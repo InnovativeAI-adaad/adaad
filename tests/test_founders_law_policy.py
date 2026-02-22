@@ -9,7 +9,7 @@ from runtime import founders_law
 def test_load_law_policy_honors_rule_severity(tmp_path: Path, monkeypatch) -> None:
     policy = {
         "rules": [
-            {"rule_id": founders_law.RULE_KEY_ROTATION, "enabled": True, "severity": "warning"},
+            {"rule_id": founders_law.RULE_KEY_ROTATION, "enabled": True, "severity": "blocking"},
             {"rule_id": founders_law.RULE_LEDGER_INTEGRITY, "enabled": True, "severity": "blocking"},
         ]
     }
@@ -27,4 +27,5 @@ def test_load_law_policy_honors_rule_severity(tmp_path: Path, monkeypatch) -> No
             ],
         }
     )
-    assert decision.passed is True
+    assert decision.passed is False
+    assert decision.failed_rules == [{"rule_id": founders_law.RULE_KEY_ROTATION, "reason": "stale"}]

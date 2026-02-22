@@ -60,3 +60,18 @@ def test_mutation_lifecycle_guard_rejection_emits_rejected_event(monkeypatch: py
     assert rejected_payloads[0]["to_state"] == "staged"
     assert rejected_payloads[0]["guard_report"]["ok"] is False
 
+
+def test_promotion_state_machine_fail_closes_on_founders_key_rotation_failure() -> None:
+    context = PromotionTransitionContext(
+        signature="cryovant-static-valid-signature",
+        trust_mode="prod",
+        fitness_score=0.9,
+        fitness_threshold=0.5,
+        founders_law_check=lambda: (False, ["FL-KEY-ROTATION-V1:stale"]),
+    )
+
+    with pytest.raises(TransitionGuardFailed, match="guard_failed:certified->activated") as exc:
+        require_transition(PromotionState.CERTIFIED, PromotionState.ACTIVATED, context)
+
+    assert exc.value.guard_report["founders_law_invariant_gate"]["ok"] is False
+    assert exc.value.guard_report["founders_law_invariant_gate"]["failures"] == ["FL-KEY-ROTATION-V1:stale"]
