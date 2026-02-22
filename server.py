@@ -301,10 +301,11 @@ def serve_dashboard(full_path: str):
         raise HTTPException(status_code=404, detail="API endpoint not found")
 
     ui_dir, ui_index, _, _ = _current_ui()
+    ui_root = ui_dir.resolve()
     if full_path:
-        requested = (ui_dir / full_path).resolve()
+        requested = (ui_root / full_path).resolve()
         try:
-            requested.relative_to(ui_dir.resolve())
+            requested.relative_to(ui_root)
         except ValueError:
             raise HTTPException(status_code=404, detail="path outside dashboard root")
 
