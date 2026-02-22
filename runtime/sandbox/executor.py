@@ -8,8 +8,9 @@ import os
 from typing import Any, Sequence
 
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider
+from runtime.governance.resource_accounting import coalesce_resource_usage_snapshot
 from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded
-from runtime.sandbox.evidence import SandboxEvidenceLedger, build_sandbox_evidence
+from runtime.sandbox.evidence import SandboxEvidenceLedger, build_sandbox_evidence, sign_bundle
 from runtime.sandbox.fs_rules import enforce_write_path_allowlist
 from runtime.sandbox.isolation import IsolationBackend, ProcessIsolationBackend
 from runtime.sandbox.manifest import SandboxManifest, validate_manifest
@@ -63,8 +64,12 @@ class HardenedSandboxExecutor:
             preflight=preflight,
             events=events,
         )
-        entry = self.evidence_ledger.append(evidence_payload)
-        self.last_evidence_payload = dict(evidence_payload)
+        signed_payload = sign_bundle(
+            evidence_payload,
+            metadata={"policy_hash": self.policy.policy_hash, "provider_ts": evidence_payload["timestamp"]},
+        )
+        entry = self.evidence_ledger.append(signed_payload)
+        self.last_evidence_payload = dict(signed_payload)
         self.last_evidence_hash = str((entry.get("payload") or {}).get("evidence_hash") or "")
 
     def run_tests_with_retry(
@@ -113,6 +118,9 @@ class HardenedSandboxExecutor:
         if float(result.memory_mb or 0.0) > max_memory:
             raise ResourceBoundsExceeded("resource_bounds_exceeded:memory")
         result_payload["disk_mb"] = 0.0
+        result_payload["resource_bounds_snapshot"] = coalesce_resource_usage_snapshot(
+            observed=result_payload, telemetry=result_payload
+        )
 
         if not result.observed_syscalls:
             self._record_evidence(

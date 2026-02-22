@@ -6,6 +6,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Tuple
 
+from runtime.sandbox.syscall_filter import DEFAULT_SYSCALL_ALLOWLIST
+
 
 @dataclass(frozen=True)
 class SandboxHardeningPolicy:
@@ -16,7 +18,7 @@ class SandboxHardeningPolicy:
 
 def default_hardening_policy() -> SandboxHardeningPolicy:
     return SandboxHardeningPolicy(
-        syscall_allowlist=("read", "write", "openat", "close", "fstat", "mmap", "munmap", "brk", "rt_sigaction", "rt_sigreturn", "exit", "exit_group"),
+        syscall_allowlist=DEFAULT_SYSCALL_ALLOWLIST,
         workspace_prefixes=(".", "/workspace"),
         seccomp_available=True,
     )

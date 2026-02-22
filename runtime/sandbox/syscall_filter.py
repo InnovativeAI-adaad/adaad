@@ -8,6 +8,34 @@ from typing import Iterable, Tuple
 from runtime.governance.foundation import sha256_prefixed_digest
 
 
+DEFAULT_SYSCALL_ALLOWLIST: tuple[str, ...] = (
+    "brk",
+    "clock_gettime",
+    "close",
+    "exit",
+    "exit_group",
+    "fstat",
+    "futex",
+    "getpid",
+    "getrandom",
+    "mmap",
+    "mprotect",
+    "munmap",
+    "newfstatat",
+    "open",
+    "openat",
+    "pread64",
+    "prlimit64",
+    "read",
+    "rt_sigaction",
+    "rt_sigprocmask",
+    "rt_sigreturn",
+    "set_tid_address",
+    "stat",
+    "write",
+)
+
+
 def syscall_trace_fingerprint(observed: Iterable[str]) -> str:
     """Return a deterministic fingerprint for observed syscall telemetry.
 
@@ -21,7 +49,7 @@ def syscall_trace_fingerprint(observed: Iterable[str]) -> str:
 
 
 def enforce_syscall_allowlist_with_fingerprint(
-    observed: Iterable[str], allowlist: Tuple[str, ...]
+    observed_syscalls: Iterable[str], allowlist: Tuple[str, ...]
 ) -> tuple[bool, tuple[str, ...], str]:
     """Enforce syscall policy and return a canonical trace fingerprint.
 
@@ -30,10 +58,12 @@ def enforce_syscall_allowlist_with_fingerprint(
     - `fingerprint` is deterministic for semantically equivalent traces.
     """
 
-    observed_tuple = tuple(str(item) for item in observed)
-    allowed = set(allowlist)
+    observed_tuple = tuple(str(item) for item in observed_syscalls)
+    canonical_allowlist = tuple(sorted({str(item) for item in allowlist}))
+    allowed = set(canonical_allowlist)
     denied = tuple(sorted({item for item in observed_tuple if item not in allowed}))
-    return (len(denied) == 0, denied, syscall_trace_fingerprint(observed_tuple))
+    fingerprint = sha256_prefixed_digest({"allowlist": canonical_allowlist, "denied": denied})
+    return (len(denied) == 0, denied, fingerprint)
 
 
 def enforce_syscall_allowlist(observed: Iterable[str], allowlist: Tuple[str, ...]) -> tuple[bool, tuple[str, ...]]:
@@ -41,4 +71,9 @@ def enforce_syscall_allowlist(observed: Iterable[str], allowlist: Tuple[str, ...
     return (ok, denied)
 
 
-__all__ = ["enforce_syscall_allowlist", "enforce_syscall_allowlist_with_fingerprint", "syscall_trace_fingerprint"]
+__all__ = [
+    "DEFAULT_SYSCALL_ALLOWLIST",
+    "enforce_syscall_allowlist",
+    "enforce_syscall_allowlist_with_fingerprint",
+    "syscall_trace_fingerprint",
+]
