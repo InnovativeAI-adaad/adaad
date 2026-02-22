@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import os
 import tempfile
 import unittest
 from contextlib import contextmanager
-from unittest.mock import patch
 from pathlib import Path
+from unittest.mock import patch
 
 from security.gatekeeper_protocol import run_gatekeeper
 
@@ -24,7 +25,7 @@ def _in_temp_repo():
 
 
 class GatekeeperProtocolTest(unittest.TestCase):
-    def test_unchanged_files_have_no_drift(self) -> None:
+    def test_no_drift_persists_manifest_snapshot(self) -> None:
         with _in_temp_repo():
             Path("app/alpha.txt").write_text("stable", encoding="utf-8")
 
@@ -36,8 +37,13 @@ class GatekeeperProtocolTest(unittest.TestCase):
             self.assertNotIn("drift", second)
             self.assertEqual(second["reasons"], [])
             self.assertIsNone(second["persistence_error"])
+            self.assertEqual(second["schema_version"], 2)
+            self.assertEqual(second["manifest_version"], "gatekeeper_manifest_v2")
+            self.assertEqual(second["provenance"]["changed_count"], 0)
+            self.assertEqual(second["provenance"]["sample_changed_paths"], [])
+            self.assertTrue(Path("security/ledger/gate_manifest_snapshot.json").exists())
 
-    def test_content_change_with_same_path_flags_drift(self) -> None:
+    def test_single_file_changed_reports_provenance_and_drift_metadata(self) -> None:
         with _in_temp_repo():
             target = Path("app/alpha.txt")
             target.write_text("version-a", encoding="utf-8")
@@ -49,37 +55,52 @@ class GatekeeperProtocolTest(unittest.TestCase):
             self.assertFalse(updated["ok"])
             self.assertTrue(updated.get("drift"))
             self.assertIn("drift_detected", updated["reasons"])
+            self.assertEqual(updated["drift_report"]["changed_count"], 1)
+            self.assertEqual(updated["drift_report"]["changed_paths"], ["app/alpha.txt"])
+            self.assertEqual(updated["provenance"]["changed_count"], 1)
+            self.assertEqual(updated["provenance"]["sample_changed_paths"], ["app/alpha.txt"])
 
-    def test_path_add_or_remove_flags_drift(self) -> None:
+            lines = Path("security/ledger/gatekeeper_events.jsonl").read_text(encoding="utf-8").splitlines()
+            event = json.loads(lines[-1])
+            self.assertEqual(event["schema_version"], 2)
+            self.assertEqual(event["manifest_version"], "gatekeeper_manifest_v2")
+            self.assertTrue(event["drift"])
+            self.assertEqual(event["provenance"]["changed_count"], 1)
+
+    def test_excluded_files_are_ignored(self) -> None:
         with _in_temp_repo():
-            first = Path("app/first.txt")
-            second = Path("app/second.txt")
-            first.write_text("base", encoding="utf-8")
+            Path("app/alpha.txt").write_text("stable", encoding="utf-8")
             run_gatekeeper()
 
-            second.write_text("new", encoding="utf-8")
-            added = run_gatekeeper()
-            self.assertTrue(added.get("drift"))
-            self.assertIn("drift_detected", added["reasons"])
+            Path("app/.localstate").write_text("editor", encoding="utf-8")
+            Path("runtime/.gitkeep").write_text("", encoding="utf-8")
+            Path("security/ledger/gate_hash.txt").write_text("tampered", encoding="utf-8")
+            result = run_gatekeeper()
 
-            run_gatekeeper()
-            second.unlink()
-            removed = run_gatekeeper()
-            self.assertTrue(removed.get("drift"))
-            self.assertIn("drift_detected", removed["reasons"])
+            self.assertTrue(result["ok"])
+            self.assertNotIn("drift", result)
+            self.assertEqual(result["reasons"], [])
 
-    def test_runtime_content_change_flags_drift(self) -> None:
+    def test_deterministic_ordering_of_reported_changes(self) -> None:
         with _in_temp_repo():
-            target = Path("runtime/config.json")
-            target.write_text('{"mode":"a"}', encoding="utf-8")
+            Path("app/zeta.txt").write_text("old", encoding="utf-8")
+            Path("runtime/mid.txt").write_text("old", encoding="utf-8")
+            Path("security/alpha.txt").write_text("old", encoding="utf-8")
             run_gatekeeper()
 
-            target.write_text('{"mode":"b"}', encoding="utf-8")
-            updated = run_gatekeeper()
+            Path("app/a_add.txt").write_text("new", encoding="utf-8")
+            Path("app/zeta.txt").unlink()
+            Path("runtime/mid.txt").write_text("updated", encoding="utf-8")
+            Path("security/alpha.txt").write_text("updated", encoding="utf-8")
+            result = run_gatekeeper()
 
-            self.assertFalse(updated["ok"])
-            self.assertTrue(updated.get("drift"))
-            self.assertIn("drift_detected", updated["reasons"])
+            self.assertTrue(result["drift"])
+            self.assertEqual(result["drift_report"]["added_paths"], ["app/a_add.txt"])
+            self.assertEqual(result["drift_report"]["removed_paths"], ["app/zeta.txt"])
+            self.assertEqual(
+                result["drift_report"]["changed_paths"],
+                ["runtime/mid.txt", "security/alpha.txt"],
+            )
 
     def test_missing_paths_reason_code(self) -> None:
         with _in_temp_repo():
