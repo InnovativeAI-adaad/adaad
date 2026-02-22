@@ -16,9 +16,9 @@ Use this checklist for any release candidate, with strict enforcement for govern
 
 > **Hard block:** Do not publish public release notes, governance milestone updates, roadmap posts, or social announcements until every evidence entry above is complete and validated.
 
-## 3) Versioned documentation and release notes
+## 3) Versioned documentation and release notes (path consistency)
 
-- [ ] Release notes file exists under `docs/releases/` and reflects scope.
+- [ ] Release notes file exists at `docs/releases/<version>.md` (for this milestone: `docs/releases/1.0.0.md`) and reflects scope.
 - [ ] Governance/spec deltas are reflected in versioned docs.
 - [ ] Any externally referenced docs/spec links are immutable/versioned.
 
