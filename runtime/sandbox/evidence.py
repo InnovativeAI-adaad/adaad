@@ -3,15 +3,53 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
+import os
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 
 from runtime import ROOT_DIR
 from runtime.governance.foundation import ZERO_HASH, canonical_json, sha256_prefixed_digest
+from runtime.governance.resource_accounting import coalesce_resource_usage_snapshot
 from runtime.sandbox.syscall_filter import syscall_trace_fingerprint
 
 SANDBOX_EVIDENCE_PATH = ROOT_DIR / "security" / "ledger" / "sandbox_evidence.jsonl"
+_DEFAULT_DEV_SIGNING_KEY = "adaad-dev-evidence-signing-key"
+
+
+def _signing_key_bytes() -> bytes:
+    return str(os.getenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY") or _DEFAULT_DEV_SIGNING_KEY).encode("utf-8")
+
+
+def _canonical_bytes(payload: Mapping[str, Any]) -> bytes:
+    return canonical_json(dict(payload)).encode("utf-8")
+
+
+def sign_bundle(payload: Mapping[str, Any], *, metadata: Mapping[str, Any] | None = None) -> Dict[str, Any]:
+    """Return a deterministically signed evidence payload.
+
+    Invariants:
+    - signature excludes the `signed_digest` field itself.
+    - canonical JSON ordering is preserved by `canonical_json`.
+    """
+
+    bundle = dict(payload)
+    bundle.pop("signed_digest", None)
+    if metadata is not None:
+        bundle["signature_metadata"] = dict(metadata)
+    digest = hmac.new(_signing_key_bytes(), _canonical_bytes(bundle), hashlib.sha256).hexdigest()
+    bundle["signed_digest"] = f"sha256:{digest}"
+    return bundle
+
+
+def verify_bundle_signature(payload: Mapping[str, Any]) -> bool:
+    observed = str(payload.get("signed_digest") or "")
+    if not observed.startswith("sha256:"):
+        return False
+    expected = sign_bundle(payload).get("signed_digest")
+    return hmac.compare_digest(observed, str(expected))
 
 
 def build_sandbox_evidence(
@@ -40,11 +78,7 @@ def build_sandbox_evidence(
     stdout = str(result.get("stdout", ""))
     stderr = str(result.get("stderr", ""))
     trace = tuple(str(item) for item in syscall_trace)
-    resource_usage = {
-        "duration_s": float(result.get("duration_s", 0.0) or 0.0),
-        "memory_mb": float(result.get("memory_mb", 0.0) or 0.0),
-        "disk_mb": float(result.get("disk_mb", 0.0) or 0.0),
-    }
+    resource_usage = coalesce_resource_usage_snapshot(observed=result, telemetry=result)
     payload = {
         "manifest_hash": sha256_prefixed_digest(manifest),
         "policy_hash": policy_hash,
@@ -94,4 +128,10 @@ class SandboxEvidenceLedger:
         return entry
 
 
-__all__ = ["SANDBOX_EVIDENCE_PATH", "SandboxEvidenceLedger", "build_sandbox_evidence"]
+__all__ = [
+    "SANDBOX_EVIDENCE_PATH",
+    "SandboxEvidenceLedger",
+    "build_sandbox_evidence",
+    "sign_bundle",
+    "verify_bundle_signature",
+]
