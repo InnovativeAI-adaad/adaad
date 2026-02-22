@@ -32,6 +32,7 @@ from app.beast_mode_loop import BeastModeLoop
 from app.dream_mode import DreamMode
 from app.mutation_executor import MutationExecutor
 from runtime.evolution import EvolutionRuntime
+from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, CheckpointVerifier
 from runtime.evolution.replay_attestation import ReplayProofBuilder
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
 from runtime.evolution.lineage_v2 import LineageIntegrityError
@@ -329,6 +330,10 @@ class Orchestrator:
         ok, failures = verify_all()
         if not ok:
             self._fail(f"invariants_failed:{','.join(failures)}")
+        try:
+            CheckpointVerifier.verify_all_checkpoints(self.evolution_runtime.ledger.ledger_path)
+        except CheckpointVerificationError as exc:
+            self._fail(f"checkpoint_verification_failed:{exc}")
 
     def _init_cryovant(self) -> None:
         if not cryovant.validate_environment():

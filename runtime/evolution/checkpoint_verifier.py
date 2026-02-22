@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Checkpoint chain verification helpers."""
+"""Checkpoint chain verification helpers.
+
+Fail-close verification APIs raise deterministic errors with stable codes when
+checkpoint chain links or hashes are missing/mismatched.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
+from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.governance.foundation import ZERO_HASH, sha256_prefixed_digest
 
@@ -42,42 +47,43 @@ class CheckpointVerifier:
         }
 
     @staticmethod
-    def verify_all_epochs(ledger_path: str | Path) -> Dict[str, Any]:
+    def verify_all_checkpoints(ledger_path: str | Path) -> Dict[str, Any]:
         ledger = LineageLedgerV2(Path(ledger_path))
-        epoch_ids = ledger.list_epoch_ids()
-        checkpoint_count = 0
+        inventory = CheckpointRegistry(ledger).list_checkpoints()
 
-        for epoch_id in epoch_ids:
-            previous = ZERO_HASH
-            checkpoints: List[Dict[str, Any]] = [
-                dict(entry.get("payload") or {})
-                for entry in ledger.read_epoch(epoch_id)
-                if entry.get("type") == "EpochCheckpointEvent"
-            ]
-            for index, checkpoint in enumerate(checkpoints):
-                prev_hash = str(checkpoint.get("prev_checkpoint_hash") or "")
-                if prev_hash != previous:
+        for epoch in inventory["epochs"]:
+            epoch_id = str(epoch.get("epoch_id") or "")
+            checkpoints = epoch.get("checkpoints") or []
+            for checkpoint in checkpoints:
+                index = int(checkpoint.get("index", 0))
+                if not checkpoint.get("chain_linked", False):
                     raise CheckpointVerificationError(
                         code="checkpoint_prev_missing",
                         detail=f"epoch={epoch_id};index={index}",
                     )
 
-                expected_hash = sha256_prefixed_digest(CheckpointVerifier._checkpoint_material(checkpoint))
+                expected_hash = str(checkpoint.get("expected_checkpoint_hash") or "")
                 actual_hash = str(checkpoint.get("checkpoint_hash") or "")
+                if not actual_hash:
+                    raise CheckpointVerificationError(
+                        code="checkpoint_hash_missing",
+                        detail=f"epoch={epoch_id};index={index}",
+                    )
                 if actual_hash != expected_hash:
                     raise CheckpointVerificationError(
                         code="checkpoint_hash_mismatch",
                         detail=f"epoch={epoch_id};index={index}",
                     )
 
-                previous = actual_hash
-                checkpoint_count += 1
-
         return {
-            "epoch_count": len(epoch_ids),
-            "checkpoint_count": checkpoint_count,
+            "epoch_count": int(inventory.get("epoch_count", 0)),
+            "checkpoint_count": int(inventory.get("checkpoint_count", 0)),
             "verified": True,
         }
+
+    @staticmethod
+    def verify_all_epochs(ledger_path: str | Path) -> Dict[str, Any]:
+        return CheckpointVerifier.verify_all_checkpoints(ledger_path)
 
 
 def verify_checkpoint_chain(ledger: LineageLedgerV2, epoch_id: str) -> Dict[str, Any]:
