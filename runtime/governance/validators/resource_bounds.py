@@ -5,8 +5,8 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import os
-import time
 import resource
+import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -34,7 +34,10 @@ class _ChildError(RuntimeError):
 def _run_target(queue: mp.Queue, func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any], memory_mb: int) -> None:
     if memory_mb > 0:
         limit_bytes = memory_mb * 1024 * 1024
-        resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, limit_bytes))
+        # RLIMIT_AS is available on Linux/WSL; if unavailable, we still execute and
+        # report deterministic fallback semantics through parent-side observations.
+        if hasattr(resource, "RLIMIT_AS"):
+            resource.setrlimit(resource.RLIMIT_AS, (limit_bytes, limit_bytes))
     start_cpu = time.process_time()
     try:
         result = func(*args, **kwargs)
@@ -59,11 +62,11 @@ def enforce_resource_bounds(func: Callable[..., Any], *args: Any, **kwargs: Any)
         proc.terminate()
         proc.join()
         event = ResourceLimitEvent("resource_bounds_exceeded", "wall_seconds", max_wall, max_wall + 0.001)
-        raise ResourceBoundsExceeded(str(event), event=event)
+        raise ResourceBoundsExceeded("resource_bounds_exceeded:wall_seconds", event=event)
 
     if proc.exitcode not in (0, None):
         event = ResourceLimitEvent("resource_bounds_exceeded", "memory_mb", max_memory, max_memory + 1)
-        raise ResourceBoundsExceeded(str(event), event=event)
+        raise ResourceBoundsExceeded("resource_bounds_exceeded:process_exit", event=event)
 
     if queue.empty():
         raise _ChildError("child_result_missing")
@@ -71,10 +74,10 @@ def enforce_resource_bounds(func: Callable[..., Any], *args: Any, **kwargs: Any)
     status, payload, cpu_used = queue.get()
     if float(cpu_used) > max_cpu:
         event = ResourceLimitEvent("resource_bounds_exceeded", "cpu_seconds", max_cpu, float(cpu_used))
-        raise ResourceBoundsExceeded(str(event), event=event)
+        raise ResourceBoundsExceeded("resource_bounds_exceeded:cpu_seconds", event=event)
     if status == "error":
         event = ResourceLimitEvent("resource_bounds_exceeded", "memory_mb", max_memory, max_memory + 1)
-        raise ResourceBoundsExceeded(str(event), event=event)
+        raise ResourceBoundsExceeded("resource_bounds_exceeded:child_error", event=event)
     return payload
 
 

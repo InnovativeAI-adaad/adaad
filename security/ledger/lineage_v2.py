@@ -63,7 +63,10 @@ def resolve_chain(agent_id: str, *, ledger_path: Path | None = None) -> List[str
         text = line.strip()
         if not text:
             continue
-        entry = json.loads(text)
+        try:
+            entry = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise LineageResolutionError("lineage_entry_malformed") from exc
         if not isinstance(entry, dict):
             raise LineageResolutionError("lineage_entry_malformed")
         payload = {k: v for k, v in entry.items() if k != "hash"}
@@ -91,9 +94,19 @@ def resolve_chain(agent_id: str, *, ledger_path: Path | None = None) -> List[str
         return None
 
     chain: List[str] = []
+    visited: set[str] = set()
     cursor = tail
     while cursor is not None:
-        chain.append(str(cursor.get("hash") or ""))
+        mutation_id = _mutation_id(cursor)
+        if mutation_id in visited:
+            raise LineageResolutionError("lineage_cycle_detected")
+        if mutation_id:
+            visited.add(mutation_id)
+
+        link_hash = str(cursor.get("hash") or "")
+        if not link_hash:
+            raise LineageResolutionError("lineage_entry_malformed")
+        chain.append(link_hash)
         parent_id = _parent_mutation_id(cursor)
         cursor = by_mutation.get(parent_id) if parent_id else None
 
