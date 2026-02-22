@@ -27,6 +27,11 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Fail unless all required claims are marked Complete.",
     )
+    parser.add_argument(
+        "--allow-external-links",
+        action="store_true",
+        help="Permit http/https evidence links during --require-complete validation.",
+    )
     return parser.parse_args()
 
 
@@ -71,7 +76,9 @@ def main() -> int:
     repo_root = Path.cwd().resolve()
     matrix_dir = MATRIX_PATH.parent.resolve()
 
-    for claim_id in sorted(REQUIRED_CLAIM_IDS & rows.keys()):
+    claim_ids_to_validate = sorted(rows.keys()) if args.require_complete else sorted(REQUIRED_CLAIM_IDS & rows.keys())
+
+    for claim_id in claim_ids_to_validate:
         row = rows[claim_id]
         status = str(row["status"]).strip()
         evidence_cell = str(row["evidence"]).lower()
@@ -89,6 +96,8 @@ def main() -> int:
 
         for link in links:
             if _is_http_link(link):
+                if args.require_complete and not args.allow_external_links:
+                    errors.append(f"{claim_id}: external links are not allowed with --require-complete: {link}")
                 continue
             target = _normalize_local_target(link, matrix_dir)
             try:
