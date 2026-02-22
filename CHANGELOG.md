@@ -3,6 +3,16 @@
 ## [Unreleased]
 
 ### Added
+- MCP schemas for proposal request/response and mutation analysis response under `schemas/mcp/`.
+- MCP test coverage for tools parity, proposal validation, mutation analysis, rejection explanation, candidate ranking, and server route/auth contracts.
+
+### Fixed
+- Autonomy role registry tests now include the `ClaudeProposalAgent` role mapping.
+
+### Changed
+- Documented MCP architecture, route map, and server→tool mapping in `docs/mcp/IMPLEMENTATION.md`.
+
+### Added
 - Claude-governed MCP co-pilot integration (feat/claude-mcp-copilot).
   New mcp-proposal-writer server (runtime/mcp/server.py): governed write
   surface for LLM mutation proposals. ClaudeProposalAgent implements

@@ -9,10 +9,15 @@ from typing import Any, Dict, List
 
 @dataclass
 class ClaudeProposalAgent:
+    """Deterministic mutator-compatible proposal helper used by MCP flows."""
+
     agent_id: str = "claude-proposal-agent"
 
     def propose(self, context: Dict[str, Any] | None = None) -> List[Dict[str, Any]]:
-        return list((context or {}).get("candidates") or [])
+        """Return candidate proposals from context in deterministic list order."""
+
+        raw_candidates = (context or {}).get("candidates") or []
+        return [candidate for candidate in raw_candidates if isinstance(candidate, dict)]
 
     def score(self, candidate: Dict[str, Any]) -> float:
         value = candidate.get("score", 0.0)

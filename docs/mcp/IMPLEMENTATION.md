@@ -2,27 +2,36 @@
 
 This repository includes a governed MCP integration with four servers and strict tools parity between `.github/mcp_config.json` and `runtime/mcp/tools_registry.py`.
 
+## Architecture
+
+- `app/agents/claude_proposal_agent.py` provides the `claude-proposal-agent` mutator-compatible role implementation.
+- `runtime/mcp/server.py` exposes proposal-writer routes and enforces JWT for all non-health endpoints.
+- `runtime/mcp/proposal_validator.py` enforces schema, Tier-0 elevation checks, constitutional pre-checks, and authority override invariants.
+- `runtime/mcp/tools_registry.py` is the runtime source of truth for MCP tool names.
+
 ## Key invariants
 
 - `authority_level` is forced to `governor-review` server-side.
 - Tier-0 targets are rejected unless a human `elevation_token` is provided.
 - Constitutional evaluation is run before queue append.
 - Proposal queue entries are append-only and hash-linked.
+- Tool-name parity is exact (same names, order, and set) between config and runtime registry.
 
-## Servers
+## Servers and tool mapping
 
-- `aponi-local`
-- `ledger-mirror`
-- `sandbox-proxy`
-- `mcp-proposal-writer`
+- `aponi-local` → `system_intelligence`, `risk_summary`, `evolution_timeline`, `replay_diff`, `policy_simulate`, `mutation_analyze`, `mutation_explain_rejection`, `mutation_rank`
+- `ledger-mirror` → `ledger_list`, `ledger_read`
+- `sandbox-proxy` → `policy_simulate`, `skill_profiles_list`
+- `mcp-proposal-writer` → `mutation_propose`, `mutation_analyze`, `mutation_explain_rejection`, `mutation_rank`
 
-## Writer endpoints
+## Writer route mapping
 
-- `POST /mutation/propose`
-- `POST /mutation/analyze`
-- `POST /mutation/explain-rejection`
-- `POST /mutation/rank`
-- `GET /health`
+- `GET /health` → liveness and server identity
+- `GET /tools/list` → tools exposed for the selected MCP server
+- `POST /mutation/propose` → validate and enqueue proposal payloads
+- `POST /mutation/analyze` → deterministic fitness/risk prediction
+- `POST /mutation/explain-rejection` → guard-failure explanation from lifecycle rejection telemetry
+- `POST /mutation/rank` → deterministic ranking over mutation IDs
 
 JWT is required for all non-health routes.
 

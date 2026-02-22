@@ -14,9 +14,13 @@ from runtime.autonomy.scoreboard import build_scoreboard_views
 class AutonomyEnhancementTest(unittest.TestCase):
     def test_default_roles_define_required_agents(self) -> None:
         roles = default_role_specs()
-        self.assertEqual(set(roles.keys()), {"ArchitectAgent", "ExecutorAgent", "ValidatorAgent", "MutatorAgent", "GovernanceAgent"})
+        self.assertEqual(
+            set(roles.keys()),
+            {"ArchitectAgent", "ExecutorAgent", "ValidatorAgent", "MutatorAgent", "ClaudeProposalAgent", "GovernanceAgent"},
+        )
         self.assertEqual(roles["GovernanceAgent"].sandbox_permission, SandboxPermission.GOVERNANCE)
         self.assertIn("adjudicate(proposal)", roles["GovernanceAgent"].interface)
+        self.assertEqual(roles["ClaudeProposalAgent"].interface, ("propose(context)", "score(candidate)"))
 
     def test_autonomy_loop_escalates_on_failed_post_condition(self) -> None:
         actions = [
