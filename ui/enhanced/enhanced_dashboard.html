@@ -344,5 +344,14 @@
             if (ws) ws.close();
         });
     </script>
+
+  <section id="governance-hardening-status" style="margin:16px;padding:12px;border:1px solid #4b5563;border-radius:8px;">
+    <h2 style="margin-top:0;">Governance Hardening Status (v0.70.0)</h2>
+    <ul>
+      <li>Branch protection checks enforce required checks, admin enforcement, and 2 approvals.</li>
+      <li>Release evidence gate verifies replay proofs and runs governance/sandbox tests.</li>
+      <li>Lineage continuity gate enforces canonical hash-chain invariants when lineage_v2 is resolvable.</li>
+    </ul>
+  </section>
 </body>
 </html>

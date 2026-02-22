@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import os
 from typing import Any, Sequence
 
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider
+from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded
 from runtime.sandbox.evidence import SandboxEvidenceLedger, build_sandbox_evidence
 from runtime.sandbox.fs_rules import enforce_write_path_allowlist
 from runtime.sandbox.isolation import IsolationBackend, ProcessIsolationBackend
@@ -103,6 +105,13 @@ class HardenedSandboxExecutor:
 
         result = self.isolation_backend.run(test_sandbox=self.test_sandbox, args=args, retries=retries)
         result_payload = asdict(result)
+
+        max_wall = float(os.getenv("ADAAD_MAX_WALL_SECONDS", str(manifest.timeout_s)))
+        max_memory = float(os.getenv("ADAAD_MAX_MEMORY_MB", str(manifest.memory_mb)))
+        if float(result.duration_s) > max_wall:
+            raise ResourceBoundsExceeded("resource_bounds_exceeded:wall_time")
+        if float(result.memory_mb or 0.0) > max_memory:
+            raise ResourceBoundsExceeded("resource_bounds_exceeded:memory")
         result_payload["disk_mb"] = 0.0
 
         if not result.observed_syscalls:

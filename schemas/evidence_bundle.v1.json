@@ -12,7 +12,8 @@
     "risk_summaries",
     "lineage_anchors",
     "bundle_index",
-    "export_metadata"
+    "export_metadata",
+    "sandbox_snapshot"
   ],
   "additionalProperties": false,
   "properties": {
@@ -323,6 +324,36 @@
           }
         }
       }
+    },
+    "sandbox_snapshot": {
+      "type": "object",
+      "properties": {
+        "seccomp_available": {
+          "type": "boolean"
+        },
+        "namespace_isolation_available": {
+          "type": "boolean"
+        },
+        "workspace_prefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "syscall_allowlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "seccomp_available",
+        "namespace_isolation_available",
+        "workspace_prefixes",
+        "syscall_allowlist"
+      ],
+      "additionalProperties": false
     }
   }
 }

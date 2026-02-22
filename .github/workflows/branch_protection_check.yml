@@ -1,0 +1,43 @@
+name: Branch Protection Check
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  administration: read
+
+jobs:
+  validate-branch-protection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch protection via GitHub API
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = 'main';
+            const branchResp = await github.rest.repos.getBranch({ owner, repo, branch });
+            if (!branchResp || !branchResp.data || branchResp.data.name !== branch) {
+              core.setFailed('main branch missing');
+              return;
+            }
+            const protection = await github.rest.repos.getBranchProtection({ owner, repo, branch });
+            const checks = protection.data.required_status_checks;
+            if (!checks || !Array.isArray(checks.contexts) || checks.contexts.length === 0) {
+              core.setFailed('required_status_checks missing');
+              return;
+            }
+            if (!protection.data.enforce_admins || protection.data.enforce_admins.enabled !== true) {
+              core.setFailed('enforce_admins is not true');
+              return;
+            }
+            const reviews = protection.data.required_pull_request_reviews;
+            const approvals = reviews && Number(reviews.required_approving_review_count || 0);
+            if (!reviews || approvals < 2) {
+              core.setFailed(`required_approving_review_count must be >= 2 (found ${approvals || 0})`);
+              return;
+            }

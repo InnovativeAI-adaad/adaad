@@ -24,5 +24,5 @@ def build_identity(module: ModuleType, tool_id: str, version: str) -> dict[str, 
         "tool_id": tool_id,
         "version": version,
         "hash": compute_source_hash(module),
-        "timestamp": _dt.datetime.now(_dt.UTC).isoformat().replace("+00:00", "Z"),
+        "timestamp": _dt.datetime.now(_dt.timezone.utc).isoformat().replace("+00:00", "Z"),
     }

@@ -16,6 +16,8 @@ from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation import ZERO_HASH, canonical_json, sha256_prefixed_digest
 from runtime.governance.policy_artifact import DEFAULT_GOVERNANCE_POLICY_PATH, load_governance_policy
 from runtime.sandbox.evidence import SANDBOX_EVIDENCE_PATH
+from runtime.sandbox.namespace import namespace_isolation_available
+from runtime.sandbox.sandbox_policy import default_hardening_policy
 
 FORENSIC_EXPORT_DIR = ROOT_DIR / "reports" / "forensics"
 EVIDENCE_BUNDLE_SCHEMA_VERSION = "1.0"
@@ -237,6 +239,13 @@ class EvidenceBundleBuilder:
                 "determinism_warn": policy.thresholds.determinism_warn,
             },
         }
+        hardening = default_hardening_policy()
+        sandbox_snapshot = {
+            "seccomp_available": hardening.seccomp_available,
+            "namespace_isolation_available": namespace_isolation_available(),
+            "workspace_prefixes": list(hardening.workspace_prefixes),
+            "syscall_allowlist": list(hardening.syscall_allowlist),
+        }
         return {
             "schema_version": EVIDENCE_BUNDLE_SCHEMA_VERSION,
             "export_scope": {
@@ -246,6 +255,7 @@ class EvidenceBundleBuilder:
             },
             "replay_proofs": replay_proofs,
             "sandbox_evidence": sandbox_evidence,
+            "sandbox_snapshot": sandbox_snapshot,
             "policy_artifact_metadata": policy_artifact_metadata,
             "risk_summaries": {
                 "bundle_count": len(bundles),

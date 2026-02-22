@@ -15,6 +15,7 @@ import fnmatch
 import inspect
 import hashlib
 import json
+import re
 import os
 import time
 from contextlib import contextmanager
@@ -246,10 +247,54 @@ def _validate_no_banned_tokens(request: MutationRequest) -> Dict[str, Any]:
     return {"ok": True}
 
 
+def validate_lineage_continuity(mutation: Any) -> bool:
+    """Blocking lineage continuity gate for constitutional mutation evaluation."""
+    from security.ledger.lineage_v2 import resolve_chain
+
+    agent_id = str(getattr(mutation, "agent_id", "")).strip()
+    if not agent_id:
+        raise RuntimeError("lineage_missing_agent_id")
+
+    chain = resolve_chain(agent_id)
+    if not chain:
+        raise RuntimeError("lineage_missing_parent")
+    if str(chain[0]) in {"", "0" * 64}:
+        raise RuntimeError("lineage_missing_genesis")
+
+    for link in chain:
+        if not re.fullmatch(r"[0-9a-f]{64}", str(link)):
+            raise RuntimeError("lineage_tampered_hash")
+    return True
+
+
 def _validate_lineage(_: MutationRequest) -> Dict[str, Any]:
     """Resolve and verify append-only lineage chain up to certified genesis."""
     from runtime.evolution.lineage_v2 import resolve_certified_ancestor_path
     from security import cryovant
+
+    # Rationale: enforce explicit mutation lineage chain continuity when lineage_v2 exists
+    # while preserving existing genesis/journal invariants below.
+    # Invariants: agent_id must be present; chain hashes are canonical lowercase sha256;
+    # parent linkage remains append-only and rooted in genesis.
+    from security.ledger.lineage_v2 import LINEAGE_V2_PATH, LineageResolutionError, resolve_chain
+
+    if LINEAGE_V2_PATH.exists():
+        agent_id = str(getattr(_, "agent_id", "")).strip()
+        try:
+            # Only enforce the helper gate when lineage_v2 can resolve a chain for this agent.
+            # This preserves existing journal/genesis invariants as source-of-truth while
+            # adding continuity enforcement for requests represented in lineage_v2.
+            if resolve_chain(agent_id):
+                validate_lineage_continuity(_)
+        except LineageResolutionError as exc:
+            metrics.log(
+                event_type="lineage_v2_resolution_fallback",
+                payload={"reason": str(exc), "agent_id": agent_id, "lineage_v2_path": str(LINEAGE_V2_PATH)},
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+        except RuntimeError as exc:
+            return {"ok": False, "reason": str(exc), "details": {"validator": "validate_lineage_continuity"}}
 
     genesis_path = journal.GENESIS_PATH
     journal_path = journal.JOURNAL_PATH

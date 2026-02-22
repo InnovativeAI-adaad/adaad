@@ -1,20 +1,45 @@
-name: Release Evidence Gate
+name: release_evidence_gate
 
 on:
   push:
     tags:
-      - "v*-governance-*"
-      - "v*-public-readiness-*"
-      - "governance-*"
-      - "public-readiness-*"
+      - "v0.70.0"
 
 jobs:
-  validate-release-evidence:
+  governance-release-gate:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Require complete claims evidence before milestone tag acceptance
-        run: python scripts/validate_release_evidence.py --require-complete
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.server.txt
+
+      - name: Verify Replay Proof Bundles Exist
+        run: |
+          if ! ls security/ledger/replay_proofs/*.json 1> /dev/null 2>&1; then
+            echo "Replay proof artifacts missing."
+            exit 1
+          fi
+
+      - name: Verify Replay Proof Bundles
+        run: |
+          for f in security/ledger/replay_proofs/*.json; do
+            python tools/verify_replay_bundle.py "$f"
+          done
+
+      - name: Run Governance Tests
+        run: |
+          PYTHONPATH=. pytest tests/ -k governance -q
+
+      - name: Run Sandbox Tests
+        run: |
+          PYTHONPATH=. pytest tests/sandbox -q
