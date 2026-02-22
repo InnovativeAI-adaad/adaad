@@ -591,6 +591,37 @@ class Orchestrator:
             level="INFO",
         )
         if not constitutional_verdict.get("passed"):
+            entropy_budget_verdict = next(
+                (
+                    item
+                    for item in constitutional_verdict.get("verdicts", [])
+                    if isinstance(item, dict) and item.get("rule") == "entropy_budget_limit"
+                ),
+                {},
+            )
+            entropy_details = entropy_budget_verdict.get("details") if isinstance(entropy_budget_verdict, dict) else {}
+            entropy_details = entropy_details if isinstance(entropy_details, dict) else {}
+            if isinstance(entropy_details.get("details"), dict):
+                entropy_details = dict(entropy_details["details"])
+            if "entropy_budget_limit" in constitutional_verdict.get("blocking_failures", []):
+                metrics.log(
+                    event_type="mutation_rejected_entropy",
+                    payload={
+                        "agent_id": selected.agent_id,
+                        "epoch_id": active_epoch_id,
+                        "rule": "entropy_budget_limit",
+                        "reason": entropy_details.get("reason") or entropy_budget_verdict.get("reason", "entropy_budget_limit"),
+                        "max_mutation_entropy_bits": entropy_details.get("max_mutation_entropy_bits"),
+                        "epoch_entropy_bits": entropy_details.get("epoch_entropy_bits"),
+                        "constitutional_verdict": constitutional_verdict,
+                        "evidence": {
+                            "rule": "entropy_budget_limit",
+                            "details": entropy_details,
+                            "blocking_failures": constitutional_verdict.get("blocking_failures", []),
+                        },
+                    },
+                    level="ERROR",
+                )
             metrics.log(
                 event_type="mutation_rejected_constitutional",
                 payload={**constitutional_verdict, "epoch_id": active_epoch_id, "decision": "rejected", "evidence": constitutional_verdict},
