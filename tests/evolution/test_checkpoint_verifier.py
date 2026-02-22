@@ -12,7 +12,7 @@ def _seed_epoch(ledger: LineageLedgerV2, epoch_id: str) -> None:
     ledger.append_event("PromotionEvent", {"epoch_id": epoch_id, "payload": {"entropy_declared_bits": 2}})
 
 
-def test_verify_all_epochs_passes_for_valid_checkpoint_chain(tmp_path):
+def test_verify_all_checkpoints_passes_for_valid_checkpoint_chain(tmp_path):
     ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
     epoch_id = "epoch-1"
     _seed_epoch(ledger, epoch_id)
@@ -20,14 +20,14 @@ def test_verify_all_epochs_passes_for_valid_checkpoint_chain(tmp_path):
     registry.create_checkpoint(epoch_id)
     registry.create_checkpoint(epoch_id)
 
-    result = CheckpointVerifier.verify_all_epochs(ledger.ledger_path)
+    result = CheckpointVerifier.verify_all_checkpoints(ledger.ledger_path)
 
     assert result["verified"] is True
     assert result["epoch_count"] == 1
     assert result["checkpoint_count"] == 2
 
 
-def test_verify_all_epochs_raises_on_prev_missing(tmp_path):
+def test_verify_all_checkpoints_raises_on_prev_missing(tmp_path):
     ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
     epoch_id = "epoch-prev"
     _seed_epoch(ledger, epoch_id)
@@ -54,10 +54,10 @@ def test_verify_all_epochs_raises_on_prev_missing(tmp_path):
     )
 
     with pytest.raises(CheckpointVerificationError, match=r"^checkpoint_prev_missing:epoch=epoch-prev;index=1$"):
-        CheckpointVerifier.verify_all_epochs(ledger.ledger_path)
+        CheckpointVerifier.verify_all_checkpoints(ledger.ledger_path)
 
 
-def test_verify_all_epochs_raises_on_hash_mismatch(tmp_path):
+def test_verify_all_checkpoints_raises_on_hash_mismatch(tmp_path):
     ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
     epoch_id = "epoch-hash"
     _seed_epoch(ledger, epoch_id)
@@ -85,4 +85,4 @@ def test_verify_all_epochs_raises_on_hash_mismatch(tmp_path):
     )
 
     with pytest.raises(CheckpointVerificationError, match=r"^checkpoint_hash_mismatch:epoch=epoch-hash;index=2$"):
-        CheckpointVerifier.verify_all_epochs(ledger.ledger_path)
+        CheckpointVerifier.verify_all_checkpoints(ledger.ledger_path)
