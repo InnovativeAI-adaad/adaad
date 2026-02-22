@@ -191,7 +191,7 @@ class Orchestrator:
         self._v("Runtime invariants passed")
         self._init_cryovant()
         self._v("Cryovant validation passed")
-        self._verify_checkpoint_chain()
+        self._verify_checkpoint_chain_stage()
         self._v("Checkpoint chain verification passed")
         epoch_state = self.evolution_runtime.boot()
         self.state["epoch"] = epoch_state
@@ -312,7 +312,7 @@ class Orchestrator:
         self._register_elements()
         self._init_runtime()
         self._init_cryovant()
-        self._verify_checkpoint_chain()
+        self._verify_checkpoint_chain_stage()
         epoch_state = self.evolution_runtime.boot()
         self.state["epoch"] = epoch_state
         self._run_replay_preflight(verify_only=True)
@@ -334,7 +334,7 @@ class Orchestrator:
         if not ok:
             self._fail(f"invariants_failed:{','.join(failures)}")
 
-    def _verify_checkpoint_chain(self) -> None:
+    def _verify_checkpoint_chain_stage(self) -> None:
         try:
             verification = CheckpointVerifier.verify_all_checkpoints(self.evolution_runtime.ledger.ledger_path)
         except CheckpointVerificationError as exc:
@@ -350,6 +350,10 @@ class Orchestrator:
             action="checkpoint_chain_verified",
             payload={**verification, "ts": now_iso()},
         )
+
+    def _verify_checkpoint_chain(self) -> None:
+        """Backward-compatible wrapper for tests patching legacy method name."""
+        self._verify_checkpoint_chain_stage()
 
     def _init_cryovant(self) -> None:
         if not cryovant.validate_environment():

@@ -15,7 +15,7 @@ from runtime.evolution.replay import ReplayEngine
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
 from runtime.evolution.replay_verifier import ReplayVerifier
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
-from runtime.evolution.checkpoint_verifier import verify_checkpoint_chain
+from runtime.evolution.checkpoint_verifier import CheckpointVerifier, CheckpointVerificationError, verify_checkpoint_chain
 from runtime import constitution
 from runtime.governance.foundation import RuntimeDeterminismProvider, require_replay_safe_provider
 
@@ -45,6 +45,7 @@ class EvolutionRuntime:
         self.baseline_id = ""
         self.baseline_hash = ""
         self.epoch_cumulative_entropy_bits = 0
+        self._continuity_verified_epoch_id = ""
 
     @property
     def fail_closed(self) -> bool:
@@ -193,8 +194,23 @@ class EvolutionRuntime:
         state = self.epoch_manager.rotate_epoch(reason)
         payload = state.to_dict()
         self.epoch_digest = self.ledger.get_epoch_digest(payload["epoch_id"])
+        self._continuity_verified_epoch_id = ""
         self._sync_from_epoch(payload)
         return payload
+
+    def _verify_epoch_checkpoint_continuity(self, epoch_id: str) -> Dict[str, Any]:
+        if self._continuity_verified_epoch_id == epoch_id:
+            return {
+                "ok": True,
+                "epoch_id": epoch_id,
+                "reason": "cached",
+            }
+        try:
+            continuity = CheckpointVerifier.verify_epoch_checkpoint_continuity(self.ledger, epoch_id)
+        except CheckpointVerificationError as exc:
+            raise RuntimeError(f"epoch_checkpoint_continuity_failed:{exc}") from exc
+        self._continuity_verified_epoch_id = epoch_id
+        return continuity
 
     def verify_epoch(self, epoch_id: str, expected: str | None = None) -> Dict[str, Any]:
         try:
@@ -271,6 +287,7 @@ class EvolutionRuntime:
             },
         )
         checkpoint = self.checkpoint_registry.create_checkpoint(epoch_id)
+        self._verify_epoch_checkpoint_continuity(epoch_id)
         checkpoint_verification = verify_checkpoint_chain(self.ledger, epoch_id)
         return {
             "epoch_id": epoch_id,
