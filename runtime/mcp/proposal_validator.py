@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
@@ -28,17 +27,56 @@ def _load_schema() -> Dict[str, Any]:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
-def _validate_schema(payload: Dict[str, Any], schema: Dict[str, Any]) -> None:
-    required = set(schema.get("required") or [])
-    missing = [field for field in required if field not in payload]
-    if missing:
-        raise ProposalValidationError(400, "schema_validation_failed", f"missing_required:{','.join(sorted(missing))}")
+def _matches_schema_type(value: Any, expected: str) -> bool:
+    if expected == "object":
+        return isinstance(value, dict)
+    if expected == "array":
+        return isinstance(value, list)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected == "boolean":
+        return isinstance(value, bool)
+    return True
 
-    if schema.get("additionalProperties") is False:
-        allowed = set((schema.get("properties") or {}).keys())
-        extras = sorted(set(payload.keys()) - allowed)
-        if extras:
-            raise ProposalValidationError(400, "schema_validation_failed", f"unexpected_fields:{','.join(extras)}")
+
+def _validate_schema_subset(payload: Any, schema: Dict[str, Any], path: str = "$") -> list[str]:
+    errors: list[str] = []
+    expected_type = schema.get("type")
+    if isinstance(expected_type, str) and not _matches_schema_type(payload, expected_type):
+        return [f"{path}:expected_{expected_type}"]
+
+    if isinstance(payload, dict):
+        required = schema.get("required") if isinstance(schema.get("required"), list) else []
+        for field in required:
+            if isinstance(field, str) and field not in payload:
+                errors.append(f"{path}.{field}:missing_required")
+
+        properties = schema.get("properties") if isinstance(schema.get("properties"), dict) else {}
+        for key, value in payload.items():
+            if key in properties and isinstance(properties[key], dict):
+                errors.extend(_validate_schema_subset(value, properties[key], f"{path}.{key}"))
+            elif schema.get("additionalProperties") is False:
+                errors.append(f"{path}.{key}:additional_property")
+
+    if isinstance(payload, list) and isinstance(schema.get("items"), dict):
+        for idx, item in enumerate(payload):
+            errors.extend(_validate_schema_subset(item, schema["items"], f"{path}[{idx}]"))
+
+    min_length = schema.get("minLength")
+    if isinstance(min_length, int) and isinstance(payload, str) and len(payload) < min_length:
+        errors.append(f"{path}:min_length")
+
+    return errors
+
+
+def _validate_schema(payload: Dict[str, Any], schema: Dict[str, Any]) -> None:
+    errors = _validate_schema_subset(payload, schema)
+    if errors:
+        raise ProposalValidationError(400, "schema_validation_failed", ";".join(errors))
 
 
 def _is_tier0_path(path: str) -> bool:
@@ -46,16 +84,6 @@ def _is_tier0_path(path: str) -> bool:
     if normalized in TIER0_EXACT_PATHS:
         return True
     return any(normalized.startswith(prefix) for prefix in TIER0_PATH_PREFIXES)
-
-
-def _contains_banned_eval(payload: Any) -> bool:
-    if isinstance(payload, dict):
-        return any(_contains_banned_eval(v) for v in payload.values())
-    if isinstance(payload, list):
-        return any(_contains_banned_eval(v) for v in payload)
-    if isinstance(payload, str):
-        return "eval" in payload
-    return False
 
 
 def validate_proposal(raw_payload: Dict[str, Any]) -> Tuple[MutationRequest, Dict[str, Any]]:
@@ -73,10 +101,6 @@ def validate_proposal(raw_payload: Dict[str, Any]) -> Tuple[MutationRequest, Dic
     for target in payload.get("targets") or []:
         if _is_tier0_path(str((target or {}).get("path") or "")) and not elevation_token:
             raise ProposalValidationError(403, "tier0_escalation_required", "human elevation_token required")
-
-    # pre-check for banned token before constitutional evaluation contract output
-    if _contains_banned_eval(payload.get("ops") or []) or _contains_banned_eval(payload.get("targets") or []):
-        raise ProposalValidationError(422, "pre_check_failed", "banned token: eval")
 
     request = MutationRequest.from_dict(payload)
 

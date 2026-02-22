@@ -25,6 +25,8 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 
 - Deterministic promotion simulation runner: `runtime/evolution/simulation_runner.py` with CI entrypoint `scripts/run_simulation_runner.py` (machine-readable canary verdicts; no mutation side effects).
 
+- MCP proposal writer runtime: `runtime/mcp/` exposes deterministic FastAPI endpoints (`/health`, `/tools/list`, `/mutation/propose`, `/mutation/analyze`, `/mutation/explain-rejection`, `/mutation/rank`), enforces proposal validation order (schema -> authority override -> Tier-0 escalation -> constitutional pre-check), and appends accepted proposals to a hash-linked JSONL queue compatible with lineage `_hash_entry` chaining.
+
 - Canonical governance event taxonomy and normalization live in `runtime/governance/event_taxonomy.py`; UI and analytics consumers should normalize mixed legacy/new event strings through this helper before classification.
 
 - Sandbox hardening guidance: `docs/sandbox/README.md`.

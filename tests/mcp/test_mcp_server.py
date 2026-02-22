@@ -59,7 +59,10 @@ def test_propose_contracts(tmp_path, monkeypatch):
     assert client.post("/mutation/propose", json=payload, headers=hdr).status_code == 403
 
     payload["targets"] = [{"agent_id": "a", "path": "app/foo.py", "target_type": "file", "ops": []}]
-    payload["ops"] = [{"op": "replace", "value": "eval('x')"}]
+    monkeypatch.setattr(
+        "runtime.mcp.proposal_validator.evaluate_mutation",
+        lambda *_args, **_kwargs: {"passed": False, "verdicts": [{"severity": "blocking", "ok": False, "rule": "x"}]},
+    )
     assert client.post("/mutation/propose", json=payload, headers=hdr).status_code == 422
 
 

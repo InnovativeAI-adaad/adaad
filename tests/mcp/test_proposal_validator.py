@@ -39,9 +39,13 @@ def test_tier0_requires_elevation():
     assert exc.value.code == "tier0_escalation_required"
 
 
-def test_eval_token_rejected():
+@mock.patch(
+    "runtime.mcp.proposal_validator.evaluate_mutation",
+    return_value={"passed": False, "verdicts": [{"severity": "blocking", "ok": False, "rule": "x"}]},
+)
+def test_blocking_constitution_verdict_rejected(_eval):
     with pytest.raises(ProposalValidationError) as exc:
-        validate_proposal(_payload(ops=[{"op": "patch", "value": "eval('x')"}]))
+        validate_proposal(_payload())
     assert exc.value.status_code == 422
     assert exc.value.code == "pre_check_failed"
 
