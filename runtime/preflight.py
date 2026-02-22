@@ -398,8 +398,18 @@ def _import_smoke_check(target: Path, source: Optional[str]) -> Dict[str, Any]:
             "missing_dependency": missing_dependencies,
             "optional_dependency": optional_dependencies,
         }
-    except Exception as exc:  # pragma: no cover - defensive guardrail
-        return {"ok": False, "reason": f"import_analysis_failed:{exc}"}
+    except (SyntaxError, ValueError, TypeError, OSError) as exc:  # pragma: no cover - defensive guardrail
+        return {
+            "ok": False,
+            "reason": "import_analysis_failed",
+            "reason_code": "import_analysis_failed",
+            "operation_class": "governance-critical",
+            "context": {
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+                "target": str(target),
+            },
+        }
 
 
 def _legacy_validate_mutation(request: MutationRequest) -> Dict[str, Any]:

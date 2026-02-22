@@ -7,8 +7,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List
+
+LOG = logging.getLogger(__name__)
 
 REQUIRED_DIRS = [
     Path("app"),
@@ -158,6 +161,15 @@ def run_gatekeeper() -> Dict[str, object]:
         )
     except Exception as exc:
         persistence_error = f"{type(exc).__name__}: {exc}"
+        LOG.error(
+            "gatekeeper persistence failed",
+            extra={
+                "reason_code": reason_code,
+                "operation_class": "governance-critical",
+                "path": str(ledger_hash_file),
+                "error_type": type(exc).__name__,
+            },
+        )
 
     reasons: List[str] = []
     if missing:
@@ -174,6 +186,7 @@ def run_gatekeeper() -> Dict[str, object]:
         "hash": digest,
         "sub_hashes": sub_hashes,
         "persistence_error": persistence_error,
+        "persistence_reason_code": persistence_reason_code,
         "reasons": reasons,
         "schema_version": SCHEMA_VERSION,
         "manifest_version": MANIFEST_VERSION,

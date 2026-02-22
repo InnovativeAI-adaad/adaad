@@ -18,6 +18,7 @@ Core invariant checks to enforce canonical tree and banned import policies.
 import json
 import os
 import re
+from json import JSONDecodeError
 from pathlib import Path
 from typing import List, Tuple
 
@@ -102,9 +103,20 @@ def verify_metrics_path() -> Tuple[bool, List[str]]:
     try:
         metrics_module.log(event_type="invariant_metrics_probe", payload={}, level="INFO", element_id=ELEMENT_ID)
         return True, []
-    except Exception as exc:  # pragma: no cover - defensive
-        failure = f"metrics_probe_failed:{exc}"
-        metrics.log(event_type="invariant_metrics_failed", payload={"error": str(exc)}, level="ERROR", element_id=ELEMENT_ID)
+    except (TypeError, ValueError, OSError) as exc:  # pragma: no cover - defensive
+        reason_code = "metrics_probe_failed"
+        failure = f"{reason_code}:{type(exc).__name__}"
+        metrics.log(
+            event_type="invariant_metrics_failed",
+            payload={
+                "reason_code": reason_code,
+                "operation_class": "telemetry-only",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            },
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
         return False, [failure]
 
 
@@ -129,9 +141,21 @@ def ensure_staging_dir() -> Tuple[bool, List[str]]:
     staging = ROOT_DIR / "app" / "agents" / "lineage" / "_staging"
     try:
         staging.mkdir(parents=True, exist_ok=True)
-    except Exception as exc:  # pragma: no cover - defensive
-        metrics.log(event_type="invariant_staging_failed", payload={"error": str(exc)}, level="ERROR", element_id=ELEMENT_ID)
-        return False, [f"staging_unavailable:{exc}"]
+    except OSError as exc:  # pragma: no cover - defensive
+        reason_code = "staging_unavailable"
+        metrics.log(
+            event_type="invariant_staging_failed",
+            payload={
+                "reason_code": reason_code,
+                "operation_class": "governance-critical",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+                "path": str(staging),
+            },
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
+        return False, [f"{reason_code}:{type(exc).__name__}"]
     metrics.log(event_type="invariant_staging_ok", payload={"path": str(staging)}, level="INFO", element_id=ELEMENT_ID)
     return True, []
 
@@ -143,9 +167,21 @@ def verify_capabilities_file() -> Tuple[bool, List[str]]:
     try:
         json.loads(capabilities_path.read_text(encoding="utf-8"))
         return True, []
-    except Exception as exc:  # pragma: no cover - defensive
-        metrics.log(event_type="invariant_capabilities_invalid", payload={"error": str(exc)}, level="ERROR", element_id=ELEMENT_ID)
-        return False, [f"capabilities_invalid:{exc}"]
+    except (OSError, JSONDecodeError, TypeError, ValueError) as exc:  # pragma: no cover - defensive
+        reason_code = "capabilities_invalid"
+        metrics.log(
+            event_type="invariant_capabilities_invalid",
+            payload={
+                "reason_code": reason_code,
+                "operation_class": "governance-critical",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+                "path": str(capabilities_path),
+            },
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
+        return False, [f"{reason_code}:{type(exc).__name__}"]
 
 
 def scan_absolute_paths() -> Tuple[bool, List[str]]:

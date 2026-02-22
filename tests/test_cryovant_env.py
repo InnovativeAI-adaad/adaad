@@ -14,6 +14,7 @@
 import os
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 import sys  # noqa: E402
@@ -32,6 +33,13 @@ class CryovantEnvironmentTest(unittest.TestCase):
         self.assertTrue(os.access(ledger_file.parent, os.W_OK))
         keys_dir = ROOT / "security" / "keys"
         self.assertTrue(keys_dir.exists())
+
+    def test_ledger_bootstrap_failure_is_terminal_fail_closed(self):
+        with patch("security.cryovant.journal.ensure_ledger", side_effect=OSError("disk-full")):
+            with self.assertRaises(RuntimeError) as exc:
+                cryovant.validate_environment()
+
+        self.assertEqual(str(exc.exception), "cryovant_bootstrap_failed:ledger_bootstrap_failed")
 
 
 if __name__ == "__main__":

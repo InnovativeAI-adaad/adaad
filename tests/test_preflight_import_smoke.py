@@ -104,6 +104,17 @@ def test_legacy_preflight_pipeline_preserves_syntax_reason(tmp_path: Path) -> No
     assert legacy["checks"]["targets"][str(target)]["ast_parse"]["reason"].startswith("syntax_error:")
 
 
+def test_import_smoke_check_fails_closed_with_stable_reason_code_on_parse_failure(monkeypatch) -> None:
+    monkeypatch.setattr(preflight.ast, "parse", lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("bad-ast")))
+    result = _import_smoke_check(Path("broken.py"), "import os")
+
+    assert result["ok"] is False
+    assert result["reason"] == "import_analysis_failed"
+    assert result["reason_code"] == "import_analysis_failed"
+    assert result["operation_class"] == "governance-critical"
+    assert result["context"]["error_type"] == "ValueError"
+
+
 
 def test_validate_mutation_proposal_schema_accepts_valid_payload() -> None:
     request = MutationRequest(

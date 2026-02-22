@@ -20,6 +20,7 @@ import hmac
 import json
 import os
 import time
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -71,7 +72,7 @@ def env_mode() -> str:
 def _keys_configured() -> bool:
     try:
         return KEYS_DIR.exists() and any(KEYS_DIR.iterdir())
-    except Exception:
+    except OSError:
         return False
 
 
@@ -276,7 +277,7 @@ def dev_signature_allowed(signature: str) -> bool:
 def _read_json(path: Path) -> Dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (FileNotFoundError, OSError, JSONDecodeError, TypeError):
         return {}
 
 
@@ -351,20 +352,30 @@ def _maybe_rotate_keys(app_agents_dir: Path, agent_count: int) -> bool:
             element_id=ELEMENT_ID,
         )
         return True
-    except Exception as exc:
+    except (OSError, TypeError, ValueError) as exc:
         journal.record_rotation_failure(
             action="key_rotation_failed",
             payload={
+                "reason_code": "rotation_metadata_persist_failed",
+                "operation_class": "governance-critical",
                 "interval_seconds": interval_seconds,
                 "last_rotation_ts": metadata.get("last_rotation_ts"),
                 "error": str(exc),
+                "error_type": type(exc).__name__,
                 "keys_dir": str(KEYS_DIR),
                 "agents_dir": str(app_agents_dir),
             },
         )
         metrics.log(
             event_type="key_rotation_failed",
-            payload={"error": str(exc), "keys_dir": str(KEYS_DIR), "agents_dir": str(app_agents_dir)},
+            payload={
+                "reason_code": "rotation_metadata_persist_failed",
+                "operation_class": "governance-critical",
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+                "keys_dir": str(KEYS_DIR),
+                "agents_dir": str(app_agents_dir),
+            },
             level="ERROR",
             element_id=ELEMENT_ID,
         )
@@ -429,7 +440,7 @@ def validate_environment() -> bool:
     KEYS_DIR.mkdir(parents=True, exist_ok=True)
     try:
         os.chmod(str(KEYS_DIR), 0o700)
-    except Exception:
+    except OSError:
         pass
 
     LEDGER_DIR.mkdir(parents=True, exist_ok=True)
@@ -437,10 +448,16 @@ def validate_environment() -> bool:
     try:
         probe.write_text("ok", encoding="utf-8")
         probe.unlink(missing_ok=True)
-    except Exception as exc:
+    except OSError as exc:
         metrics.log(
             event_type="cryovant_environment_invalid",
-            payload={"ledger_dir": str(LEDGER_DIR), "error": str(exc)},
+            payload={
+                "reason_code": "ledger_probe_write_failed",
+                "operation_class": "boot-critical",
+                "ledger_dir": str(LEDGER_DIR),
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            },
             level="ERROR",
             element_id=ELEMENT_ID,
         )
@@ -449,14 +466,20 @@ def validate_environment() -> bool:
     try:
         ledger_file = journal.ensure_ledger()
         journal.write_entry(agent_id="system", action="env_check", payload={"check": "environment_ok"})
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except (OSError, TypeError, ValueError) as exc:  # pragma: no cover - defensive logging
         metrics.log(
             event_type="cryovant_environment_error",
-            payload={"ledger_dir": str(LEDGER_DIR), "error": str(exc)},
+            payload={
+                "reason_code": "ledger_bootstrap_failed",
+                "operation_class": "boot-critical",
+                "ledger_dir": str(LEDGER_DIR),
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            },
             level="ERROR",
             element_id=ELEMENT_ID,
         )
-        return False
+        raise RuntimeError("cryovant_bootstrap_failed:ledger_bootstrap_failed") from exc
 
     metrics.log(
         event_type="cryovant_environment_valid",
