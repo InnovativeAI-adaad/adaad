@@ -55,7 +55,7 @@ DEFAULT_LAW_RULES: Dict[str, LawRule] = {
         LawRule(RULE_INVARIANT_STAGING, "1.0.0", "staging_directory_available"),
         LawRule(RULE_INVARIANT_CAPABILITIES, "1.0.0", "capabilities_json_valid"),
         LawRule(RULE_CONSTITUTION_VERSION, "1.0.0", "constitution_version_match"),
-        LawRule(RULE_KEY_ROTATION, "1.0.0", "key_rotation_freshness", severity="warning"),
+        LawRule(RULE_KEY_ROTATION, "1.0.0", "key_rotation_freshness", severity="blocking"),
         LawRule(RULE_LEDGER_INTEGRITY, "1.0.0", "ledger_integrity_chain"),
         LawRule(RULE_MUTATION_ENGINE, "1.0.0", "mutation_engine_health"),
         LawRule(RULE_WARM_POOL, "1.0.0", "warm_pool_ready"),
