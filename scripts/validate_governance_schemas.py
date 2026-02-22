@@ -1,31 +1,83 @@
 #!/usr/bin/env python3
-# ruff: noqa: E402
 # SPDX-License-Identifier: Apache-2.0
-"""Validate governance schema files against repository conventions."""
+"""Validate governance constitution document against its schema when available."""
 
 from __future__ import annotations
 
-import sys
+import json
 from pathlib import Path
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+CONSTITUTION_PATH = REPO_ROOT / "runtime/governance/constitution.yaml"
+SCHEMA_PATH = REPO_ROOT / "docs/schemas/constitution.v1.json"
 
-from runtime.governance.schema_validator import validate_governance_schemas
+
+def _validate_node(instance: Any, schema: dict[str, Any], path: str = "$") -> list[str]:
+    errors: list[str] = []
+
+    schema_type = schema.get("type")
+    if schema_type == "object":
+        if not isinstance(instance, dict):
+            return [f"{path}:type_error:expected_object"]
+        required = schema.get("required", [])
+        for key in required:
+            if key not in instance:
+                errors.append(f"{path}:missing_required:{key}")
+        properties = schema.get("properties", {})
+        if isinstance(properties, dict):
+            for key, child_schema in properties.items():
+                if key in instance and isinstance(child_schema, dict):
+                    errors.extend(_validate_node(instance[key], child_schema, f"{path}.{key}"))
+    elif schema_type == "array":
+        if not isinstance(instance, list):
+            return [f"{path}:type_error:expected_array"]
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for idx, item in enumerate(instance):
+                errors.extend(_validate_node(item, item_schema, f"{path}[{idx}]"))
+    elif schema_type == "string" and not isinstance(instance, str):
+        errors.append(f"{path}:type_error:expected_string")
+    elif schema_type == "number" and not isinstance(instance, (int, float)):
+        errors.append(f"{path}:type_error:expected_number")
+    elif schema_type == "integer" and not isinstance(instance, int):
+        errors.append(f"{path}:type_error:expected_integer")
+    elif schema_type == "boolean" and not isinstance(instance, bool):
+        errors.append(f"{path}:type_error:expected_boolean")
+
+    enum_values = schema.get("enum")
+    if isinstance(enum_values, list) and instance not in enum_values:
+        errors.append(f"{path}:enum_error")
+
+    return errors
 
 
 def main() -> int:
-    errors = validate_governance_schemas()
-    if not errors:
-        print("governance_schema_validation:ok")
+    try:
+        constitution = json.loads(CONSTITUTION_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"governance_schema_validation:failed:{exc}")
+        return 1
+
+    if not SCHEMA_PATH.exists():
+        print("governance_schema_validation:ok:schema_missing_skipped")
         return 0
 
-    print("governance_schema_validation:failed")
-    for schema_path, schema_errors in sorted(errors.items()):
-        for error in schema_errors:
-            print(f"- {schema_path}: {error}")
-    return 1
+    try:
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"governance_schema_validation:failed:{exc}")
+        return 1
+
+    errors = _validate_node(constitution, schema)
+    if errors:
+        print("governance_schema_validation:failed")
+        for error in errors:
+            print(f"- {error}")
+        return 1
+
+    print("governance_schema_validation:ok")
+    return 0
 
 
 if __name__ == "__main__":

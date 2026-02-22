@@ -63,6 +63,21 @@ _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
 _POLICY_DOCUMENT: Dict[str, Any] = {}
 
 
+def boot_sanity_check() -> dict[str, bool]:
+    """Run deterministic boot checks required before higher-risk governance rules."""
+    version = globals().get("CONSTITUTION_VERSION")
+    if not isinstance(version, str) or not version.strip():
+        raise RuntimeError("boot_sanity_failed:invalid_constitution_version")
+
+    policy_path = globals().get("POLICY_PATH")
+    if isinstance(policy_path, Path) and policy_path.exists():
+        # Read access check is deterministic and side-effect free.
+        if not os.access(policy_path, os.R_OK):
+            raise RuntimeError("boot_sanity_failed:policy_path_not_readable")
+
+    return {"ok": True}
+
+
 def _canonical_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
 
@@ -1815,6 +1830,7 @@ __all__ = [
     "evaluate_mutation",
     "determine_tier",
     "get_forced_tier",
+    "boot_sanity_check",
     "load_constitution_policy",
     "reload_constitution_policy",
     "Tier",
