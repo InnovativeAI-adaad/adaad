@@ -16,11 +16,18 @@ def test_checkpoint_registry_emits_chain(tmp_path):
     registry = CheckpointRegistry(ledger, provider=SeededDeterminismProvider("seed"), replay_mode="strict")
     cp1 = registry.create_checkpoint(epoch_id)
     cp2 = registry.create_checkpoint(epoch_id)
+    epoch_entries = ledger.read_epoch(epoch_id)
+    governance_events = [
+        entry for entry in epoch_entries if entry.get("type") == "CheckpointGovernanceEvent"
+    ]
 
     assert cp1["prev_checkpoint_hash"].startswith("sha256:")
     assert cp2["prev_checkpoint_hash"] == cp1["checkpoint_hash"]
     assert cp1["evidence_hash"].startswith("sha256:")
     assert cp1["sandbox_policy_hash"].startswith("sha256:")
+    assert len(governance_events) == 2
+    assert governance_events[0]["payload"]["event_type"] == "checkpoint_created"
+    assert governance_events[1]["payload"]["prior_checkpoint_event_hash"].startswith("sha256:")
 
     verification = verify_checkpoint_chain(ledger, epoch_id)
     assert verification["passed"]

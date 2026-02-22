@@ -16,6 +16,16 @@ from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.governance.foundation import ZERO_HASH, sha256_prefixed_digest
 
 
+def _normalize_hash_link(value: str) -> str:
+    raw = value.strip()
+    if not raw:
+        return ZERO_HASH
+    if raw.startswith("sha256:"):
+        return raw
+    return f"sha256:{raw}"
+
+
+
 @dataclass(frozen=True)
 class CheckpointVerificationError(RuntimeError):
     """Deterministic checkpoint verification error with stable code."""
@@ -85,24 +95,67 @@ class CheckpointVerifier:
     def verify_all_epochs(ledger_path: str | Path) -> Dict[str, Any]:
         return CheckpointVerifier.verify_all_checkpoints(ledger_path)
 
+    @staticmethod
+    def verify_checkpoint_chain_with_event(ledger: LineageLedgerV2, epoch_id: str) -> Dict[str, Any]:
+        checkpoints: List[Dict[str, Any]] = [
+            dict(entry.get("payload") or {})
+            for entry in ledger.read_epoch(epoch_id)
+            if entry.get("type") == "EpochCheckpointEvent"
+        ]
+        previous = ZERO_HASH
+        errors: List[str] = []
+        halt_reason_code = ""
+        halt_reason_detail = ""
+        for index, cp in enumerate(checkpoints):
+            prev = str(cp.get("prev_checkpoint_hash") or "")
+            if prev != previous:
+                errors.append(f"prev_checkpoint_mismatch:{index}")
+                if not halt_reason_code:
+                    halt_reason_code = "prev_checkpoint_mismatch"
+                    halt_reason_detail = f"epoch={epoch_id};index={index}"
+            expected_hash = sha256_prefixed_digest(CheckpointVerifier._checkpoint_material(cp))
+            if str(cp.get("checkpoint_hash") or "") != expected_hash:
+                errors.append(f"checkpoint_hash_mismatch:{index}")
+                if not halt_reason_code:
+                    halt_reason_code = "checkpoint_hash_mismatch"
+                    halt_reason_detail = f"epoch={epoch_id};index={index}"
+            previous = str(cp.get("checkpoint_hash") or previous)
+
+        chain_event_type = "checkpoint_chain_verified" if not errors else "checkpoint_chain_violated"
+        chain_event_payload = {
+            "schema_version": "1.0",
+            "event_type": chain_event_type,
+            "epoch_id": epoch_id,
+            "checkpoint_count": len(checkpoints),
+            "verified": not errors,
+            "halt_reason_code": halt_reason_code,
+            "halt_reason_detail": halt_reason_detail,
+            "last_verified_checkpoint_hash": previous,
+            "prior_checkpoint_chain_event_hash": ZERO_HASH,
+        }
+
+        for entry in ledger.read_epoch(epoch_id):
+            if entry.get("type") != "CheckpointChainGovernanceEvent":
+                continue
+            payload = dict(entry.get("payload") or {})
+            if str(payload.get("event_type") or "") not in {"checkpoint_chain_verified", "checkpoint_chain_violated"}:
+                continue
+            chain_event_payload["prior_checkpoint_chain_event_hash"] = _normalize_hash_link(str(entry.get("hash") or ""))
+
+        ledger.append_event("CheckpointChainGovernanceEvent", chain_event_payload)
+        return {
+            "epoch_id": epoch_id,
+            "count": len(checkpoints),
+            "passed": not errors,
+            "errors": errors,
+            "event_type": chain_event_type,
+            "halt_reason_code": halt_reason_code,
+            "halt_reason_detail": halt_reason_detail,
+        }
+
 
 def verify_checkpoint_chain(ledger: LineageLedgerV2, epoch_id: str) -> Dict[str, Any]:
-    checkpoints: List[Dict[str, Any]] = [
-        dict(entry.get("payload") or {})
-        for entry in ledger.read_epoch(epoch_id)
-        if entry.get("type") == "EpochCheckpointEvent"
-    ]
-    previous = ZERO_HASH
-    errors: List[str] = []
-    for index, cp in enumerate(checkpoints):
-        prev = str(cp.get("prev_checkpoint_hash") or "")
-        if prev != previous:
-            errors.append(f"prev_checkpoint_mismatch:{index}")
-        expected_hash = sha256_prefixed_digest(CheckpointVerifier._checkpoint_material(cp))
-        if str(cp.get("checkpoint_hash") or "") != expected_hash:
-            errors.append(f"checkpoint_hash_mismatch:{index}")
-        previous = str(cp.get("checkpoint_hash") or previous)
-    return {"epoch_id": epoch_id, "count": len(checkpoints), "passed": not errors, "errors": errors}
+    return CheckpointVerifier.verify_checkpoint_chain_with_event(ledger, epoch_id)
 
 
 __all__ = ["CheckpointVerifier", "CheckpointVerificationError", "verify_checkpoint_chain"]
