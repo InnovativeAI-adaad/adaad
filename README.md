@@ -84,14 +84,18 @@ Example dry-run output (illustrative):
 |---|---|
 | Recommended for | Governed audit workflows, replay verification, staged mutation review |
 | Not ready for | Unattended production autonomy |
-| Maturity | Experimental / pre-1.0 |
+| Maturity | Stable / v1.0 |
 | Recommended environment | Linux / WSL |
 | Replay strict | Production-ready |
 | Mutation execution | Staging-only |
 
-Mutation execution is limited to controlled environments. Production use should run in dry-run or strict replay modes unless explicitly authorized by policy.
+### Limitations
 
-**Practical readiness summary:** ADAAD is currently safe for governed audit/replay workflows and staged mutation review. It is not positioned yet for unattended production autonomy.
+- Mutation execution is limited to controlled environments.
+- Unattended production autonomy remains out of scope.
+- Production use should run in dry-run or strict replay modes unless explicitly authorized by policy.
+
+**Practical readiness summary:** ADAAD is stable for governed audit/replay workflows and staged mutation review. It is not positioned for unattended production autonomy.
 
 ### Validated guarantees vs roadmap
 
