@@ -108,6 +108,26 @@ class CryovantDevSignatureTest(unittest.TestCase):
 
         metrics_log.assert_not_called()
 
+    def test_verify_hmac_digest_signature_accepts_legacy_unprefixed_signature(self) -> None:
+        signature = cryovant.sign_hmac_digest(
+            key_id="k1",
+            signed_digest="sha256:" + ("a" * 64),
+            specific_env_prefix="CRYOVANT_TEST_KEY_",
+            generic_env_var="CRYOVANT_TEST_SIGNING_KEY",
+            fallback_namespace="cryovant-test",
+        )
+        legacy = signature.removeprefix("sha256:")
+        self.assertTrue(
+            cryovant.verify_hmac_digest_signature(
+                key_id="k1",
+                signed_digest="sha256:" + ("a" * 64),
+                signature=legacy,
+                specific_env_prefix="CRYOVANT_TEST_KEY_",
+                generic_env_var="CRYOVANT_TEST_SIGNING_KEY",
+                fallback_namespace="cryovant-test",
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,7 @@ Cryovant gatekeeper enforcing environment and lineage validation.
 """
 
 import hashlib
+import hmac
 import json
 import os
 import time
@@ -33,6 +34,25 @@ KEYS_DIR = SECURITY_ROOT / "keys"
 LEDGER_DIR = SECURITY_ROOT / "ledger"
 ROTATION_METADATA_PATH = KEYS_DIR / "rotation.json"
 DEFAULT_ROTATION_INTERVAL_SECONDS = 60 * 60 * 24 * 30
+
+_HMAC_SIGNATURE_PREFIX = "sha256:"
+_ARTIFACT_HMAC_CONFIG: Dict[str, Dict[str, str]] = {
+    "replay_proof": {
+        "specific_env_prefix": "ADAAD_REPLAY_PROOF_KEY_",
+        "generic_env_var": "ADAAD_REPLAY_PROOF_SIGNING_KEY",
+        "fallback_namespace": "adaad-replay-proof-dev-secret",
+    },
+    "policy_artifact": {
+        "specific_env_prefix": "ADAAD_POLICY_ARTIFACT_KEY_",
+        "generic_env_var": "ADAAD_POLICY_ARTIFACT_SIGNING_KEY",
+        "fallback_namespace": "adaad-policy-artifact-dev-secret",
+    },
+    "rollback_certificate": {
+        "specific_env_prefix": "CRYOVANT_ROLLBACK_SIGNING_KEY_",
+        "generic_env_var": "CRYOVANT_ROLLBACK_SIGNING_KEY",
+        "fallback_namespace": "cryovant-rollback-certificate",
+    },
+}
 
 
 def dev_mode() -> bool:
@@ -77,16 +97,28 @@ def sign_hmac_digest(
     specific_env_prefix: str,
     generic_env_var: str,
     fallback_namespace: str,
+    hmac_secret: str | None = None,
 ) -> str:
     """Build deterministic HMAC-style digest signature for sealed artifacts."""
 
-    secret = _resolve_hmac_secret(
+    secret = hmac_secret or _resolve_hmac_secret(
         key_id=key_id,
         specific_env_prefix=specific_env_prefix,
         generic_env_var=generic_env_var,
         fallback_namespace=fallback_namespace,
     )
-    return "sha256:" + hashlib.sha256(f"{secret}:{signed_digest}".encode("utf-8")).hexdigest()
+    return _HMAC_SIGNATURE_PREFIX + hashlib.sha256(f"{secret}:{signed_digest}".encode("utf-8")).hexdigest()
+
+
+def _canonical_signature(signature: str) -> str:
+    if not isinstance(signature, str):
+        return ""
+    candidate = signature.strip()
+    if not candidate:
+        return ""
+    if candidate.startswith(_HMAC_SIGNATURE_PREFIX):
+        return _HMAC_SIGNATURE_PREFIX + candidate[len(_HMAC_SIGNATURE_PREFIX) :].lower()
+    return _HMAC_SIGNATURE_PREFIX + candidate.lower()
 
 
 def verify_hmac_digest_signature(
@@ -97,6 +129,7 @@ def verify_hmac_digest_signature(
     specific_env_prefix: str,
     generic_env_var: str,
     fallback_namespace: str,
+    hmac_secret: str | None = None,
 ) -> bool:
     expected = sign_hmac_digest(
         key_id=key_id,
@@ -104,8 +137,40 @@ def verify_hmac_digest_signature(
         specific_env_prefix=specific_env_prefix,
         generic_env_var=generic_env_var,
         fallback_namespace=fallback_namespace,
+        hmac_secret=hmac_secret,
     )
-    return signature == expected
+    return hmac.compare_digest(_canonical_signature(signature), expected)
+
+
+def sign_artifact_hmac_digest(*, artifact_type: str, key_id: str, signed_digest: str, hmac_secret: str | None = None) -> str:
+    config = _ARTIFACT_HMAC_CONFIG.get(artifact_type)
+    if not config:
+        raise ValueError(f"unknown_artifact_type:{artifact_type}")
+    return sign_hmac_digest(
+        key_id=key_id,
+        signed_digest=signed_digest,
+        specific_env_prefix=config["specific_env_prefix"],
+        generic_env_var=config["generic_env_var"],
+        fallback_namespace=config["fallback_namespace"],
+        hmac_secret=hmac_secret,
+    )
+
+
+def verify_artifact_hmac_digest_signature(
+    *, artifact_type: str, key_id: str, signed_digest: str, signature: str, hmac_secret: str | None = None
+) -> bool:
+    config = _ARTIFACT_HMAC_CONFIG.get(artifact_type)
+    if not config:
+        return False
+    return verify_hmac_digest_signature(
+        key_id=key_id,
+        signed_digest=signed_digest,
+        signature=signature,
+        specific_env_prefix=config["specific_env_prefix"],
+        generic_env_var=config["generic_env_var"],
+        fallback_namespace=config["fallback_namespace"],
+        hmac_secret=hmac_secret,
+    )
 
 
 def verify_payload_signature(

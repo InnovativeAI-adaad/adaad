@@ -69,12 +69,10 @@ def issue_rollback_certificate(
         forward_certificate_digest=forward_certificate_digest,
     )
     digest = sha256_prefixed_digest(canonical_json(body))
-    signature = cryovant.sign_hmac_digest(
+    signature = cryovant.sign_artifact_hmac_digest(
+        artifact_type="rollback_certificate",
         key_id=ROLLBACK_CERTIFICATE_KEY_ID,
         signed_digest=digest,
-        specific_env_prefix="CRYOVANT_ROLLBACK_SIGNING_KEY_",
-        generic_env_var="CRYOVANT_ROLLBACK_SIGNING_KEY",
-        fallback_namespace="cryovant-rollback-certificate",
     )
     certificate = {
         **body,
@@ -143,13 +141,11 @@ def verify_rollback_certificate(certificate: Mapping[str, Any]) -> tuple[bool, l
     if not isinstance(signature, Mapping):
         errors.append("signature_invalid")
         return False, errors
-    signature_ok = cryovant.verify_hmac_digest_signature(
+    signature_ok = cryovant.verify_artifact_hmac_digest_signature(
+        artifact_type="rollback_certificate",
         key_id=str(signature.get("key_id") or ROLLBACK_CERTIFICATE_KEY_ID),
         signed_digest=str(signature.get("signed_digest") or ""),
         signature=str(signature.get("value") or ""),
-        specific_env_prefix="CRYOVANT_ROLLBACK_SIGNING_KEY_",
-        generic_env_var="CRYOVANT_ROLLBACK_SIGNING_KEY",
-        fallback_namespace="cryovant-rollback-certificate",
     )
     if str(signature.get("signed_digest") or "") != cert_digest:
         errors.append("signature_digest_link_mismatch")

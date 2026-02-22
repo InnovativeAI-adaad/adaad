@@ -7,6 +7,7 @@ import json
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.replay_attestation import ReplayProofBuilder, validate_replay_proof_schema, verify_replay_proof_bundle
 from runtime.governance.foundation import canonical_json, sha256_digest, sha256_prefixed_digest
+from security import cryovant
 
 
 def _seed_epoch(ledger: LineageLedgerV2, *, epoch_id: str) -> None:
@@ -87,7 +88,12 @@ def _attach_trust_metadata(bundle: dict, *, key_epoch_id: str = "epoch-1") -> di
     trusted["proof_digest"] = proof_digest
     key_id = trusted["signature_bundle"]["key_id"]
     secret = f"adaad-replay-proof-dev-secret:{key_id}"
-    signature = "sha256:" + sha256_digest(f"{secret}:{proof_digest}")
+    signature = cryovant.sign_artifact_hmac_digest(
+        artifact_type="replay_proof",
+        key_id=key_id,
+        signed_digest=proof_digest,
+        hmac_secret=secret,
+    )
     trusted["signature_bundle"]["signed_digest"] = proof_digest
     trusted["signature_bundle"]["signature"] = signature
     trusted["signatures"][0]["signed_digest"] = proof_digest
@@ -163,6 +169,20 @@ def test_replay_attestation_verify_uses_explicit_keyring(tmp_path) -> None:
     bundle = builder.build_bundle(epoch_id)
 
     assert not verify_replay_proof_bundle(bundle, keyring={"other-key": "secret"})["ok"]
+    assert verify_replay_proof_bundle(bundle, keyring={"proof-key": "adaad-replay-proof-dev-secret:proof-key"})["ok"]
+
+
+def test_replay_attestation_accepts_unprefixed_signature_from_keyring(tmp_path) -> None:
+    epoch_id = "epoch-keyring-unprefixed"
+    ledger = LineageLedgerV2(tmp_path / "lineage_keyring_unprefixed.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(ledger=ledger, proofs_dir=tmp_path / "proofs", key_id="proof-key")
+    bundle = builder.build_bundle(epoch_id)
+    signature_value = str(bundle["signatures"][0]["signature"] or "")
+    bundle["signatures"][0]["signature"] = signature_value.removeprefix("sha256:")
+    bundle["signature_bundle"]["signature"] = signature_value.removeprefix("sha256:")
+
     assert verify_replay_proof_bundle(bundle, keyring={"proof-key": "adaad-replay-proof-dev-secret:proof-key"})["ok"]
 
 

@@ -177,15 +177,14 @@ def _parse_envelope(artifact: dict[str, Any]) -> GovernancePolicyArtifactEnvelop
         previous_artifact_hash=previous_artifact_hash,
         effective_epoch=effective_epoch,
     )
-    digest = policy_artifact_digest(envelope)
-    signature_ok = cryovant.verify_payload_signature(
-        digest.encode("utf-8"),
-        envelope.signature,
-        signer.key_id,
-        specific_env_prefix="ADAAD_POLICY_ARTIFACT_KEY_",
-        generic_env_var="ADAAD_POLICY_ARTIFACT_SIGNING_KEY",
-        fallback_namespace="adaad-policy-artifact-dev-secret",
-    )
+    signature_ok = cryovant.verify_signature(envelope.signature) or cryovant.dev_signature_allowed(envelope.signature)
+    if not signature_ok and signer.algorithm == "hmac-sha256":
+        signature_ok = cryovant.verify_artifact_hmac_digest_signature(
+            artifact_type="policy_artifact",
+            key_id=signer.key_id,
+            signed_digest=policy_artifact_digest(envelope),
+            signature=envelope.signature,
+        )
     if not signature_ok:
         raise GovernancePolicyError("policy signature verification failed (fail-closed)")
     return envelope

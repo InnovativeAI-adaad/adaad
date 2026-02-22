@@ -196,12 +196,10 @@ class ReplayProofBuilder:
             "key_id": self.key_id,
             "algorithm": self.algorithm,
             "signed_digest": signed_digest,
-            "signature": cryovant.sign_hmac_digest(
+            "signature": cryovant.sign_artifact_hmac_digest(
+                artifact_type="replay_proof",
                 key_id=self.key_id,
                 signed_digest=signed_digest,
-                specific_env_prefix="ADAAD_REPLAY_PROOF_KEY_",
-                generic_env_var="ADAAD_REPLAY_PROOF_SIGNING_KEY",
-                fallback_namespace="adaad-replay-proof-dev-secret",
             ),
         }
         bundle = {**unsigned_bundle, "proof_digest": proof_digest, "signature_bundle": signature_bundle, "signatures": [signature_bundle]}
@@ -369,15 +367,19 @@ def verify_replay_proof_bundle(
             if not secret:
                 validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "unknown_key_id"})
                 continue
-            expected_signature = "sha256:" + sha256_digest(f"{secret}:{signed_digest}")
+            matches = cryovant.verify_artifact_hmac_digest_signature(
+                artifact_type="replay_proof",
+                key_id=key_id,
+                signed_digest=signed_digest,
+                signature=provided,
+                hmac_secret=secret,
+            )
         else:
-            signature_ok = cryovant.verify_payload_signature(
-                signed_digest.encode("utf-8"),
-                provided,
-                key_id,
-                specific_env_prefix="ADAAD_REPLAY_PROOF_KEY_",
-                generic_env_var="ADAAD_REPLAY_PROOF_SIGNING_KEY",
-                fallback_namespace="adaad-replay-proof-dev-secret",
+            matches = cryovant.verify_artifact_hmac_digest_signature(
+                artifact_type="replay_proof",
+                key_id=key_id,
+                signed_digest=signed_digest,
+                signature=provided,
             )
             validation.append(
                 {
@@ -390,10 +392,10 @@ def verify_replay_proof_bundle(
             continue
         validation.append(
             {
-                "ok": provided == expected_signature,
+                "ok": matches,
                 "key_id": key_id,
                 "algorithm": algorithm,
-                "error": "" if provided == expected_signature else "signature_mismatch",
+                "error": "" if matches else "signature_mismatch",
             }
         )
 
