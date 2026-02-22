@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/checkpoint_chain_event.v1.json",
+  "title": "Checkpoint Chain Events v1",
+  "type": "object",
+  "oneOf": [
+    {
+      "additionalProperties": false,
+      "required": ["chain_depth", "latest_checkpoint_id", "latest_manifest_hash", "timestamp"],
+      "properties": {
+        "chain_depth": {"type": "integer", "minimum": 0},
+        "latest_checkpoint_id": {"type": "string", "minLength": 1},
+        "latest_manifest_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "timestamp": {"type": "string", "format": "date-time"}
+      }
+    },
+    {
+      "additionalProperties": false,
+      "required": ["checkpoint_id", "expected_hash", "actual_hash", "halt_reason", "timestamp"],
+      "properties": {
+        "checkpoint_id": {"type": "string", "minLength": 1},
+        "expected_hash": {"type": "string", "minLength": 1},
+        "actual_hash": {"type": "string", "minLength": 1},
+        "halt_reason": {"type": "string", "enum": ["hash_mismatch", "chain_gap", "missing_genesis"]},
+        "timestamp": {"type": "string", "format": "date-time"}
+      }
+    }
+  ]
+}

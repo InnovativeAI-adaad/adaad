@@ -40,3 +40,8 @@ This policy governs JSON schemas under `schemas/` that define governance artifac
 - Releases are now gated by `.github/workflows/governance_strict_release_gate.yml` for governance/public-readiness tag flows.
 - Migration impact: release candidates must pass determinism lint, entropy discipline checks, governance strict-mode validation (including rule activation assertions), strict replay validation, and constitution fingerprint stability checks before gate completion.
 - Operational expectation: any non-success state in a required strict-release job is release-blocking until resolved; there is no permissive skip path for these checks.
+
+## Checkpoint chain event schemas
+- `schemas/checkpoint_event.v1.json` defines `checkpoint_created` payload shape.
+- `schemas/checkpoint_chain_event.v1.json` defines `checkpoint_chain_verified` and `checkpoint_chain_violated` payload shapes.
+- Versioning: both are initial v1 artifacts for PR-3 hardening and follow draft-2020-12 + canonical `$id` policy.

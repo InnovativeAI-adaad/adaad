@@ -13,7 +13,7 @@ from typing import Any, Dict, List
 
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.lineage_v2 import LineageLedgerV2
-from runtime.governance.foundation import ZERO_HASH, sha256_prefixed_digest
+from runtime.governance.foundation import ZERO_HASH, RuntimeDeterminismProvider, default_provider, sha256_prefixed_digest
 
 
 @dataclass(frozen=True)
@@ -82,6 +82,59 @@ class CheckpointVerifier:
         }
 
     @staticmethod
+    def verify_chain(ledger: LineageLedgerV2, *, provider: RuntimeDeterminismProvider | None = None) -> Dict[str, Any]:
+        provider = provider or default_provider()
+        checkpoint_entries = [entry for entry in ledger.read_all() if entry.get("type") == "checkpoint_created"]
+        previous_hash = ZERO_HASH
+        for entry in checkpoint_entries:
+            payload = dict(entry.get("payload") or {})
+            checkpoint_id = str(payload.get("checkpoint_id") or "")
+            actual_prev = str(payload.get("previous_checkpoint_hash") or ZERO_HASH)
+            if actual_prev != previous_hash:
+                ledger.append_event(
+                    "checkpoint_chain_violated",
+                    {
+                        "checkpoint_id": checkpoint_id,
+                        "expected_hash": previous_hash,
+                        "actual_hash": actual_prev,
+                        "halt_reason": "missing_genesis" if previous_hash == ZERO_HASH else "chain_gap",
+                        "timestamp": provider.iso_now(),
+                    },
+                )
+                raise CheckpointVerificationError("checkpoint_chain_violated", f"checkpoint_id={checkpoint_id}")
+
+            expected_id_material = {"epoch_id": payload.get("epoch_id"), "manifest_hash": payload.get("manifest_hash")}
+            expected_id = f"chk_{sha256_prefixed_digest(expected_id_material).split(':', 1)[1][:16]}"
+            if checkpoint_id != expected_id:
+                ledger.append_event(
+                    "checkpoint_chain_violated",
+                    {
+                        "checkpoint_id": checkpoint_id,
+                        "expected_hash": expected_id,
+                        "actual_hash": checkpoint_id,
+                        "halt_reason": "hash_mismatch",
+                        "timestamp": provider.iso_now(),
+                    },
+                )
+                raise CheckpointVerificationError("checkpoint_chain_violated", f"checkpoint_id={checkpoint_id}")
+
+            entry_hash = str(entry.get("hash") or "")
+            previous_hash = f"sha256:{entry_hash}" if entry_hash else previous_hash
+
+        if checkpoint_entries:
+            latest_payload = dict(checkpoint_entries[-1].get("payload") or {})
+            ledger.append_event(
+                "checkpoint_chain_verified",
+                {
+                    "chain_depth": len(checkpoint_entries),
+                    "latest_checkpoint_id": latest_payload.get("checkpoint_id", ""),
+                    "latest_manifest_hash": latest_payload.get("manifest_hash", ""),
+                    "timestamp": provider.iso_now(),
+                },
+            )
+        return {"verified": True, "chain_depth": len(checkpoint_entries)}
+
+    @staticmethod
     def verify_all_epochs(ledger_path: str | Path) -> Dict[str, Any]:
         return CheckpointVerifier.verify_all_checkpoints(ledger_path)
 
@@ -105,4 +158,68 @@ def verify_checkpoint_chain(ledger: LineageLedgerV2, epoch_id: str) -> Dict[str,
     return {"epoch_id": epoch_id, "count": len(checkpoints), "passed": not errors, "errors": errors}
 
 
-__all__ = ["CheckpointVerifier", "CheckpointVerificationError", "verify_checkpoint_chain"]
+def verify_epoch_checkpoint_continuity(
+    ledger: LineageLedgerV2,
+    *,
+    current_epoch_id: str,
+    provider: RuntimeDeterminismProvider | None = None,
+) -> Dict[str, Any]:
+    provider = provider or default_provider()
+    epoch_ids = ledger.list_epoch_ids()
+    if current_epoch_id not in epoch_ids:
+        return {"verified": True, "reason": "epoch_untracked"}
+    idx = epoch_ids.index(current_epoch_id)
+    if idx == 0:
+        return {"verified": True, "reason": "genesis_epoch"}
+
+    prior_epoch_id = epoch_ids[idx - 1]
+    prior_checkpoints = [
+        dict(entry.get("payload") or {})
+        for entry in ledger.read_epoch(prior_epoch_id)
+        if entry.get("type") == "EpochCheckpointEvent"
+    ]
+    if not prior_checkpoints:
+        ledger.append_event(
+            "epoch_checkpoint_continuity_failed",
+            {
+                "prior_epoch_id": prior_epoch_id,
+                "new_epoch_id": current_epoch_id,
+                "halt_reason": "missing_terminal_checkpoint",
+                "timestamp": provider.iso_now(),
+            },
+        )
+        raise CheckpointVerificationError("epoch_checkpoint_continuity_failed", f"prior_epoch={prior_epoch_id}")
+
+    prior_terminal = prior_checkpoints[-1]
+    verification = verify_checkpoint_chain(ledger, prior_epoch_id)
+    if not verification.get("passed", False):
+        ledger.append_event(
+            "epoch_checkpoint_continuity_failed",
+            {
+                "prior_epoch_id": prior_epoch_id,
+                "prior_terminal_checkpoint_id": prior_terminal.get("checkpoint_id", ""),
+                "new_epoch_id": current_epoch_id,
+                "halt_reason": "hash_mismatch",
+                "timestamp": provider.iso_now(),
+            },
+        )
+        raise CheckpointVerificationError("epoch_checkpoint_continuity_failed", f"prior_epoch={prior_epoch_id}")
+
+    ledger.append_event(
+        "epoch_checkpoint_continuity_verified",
+        {
+            "prior_epoch_id": prior_epoch_id,
+            "prior_terminal_checkpoint_id": prior_terminal.get("checkpoint_id", ""),
+            "new_epoch_id": current_epoch_id,
+            "timestamp": provider.iso_now(),
+        },
+    )
+    return {"verified": True, "prior_epoch_id": prior_epoch_id}
+
+
+__all__ = [
+    "CheckpointVerifier",
+    "CheckpointVerificationError",
+    "verify_checkpoint_chain",
+    "verify_epoch_checkpoint_continuity",
+]

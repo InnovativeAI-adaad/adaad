@@ -67,6 +67,16 @@ class CheckpointRegistry:
                 latest = candidate
         return latest
 
+    def _latest_checkpoint_event_hash(self) -> str:
+        latest = ZERO_HASH
+        for entry in self.ledger.read_all():
+            if safe_get(entry, "type", default="") != "checkpoint_created":
+                continue
+            event_hash = str(safe_get(entry, "hash", default=""))
+            if event_hash:
+                latest = f"sha256:{event_hash}"
+        return latest
+
     def create_checkpoint(self, epoch_id: str) -> Dict[str, Any]:
         require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
         epoch_events = self.ledger.read_epoch(epoch_id)
@@ -97,7 +107,8 @@ class CheckpointRegistry:
             "prev_checkpoint_hash": prev_checkpoint_hash,
         }
         checkpoint_hash = sha256_prefixed_digest(checkpoint_material)
-        checkpoint_id = f"chk_{checkpoint_hash.split(':', 1)[1][:16]}"
+        checkpoint_id_material = {"epoch_id": epoch_id, "manifest_hash": checkpoint_hash}
+        checkpoint_id = f"chk_{sha256_prefixed_digest(checkpoint_id_material).split(':', 1)[1][:16]}"
         event = EpochCheckpointEvent(
             epoch_id=epoch_id,
             checkpoint_id=checkpoint_id,
@@ -116,6 +127,17 @@ class CheckpointRegistry:
         )
         payload = event.to_payload()
         self.ledger.append_event("EpochCheckpointEvent", payload)
+        self.ledger.append_event(
+            "checkpoint_created",
+            {
+                "checkpoint_id": checkpoint_id,
+                "epoch_id": epoch_id,
+                "manifest_hash": checkpoint_hash,
+                "previous_checkpoint_hash": self._latest_checkpoint_event_hash(),
+                "snapshot_path": f"checkpoints/{checkpoint_id}",
+                "timestamp": self.provider.iso_now(),
+            },
+        )
         return payload
 
     def list_checkpoints(self) -> Dict[str, Any]:

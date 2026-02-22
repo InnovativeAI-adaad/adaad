@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/checkpoint_event.v1.json",
+  "title": "Checkpoint Created Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "checkpoint_id",
+    "epoch_id",
+    "manifest_hash",
+    "previous_checkpoint_hash",
+    "snapshot_path",
+    "timestamp"
+  ],
+  "properties": {
+    "checkpoint_id": {"type": "string", "minLength": 1},
+    "epoch_id": {"type": "string", "minLength": 1},
+    "manifest_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "previous_checkpoint_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "snapshot_path": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "format": "date-time"}
+  }
+}

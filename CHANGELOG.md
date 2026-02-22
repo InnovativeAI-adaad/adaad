@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Changed
+- PR-3 hardening: checkpoint chain now emits `checkpoint_created`/`checkpoint_chain_verified`/`checkpoint_chain_violated` events, boot enforces chain verification after Cryovant, and epoch-boundary continuity checks fail closed.
 - Hardened replay-mode provider synchronization so `EvolutionRuntime.set_replay_mode()` aligns the epoch manager provider with the governor provider before strict replay checks.
 - Improved deterministic shared-epoch concurrency behavior in governor validation ordering for strict replay lanes.
 - Mutation executor now preserves backwards compatibility with legacy `_run_tests` monkeypatches that do not accept keyword args.

@@ -142,7 +142,7 @@ Expected status in this repository branch: all tests passing (with one known col
 |---|---|---|
 | PR-1 | Complete | Scoring foundation + deterministic scoring/ledger substrate validated in-tree. |
 | PR-2 | Complete | Constitutional rule engine semantics (enabled gating, tier overrides, deterministic evaluation) validated in-tree. |
-| PR-3 | Complete | Checkpoint + entropy policy enforcement paths are implemented and tested in-tree. |
+| PR-3 | Complete | Checkpoint + entropy policy enforcement, checkpoint-created chain events, boot-stage chain verification, and epoch continuity checks are implemented and tested in-tree. |
 | PR-4 | Complete | Lifecycle/promotion contract wiring is implemented with deterministic event/ledger behavior. |
 | PR-5 | Complete baseline | Deterministic sandbox policy/enforcement baseline is validated; deeper hardening remains roadmap. |
 | PR-6 | Implemented baseline | Federation coordination/protocol baseline is implemented in-tree; broader distributed hardening remains roadmap. |
