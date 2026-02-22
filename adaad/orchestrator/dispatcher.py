@@ -35,8 +35,11 @@ def _latency_budget_meta(*, route: str, latency_ms: float) -> dict[str, Any]:
                     payload={"route": route, "latency_ms": round(latency_ms, 3), "target_ms": MAX_LATENCY_MS},
                     level="WARNING",
                 )
-            except Exception:
-                pass
+            except Exception as exc:
+                _LOGGER.warning(
+                    "dispatcher runtime metrics write failed",
+                    extra={"route": route, "latency_ms": round(latency_ms, 3), "exception": str(exc)},
+                )
     return meta
 
 

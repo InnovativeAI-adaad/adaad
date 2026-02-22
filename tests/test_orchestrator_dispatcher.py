@@ -61,3 +61,29 @@ def test_dispatcher_class_error_isolation_and_latency_watchdog() -> None:
     assert response["metadata"]["route"] == "slow"
     assert response["metadata"]["within_target"] is False
     assert response["metadata"]["warning"] == "latency_budget_exceeded"
+
+
+def test_dispatcher_class_latency_metrics_failure_is_non_fatal(monkeypatch, caplog) -> None:
+    class _FailingMetrics:
+        @staticmethod
+        def log(**_kwargs):
+            raise RuntimeError("sink unavailable")
+
+    monkeypatch.setattr("adaad.orchestrator.dispatcher.runtime_metrics", _FailingMetrics)
+
+    def slow_handler(_payload):
+        time.sleep(0.055)
+        return {"ok": True}
+
+    dispatcher = Dispatcher(HandlerRegistry.preload({"slow": slow_handler}))
+
+    with caplog.at_level("WARNING", logger="adaad.dispatcher"):
+        response = dispatcher.dispatch("slow", None)
+
+    assert response["ok"] is True
+    assert response["metadata"]["warning"] == "latency_budget_exceeded"
+    assert any(record.message == "dispatcher runtime metrics write failed" for record in caplog.records)
+    failure_record = next(record for record in caplog.records if record.message == "dispatcher runtime metrics write failed")
+    assert failure_record.route == "slow"
+    assert failure_record.latency_ms >= 50
+    assert "sink unavailable" in failure_record.exception
