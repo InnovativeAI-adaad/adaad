@@ -11,10 +11,17 @@ from typing import Any, Dict
 
 from runtime import ROOT_DIR
 from runtime.evolution.baseline import BaselineStore, create_baseline
+from runtime.evolution.checkpoint_verifier import CheckpointVerifier
 from runtime.evolution.entropy_discipline import deterministic_context
 from runtime.founders_law import epoch_law_metadata
 from runtime.governance.deterministic_filesystem import read_file_deterministic
-from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
+from runtime.governance.foundation import (
+    ZERO_HASH,
+    RuntimeDeterminismProvider,
+    default_provider,
+    require_replay_safe_provider,
+    sha256_prefixed_digest,
+)
 from runtime.governance.founders_law_v2 import LawManifest
 from runtime.governance.law_evolution_certificate import (
     LawEvolutionCertificate,
@@ -159,13 +166,78 @@ class EpochManager:
         if transition_errors:
             raise ValueError("invalid law transition: " + "; ".join(transition_errors))
 
+        continuity = self._verify_terminal_checkpoint_continuity(current.epoch_id)
+        if not continuity["ok"]:
+            self.ledger.append_event(
+                "epoch_checkpoint_continuity_failed",
+                {
+                    "epoch_id": current.epoch_id,
+                    "reason": continuity["reason"],
+                    "details": continuity,
+                },
+            )
+            raise RuntimeError(f"epoch_checkpoint_continuity_failed:{continuity['reason']}")
+
+        self.ledger.append_event(
+            "epoch_checkpoint_continuity_verified",
+            {
+                "epoch_id": current.epoch_id,
+                "terminal_checkpoint_hash": continuity["terminal_checkpoint_hash"],
+            },
+        )
+
         self._force_end = False
         self._state = self.start_new_epoch(
-            {"reason": reason},
+            {
+                "reason": reason,
+                "prior_epoch_id": current.epoch_id,
+                "prior_terminal_checkpoint_hash": continuity["terminal_checkpoint_hash"],
+            },
             law_manifest=new_law_manifest,
             law_certificate=law_certificate,
         )
         return self._state
+
+    def _verify_terminal_checkpoint_continuity(self, epoch_id: str) -> Dict[str, Any]:
+        checkpoints = [
+            dict(entry.get("payload") or {})
+            for entry in self.ledger.read_epoch(epoch_id)
+            if entry.get("type") == "EpochCheckpointEvent"
+        ]
+        hashed = [checkpoint for checkpoint in checkpoints if str(checkpoint.get("checkpoint_hash") or "")]
+        if not hashed:
+            return {"ok": False, "reason": "prior_checkpoint_missing", "epoch_id": epoch_id}
+
+        previous_hash = ZERO_HASH
+        for index, checkpoint in enumerate(hashed):
+            prev_checkpoint_hash = str(checkpoint.get("prev_checkpoint_hash") or "")
+            if prev_checkpoint_hash != previous_hash:
+                return {
+                    "ok": False,
+                    "reason": f"checkpoint_prev_mismatch:{index}",
+                    "epoch_id": epoch_id,
+                    "expected_prev_checkpoint_hash": previous_hash,
+                    "actual_prev_checkpoint_hash": prev_checkpoint_hash,
+                }
+            expected_hash = sha256_prefixed_digest(CheckpointVerifier._checkpoint_material(checkpoint))
+            checkpoint_hash = str(checkpoint.get("checkpoint_hash") or "")
+            if checkpoint_hash != expected_hash:
+                return {
+                    "ok": False,
+                    "reason": f"checkpoint_hash_mismatch:{index}",
+                    "epoch_id": epoch_id,
+                    "checkpoint_hash": checkpoint_hash,
+                    "expected_checkpoint_hash": expected_hash,
+                }
+            previous_hash = checkpoint_hash
+
+        terminal = hashed[-1]
+        return {
+            "ok": True,
+            "epoch_id": epoch_id,
+            "terminal_checkpoint_hash": str(terminal.get("checkpoint_hash") or ""),
+            "checkpoint_count": len(hashed),
+        }
 
     def start_new_epoch(
         self,
