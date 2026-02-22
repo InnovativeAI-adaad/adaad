@@ -31,11 +31,14 @@ from app.agents.mutation_request import MutationRequest
 from app.beast_mode_loop import BeastModeLoop
 from app.dream_mode import DreamMode
 from app.mutation_executor import MutationExecutor
+from app.orchestration import MutationOrchestrationService
 from runtime.evolution import EvolutionRuntime
 from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, CheckpointVerifier
 from runtime.evolution.replay_attestation import ReplayProofBuilder
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
+from runtime.evolution.replay_service import ReplayVerificationService
 from runtime.evolution.lineage_v2 import LineageIntegrityError
+from runtime.boot import BootPreflightService
 from runtime.recovery.ledger_guardian import AutoRecoveryHook, SnapshotManager
 from runtime.recovery.tier_manager import RecoveryPolicy, RecoveryTierLevel, TierManager
 from runtime.platform.android_monitor import AndroidMonitor
@@ -54,7 +57,6 @@ from runtime.founders_law import (
     RULE_WARM_POOL,
     enforce_law,
 )
-from runtime.invariants import verify_all
 from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.constitution import (
     CONSTITUTION_VERSION,
@@ -65,13 +67,11 @@ from runtime.constitution import (
 )
 from runtime.fitness_v2 import score_mutation_enhanced
 from runtime.governance.foundation import default_provider
-from runtime.preflight import validate_boot_runtime_profile
 from runtime.timeutils import now_iso
 from runtime.warm_pool import WarmPool
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
 from security import cryovant
-from security.gatekeeper_protocol import run_gatekeeper
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
 from ui.aponi_dashboard import AponiDashboard
@@ -135,6 +135,9 @@ class Orchestrator:
         self.storage_manager = StorageManager(APP_ROOT.parent)
         self.executor = MutationExecutor(self.agents_root, evolution_runtime=self.evolution_runtime)
         self.mutation_engine = MutationEngine(metrics.METRICS_PATH)
+        self.boot_preflight = BootPreflightService()
+        self.replay_service = ReplayVerificationService(manifests_dir=APP_ROOT.parent / "security" / "replay_manifests")
+        self.mutation_orchestrator = MutationOrchestrationService()
         self.dry_run = dry_run
         self.verbose = verbose
         self.replay_mode = normalize_replay_mode(replay_mode)
@@ -177,14 +180,14 @@ class Orchestrator:
             self._v("Warning: dry-run + strict replay may not reflect production execution semantics.")
         self._v("Starting governance spine initialization")
         metrics.log(event_type="orchestrator_start", payload={}, level="INFO")
-        gate = run_gatekeeper()
-        if not gate.get("ok"):
-            self._fail(f"gatekeeper_failed:{','.join(gate.get('missing', []))}")
+        gate = self.boot_preflight.validate_gatekeeper()
+        if not gate.ok:
+            self._fail(gate.reason)
         self._v("Gatekeeper preflight passed")
-        boot_profile = validate_boot_runtime_profile(replay_mode=self.replay_mode.value)
-        if not boot_profile.get("ok"):
-            self._fail(f"boot_runtime_profile_failed:{boot_profile.get('reason', 'unknown')}")
-        self.state["runtime_profile"] = boot_profile.get("checks", {})
+        boot_profile = self.boot_preflight.validate_runtime_profile(replay_mode=self.replay_mode.value)
+        if not boot_profile.ok:
+            self._fail(boot_profile.reason)
+        self.state["runtime_profile"] = boot_profile.payload.get("checks", {})
         bootstrap_tool_registry()
         self._register_elements()
         self._init_runtime()
@@ -212,15 +215,20 @@ class Orchestrator:
         self._v(f"Replay decision: {self.state.get('replay_decision')}")
         self._v(f"Fail-closed state: {self.evolution_runtime.fail_closed}")
         self._v(f"Replay aggregate score: {self.state.get('replay_score')}")
-        if self.state.get("mutation_enabled"):
-            if self.evolution_runtime.fail_closed:
-                self.state["replay_divergence"] = True
-                journal.write_entry(agent_id="system", action="mutation_blocked_fail_closed", payload={"epoch_id": self.evolution_runtime.current_epoch_id, "ts": now_iso()})
-            elif self._governance_gate():
-                if self.exit_after_boot:
-                    self.state["mutation_cycle_skipped"] = "exit_after_boot"
-                else:
-                    self._run_mutation_cycle()
+        governance_passed = self._governance_gate() if self.state.get("mutation_enabled") and not self.evolution_runtime.fail_closed else True
+        transition = self.mutation_orchestrator.choose_transition(
+            mutation_enabled=bool(self.state.get("mutation_enabled")),
+            fail_closed=self.evolution_runtime.fail_closed,
+            governance_gate_passed=governance_passed,
+            exit_after_boot=self.exit_after_boot,
+        )
+        if transition.reason == "mutation_blocked_fail_closed":
+            self.state["replay_divergence"] = True
+            journal.write_entry(agent_id="system", action="mutation_blocked_fail_closed", payload={"epoch_id": self.evolution_runtime.current_epoch_id, "ts": now_iso()})
+        if "mutation_cycle_skipped" in transition.payload:
+            self.state["mutation_cycle_skipped"] = transition.payload["mutation_cycle_skipped"]
+        if transition.payload.get("run_cycle"):
+            self._run_mutation_cycle()
         self._v(f"Mutation cycle status: {'enabled' if self.state.get('mutation_enabled') else 'disabled'}")
         self._register_capabilities()
         self._v("Capability registration complete")
@@ -237,78 +245,41 @@ class Orchestrator:
 
     def _run_replay_preflight(self, *, verify_only: bool = False) -> Dict[str, Any]:
         mode = self.replay_mode
-        preflight = self.evolution_runtime.replay_preflight(mode, epoch_id=self.replay_epoch or None)
-        has_divergence = bool(preflight.get("has_divergence"))
+        envelope, preflight = self.replay_service.run_preflight(
+            evolution_runtime=self.evolution_runtime,
+            replay_mode=mode,
+            replay_epoch=self.replay_epoch,
+            verify_only=verify_only,
+        )
+        outcome = envelope.payload
+        has_divergence = bool(outcome.get("divergence"))
         self.state["replay_mode"] = mode.value
         self.state["replay_target"] = preflight.get("verify_target")
         self.state["replay_decision"] = preflight.get("decision")
         self.state["replay_results"] = preflight.get("results", [])
         self.state["replay_divergence"] = has_divergence
         self.state["status"] = "replay_warning" if has_divergence else "replay_verified"
-        replay_score = self._aggregate_replay_score(preflight.get("results", []))
-        self.state["replay_score"] = replay_score
-        outcome = {
-            "mode": mode.value,
-            "verify_only": verify_only,
-            "ok": not has_divergence,
-            "decision": preflight.get("decision"),
-            "target": preflight.get("verify_target"),
-            "divergence": has_divergence,
-            "results": preflight.get("results", []),
-            "replay_score": replay_score,
-            "ts": now_iso(),
-        }
-        journal.write_entry(agent_id="system", action="replay_verified", payload=outcome)
-        try:
-            manifest_path = self.write_replay_manifest(outcome)
-            self._v(f"Replay manifest written: {manifest_path}")
-        except Exception as exc:
-            metrics.log(
-                event_type="replay_manifest_write_failed",
-                payload={"error": str(exc), "mode": outcome["mode"], "target": outcome.get("target")},
-                level="WARN",
-            )
-        if has_divergence and mode.fail_closed:
-            self._fail("replay_divergence")
+        self.state["replay_score"] = outcome.get("replay_score", 1.0)
+        if envelope.evidence_refs:
+            self._v(f"Replay manifest written: {envelope.evidence_refs[0]}")
+        if envelope.status == "error":
+            self._fail(envelope.reason)
         self._v("Replay Summary:")
         self._v(f"  Mode: {mode.value}")
         self._v(f"  Target: {preflight.get('verify_target')}")
         self._v(f"  Divergence: {has_divergence}")
-        self._v(f"  Score: {replay_score}")
+        self._v(f"  Score: {self.state['replay_score']}")
         if verify_only:
             dump()
             return {"verify_only": True, **outcome}
         return {"verify_only": False, **outcome}
 
-    @staticmethod
-    def _aggregate_replay_score(results: list[Dict[str, Any]]) -> float:
-        if not results:
-            return 1.0
-        scores = [float(result.get("replay_score", 0.0)) for result in results]
-        return round(sum(scores) / len(scores), 4)
-
-
-    def write_replay_manifest(self, outcome: Dict[str, Any]) -> os.PathLike[str]:
-        manifests_dir = APP_ROOT.parent / "security" / "replay_manifests"
-        manifests_dir.mkdir(parents=True, exist_ok=True)
-
-        def _sanitize_component(value: Any) -> str:
-            normalized = re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "unknown")).strip("-._")
-            return normalized or "unknown"
-
-        mode_component = _sanitize_component(outcome.get("mode"))
-        target_component = _sanitize_component(outcome.get("target"))
-        timestamp_component = _sanitize_component(outcome.get("ts"))
-        manifest_path = manifests_dir / f"{mode_component}__{target_component}__{timestamp_component}.json"
-        manifest_path.write_text(json.dumps(outcome, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        return manifest_path
-
     def verify_replay_only(self) -> None:
         self._v("Running replay verification-only mode")
         metrics.log(event_type="orchestrator_start", payload={"verify_only": True}, level="INFO")
-        gate = run_gatekeeper()
-        if not gate.get("ok"):
-            self._fail(f"gatekeeper_failed:{','.join(gate.get('missing', []))}")
+        gate = self.boot_preflight.validate_gatekeeper()
+        if not gate.ok:
+            self._fail(gate.reason)
         self._register_elements()
         self._init_runtime()
         self._init_cryovant()
@@ -330,9 +301,9 @@ class Orchestrator:
 
     def _init_runtime(self) -> None:
         self.warm_pool.start()
-        ok, failures = verify_all()
-        if not ok:
-            self._fail(f"invariants_failed:{','.join(failures)}")
+        invariants = self.boot_preflight.validate_invariants()
+        if not invariants.ok:
+            self._fail(invariants.reason)
 
     def _verify_checkpoint_chain_stage(self) -> None:
         try:
@@ -356,11 +327,9 @@ class Orchestrator:
         self._verify_checkpoint_chain_stage()
 
     def _init_cryovant(self) -> None:
-        if not cryovant.validate_environment():
-            self._fail("cryovant_environment")
-        certified, errors = cryovant.certify_agents(self.agents_root)
-        if not certified:
-            self._fail(f"cryovant_certification:{','.join(errors)}")
+        cryovant_status = self.boot_preflight.validate_cryovant(self.agents_root)
+        if not cryovant_status.ok:
+            self._fail(cryovant_status.reason)
 
     def _health_check_architect(self) -> None:
         scan = self.architect.scan()
@@ -370,14 +339,15 @@ class Orchestrator:
     def _health_check_dream(self) -> None:
         assert self.dream is not None
         tasks = self.dream.discover_tasks()
-        if not tasks:
-            metrics.log(event_type="dream_safe_boot", payload={"reason": "no tasks"}, level="WARN")
+        transition = self.mutation_orchestrator.evaluate_dream_tasks(tasks)
+        if transition.status != "ok":
+            metrics.log(event_type="dream_safe_boot", payload={"reason": transition.reason}, level="WARN")
             self.state["mutation_enabled"] = False
-            self.state["safe_boot"] = True
+            self.state["safe_boot"] = transition.payload.get("safe_boot", True)
             return
         metrics.log(event_type="dream_health_ok", payload={"tasks": tasks}, level="INFO")
         self.state["mutation_enabled"] = True
-        self.state["safe_boot"] = False
+        self.state["safe_boot"] = transition.payload.get("safe_boot", False)
 
     def _health_check_beast(self) -> None:
         assert self.beast is not None
