@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.dev/schemas/mcp/analysis_response.v1.json",
+  "type": "object",
+  "required": ["predicted_fitness_score", "risk_tier", "component_scores", "blocking_predictions", "recommendation"],
+  "additionalProperties": true,
+  "properties": {
+    "predicted_fitness_score": {"type": "number"},
+    "risk_tier": {"type": "string"},
+    "component_scores": {"type": "object"},
+    "blocking_predictions": {"type": "array", "items": {"type": "string"}},
+    "recommendation": {"type": "string"}
+  }
+}

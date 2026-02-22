@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Added
+- Claude-governed MCP co-pilot integration (feat/claude-mcp-copilot).
+  New mcp-proposal-writer server (runtime/mcp/server.py): governed write
+  surface for LLM mutation proposals. ClaudeProposalAgent implements
+  MutatorAgent role. proposal_queue.py: append-only hash-linked staging.
+  mutation_analyzer.py: deterministic fitness + constitutional pre-check.
+  rejection_explainer.py: guard_report → plain-English explanation.
+  candidate_ranker.py: fitness-weighted proposal ranking.
+  tools_registry.py: MCP tools/list handler for all 4 servers.
+  --serve-mcp flag added to ui/aponi_dashboard.py.
+  .github/mcp_config.json: GitHub Copilot-compatible server configuration.
+
+### Fixed
+- CRITICAL: verify_signature() in security/cryovant.py now performs real
+  HMAC-SHA-256 verification. Stub that always returned False removed.
+- BLOCKING: --serve-mcp CLI flag now exists in ui/aponi_dashboard.py.
+
+### Changed
+- docs/CONSTITUTION.md: added LLM Proposal Agent governance clause.
+- runtime/autonomy/roles.py: registered ClaudeProposalAgent.
+
 ### Changed
 - Cryovant agent certificate checks now prefer payload-bound HMAC verification with legacy static/dev fallback telemetry during migration.
 - Fixed constitution document version parsing regex so governance version-gate checks evaluate real markdown versions.

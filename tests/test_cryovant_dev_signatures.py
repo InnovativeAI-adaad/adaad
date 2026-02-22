@@ -69,8 +69,13 @@ class CryovantDevSignatureTest(unittest.TestCase):
         self.assertIn("cryovant_dev_signature_accepted", event_types)
 
 
-    def test_verify_signature_compatibility_wrapper_accepts_legacy_static(self) -> None:
-        self.assertTrue(cryovant.verify_signature("cryovant-static-legacy"))
+    def test_verify_signature_hmac_against_keys_dir(self) -> None:
+        key_id = "agent-certificate"
+        key_material = b"super-secret"
+        (cryovant.KEYS_DIR / f"{key_id}.key").write_bytes(key_material)
+        digest = cryovant.hmac.new(key_material, b"cryovant", cryovant.hashlib.sha256).hexdigest()
+        self.assertTrue(cryovant.verify_signature(f"{key_id}:{digest}"))
+
 
     def test_verify_payload_signature_accepts_payload_bound_static_signature(self) -> None:
         payload = b"governance-envelope"

@@ -79,6 +79,19 @@ def default_role_specs() -> dict[str, AgentRoleSpec]:
             error_policy="dry_run_only_when_risk_uncertain",
             sandbox_permission=SandboxPermission.RESTRICTED_WRITE,
         ),
+        "ClaudeProposalAgent": AgentRoleSpec(
+            name="ClaudeProposalAgent",
+            responsibilities=(
+                "propose governed mutation candidates",
+                "provide deterministic pre-review mutation analysis",
+                "emit MCP-compatible proposal payloads",
+            ),
+            interface=("propose(context)", "score(candidate)"),
+            input_schema=("lineage_state", "fitness_signals", "policy_constraints"),
+            output_schema=("candidates", "selection_reason", "manifest_stub"),
+            error_policy="force_governor_review_authority",
+            sandbox_permission=SandboxPermission.RESTRICTED_WRITE,
+        ),
         "GovernanceAgent": AgentRoleSpec(
             name="GovernanceAgent",
             responsibilities=(

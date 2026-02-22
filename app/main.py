@@ -75,6 +75,7 @@ from security import cryovant
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
 from ui.aponi_dashboard import AponiDashboard
+from runtime.mcp.server import create_app as create_mcp_app
 
 
 ORCHESTRATOR_LOGGER = "adaad.orchestrator"
@@ -211,6 +212,7 @@ class Orchestrator:
         self._health_check_architect()
         self._health_check_dream()
         self._health_check_beast()
+        self._health_check_mcp()
         self._run_replay_preflight()
         self._v(f"Replay decision: {self.state.get('replay_decision')}")
         self._v(f"Fail-closed state: {self.evolution_runtime.fail_closed}")
@@ -369,6 +371,14 @@ class Orchestrator:
             payload={"staging_root": str(staging_root), "validated_agents": len(invalid_agents) == 0},
             level="INFO",
         )
+
+
+    def _health_check_mcp(self) -> None:
+        try:
+            create_mcp_app("mcp-proposal-writer")
+        except Exception as exc:
+            self._fail(f"mcp_server_health_failed:{exc}")
+        metrics.log(event_type="mcp_server_health_ok", payload={"server": "mcp-proposal-writer"}, level="INFO")
 
     def _governance_gate(self) -> bool:
         checks = [
@@ -721,6 +731,7 @@ class Orchestrator:
             ("dream.cycle", "0.65.0", "Fire"),
             ("beast.evaluate", "0.65.0", "Fire"),
             ("ui.dashboard", "0.65.0", "Metal"),
+            ("mcp.proposal_writer", "0.65.0", "Water"),
         ]
         for capability_name, capability_version, owner in registrations:
             identity = generate_tool_manifest(__name__, capability_name, capability_version)

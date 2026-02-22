@@ -22,6 +22,7 @@ from security.ledger import journal
 ELEMENT_ID = "Fire"
 TRUST_MODES = {"dev", "prod"}
 LIFECYCLE_STATE_DIR = ROOT_DIR / "runtime" / "lifecycle_states"
+KNOWN_AGENT_ID_PREFIXES = ("architect", "executor", "validator", "mutator", "claude-proposal-agent", "sample")
 
 
 class LifecycleTransitionError(RuntimeError):
@@ -136,6 +137,11 @@ def _signature_valid(signature: str, trust_mode: str, context: MutationLifecycle
     return False, "invalid_signature"
 
 
+def _known_agent_prefix_ok(agent_id: str) -> bool:
+    normalized = str(agent_id or "").strip().lower()
+    return any(normalized.startswith(prefix) for prefix in KNOWN_AGENT_ID_PREFIXES)
+
+
 def _founders_law_ok(context: MutationLifecycleContext) -> tuple[bool, list[str]]:
     if context.founders_law_result is not None:
         return context.founders_law_result
@@ -240,8 +246,9 @@ def transition(current_state: str, next_state: str, context: MutationLifecycleCo
     if rule["require_fitness"]:
         fitness_ok = context.fitness_score is not None and context.fitness_score >= context.fitness_threshold
 
+    agent_prefix_ok = _known_agent_prefix_ok(context.agent_id)
     guard_report = {
-        "ok": signature_ok and founders_ok and cert_ok and fitness_ok and trust_mode in rule["allowed_trust_modes"],
+        "ok": signature_ok and founders_ok and cert_ok and fitness_ok and trust_mode in rule["allowed_trust_modes"] and agent_prefix_ok,
         "cryovant_signature_validity": {"ok": signature_ok, "method": signature_method},
         "founders_law_invariant_gate": {"ok": founders_ok, "failures": founders_failures},
         "fitness_threshold_gate": {
@@ -256,6 +263,7 @@ def transition(current_state: str, next_state: str, context: MutationLifecycleCo
             "allowed": sorted(rule["allowed_trust_modes"]),
         },
         "cert_reference_gate": {"ok": cert_ok, "required": bool(rule["require_cert"])},
+        "known_agent_id_prefix_gate": {"ok": agent_prefix_ok, "allowed_prefixes": sorted(KNOWN_AGENT_ID_PREFIXES)},
     }
     context.trust_mode = trust_mode
 

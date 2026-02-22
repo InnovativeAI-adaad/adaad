@@ -203,7 +203,10 @@ def verify_payload_signature(
         fallback_namespace=fallback_namespace,
     ):
         return True
-    return verify_signature(signature)
+    try:
+        return verify_signature(signature)
+    except (FileNotFoundError, ValueError, OSError):
+        return False
 
 
 def verify_session(token: str) -> bool:
@@ -235,9 +238,38 @@ def _dev_signature_allowed(signature: str) -> bool:
 
 
 def verify_signature(signature: str) -> bool:
-    """Compatibility wrapper for legacy static/dev signatures."""
+    """Verify HMAC-SHA-256 signature against key material in ``KEYS_DIR``.
 
-    return _legacy_static_signature_allowed(signature) or _dev_signature_allowed(signature)
+    Signature format: ``<key_id>:<sha256_hex>`` where digest is calculated as
+    ``HMAC_SHA256(key_bytes, b"cryovant")``.
+    """
+
+    raw = str(signature or "").strip()
+    if not KEYS_DIR.exists():
+        raise FileNotFoundError(f"keys_dir_missing:{KEYS_DIR}")
+    if ":" not in raw:
+        raise ValueError("invalid_signature_format")
+    key_id, provided = raw.split(":", 1)
+    key_id = key_id.strip()
+    provided = provided.strip().lower()
+    if not key_id or len(provided) != 64 or any(ch not in "0123456789abcdef" for ch in provided):
+        raise ValueError("invalid_signature_format")
+
+    key_path = None
+    for suffix in (".key", ".pem", ".txt"):
+        candidate = KEYS_DIR / f"{key_id}{suffix}"
+        if candidate.exists():
+            key_path = candidate
+            break
+    if key_path is None:
+        raise FileNotFoundError(f"key_missing:{key_id}")
+
+    key_material = key_path.read_bytes().strip()
+    if not key_material:
+        raise ValueError(f"key_empty:{key_id}")
+
+    expected = hmac.new(key_material, b"cryovant", hashlib.sha256).hexdigest()
+    return hmac.compare_digest(provided, expected)
 
 
 def _valid_signature(
@@ -293,14 +325,21 @@ def signature_valid(signature: str) -> bool:
         if env_mode() != "dev":
             return False
 
-    if verify_signature(signature):
-        if signature.startswith("cryovant-dev-"):
-            metrics.log(
-                event_type="cryovant_dev_signature_accepted",
-                payload={"env_mode": env_mode(), "signature_prefix": signature[:24], "dev_mode": dev_mode()},
-                level="WARNING",
-                element_id=ELEMENT_ID,
-            )
+    try:
+        verified = verify_signature(signature)
+    except (FileNotFoundError, ValueError, OSError):
+        verified = False
+
+    if verified:
+        return True
+
+    if _dev_signature_allowed(signature):
+        metrics.log(
+            event_type="cryovant_dev_signature_accepted",
+            payload={"env_mode": env_mode(), "signature_prefix": signature[:24], "dev_mode": dev_mode()},
+            level="WARNING",
+            element_id=ELEMENT_ID,
+        )
         return True
 
     return False

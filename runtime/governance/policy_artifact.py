@@ -177,7 +177,11 @@ def _parse_envelope(artifact: dict[str, Any]) -> GovernancePolicyArtifactEnvelop
         previous_artifact_hash=previous_artifact_hash,
         effective_epoch=effective_epoch,
     )
-    signature_ok = cryovant.verify_signature(envelope.signature) or cryovant.dev_signature_allowed(envelope.signature)
+    try:
+        signature_ok = cryovant.verify_signature(envelope.signature)
+    except (ValueError, OSError):
+        signature_ok = False
+    signature_ok = signature_ok or cryovant.dev_signature_allowed(envelope.signature)
     if not signature_ok and signer.algorithm == "hmac-sha256":
         signature_ok = cryovant.verify_artifact_hmac_digest_signature(
             artifact_type="policy_artifact",

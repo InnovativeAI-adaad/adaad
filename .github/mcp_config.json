@@ -1,0 +1,42 @@
+{
+  "mcpServers": {
+    "aponi-local": {
+      "type": "local",
+      "command": "python",
+      "args": ["-m", "runtime.mcp.server", "--server", "aponi-local"],
+      "tools": [
+        "system_intelligence",
+        "risk_summary",
+        "evolution_timeline",
+        "replay_diff",
+        "policy_simulate",
+        "mutation_analyze",
+        "mutation_explain_rejection",
+        "mutation_rank"
+      ]
+    },
+    "ledger-mirror": {
+      "type": "local",
+      "command": "python",
+      "args": ["-m", "runtime.mcp.server", "--server", "ledger-mirror"],
+      "tools": ["ledger_list", "ledger_read"]
+    },
+    "sandbox-proxy": {
+      "type": "local",
+      "command": "python",
+      "args": ["-m", "runtime.mcp.server", "--server", "sandbox-proxy"],
+      "tools": ["policy_simulate", "skill_profiles_list"]
+    },
+    "mcp-proposal-writer": {
+      "type": "local",
+      "command": "python",
+      "args": ["-m", "runtime.mcp.server", "--server", "mcp-proposal-writer"],
+      "tools": [
+        "mutation_propose",
+        "mutation_analyze",
+        "mutation_explain_rejection",
+        "mutation_rank"
+      ]
+    }
+  }
+}

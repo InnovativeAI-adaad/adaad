@@ -518,12 +518,14 @@ class AponiDashboard:
     Lightweight dashboard exposing orchestrator state and logs.
     """
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 8080) -> None:
+    def __init__(self, host: str = "0.0.0.0", port: int = 8080, *, serve_mcp: bool = False, jwt_secret: str = "") -> None:
         self.host = host
         self.port = port
         self._server: HTTPServer | None = None
         self._thread: threading.Thread | None = None
         self._state: Dict[str, str] = {}
+        self.serve_mcp = bool(serve_mcp)
+        self.jwt_secret = jwt_secret
 
     def start(self, orchestrator_state: Dict[str, str]) -> None:
         self._state = orchestrator_state
@@ -535,6 +537,8 @@ class AponiDashboard:
 
     def _build_handler(self):
         state_ref = self._state
+        serve_mcp = self.serve_mcp
+        jwt_secret = self.jwt_secret
         lineage_dir = APP_ROOT / "agents" / "lineage"
         staging_dir = lineage_dir / "_staging"
         capabilities_path = APP_ROOT.parent / "data" / "capabilities.json"
@@ -553,6 +557,41 @@ class AponiDashboard:
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
+
+
+            def _decode_jwt_payload(self, token: str) -> Dict[str, Any]:
+                import base64
+                import hashlib
+                import hmac
+
+                header_b64, payload_b64, sig_b64 = token.split(".")
+                message = f"{header_b64}.{payload_b64}".encode("utf-8")
+                expected = base64.urlsafe_b64encode(hmac.new(jwt_secret.encode("utf-8"), message, hashlib.sha256).digest()).decode("utf-8").rstrip("=")
+                if not hmac.compare_digest(expected, sig_b64):
+                    raise ValueError("invalid_jwt")
+                pad = "=" * (-len(payload_b64) % 4)
+                return json.loads(base64.urlsafe_b64decode((payload_b64 + pad).encode("utf-8")))
+
+            def _require_jwt(self) -> bool:
+                if not serve_mcp:
+                    return True
+                auth = self.headers.get("Authorization", "")
+                if not auth.startswith("Bearer ") or not jwt_secret:
+                    self._send_json({"ok": False, "error": "missing_jwt"}, status_code=401)
+                    return False
+                token = auth.split(" ", 1)[1].strip()
+                try:
+                    payload = self._decode_jwt_payload(token)
+                    if int(payload.get("exp", 0) or 0) < int(time.time()):
+                        self._send_json({"ok": False, "error": "expired_jwt"}, status_code=401)
+                        return False
+                except ValueError:
+                    self._send_json({"ok": False, "error": "invalid_jwt"}, status_code=401)
+                    return False
+                except Exception:
+                    self._send_json({"ok": False, "error": "invalid_jwt"}, status_code=401)
+                    return False
+                return True
 
             def _send_schema_violation(self, endpoint: str, violations: List[str]) -> None:
                 self._send_json(
@@ -750,10 +789,18 @@ class AponiDashboard:
 
             def do_POST(self):  # noqa: N802 - required by base class
                 parsed = urlparse(self.path)
+                if serve_mcp and parsed.path in {"/mutation/analyze", "/mutation/explain-rejection", "/mutation/rank"} and not self._require_jwt():
+                    return
                 if parsed.path.startswith("/policy/simulate"):
                     self._send_json({"ok": False, "error": "method_not_allowed", "detail": "policy/simulate is GET only"}, status_code=405)
                     return
-                if not (parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/telemetry") or parsed.path.startswith("/ux/events") or parsed.path.startswith("/control/execution")):
+                if not (
+                    parsed.path.startswith("/control/queue")
+                    or parsed.path.startswith("/control/telemetry")
+                    or parsed.path.startswith("/ux/events")
+                    or parsed.path.startswith("/control/execution")
+                    or (serve_mcp and parsed.path in {"/mutation/analyze", "/mutation/explain-rejection", "/mutation/rank"})
+                ):
                     self.send_response(404)
                     self.end_headers()
                     return
@@ -768,6 +815,30 @@ class AponiDashboard:
                     payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
                 except json.JSONDecodeError:
                     self._send_json({"ok": False, "error": "invalid_json"})
+                    return
+
+                if parsed.path == "/mutation/analyze":
+                    from runtime.mcp.mutation_analyzer import analyze_mutation
+
+                    self._send_json(analyze_mutation(payload))
+                    return
+                if parsed.path == "/mutation/explain-rejection":
+                    from runtime.mcp.rejection_explainer import explain_rejection
+
+                    mutation_id = str(payload.get("mutation_id") or "")
+                    try:
+                        self._send_json(explain_rejection(mutation_id))
+                    except KeyError:
+                        self._send_json({"ok": False, "error": "mutation_not_found"}, status_code=404)
+                    return
+                if parsed.path == "/mutation/rank":
+                    from runtime.mcp.candidate_ranker import rank_candidates
+
+                    mutation_ids = payload.get("mutation_ids")
+                    if not isinstance(mutation_ids, list) or not mutation_ids:
+                        self._send_json({"ok": False, "error": "empty_candidates"}, status_code=400)
+                        return
+                    self._send_json(rank_candidates([str(v) for v in mutation_ids]))
                     return
                 if parsed.path.startswith("/control/execution"):
                     if not self._execution_control_surface_enabled():
@@ -2144,9 +2215,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run Aponi dashboard in standalone mode.")
     parser.add_argument("--host", default=os.environ.get("APONI_HOST", "0.0.0.0"), help="Host interface to bind (env: APONI_HOST)")
     parser.add_argument("--port", type=int, default=int(os.environ.get("APONI_PORT", "8080")), help="Port to bind (env: APONI_PORT)")
+    parser.add_argument("--serve-mcp", action="store_true", help="Enable MCP mutation utility endpoints with JWT enforcement.")
     args = parser.parse_args(argv)
 
-    dashboard = AponiDashboard(host=args.host, port=args.port)
+    dashboard = AponiDashboard(host=args.host, port=args.port, serve_mcp=args.serve_mcp, jwt_secret=os.environ.get("ADAAD_MCP_JWT_SECRET", ""))
     dashboard.start({"status": "dashboard_only"})
     print(f"[APONI] dashboard running on http://{dashboard.host}:{dashboard.port}")
     print(

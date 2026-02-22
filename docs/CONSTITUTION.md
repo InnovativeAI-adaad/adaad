@@ -153,3 +153,8 @@ ADAAD boot is fail-closed for constitutional policy inputs. The following artifa
 If either artifact is missing or invalid, constitutional initialization fails and runtime start is blocked (`constitution_boot_failed`).
 
 `governance/rule_applicability.yaml` is therefore treated as constitution-adjacent policy, not optional metadata.
+
+
+## LLM Proposal Agents
+
+LLM agents (e.g. claude-proposal-agent) are governed identically to ArchitectAgent. authority_level is always governor-review. Tier-0 paths require explicit policy elevation by a human reviewer.
