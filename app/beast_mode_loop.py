@@ -32,7 +32,7 @@ from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_ag
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from runtime import fitness, metrics
 from runtime.capability_graph import get_capabilities, register_capability
-from runtime.evolution.promotion_manifest import PromotionManifestWriter
+from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_pr_lifecycle_event
 from runtime.evolution.evolution_kernel import EvolutionKernel
 from runtime.governance.foundation import safe_get
 from runtime.manifest.generator import generate_tool_manifest
@@ -588,6 +588,28 @@ class LegacyBeastModeCompatibilityAdapter:
         )
 
         if not accepted:
+            decision_id = self._canonical_mutation_id(payload)
+            deny_manifest_ref = self.promotion_manifest_writer.write(
+                {
+                    "parent_id": selected,
+                    "child_id": str(staged_dir.name),
+                    "agent_id": selected,
+                    "epoch_id": str(payload.get("epoch_id") or "unknown"),
+                    "bundle_id": str(payload.get("bundle_id") or payload.get("mutation_intent") or "unknown"),
+                    "fitness_score": score,
+                    "legacy_fitness_score": score,
+                    "autonomy_composite_score": autonomy_score,
+                    "promotion_rationale": "promotion denied by policy evaluation",
+                    "staged_path": str(staged_dir),
+                    "promoted_path": "",
+                    "promotion_decision": "deny",
+                }
+            )
+            emit_pr_lifecycle_event(
+                policy_version="promotion-policy.v1",
+                evaluation_result="deny",
+                decision_id=decision_id,
+            )
             self._discard(staged_dir, payload, score, autonomy_score)
             metrics.log(event_type="beast_cycle_end", payload={"status": "discarded", "agent": selected}, level="INFO", element_id=ELEMENT_ID)
             return {
@@ -595,6 +617,7 @@ class LegacyBeastModeCompatibilityAdapter:
                 "agent": selected,
                 "legacy_fitness_score": score,
                 "autonomy_composite_score": autonomy_score,
+                "promotion_manifest": deny_manifest_ref,
             }
 
         agent_dir = agent_path_from_id(selected, self.agents_root)
@@ -634,7 +657,13 @@ class LegacyBeastModeCompatibilityAdapter:
                 "promotion_rationale": promotion_rationale,
                 "staged_path": str(staged_dir),
                 "promoted_path": str(promoted),
+                "promotion_decision": "allow",
             }
+        )
+        emit_pr_lifecycle_event(
+            policy_version="promotion-policy.v1",
+            evaluation_result="allow",
+            decision_id=self._canonical_mutation_id(payload),
         )
         journal.write_entry(
             agent_id=selected,

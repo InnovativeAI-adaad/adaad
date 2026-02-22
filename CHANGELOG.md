@@ -40,9 +40,8 @@
 - Aponi execution-control now validates queue targets by command id, returning explicit `target_not_found` or `target_not_executable` errors before orchestration.
 
 ### Added
-- Constitution framework advanced to `0.2.0`; PR-2 rule set is now active for `max_complexity_delta`, `test_coverage_maintained`, `max_mutation_rate`, `lineage_continuity`, and `resource_bounds` with tier-aware severities from policy.
 - Constitutional enforcement semantics now consistently apply enabled-rule gating with applicability pass-through (`rule_not_applicable`) and tier override resolution, improving deterministic verdict replay behavior.
-- Replay/determinism posture updated for constitutional evaluation: active PR-2 rules increase deterministic evidence surface while preserving reproducible policy-hash/version coupling across audits.
+- Replay/determinism posture updated for constitutional evaluation, increasing deterministic evidence surface while preserving reproducible policy-hash/version coupling across audits.
 - Added read-only Aponi replay forensics endpoints (`/replay/divergence`, `/replay/diff?epoch_id=...`) and versioned governance health model metadata (`v1.0.0`).
 - Added Aponi V2 governance docs: replay forensics + health model, red-team pressure scenario, and 0.70.0 draft release notes.
 - Added epoch entropy observability helper (`runtime/evolution/telemetry_audit.py`) for declared vs observed entropy breakdown by epoch.
@@ -71,10 +70,10 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 |---|---|---|
 | PR-1 | Implemented | Scoring foundation + deterministic governance/scoring ledger/test coverage landed in this branch |
 | PR-2 | Implemented | Constitutional rule set v0.2.0 enabled with deterministic validators, governance envelope digest, drift detection, and coverage artifact pipeline contracts |
-| PR-3 | Partial | Checkpoint registry/verifier and entropy policy primitives landed; full scope still open |
-| PR-4 | Partial | Promotion policy/state-machine hardening landed; remaining milestone scope still open |
+| PR-3 | Implemented | Checkpoint registry/verifier and entropy policy enforcement paths landed with deterministic coverage in this branch |
+| PR-4 | Implemented | Lifecycle/promotion policy state-machine and ledger/event contract wiring landed with deterministic coverage in this branch |
 | PR-5 | Implemented (baseline) | Deterministic sandbox policy checks and evidence hashing landed |
-| PR-6 | Planned | Federation-level sovereignty orchestration remains roadmap |
+| PR-6 | Implemented (baseline) | Deterministic federation coordination/protocol baseline landed; distributed transport hardening remains roadmap |
 
 ### Validated guarantees (this branch)
 
@@ -91,7 +90,8 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 
 - Sandbox hardening depth beyond current baseline checks.
 - Portable cryptographic replay proof bundles suitable for external verifier exchange.
-- Federation and cross-instance sovereignty coordination (PR-6 scope).
+- Federation and cross-instance sovereignty hardening beyond current in-tree coordination/protocol baseline.
+- Key-rotation enforcement escalation and audit closure before 1.0 freeze.
 
 ## 0.65.0 - Initial import of ADAAD He65 tree
 

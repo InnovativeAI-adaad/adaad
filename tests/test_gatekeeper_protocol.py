@@ -68,6 +68,19 @@ class GatekeeperProtocolTest(unittest.TestCase):
             self.assertTrue(removed.get("drift"))
             self.assertIn("drift_detected", removed["reasons"])
 
+    def test_runtime_content_change_flags_drift(self) -> None:
+        with _in_temp_repo():
+            target = Path("runtime/config.json")
+            target.write_text('{"mode":"a"}', encoding="utf-8")
+            run_gatekeeper()
+
+            target.write_text('{"mode":"b"}', encoding="utf-8")
+            updated = run_gatekeeper()
+
+            self.assertFalse(updated["ok"])
+            self.assertTrue(updated.get("drift"))
+            self.assertIn("drift_detected", updated["reasons"])
+
     def test_missing_paths_reason_code(self) -> None:
         with _in_temp_repo():
             Path("security/keys").rmdir()

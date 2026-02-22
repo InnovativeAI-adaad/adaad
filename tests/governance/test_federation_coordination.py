@@ -14,8 +14,10 @@ from runtime.governance.federation import (
     POLICY_PRECEDENCE_LOCAL,
     FederationPolicyExchange,
     FederationVote,
+    LocalFederationTransport,
     evaluate_federation_decision,
     persist_federation_decision,
+    run_coordination_cycle,
 )
 from runtime.governance.founders_law_v2 import (
     COMPAT_DOWNLEVEL,
@@ -204,3 +206,83 @@ def test_federation_state_snapshot_records_epoch_fingerprint(tmp_path: Path) -> 
     assert payload["version"] == 1
     assert payload["records"][0]["epoch_id"] == "epoch-4"
     assert payload["records"][0]["epoch_fingerprint"].startswith("sha256:")
+
+
+def _transport_envelope(*, envelope_id: str, source_peer_id: str, target_peer_id: str, handshake: dict[str, object]) -> dict[str, object]:
+    return {
+        "schema_id": "https://adaad.local/schemas/federation_transport_contract.v1.json",
+        "protocol": "adaad.federation.transport",
+        "protocol_version": "1.0",
+        "envelope_id": envelope_id,
+        "source_peer_id": source_peer_id,
+        "target_peer_id": target_peer_id,
+        "sent_at_epoch": 0,
+        "handshake": handshake,
+    }
+
+
+def test_run_coordination_cycle_two_peer_quorum_via_local_transport() -> None:
+    transport = LocalFederationTransport()
+    local_peer = "node-a"
+
+    transport.send_handshake(
+        target_peer_id=local_peer,
+        envelope=_transport_envelope(
+            envelope_id="env-a",
+            source_peer_id="node-a",
+            target_peer_id=local_peer,
+            handshake={
+                "peer_id": "node-a",
+                "policy_version": "2.1.0",
+                "manifest_digest": "sha256:m-a",
+                "decision": "accept",
+                "is_local": True,
+            },
+        ),
+    )
+    transport.send_handshake(
+        target_peer_id=local_peer,
+        envelope=_transport_envelope(
+            envelope_id="env-b",
+            source_peer_id="node-b",
+            target_peer_id=local_peer,
+            handshake={
+                "peer_id": "node-b",
+                "policy_version": "2.1.0",
+                "manifest_digest": "sha256:m-a",
+                "decision": "accept",
+            },
+        ),
+    )
+
+    received = transport.receive_handshake(local_peer_id=local_peer)
+    result = run_coordination_cycle([dict(row["handshake"]) for row in received])
+
+    assert result.federated_passed is True
+    assert result.decision.decision_class == "consensus"
+    assert result.emitted_events[0]["event_type"] == "federation_verified"
+
+
+def test_run_coordination_cycle_strict_replay_divergence_fails_closed() -> None:
+    result = run_coordination_cycle(
+        [
+            {
+                "peer_id": "node-a",
+                "policy_version": "2.1.0",
+                "manifest_digest": "sha256:m-a",
+                "decision": "accept",
+                "is_local": True,
+            },
+            {
+                "peer_id": "node-b",
+                "policy_version": "2.2.0",
+                "manifest_digest": "sha256:m-b",
+                "decision": "accept",
+            },
+        ]
+    )
+
+    assert result.federated_passed is False
+    assert result.fail_closed is True
+    assert result.divergence_class == "drift_federated_split_brain"
+    assert result.emitted_events[0]["event_type"] == "federation_divergence_detected"

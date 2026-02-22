@@ -1230,6 +1230,7 @@ def _parse_entropy_limit(value: str, *, field: str) -> tuple[bool, int, str | No
 def _validate_entropy_budget_limit(request: MutationRequest) -> Dict[str, Any]:
     """Reject requests whose mutation/epoch entropy exceeds configured constitutional budgets."""
     from runtime.evolution.entropy_metadata import estimate_entropy_bits
+    from runtime.evolution.entropy_policy import EntropyPolicy, EntropyPolicyViolation
 
     envelope_state = get_deterministic_envelope_state()
     tier_name = str(envelope_state.get("tier", "")).strip().upper()
@@ -1330,16 +1331,26 @@ def _validate_entropy_budget_limit(request: MutationRequest) -> Dict[str, Any]:
             "details": {"value": epoch_bits_raw},
         }
 
-    mutation_exceeded = mutation_bits > max_mutation_bits
-    epoch_exceeded = epoch_bits > max_epoch_bits
-    if mutation_exceeded and epoch_exceeded:
-        reason = "mutation_and_epoch_entropy_budget_exceeded"
-    elif mutation_exceeded:
-        reason = "entropy_budget_exceeded"
-    elif epoch_exceeded:
-        reason = "epoch_entropy_budget_exceeded"
-    else:
+    policy = EntropyPolicy(
+        policy_id="constitution_entropy_budget_limit",
+        per_mutation_ceiling_bits=max_mutation_bits,
+        per_epoch_ceiling_bits=max_epoch_bits,
+    )
+    try:
+        enforcement = policy.enforce(
+            mutation_bits=mutation_bits,
+            declared_bits=declared_bits,
+            observed_bits=observed_bits,
+            epoch_bits=epoch_bits,
+        )
         reason = "entropy_budget_ok"
+        mutation_exceeded = False
+        epoch_exceeded = False
+    except EntropyPolicyViolation as exc:
+        enforcement = exc.detail
+        reason = exc.reason
+        mutation_exceeded = int(enforcement["mutation_bits"]) > max_mutation_bits
+        epoch_exceeded = int(enforcement["epoch_bits"]) > max_epoch_bits
 
     return {
         "ok": not (mutation_exceeded or epoch_exceeded),
@@ -1353,10 +1364,12 @@ def _validate_entropy_budget_limit(request: MutationRequest) -> Dict[str, Any]:
             "resolved_domain": mutation_limit_resolution["resolved_domain"],
             "applied_ceiling": mutation_limit_resolution["effective_limit"],
             "matched_domain_limits": mutation_limit_resolution["matched_domain_limits"],
-            "declared_bits": declared_bits,
-            "observed_bits": observed_bits,
-            "mutation_bits": mutation_bits,
-            "epoch_entropy_bits": epoch_bits,
+            "declared_bits": int(enforcement["declared_bits"]),
+            "observed_bits": int(enforcement["observed_bits"]),
+            "mutation_bits": int(enforcement["mutation_bits"]),
+            "epoch_entropy_bits": int(enforcement["epoch_bits"]),
+            "policy_id": str(enforcement["policy_id"]),
+            "policy_hash": str(enforcement["policy_hash"]),
             "mutation_exceeded": mutation_exceeded,
             "epoch_exceeded": epoch_exceeded,
         },
