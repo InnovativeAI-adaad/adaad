@@ -96,6 +96,35 @@ def test_tier_override_behavior_from_policy() -> None:
     assert stable == constitution.Severity.WARNING
 
 
+def test_load_policy_document_parses_yaml_content(tmp_path: Path) -> None:
+    policy_path = tmp_path / "policy.yaml"
+    _write_policy(policy_path, "version: 0.2.0\nrules: []\n")
+
+    policy, policy_hash = constitution._load_policy_document(policy_path)
+
+    assert policy["version"] == "0.2.0"
+    assert policy["rules"] == []
+    assert len(policy_hash) == 64
+
+
+def test_load_policy_document_parses_json_in_yaml_extension(tmp_path: Path) -> None:
+    policy_path = tmp_path / "policy.yaml"
+    _write_policy(policy_path, '{"version":"0.2.0","rules":[]}')
+
+    policy, _ = constitution._load_policy_document(policy_path)
+
+    assert policy["version"] == "0.2.0"
+    assert policy["rules"] == []
+
+
+def test_load_policy_document_maps_malformed_json_or_yaml_to_value_error(tmp_path: Path) -> None:
+    policy_path = tmp_path / "policy.yaml"
+    _write_policy(policy_path, "version: [unterminated")
+
+    with pytest.raises(ValueError, match="constitution_policy_invalid_json"):
+        constitution._load_policy_document(policy_path)
+
+
 def test_invalid_schema_fail_close(tmp_path: Path) -> None:
     invalid = tmp_path / "constitution.yaml"
     _write_policy(

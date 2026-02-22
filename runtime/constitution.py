@@ -25,6 +25,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping
 
+import yaml
+
 from app.agents.mutation_request import MutationRequest
 from runtime import metrics
 from runtime.governance.resource_accounting import (
@@ -1400,8 +1402,11 @@ def _load_policy_document(path: Path) -> tuple[Mapping[str, Any], str]:
         raise ValueError(f"constitution_policy_missing:{path}")
     raw = path.read_text(encoding="utf-8")
     try:
-        policy = json.loads(raw)
-    except json.JSONDecodeError as exc:
+        if path.suffix.lower() in {".yaml", ".yml"}:
+            policy = yaml.safe_load(raw)
+        else:
+            policy = json.loads(raw)
+    except (json.JSONDecodeError, yaml.YAMLError) as exc:
         raise ValueError(f"constitution_policy_invalid_json:{exc}") from exc
     if not isinstance(policy, dict):
         raise ValueError("constitution_policy_invalid_schema:root_not_object")
