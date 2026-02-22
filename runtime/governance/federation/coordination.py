@@ -89,6 +89,15 @@ class FederationPolicyExchange:
 
 
 @dataclass(frozen=True)
+class FederationCoordinationResult:
+    decision: FederationDecision
+    federated_passed: bool
+    divergence_class: str
+    fail_closed: bool
+    emitted_events: List[Dict[str, object]]
+
+
+@dataclass(frozen=True)
 class LockAcquisitionResult:
     acquired: bool
     lock_path: Path
@@ -279,6 +288,76 @@ class FederationDecision:
     vote_digest: str
 
 
+def run_coordination_cycle(peer_handshakes: list[dict]) -> FederationCoordinationResult:
+    """Single deterministic entrypoint for quorum coordination from peer handshakes."""
+    sorted_handshakes = sorted(
+        [dict(handshake) for handshake in peer_handshakes],
+        key=lambda row: (str(row.get("peer_id", "")), str(row.get("policy_version", "")), str(row.get("manifest_digest", ""))),
+    )
+
+    local_handshake = next((row for row in sorted_handshakes if bool(row.get("is_local"))), None)
+    if local_handshake is None:
+        raise ValueError("local_handshake_missing")
+
+    exchange = FederationPolicyExchange(
+        local_peer_id=str(local_handshake["peer_id"]),
+        local_policy_version=str(local_handshake["policy_version"]),
+        local_manifest_digest=str(local_handshake["manifest_digest"]),
+        peer_versions={
+            str(row["peer_id"]): str(row["policy_version"])
+            for row in sorted_handshakes
+            if str(row["peer_id"]) != str(local_handshake["peer_id"])
+        },
+    )
+    votes = [
+        FederationVote(
+            peer_id=str(row["peer_id"]),
+            policy_version=str(row["policy_version"]),
+            manifest_digest=str(row["manifest_digest"]),
+            decision="accept" if row.get("decision", "accept") == "accept" else "reject",
+        )
+        for row in sorted_handshakes
+        if str(row["peer_id"]) != str(local_handshake["peer_id"])
+    ]
+    decision = evaluate_federation_decision(exchange, votes, quorum_size=max(1, len(sorted_handshakes)))
+
+    mismatched_peers = [
+        vote.peer_id
+        for vote in votes
+        if vote.policy_version != exchange.local_policy_version or vote.manifest_digest != exchange.local_manifest_digest
+    ]
+    divergence_class = "none" if not mismatched_peers else "drift_federated_split_brain"
+    fail_closed = divergence_class != "none"
+
+    emitted_events: List[Dict[str, object]]
+    if not fail_closed and decision.decision_class in {DECISION_CLASS_CONSENSUS, DECISION_CLASS_QUORUM}:
+        emitted_events = [
+            {
+                "event_type": "federation_verified",
+                "decision_class": decision.decision_class,
+                "peer_count": len(sorted_handshakes),
+            }
+        ]
+    else:
+        emitted_events = [
+            {
+                "event_type": "federation_divergence_detected",
+                "decision_class": decision.decision_class,
+                "divergence_class": divergence_class,
+                "fail_closed": True,
+                "mismatched_peers": mismatched_peers,
+            }
+        ]
+
+    return FederationCoordinationResult(
+        decision=decision,
+        federated_passed=not fail_closed and decision.decision_class in {DECISION_CLASS_CONSENSUS, DECISION_CLASS_QUORUM},
+        divergence_class=divergence_class,
+        fail_closed=fail_closed,
+        emitted_events=emitted_events,
+    )
+
+
 def resolve_governance_precedence(
     *,
     local_passed: bool,
@@ -348,6 +427,7 @@ __all__ = [
     "POLICY_PRECEDENCE_BOTH",
     "POLICY_PRECEDENCE_FEDERATED",
     "POLICY_PRECEDENCE_LOCAL",
+    "FederationCoordinationResult",
     "FederationDecision",
     "FederationPolicyExchange",
     "FederationVote",
@@ -359,4 +439,5 @@ __all__ = [
     "persist_federation_decision",
     "release_mutation_lock",
     "resolve_governance_precedence",
+    "run_coordination_cycle",
 ]
