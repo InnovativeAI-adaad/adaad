@@ -27,7 +27,13 @@ from typing import Any, Callable, Dict, List, Mapping
 
 from app.agents.mutation_request import MutationRequest
 from runtime import metrics
-from runtime.governance.resource_accounting import coalesce_resource_usage_snapshot, normalize_resource_usage_snapshot
+from runtime.governance.resource_accounting import (
+    coalesce_resource_usage_snapshot,
+    merge_platform_telemetry,
+    normalize_platform_telemetry_snapshot,
+    normalize_resource_usage_snapshot,
+)
+from runtime.platform.android_monitor import AndroidMonitor
 from security.ledger import journal
 
 CONSTITUTION_VERSION = "0.2.0"
@@ -50,7 +56,7 @@ VALIDATOR_VERSIONS: Dict[str, str] = {
     "_validate_complexity": "1.1.0",
     "_validate_coverage": "1.1.0",
     "_validate_mutation_rate": "2.1.0",
-    "_validate_resources": "1.2.0",
+    "_validate_resources": "1.3.0",
     "_validate_entropy_budget_limit": "1.0.0",
 }
 _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
@@ -839,6 +845,8 @@ def _validate_resources(_: MutationRequest) -> Dict[str, Any]:
             return 0.0, raw
 
     envelope_state = get_deterministic_envelope_state()
+    tier_name = str(envelope_state.get("tier", "")).strip().upper() or Tier.SANDBOX.name
+    tier = Tier[tier_name] if tier_name in Tier.__members__ else Tier.SANDBOX
     telemetry = envelope_state.get("platform_telemetry")
     observed = envelope_state.get("resource_measurements")
     observed_map = observed if isinstance(observed, Mapping) else {}
@@ -855,6 +863,11 @@ def _validate_resources(_: MutationRequest) -> Dict[str, Any]:
             element_id=ELEMENT_ID,
         )
     bounds_policy_version = str(resource_policy.get("policy_version") or "0")
+    strict_telemetry_tiers = {
+        str(item).strip().upper()
+        for item in (resource_policy.get("strict_telemetry_tiers") or [Tier.PRODUCTION.name])
+        if str(item).strip()
+    }
     limits = resource_policy.get("limits") if isinstance(resource_policy.get("limits"), dict) else {}
     allow_overrides = {
         str(item).strip()
@@ -878,6 +891,37 @@ def _validate_resources(_: MutationRequest) -> Dict[str, Any]:
         return {"ok": False, "reason": "invalid_resource_cpu_bound", "details": {"value": bad_cpu_bound}}
     if bad_wall_bound is not None:
         return {"ok": False, "reason": "invalid_resource_wall_bound", "details": {"value": bad_wall_bound}}
+
+    observed_expected_keys = ["peak_rss_mb", "cpu_seconds", "cpu_time_seconds", "wall_seconds", "wall_time_seconds", "duration_s"]
+    telemetry_expected_keys = ["memory_mb"]
+    has_observed = isinstance(observed, Mapping) and any(observed_map.get(key) is not None for key in observed_expected_keys)
+    has_telemetry = isinstance(telemetry, Mapping) and any(telemetry_map.get(key) is not None for key in telemetry_expected_keys)
+    if not has_observed and not has_telemetry:
+        missing_details = {
+            "tier": tier.name,
+            "has_observed": has_observed,
+            "has_telemetry": has_telemetry,
+            "expected": {
+                "resource_measurements": observed_expected_keys,
+                "platform_telemetry": telemetry_expected_keys,
+            },
+            "strict_telemetry_tiers": sorted(strict_telemetry_tiers),
+        }
+        strict_tier = tier.name in strict_telemetry_tiers
+        metrics.log(
+            event_type="resource_measurements_missing",
+            payload={
+                "reason": "resource_measurements_missing",
+                "mode": "fail_closed" if strict_tier else "fail_open",
+                "rationale": "tier_requires_resource_evidence" if strict_tier else "tier_not_configured_for_strict_telemetry_enforcement",
+                "details": missing_details,
+            },
+            level="ERROR" if strict_tier else "WARNING",
+            element_id=ELEMENT_ID,
+        )
+        if strict_tier:
+            return {"ok": False, "reason": "resource_measurements_missing", "details": missing_details}
+        return {"ok": True, "reason": "resource_measurements_missing_fail_open", "details": missing_details}
 
     resource_usage_snapshot = coalesce_resource_usage_snapshot(observed=observed_map, telemetry=telemetry_map)
     peak_rss_mb = resource_usage_snapshot["memory_mb"]
@@ -1410,6 +1454,12 @@ def _validate_policy_schema(policy: Mapping[str, Any], expected_version: str) ->
     for entry in allow_env_overrides:
         if str(entry) not in allowed_override_keys:
             raise ValueError(f"constitution_policy_invalid_schema:resource_bounds_allow_env_override:{entry}")
+    strict_telemetry_tiers = resource_bounds_policy.get("strict_telemetry_tiers", [Tier.PRODUCTION.name])
+    if not isinstance(strict_telemetry_tiers, list):
+        raise ValueError("constitution_policy_invalid_schema:resource_bounds_strict_telemetry_tiers")
+    for tier_name in strict_telemetry_tiers:
+        if str(tier_name).strip().upper() not in Tier.__members__:
+            raise ValueError(f"constitution_policy_invalid_schema:resource_bounds_strict_telemetry_tier:{tier_name}")
 
 
 def _record_amendment(old_hash: str | None, new_hash: str, version: str) -> None:
@@ -1493,6 +1543,19 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
 
     prior_state = get_deterministic_envelope_state()
     domain_classification = _classify_request_domains(request)
+    monitor_snapshot = AndroidMonitor(Path.cwd()).snapshot()
+    android_telemetry = normalize_platform_telemetry_snapshot(
+        memory_mb=monitor_snapshot.memory_mb,
+        cpu_percent=monitor_snapshot.cpu_percent,
+        battery_percent=monitor_snapshot.battery_percent,
+        storage_mb=monitor_snapshot.storage_mb,
+    )
+    existing_platform_telemetry = prior_state.get("platform_telemetry") if isinstance(prior_state.get("platform_telemetry"), Mapping) else {}
+    # Rationale: merge Android and runtime telemetry conservatively for constitutional
+    # resource bounds enforcement.
+    # Invariants: memory/cpu preserve highest pressure; battery/storage preserve
+    # most constrained context values.
+    merged_platform_telemetry = merge_platform_telemetry(observed=existing_platform_telemetry, android=android_telemetry)
     evaluation_state = {
         **prior_state,
         "tier": tier.name,
@@ -1500,6 +1563,7 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
         "agent_id": request.agent_id,
         "epoch_id": str(request.epoch_id or ""),
         "domain_classification": domain_classification,
+        "platform_telemetry": merged_platform_telemetry,
     }
 
     with deterministic_envelope_scope(evaluation_state):

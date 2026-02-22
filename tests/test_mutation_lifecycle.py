@@ -87,6 +87,42 @@ def test_lifecycle_state_persist_and_restore(_dev_sig, _write_entry, _append_tx,
     assert restored.current_state == "executing"
 
 
+
+
+@mock.patch("runtime.mutation_lifecycle.journal.append_tx")
+@mock.patch("runtime.mutation_lifecycle.journal.write_entry")
+@mock.patch("runtime.mutation_lifecycle.cryovant.dev_signature_allowed", return_value=True)
+def test_persist_restore_roundtrip_preserves_json_contract(_dev_sig, _write_entry, _append_tx, tmp_path: Path) -> None:
+    context = _context(cert_refs={"bundle_id": "b-1"}, fitness_score=0.9, state_dir=tmp_path)
+    assert transition("certified", "executing", context) == "executing"
+
+    state_path = context.state_path()
+    persisted = state_path.read_text(encoding="utf-8")
+    restored = MutationLifecycleContext.restore("m-1", state_dir=tmp_path)
+
+    assert restored is not None
+    assert restored.current_state == "executing"
+    assert persisted.startswith("{\n  ")
+
+
+@mock.patch("runtime.mutation_lifecycle.journal.append_tx")
+@mock.patch("runtime.mutation_lifecycle.journal.write_entry")
+def test_persist_write_failure_keeps_existing_state_well_formed(_write_entry, _append_tx, tmp_path: Path) -> None:
+    context = _context(state_dir=tmp_path)
+    context.persist()
+    state_path = context.state_path()
+    baseline = state_path.read_text(encoding="utf-8")
+
+    with mock.patch("pathlib.Path.replace", side_effect=OSError("replace failed")):
+        with pytest.raises(OSError, match="replace failed"):
+            context.persist()
+
+    assert state_path.read_text(encoding="utf-8") == baseline
+    assert MutationLifecycleContext.restore("m-1", state_dir=tmp_path) is not None
+    assert list(tmp_path.glob("*.tmp")) == []
+    assert list(tmp_path.glob(".*.tmp")) == []
+
+
 @mock.patch("runtime.mutation_lifecycle.issue_rollback_certificate")
 @mock.patch("runtime.mutation_lifecycle.journal.append_tx")
 @mock.patch("runtime.mutation_lifecycle.journal.write_entry")

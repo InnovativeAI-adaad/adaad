@@ -35,6 +35,53 @@ def normalize_resource_usage_snapshot(
     return normalized
 
 
+def normalize_platform_telemetry_snapshot(
+    *,
+    memory_mb: Any = 0.0,
+    cpu_percent: Any = 0.0,
+    battery_percent: Any = 0.0,
+    storage_mb: Any = 0.0,
+) -> dict[str, float]:
+    """Return canonical platform telemetry values for deterministic envelope state."""
+
+    cpu = round(min(100.0, _parse_non_negative(cpu_percent)), 4)
+    battery = round(min(100.0, _parse_non_negative(battery_percent)), 4)
+    return {
+        "memory_mb": round(_parse_non_negative(memory_mb), 4),
+        "cpu_percent": cpu,
+        "battery_percent": battery,
+        "storage_mb": round(_parse_non_negative(storage_mb), 4),
+    }
+
+
+def merge_platform_telemetry(*, observed: Mapping[str, Any], android: Mapping[str, Any]) -> dict[str, float]:
+    """Merge sandbox and Android telemetry into a single deterministic snapshot.
+
+    Precedence semantics are intentionally conservative:
+    - memory_mb/cpu_percent use max(...): keep the worst observed pressure signal.
+    - battery_percent/storage_mb use min(...): keep the most constrained mobile context.
+    """
+
+    observed_normalized = normalize_platform_telemetry_snapshot(
+        memory_mb=observed.get("memory_mb"),
+        cpu_percent=observed.get("cpu_percent"),
+        battery_percent=observed.get("battery_percent"),
+        storage_mb=observed.get("storage_mb"),
+    )
+    android_normalized = normalize_platform_telemetry_snapshot(
+        memory_mb=android.get("memory_mb"),
+        cpu_percent=android.get("cpu_percent"),
+        battery_percent=android.get("battery_percent"),
+        storage_mb=android.get("storage_mb"),
+    )
+    return {
+        "memory_mb": round(max(observed_normalized["memory_mb"], android_normalized["memory_mb"]), 4),
+        "cpu_percent": round(max(observed_normalized["cpu_percent"], android_normalized["cpu_percent"]), 4),
+        "battery_percent": round(min(observed_normalized["battery_percent"], android_normalized["battery_percent"]), 4),
+        "storage_mb": round(min(observed_normalized["storage_mb"], android_normalized["storage_mb"]), 4),
+    }
+
+
 def coalesce_resource_usage_snapshot(*, observed: Mapping[str, Any], telemetry: Mapping[str, Any]) -> dict[str, float]:
     """Resolve deterministic resource usage by taking maxima across trusted aliases."""
 
@@ -61,4 +108,9 @@ def coalesce_resource_usage_snapshot(*, observed: Mapping[str, Any], telemetry: 
     )
 
 
-__all__ = ["coalesce_resource_usage_snapshot", "normalize_resource_usage_snapshot"]
+__all__ = [
+    "coalesce_resource_usage_snapshot",
+    "merge_platform_telemetry",
+    "normalize_platform_telemetry_snapshot",
+    "normalize_resource_usage_snapshot",
+]

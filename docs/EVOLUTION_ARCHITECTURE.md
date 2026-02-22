@@ -139,3 +139,9 @@ Expected invariants:
 - Test execution uses `HardenedSandboxExecutor`, records sandbox evidence hashes in append-only ledger storage, and feeds evidence hashes into epoch checkpoint aggregation.
 - Sandbox enforcement includes deterministic syscall, filesystem, network, and resource policy checks prior to execution.
 - Sandbox replay verification computes deterministic evidence/hash parity via `runtime.sandbox.replay`.
+
+## Android Telemetry → Constitutional Resource Bounds
+- During `evaluate_mutation`, the runtime samples `AndroidMonitor.snapshot()` and normalizes it via `runtime.governance.resource_accounting.normalize_platform_telemetry_snapshot`.
+- The deterministic envelope state stores merged `platform_telemetry` that `_validate_resources` consumes for `memory_mb`/`cpu_percent` pressure signals plus contextual `battery_percent`/`storage_mb`.
+- Merge precedence is conservative and deterministic: memory/cpu use `max(sandbox_observed, android_monitor)`, while battery/storage use `min(...)` to retain the most constrained mobile context.
+- Resource usage enforcement still resolves hard limits through `coalesce_resource_usage_snapshot(...)` and blocks fail-closed when bounds are exceeded.

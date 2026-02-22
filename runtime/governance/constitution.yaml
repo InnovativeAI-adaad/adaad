@@ -137,6 +137,9 @@
       "memory_mb",
       "cpu_seconds",
       "wall_seconds"
+    ],
+    "strict_telemetry_tiers": [
+      "PRODUCTION"
     ]
   }
 }

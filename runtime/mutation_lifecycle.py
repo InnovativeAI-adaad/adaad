@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -66,7 +67,31 @@ class MutationLifecycleContext:
             "current_state": self.current_state,
             "ts": now_iso(),
         }
-        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        encoded = json.dumps(payload, ensure_ascii=False, indent=2)
+        tmp_path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=path.parent,
+                prefix=f".{path.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                handle.write(encoded)
+                handle.flush()
+                os.fsync(handle.fileno())
+                tmp_path = Path(handle.name)
+            tmp_path.replace(path)
+            dir_fd = os.open(path.parent, os.O_RDONLY)
+            try:
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+        except Exception:
+            if tmp_path is not None and tmp_path.exists():
+                tmp_path.unlink()
+            raise
 
     def cleanup_state(self) -> None:
         path = self.state_path()

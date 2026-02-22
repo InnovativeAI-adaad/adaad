@@ -85,6 +85,8 @@ Only the transitions listed below are legal. Any other transition MUST be reject
 - Transition enforcement is centralized in `runtime/mutation_lifecycle.py::transition(...)`.
 - Runtime callers (including mutation execution flow) must invoke this function and treat undeclared transitions as hard rejections.
 - No fallback or inferred predecessor transitions are permitted.
+- Lifecycle context persistence is crash-safe: state snapshots are written to a same-directory temporary file, `flush` + `fsync`ed, and atomically promoted with `Path.replace()` so readers never observe partial JSON state files.
+- Persistence invariant: serialized lifecycle payload keys and JSON formatting remain stable (`ensure_ascii=False`, `indent=2`) to preserve compatibility for replay and external tooling.
 
 
 ## Canonical module paths
