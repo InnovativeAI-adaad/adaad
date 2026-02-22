@@ -17,6 +17,7 @@ class PolicyValidationResult:
 class PolicyValidator:
     def validate(self, policy_text: str) -> PolicyValidationResult:
         tmp_path: Path | None = None
+        result: PolicyValidationResult
         try:
             from runtime.constitution import CONSTITUTION_VERSION, load_constitution_policy
 
@@ -32,15 +33,17 @@ class PolicyValidator:
                 tmp_file.flush()
 
             load_constitution_policy(path=tmp_path, expected_version=CONSTITUTION_VERSION)
-            return PolicyValidationResult(valid=True, errors=[])
+            result = PolicyValidationResult(valid=True, errors=[])
         except Exception as exc:
-            return PolicyValidationResult(valid=False, errors=[str(exc)])
+            result = PolicyValidationResult(valid=False, errors=[str(exc)])
         finally:
             if tmp_path is not None:
                 try:
                     tmp_path.unlink()
-                except FileNotFoundError:
-                    pass
+                except OSError as exc:
+                    result.errors.append(f"Temporary policy file cleanup failed: {exc}")
+
+        return result
 
 
 __all__ = ["PolicyValidator", "PolicyValidationResult"]
