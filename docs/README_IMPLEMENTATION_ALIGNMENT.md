@@ -129,11 +129,27 @@ Expected status in this repository branch: all tests passing (with one known col
 | Milestone | Status in docs | Reconciled repository posture |
 |---|---|---|
 | PR-1 | Complete | Keep as complete (scoring + deterministic ledger/test claims present and aligned) |
-| PR-2 | Open | Keep as planned/open (no validated completion claim retained) |
-| PR-3 | In progress | Partial implementation present (checkpoint + entropy policy primitives) |
-| PR-4 | In progress | Partial implementation present (promotion policy/state transitions) |
+| PR-2 | Complete | Constitutional rule set is fully enabled and validated; see `runtime/constitution.py` (validator registry + policy loading/enabled-rule gating) and `tests/test_constitution_policy.py` (coverage for lineage/coverage/mutation-rate/resource-bounds behavior). |
+| PR-3 | Complete | Checkpoint registry/verifier and entropy policy enforcement are implemented with deterministic coverage in-tree; milestone scope is satisfied for 0.65.x. |
+| PR-4 | Complete | PR lifecycle contracts, promotion policy/state transitions, and deterministic ledger/event paths are implemented and validated in-tree. |
 | PR-5 | Complete baseline | Keep complete for baseline hardening; additional depth remains roadmap |
-| PR-6 | Planned | Federation scope remains roadmap |
+| PR-6 | Implemented baseline | Deterministic federation coordination/protocol contracts are implemented in-tree; transport/distributed hardening remains roadmap. |
+
+
+## Final Governance Maturity Matrix (0.65.x)
+
+| Milestone | Final 0.65.x status | Scope note |
+|---|---|---|
+| PR-1 | Complete | Scoring foundation + deterministic scoring/ledger substrate validated in-tree. |
+| PR-2 | Complete | Constitutional rule engine semantics (enabled gating, tier overrides, deterministic evaluation) validated in-tree. |
+| PR-3 | Complete | Checkpoint + entropy policy enforcement paths are implemented and tested in-tree. |
+| PR-4 | Complete | Lifecycle/promotion contract wiring is implemented with deterministic event/ledger behavior. |
+| PR-5 | Complete baseline | Deterministic sandbox policy/enforcement baseline is validated; deeper hardening remains roadmap. |
+| PR-6 | Implemented baseline | Federation coordination/protocol baseline is implemented in-tree; broader distributed hardening remains roadmap. |
+
+### Next governance audit
+
+- Audit key-rotation enforcement next: verify epoch/key-rotation freshness policy coverage and escalation posture before 1.0 freeze.
 
 ## Release Notes Rule: Guarantees vs Roadmap
 
