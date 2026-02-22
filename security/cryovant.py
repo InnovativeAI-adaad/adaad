@@ -448,14 +448,46 @@ def validate_ancestry(agent_id: Optional[str]) -> bool:
         journal.write_entry(agent_id="unknown", action="ancestry_failed", payload={"reason": "missing_id"})
         return False
 
-    if known_ids and agent_id not in known_ids:
+    if not known_ids:
+        if os.environ.get("ADAAD_ALLOW_GENESIS", "0") == "1":
+            journal.write_entry(
+                agent_id=agent_id,
+                action="ancestry_validated",
+                payload={"reason": "genesis_override_allowed"},
+            )
+            metrics.log(
+                event_type="cryovant_genesis_override_allowed",
+                payload={"agent_id": agent_id, "reason": "genesis_override_allowed"},
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            return True
+
+        journal.write_entry(
+            agent_id=agent_id,
+            action="ancestry_failed",
+            payload={"reason": "empty_journal_denied"},
+        )
         metrics.log(
-            event_type="cryovant_unknown_ancestry",
-            payload={"agent_id": agent_id, "known": list(known_ids)},
+            event_type="cryovant_empty_journal_denied",
+            payload={"agent_id": agent_id, "reason": "empty_journal_denied"},
             level="ERROR",
             element_id=ELEMENT_ID,
         )
-        journal.write_entry(agent_id=agent_id, action="ancestry_failed", payload={"known": list(known_ids)})
+        return False
+
+    if known_ids and agent_id not in known_ids:
+        metrics.log(
+            event_type="cryovant_unknown_ancestry",
+            payload={"agent_id": agent_id, "known": list(known_ids), "reason": "unknown_ancestry"},
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
+        journal.write_entry(
+            agent_id=agent_id,
+            action="ancestry_failed",
+            payload={"known": list(known_ids), "reason": "unknown_ancestry"},
+        )
         return False
 
     journal.write_entry(agent_id=agent_id, action="ancestry_validated", payload={})
