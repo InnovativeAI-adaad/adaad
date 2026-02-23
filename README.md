@@ -139,6 +139,12 @@ ADAAD does not:
 - Run `./quickstart.sh` to execute baseline checks.
 - Run `python -m app.main --dry-run --replay audit --verbose` for a governed dry-run.
 
+## Dependency Baseline (Production)
+
+- `requirements.server.txt` is the source of truth for production/runtime dependency versions.
+- `archives/backend/requirements.txt` mirrors the same pinned `fastapi`, `uvicorn`, and `anthropic` versions to preserve archive reproducibility against the active runtime baseline.
+- Run `python scripts/check_dependency_baseline.py` to enforce this mirror invariant before merge/release (works from any current working directory and fails if tracked packages are unpinned or divergent).
+
 ## Strategic Documentation Path
 
 - Canonical docs home: [docs/README.md](docs/README.md)
