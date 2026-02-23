@@ -2,6 +2,12 @@
 
 Founders Law v2 moves governance from a single policy surface to composable, independently versioned law modules. This document defines the runtime model used by `runtime/governance/founders_law_v2.py`.
 
+<p align="center">
+  <img src="../assets/adaad-governance-flow.svg" width="900" alt="Founders Law governance flow from manifest evaluation through deterministic replay checks to ledger-backed enforcement evidence">
+</p>
+
+*Evidence path: law manifests and federation inputs are evaluated through deterministic governance gates, then compatibility and enforcement outcomes are emitted as signed evidence artifacts for replay and audit.*
+
 ## Law module model
 
 Each module includes:

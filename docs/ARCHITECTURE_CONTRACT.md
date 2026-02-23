@@ -2,6 +2,12 @@
 
 This contract defines ownership boundaries for high-churn modules and the canonical execution flow.
 
+<p align="center">
+  <img src="assets/architecture-simple.svg" width="900" alt="Simplified ADAAD architecture with trust, governance, and execution layers and their primary module paths">
+</p>
+
+Legend: the **Trust layer** maps to Cryovant runtime trust validation and ancestry checks (`runtime/*` trust and preflight surfaces), the **Governance layer** maps to constitution/founders-law enforcement (`runtime/governance/*` with root `governance/` adapters), and the **Execution layer** maps to orchestration and mutation execution (`adaad/orchestrator/*`, `app/mutation_executor.py`, and `app/main.py` entry wiring).
+
 ## Canonical entrypoints
 
 - **Primary platform entrypoint:** `app/main.py` (`python -m app.main`).
