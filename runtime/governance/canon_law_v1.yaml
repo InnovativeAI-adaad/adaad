@@ -1,0 +1,78 @@
+{
+  "version": "1.0.0",
+  "name": "ADAAD Canonical Governance Law",
+  "clauses": [
+    {
+      "article": "Article I",
+      "clause_id": "I.policy_parse_must_succeed",
+      "applies_to": "policy_validator",
+      "enforcement": "policy document must load under constitution version",
+      "escalation": "advisory",
+      "mutation_block": false,
+      "fail_closed": false
+    },
+    {
+      "article": "Article II",
+      "clause_id": "II.policy_payload_must_be_nonempty",
+      "applies_to": "policy_validator",
+      "enforcement": "policy payload cannot be empty",
+      "escalation": "conservative",
+      "mutation_block": false,
+      "fail_closed": true
+    },
+    {
+      "article": "Article III",
+      "clause_id": "III.gate_file_must_exist",
+      "applies_to": "gate_certifier",
+      "enforcement": "candidate file must exist and be a regular file",
+      "escalation": "conservative",
+      "mutation_block": false,
+      "fail_closed": true
+    },
+    {
+      "article": "Article IV",
+      "clause_id": "IV.gate_forbidden_code_block",
+      "applies_to": "gate_certifier",
+      "enforcement": "forbidden imports/tokens must be rejected",
+      "escalation": "governance",
+      "mutation_block": true,
+      "fail_closed": true
+    },
+    {
+      "article": "Article V",
+      "clause_id": "V.gate_authentication_required",
+      "applies_to": "gate_certifier",
+      "enforcement": "cryovant session verification required",
+      "escalation": "governance",
+      "mutation_block": true,
+      "fail_closed": true
+    },
+    {
+      "article": "Article VI",
+      "clause_id": "VI.lifecycle_transition_must_be_declared",
+      "applies_to": "policy_lifecycle",
+      "enforcement": "only declared policy lifecycle transitions are allowed",
+      "escalation": "governance",
+      "mutation_block": true,
+      "fail_closed": true
+    },
+    {
+      "article": "Article VII",
+      "clause_id": "VII.lifecycle_proof_must_match_artifact",
+      "applies_to": "policy_lifecycle",
+      "enforcement": "proof digest must match artifact digest",
+      "escalation": "critical",
+      "mutation_block": true,
+      "fail_closed": true
+    },
+    {
+      "article": "Article VIII",
+      "clause_id": "VIII.undefined_state_fail_closed",
+      "applies_to": "all",
+      "enforcement": "undefined state or escalation must fail-closed",
+      "escalation": "critical",
+      "mutation_block": true,
+      "fail_closed": true
+    }
+  ]
+}

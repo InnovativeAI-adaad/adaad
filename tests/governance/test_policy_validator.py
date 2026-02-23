@@ -36,7 +36,8 @@ def test_policy_validator_validation_failure_with_cleanup_success(monkeypatch) -
     result = PolicyValidator().validate("{}")
 
     assert not result.valid
-    assert result.errors == ["invalid policy"]
+    assert result.errors[0] == "invalid policy"
+    assert result.errors[1].startswith("ledger_hash:")
 
 
 def test_policy_validator_cleanup_failure_is_non_fatal(monkeypatch) -> None:
@@ -50,9 +51,7 @@ def test_policy_validator_cleanup_failure_is_non_fatal(monkeypatch) -> None:
     result = PolicyValidator().validate('{"ok": true}')
 
     assert result.valid
-    assert result.errors == [
-        "Temporary policy file cleanup failed: simulated cleanup failure"
-    ]
+    assert result.errors == ["Temporary policy file cleanup failed: simulated cleanup failure"]
 
 
 def test_policy_validator_parallel_validate_has_no_cross_talk(monkeypatch) -> None:
@@ -80,4 +79,5 @@ def test_policy_validator_parallel_validate_has_no_cross_talk(monkeypatch) -> No
         if expected_valid:
             assert result.errors == []
         else:
-            assert result.errors == ["invalid policy"]
+            assert result.errors[0] == "invalid policy"
+            assert result.errors[1].startswith("ledger_hash:")
