@@ -1,20 +1,45 @@
-# Cryovant Key Handling ![Internal](https://img.shields.io/badge/Security-Internal-blue)
+# Security
 
-> This security note covers private-key handling and lineage ledger hygiene for ADAAD deployments.
-> Follow these controls to avoid credential leakage and maintain deterministic forensic evidence chains.
-> Use private reporting channels for vulnerabilities.
+## Security model summary
 
-> **Doc metadata:** Audience: Operator / Auditor · Last validated release: `v1.0.0`
+Cryovant is designed around a least-privilege, auditable security model:
 
-> ✅ **Do this:** Keep `security/keys/` owner-restricted and validate ledger writes through governance tooling.
->
-> ⚠️ **Caveat:** Misconfigured filesystem permissions can silently expose signing material.
->
-> 🚫 **Out of scope:** Never disclose vulnerabilities or key material in public issue trackers.
+- Private key material is stored locally under `security/keys/` with owner-only filesystem permissions.
+- Secrets are never committed to source control or included in release artifacts.
+- Security-relevant lineage events are append-only and recorded for post-incident review.
+- Evidence used for governance and release communications is traceable to versioned repository artifacts.
+- All security-relevant events must be replay-verifiable and ledger-anchored.
 
-- `security/keys/` is created automatically on first run by Cryovant; if you need to provision it manually, run `mkdir -p security/keys` before setting owner-only permissions (`chmod 700 security/keys`).
-Private keys MUST:
-- Never be committed
-- Never be world-readable
-- Never be transmitted over unsecured channels
-- Ledger writes are recorded in `security/ledger/lineage.jsonl` and mirrored to `reports/metrics.jsonl`.
+## Reporting process
+
+If you identify a potential vulnerability, follow this coordinated disclosure process:
+
+1. Do **not** open a public issue with exploit details.
+2. Share a private report with maintainers including:
+   - Impacted component(s)
+   - Reproduction steps or proof-of-concept
+   - Severity assessment and potential blast radius
+3. Allow maintainers time to triage, remediate, and coordinate disclosure timing.
+4. After remediation, publish an advisory summary with affected versions and mitigations.
+
+## Key handling overview
+
+Use the following baseline controls for local key material:
+
+- [ ] Ensure `security/keys/` exists before first use (`mkdir -p security/keys`).
+- [ ] Enforce strict directory permissions (`chmod 700 security/keys`).
+- [ ] Keep private keys outside version control.
+- [ ] Rotate or revoke keys immediately if compromise is suspected.
+
+## Audit artifacts and evidence locations
+
+Security and release evidence is expected in the following locations:
+
+- Lineage ledger: `security/ledger/lineage.jsonl`
+- Metrics mirror: `reports/metrics.jsonl`
+- Claims/evidence matrix: `docs/comms/claims_evidence_matrix.md`
+- Release evidence validation helper: `scripts/validate_release_evidence.py`
+
+---
+
+Related docs: [Repository README](../README.md) · [Documentation index](README.md)

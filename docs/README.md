@@ -1,83 +1,66 @@
-# 📚 ADAAD Documentation
+# 📚 ADAAD Documentation Hub
 
-Welcome to the canonical ADAAD documentation home.
-
-## 🔒 Trust Guarantees
-
-ADAAD enforces:
-
-- Deterministic replay validation
-- Fail-closed mutation execution
-- Policy-bound runtime enforcement
-- Lineage and mutation traceability
-- Constitution-level governance constraints
-
-All governance decisions are reproducible across runs.
+Welcome to the central navigation page for ADAAD docs.
 
 <p align="center">
-  <img src="assets/governance-flow.svg" width="760" alt="Governance flow: Propose to Archive with replay and policy gates">
+  <img src="assets/governance-flow.svg" width="760" alt="ADAAD governance flow from proposal to replay verification and evidence archival">
 </p>
 
-## 🔎 10-Minute Evaluator Path
+## 🌈 Quick visual routes
 
-1. Read [README.md](../README.md)
-2. Read [ARCHITECTURE_CONTRACT.md](ARCHITECTURE_CONTRACT.md)
-3. Review [RELEASE_EVIDENCE_MATRIX.md](RELEASE_EVIDENCE_MATRIX.md)
-4. Run [QUICKSTART.md](../QUICKSTART.md)
-5. Inspect [examples/mutation_cycle_trace.json](examples/mutation_cycle_trace.json)
+| I want to... | Go here |
+| --- | --- |
+| 🚀 Launch a governed run fast | [Quickstart](../QUICKSTART.md) |
+| 🧠 Understand architecture boundaries | [Architecture Contract](ARCHITECTURE_CONTRACT.md) |
+| 🛡️ Validate governance and security posture | [Security](SECURITY.md) + [Constitution](CONSTITUTION.md) |
+| 📦 Ship with release discipline | [Release checklist](release/release_checklist.md) |
 
-## 🚀 Getting Started
+## 🚀 Most-used docs
 
-- [Quickstart (5 minutes)](../QUICKSTART.md)
-- [Top-level project README](../README.md)
-- [First loop walkthrough](first-loop-30min.md)
+| Doc | Why start here |
+| --- | --- |
+| [Quickstart](../QUICKSTART.md) | Fastest way to run ADAAD locally. |
+| [Security](SECURITY.md) | Key handling, reporting process, and audit artifact locations. |
+| [Architecture Contract](ARCHITECTURE_CONTRACT.md) | Canonical ownership and layer boundaries. |
+| [Release checklist](release/release_checklist.md) | Governance-ready release go/no-go gates. |
 
-## 🧭 Most-visited docs
+## 🎯 Documentation by intent
 
-| Doc | Why visit |
-|---|---|
-| [QUICKSTART.md](../QUICKSTART.md) | Fast setup and first governed run |
-| [docs/SECURITY.md](SECURITY.md) | Security model, controls, and guarantees |
-| [docs/ARCHITECTURE_CONTRACT.md](ARCHITECTURE_CONTRACT.md) | Architecture contract and runtime boundaries |
-| [docs/releases/1.0.0.md](releases/1.0.0.md) | v1.0.0 release notes and scope |
+- **Run ADAAD fast:** [Quickstart](../QUICKSTART.md)
+- **Understand system boundaries:** [Architecture Contract](ARCHITECTURE_CONTRACT.md)
+- **Validate governance controls:** [Constitution](CONSTITUTION.md)
+- **Prepare releases safely:** [Release checklist](release/release_checklist.md)
 
-## 🏗️ Architecture
+## 🧭 Core references
 
-- [Architecture contract](ARCHITECTURE_CONTRACT.md)
-- [Architecture summary (one page)](ARCHITECTURE_SUMMARY.md)
-- [Evolution architecture](EVOLUTION_ARCHITECTURE.md)
-- [Architecture implementation alignment](README_IMPLEMENTATION_ALIGNMENT.md)
-
-## 🛡️ Governance & Security
-
-- [Security documentation](SECURITY.md)
-- [Threat model](THREAT_MODEL.md)
-- [Governance enforcement](GOVERNANCE_ENFORCEMENT.md)
 - [Constitution](CONSTITUTION.md)
-- [Governance docs directory](governance/)
-
-## 🧾 Releases
-
+- [Governance mutation lifecycle](governance/mutation_lifecycle.md)
+- [Threat model](THREAT_MODEL.md)
 - [Release evidence matrix](RELEASE_EVIDENCE_MATRIX.md)
-- [Release replay verification procedure](DETERMINISM.md#replay-contract)
-- [Mutation evidence schema](../schemas/evidence_bundle.v1.json)
-- [Governance audit checklist](releases/RELEASE_AUDIT_CHECKLIST.md)
-- [Release notes directory](releases/)
-- [v1.0.0 release notes](releases/1.0.0.md)
-- [Project changelog](../CHANGELOG.md)
+- [Diagram ownership](DIAGRAM_OWNERSHIP.md)
 
-## 🧪 Examples
+## Start here next
 
-- [Examples directory](examples/)
-- [Mutation cycle trace sample](examples/mutation_cycle_trace.json)
+### New user
+- [Quickstart](../QUICKSTART.md)
+- [Single-agent runnable example](../examples/single-agent-loop/README.md)
+- [Security and key handling](SECURITY.md)
 
-## 🛠️ Operations / Runbooks
+### Contributor
+- [Contribution guide](../CONTRIBUTING.md)
+- [Release checklist](release/release_checklist.md)
+- [Repository README](../README.md)
 
-- [Governance runbooks and playbooks](governance/)
-- [Sandbox operational notes](sandbox/README.md)
-- [Federation conflict runbook](governance/FEDERATION_CONFLICT_RUNBOOK.md)
-- [Aponi alert runbook](governance/APONI_ALERT_RUNBOOK.md)
+### Governance/audit reviewer
+- [Constitution and governance boundaries](CONSTITUTION.md)
+- [Governance policy artifact](../governance/governance_policy_v1.json)
+- [Release evidence checklist](release/release_checklist.md)
 
----
+<details>
+<summary><strong>Need deeper governance references?</strong></summary>
 
-If you need machine-oriented inventory/indexing, use [`docs/manifest.txt`](manifest.txt).
+- [Governance mutation lifecycle](governance/mutation_lifecycle.md)
+- [Release evidence matrix](RELEASE_EVIDENCE_MATRIX.md)
+- [Diagram ownership contract](DIAGRAM_OWNERSHIP.md)
+
+</details>

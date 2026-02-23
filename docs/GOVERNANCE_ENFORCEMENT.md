@@ -1,5 +1,13 @@
 # Governance Enforcement
 
+## Governance flow (evidence path)
+
+<p align="center">
+  <img src="assets/adaad-governance-flow.svg" width="900" alt="Governance enforcement flow illustrating proposal intake, policy gates, replay checks, and evidence logging stages">
+</p>
+
+*Evidence path: proposal intent and context enter policy evaluation, replay and determinism controls gate execution, and resulting decisions are anchored in governance/ledger artifacts for auditability.*
+
 Required branch protections for `main`:
 
 - Required status checks must pass before merge.

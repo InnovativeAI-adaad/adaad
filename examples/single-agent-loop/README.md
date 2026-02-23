@@ -21,3 +21,7 @@ After execution, inspect:
 - `examples/single-agent-loop/.run/agents/lineage/` for staged/promoted mutation bundles.
 - `security/ledger/lineage.jsonl` for `ancestry_validated` and `mutation_promoted` events.
 - `reports/metrics.jsonl` for `dream_discovery`, `dream_candidate_generated`, and `mutation_promoted` events.
+
+
+---
+Looking for broader guidance? Return to the [Docs hub](../../docs/README.md).

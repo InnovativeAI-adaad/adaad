@@ -341,3 +341,14 @@ To view the enhanced dashboard:
 python -m http.server 8081 --directory ui/enhanced
 # open http://localhost:8081/enhanced_dashboard.html
 ```
+
+
+## After first successful run
+
+- [Walk through the single-agent loop example](examples/single-agent-loop/README.md)
+- [Review security and key handling guidance](docs/SECURITY.md)
+- [Use the release checklist for governed delivery](docs/release/release_checklist.md)
+
+## Start here next
+
+See role-based paths in [docs/README.md](docs/README.md).
