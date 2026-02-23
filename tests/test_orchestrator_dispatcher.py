@@ -5,7 +5,7 @@ import time
 
 from adaad.orchestrator import bootstrap as bootstrap_module
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
-from adaad.orchestrator.dispatcher import Dispatcher, dispatch
+from adaad.orchestrator.dispatcher import Dispatcher, dispatch, dispatch_result_or_raise
 from adaad.orchestrator.registry import HandlerRegistry, clear_registry, register_tool
 
 
@@ -87,3 +87,43 @@ def test_dispatcher_class_latency_metrics_failure_is_non_fatal(monkeypatch, capl
     assert failure_record.route == "slow"
     assert failure_record.latency_ms >= 50
     assert "sink unavailable" in failure_record.exception
+
+
+def test_dispatch_result_or_raise_accepts_result_envelope() -> None:
+    assert dispatch_result_or_raise({"result": {"ok": True}}) == {"ok": True}
+
+
+def test_dispatch_composes_with_dispatch_result_or_raise() -> None:
+    register_tool("test.ok", lambda _payload: {"status": "ok", "value": 42})
+
+    envelope = dispatch("test.ok", {})
+    result = dispatch_result_or_raise(envelope)
+
+    assert result == {"status": "ok", "value": 42}
+
+
+def test_dispatch_result_or_raise_fails_closed_for_error_envelope() -> None:
+    try:
+        dispatch_result_or_raise({"status": "error", "error": {"code": "route_not_found"}})
+    except RuntimeError as exc:
+        assert str(exc) == "dispatch failed:route_not_found"
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
+def test_dispatch_result_or_raise_fails_closed_for_missing_result() -> None:
+    try:
+        dispatch_result_or_raise({"metadata": {"route": "x"}})
+    except RuntimeError as exc:
+        assert str(exc) == "dispatch failed:missing_result"
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
+def test_dispatch_result_or_raise_fails_closed_for_non_success_result_status() -> None:
+    try:
+        dispatch_result_or_raise({"result": {"status": "rejected", "error_code": "policy_blocked"}})
+    except RuntimeError as exc:
+        assert str(exc) == "dispatch failed:policy_blocked"
+    else:
+        raise AssertionError("expected RuntimeError")

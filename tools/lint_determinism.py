@@ -18,6 +18,11 @@ TARGET_DIRS: tuple[str, ...] = (
     "security",
 )
 
+REQUIRED_GOVERNANCE_FILES: tuple[str, ...] = (
+    "runtime/evolution/fitness_orchestrator.py",
+    "runtime/governance/federation/transport.py",
+)
+
 # Direct dynamic execution primitives.
 FORBIDDEN_CALLS: tuple[tuple[str, ...], ...] = (
     ("eval",),
@@ -367,6 +372,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         roots = [REPO_ROOT / relative for relative in TARGET_DIRS]
 
     issues: list[LintIssue] = []
+    for required_relative in REQUIRED_GOVERNANCE_FILES:
+        required_path = (REPO_ROOT / required_relative).resolve()
+        if not required_path.exists():
+            issues.append(LintIssue(REPO_ROOT / required_relative, 1, 0, "required_scope_file_missing"))
+
     for file_path in _iter_python_files(roots):
         issues.extend(_lint_file(file_path))
 

@@ -179,3 +179,5 @@ The UI JavaScript is served as `/ui/aponi.js` to remain CSP-compatible without i
 - Federation divergence incident response: `docs/governance/FEDERATION_CONFLICT_RUNBOOK.md`.
 
 Aponi governance intelligence responses are validated against draft-2020-12 schemas in `schemas/aponi_responses/`; validation failures return structured `governance_error: "response_schema_violation"` fail-closed responses.
+
+Runtime alignment note: mutation fitness is emitted from the epoch-frozen `FitnessOrchestrator`, and governance gate/policy enforcement is governed by Canon Law v1.0 fail-closed escalation semantics for deterministic audit replay.

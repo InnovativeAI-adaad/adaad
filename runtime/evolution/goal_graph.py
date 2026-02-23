@@ -8,6 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Sequence
 
+from runtime.governance.deterministic_filesystem import read_file_deterministic
+from security import cryovant
+
 
 @dataclass(frozen=True)
 class GoalNode:
@@ -23,6 +26,9 @@ class GoalNode:
 class GoalGraph:
     """Weighted deterministic objective graph loaded from JSON."""
 
+    _shared: "GoalGraph | None" = None
+    _shared_path: Path | None = None
+
     def __init__(self, roots: Sequence[GoalNode]) -> None:
         self._roots = tuple(roots)
 
@@ -30,7 +36,7 @@ class GoalGraph:
     def load(cls, path: str | Path) -> "GoalGraph":
         goal_path = Path(path)
         try:
-            raw = json.loads(goal_path.read_text(encoding="utf-8"))
+            raw = json.loads(read_file_deterministic(goal_path))
         except (FileNotFoundError, json.JSONDecodeError) as exc:
             from runtime import metrics
 
@@ -43,6 +49,24 @@ class GoalGraph:
         roots_raw = raw.get("goals") or []
         roots = [cls._parse_node(node) for node in roots_raw]
         return cls(roots)
+
+    @classmethod
+    def get_shared(cls, path: str | Path) -> "GoalGraph":
+        resolved = Path(path)
+        if cls._shared is None or cls._shared_path != resolved:
+            cls._shared = cls.load(resolved)
+            cls._shared_path = resolved
+        return cls._shared
+
+    @classmethod
+    def reload_goal_graph(cls, path: str | Path, *, signature: str, key_id: str = "goal-graph") -> "GoalGraph":
+        goal_path = Path(path)
+        payload = read_file_deterministic(goal_path).encode("utf-8")
+        if not cryovant.verify_payload_signature(payload, signature, key_id):
+            raise ValueError("goal_graph_signature_verification_failed")
+        cls._shared = cls.load(goal_path)
+        cls._shared_path = goal_path
+        return cls._shared
 
     @classmethod
     def _parse_node(cls, payload: Mapping[str, Any]) -> GoalNode:

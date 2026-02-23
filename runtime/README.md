@@ -52,6 +52,8 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 - Federation transport canonical messages include `policy_exchange`, `federation_vote`, and `replay_proof_bundle`, each requiring canonical JSON digest and deterministic Ed25519 signature validation.
 - Deterministic promotion simulation runner: `runtime/evolution/simulation_runner.py` with CI entrypoint `scripts/run_simulation_runner.py`.
 - Deterministic epoch-frozen fitness orchestration: `runtime/evolution/fitness_orchestrator.py` (`survival_only`/`hybrid`/`economic_full` regimes, epoch snapshot ledger emission, stable config hashing).
+- Canon Law v1.0 YAML enforcement is wired through `runtime/governance/{canon_law.py,policy_validator.py,gate_certifier.py}` with deterministic escalation tiers and fail-closed defaults.
+- Goal graph supports signed hot-reload via `GoalGraph.reload_goal_graph(...)` with Cryovant payload signature verification before activation.
 - MCP proposal writer runtime: `runtime/mcp/` deterministic FastAPI endpoints and hash-linked queue append flow.
 - Canonical governance event taxonomy/normalization: `runtime/governance/event_taxonomy.py`.
 - Constitution resource governance + shared accounting: `runtime/governance/constitution.yaml`, `runtime/governance/resource_accounting.py`.

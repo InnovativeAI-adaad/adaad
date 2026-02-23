@@ -21,6 +21,8 @@ The app layer orchestrates boot order and creative/evaluative cycles. Architect 
 - `app/mutation_executor.py` is the pure execution engine and should remain UI/entrypoint agnostic.
 - `adaad/orchestrator/*` is orchestration/wiring only. Any direct `app.main` coupling is forbidden.
 - Legacy module-level compatibility paths are adapter-only and must not grow business logic.
+- Dispatcher call sites in orchestration paths must fail closed on non-success envelopes before reading `result` payloads (deterministic `dispatch failed:<code>` RuntimeError on error/missing result/explicit non-success result status).
+- Dispatch guard failures should be observable via dispatcher logger records to preserve triage/audit visibility for rejected envelopes.
 - See `docs/ARCHITECTURE_CONTRACT.md` for ownership and enforcement boundaries.
 
 

@@ -71,7 +71,7 @@ from runtime.governance.foundation import default_provider
 from runtime.timeutils import now_iso
 from runtime.warm_pool import WarmPool
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
-from adaad.orchestrator.dispatcher import dispatch
+from adaad.orchestrator.dispatcher import dispatch, dispatch_result_or_raise
 from security import cryovant
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
@@ -776,9 +776,15 @@ class Orchestrator:
         if request.targets:
             for target in request.targets:
                 if target.path == "dna.json":
-                    dispatch("mutation.apply_ops", simulated, target.ops)
+                    envelope = dispatch("mutation.apply_ops", simulated, target.ops)
+                    # Mutation rationale: fail closed on dispatch envelope errors.
+                    # Expected invariants: only success envelopes can mutate simulated DNA.
+                    dispatch_result_or_raise(envelope)
         else:
-            dispatch("mutation.apply_ops", simulated, request.ops)
+            envelope = dispatch("mutation.apply_ops", simulated, request.ops)
+            # Mutation rationale: fail closed on dispatch envelope errors.
+            # Expected invariants: only success envelopes can mutate simulated DNA.
+            dispatch_result_or_raise(envelope)
         payload = {
             "parent": dna.get("lineage") or "dry_run",
             "intent": request.intent,

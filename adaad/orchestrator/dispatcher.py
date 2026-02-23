@@ -18,6 +18,38 @@ MAX_LATENCY_MS = 50.0
 _LOGGER = logging.getLogger("adaad.dispatcher")
 
 
+def dispatch_result_or_raise(envelope: dict[str, Any]) -> Any:
+    """Extract dispatcher result payload or fail-closed on envelope errors.
+
+    Mutation rationale: ensure callers only continue on explicit successful
+    dispatch outcomes and never consume ambiguous envelopes.
+    Expected invariants: error envelopes, missing results, and explicit
+    non-success result statuses raise deterministic RuntimeError values.
+    """
+
+    status = str(envelope.get("status") or "")
+    if status == "error":
+        error = envelope.get("error") if isinstance(envelope.get("error"), dict) else {}
+        code = str(error.get("code") or "unknown")
+        _LOGGER.error("dispatch_result_or_raise envelope_error", extra={"code": code})
+        raise RuntimeError(f"dispatch failed:{code}")
+    if "result" not in envelope:
+        _LOGGER.error("dispatch_result_or_raise missing_result")
+        raise RuntimeError("dispatch failed:missing_result")
+
+    result = envelope["result"]
+    if isinstance(result, dict) and "status" in result:
+        result_status = str(result.get("status") or "").strip().lower()
+        if result_status not in {"ok", "success"}:
+            error_code = str(result.get("error_code") or "result_status_not_success")
+            _LOGGER.error(
+                "dispatch_result_or_raise non_success_result_status",
+                extra={"result_status": result_status, "error_code": error_code},
+            )
+            raise RuntimeError(f"dispatch failed:{error_code}")
+    return result
+
+
 def _latency_budget_meta(*, route: str, latency_ms: float) -> dict[str, Any]:
     meta: dict[str, Any] = {
         "route": route,
@@ -136,4 +168,4 @@ def dispatch(tool_name: str, /, *args: Any, **kwargs: Any) -> dict[str, Any]:
     return envelope
 
 
-__all__ = ["Dispatcher", "dispatch", "MAX_LATENCY_MS"]
+__all__ = ["Dispatcher", "dispatch", "dispatch_result_or_raise", "MAX_LATENCY_MS"]
