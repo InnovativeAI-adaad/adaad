@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Dict, Set
 
+from runtime.governance.canon_law import CanonLawError, emit_violation_event, load_canon_law, one_way_escalation
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation.clock import utc_now_iso
 from security import cryovant
@@ -38,14 +39,63 @@ class GateCertifier:
 
     def certify(self, file_path: Path, metadata: Dict[str, str] | None = None) -> Dict[str, object]:
         metadata = dict(metadata or {})
+        escalation = "advisory"
+        try:
+            clauses = load_canon_law()
+        except CanonLawError as exc:
+            return self._result(False, metadata, error=f"canon_law_error:{exc}", file=str(file_path), escalation="critical", mutation_blocked=True, fail_closed=True, event=[])
+        mutation_blocked = False
+        fail_closed = False
+
+        def _record(clause_id: str, reason: str, *, context: Dict[str, object] | None = None) -> dict[str, object]:
+            nonlocal escalation, mutation_blocked, fail_closed
+            clause = clauses[clause_id]
+            entry = emit_violation_event(component="gate_certifier", clause=clause, reason=reason, context=context)
+            escalation = one_way_escalation(escalation, clause.escalation)
+            mutation_blocked = mutation_blocked or clause.mutation_block
+            fail_closed = fail_closed or clause.fail_closed
+            return {"ledger_hash": entry.get("hash", "")}
+
         if not file_path.exists() or file_path.is_dir():
-            return self._result(False, metadata, error="missing_file", file=str(file_path))
+            evt = _record("III.gate_file_must_exist", "missing_file", context={"file": str(file_path)})
+            return self._result(
+                False,
+                metadata,
+                error="missing_file",
+                file=str(file_path),
+                escalation=escalation,
+                mutation_blocked=mutation_blocked,
+                fail_closed=fail_closed,
+                event=evt,
+            )
         content = read_file_deterministic(file_path)
 
         try:
             tree = ast.parse(content)
         except SyntaxError as exc:
-            return self._result(False, metadata, error=f"syntax_error:{exc}", file=str(file_path))
+            evt = _record("IV.gate_forbidden_code_block", "syntax_error", context={"error": str(exc), "file": str(file_path)})
+            return self._result(
+                False,
+                metadata,
+                error=f"syntax_error:{exc}",
+                file=str(file_path),
+                escalation=escalation,
+                mutation_blocked=mutation_blocked,
+                fail_closed=fail_closed,
+                event=evt,
+            )
+        except CanonLawError as exc:
+            evt = _record("VIII.undefined_state_fail_closed", "undefined_state", context={"error": str(exc), "file": str(file_path)})
+            return self._result(
+                False,
+                metadata,
+                error=f"undefined_state:{exc}",
+                file=str(file_path),
+                escalation=escalation,
+                mutation_blocked=mutation_blocked,
+                fail_closed=fail_closed,
+                event=evt,
+            )
 
         found_imports = _imports_in_tree(tree)
         import_ok = not any(bad in found_imports for bad in self.banned_imports)
@@ -60,6 +110,11 @@ class GateCertifier:
                 auth_ok = False
 
         passed = import_ok and token_ok and auth_ok
+        violation_events: list[dict[str, object]] = []
+        if not import_ok or not token_ok:
+            violation_events.append(_record("IV.gate_forbidden_code_block", "forbidden_code_or_import"))
+        if not auth_ok:
+            violation_events.append(_record("V.gate_authentication_required", "auth_failed"))
         metadata.pop("cryovant_token", None)
         return self._result(
             passed,
@@ -72,6 +127,10 @@ class GateCertifier:
                 "token_ok": token_ok,
                 "auth_ok": auth_ok,
             },
+            escalation=escalation,
+            mutation_blocked=mutation_blocked,
+            fail_closed=fail_closed,
+            event=violation_events,
         )
 
     def _result(self, passed: bool, metadata: Dict[str, str], **kwargs: object) -> Dict[str, object]:
