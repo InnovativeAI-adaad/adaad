@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from runtime.fitness_v2 import score_mutation_survival
+from runtime.evolution.fitness_orchestrator import FitnessOrchestrator
 
 
 WEIGHTS = {
@@ -18,7 +18,19 @@ WEIGHTS = {
 
 
 def analyze_mutation(payload: Dict[str, Any]) -> Dict[str, Any]:
-    score = float(score_mutation_survival("claude-proposal-agent", "mcp", payload))
+    orchestrator = FitnessOrchestrator()
+    result = orchestrator.score(
+        {
+            "epoch_id": str(payload.get("epoch_id") or "mcp-static-epoch"),
+            "mutation_tier": payload.get("mutation_tier", "low"),
+            "correctness_score": payload.get("constitutional_compliance", 0.5),
+            "efficiency_score": payload.get("resource_efficiency", 0.5),
+            "policy_compliance_score": payload.get("constitutional_compliance", 0.5),
+            "goal_alignment_score": payload.get("performance_delta", 0.5),
+            "simulated_market_score": payload.get("lineage_distance", 0.5),
+        }
+    )
+    score = float(result.total_score)
     components = {
         key: float(payload.get(key, 0.5)) if isinstance(payload.get(key), (int, float)) else 0.5
         for key in WEIGHTS
@@ -45,6 +57,8 @@ def analyze_mutation(payload: Dict[str, Any]) -> Dict[str, Any]:
         "component_scores": components,
         "blocking_predictions": blocking_predictions,
         "recommendation": recommendation,
+        "fitness_regime": result.regime,
+        "fitness_config_hash": result.config_hash,
     }
 
 

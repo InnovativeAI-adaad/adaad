@@ -21,8 +21,7 @@ from runtime.evolution.promotion_policy import PromotionPolicyEngine
 from runtime.evolution.promotion_state_machine import PromotionState, require_transition
 from runtime.evolution.entropy_detector import detect_entropy_metadata, observed_entropy_from_telemetry
 from runtime.evolution.entropy_policy import EntropyPolicy, enforce_entropy_policy
-from runtime.fitness_pipeline import FitnessPipeline, RiskEvaluator, TestOutcomeEvaluator
-from runtime.fitness_v2 import score_mutation_survival
+from runtime.evolution.fitness_orchestrator import FitnessOrchestrator
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
 from runtime.invariants import verify_all
 from runtime.manifest.generator import generate_manifest, write_manifest
@@ -71,7 +70,7 @@ class MutationExecutor:
         self.test_sandbox = TestSandbox(root_dir=ROOT_DIR, timeout_s=60)
         self.hardened_sandbox = HardenedSandboxExecutor(self.test_sandbox, provider=self.provider)
         self.impact_predictor = ImpactPredictor(agents_root)
-        self.fitness_pipeline = FitnessPipeline([TestOutcomeEvaluator(), RiskEvaluator()])
+        self.fitness_orchestrator = FitnessOrchestrator()
         self.promotion_policy = PromotionPolicyEngine({
             "schema_version": "1.0",
             "policy_id": "default",
@@ -459,20 +458,19 @@ class MutationExecutor:
         }
 
         survival_payload = {**payload, "verified": True, "ops": request.ops, "impact_risk_score": impact.risk_score}
-        survival_score = score_mutation_survival(request.agent_id, request.intent or "default", survival_payload)
-        composed_fitness = self.fitness_pipeline.evaluate({"tests_ok": tests_ok, "impact_risk_score": impact.risk_score})
         fitness_component_scores = {
             "correctness_score": 1.0 if tests_ok else 0.0,
-            "efficiency_score": float(composed_fitness.get("score", 0.0) or 0.0),
+            "efficiency_score": max(0.0, 1.0 - float(impact.risk_score)),
             "policy_compliance_score": 1.0,
             "goal_alignment_score": 0.0,
             "simulated_market_score": max(0.0, 1.0 - float(impact.risk_score)),
         }
+        pre_orchestrator_survival_score = float(fitness_component_scores["efficiency_score"])
         goal_graph_score = self.goal_graph.compute_goal_score(
             {
                 "metrics": {
                     "tests_ok": 1.0 if tests_ok else 0.0,
-                    "survival_score": float(survival_score),
+                    "survival_score": pre_orchestrator_survival_score,
                     "risk_score_inverse": max(0.0, 1.0 - float(impact.risk_score)),
                     "entropy_compliance": 1.0,
                     "deterministic_replay_seed": 1.0 if _is_valid_replay_seed(replay_seed) else 0.0,
@@ -489,6 +487,22 @@ class MutationExecutor:
         payload["goal_graph_score"] = goal_graph_score
         survival_payload["goal_graph_score"] = goal_graph_score
         fitness_component_scores["goal_alignment_score"] = float(goal_graph_score)
+
+        orchestrated_fitness = self.fitness_orchestrator.score(
+            {
+                "epoch_id": epoch_id,
+                "ledger": self.governor.ledger,
+                "mutation_tier": self._risk_tier(float(impact.risk_score)).lower(),
+                **fitness_component_scores,
+            }
+        )
+        survival_score = float(orchestrated_fitness.total_score)
+        composed_fitness = {
+            "overall_score": survival_score,
+            "breakdown": dict(orchestrated_fitness.breakdown),
+            "regime": orchestrated_fitness.regime,
+            "config_hash": orchestrated_fitness.config_hash,
+        }
 
         entropy_metadata = detect_entropy_metadata(
             request,

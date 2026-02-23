@@ -50,6 +50,7 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 - Hardened sandbox isolation primitives: `runtime/sandbox/{executor,policy,manifest,evidence,isolation,preflight}.py` with strict pre-exec enforcement preparation and fail-closed integrity events.
 - Federation coordination primitives: `runtime/governance/federation/` for deterministic policy exchange, quorum/consensus recording, and governance precedence checks.
 - Deterministic promotion simulation runner: `runtime/evolution/simulation_runner.py` with CI entrypoint `scripts/run_simulation_runner.py`.
+- Deterministic epoch-frozen fitness orchestration: `runtime/evolution/fitness_orchestrator.py` (`survival_only`/`hybrid`/`economic_full` regimes, epoch snapshot ledger emission, stable config hashing).
 - MCP proposal writer runtime: `runtime/mcp/` deterministic FastAPI endpoints and hash-linked queue append flow.
 - Canonical governance event taxonomy/normalization: `runtime/governance/event_taxonomy.py`.
 - Constitution resource governance + shared accounting: `runtime/governance/constitution.yaml`, `runtime/governance/resource_accounting.py`.
