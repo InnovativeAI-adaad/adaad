@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="180" viewBox="0 0 1200 180" role="img" aria-labelledby="title desc">
+  <title id="title">ADAAD Governance Flow</title>
+  <desc id="desc">Propose to Archive flow with replay verification and policy gating.</desc>
+  <rect width="1200" height="180" fill="#0b1220" rx="14"/>
+  <g font-family="Arial, sans-serif" font-size="16" fill="#e8eefc" text-anchor="middle">
+    <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L10,4 L0,8 z" fill="#78a6ff"/>
+      </marker>
+    </defs>
+
+    <g>
+      <rect x="20" y="55" width="140" height="70" rx="10" fill="#1d2a44" stroke="#5d85d6"/>
+      <text x="90" y="97">Propose</text>
+
+      <rect x="180" y="55" width="140" height="70" rx="10" fill="#1d2a44" stroke="#5d85d6"/>
+      <text x="250" y="97">Simulate</text>
+
+      <rect x="340" y="55" width="160" height="70" rx="10" fill="#1b334f" stroke="#66b3ff"/>
+      <text x="420" y="97">Replay Verify</text>
+
+      <rect x="520" y="55" width="150" height="70" rx="10" fill="#1b334f" stroke="#66b3ff"/>
+      <text x="595" y="97">Policy Gate</text>
+
+      <rect x="690" y="55" width="130" height="70" rx="10" fill="#20422a" stroke="#6fd39a"/>
+      <text x="755" y="97">Execute</text>
+
+      <rect x="840" y="55" width="190" height="70" rx="10" fill="#20422a" stroke="#6fd39a"/>
+      <text x="935" y="97">Evidence Attach</text>
+
+      <rect x="1050" y="55" width="130" height="70" rx="10" fill="#3a2a1e" stroke="#d6a36a"/>
+      <text x="1115" y="97">Archive</text>
+    </g>
+
+    <g stroke="#78a6ff" stroke-width="3" fill="none" marker-end="url(#arrow)">
+      <line x1="160" y1="90" x2="178" y2="90"/>
+      <line x1="320" y1="90" x2="338" y2="90"/>
+      <line x1="500" y1="90" x2="518" y2="90"/>
+      <line x1="670" y1="90" x2="688" y2="90"/>
+      <line x1="820" y1="90" x2="838" y2="90"/>
+      <line x1="1030" y1="90" x2="1048" y2="90"/>
+    </g>
+  </g>
+</svg>

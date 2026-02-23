@@ -1,3 +1,4 @@
+NOTE: Human readers should start at docs/README.md.
 app/
 runtime/
 security/
