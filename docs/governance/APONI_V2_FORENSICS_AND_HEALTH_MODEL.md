@@ -113,6 +113,10 @@ Returns a deterministic weighted instability projection with:
 The endpoint also exposes a deterministic Wilson-style confidence interval and `velocity_spike_anomaly` when velocity exceeds a fixed threshold.
 Anomaly mode is `absolute_delta`: both sharp destabilization and sharp stabilization deltas are flagged for operator review.
 
+### `GET /metrics/review-quality`
+
+Returns a deterministic review latency and SLA coverage summary over a bounded metrics window (`limit`) using a caller-specified or default `sla_seconds` threshold.
+
 ### `GET /policy/simulate`
 
 Read-only policy simulation endpoint that compares health outcomes under current policy vs a candidate governance policy artifact.
