@@ -1,8 +1,39 @@
-# ADAAD Quick Start (5 Minutes)
+# ADAAD Quick Start (5 Minutes) ![Stable](https://img.shields.io/badge/Status-Stable-2ea043)
 
 > 🎥 Prefer video? A walkthrough is not published yet; this guide is the canonical setup path today.
 
 This guide gives you the fastest path to a working ADAAD run, plus a clean reset path if state drifts.
+
+> ADAAD quickstart bootstraps deterministic replay-safe setup, validates governance readiness,
+> and gives you a first dry-run mutation result without modifying repository state.
+> Follow this sequence for local operator onboarding and contributor sanity checks.
+
+> **Doc metadata:** Audience: Operator / Contributor · Last validated release: `v1.0.0`
+
+> ✅ **Do this:** Execute the numbered flow in order, then run `./quickstart.sh` as your first confidence check.
+>
+> ⚠️ **Caveat:** Strict replay checks may fail on first-time local state until replay artifacts stabilize.
+>
+> 🚫 **Out of scope:** This guide does not cover unattended production deployment hardening.
+
+## Table of Contents
+
+- [What success looks like in under 2 minutes](#what-success-looks-like-in-under-2-minutes)
+- [Prerequisites](#prerequisites)
+- [1) Clone and enter the repo](#1-clone-and-enter-the-repo)
+- [2) Create and activate a virtual environment](#2-create-and-activate-a-virtual-environment)
+- [3) Install dependencies](#3-install-dependencies)
+- [4) Initialize ADAAD workspace](#4-initialize-adaad-workspace)
+- [Governance boot-critical artifacts](#governance-boot-critical-artifacts)
+- [5) Verify boot works (recommended)](#5-verify-boot-works-recommended)
+- [6) Optional replay verification-only mode](#6-optional-replay-verification-only-mode)
+- [7) Optional dry-run mutation evaluation](#7-optional-dry-run-mutation-evaluation)
+- [Launch the dashboard quickly](#launch-the-dashboard-quickly)
+- [Quick health checks](#quick-health-checks)
+- [Clean reset (if behavior looks inconsistent)](#clean-reset-if-behavior-looks-inconsistent)
+- [Troubleshooting](#troubleshooting)
+- [Next steps](#next-steps)
+- [Optional UX-first first run](#optional-ux-first-first-run)
 
 ## What success looks like in under 2 minutes
 
@@ -245,7 +276,7 @@ python nexus_setup.py --validate-only          # confirm all checks pass
 python nexus_setup.py --validate-only --json   # machine-readable output for scripting
 ```
 
-## Troubleshooting
+## Troubleshooting ![Internal](https://img.shields.io/badge/Guide-Internal-blue)
 
 ### `ModuleNotFoundError` during startup
 
