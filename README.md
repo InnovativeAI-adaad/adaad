@@ -1,6 +1,8 @@
-# ADAAD
+# ADAAD ![Stable](https://img.shields.io/badge/Status-Stable-2ea043)
 
-> **Deterministic, policy-governed autonomous code evolution.**
+> Deterministic, policy-governed autonomous code evolution.
+> ADAAD enforces constitutional mutation gates, deterministic replay checks, and fail-closed execution behavior.
+> It is built for governed staging and audit workflows.
 
 ADAAD is a governance layer for autonomous code mutation. It exists to ensure autonomy remains reproducible, auditable, and constrained by constitutional policy.
 

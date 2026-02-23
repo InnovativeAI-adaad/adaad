@@ -1,48 +1,63 @@
-# Earth (runtime)
+# Earth (runtime) ![Stable](https://img.shields.io/badge/Runtime-Stable-2ea043)
 
 The runtime element owns invariant checks, metrics, warm-pool infrastructure, capability registry, and root paths. It must initialize before any other element. All metrics and capability events are logged to `reports/metrics.jsonl` and persisted under `data/`.
 
+> Runtime is the canonical governance and replay substrate for ADAAD boot and mutation control.
+> It defines deterministic primitives, policy enforcement boundaries, and evidence/export contracts.
+> Consumers should import runtime-native modules first, with adapters used only for compatibility.
 
-## Canonical import paths
+> **Doc metadata:** Audience: Contributor / Auditor · Last validated release: `v1.0.0`
+
+> ✅ **Do this:** Add governance/evolution logic under `runtime/*` and keep imports on canonical paths.
+>
+> ⚠️ **Caveat:** Compatibility adapters (`governance/*`) are legacy-facing shims and should not gain new business logic.
+>
+> 🚫 **Out of scope:** Do not introduce alternate runtime roots or duplicate governance implementation trees.
+
+Runtime is the only authoritative implementation root for governance and replay.
+
+
+## Canonical import paths ![Internal](https://img.shields.io/badge/Contract-Internal-blue)
+
+<details>
+<summary><strong>Core path ownership</strong></summary>
 
 - Authoritative governance foundation modules live in `runtime/governance/foundation/`.
 - Authoritative evolution governance helpers live in `runtime/evolution/` (`scoring.py`, `promotion_state_machine.py`, `checkpoint.py`).
 - `governance/` at repo root is compatibility-only and must re-export runtime implementations rather than duplicate logic.
+
+</details>
+
+<details>
+<summary><strong>Determinism and invariants</strong></summary>
 
 Deterministic replay-sensitive entry points now consume a shared provider abstraction from `runtime/governance/foundation/determinism.py` for UTC clock access and ID/token generation.
 
 - Epoch checkpoint registry/verifier: `runtime/evolution/checkpoint_registry.py`, `runtime/evolution/checkpoint_verifier.py`.
 - Entropy enforcement primitives: `runtime/evolution/entropy_detector.py`, `runtime/evolution/entropy_policy.py` with declared+observed telemetry accounting and per-epoch durable entropy totals.
 - Entropy observability helper: `runtime/evolution/telemetry_audit.py` (`get_epoch_entropy_breakdown`).
-- Hardened sandbox isolation primitives: `runtime/sandbox/{executor,policy,manifest,evidence,isolation,preflight}.py` with strict pre-exec enforcement preparation (seccomp/capability/resource profiles), canonical syscall fingerprint evidence, deterministic preflight blocking before test execution, explicit deny-by-default DNS egress policy, and fail-closed structured sandbox integrity events.
-- Lineage replay integrity now distinguishes two paths: verified replay digests (chain-integrity prevalidated) for strict/production checks, and explicit unverified forensic digest recomputation for tamper analysis workflows.
-- Constitutional lineage continuity now validates mutation ancestry links (parent mutation IDs + ancestor chains) and emits deterministic `lineage_violation_detected` events before execution; strict replay boot paths fail closed when ancestry cannot be certified. The `ancestor_chain` ordering invariant is oldest -> newest, with the tail matching `parent_mutation_id` when both are present.
-- Strict replay determinism requires deterministic providers; audit tier enforcement also requires deterministic providers to preserve forensic replay value.
-- Mutation transactions (`runtime/tools/mutation_tx.py`) derive transaction IDs from the shared determinism provider using epoch/agent/mutation/replay context labels, so strict/audit replay mode emits replay-safe stable IDs while off-mode remains provider-default behavior.
-- Mutation transaction verification (`runtime/tools/mutation_tx.py`) enforces deterministic invariants before commit: every recorded path must resolve under `agent_root`, touched-file sets must be stable/non-empty when mutations were requested, and per-record metadata (`checksum`, `applied`, `skipped`) must remain internally consistent; invariant failures raise a verification error and trigger rollback.
-- Strict replay invariants reference: `docs/governance/STRICT_REPLAY_INVARIANTS.md` (verified vs unverified digest policy, provider requirements, and replay-equivalence guarantees).
-- Federation coordination primitives: `runtime/governance/federation/` provides deterministic policy version exchange, quorum/consensus decision recording, conflict reconciliation actions, and explicit local-vs-federated governance precedence for replay attestation checks.
+- Lineage replay integrity distinguishes verified replay digests (strict/production) from explicit unverified forensic digest recomputation (tamper analysis).
+- Constitutional lineage continuity validates parent mutation IDs plus ancestor chains and emits deterministic `lineage_violation_detected` events before execution.
+- Strict replay/audit determinism requires deterministic providers to preserve replay and forensic guarantees.
+- Mutation transactions (`runtime/tools/mutation_tx.py`) derive replay-safe stable IDs from deterministic context labels and verify path/touched-file/metadata invariants before commit.
+- Strict replay invariants reference: `docs/governance/STRICT_REPLAY_INVARIANTS.md` (digest policy, provider requirements, replay-equivalence guarantees).
 
-- Deterministic promotion simulation runner: `runtime/evolution/simulation_runner.py` with CI entrypoint `scripts/run_simulation_runner.py` (machine-readable canary verdicts; no mutation side effects).
+</details>
 
-- MCP proposal writer runtime: `runtime/mcp/` exposes deterministic FastAPI endpoints (`/health`, `/tools/list`, `/mutation/propose`, `/mutation/analyze`, `/mutation/explain-rejection`, `/mutation/rank`), enforces proposal validation order (schema -> authority override -> Tier-0 escalation -> constitutional pre-check), and appends accepted proposals to a hash-linked JSONL queue compatible with lineage `_hash_entry` chaining.
+<details>
+<summary><strong>Security, federation, and evidence contracts</strong></summary>
 
-- Canonical governance event taxonomy and normalization live in `runtime/governance/event_taxonomy.py`; UI and analytics consumers should normalize mixed legacy/new event strings through this helper before classification.
+- Hardened sandbox isolation primitives: `runtime/sandbox/{executor,policy,manifest,evidence,isolation,preflight}.py` with strict pre-exec enforcement preparation and fail-closed integrity events.
+- Federation coordination primitives: `runtime/governance/federation/` for deterministic policy exchange, quorum/consensus recording, and governance precedence checks.
+- Deterministic promotion simulation runner: `runtime/evolution/simulation_runner.py` with CI entrypoint `scripts/run_simulation_runner.py`.
+- MCP proposal writer runtime: `runtime/mcp/` deterministic FastAPI endpoints and hash-linked queue append flow.
+- Canonical governance event taxonomy/normalization: `runtime/governance/event_taxonomy.py`.
+- Constitution resource governance + shared accounting: `runtime/governance/constitution.yaml`, `runtime/governance/resource_accounting.py`.
+- Replay attestation bundles: `runtime/evolution/replay_attestation.py` (signed replay-proof exports + offline verification helpers).
+- Forensic evidence bundles: `runtime/evolution/evidence_bundle.py` (`schemas/evidence_bundle.v1.json`).
+- Governance signing and operations guides: `docs/governance/POLICY_ARTIFACT_SIGNING_GUIDE.md`, `docs/governance/FORENSIC_BUNDLE_LIFECYCLE.md`, `docs/governance/FEDERATION_CONFLICT_RUNBOOK.md`, and founders-law model docs.
 
-- Sandbox hardening guidance: `docs/sandbox/README.md`.
-
-- Constitution resource governance now resolves `resource_bounds_policy` from `runtime/governance/constitution.yaml` first (with explicit, allowlisted env overrides only) and emits deterministic `resource_usage_snapshot` + `bounds_policy_version` in rejection telemetry/ledger payloads.
-- Shared deterministic resource accounting normalization for governance and sandbox evidence is centralized in `runtime/governance/resource_accounting.py`.
-- Replay attestation bundles: `runtime/evolution/replay_attestation.py` builds deterministic `security/ledger/replay_proofs/<epoch>.replay_attestation.v1.json` files, emits replay-proof contract fields (`baseline_digest`, `ledger_state_hash`, `mutation_graph_fingerprint`, `constitution_version`, `sandbox_policy_hash`, `signature_bundle`), signs them with configured key metadata via `security/cryovant.py` deterministic key-resolution helpers, validates bundle schema fail-closed, and exposes offline verification helpers used by Aponi replay endpoints.
-
-- Forensic evidence bundles: `runtime/evolution/evidence_bundle.py` exports canonical immutable bundles with signed export metadata (`digest`, `retention_days`, `access_scope`, signer fields), validates against `schemas/evidence_bundle.v1.json`, and fails closed on malformed evidence/schema inputs.
-
-- Governance signing guide: `docs/governance/POLICY_ARTIFACT_SIGNING_GUIDE.md` (deterministic signing + verification workflow, including `scripts/sign_policy_artifact.sh` and `scripts/verify_policy_artifact.sh`).
-- State persistence toggle: governance policy payload now supports `state_backend` (`json` default, optional `sqlite`) for deterministic registry/ledger persistence through `runtime/state/` stores with parity checks and JSON→SQLite migration helpers.
-- Forensic retention lifecycle: `docs/governance/FORENSIC_BUNDLE_LIFECYCLE.md` (`scripts/enforce_forensic_retention.py` dry-run/enforce operations + optional `ops/systemd/adaad-forensic-retention.timer`).
-- Federation incident response: `docs/governance/FEDERATION_CONFLICT_RUNBOOK.md`.
-
-- Founders-law governance model implementation for federation compatibility: `runtime/governance/founders_law_v2.py` (`docs/governance/founders_law_v2.md`).
+</details>
 
 
 ## Determinism and boundary enforcement
