@@ -11,6 +11,7 @@ This page is the standard entry point for users and renders live data from read-
 - `/system/intelligence`
 - `/risk/summary`
 - `/risk/instability`
+- `/metrics/review-quality` (deterministic review latency and SLA coverage summary over a bounded metrics window)
 - `/policy/simulate`
 - `/alerts/evaluate`
 - `/evolution/timeline`
