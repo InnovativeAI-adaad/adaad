@@ -9,9 +9,11 @@ from runtime.governance.federation.coordination import (
     COMPATIBILITY_DOWNLEVEL,
     COMPATIBILITY_FULL,
     COMPATIBILITY_INCOMPATIBLE,
+    DECISION_CLASS_SPLIT_BRAIN,
     FileBackedFederationRegistry,
     acquire_mutation_lock,
     classify_manifest_compatibility,
+    run_coordination_cycle,
     release_mutation_lock,
 )
 from runtime.governance.federation.manifest import FederationManifest
@@ -102,3 +104,18 @@ def test_mutation_lock_ttl_allows_reacquire(monkeypatch, tmp_path: Path) -> None
 
     monkeypatch.setattr("runtime.governance.federation.coordination._now_epoch_seconds", lambda: 20)
     assert acquire_mutation_lock("intent-expire", lock_dir=tmp_path).acquired
+
+
+def test_split_brain_escalation_behavior() -> None:
+    result = run_coordination_cycle(
+        [
+            {"peer_id": "node-a", "policy_version": "2.0.0", "manifest_digest": "sha256:" + ("a" * 64), "is_local": True},
+            {"peer_id": "node-b", "policy_version": "2.1.0", "manifest_digest": "sha256:" + ("b" * 64), "decision": "accept"},
+            {"peer_id": "node-c", "policy_version": "2.0.0", "manifest_digest": "sha256:" + ("c" * 64), "decision": "accept"},
+            {"peer_id": "node-d", "policy_version": "2.1.0", "manifest_digest": "sha256:" + ("d" * 64), "decision": "accept"},
+        ]
+    )
+
+    assert result.decision.decision_class == DECISION_CLASS_SPLIT_BRAIN
+    assert result.fail_closed
+    assert "escalate_split_brain_review" in result.decision.reconciliation_actions

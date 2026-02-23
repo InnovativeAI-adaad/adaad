@@ -25,28 +25,56 @@
     },
     "phase": {
       "type": "string",
-      "enum": ["bind", "reject"]
+      "enum": [
+        "bind",
+        "reject"
+      ]
     },
     "decision_class": {
       "type": "string",
-      "enum": ["consensus", "quorum", "conflict", "rejected", "local_override"]
+      "enum": [
+        "consensus",
+        "quorum",
+        "conflict",
+        "split-brain",
+        "rejected",
+        "local_override"
+      ]
     },
-    "selected_policy_version": {"type": "string", "minLength": 1},
+    "selected_policy_version": {
+      "type": "string",
+      "minLength": 1
+    },
     "peer_ids": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1},
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
       "minItems": 1
     },
     "manifest_digests": {
       "type": "object",
-      "additionalProperties": {"type": "string", "pattern": "^sha256:[a-zA-Z0-9]+"}
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[a-zA-Z0-9]+"
+      }
     },
     "reconciliation_actions": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1}
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
-    "quorum_size": {"type": "integer", "minimum": 1},
-    "vote_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "quorum_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "vote_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
     "conflict_class": {
       "type": "string",
       "enum": [
@@ -54,14 +82,27 @@
         "policy_version_split",
         "manifest_digest_mismatch",
         "signature_mismatch",
-        "governance_precedence_conflict"
+        "governance_precedence_conflict",
+        "split_brain_detected"
       ]
     },
     "error_class": {
       "type": "string",
-      "enum": ["none", "invalid_signature", "schema_validation_failed", "replay_detected", "quorum_unmet"]
+      "enum": [
+        "none",
+        "invalid_signature",
+        "schema_validation_failed",
+        "replay_detected",
+        "quorum_unmet"
+      ]
     },
-    "retry_counter": {"type": "integer", "minimum": 0},
-    "retry_token": {"type": "string", "minLength": 1}
+    "retry_counter": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "retry_token": {
+      "type": "string",
+      "minLength": 1
+    }
   }
 }

@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 DECISION_CLASS_CONSENSUS = "consensus"
 DECISION_CLASS_QUORUM = "quorum"
 DECISION_CLASS_CONFLICT = "conflict"
+DECISION_CLASS_SPLIT_BRAIN = "split-brain"
 DECISION_CLASS_REJECTED = "rejected"
 DECISION_CLASS_LOCAL_OVERRIDE = "local_override"
 
@@ -259,9 +260,13 @@ def evaluate_federation_decision(
         decision_class = DECISION_CLASS_QUORUM
         reconciliation_actions = ["stage_majority_policy", "request_minor_peer_reconciliation"]
     elif len(sorted_versions) > 1:
-        decision_class = DECISION_CLASS_CONFLICT
+        top_tied = len(sorted_versions) > 1 and sorted_versions[0][1] == sorted_versions[1][1]
+        decision_class = DECISION_CLASS_SPLIT_BRAIN if top_tied else DECISION_CLASS_CONFLICT
         selected_policy_version = exchange.local_policy_version
-        reconciliation_actions = ["freeze_federated_upgrade", "require_local_governance_review"]
+        if decision_class == DECISION_CLASS_SPLIT_BRAIN:
+            reconciliation_actions = ["escalate_split_brain_review", "freeze_federated_upgrade", "require_local_governance_review"]
+        else:
+            reconciliation_actions = ["freeze_federated_upgrade", "require_local_governance_review"]
     else:
         decision_class = DECISION_CLASS_REJECTED
         reconciliation_actions = ["reject_federated_policy_update"]
@@ -378,7 +383,7 @@ def resolve_governance_precedence(
     if not local_passed and federated_passed:
         decision_class = DECISION_CLASS_LOCAL_OVERRIDE
     elif local_passed and not federated_passed:
-        decision_class = DECISION_CLASS_CONFLICT
+        decision_class = DECISION_CLASS_SPLIT_BRAIN
     elif final_passed:
         decision_class = DECISION_CLASS_CONSENSUS
     else:
@@ -424,6 +429,7 @@ __all__ = [
     "DECISION_CLASS_LOCAL_OVERRIDE",
     "DECISION_CLASS_QUORUM",
     "DECISION_CLASS_REJECTED",
+    "DECISION_CLASS_SPLIT_BRAIN",
     "POLICY_PRECEDENCE_BOTH",
     "POLICY_PRECEDENCE_FEDERATED",
     "POLICY_PRECEDENCE_LOCAL",

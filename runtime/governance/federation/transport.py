@@ -3,6 +3,10 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
+import hmac
+from hashlib import sha256
 import json
 import re
 from typing import Any, Protocol
@@ -11,6 +15,11 @@ from runtime import ROOT_DIR
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 
 _TRANSPORT_SCHEMA = "federation_transport_contract.v1.json"
+_CANONICAL_MESSAGE_SCHEMAS = {
+    "policy_exchange": "federation_policy_exchange.v1.json",
+    "federation_vote": "federation_vote.v1.json",
+    "replay_proof_bundle": "federation_replay_proof_bundle.v1.json",
+}
 
 
 class FederationTransportContractError(ValueError):
@@ -47,7 +56,7 @@ class LocalFederationTransport:
         return ordered
 
 
-def _schema() -> dict[str, Any]:
+def _transport_schema() -> dict[str, Any]:
     path = ROOT_DIR / "schemas" / _TRANSPORT_SCHEMA
     return json.loads(read_file_deterministic(path))
 
@@ -61,6 +70,8 @@ def _is_type(value: Any, expected: str) -> bool:
         return isinstance(value, str)
     if expected == "integer":
         return isinstance(value, int) and not isinstance(value, bool)
+    if expected == "boolean":
+        return isinstance(value, bool)
     return True
 
 
@@ -110,15 +121,100 @@ def _validate(schema: dict[str, Any], payload: Any, path: str = "$") -> list[str
 
 
 def validate_federation_transport_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
-    errors = _validate(_schema(), envelope)
+    errors = _validate(_transport_schema(), envelope)
     if errors:
         raise FederationTransportContractError(";".join(sorted(errors)))
     return dict(envelope)
+
+
+def _message_schema(schema_name: str) -> dict[str, Any]:
+    path = ROOT_DIR / "schemas" / schema_name
+    return json.loads(read_file_deterministic(path))
+
+
+def canonicalize_json(payload: Any) -> str:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def _message_payload_for_digest(message: dict[str, Any]) -> dict[str, Any]:
+    message_type = message.get("message_type")
+    payload = message.get("payload")
+    if not isinstance(message_type, str) or not isinstance(payload, dict):
+        raise FederationTransportContractError("$.message:invalid_shape")
+    return {
+        "message_type": message_type,
+        "payload": payload,
+    }
+
+
+def compute_message_digest(message: dict[str, Any]) -> str:
+    encoded = canonicalize_json(_message_payload_for_digest(message)).encode("utf-8")
+    return "sha256:" + sha256(encoded).hexdigest()
+
+
+def verify_message_digest(message: dict[str, Any]) -> None:
+    digest = message.get("digest")
+    if not isinstance(digest, str):
+        raise FederationTransportContractError("$.digest:missing")
+    expected = compute_message_digest(message)
+    if not hmac.compare_digest(digest, expected):
+        raise FederationTransportContractError("$.digest:mismatch")
+
+
+def verify_message_signature(message: dict[str, Any]) -> None:
+    try:
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    except ModuleNotFoundError as exc:
+        raise FederationTransportContractError("$.signature:verification_backend_missing") from exc
+
+    signature = message.get("signature")
+    if not isinstance(signature, dict):
+        raise FederationTransportContractError("$.signature:expected_object")
+    if signature.get("algorithm") != "ed25519":
+        raise FederationTransportContractError("$.signature.algorithm:unsupported")
+
+    public_key_b64 = signature.get("public_key")
+    signature_b64 = signature.get("value")
+    if not isinstance(public_key_b64, str) or not isinstance(signature_b64, str):
+        raise FederationTransportContractError("$.signature:missing_material")
+
+    try:
+        public_key_raw = base64.b64decode(public_key_b64, validate=True)
+        signature_raw = base64.b64decode(signature_b64, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise FederationTransportContractError("$.signature:invalid_base64") from exc
+
+    try:
+        verifier = Ed25519PublicKey.from_public_bytes(public_key_raw)
+        verifier.verify(signature_raw, compute_message_digest(message).encode("utf-8"))
+    except (TypeError, ValueError, InvalidSignature) as exc:
+        raise FederationTransportContractError("$.signature:invalid") from exc
+
+
+def validate_canonical_federation_message(message: dict[str, Any]) -> dict[str, Any]:
+    message_type = message.get("message_type")
+    schema_name = _CANONICAL_MESSAGE_SCHEMAS.get(message_type)
+    if schema_name is None:
+        raise FederationTransportContractError("$.message_type:unsupported")
+
+    errors = _validate(_message_schema(schema_name), message)
+    if errors:
+        raise FederationTransportContractError(";".join(sorted(errors)))
+
+    verify_message_digest(message)
+    verify_message_signature(message)
+    return dict(message)
 
 
 __all__ = [
     "FederationTransport",
     "FederationTransportContractError",
     "LocalFederationTransport",
+    "canonicalize_json",
+    "compute_message_digest",
+    "validate_canonical_federation_message",
     "validate_federation_transport_envelope",
+    "verify_message_digest",
+    "verify_message_signature",
 ]

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/federation_vote.v1.json",
+  "title": "Federation Vote Message v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "message_type", "payload", "digest", "signature"],
+  "properties": {
+    "schema_id": {"type": "string", "const": "https://adaad.local/schemas/federation_vote.v1.json"},
+    "message_type": {"type": "string", "const": "federation_vote"},
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exchange_id", "peer_id", "policy_version", "manifest_digest", "decision", "sent_at_epoch"],
+      "properties": {
+        "exchange_id": {"type": "string", "minLength": 1},
+        "peer_id": {"type": "string", "minLength": 1},
+        "policy_version": {"type": "string", "minLength": 1},
+        "manifest_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+        "decision": {"type": "string", "enum": ["accept", "reject"]},
+        "sent_at_epoch": {"type": "integer", "minimum": 0}
+      }
+    },
+    "digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "key_id", "public_key", "value"],
+      "properties": {
+        "algorithm": {"type": "string", "const": "ed25519"},
+        "key_id": {"type": "string", "minLength": 1},
+        "public_key": {"type": "string", "minLength": 1},
+        "value": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

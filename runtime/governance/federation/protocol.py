@@ -212,6 +212,8 @@ def encode_handshake_response_envelope(
     error_class = "none"
     if decision.decision_class == "conflict":
         conflict_class = "policy_version_split"
+    if decision.decision_class == "split-brain":
+        conflict_class = "split_brain_detected"
     if decision.decision_class == "rejected":
         error_class = "quorum_unmet"
 
