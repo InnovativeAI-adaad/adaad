@@ -60,6 +60,10 @@ def test_summarize_review_quality_aggregates() -> None:
                 "sla_seconds": 86400,
             },
         },
+        {
+            "event": "governance_debt_snapshot",
+            "payload": {"compound_debt_score": 1.75},
+        },
     ]
     summary = summarize_review_quality(entries)
 
@@ -67,3 +71,4 @@ def test_summarize_review_quality_aggregates() -> None:
     assert summary["reviewed_within_sla_percent"] == 50.0
     assert summary["review_depth_proxies"]["decision_override_count"] == 1
     assert summary["reviewer_participation_concentration"]["reviewer_count"] == 2
+    assert summary["compound_debt_score"]["latest"] == 1.75

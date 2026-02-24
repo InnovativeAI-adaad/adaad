@@ -7,6 +7,7 @@ from collections import Counter
 from typing import Any, Dict, Iterable, List, cast
 
 from runtime import metrics
+from runtime.governance.debt_ledger import GOVERNANCE_DEBT_EVENT_TYPE
 from runtime.governance.foundation import canonical_json_bytes, sha256_prefixed_digest
 from security.ledger.journal import append_tx
 
@@ -88,11 +89,18 @@ def summarize_review_quality(entries: Iterable[Dict[str, Any]], *, default_sla_s
     """Aggregate governance review KPI metrics from review telemetry events."""
 
     records: List[Dict[str, Any]] = []
+    debt_scores: List[float] = []
     for entry in entries:
-        if not isinstance(entry, dict) or str(entry.get("event", "")).strip() != REVIEW_QUALITY_EVENT_TYPE:
+        if not isinstance(entry, dict):
             continue
+        event_name = str(entry.get("event", "")).strip()
         payload_raw = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
         payload = cast(Dict[str, Any], payload_raw)
+        if event_name == GOVERNANCE_DEBT_EVENT_TYPE:
+            debt_scores.append(max(0.0, _as_float(payload.get("compound_debt_score"), 0.0)))
+            continue
+        if event_name != REVIEW_QUALITY_EVENT_TYPE:
+            continue
         normalized = _normalize_record(payload)
         if int(normalized.get("sla_seconds") or 0) <= 0:
             normalized["sla_seconds"] = int(default_sla_seconds)
@@ -132,6 +140,12 @@ def summarize_review_quality(entries: Iterable[Dict[str, Any]], *, default_sla_s
             "average_comment_count": round(total_comments / total_reviews, 6) if total_reviews else 0.0,
             "override_rate_percent": round((overrides / total_reviews) * 100.0, 3) if total_reviews else 0.0,
             "decision_override_count": overrides,
+        },
+        "compound_debt_score": {
+            "latest": round(debt_scores[-1], 6) if debt_scores else 0.0,
+            "peak": round(max(debt_scores), 6) if debt_scores else 0.0,
+            "average": round(sum(debt_scores) / len(debt_scores), 6) if debt_scores else 0.0,
+            "sample_count": len(debt_scores),
         },
     }
 

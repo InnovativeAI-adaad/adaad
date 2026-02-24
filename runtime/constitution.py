@@ -29,6 +29,7 @@ import yaml
 
 from app.agents.mutation_request import MutationRequest
 from runtime import metrics
+from runtime.governance.debt_ledger import GovernanceDebtLedger
 from runtime.governance.resource_accounting import (
     coalesce_resource_usage_snapshot,
     merge_platform_telemetry,
@@ -1537,6 +1538,7 @@ except ValueError as exc:
 
 _record_amendment(old_hash=None, new_hash=POLICY_HASH, version=CONSTITUTION_VERSION)
 _BASE_GOVERNANCE_FINGERPRINT = _current_governance_fingerprint()
+_GOVERNANCE_DEBT_LEDGER = GovernanceDebtLedger()
 
 
 def reload_constitution_policy(path: Path = POLICY_PATH) -> str:
@@ -1697,6 +1699,29 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
         "governance_drift_detected": drift_detected,
     }
 
+    epoch_id = str(evaluation_state.get("epoch_id", "")).strip()
+    epoch_match = re.search(r"(\d+)$", epoch_id)
+    epoch_index = int(epoch_match.group(1)) if epoch_match else 0
+    warning_verdicts = [
+        item
+        for item in verdicts
+        if isinstance(item, dict) and str(item.get("severity", "")).strip().lower() == Severity.WARNING.value and not bool(item.get("passed", False))
+    ]
+    if drift_detected and tier != Tier.PRODUCTION:
+        warning_verdicts.append({"rule": "governance_drift_detected", "severity": Severity.WARNING.value, "passed": False})
+    debt_snapshot = _GOVERNANCE_DEBT_LEDGER.accumulate_epoch_verdicts(
+        epoch_id=epoch_id,
+        epoch_index=epoch_index,
+        warning_verdicts=warning_verdicts,
+        agent_id=request.agent_id,
+    )
+    evaluation["governance_debt_snapshot"] = {
+        "snapshot_hash": debt_snapshot.snapshot_hash,
+        "prev_snapshot_hash": debt_snapshot.prev_snapshot_hash,
+        "compound_debt_score": debt_snapshot.compound_debt_score,
+        "threshold_breached": debt_snapshot.threshold_breached,
+    }
+
 
 
     ceiling_events = []
@@ -1715,7 +1740,6 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
             }
         )
 
-    epoch_id = str(evaluation_state.get("epoch_id", "")).strip()
     if epoch_id:
         journal.write_entry(
             agent_id=request.agent_id or "system",
