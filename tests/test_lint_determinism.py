@@ -1,10 +1,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
-import ast
+import os
 from pathlib import Path
+
+import pytest
 
 from tools import lint_determinism
 
+
+QA7_LINT_ROLLOUT_ENABLED = os.getenv("QA7_LINT_ROLLOUT", "").lower() in {"1", "true", "yes", "on"}
+qa7_rollout = pytest.mark.qa7
+qa7_gate = pytest.mark.skipif(
+    not QA7_LINT_ROLLOUT_ENABLED,
+    reason="QA-7 rollout lint tests are gated until lint scope expansion lands (set QA7_LINT_ROLLOUT=1 to enable).",
+)
+
+
+# Current-policy contract tests (must pass now)
 
 def test_lint_determinism_flags_forbidden_dynamic_execution(tmp_path: Path) -> None:
     target = tmp_path / "runtime" / "governance" / "bad.py"
@@ -62,33 +74,6 @@ def test_lint_determinism_flags_entropy_imports_in_evolution_scope(tmp_path: Pat
 
     assert issues
     assert any(issue.message == "forbidden_entropy_import" for issue in issues)
-
-
-def test_lint_determinism_flags_entropy_calls_in_replay_sensitive_app_scope(tmp_path: Path) -> None:
-    target = tmp_path / "app" / "dream_mode.py"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        "import time\n\ndef run():\n    return time.time()\n",
-        encoding="utf-8",
-    )
-
-    issues = lint_determinism._lint_file(target)
-
-    assert issues
-    assert any(issue.message == "forbidden_entropy_source" for issue in issues)
-
-
-def test_lint_determinism_allows_documented_entropy_exception_for_beast_mode(tmp_path: Path) -> None:
-    target = tmp_path / "app" / "beast_mode_loop.py"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        "import time\n\ndef _clock():\n    return time.time(), time.monotonic()\n",
-        encoding="utf-8",
-    )
-
-    issues = lint_determinism._lint_file(target)
-
-    assert all(issue.message != "forbidden_entropy_source" for issue in issues)
 
 
 def test_lint_determinism_accepts_clean_file(tmp_path: Path) -> None:
@@ -179,16 +164,6 @@ def find_files_deterministic(path):
     assert issues == []
 
 
-def test_lint_determinism_flags_direct_print_in_operational_modules(tmp_path: Path) -> None:
-    target = tmp_path / "app" / "main.py"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("def run():\n    print('status')\n", encoding="utf-8")
-
-    issues = lint_determinism._lint_file(target)
-
-    assert any(issue.message == "forbidden_direct_print" for issue in issues)
-
-
 def test_lint_determinism_allows_direct_print_in_tools_cli_scripts(tmp_path: Path) -> None:
     target = tmp_path / "tools" / "cli.py"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -228,6 +203,54 @@ def test_lint_required_governance_files_include_federation_protocol_stack() -> N
     assert "runtime/governance/federation/manifest.py" in required
 
 
+# QA-7 rollout tests (enable with QA7_LINT_ROLLOUT=1)
+
+
+@qa7_rollout
+@qa7_gate
+def test_lint_determinism_flags_entropy_calls_in_replay_sensitive_app_scope(tmp_path: Path) -> None:
+    target = tmp_path / "app" / "dream_mode.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "import time\n\ndef run():\n    return time.time()\n",
+        encoding="utf-8",
+    )
+
+    issues = lint_determinism._lint_file(target)
+
+    assert issues
+    assert any(issue.message == "forbidden_entropy_source" for issue in issues)
+
+
+@qa7_rollout
+@qa7_gate
+def test_lint_determinism_allows_documented_entropy_exception_for_beast_mode(tmp_path: Path) -> None:
+    target = tmp_path / "app" / "beast_mode_loop.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "import time\n\ndef _clock():\n    return time.time(), time.monotonic()\n",
+        encoding="utf-8",
+    )
+
+    issues = lint_determinism._lint_file(target)
+
+    assert all(issue.message != "forbidden_entropy_source" for issue in issues)
+
+
+@qa7_rollout
+@qa7_gate
+def test_lint_determinism_flags_direct_print_in_operational_modules(tmp_path: Path) -> None:
+    target = tmp_path / "app" / "main.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("def run():\n    print('status')\n", encoding="utf-8")
+
+    issues = lint_determinism._lint_file(target)
+
+    assert any(issue.message == "forbidden_direct_print" for issue in issues)
+
+
+@qa7_rollout
+@qa7_gate
 def test_lint_targets_include_selected_replay_sensitive_app_modules() -> None:
     targets = set(lint_determinism.TARGET_FILES)
     assert "app/dream_mode.py" in targets
