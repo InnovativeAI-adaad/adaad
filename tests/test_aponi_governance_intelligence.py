@@ -668,9 +668,11 @@ def test_risk_instability_reports_velocity_and_acceleration() -> None:
 
 def test_policy_simulation_compares_current_and_candidate_policy() -> None:
     handler = _handler_class()
-    with patch.object(handler, "_mutation_rate_state", return_value={"ok": True}):
-        with patch.object(handler, "_intelligence_snapshot", return_value={"determinism_score": 0.91}):
-            payload = handler._policy_simulation({"policy": ["governance_policy_v1.json"]})
+    with patch("ui.aponi_dashboard.GOVERNANCE_POLICY", _test_policy()):
+        with patch("ui.aponi_dashboard.load_governance_policy", return_value=_test_policy()):
+            with patch.object(handler, "_mutation_rate_state", return_value={"ok": True}):
+                with patch.object(handler, "_intelligence_snapshot", return_value={"determinism_score": 0.91}):
+                    payload = handler._policy_simulation({"policy": ["governance_policy_v1.json"]})
 
     assert payload["ok"] is True
     assert payload["current_policy"]["health"] in {"PASS", "WARN", "BLOCK"}
@@ -678,7 +680,8 @@ def test_policy_simulation_compares_current_and_candidate_policy() -> None:
 
 def test_policy_simulation_rejects_invalid_score_input() -> None:
     handler = _handler_class()
-    payload = handler._policy_simulation({"determinism_score": ["not-a-number"]})
+    with patch("ui.aponi_dashboard.load_governance_policy", return_value=_test_policy()):
+        payload = handler._policy_simulation({"determinism_score": ["not-a-number"]})
 
     assert payload["ok"] is False
     assert payload["error"] == "invalid_determinism_score"
