@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app.dream_mode import DreamMode
 from runtime.evolution.replay_service import ReplayVerificationService
+from runtime.governance.foundation import SeededDeterminismProvider
 
 
 class _Fitness:
@@ -15,7 +16,13 @@ class _Fitness:
 
 
 def test_write_dream_manifest_creates_expected_file(tmp_path: Path) -> None:
-    dream = DreamMode(tmp_path / "agents", tmp_path / "lineage", replay_mode="audit", recovery_tier="advisory")
+    dream = DreamMode(
+        tmp_path / "agents",
+        tmp_path / "lineage",
+        replay_mode="audit",
+        recovery_tier="advisory",
+        provider=SeededDeterminismProvider(seed="manifest"),
+    )
     staged_path = tmp_path / "lineage" / "_staging" / "candidate"
     staged_path.mkdir(parents=True)
 

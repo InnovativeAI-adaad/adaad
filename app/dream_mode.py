@@ -16,7 +16,6 @@ Dream mode handles mutation cycles for agents.
 """
 
 import json
-import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -25,6 +24,7 @@ from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_ag
 from runtime import metrics
 from runtime.evolution.entropy_discipline import EntropyBudget, deterministic_context, deterministic_token_with_budget
 from runtime.evolution.fitness import FitnessEvaluator
+from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
 from security import cryovant
 
 ELEMENT_ID = "Fire"
@@ -35,11 +35,25 @@ class DreamMode:
     Drives creative mutation cycles.
     """
 
-    def __init__(self, agents_root: Path, lineage_dir: Path, *, replay_mode: str = "off", recovery_tier: str | None = None):
+    def __init__(
+        self,
+        agents_root: Path,
+        lineage_dir: Path,
+        *,
+        replay_mode: str = "off",
+        recovery_tier: str | None = None,
+        provider: RuntimeDeterminismProvider | None = None,
+    ):
         self.agents_root = agents_root
         self.lineage_dir = lineage_dir
         self.replay_mode = replay_mode
         self.recovery_tier = recovery_tier
+        self.provider = provider or default_provider()
+        normalized_mode = (self.replay_mode or "off").strip().lower()
+        if normalized_mode == "audit":
+            require_replay_safe_provider(self.provider, recovery_tier="audit")
+        else:
+            require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
         self.entropy_budget = EntropyBudget()
         self.fitness_evaluator = FitnessEvaluator()
 
@@ -141,7 +155,14 @@ class DreamMode:
 
         metrics.log(event_type="evolution_cycle_decision", payload={"selected_agent": selected}, level="INFO", element_id=ELEMENT_ID)
         if deterministic_context(replay_mode=self.replay_mode, recovery_tier=self.recovery_tier):
-            seed = f"{epoch_id}::{selected}"
+            if (self.replay_mode or "off").strip().lower() == "audit":
+                require_replay_safe_provider(self.provider, recovery_tier="audit")
+            else:
+                require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
+            seed = self.provider.next_token(
+                label=f"dream_seed:{epoch_id}:{selected}:{bundle_id}",
+                length=32,
+            )
             numeric_token, self.entropy_budget = deterministic_token_with_budget(
                 seed,
                 f"mutation_{bundle_id}",
@@ -149,11 +170,14 @@ class DreamMode:
             )
             token = str(numeric_token)
         else:
-            token = str(time.time())
+            token = self.provider.next_token(
+                label=f"dream_token:{epoch_id}:{selected}:{bundle_id}",
+                length=16,
+            )
         mutation_content = f"{selected}-mutation-{token}"
         handoff_contract = {
             "schema_version": "1.0",
-            "issued_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "issued_at": self.provider.format_utc("%Y-%m-%dT%H:%M:%SZ"),
             "issuer": "DreamMode",
             "agent": selected,
             "dream_scope": dream_scope,
