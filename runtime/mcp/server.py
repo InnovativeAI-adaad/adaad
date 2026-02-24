@@ -8,9 +8,11 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 import uuid
 from contextlib import asynccontextmanager
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict
 
@@ -24,6 +26,8 @@ from runtime.mcp.proposal_validator import ProposalValidationError, validate_pro
 from runtime.mcp.rejection_explainer import explain_rejection
 from runtime.mcp.tools_registry import tools_list_response
 from security import cryovant
+
+LOG = logging.getLogger(__name__)
 
 
 def _b64url_decode(value: str) -> bytes:
@@ -40,6 +44,14 @@ def _verify_jwt(request: Request) -> None:
     token = auth.split(" ", 1)[1].strip()
     try:
         header_b64, payload_b64, signature_b64 = token.split(".")
+    except ValueError as exc:
+        LOG.warning(
+            "JWT validation failed: malformed token",
+            extra={"reason_code": "invalid_jwt", "error_type": type(exc).__name__},
+        )
+        raise HTTPException(status_code=401, detail="invalid_jwt") from exc
+
+    try:
         message = f"{header_b64}.{payload_b64}".encode("utf-8")
         secret = os.environ.get("ADAAD_MCP_JWT_SECRET", "").encode("utf-8")
         if not secret:
@@ -53,7 +65,11 @@ def _verify_jwt(request: Request) -> None:
             raise HTTPException(status_code=401, detail="expired_jwt")
     except HTTPException:
         raise
-    except Exception as exc:  # pragma: no cover - defensive
+    except (ValueError, JSONDecodeError, UnicodeDecodeError, base64.binascii.Error) as exc:
+        LOG.warning(
+            "JWT validation failed",
+            extra={"reason_code": "invalid_jwt", "error_type": type(exc).__name__},
+        )
         raise HTTPException(status_code=401, detail="invalid_jwt") from exc
 
 
@@ -93,8 +109,15 @@ def create_app(server_name: str = "mcp-proposal-writer") -> FastAPI:
             if exc.code == "pre_check_failed":
                 try:
                     body["verdicts"] = json.loads(exc.detail)
-                except Exception:
-                    pass
+                except JSONDecodeError as parse_exc:
+                    LOG.warning(
+                        "proposal pre-check verdict parse failed",
+                        extra={
+                            "reason_code": "pre_check_verdict_parse_failed",
+                            "error_type": type(parse_exc).__name__,
+                            "validation_error_code": exc.code,
+                        },
+                    )
             raise HTTPException(status_code=exc.status_code, detail=body)
         proposal_id = str(uuid.uuid4())
         queue_entry = append_proposal(proposal_id=proposal_id, request=request)
