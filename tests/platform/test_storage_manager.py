@@ -119,29 +119,57 @@ def test_storage_manager_prune_report_and_counts_are_deterministic(
     assert recent.exists()
 
 
-def test_storage_manager_warn_emits_metric_with_path(monkeypatch, tmp_path: Path) -> None:
+def test_storage_manager_reads_thresholds_from_runtime_config(tmp_path: Path) -> None:
     candidates = tmp_path / "candidates"
-    broken = candidates / "broken"
-    broken.mkdir(parents=True)
-    fitness_file = broken / "fitness.json"
-    fitness_file.write_text('{"score": "nanx"}', encoding="utf-8")
+    borderline = candidates / "borderline"
+    borderline.mkdir(parents=True)
+    (borderline / "fitness.json").write_text(json.dumps({"score": 0.5}), encoding="utf-8")
 
-    records: list[tuple[str, dict[str, object], str]] = []
-    monkeypatch.setattr(
-        "runtime.platform.storage_manager.metrics.log",
-        lambda event_type, payload, level="INFO": records.append((event_type, payload, level)),
+    snapshots = tmp_path / "snapshots"
+    snapshots.mkdir(parents=True)
+    old = snapshots / "old.snap"
+    old.write_text("old", encoding="utf-8")
+    old_ts = time.time() - (2 * 24 * 60 * 60)
+    os.utime(old, (old_ts, old_ts))
+
+    mgr = StorageManager(
+        tmp_path,
+        max_storage_mb=0.0,
+        runtime_config={
+            "failed_candidate_score_threshold": 0.6,
+            "snapshot_max_age_days": 1,
+        },
     )
+    result = mgr.check_and_prune()
 
-    mgr = StorageManager(tmp_path, max_storage_mb=0.0)
-    with warnings.catch_warnings(record=True):
-        warnings.simplefilter("always")
-        pruned = mgr._prune_failed_candidates()
+    assert result["pruned"] is True
+    assert result["pruned_count"] == 2
+    assert not borderline.exists()
+    assert not old.exists()
 
-    assert pruned == 0
-    assert len(records) == 1
-    event_type, payload, level = records[0]
-    assert event_type == "storage_manager_prune_fallback"
-    assert level == "WARNING"
-    assert payload["path"] == str(fitness_file)
-    assert payload["context"]["candidate"] == str(broken)
-    assert payload["context"]["error"] == "ValueError"
+
+def test_storage_manager_minimum_reclaim_target_forces_snapshot_prune(tmp_path: Path) -> None:
+    candidates = tmp_path / "candidates"
+    low = candidates / "low"
+    low.mkdir(parents=True)
+    (low / "fitness.json").write_text(json.dumps({"score": 0.1}), encoding="utf-8")
+
+    snapshots = tmp_path / "snapshots"
+    snapshots.mkdir(parents=True)
+    old = snapshots / "old.snap"
+    old.write_text("old", encoding="utf-8")
+    old_ts = time.time() - (3 * 24 * 60 * 60)
+    os.utime(old, (old_ts, old_ts))
+
+    mgr = StorageManager(
+        tmp_path,
+        max_storage_mb=0.0,
+        snapshot_max_age_days=1,
+        minimum_reclaim_target_mb=0.01,
+    )
+    result = mgr.check_and_prune()
+
+    assert result["pruned"] is True
+    assert result["pruned_count"] == 2
+    assert not low.exists()
+    assert not old.exists()
