@@ -10,6 +10,7 @@ from runtime.autonomy.loop import AgentAction, run_self_check_loop
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from runtime.autonomy.roles import SandboxPermission, default_role_specs
 from runtime.autonomy.scoreboard import build_scoreboard_views
+from runtime.governance.foundation.determinism import SeededDeterminismProvider, SystemDeterminismProvider
 
 
 class AutonomyEnhancementTest(unittest.TestCase):
@@ -147,6 +148,84 @@ class AutonomyEnhancementTest(unittest.TestCase):
             threshold = engine.get_current_threshold()
             self.assertGreater(threshold, 0.5)
             self.assertEqual(result.decision, "hold")
+
+    def test_adaptive_budget_snapshot_hash_deterministic_for_identical_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = {
+                "cycle_id": "cycle-deterministic",
+                "governance_debt_score": 0.25,
+                "fitness_trend_delta": -0.2,
+                "epoch_pass_rate": 0.7,
+            }
+            provider = SeededDeterminismProvider(seed="budget-seed")
+            first_engine = AutonomyBudgetEngine(
+                snapshot_path=Path(tmp) / "first.jsonl",
+                provider=provider,
+                replay_mode="strict",
+            )
+            second_engine = AutonomyBudgetEngine(
+                snapshot_path=Path(tmp) / "second.jsonl",
+                provider=provider,
+                replay_mode="strict",
+            )
+
+            first = first_engine.record_snapshot(**payload)
+            second = second_engine.record_snapshot(**payload)
+
+            self.assertEqual(first.snapshot_hash, second.snapshot_hash)
+            self.assertEqual(first.created_at_ms, second.created_at_ms)
+
+    def test_adaptive_budget_strict_rejects_missing_deterministic_timestamp_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = AutonomyBudgetEngine(
+                snapshot_path=Path(tmp) / "strict.jsonl",
+                replay_mode="strict",
+                provider=SystemDeterminismProvider(),
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "deterministic_timestamp_required"):
+                engine.record_snapshot(
+                    cycle_id="cycle-strict",
+                    governance_debt_score=0.4,
+                    fitness_trend_delta=0.0,
+                    epoch_pass_rate=1.0,
+                )
+
+    def test_adaptive_budget_hash_chain_continuity_across_appended_snapshots(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            snapshot_path = Path(tmp) / "continuity.jsonl"
+            writer = AutonomyBudgetEngine(
+                snapshot_path=snapshot_path,
+                provider=SeededDeterminismProvider(seed="chain"),
+                replay_mode="strict",
+            )
+            first = writer.record_snapshot(
+                cycle_id="cycle-1",
+                governance_debt_score=0.1,
+                fitness_trend_delta=0.2,
+                epoch_pass_rate=0.9,
+            )
+
+            appender = AutonomyBudgetEngine(
+                snapshot_path=snapshot_path,
+                provider=SeededDeterminismProvider(seed="chain"),
+                replay_mode="strict",
+            )
+            second = appender.record_snapshot(
+                cycle_id="cycle-2",
+                governance_debt_score=0.3,
+                fitness_trend_delta=-0.1,
+                epoch_pass_rate=0.95,
+            )
+            third = appender.record_snapshot(
+                cycle_id="cycle-3",
+                governance_debt_score=0.5,
+                fitness_trend_delta=0.0,
+                epoch_pass_rate=0.8,
+            )
+
+            self.assertEqual(second.prev_hash, first.snapshot_hash)
+            self.assertEqual(third.prev_hash, second.snapshot_hash)
 
 
 if __name__ == "__main__":

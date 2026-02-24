@@ -4,10 +4,10 @@
 from __future__ import annotations
 
 import json
-import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from runtime.governance.foundation.determinism import RuntimeDeterminismProvider, default_provider
 from runtime.governance.foundation.hashing import ZERO_HASH, sha256_prefixed_digest
 
 
@@ -41,6 +41,9 @@ class AutonomyBudgetEngine:
         governance_debt_weight: float = 0.20,
         fitness_trend_weight: float = 0.15,
         epoch_pass_rate_weight: float = 0.30,
+        replay_mode: str = "off",
+        recovery_tier: str | None = None,
+        provider: RuntimeDeterminismProvider | None = None,
     ) -> None:
         self.snapshot_path = Path(snapshot_path)
         self.snapshot_path.parent.mkdir(parents=True, exist_ok=True)
@@ -50,6 +53,21 @@ class AutonomyBudgetEngine:
         self.governance_debt_weight = float(governance_debt_weight)
         self.fitness_trend_weight = float(fitness_trend_weight)
         self.epoch_pass_rate_weight = float(epoch_pass_rate_weight)
+        self.replay_mode = str(replay_mode or "off")
+        self.recovery_tier = recovery_tier
+        self.provider = provider or default_provider()
+
+    def _strict_or_audit_mode(self) -> bool:
+        mode = self.replay_mode.strip().lower()
+        tier = (self.recovery_tier or "").strip().lower()
+        return mode in {"strict", "audit"} or tier == "audit"
+
+    def _resolve_created_at_ms(self, created_at_ms: int | None) -> int:
+        if created_at_ms is not None:
+            return int(created_at_ms)
+        if self._strict_or_audit_mode() and not getattr(self.provider, "deterministic", False):
+            raise RuntimeError("deterministic_timestamp_required")
+        return int(self.provider.now_utc().timestamp() * 1000)
 
     @staticmethod
     def _clamp(value: float, floor: float, ceiling: float) -> float:
@@ -104,7 +122,7 @@ class AutonomyBudgetEngine:
             fitness_trend_delta=fitness_trend_delta,
             epoch_pass_rate=epoch_pass_rate,
         )
-        created = int(time.time() * 1000) if created_at_ms is None else int(created_at_ms)
+        created = self._resolve_created_at_ms(created_at_ms)
         payload = {
             "cycle_id": str(cycle_id),
             "governance_debt_score": float(governance_debt_score),
