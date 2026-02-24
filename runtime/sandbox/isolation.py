@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
+import sys
 from typing import Protocol, Sequence
 
 from runtime.sandbox.manifest import SandboxManifest
@@ -29,6 +31,20 @@ class IsolationPreparation:
 
     mode: str
     controls: tuple[EnforcedControl, ...]
+
+
+def capability_drop_supported() -> tuple[bool, str]:
+    if "android" in sys.platform:
+        return False, "capability_drop_android_platform"
+    uname = getattr(os, "uname", None)
+    if callable(uname):
+        try:
+            machine = str(uname()).lower()
+        except Exception:
+            machine = ""
+        if "android" in machine:
+            return False, "capability_drop_android_platform"
+    return True, "ok"
 
 
 class IsolationBackend(Protocol):
@@ -70,6 +86,9 @@ class ProcessIsolationBackend:
 
         if not policy.capability_drop or not self.capability_profile_id:
             raise RuntimeError("sandbox_policy_unenforceable:capability_drop")
+        capability_supported, capability_reason = capability_drop_supported()
+        if not capability_supported:
+            raise RuntimeError(f"sandbox_policy_unenforceable:{capability_reason}")
         controls.append(
             EnforcedControl(
                 control="capability_drop",
@@ -138,6 +157,7 @@ class ContainerIsolationBackend:
 
 
 __all__ = [
+    "capability_drop_supported",
     "ContainerIsolationBackend",
     "EnforcedControl",
     "IsolationBackend",

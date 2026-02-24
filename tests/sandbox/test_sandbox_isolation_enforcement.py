@@ -122,3 +122,19 @@ def test_backend_fails_closed_when_rlimit_enforcement_unavailable(monkeypatch):
         executor.run_tests_with_retry(mutation_id="m1", epoch_id="e1", replay_seed="0000000000000001")
 
     assert sandbox.calls == 0
+
+
+def test_backend_fails_closed_for_android_capability_drop_degradation(monkeypatch):
+    sandbox = _TrackingSandbox()
+    backend = ProcessIsolationBackend()
+    executor = HardenedSandboxExecutor(
+        sandbox,
+        provider=SeededDeterminismProvider("seed"),
+        isolation_backend=backend,
+    )
+    monkeypatch.setattr("runtime.sandbox.isolation.capability_drop_supported", lambda: (False, "capability_drop_android_platform"))
+
+    with pytest.raises(RuntimeError, match="sandbox_policy_unenforceable:capability_drop_android_platform"):
+        executor.run_tests_with_retry(mutation_id="m1", epoch_id="e1", replay_seed="0000000000000001")
+
+    assert sandbox.calls == 0

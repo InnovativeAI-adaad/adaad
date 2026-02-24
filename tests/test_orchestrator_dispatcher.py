@@ -127,3 +127,21 @@ def test_dispatch_result_or_raise_fails_closed_for_non_success_result_status() -
         assert str(exc) == "dispatch failed:policy_blocked"
     else:
         raise AssertionError("expected RuntimeError")
+
+
+def test_dispatch_result_or_raise_fails_closed_for_invalid_envelope_type() -> None:
+    try:
+        dispatch_result_or_raise([])  # type: ignore[arg-type]
+    except RuntimeError as exc:
+        assert str(exc) == "dispatch failed:invalid_envelope"
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
+def test_dispatch_result_or_raise_fails_closed_for_invalid_top_level_status() -> None:
+    try:
+        dispatch_result_or_raise({"status": "pending", "result": {"ok": True}})
+    except RuntimeError as exc:
+        assert str(exc) == "dispatch failed:invalid_envelope_status"
+    else:
+        raise AssertionError("expected RuntimeError")

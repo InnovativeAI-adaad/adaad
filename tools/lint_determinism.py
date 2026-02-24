@@ -22,6 +22,8 @@ REQUIRED_GOVERNANCE_FILES: tuple[str, ...] = (
     "runtime/evolution/fitness_orchestrator.py",
     "runtime/governance/federation/transport.py",
     "runtime/governance/federation/coordination.py",
+    "runtime/governance/federation/protocol.py",
+    "runtime/governance/federation/manifest.py",
 )
 
 # Direct dynamic execution primitives.

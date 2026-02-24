@@ -51,3 +51,150 @@ def test_economic_fitness_rebalances_weights_from_history() -> None:
     tuned = evaluator.rebalance_from_history(history)
     assert tuned["correctness_score"] >= original["correctness_score"]
     assert abs(sum(tuned.values()) - 1.0) < 1e-9
+
+
+def test_economic_fitness_snapshots_weights_per_epoch() -> None:
+    evaluator = EconomicFitnessEvaluator(rebalance_interval=1000)
+
+    baseline = evaluator.evaluate({
+        "epoch_id": "epoch-1",
+        "correctness_score": 0.8,
+        "efficiency_score": 0.4,
+        "policy_compliance_score": 0.9,
+        "goal_alignment_score": 0.5,
+        "simulated_market_score": 0.7,
+    })
+
+    evaluator.weights = {
+        "correctness_score": 1.0,
+        "efficiency_score": 0.0,
+        "policy_compliance_score": 0.0,
+        "goal_alignment_score": 0.0,
+        "simulated_market_score": 0.0,
+    }
+
+    same_epoch = evaluator.evaluate({
+        "epoch_id": "epoch-1",
+        "correctness_score": 0.8,
+        "efficiency_score": 0.4,
+        "policy_compliance_score": 0.9,
+        "goal_alignment_score": 0.5,
+        "simulated_market_score": 0.7,
+    })
+    next_epoch = evaluator.evaluate({
+        "epoch_id": "epoch-2",
+        "correctness_score": 0.8,
+        "efficiency_score": 0.4,
+        "policy_compliance_score": 0.9,
+        "goal_alignment_score": 0.5,
+        "simulated_market_score": 0.7,
+    })
+
+    assert baseline.weights == same_epoch.weights
+    assert baseline.score == same_epoch.score
+    assert next_epoch.weights["correctness_score"] == 1.0
+
+
+def test_economic_fitness_replay_equivalence_across_reinstantiation() -> None:
+    payload = {
+        "epoch_id": "epoch-replay",
+        "content": "mutation: candidate",
+        "tests_ok": True,
+        "sandbox_ok": True,
+        "constitution_ok": True,
+        "policy_valid": True,
+        "goal_graph": {"alignment_score": 0.8},
+        "task_value_proxy": {"value_score": 0.75},
+        "platform": {"memory_mb": 2048, "cpu_percent": 20, "runtime_ms": 2000},
+        "epoch_metadata": {},
+    }
+
+    first = EconomicFitnessEvaluator().evaluate(dict(payload))
+    second = EconomicFitnessEvaluator().evaluate(dict(payload))
+
+    assert first.to_dict() == second.to_dict()
+    assert payload["epoch_metadata"]["fitness_weight_snapshot_hash"].startswith("sha256:")
+
+
+def test_economic_fitness_persists_snapshot_hash_into_epoch_metadata() -> None:
+    evaluator = EconomicFitnessEvaluator()
+    epoch_metadata = {}
+    result = evaluator.evaluate({
+        "epoch_id": "epoch-meta",
+        "correctness_score": 0.8,
+        "efficiency_score": 0.4,
+        "policy_compliance_score": 0.9,
+        "goal_alignment_score": 0.5,
+        "simulated_market_score": 0.7,
+        "epoch_metadata": epoch_metadata,
+    })
+
+    assert epoch_metadata["fitness_weight_snapshot_hash"] == result.weight_snapshot_hash
+    assert result.weight_snapshot_hash.startswith("sha256:")
+
+
+def test_weight_snapshot_hash_stable_within_epoch() -> None:
+    evaluator = EconomicFitnessEvaluator(rebalance_interval=1000)
+    payload = {
+        "epoch_id": "epoch-hash-same",
+        "correctness_score": 0.8,
+        "efficiency_score": 0.4,
+        "policy_compliance_score": 0.9,
+        "goal_alignment_score": 0.5,
+        "simulated_market_score": 0.7,
+    }
+    first = evaluator.evaluate(dict(payload))
+    second = evaluator.evaluate(dict(payload))
+    assert first.weight_snapshot_hash == second.weight_snapshot_hash
+
+
+def test_weight_snapshot_hash_changes_next_epoch_when_weights_change() -> None:
+    evaluator = EconomicFitnessEvaluator(rebalance_interval=1000)
+    baseline = evaluator.evaluate(
+        {
+            "epoch_id": "epoch-hash-a",
+            "correctness_score": 0.8,
+            "efficiency_score": 0.4,
+            "policy_compliance_score": 0.9,
+            "goal_alignment_score": 0.5,
+            "simulated_market_score": 0.7,
+        }
+    )
+    evaluator.weights = {
+        "correctness_score": 1.0,
+        "efficiency_score": 0.0,
+        "policy_compliance_score": 0.0,
+        "goal_alignment_score": 0.0,
+        "simulated_market_score": 0.0,
+    }
+    next_epoch = evaluator.evaluate(
+        {
+            "epoch_id": "epoch-hash-b",
+            "correctness_score": 0.8,
+            "efficiency_score": 0.4,
+            "policy_compliance_score": 0.9,
+            "goal_alignment_score": 0.5,
+            "simulated_market_score": 0.7,
+        }
+    )
+    assert baseline.weight_snapshot_hash != next_epoch.weight_snapshot_hash
+
+
+def test_epoch_metadata_hash_mismatch_fails_closed() -> None:
+    evaluator = EconomicFitnessEvaluator(rebalance_interval=1000)
+    try:
+        evaluator.evaluate(
+            {
+                "epoch_id": "epoch-mismatch",
+                "correctness_score": 0.8,
+                "efficiency_score": 0.4,
+                "policy_compliance_score": 0.9,
+                "goal_alignment_score": 0.5,
+                "simulated_market_score": 0.7,
+                "epoch_metadata": {"fitness_weight_snapshot_hash": "sha256:deadbeef"},
+            }
+        )
+    except RuntimeError as exc:
+        assert str(exc) == "fitness_weight_snapshot_hash_mismatch"
+    else:
+        raise AssertionError("expected RuntimeError")

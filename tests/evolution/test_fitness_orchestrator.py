@@ -45,8 +45,9 @@ def test_weights_and_regime_are_frozen_within_epoch() -> None:
     assert first.regime == "economic_full"
     assert second.regime == "economic_full"
     assert first.config_hash == second.config_hash
-    assert len(ledger.events) == 1
+    assert len(ledger.events) == 2
     assert ledger.events[0]["type"] == "fitness_regime_snapshot"
+    assert ledger.events[1]["type"] == "EpochMetadataEvent"
 
 
 def test_config_hash_stability_for_same_regime_snapshot() -> None:
@@ -63,3 +64,14 @@ def test_tier_to_regime_mapping_invariants() -> None:
     assert orchestrator.score(_context(epoch_id="epoch-med", mutation_tier="medium")).regime == "hybrid"
     assert orchestrator.score(_context(epoch_id="epoch-high", mutation_tier="high")).regime == "survival_only"
     assert orchestrator.score(_context(epoch_id="epoch-crit", mutation_tier="critical")).regime == "survival_only"
+
+
+def test_deterministic_seed_propagates_into_snapshot_hashes() -> None:
+    orchestrator = FitnessOrchestrator()
+    seeded_a = orchestrator.score(_context(epoch_id="seeded-a", deterministic_seed="seed-1"))
+    seeded_b = orchestrator.score(_context(epoch_id="seeded-b", deterministic_seed="seed-1"))
+    seeded_c = orchestrator.score(_context(epoch_id="seeded-c", deterministic_seed="seed-2"))
+
+    assert seeded_a.config_hash == seeded_b.config_hash
+    assert seeded_a.weight_snapshot_hash == seeded_b.weight_snapshot_hash
+    assert seeded_a.config_hash != seeded_c.config_hash

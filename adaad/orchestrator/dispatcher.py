@@ -27,12 +27,19 @@ def dispatch_result_or_raise(envelope: dict[str, Any]) -> Any:
     non-success result statuses raise deterministic RuntimeError values.
     """
 
-    status = str(envelope.get("status") or "")
+    if not isinstance(envelope, dict):
+        _LOGGER.error("dispatch_result_or_raise invalid_envelope")
+        raise RuntimeError("dispatch failed:invalid_envelope")
+
+    status = str(envelope.get("status") or "").strip().lower()
     if status == "error":
         error = envelope.get("error") if isinstance(envelope.get("error"), dict) else {}
         code = str(error.get("code") or "unknown")
         _LOGGER.error("dispatch_result_or_raise envelope_error", extra={"code": code})
         raise RuntimeError(f"dispatch failed:{code}")
+    if status and status not in {"ok", "success"}:
+        _LOGGER.error("dispatch_result_or_raise invalid_envelope_status", extra={"status": status})
+        raise RuntimeError("dispatch failed:invalid_envelope_status")
     if "result" not in envelope:
         _LOGGER.error("dispatch_result_or_raise missing_result")
         raise RuntimeError("dispatch failed:missing_result")

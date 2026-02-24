@@ -192,3 +192,9 @@ def test_lint_determinism_allows_approved_wrapper_for_nondeterminism_calls(tmp_p
     issues = lint_determinism._lint_file(target)
 
     assert all(issue.message != "forbidden_governance_nondeterminism_api" for issue in issues)
+
+
+def test_lint_required_governance_files_include_federation_protocol_stack() -> None:
+    required = set(lint_determinism.REQUIRED_GOVERNANCE_FILES)
+    assert "runtime/governance/federation/protocol.py" in required
+    assert "runtime/governance/federation/manifest.py" in required

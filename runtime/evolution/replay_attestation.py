@@ -165,6 +165,22 @@ class ReplayProofBuilder:
                         policy_hashes[field] = candidate
         return policy_hashes
 
+
+    def _fitness_weight_snapshot_hash(self, epoch_id: str) -> str:
+        events = self.ledger.read_epoch(epoch_id)
+        for entry in reversed(events):
+            payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+            if entry.get("type") == "EpochMetadataEvent":
+                metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+                candidate = metadata.get("fitness_weight_snapshot_hash")
+                if isinstance(candidate, str) and candidate:
+                    return candidate
+            if entry.get("type") == "fitness_regime_snapshot":
+                candidate = payload.get("weight_snapshot_hash") or payload.get("config_hash")
+                if isinstance(candidate, str) and candidate:
+                    return candidate
+        return ZERO_HASH
+
     def build_bundle(self, epoch_id: str) -> Dict[str, Any]:
         replay_state = self.replay_engine.replay_epoch(epoch_id)
         ledger_state_hash = self.ledger.get_epoch_digest(epoch_id) or replay_state.get("digest") or "sha256:0"
@@ -176,6 +192,7 @@ class ReplayProofBuilder:
             raise RuntimeError("replay_proof_goal_graph_missing")
         mutation_graph_fingerprint = "sha256:" + sha256_digest(read_file_deterministic(goal_graph_path))
         policy_hashes = self._policy_hashes(checkpoint_chain, epoch_id)
+        fitness_weight_snapshot_hash = self._fitness_weight_snapshot_hash(epoch_id)
         unsigned_bundle = {
             "schema_version": "1.0",
             "epoch_id": epoch_id,
@@ -189,6 +206,7 @@ class ReplayProofBuilder:
             "replay_digest": str(replay_state.get("digest") or "sha256:0"),
             "canonical_digest": str(replay_state.get("canonical_digest") or sha256_digest(replay_state)),
             "policy_hashes": policy_hashes,
+            "fitness_weight_snapshot_hash": fitness_weight_snapshot_hash,
         }
         proof_digest = sha256_prefixed_digest(unsigned_bundle)
         signed_digest = proof_digest
@@ -277,6 +295,7 @@ def verify_replay_proof_bundle(
         "replay_digest": bundle.get("replay_digest"),
         "canonical_digest": bundle.get("canonical_digest"),
         "policy_hashes": bundle.get("policy_hashes", {}),
+        "fitness_weight_snapshot_hash": bundle.get("fitness_weight_snapshot_hash"),
     }
     if "trust_root_metadata" in bundle:
         unsigned_bundle["trust_root_metadata"] = bundle.get("trust_root_metadata")
@@ -383,10 +402,10 @@ def verify_replay_proof_bundle(
             )
             validation.append(
                 {
-                    "ok": signature_ok,
+                    "ok": matches,
                     "key_id": key_id,
                     "algorithm": algorithm,
-                    "error": "" if signature_ok else "signature_mismatch",
+                    "error": "" if matches else "signature_mismatch",
                 }
             )
             continue

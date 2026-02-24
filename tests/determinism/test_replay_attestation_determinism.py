@@ -19,6 +19,13 @@ def _seed_epoch(ledger: LineageLedgerV2, *, epoch_id: str) -> None:
             "metadata": {"seed": "alpha"},
         },
     )
+    ledger.append_event(
+        "EpochMetadataEvent",
+        {
+            "epoch_id": epoch_id,
+            "metadata": {"fitness_weight_snapshot_hash": "sha256:" + ("f" * 64)},
+        },
+    )
     ledger.append_bundle_with_digest(
         epoch_id,
         {
@@ -82,6 +89,7 @@ def _attach_trust_metadata(bundle: dict, *, key_epoch_id: str = "epoch-1") -> di
         "replay_digest": trusted.get("replay_digest"),
         "canonical_digest": trusted.get("canonical_digest"),
         "policy_hashes": trusted.get("policy_hashes", {}),
+        "fitness_weight_snapshot_hash": trusted.get("fitness_weight_snapshot_hash"),
         "trust_root_metadata": trusted.get("trust_root_metadata"),
     }
     proof_digest = sha256_prefixed_digest(unsigned_bundle)
@@ -114,6 +122,7 @@ def test_replay_attestation_digest_is_identical_for_identical_input(tmp_path) ->
     bundle_a = builder_a.build_bundle(epoch_id)
     bundle_b = builder_b.build_bundle(epoch_id)
 
+    assert bundle_a["fitness_weight_snapshot_hash"] == "sha256:" + ("f" * 64)
     assert bundle_a["proof_digest"] == bundle_b["proof_digest"]
     assert bundle_a["signature_bundle"] == bundle_b["signature_bundle"]
     assert canonical_json(bundle_a) == canonical_json(bundle_b)

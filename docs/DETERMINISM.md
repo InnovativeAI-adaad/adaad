@@ -36,6 +36,7 @@ Replay is invalidated when any covered deterministic input diverges, including:
 - policy decision artifacts,
 - lineage/evidence references,
 - replay attestation payloads.
+- replay attestation payloads include `fitness_weight_snapshot_hash` bound to epoch metadata.
 
 ### Excluded (non-governance runtime noise)
 - non-deterministic telemetry fields not covered by replay contract,

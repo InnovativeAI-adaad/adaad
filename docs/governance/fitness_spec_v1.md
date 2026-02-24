@@ -54,3 +54,8 @@ Fitness config validation MUST fail closed when:
 - config payload is malformed.
 
 These checks are enforced by contract tests in `tests/evolution/test_fitness_weights_contract.py`.
+
+- **Epoch weight snapshots**: fitness weights are snapshotted on first evaluation for each `epoch_id`; subsequent scoring in that epoch MUST reuse the same weight vector even if adaptive rebalancing updates default weights for later epochs.
+
+- **Snapshot hash contract**: evaluators MUST emit `weight_snapshot_hash` and persist it as `fitness_weight_snapshot_hash` in epoch metadata for replay/attestation binding.
+- **Fail-closed hash guard**: when `epoch_metadata.fitness_weight_snapshot_hash` is pre-specified and does not match the computed epoch snapshot hash, evaluation MUST fail closed with a deterministic mismatch error.

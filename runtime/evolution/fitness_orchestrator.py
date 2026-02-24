@@ -47,6 +47,8 @@ class _Snapshot:
     regime: str
     weights: Mapping[str, float]
     config_hash: str
+    weight_snapshot_hash: str
+    seed_fingerprint: str
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,7 @@ class _ScoreResult:
     breakdown: Mapping[str, float]
     regime: str
     config_hash: str
+    weight_snapshot_hash: str
 
 
 class FitnessOrchestrator:
@@ -82,17 +85,23 @@ class FitnessOrchestrator:
             breakdown=MappingProxyType(dict(breakdown)),
             regime=snapshot.regime,
             config_hash=snapshot.config_hash,
+            weight_snapshot_hash=snapshot.weight_snapshot_hash,
         )
 
     def _create_snapshot(self, context: Mapping[str, Any]) -> _Snapshot:
         regime = self._regime_for_tier(context.get("mutation_tier"))
         canonical_weights = self._canonicalize_weights(_REGIME_WEIGHTS[regime])
-        config_material = {"regime": regime, "weights": canonical_weights}
+        deterministic_seed = str(context.get("deterministic_seed") or "").strip()
+        seed_fingerprint = sha256_prefixed_digest(canonical_json({"deterministic_seed": deterministic_seed})) if deterministic_seed else "sha256:0"
+        weight_snapshot_hash = sha256_prefixed_digest(canonical_json({"regime": regime, "weights": canonical_weights}))
+        config_material = {"regime": regime, "weights": canonical_weights, "seed_fingerprint": seed_fingerprint}
         config_hash = sha256_prefixed_digest(canonical_json(config_material))
         return _Snapshot(
             regime=regime,
             weights=MappingProxyType(canonical_weights),
             config_hash=config_hash,
+            weight_snapshot_hash=weight_snapshot_hash,
+            seed_fingerprint=seed_fingerprint,
         )
 
     @staticmethod
@@ -114,8 +123,21 @@ class FitnessOrchestrator:
             "regime": snapshot.regime,
             "weights": dict(snapshot.weights),
             "config_hash": snapshot.config_hash,
+            "weight_snapshot_hash": snapshot.weight_snapshot_hash,
+            "seed_fingerprint": snapshot.seed_fingerprint,
         }
         ledger.append_event("fitness_regime_snapshot", payload)
+        ledger.append_event(
+            "EpochMetadataEvent",
+            {
+                "epoch_id": epoch_id,
+                "metadata": {
+                    "fitness_weight_snapshot_hash": snapshot.weight_snapshot_hash,
+                    "fitness_config_hash": snapshot.config_hash,
+                    "fitness_seed_fingerprint": snapshot.seed_fingerprint,
+                },
+            },
+        )
 
     @staticmethod
     def _canonicalize_weights(weights: Mapping[str, Any]) -> Dict[str, float]:
