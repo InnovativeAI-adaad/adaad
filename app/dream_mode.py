@@ -49,13 +49,20 @@ class DreamMode:
         self.replay_mode = replay_mode
         self.recovery_tier = recovery_tier
         self.provider = provider or default_provider()
+        self._require_replay_safe_provider()
+        self.entropy_budget = EntropyBudget()
+        self.fitness_evaluator = FitnessEvaluator()
+
+    def _require_replay_safe_provider(self) -> None:
         normalized_mode = (self.replay_mode or "off").strip().lower()
         if normalized_mode == "audit":
             require_replay_safe_provider(self.provider, recovery_tier="audit")
-        else:
-            require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
-        self.entropy_budget = EntropyBudget()
-        self.fitness_evaluator = FitnessEvaluator()
+            return
+        require_replay_safe_provider(
+            self.provider,
+            replay_mode=self.replay_mode,
+            recovery_tier=self.recovery_tier,
+        )
 
     @staticmethod
     def _read_json(path: Path) -> Dict[str, object]:
@@ -154,11 +161,8 @@ class DreamMode:
             return {"status": "blocked", "agent": selected, "reason": "dream_scope_missing"}
 
         metrics.log(event_type="evolution_cycle_decision", payload={"selected_agent": selected}, level="INFO", element_id=ELEMENT_ID)
+        self._require_replay_safe_provider()
         if deterministic_context(replay_mode=self.replay_mode, recovery_tier=self.recovery_tier):
-            if (self.replay_mode or "off").strip().lower() == "audit":
-                require_replay_safe_provider(self.provider, recovery_tier="audit")
-            else:
-                require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
             seed = self.provider.next_token(
                 label=f"dream_seed:{epoch_id}:{selected}:{bundle_id}",
                 length=32,
@@ -177,7 +181,7 @@ class DreamMode:
         mutation_content = f"{selected}-mutation-{token}"
         handoff_contract = {
             "schema_version": "1.0",
-            "issued_at": self.provider.format_utc("%Y-%m-%dT%H:%M:%SZ"),
+            "issued_at": self.provider.iso_now(),
             "issuer": "DreamMode",
             "agent": selected,
             "dream_scope": dream_scope,
