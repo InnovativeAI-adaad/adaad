@@ -287,14 +287,24 @@ class EconomicFitnessEvaluator:
             epoch_meta.setdefault("fitness_weight_snapshot_hash", snapshot_hash)
         return dict(snapshot), str(snapshot_hash)
 
-    def evaluate_content(self, mutation_content: str, *, constitution_ok: bool = True) -> EconomicFitnessResult:
-        payload = {
+    def evaluate_content(
+        self,
+        mutation_content: str,
+        *,
+        constitution_ok: bool = True,
+        source_signal: Mapping[str, Any] | None = None,
+    ) -> EconomicFitnessResult:
+        payload: Dict[str, Any] = {
             "content": mutation_content,
             "passed_syntax": bool(mutation_content and "mutation" in mutation_content),
             "tests_ok": bool(mutation_content),
             "constitution_ok": bool(constitution_ok),
-            "simulated_market_score": 0.5,
         }
+        if isinstance(source_signal, Mapping):
+            payload.update(dict(source_signal))
+        elif mutation_content:
+            derived_proxy = min(1.0, len(mutation_content.strip()) / 400.0)
+            payload["task_value_proxy"] = {"value_score": round(derived_proxy, 6)}
         return self.evaluate(payload)
 
     def _correctness_score(self, payload: Mapping[str, Any]) -> float:
