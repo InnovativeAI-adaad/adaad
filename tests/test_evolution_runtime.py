@@ -66,6 +66,41 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
         self.assertFalse(decision.accepted)
         self.assertEqual(decision.reason, "governor_fail_closed")
 
+
+    def test_before_mutation_cycle_emits_forecast_and_scan_events(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+
+        result = runtime.before_mutation_cycle()
+
+        self.assertIn("entropy_forecast", result)
+        self.assertIn("threat_scan", result)
+        entries = runtime.ledger.read_all()
+        event_types = [item.get("type") for item in entries]
+        self.assertIn("EntropyForecastEvent", event_types)
+        self.assertIn("ThreatScanEvent", event_types)
+
+    def test_before_mutation_cycle_blocks_on_entropy_forecast(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+        runtime.epoch_cumulative_entropy_bits = 4096
+
+        with mock.patch.dict("os.environ", {"ADAAD_MAX_EPOCH_ENTROPY_BITS": "4096", "ADAAD_MAX_MUTATION_ENTROPY_BITS": "128"}):
+            result = runtime.before_mutation_cycle()
+
+        self.assertTrue(result.get("blocked"))
+        self.assertEqual(result.get("reason"), "entropy_forecast_block")
+
+    def test_before_mutation_cycle_escalates_on_threat_scan(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+        runtime.ledger.append_event("SyntheticMutationOutcome", {"epoch_id": runtime.current_epoch_id, "status": "failed"})
+        runtime.ledger.append_event("SyntheticMutationOutcome", {"epoch_id": runtime.current_epoch_id, "status": "failed"})
+
+        result = runtime.before_mutation_cycle()
+
+        self.assertTrue(result.get("escalated"))
+        self.assertEqual(result.get("reason"), "threat_scan_escalate")
     def test_replay_preflight_reports_explicit_divergence_fields(self) -> None:
         runtime = EvolutionRuntime()
         runtime.verify_epoch = mock.Mock(return_value={

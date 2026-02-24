@@ -6,6 +6,7 @@ from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.checkpoint_verifier import verify_checkpoint_chain
 from runtime.evolution.entropy_detector import detect_entropy_metadata
 from runtime.evolution.entropy_policy import EntropyPolicy, enforce_entropy_policy
+from runtime.evolution.entropy_forecast import EntropyBudgetForecaster
 from runtime.evolution.governor import EvolutionGovernor, GovernanceDecision, RecoveryTier
 from runtime.evolution.goal_graph import GoalGraph, GoalNode
 from runtime.evolution.impact import ImpactScorer, ImpactScore
@@ -35,6 +36,7 @@ __all__ = [
     "EpochState",
     "enforce_entropy_policy",
     "EntropyPolicy",
+    "EntropyBudgetForecaster",
     "detect_entropy_metadata",
     "verify_checkpoint_chain",
     "CheckpointRegistry",

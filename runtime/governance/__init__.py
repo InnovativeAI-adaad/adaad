@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from runtime.governance.threat_monitor import ThreatMonitor, default_detectors
 from runtime.governance.foundation import (
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
@@ -30,4 +31,6 @@ __all__ = [
     "now_iso",
     "utc_now_iso",
     "utc_timestamp_label",
+    "ThreatMonitor",
+    "default_detectors",
 ]
