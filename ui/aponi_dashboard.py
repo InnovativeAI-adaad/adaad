@@ -1643,9 +1643,9 @@ class AponiDashboard:
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{HUMAN_DASHBOARD_TITLE}</title>
   <style>
-    body {{ font-family: Arial, sans-serif; margin: 0; background: #0e1624; color: #e8eef6; }}
+    body {{ font-family: Arial, sans-serif; margin: 0; background: #0e1624; color: #e8eef6; min-height: 100vh; }}
     header {{ background: #17243a; padding: 1rem 1.25rem; }}
-    main {{ padding: 1rem 1.25rem 2rem; display: grid; gap: 1rem; }}
+    main {{ padding: 1rem 1.25rem 6.25rem; display: grid; gap: 1rem; }}
     section {{ border: 1px solid #273751; border-radius: 8px; padding: 0.9rem; background: #121d30; }}
     h1, h2, h3 {{ margin: 0 0 0.75rem; }}
     h1 {{ font-size: 1.3rem; }}
@@ -1663,6 +1663,15 @@ class AponiDashboard:
     .floating-actions {{ display: flex; gap: 0.5rem; }}
     .floating-btn {{ border: 1px solid #3f5f89; color: #e6f0ff; background: #1f3555; padding: 0.45rem 0.7rem; border-radius: 6px; cursor: pointer; }}
     .floating-status {{ font-size: 0.8rem; color: #9cc0f5; white-space: pre-wrap; }}
+    .app-view {{ display: none; }}
+    .app-view.is-active {{ display: grid; gap: 1rem; }}
+    .app-view:focus {{ outline: 2px solid #76a6f0; outline-offset: 4px; }}
+    .command-bar {{ position: fixed; left: 0; right: 0; bottom: 0; z-index: 18; display: flex; justify-content: center; align-items: center; padding: 0.5rem 1rem calc(0.55rem + env(safe-area-inset-bottom)); background: rgba(9, 19, 33, 0.95); border-top: 1px solid #304769; backdrop-filter: blur(6px); }}
+    .command-list {{ list-style: none; margin: 0; padding: 0; display: flex; gap: 0.55rem; align-items: center; }}
+    .command-item {{ margin: 0; }}
+    .command-btn {{ width: 2.6rem; height: 2.6rem; border-radius: 999px; border: 1px solid #3b5477; color: #cde2ff; background: #13233a; cursor: pointer; font-size: 1.15rem; }}
+    .command-btn[aria-current="page"] {{ background: #1f3555; border-color: #73a0e2; color: #fff; }}
+    .command-btn--primary {{ width: 3.2rem; height: 3.2rem; border-color: #8db9ff; background: linear-gradient(135deg, #1d4f9c, #2e71d2); box-shadow: 0 8px 18px rgba(31, 99, 193, 0.45); transform: translateY(-0.35rem); }}
   </style>
 </head>
 <body>
@@ -1691,13 +1700,40 @@ class AponiDashboard:
     <span>Cancel action</span><span>Fork action</span><span>Raw execution event payload</span><span>History</span>
   </div>
   <main>
-    <section><h2>System state</h2><pre id="state">Loading...</pre></section>
-    <section><h2>Intelligence snapshot</h2><pre id="intelligence">Loading...</pre></section>
-    <section><h2>Risk summary</h2><pre id="risk">Loading...</pre></section>
-    <section><h2>Risk instability</h2><pre id="instability">Loading...</pre></section>
-    <section><h2>Replay divergence</h2><pre id="replay">Loading...</pre></section>
-    <section><h2>Evolution timeline (latest)</h2><pre id="timeline">Loading...</pre></section>
+    <section id="view-home" class="app-view is-active" data-route="home" aria-labelledby="homeHeading" tabindex="-1">
+      <h2 id="homeHeading">Home</h2>
+      <section><h3>System state</h3><pre id="state">Loading...</pre></section>
+      <section><h3>Intelligence snapshot</h3><pre id="intelligence">Loading...</pre></section>
+    </section>
+    <section id="view-tasks" class="app-view" data-route="tasks" aria-labelledby="tasksHeading" tabindex="-1">
+      <h2 id="tasksHeading">Tasks</h2>
+      <section><h3>Risk summary</h3><pre id="risk">Loading...</pre></section>
+      <section><h3>Risk instability</h3><pre id="instability">Loading...</pre></section>
+    </section>
+    <section id="view-insights-page" class="app-view" data-route="insights" aria-labelledby="insightsHeading" tabindex="-1">
+      <h2 id="insightsHeading">Insights</h2>
+      <section><h3>Live insights</h3><div id="insights">Loading...</div></section>
+      <section><h3>UX summary</h3><pre id="uxSummary">Loading...</pre></section>
+    </section>
+    <section id="view-history" class="app-view" data-route="history" aria-labelledby="historyHeading" tabindex="-1">
+      <h2 id="historyHeading">History</h2>
+      <section><h3>Replay divergence</h3><pre id="replay">Loading...</pre></section>
+      <section><h3>Evolution timeline (latest)</h3><pre id="timeline">Loading...</pre></section>
+    </section>
+    <section id="view-profile" class="app-view" data-route="profile" aria-labelledby="profileHeading" tabindex="-1">
+      <h2 id="profileHeading">Profile</h2>
+      <section><h3>Governance queue status</h3><pre id="queueSummaryProfile">Use command panel to review queue status.</pre></section>
+    </section>
   </main>
+  <nav class="command-bar" aria-label="Primary destinations">
+    <ul class="command-list">
+      <li class="command-item"><button type="button" class="command-btn" data-route-target="home" aria-label="Home">⌂</button></li>
+      <li class="command-item"><button type="button" class="command-btn" data-route-target="tasks" aria-label="Tasks">✓</button></li>
+      <li class="command-item"><button type="button" class="command-btn command-btn--primary" data-route-target="insights" aria-label="Insights">◎</button></li>
+      <li class="command-item"><button type="button" class="command-btn" data-route-target="history" aria-label="History">↺</button></li>
+      <li class="command-item"><button type="button" class="command-btn" data-route-target="profile" aria-label="Profile">◉</button></li>
+    </ul>
+  </nav>
   <aside id="controlPanel" class="floating-panel" aria-label="Aponi command initiator">
     <div id="controlPanelHeader" class="floating-header">
       <strong>Aponi Command Initiator</strong>
@@ -1753,6 +1789,7 @@ const MODE_STORAGE_KEY = 'aponi.user.mode.v1';
 const UX_SESSION_KEY = 'aponi.ux.session.v1';
 const EXECUTION_POLL_MS = 1500;
 const CONTROL_STATES = { select: 0, configure: 1, execute: 2, complete: 3, failed: 4 };
+const APP_ROUTES = ['home', 'tasks', 'insights', 'history', 'profile'];
 
 // TODO(aponi-ui): remove compatibility marker shim once full multi-view dashboard is restored.
 const __compatMarkers = `
@@ -1960,7 +1997,10 @@ async function refreshControlQueue() {
       },
       latest_entries: Array.isArray(payload.entries) ? payload.entries.slice(-3) : [],
     };
-    el.textContent = JSON.stringify(summary, null, 2);
+    const summaryText = JSON.stringify(summary, null, 2);
+    el.textContent = summaryText;
+    const profileSummary = document.getElementById('queueSummaryProfile');
+    if (profileSummary) profileSummary.textContent = summaryText;
   } catch (err) {
     el.textContent = 'Failed to load queue surfaces: ' + err;
   }
@@ -2106,10 +2146,10 @@ function toCardModelFromInsightRecommendation(index, recommendation) { return { 
 function toCardModelFromHistoryRerun(entry) { return { source: 'history-rerun', kind: 'run_task', payload: (entry && entry.payload) || {}, title: 'Rerun' }; }
 
 function wireExecutionActions() {
-  document.getElementById('executionCancel')?.addEventListener('click', async () => {
+  document.getElementById('execCancel')?.addEventListener('click', async () => {
     await queueExecutionControl('cancel', executionState.activeEntry);
   });
-  document.getElementById('executionFork')?.addEventListener('click', () => {
+  document.getElementById('execFork')?.addEventListener('click', () => {
     hydrateForkDraft(executionState.activeEntry);
   });
 }
@@ -2135,15 +2175,65 @@ function renderInsights(items) {
 
 function refreshActionCards() { return Promise.resolve(); }
 function refreshHistory() { return Promise.resolve(); }
-function reorderHomeCards(mode) {
-  const host = document.getElementById('view-insights');
-  if (!host) return;
-  const cards = Array.from(host.querySelectorAll('[data-card-key]'));
-  cards.sort((a,b)=>(a.dataset.cardKey||'').localeCompare(b.dataset.cardKey||''));
-  if (mode === 'reverse') cards.reverse();
-  cards.forEach((c)=>host.appendChild(c));
+function routeFromHash() {
+  const raw = (window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
+  return APP_ROUTES.includes(raw) ? raw : 'home';
 }
-function setupViews() {}
+
+function applyRoute(route, opts = {}) {
+  const destination = APP_ROUTES.includes(route) ? route : 'home';
+  const views = document.querySelectorAll('.app-view[data-route]');
+  views.forEach((view) => {
+    const active = view.dataset.route === destination;
+    view.classList.toggle('is-active', active);
+    if (active) {
+      view.removeAttribute('hidden');
+    } else {
+      view.setAttribute('hidden', 'hidden');
+    }
+  });
+
+  document.querySelectorAll('.command-btn[data-route-target]').forEach((button) => {
+    const active = button.dataset.routeTarget === destination;
+    if (active) {
+      button.setAttribute('aria-current', 'page');
+    } else {
+      button.removeAttribute('aria-current');
+    }
+  });
+
+  if (!opts.skipHashSync) {
+    const targetHash = '#' + destination;
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash;
+    }
+  }
+
+  if (opts.focusMain !== false) {
+    const activeView = document.querySelector('.app-view.is-active');
+    if (activeView) activeView.focus();
+  }
+}
+
+function setupViews() {
+  document.querySelectorAll('.command-btn[data-route-target]').forEach((button) => {
+    button.addEventListener('click', () => applyRoute(button.dataset.routeTarget || 'home'));
+    button.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      const buttons = Array.from(document.querySelectorAll('.command-btn[data-route-target]'));
+      const index = buttons.indexOf(button);
+      if (index < 0) return;
+      const direction = event.key === 'ArrowRight' ? 1 : -1;
+      const next = buttons[(index + direction + buttons.length) % buttons.length];
+      if (next) next.focus();
+      event.preventDefault();
+    });
+  });
+
+  window.addEventListener('hashchange', () => applyRoute(routeFromHash(), { skipHashSync: true }));
+  applyRoute(routeFromHash(), { skipHashSync: true, focusMain: false });
+}
+
 function setupModeSwitcher() { reorderHomeCards('alpha'); }
 function setupModeTracking() {}
 function markFeatureEntry() {}
