@@ -43,6 +43,7 @@ def run_self_check_loop(
     replay_mode: str = "off",
     recovery_tier: str | None = None,
     provider: RuntimeDeterminismProvider | None = None,
+    duration_ms: int | None = None,
     elapsed_duration_ms: int | None = None,
 ) -> AutonomyLoopResult:
     effective_provider = provider or (budget_engine.provider if budget_engine is not None else None) or default_provider()
@@ -51,8 +52,10 @@ def run_self_check_loop(
     tier = (recovery_tier or "").strip().lower()
     strict_or_audit = mode in {"strict", "audit"} or tier == "audit"
 
+    duration_override_ms = duration_ms if duration_ms is not None else elapsed_duration_ms
+
     started_ts: float | None = None
-    if elapsed_duration_ms is None:
+    if duration_override_ms is None:
         if strict_or_audit:
             if not getattr(effective_provider, "deterministic", False):
                 raise RuntimeError("deterministic_timestamp_required")
@@ -107,8 +110,8 @@ def run_self_check_loop(
     else:
         decision = "hold"
 
-    if elapsed_duration_ms is not None:
-        total_duration_ms = int(elapsed_duration_ms)
+    if duration_override_ms is not None:
+        total_duration_ms = int(duration_override_ms)
     elif strict_or_audit:
         finished_ts = effective_provider.now_utc().timestamp()
         total_duration_ms = int((finished_ts - (started_ts or finished_ts)) * 1000)

@@ -199,6 +199,39 @@ class AutonomyEnhancementTest(unittest.TestCase):
             },
         )
 
+
+    def test_autonomy_cycle_summary_deterministic_with_duration_override_in_audit_mode(self) -> None:
+        actions = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=7, ok=True)]
+
+        with mock.patch("runtime.metrics.log") as log_mock:
+            result = run_self_check_loop(
+                cycle_id="cycle-audit-summary",
+                actions=actions,
+                post_condition_checks={"tests_pass": lambda: True},
+                mutation_score=0.75,
+                mutate_threshold=0.7,
+                replay_mode="audit",
+                duration_ms=111,
+            )
+
+        self.assertEqual(result.total_duration_ms, 111)
+        summary_call = log_mock.call_args_list[-1]
+        self.assertEqual(summary_call.kwargs["event_type"], "autonomy_cycle_summary")
+        self.assertEqual(
+            summary_call.kwargs["payload"],
+            {
+                "cycle_id": "cycle-audit-summary",
+                "all_actions_ok": True,
+                "post_conditions_passed": True,
+                "mutation_score": 0.75,
+                "mutate_threshold": 0.7,
+                "threshold_source": "static",
+                "budget_snapshot_hash": None,
+                "decision": "self_mutate",
+                "total_duration_ms": 111,
+            },
+        )
+
     def test_autonomy_loop_decision_semantics_unchanged_with_elapsed_override(self) -> None:
         actions_ok = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=3, ok=True)]
         actions_fail = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=3, ok=False)]
@@ -209,7 +242,7 @@ class AutonomyEnhancementTest(unittest.TestCase):
             post_condition_checks={"tests_pass": lambda: True},
             mutation_score=1.0,
             mutate_threshold=0.1,
-            elapsed_duration_ms=9,
+            duration_ms=9,
         )
         self.assertEqual(escalate.decision, "escalate")
 
@@ -219,7 +252,7 @@ class AutonomyEnhancementTest(unittest.TestCase):
             post_condition_checks={"tests_pass": lambda: True},
             mutation_score=0.8,
             mutate_threshold=0.7,
-            elapsed_duration_ms=9,
+            duration_ms=9,
         )
         self.assertEqual(self_mutate.decision, "self_mutate")
 
@@ -229,7 +262,7 @@ class AutonomyEnhancementTest(unittest.TestCase):
             post_condition_checks={"tests_pass": lambda: True},
             mutation_score=0.6,
             mutate_threshold=0.7,
-            elapsed_duration_ms=9,
+            duration_ms=9,
         )
         self.assertEqual(hold.decision, "hold")
 
@@ -259,7 +292,7 @@ class AutonomyEnhancementTest(unittest.TestCase):
             mutation_score=0.2,
             mutate_threshold=0.3,
             replay_mode="strict",
-            elapsed_duration_ms=42,
+            duration_ms=42,
         )
 
         self.assertEqual(result.total_duration_ms, 42)
