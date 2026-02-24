@@ -6,13 +6,23 @@ from __future__ import annotations
 import json
 import shutil
 import time
+import warnings
+from json import JSONDecodeError
 from pathlib import Path
 
 
 class StorageManager:
-    def __init__(self, data_root: Path, max_storage_mb: float = 5000.0):
+    def __init__(
+        self,
+        data_root: Path,
+        max_storage_mb: float = 5000.0,
+        failed_candidate_score_threshold: float = 0.3,
+        snapshot_max_age_days: int = 30,
+    ):
         self.data_root = data_root
         self.max_storage_mb = max_storage_mb
+        self.failed_candidate_score_threshold = failed_candidate_score_threshold
+        self.snapshot_max_age_days = snapshot_max_age_days
 
     def check_and_prune(self) -> dict:
         current_mb = self._get_usage_mb()
@@ -52,9 +62,14 @@ class StorageManager:
                 continue
             try:
                 fitness = json.loads(fitness_file.read_text(encoding="utf-8"))
-            except Exception:
+            except (JSONDecodeError, OSError, ValueError) as exc:
+                self._warn(
+                    "Failed to read candidate fitness for pruning",
+                    path=fitness_file,
+                    context={"candidate": str(candidate), "error": type(exc).__name__},
+                )
                 continue
-            if float(fitness.get("score", 1.0)) < 0.3:
+            if float(fitness.get("score", 1.0)) < self.failed_candidate_score_threshold:
                 shutil.rmtree(candidate, ignore_errors=True)
                 pruned += 1
         return pruned
@@ -63,7 +78,7 @@ class StorageManager:
         snapshots_dir = self.data_root / "snapshots"
         if not snapshots_dir.exists():
             return 0
-        threshold = time.time() - (30 * 24 * 60 * 60)
+        threshold = time.time() - (self.snapshot_max_age_days * 24 * 60 * 60)
         pruned = 0
         for snapshot in snapshots_dir.glob("*"):
             try:
@@ -73,9 +88,23 @@ class StorageManager:
                     else:
                         snapshot.unlink(missing_ok=True)
                     pruned += 1
-            except Exception:
+            except (OSError, ValueError) as exc:
+                self._warn(
+                    "Failed to evaluate or prune snapshot",
+                    path=snapshot,
+                    context={"error": type(exc).__name__},
+                )
                 continue
         return pruned
+
+    @staticmethod
+    def _warn(message: str, path: Path, context: dict[str, str]) -> None:
+        details = {
+            "message": message,
+            "path": str(path),
+            "context": context,
+        }
+        warnings.warn(json.dumps(details, sort_keys=True), stacklevel=2)
 
 
 __all__ = ["StorageManager"]
