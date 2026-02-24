@@ -1663,6 +1663,20 @@ class AponiDashboard:
     .floating-actions {{ display: flex; gap: 0.5rem; }}
     .floating-btn {{ border: 1px solid #3f5f89; color: #e6f0ff; background: #1f3555; padding: 0.45rem 0.7rem; border-radius: 6px; cursor: pointer; }}
     .floating-status {{ font-size: 0.8rem; color: #9cc0f5; white-space: pre-wrap; }}
+    .view-tabs {{ display: flex; gap: 0.5rem; margin-top: 0.8rem; }}
+    .tab-btn {{ border: 1px solid #355079; background: #14243b; color: #dce8fa; border-radius: 6px; padding: 0.35rem 0.65rem; cursor: pointer; }}
+    .tab-btn.active {{ background: #1f3555; border-color: #5e84b9; }}
+    .view {{ display: none; }}
+    .view.active {{ display: grid; gap: 1rem; }}
+    .primary-card {{ border: 1px solid #3b5f8f; border-radius: 10px; background: #12233a; padding: 1rem; }}
+    .primary-card h2 {{ margin-bottom: 0.4rem; }}
+    .primary-card p {{ margin: 0.2rem 0; color: #bfd2ef; }}
+    .primary-card button {{ margin-top: 0.7rem; }}
+    .context-strip {{ display: grid; gap: 0.6rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }}
+    .context-chip {{ border: 1px solid #2c4466; border-radius: 8px; padding: 0.6rem; background: #101d31; }}
+    .chip-label {{ font-size: 0.75rem; text-transform: uppercase; color: #8fb1df; }}
+    .chip-value {{ font-size: 0.92rem; margin-top: 0.25rem; }}
+    .quick-actions {{ display: flex; flex-wrap: wrap; gap: 0.6rem; }}
   </style>
 </head>
 <body>
@@ -1683,7 +1697,6 @@ class AponiDashboard:
     <div id="executionPanel"></div>
     <div id="executionSummary"></div>
     <pre id="executionRaw"></pre>
-    <pre id="uxSummary"></pre>
     <select id="historyTypeFilter"></select>
     <input id="historyDateFrom" />
     <input id="historyDateTo" />
@@ -1691,12 +1704,41 @@ class AponiDashboard:
     <span>Cancel action</span><span>Fork action</span><span>Raw execution event payload</span><span>History</span>
   </div>
   <main>
-    <section><h2>System state</h2><pre id="state">Loading...</pre></section>
-    <section><h2>Intelligence snapshot</h2><pre id="intelligence">Loading...</pre></section>
-    <section><h2>Risk summary</h2><pre id="risk">Loading...</pre></section>
-    <section><h2>Risk instability</h2><pre id="instability">Loading...</pre></section>
-    <section><h2>Replay divergence</h2><pre id="replay">Loading...</pre></section>
-    <section><h2>Evolution timeline (latest)</h2><pre id="timeline">Loading...</pre></section>
+    <div class="view-tabs">
+      <button class="tab-btn active" data-view="home" id="tabHome" type="button">Home</button>
+      <button class="tab-btn" data-view="insights" id="tabInsights" type="button">Insights</button>
+      <button class="tab-btn" data-view="history" id="tabHistory" type="button">History</button>
+    </div>
+    <div class="view active" id="view-home">
+      <section class="primary-card">
+        <h2 id="homePrimaryHeadline">Evaluating recommended action...</h2>
+        <p id="homePrimaryReason">Gathering governance context from state, intelligence, and risk endpoints.</p>
+        <button id="homePrimaryCta" type="button" class="tab-btn">Open recommendation details</button>
+      </section>
+      <section>
+        <h2>Current context</h2>
+        <div class="context-strip">
+          <div class="context-chip"><div class="chip-label">Project</div><div class="chip-value" id="contextProject">Loading...</div></div>
+          <div class="context-chip"><div class="chip-label">Active agent</div><div class="chip-value" id="contextAgent">Loading...</div></div>
+          <div class="context-chip"><div class="chip-label">Mode</div><div class="chip-value" id="contextMode">Loading...</div></div>
+        </div>
+      </section>
+      <section>
+        <h2>Quick actions</h2>
+        <div class="quick-actions" id="homeQuickActions"></div>
+      </section>
+    </div>
+    <div class="view" id="view-insights">
+      <section><h2>System state</h2><pre id="state">Loading...</pre></section>
+      <section><h2>Intelligence snapshot</h2><pre id="intelligence">Loading...</pre></section>
+      <section><h2>Risk summary</h2><pre id="risk">Loading...</pre></section>
+      <section><h2>Risk instability</h2><pre id="instability">Loading...</pre></section>
+    </div>
+    <div class="view" id="view-history">
+      <section><h2>Replay divergence</h2><pre id="replay">Loading...</pre></section>
+      <section><h2>Evolution timeline (latest)</h2><pre id="timeline">Loading...</pre></section>
+      <section><h2>UX summary</h2><pre id="uxSummary">Loading...</pre></section>
+    </div>
   </main>
   <aside id="controlPanel" class="floating-panel" aria-label="Aponi command initiator">
     <div id="controlPanelHeader" class="floating-header">
@@ -1791,14 +1833,16 @@ Expand insight details
 
 async function paint(id, endpoint) {
   const el = document.getElementById(id);
-  if (!el) return;
+  if (!el) return null;
   try {
     const response = await fetch(endpoint, { cache: 'no-store' });
     if (!response.ok) throw new Error(`endpoint returned HTTP ${response.status}`);
     const payload = await response.json();
     el.textContent = JSON.stringify(payload, null, 2);
+    return payload;
   } catch (err) {
     el.textContent = 'Failed to load ' + endpoint + ': ' + err;
+    return null;
   }
 }
 
@@ -2135,21 +2179,129 @@ function renderInsights(items) {
 
 function refreshActionCards() { return Promise.resolve(); }
 function refreshHistory() { return Promise.resolve(); }
-function reorderHomeCards(mode) {
-  const host = document.getElementById('view-insights');
-  if (!host) return;
-  const cards = Array.from(host.querySelectorAll('[data-card-key]'));
-  cards.sort((a,b)=>(a.dataset.cardKey||'').localeCompare(b.dataset.cardKey||''));
-  if (mode === 'reverse') cards.reverse();
-  cards.forEach((c)=>host.appendChild(c));
+function setupViews() {
+  const buttons = Array.from(document.querySelectorAll('[data-view]'));
+  const views = {
+    home: document.getElementById('view-home'),
+    insights: document.getElementById('view-insights'),
+    history: document.getElementById('view-history'),
+  };
+  const activate = (target) => {
+    buttons.forEach((btn) => btn.classList.toggle('active', btn.dataset.view === target));
+    Object.entries(views).forEach(([key, view]) => {
+      if (view) view.classList.toggle('active', key === target);
+    });
+  };
+  buttons.forEach((btn) => btn.addEventListener('click', () => activate(btn.dataset.view || 'home')));
 }
-function setupViews() {}
 function setupModeSwitcher() { reorderHomeCards('alpha'); }
 function setupModeTracking() {}
 function markFeatureEntry() {}
 function markInteraction() {}
 function registerUndoAction() {}
 function hydrateForkDraft() {}
+
+function scoreRecommendation(option) {
+  return (option.priority || 0) * 100 - (option.risk || 0) * 10 + (option.readiness || 0);
+}
+
+function deriveHomeRecommendation(statePayload, intelligencePayload, riskPayload) {
+  const recommendations = [];
+  const activeAgent = statePayload?.active_agent_id || statePayload?.agent_id || 'none';
+  const agentCount = Array.isArray(statePayload?.agents) ? statePayload.agents.length : (statePayload?.agent_count || 0);
+  const riskScore = Number(riskPayload?.risk_score ?? riskPayload?.composite_risk ?? 0);
+  const escalation = Number(riskPayload?.escalation_frequency ?? 0);
+  const intelligenceHints = normalizeInsights(intelligencePayload || {}).slice(0, 3);
+
+  if (riskScore >= 0.7 || escalation >= 0.2) {
+    recommendations.push({
+      key: 'risk_review',
+      headline: 'Review elevated risk posture',
+      reason: `Risk score ${riskScore.toFixed(2)} indicates elevated instability and deserves immediate governance review.`,
+      cta: 'Open Insights risk details',
+      action: () => document.getElementById('tabInsights')?.click(),
+      priority: 3,
+      risk: 1,
+      readiness: 6,
+    });
+  }
+  if (!activeAgent || activeAgent === 'none' || agentCount === 0) {
+    recommendations.push({
+      key: 'configure_agent',
+      headline: 'Set an active agent',
+      reason: 'No active agent is available in /state, so queue operations are currently constrained.',
+      cta: 'Focus command initiator',
+      action: () => document.getElementById('controlAgentId')?.focus(),
+      priority: 2,
+      risk: 0,
+      readiness: 8,
+    });
+  }
+  if (intelligenceHints.length) {
+    recommendations.push({
+      key: 'intelligence_followup',
+      headline: intelligenceHints[0].title || 'Follow intelligence recommendation',
+      reason: intelligenceHints[0].summary || 'Intelligence endpoint reported a recommendation requiring action.',
+      cta: 'Review intelligence in Insights',
+      action: () => document.getElementById('tabInsights')?.click(),
+      priority: 2,
+      risk: 0,
+      readiness: 7,
+    });
+  }
+  if (!recommendations.length) {
+    recommendations.push({
+      key: 'steady_state',
+      headline: 'System is stable',
+      reason: 'No urgent interventions are indicated by state, intelligence, or risk summary.',
+      cta: 'Check History trends',
+      action: () => document.getElementById('tabHistory')?.click(),
+      priority: 1,
+      risk: 0,
+      readiness: 5,
+    });
+  }
+
+  recommendations.sort((left, right) => scoreRecommendation(right) - scoreRecommendation(left));
+  return { primary: recommendations[0], quickActions: recommendations.slice(0, 3) };
+}
+
+function renderHome(statePayload, intelligencePayload, riskPayload) {
+  const project = statePayload?.project || statePayload?.project_id || 'ADAAD';
+  const activeAgent = statePayload?.active_agent_id || statePayload?.agent_id || 'none';
+  const mode = statePayload?.mode || statePayload?.governance_mode || 'strict';
+  const recommendation = deriveHomeRecommendation(statePayload, intelligencePayload, riskPayload);
+
+  const headline = document.getElementById('homePrimaryHeadline');
+  const reason = document.getElementById('homePrimaryReason');
+  const ctaButton = document.getElementById('homePrimaryCta');
+  if (headline) headline.textContent = recommendation.primary.headline;
+  if (reason) reason.textContent = recommendation.primary.reason;
+  if (ctaButton) {
+    ctaButton.textContent = recommendation.primary.cta;
+    ctaButton.onclick = recommendation.primary.action;
+  }
+
+  const projectEl = document.getElementById('contextProject');
+  const agentEl = document.getElementById('contextAgent');
+  const modeEl = document.getElementById('contextMode');
+  if (projectEl) projectEl.textContent = String(project);
+  if (agentEl) agentEl.textContent = String(activeAgent);
+  if (modeEl) modeEl.textContent = String(mode);
+
+  const quickHost = document.getElementById('homeQuickActions');
+  if (!quickHost) return;
+  quickHost.innerHTML = '';
+  recommendation.quickActions.slice(0, 3).forEach((item) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'tab-btn';
+    button.textContent = item.headline;
+    button.title = item.reason;
+    button.addEventListener('click', item.action);
+    quickHost.appendChild(button);
+  });
+}
 
 async function queueExecutionControlForLatest(type) {
   const status = document.getElementById('controlStatus');
@@ -2169,19 +2321,23 @@ async function queueExecutionControlForLatest(type) {
 }
 
 async function refresh() {
-  const intelligence = await paint('intelligence', '/system/intelligence');
-  await Promise.all([
+  const [statePayload, intelligencePayload, riskPayload] = await Promise.all([
     paint('state', '/state'),
+    paint('intelligence', '/system/intelligence'),
     paint('risk', '/risk/summary'),
+  ]);
+
+  await Promise.all([
     paint('instability', '/risk/instability'),
     paint('replay', '/replay/divergence'),
     paint('timeline', '/evolution/timeline'),
-    paint('uxSummary', '/ux/summary'),
     refreshHistory(),
     refreshControlQueue(),
     refreshActionCards(),
   ]);
-  renderInsights(normalizeInsights(intelligence || {}));
+
+  renderHome(statePayload || {}, intelligencePayload || {}, riskPayload || {});
+  renderInsights(normalizeInsights(intelligencePayload || {}));
 }
 
 setupViews();

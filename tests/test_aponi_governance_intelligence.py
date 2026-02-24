@@ -240,6 +240,13 @@ def test_user_console_uses_external_script_for_csp_compatibility() -> None:
     assert "id=\"uxSummary\"" in html
     assert "'/ux/events'" in script
     assert "Expand insight details" in script
+    assert "id=\"view-home\"" in html
+    assert "id=\"homePrimaryHeadline\"" in html
+    assert "id=\"contextProject\"" in html
+    assert "id=\"homeQuickActions\"" in html
+    assert "function deriveHomeRecommendation(statePayload, intelligencePayload, riskPayload)" in script
+    assert "recommendation.quickActions.slice(0, 3)" in script
+    assert "await paint('uxSummary', '/ux/summary')" not in script
 
 def test_risk_instability_uses_weighted_deterministic_formula() -> None:
     handler = _handler_class()
