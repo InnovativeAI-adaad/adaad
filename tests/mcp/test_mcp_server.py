@@ -140,3 +140,42 @@ def test_startup_refuses_when_signing_key_absent(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError):
         with TestClient(app):
             pass
+
+
+def test_auth_failure_codes_for_malformed_tokens(tmp_path, monkeypatch):
+    monkeypatch.setenv("ADAAD_MCP_JWT_SECRET", "super-secret")
+    monkeypatch.setattr(cryovant, "KEYS_DIR", tmp_path)
+    (tmp_path / "signing-key.pem").write_text("k", encoding="utf-8")
+    client = TestClient(create_app())
+
+    malformed = "abc.def"
+    resp = client.post("/mutation/rank", json={"mutation_ids": ["x"]}, headers={"Authorization": f"Bearer {malformed}"})
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "invalid_jwt"
+    assert "super-secret" not in resp.text
+
+    bad_payload = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid-json.signature"
+    resp2 = client.post("/mutation/rank", json={"mutation_ids": ["x"]}, headers={"Authorization": f"Bearer {bad_payload}"})
+    assert resp2.status_code == 401
+    assert resp2.json()["detail"] == "invalid_jwt"
+
+
+def test_pre_check_failed_fallback_on_unparseable_verdicts(tmp_path, monkeypatch):
+    monkeypatch.setenv("ADAAD_MCP_JWT_SECRET", "secret")
+    monkeypatch.setattr(cryovant, "KEYS_DIR", tmp_path)
+    (tmp_path / "signing-key.pem").write_text("k", encoding="utf-8")
+    client = TestClient(create_app())
+    tok = _jwt("secret", int(time.time()) + 500)
+
+    from runtime.mcp.proposal_validator import ProposalValidationError
+
+    def _raise(*_args, **_kwargs):
+        raise ProposalValidationError(code="pre_check_failed", detail="not-json", status_code=422)
+
+    monkeypatch.setattr("runtime.mcp.server.validate_proposal", _raise)
+    payload = {"agent_id": "a"}
+    resp = client.post("/mutation/propose", json=payload, headers={"Authorization": f"Bearer {tok}"})
+    assert resp.status_code == 422
+    body = resp.json()["detail"]
+    assert body["error"] == "pre_check_failed"
+    assert "verdicts" not in body

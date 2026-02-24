@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+from json import JSONDecodeError
 from pathlib import Path
 from typing import Dict, List
 
@@ -123,8 +124,16 @@ def run_gatekeeper() -> Dict[str, object]:
             loaded_snapshot = json.loads(LEDGER_SNAPSHOT_PATH.read_text(encoding="utf-8"))
             if isinstance(loaded_snapshot, dict):
                 prev_snapshot = {str(path): str(file_hash) for path, file_hash in loaded_snapshot.items()}
-        except Exception as exc:
+        except (JSONDecodeError, OSError, ValueError) as exc:
             snapshot_load_error = f"{type(exc).__name__}: {exc}"
+            LOG.warning(
+                "gatekeeper snapshot load failed",
+                extra={
+                    "reason_code": "snapshot_load_failed",
+                    "error_type": type(exc).__name__,
+                    "path": str(LEDGER_SNAPSHOT_PATH),
+                },
+            )
 
     drift_report = _compute_drift(prev_snapshot, manifest_snapshot)
     has_snapshot_baseline = bool(prev_snapshot)
@@ -141,6 +150,7 @@ def run_gatekeeper() -> Dict[str, object]:
     }
 
     persistence_error = snapshot_load_error
+    persistence_reason_code = "snapshot_load_failed" if snapshot_load_error else None
     try:
         LEDGER_HASH_PATH.parent.mkdir(parents=True, exist_ok=True)
         LEDGER_HASH_PATH.write_text(digest, encoding="utf-8")
@@ -159,14 +169,15 @@ def run_gatekeeper() -> Dict[str, object]:
                 "drift_report": drift_report,
             }
         )
-    except Exception as exc:
+    except OSError as exc:
         persistence_error = f"{type(exc).__name__}: {exc}"
+        persistence_reason_code = "hash_persist_failed"
         LOG.error(
             "gatekeeper persistence failed",
             extra={
-                "reason_code": reason_code,
+                "reason_code": persistence_reason_code,
                 "operation_class": "governance-critical",
-                "path": str(ledger_hash_file),
+                "path": str(LEDGER_HASH_PATH),
                 "error_type": type(exc).__name__,
             },
         )

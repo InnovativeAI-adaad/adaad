@@ -140,5 +140,19 @@ class GatekeeperProtocolTest(unittest.TestCase):
             self.assertEqual(payload["persistence_reason_code"], "hash_persist_failed")
 
 
+    def test_invalid_snapshot_payload_reports_structured_failure(self) -> None:
+        with _in_temp_repo():
+            Path("app/alpha.txt").write_text("stable", encoding="utf-8")
+            run_gatekeeper()
+            Path("security/ledger/gate_manifest_snapshot.json").write_text("{not-json", encoding="utf-8")
+
+            payload = run_gatekeeper()
+
+            self.assertFalse(payload["ok"])
+            self.assertIn("hash_persist_failed", payload["reasons"])
+            self.assertEqual(payload["persistence_reason_code"], "snapshot_load_failed")
+            self.assertIn("JSONDecodeError", payload["persistence_error"])
+
+
 if __name__ == "__main__":
     unittest.main()
