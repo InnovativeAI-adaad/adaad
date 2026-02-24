@@ -106,6 +106,34 @@ def _apply_governance_ci_mode_defaults() -> None:
     os.environ.setdefault("ADAAD_RESOURCE_WALL_SECONDS", "60")
 
 
+def _load_storage_manager_configs() -> tuple[dict[str, Any], dict[str, Any]]:
+    runtime_config: dict[str, Any] = {}
+    governance_config: dict[str, Any] = {}
+
+    profile_path = APP_ROOT.parent / "governance_runtime_profile.lock.json"
+    if profile_path.exists():
+        try:
+            profile_payload = json.loads(profile_path.read_text(encoding="utf-8"))
+            runtime_manifest = profile_payload.get("runtime_manifest", {})
+            if isinstance(runtime_manifest, dict):
+                storage_config = runtime_manifest.get("storage_manager", {})
+                if isinstance(storage_config, dict):
+                    runtime_config.update(storage_config)
+        except (OSError, ValueError, TypeError):
+            runtime_config = {}
+
+    governance_path = APP_ROOT.parent / "governance" / "storage_manager.json"
+    if governance_path.exists():
+        try:
+            governance_payload = json.loads(governance_path.read_text(encoding="utf-8"))
+            if isinstance(governance_payload, dict):
+                governance_config.update(governance_payload)
+        except (OSError, ValueError, TypeError):
+            governance_config = {}
+
+    return governance_config, runtime_config
+
+
 class Orchestrator:
     """
     Coordinates boot order and health checks.
@@ -134,7 +162,12 @@ class Orchestrator:
         self.recovery_hook = AutoRecoveryHook(self.snapshot_manager)
         self.tier_manager = TierManager()
         self.resource_monitor = AndroidMonitor(APP_ROOT.parent)
-        self.storage_manager = StorageManager(APP_ROOT.parent)
+        governance_storage_config, runtime_storage_config = _load_storage_manager_configs()
+        self.storage_manager = StorageManager(
+            APP_ROOT.parent,
+            governance_config=governance_storage_config,
+            runtime_config=runtime_storage_config,
+        )
         self.executor = MutationExecutor(self.agents_root, evolution_runtime=self.evolution_runtime)
         self.mutation_engine = MutationEngine(metrics.METRICS_PATH)
         self.boot_preflight = BootPreflightService()

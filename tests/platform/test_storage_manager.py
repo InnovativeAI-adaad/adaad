@@ -117,3 +117,59 @@ def test_storage_manager_prune_report_and_counts_are_deterministic(
     assert high.exists()
     assert not old.exists()
     assert recent.exists()
+
+
+def test_storage_manager_reads_thresholds_from_runtime_config(tmp_path: Path) -> None:
+    candidates = tmp_path / "candidates"
+    borderline = candidates / "borderline"
+    borderline.mkdir(parents=True)
+    (borderline / "fitness.json").write_text(json.dumps({"score": 0.5}), encoding="utf-8")
+
+    snapshots = tmp_path / "snapshots"
+    snapshots.mkdir(parents=True)
+    old = snapshots / "old.snap"
+    old.write_text("old", encoding="utf-8")
+    old_ts = time.time() - (2 * 24 * 60 * 60)
+    os.utime(old, (old_ts, old_ts))
+
+    mgr = StorageManager(
+        tmp_path,
+        max_storage_mb=0.0,
+        runtime_config={
+            "failed_candidate_score_threshold": 0.6,
+            "snapshot_max_age_days": 1,
+        },
+    )
+    result = mgr.check_and_prune()
+
+    assert result["pruned"] is True
+    assert result["pruned_count"] == 2
+    assert not borderline.exists()
+    assert not old.exists()
+
+
+def test_storage_manager_minimum_reclaim_target_forces_snapshot_prune(tmp_path: Path) -> None:
+    candidates = tmp_path / "candidates"
+    low = candidates / "low"
+    low.mkdir(parents=True)
+    (low / "fitness.json").write_text(json.dumps({"score": 0.1}), encoding="utf-8")
+
+    snapshots = tmp_path / "snapshots"
+    snapshots.mkdir(parents=True)
+    old = snapshots / "old.snap"
+    old.write_text("old", encoding="utf-8")
+    old_ts = time.time() - (3 * 24 * 60 * 60)
+    os.utime(old, (old_ts, old_ts))
+
+    mgr = StorageManager(
+        tmp_path,
+        max_storage_mb=0.0,
+        snapshot_max_age_days=1,
+        minimum_reclaim_target_mb=0.01,
+    )
+    result = mgr.check_and_prune()
+
+    assert result["pruned"] is True
+    assert result["pruned_count"] == 2
+    assert not low.exists()
+    assert not old.exists()
