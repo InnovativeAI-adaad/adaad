@@ -149,6 +149,122 @@ class AutonomyEnhancementTest(unittest.TestCase):
             self.assertGreater(threshold, 0.5)
             self.assertEqual(result.decision, "hold")
 
+
+    def test_autonomy_cycle_summary_deterministic_under_strict_provider(self) -> None:
+        actions = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=7, ok=True)]
+
+        class _StepProvider:
+            deterministic = True
+
+            def __init__(self) -> None:
+                from datetime import datetime, timedelta, timezone
+
+                self._base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+                self._step = timedelta(milliseconds=25)
+                self._calls = 0
+
+            def now_utc(self):
+                value = self._base + (self._step * self._calls)
+                self._calls += 1
+                return value
+
+        provider = _StepProvider()
+
+        with mock.patch("runtime.metrics.log") as log_mock:
+            result = run_self_check_loop(
+                cycle_id="cycle-deterministic-summary",
+                actions=actions,
+                post_condition_checks={"tests_pass": lambda: True},
+                mutation_score=0.75,
+                mutate_threshold=0.7,
+                replay_mode="strict",
+                provider=provider,
+            )
+
+        self.assertEqual(result.total_duration_ms, 25)
+        summary_call = log_mock.call_args_list[-1]
+        self.assertEqual(summary_call.kwargs["event_type"], "autonomy_cycle_summary")
+        self.assertEqual(
+            summary_call.kwargs["payload"],
+            {
+                "cycle_id": "cycle-deterministic-summary",
+                "all_actions_ok": True,
+                "post_conditions_passed": True,
+                "mutation_score": 0.75,
+                "mutate_threshold": 0.7,
+                "threshold_source": "static",
+                "budget_snapshot_hash": None,
+                "decision": "self_mutate",
+                "total_duration_ms": 25,
+            },
+        )
+
+    def test_autonomy_loop_decision_semantics_unchanged_with_elapsed_override(self) -> None:
+        actions_ok = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=3, ok=True)]
+        actions_fail = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=3, ok=False)]
+
+        escalate = run_self_check_loop(
+            cycle_id="cycle-escalate",
+            actions=actions_fail,
+            post_condition_checks={"tests_pass": lambda: True},
+            mutation_score=1.0,
+            mutate_threshold=0.1,
+            elapsed_duration_ms=9,
+        )
+        self.assertEqual(escalate.decision, "escalate")
+
+        self_mutate = run_self_check_loop(
+            cycle_id="cycle-self-mutate",
+            actions=actions_ok,
+            post_condition_checks={"tests_pass": lambda: True},
+            mutation_score=0.8,
+            mutate_threshold=0.7,
+            elapsed_duration_ms=9,
+        )
+        self.assertEqual(self_mutate.decision, "self_mutate")
+
+        hold = run_self_check_loop(
+            cycle_id="cycle-hold",
+            actions=actions_ok,
+            post_condition_checks={"tests_pass": lambda: True},
+            mutation_score=0.6,
+            mutate_threshold=0.7,
+            elapsed_duration_ms=9,
+        )
+        self.assertEqual(hold.decision, "hold")
+
+    def test_autonomy_loop_backward_compatible_without_provider(self) -> None:
+        actions = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=10, ok=True)]
+
+        with mock.patch("runtime.autonomy.loop.time.time", side_effect=[10.0, 10.05]):
+            result = run_self_check_loop(
+                cycle_id="cycle-compat",
+                actions=actions,
+                post_condition_checks={"tests_pass": lambda: True},
+                mutation_score=0.2,
+                mutate_threshold=0.3,
+            )
+
+        self.assertEqual(result.total_duration_ms, 50)
+        self.assertEqual(result.decision, "hold")
+
+
+    def test_autonomy_loop_strict_allows_elapsed_override_without_provider(self) -> None:
+        actions = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=10, ok=True)]
+
+        result = run_self_check_loop(
+            cycle_id="cycle-strict-elapsed",
+            actions=actions,
+            post_condition_checks={"tests_pass": lambda: True},
+            mutation_score=0.2,
+            mutate_threshold=0.3,
+            replay_mode="strict",
+            elapsed_duration_ms=42,
+        )
+
+        self.assertEqual(result.total_duration_ms, 42)
+        self.assertEqual(result.decision, "hold")
+
     def test_adaptive_budget_snapshot_hash_deterministic_for_identical_inputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             payload = {

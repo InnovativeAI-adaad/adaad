@@ -9,6 +9,7 @@ from typing import Callable
 
 from runtime import metrics
 from runtime.autonomy.adaptive_budget import AutonomyBudgetEngine
+from runtime.governance.foundation.determinism import RuntimeDeterminismProvider, default_provider
 
 
 @dataclass(frozen=True)
@@ -39,8 +40,25 @@ def run_self_check_loop(
     governance_debt_score: float = 0.0,
     fitness_trend_delta: float = 0.0,
     epoch_pass_rate: float = 1.0,
+    replay_mode: str = "off",
+    recovery_tier: str | None = None,
+    provider: RuntimeDeterminismProvider | None = None,
+    elapsed_duration_ms: int | None = None,
 ) -> AutonomyLoopResult:
-    started = time.time()
+    effective_provider = provider or (budget_engine.provider if budget_engine is not None else None) or default_provider()
+
+    mode = replay_mode.strip().lower()
+    tier = (recovery_tier or "").strip().lower()
+    strict_or_audit = mode in {"strict", "audit"} or tier == "audit"
+
+    started_ts: float | None = None
+    if elapsed_duration_ms is None:
+        if strict_or_audit:
+            if not getattr(effective_provider, "deterministic", False):
+                raise RuntimeError("deterministic_timestamp_required")
+            started_ts = effective_provider.now_utc().timestamp()
+        else:
+            started_ts = time.time()
     all_actions_ok = True
     for action in actions:
         metrics.log(
@@ -89,7 +107,13 @@ def run_self_check_loop(
     else:
         decision = "hold"
 
-    total_duration_ms = int((time.time() - started) * 1000)
+    if elapsed_duration_ms is not None:
+        total_duration_ms = int(elapsed_duration_ms)
+    elif strict_or_audit:
+        finished_ts = effective_provider.now_utc().timestamp()
+        total_duration_ms = int((finished_ts - (started_ts or finished_ts)) * 1000)
+    else:
+        total_duration_ms = int((time.time() - (started_ts or time.time())) * 1000)
     metrics.log(
         event_type="autonomy_cycle_summary",
         payload={
