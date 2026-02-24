@@ -13,6 +13,9 @@ from security import cryovant
 
 FORBIDDEN_TOKENS: Set[str] = {"os.system(", "subprocess.Popen", "eval(", "exec(", "socket."}
 BANNED_IMPORTS: Set[str] = {"subprocess", "socket"}
+DYNAMIC_EXEC_PRIMITIVES: Set[str] = {"eval", "exec", "compile", "__import__"}
+MODULE_RUNTIME_RISKS: Set[str] = {"os", "subprocess", "socket"}
+SUSPICIOUS_ATTR_INVOCATIONS: Set[str] = {"system", "popen", "popen2", "spawn", "execve"}
 
 
 def _imports_in_tree(tree: ast.AST) -> Set[str]:
@@ -29,6 +32,83 @@ def _imports_in_tree(tree: ast.AST) -> Set[str]:
 
 def _sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _attribute_path(node: ast.AST) -> str | None:
+    parts: list[str] = []
+    current: ast.AST | None = node
+    while isinstance(current, ast.Attribute):
+        parts.append(current.attr)
+        current = current.value
+    if isinstance(current, ast.Name):
+        parts.append(current.id)
+        return ".".join(reversed(parts))
+    return None
+
+
+def _ast_forbidden_patterns(tree: ast.AST) -> tuple[bool, list[str]]:
+    module_aliases: dict[str, str] = {}
+    symbol_aliases: dict[str, str] = {}
+    reasons: list[str] = []
+    dynamic_aliases: set[str] = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                top_level = alias.name.split(".")[0]
+                bound_name = alias.asname or top_level
+                module_aliases[bound_name] = top_level
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            top_level = node.module.split(".")[0]
+            for alias in node.names:
+                bound_name = alias.asname or alias.name
+                symbol_aliases[bound_name] = f"{top_level}.{alias.name}"
+        elif isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
+            call = node.value
+            if isinstance(call.func, ast.Name) and call.func.id == "getattr":
+                if len(call.args) >= 2 and isinstance(call.args[1], ast.Constant) and isinstance(call.args[1].value, str):
+                    if call.args[1].value in DYNAMIC_EXEC_PRIMITIVES:
+                        for target in node.targets:
+                            if isinstance(target, ast.Name):
+                                dynamic_aliases.add(target.id)
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+
+        if isinstance(node.func, ast.Name):
+            callee = node.func.id
+            if callee in DYNAMIC_EXEC_PRIMITIVES:
+                reasons.append(f"dynamic_primitive:{callee}")
+            mapped_symbol = symbol_aliases.get(callee)
+            if callee in dynamic_aliases:
+                reasons.append(f"dynamic_primitive_alias:{callee}")
+            if mapped_symbol and mapped_symbol.split(".")[0] in MODULE_RUNTIME_RISKS:
+                reasons.append(f"module_runtime_risk:{mapped_symbol}")
+            continue
+
+        attr_path = _attribute_path(node.func)
+        if attr_path:
+            parts = attr_path.split(".")
+            root = parts[0]
+            if root in module_aliases:
+                mapped_root = module_aliases[root]
+                mapped_path = ".".join([mapped_root, *parts[1:]])
+                if mapped_root in MODULE_RUNTIME_RISKS:
+                    reasons.append(f"module_runtime_risk:{mapped_path}")
+                if mapped_root in MODULE_RUNTIME_RISKS and parts[-1] in SUSPICIOUS_ATTR_INVOCATIONS:
+                    reasons.append(f"suspicious_attribute_invocation:{mapped_path}")
+            if parts[-1] in DYNAMIC_EXEC_PRIMITIVES:
+                reasons.append(f"attribute_dynamic_primitive:{attr_path}")
+
+        if isinstance(node.func, ast.Call) and isinstance(node.func.func, ast.Name) and node.func.func.id == "getattr":
+            getter_args = node.func.args
+            if len(getter_args) >= 2 and isinstance(getter_args[1], ast.Constant) and isinstance(getter_args[1].value, str):
+                attr_name = getter_args[1].value
+                if attr_name in DYNAMIC_EXEC_PRIMITIVES:
+                    reasons.append(f"getattr_dynamic_primitive:{attr_name}")
+
+    return (len(reasons) == 0, sorted(set(reasons)))
 
 
 @dataclass
@@ -100,6 +180,7 @@ class GateCertifier:
         found_imports = _imports_in_tree(tree)
         import_ok = not any(bad in found_imports for bad in self.banned_imports)
         token_ok = not any(tok in content for tok in self.forbidden_tokens)
+        ast_ok, ast_violations = _ast_forbidden_patterns(tree)
 
         token = (metadata.get("cryovant_token") or "").strip()
         auth_ok = False
@@ -109,9 +190,9 @@ class GateCertifier:
             except Exception:
                 auth_ok = False
 
-        passed = import_ok and token_ok and auth_ok
+        passed = import_ok and ast_ok and auth_ok
         violation_events: list[dict[str, object]] = []
-        if not import_ok or not token_ok:
+        if not import_ok or not ast_ok:
             violation_events.append(_record("IV.gate_forbidden_code_block", "forbidden_code_or_import"))
         if not auth_ok:
             violation_events.append(_record("V.gate_authentication_required", "auth_failed"))
@@ -125,6 +206,8 @@ class GateCertifier:
                 "imports": sorted(found_imports),
                 "import_ok": import_ok,
                 "token_ok": token_ok,
+                "ast_ok": ast_ok,
+                "ast_violations": ast_violations,
                 "auth_ok": auth_ok,
             },
             escalation=escalation,
