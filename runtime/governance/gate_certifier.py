@@ -46,8 +46,14 @@ def _attribute_path(node: ast.AST) -> str | None:
     return None
 
 
-def _ast_forbidden_patterns(tree: ast.AST) -> tuple[bool, list[str]]:
+def _ast_forbidden_patterns(tree: ast.AST) -> tuple[bool, list[str], list[dict[str, object]]]:
     reasons: set[str] = set()
+    reason_lines: dict[str, int] = {}
+
+    def _add_reason(reason: str, line: int | None) -> None:
+        reasons.add(reason)
+        if line is not None and reason not in reason_lines:
+            reason_lines[reason] = line
 
     class _SecurityVisitor(ast.NodeVisitor):
         def __init__(self) -> None:
@@ -75,20 +81,20 @@ def _ast_forbidden_patterns(tree: ast.AST) -> tuple[bool, list[str]]:
             leaf = parts[-1]
 
             if isinstance(call_node.func, ast.Name) and call_node.func.id in DYNAMIC_EXEC_PRIMITIVES:
-                reasons.add(f"dynamic_primitive:{call_node.func.id}")
+                _add_reason(f"dynamic_primitive:{call_node.func.id}", getattr(call_node, "lineno", None))
 
             if isinstance(call_node.func, ast.Name) and call_node.func.id in self.aliases:
                 resolved = self.aliases[call_node.func.id]
                 if resolved.split(".")[-1] in DYNAMIC_EXEC_PRIMITIVES:
-                    reasons.add(f"dynamic_primitive_alias:{call_node.func.id}")
+                    _add_reason(f"dynamic_primitive_alias:{call_node.func.id}", getattr(call_node, "lineno", None))
 
             if leaf in DYNAMIC_EXEC_PRIMITIVES:
-                reasons.add(f"attribute_dynamic_primitive:{path}")
+                _add_reason(f"attribute_dynamic_primitive:{path}", getattr(call_node, "lineno", None))
 
             if root in MODULE_RUNTIME_RISKS:
-                reasons.add(f"module_runtime_risk:{path}")
+                _add_reason(f"module_runtime_risk:{path}", getattr(call_node, "lineno", None))
                 if leaf in SUSPICIOUS_ATTR_INVOCATIONS:
-                    reasons.add(f"suspicious_attribute_invocation:{path}")
+                    _add_reason(f"suspicious_attribute_invocation:{path}", getattr(call_node, "lineno", None))
 
         def visit_Import(self, node: ast.Import) -> None:
             for alias in node.names:
@@ -119,7 +125,19 @@ def _ast_forbidden_patterns(tree: ast.AST) -> tuple[bool, list[str]]:
 
     _SecurityVisitor().visit(tree)
 
-    return (len(reasons) == 0, sorted(reasons))
+    sorted_reasons = sorted(reasons)
+    semantic_violations: list[dict[str, object]] = []
+    for detail in sorted_reasons:
+        kind, _, remainder = detail.partition(":")
+        semantic_violations.append(
+            {
+                "kind": kind,
+                "detail": remainder,
+                "line": reason_lines.get(detail),
+            }
+        )
+
+    return (len(reasons) == 0, sorted_reasons, semantic_violations)
 
 
 @dataclass
@@ -191,7 +209,7 @@ class GateCertifier:
         found_imports = _imports_in_tree(tree)
         import_ok = not any(bad in found_imports for bad in self.banned_imports)
         token_ok = not any(tok in content for tok in self.forbidden_tokens)
-        ast_ok, ast_violations = _ast_forbidden_patterns(tree)
+        ast_ok, ast_violations, semantic_violations = _ast_forbidden_patterns(tree)
 
         token = (metadata.get("cryovant_token") or "").strip()
         auth_ok = False
@@ -219,6 +237,7 @@ class GateCertifier:
                 "token_ok": token_ok,
                 "ast_ok": ast_ok,
                 "ast_violations": ast_violations,
+                "semantic_violations": semantic_violations,
                 "auth_ok": auth_ok,
             },
             escalation=escalation,

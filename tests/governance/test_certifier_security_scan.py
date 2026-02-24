@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from runtime.governance.canon_law import CanonClause
 from runtime.governance.gate_certifier import GateCertifier
 
 
@@ -166,3 +167,67 @@ getattr(builtins, 'exec')('x = 42')
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
     assert "attribute_dynamic_primitive:builtins.exec" in cert["checks"]["ast_violations"]
+
+
+def test_certify_result_contains_semantic_violations_field(tmp_path: Path, monkeypatch) -> None:
+    target = tmp_path / "semantic_violation_fixture.py"
+    target.write_text(
+        "import builtins as b\n"
+        "runner = getattr(b, 'eval')\n"
+        "runner('1 + 1')\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+
+    monkeypatch.setattr(
+        "runtime.governance.gate_certifier.load_canon_law",
+        lambda: {
+            "IV.gate_forbidden_code_block": CanonClause(
+                article="IV",
+                clause_id="IV.gate_forbidden_code_block",
+                applies_to="runtime.governance.gate_certifier",
+                enforcement="static_analysis",
+                escalation="critical",
+                mutation_block=True,
+                fail_closed=False,
+            ),
+            "V.gate_authentication_required": CanonClause(
+                article="V",
+                clause_id="V.gate_authentication_required",
+                applies_to="runtime.governance.gate_certifier",
+                enforcement="cryovant_auth",
+                escalation="governance",
+                mutation_block=True,
+                fail_closed=True,
+            ),
+            "III.gate_file_must_exist": CanonClause(
+                article="III",
+                clause_id="III.gate_file_must_exist",
+                applies_to="runtime.governance.gate_certifier",
+                enforcement="file_guard",
+                escalation="governance",
+                mutation_block=True,
+                fail_closed=False,
+            ),
+            "VIII.undefined_state_fail_closed": CanonClause(
+                article="VIII",
+                clause_id="VIII.undefined_state_fail_closed",
+                applies_to="runtime.governance.gate_certifier",
+                enforcement="fail_closed",
+                escalation="critical",
+                mutation_block=True,
+                fail_closed=True,
+            ),
+        },
+    )
+
+    certifier = GateCertifier()
+    result = certifier.certify(target, {"cryovant_token": "x" * 24})
+
+    assert "checks" in result
+    assert "semantic_violations" in result["checks"]
+    semantic_violations = result["checks"]["semantic_violations"]
+    assert isinstance(semantic_violations, list)
+    assert semantic_violations
+    assert {"kind", "detail", "line"}.issubset(semantic_violations[0].keys())
