@@ -4,8 +4,23 @@
 from __future__ import annotations
 
 import os
+import logging
 from dataclasses import dataclass
 from pathlib import Path
+
+from runtime import metrics
+
+
+LOG = logging.getLogger(__name__)
+METRIC_EVENT = "android_monitor_probe_fallback"
+
+
+def _emit_probe_fallback(*, probe: str, reason_code: str, error: Exception | None = None) -> None:
+    payload = {"probe": probe, "reason_code": reason_code}
+    if error is not None:
+        payload["error_type"] = type(error).__name__
+    LOG.warning("android monitor probe fallback", extra=payload)
+    metrics.log(event_type=METRIC_EVENT, payload=payload, level="WARNING")
 
 
 @dataclass(frozen=True)
@@ -47,8 +62,13 @@ class AndroidMonitor:
     def _read_battery() -> float:
         capacity_path = Path("/sys/class/power_supply/battery/capacity")
         try:
-            return float(capacity_path.read_text(encoding="utf-8").strip())
-        except Exception:
+            reading = float(capacity_path.read_text(encoding="utf-8").strip())
+            return max(0.0, min(100.0, reading))
+        except OSError as exc:
+            _emit_probe_fallback(probe="battery", reason_code="battery_probe_unreadable", error=exc)
+            return 100.0
+        except ValueError as exc:
+            _emit_probe_fallback(probe="battery", reason_code="battery_probe_parse_error", error=exc)
             return 100.0
 
     @staticmethod
@@ -57,8 +77,12 @@ class AndroidMonitor:
         try:
             lines = meminfo.read_text(encoding="utf-8").splitlines()
             available_kb = next(int(line.split()[1]) for line in lines if line.startswith("MemAvailable:"))
-            return available_kb / 1024.0
-        except Exception:
+            return max(0.0, available_kb / 1024.0)
+        except OSError as exc:
+            _emit_probe_fallback(probe="memory", reason_code="meminfo_unreadable", error=exc)
+            return 8192.0
+        except (StopIteration, IndexError, ValueError) as exc:
+            _emit_probe_fallback(probe="memory", reason_code="meminfo_parse_error", error=exc)
             return 8192.0
 
     def _read_storage(self) -> float:
@@ -72,7 +96,11 @@ class AndroidMonitor:
             load1, _, _ = os.getloadavg()
             cpus = os.cpu_count() or 1
             return max(0.0, min(100.0, (load1 / cpus) * 100.0))
-        except Exception:
+        except OSError as exc:
+            _emit_probe_fallback(probe="cpu", reason_code="cpu_probe_unavailable", error=exc)
+            return 0.0
+        except (TypeError, ValueError, ZeroDivisionError) as exc:
+            _emit_probe_fallback(probe="cpu", reason_code="cpu_probe_parse_error", error=exc)
             return 0.0
 
 

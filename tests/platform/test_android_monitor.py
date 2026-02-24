@@ -2,8 +2,10 @@
 
 from pathlib import Path
 
+import pytest
+
 from app.agents.mutation_request import MutationRequest, MutationTarget
-from runtime import constitution
+from runtime.platform import android_monitor
 from runtime.platform.android_monitor import AndroidMonitor, ResourceSnapshot
 
 
@@ -22,6 +24,8 @@ def test_android_monitor_snapshot_non_android(tmp_path: Path, monkeypatch) -> No
 
 
 def test_evaluation_state_merges_android_telemetry(monkeypatch) -> None:
+    constitution = pytest.importorskip("runtime.constitution")
+
     request = MutationRequest(
         agent_id="test_subject",
         generation_ts="now",
@@ -49,3 +53,41 @@ def test_evaluation_state_merges_android_telemetry(monkeypatch) -> None:
     assert telemetry["cpu_percent"] == 81.0
     assert telemetry["battery_percent"] == 22.0
     assert telemetry["storage_mb"] == 900.0
+
+
+def test_probe_fallback_values_unchanged_and_diagnostics_emitted(monkeypatch) -> None:
+    signals: list[dict[str, str]] = []
+
+    def _capture_signal(*, probe: str, reason_code: str, error: Exception | None = None) -> None:
+        payload = {"probe": probe, "reason_code": reason_code}
+        if error is not None:
+            payload["error_type"] = type(error).__name__
+        signals.append(payload)
+
+    monkeypatch.setattr(android_monitor, "_emit_probe_fallback", _capture_signal)
+
+    monkeypatch.setattr(Path, "read_text", lambda self, encoding="utf-8": (_ for _ in ()).throw(OSError("boom")))
+    monkeypatch.setattr(android_monitor.os, "getloadavg", lambda: (_ for _ in ()).throw(OSError("no loadavg")))
+
+    assert AndroidMonitor._read_battery() == 100.0
+    assert AndroidMonitor._read_memory() == 8192.0
+    assert AndroidMonitor._read_cpu() == 0.0
+
+    assert [signal["reason_code"] for signal in signals] == [
+        "battery_probe_unreadable",
+        "meminfo_unreadable",
+        "cpu_probe_unavailable",
+    ]
+
+
+def test_no_crash_on_partial_platform_unavailability(tmp_path: Path, monkeypatch) -> None:
+    monitor = AndroidMonitor(tmp_path)
+    monkeypatch.setattr(monitor, "is_android", True)
+    monkeypatch.setattr(AndroidMonitor, "_read_battery", staticmethod(lambda: 100.0))
+    monkeypatch.setattr(AndroidMonitor, "_read_memory", staticmethod(lambda: 8192.0))
+    monkeypatch.setattr(AndroidMonitor, "_read_cpu", staticmethod(lambda: 0.0))
+    monkeypatch.setattr(AndroidMonitor, "_read_storage", lambda self: 1024.0)
+
+    snapshot = monitor.snapshot()
+
+    assert snapshot == ResourceSnapshot(battery_percent=100.0, memory_mb=8192.0, storage_mb=1024.0, cpu_percent=0.0)
