@@ -129,6 +129,46 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
         self.assertLess(detail["replay_score"], 1.0)
         self.assertTrue(detail["cause_buckets"]["digest_mismatch"])
 
+    def test_boot_fail_closes_on_federation_split_brain(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.coherence_validator.validate = mock.Mock(return_value=mock.Mock(
+            recommendation="halt",
+            report_hash="sha256:" + ("a" * 64),
+            to_dict=lambda: {"recommendation": "halt"},
+        ))
+        runtime.governor.enter_fail_closed = mock.Mock()
+
+        with self.assertRaisesRegex(RuntimeError, "federation_split_brain"):
+            runtime.boot()
+
+        runtime.governor.enter_fail_closed.assert_called_once()
+
+    def test_boot_journals_federation_coherence_event(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.coherence_validator.validate = mock.Mock(return_value=mock.Mock(
+            recommendation="proceed",
+            report_hash="sha256:" + ("b" * 64),
+            to_dict=lambda: {"recommendation": "proceed", "report_hash": "sha256:" + ("b" * 64)},
+        ))
+        runtime.ledger.append_event = mock.Mock()
+        with mock.patch("runtime.evolution.runtime.constitution.VALIDATOR_REGISTRY", {"lineage_continuity": lambda _req: {"ok": True, "reason": "ok"}}):
+            runtime.epoch_manager.load_or_create = mock.Mock(return_value=mock.Mock(
+                epoch_id="epoch-1",
+                to_dict=lambda: {
+                    "epoch_id": "epoch-1",
+                    "metadata": {},
+                    "mutation_count": 0,
+                    "start_ts": "",
+                    "baseline_id": "",
+                    "baseline_hash": "",
+                    "cumulative_entropy_bits": 0,
+                },
+            ))
+            runtime.boot()
+
+        first_call = runtime.ledger.append_event.call_args_list[0]
+        self.assertEqual(first_call.args[0], "FederationCoherenceEvent")
+
 
     def test_after_mutation_cycle_emits_regression_signal_and_forces_rotation_on_severe_decline(self) -> None:
         runtime = EvolutionRuntime()

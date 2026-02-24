@@ -33,6 +33,10 @@ from runtime.governance.federation.transport import (
     LocalFederationTransport,
     validate_federation_transport_envelope,
 )
+from runtime.governance.federation.coherence_validator import (
+    CoherenceReport,
+    FederationCoherenceValidator,
+)
 
 __all__ = [
     "DECISION_CLASS_CONFLICT",
@@ -61,4 +65,6 @@ __all__ = [
     "FederationTransportContractError",
     "LocalFederationTransport",
     "validate_federation_transport_envelope",
+    "CoherenceReport",
+    "FederationCoherenceValidator",
 ]
