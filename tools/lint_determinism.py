@@ -18,6 +18,13 @@ TARGET_DIRS: tuple[str, ...] = (
     "security",
 )
 
+# Replay-sensitive app modules that must be linted even though the full app tree is
+# intentionally out of scope for this tool.
+TARGET_FILES: tuple[str, ...] = (
+    "app/dream_mode.py",
+    "app/beast_mode_loop.py",
+)
+
 REQUIRED_GOVERNANCE_FILES: tuple[str, ...] = (
     "runtime/evolution/fitness_orchestrator.py",
     "runtime/governance/federation/transport.py",
@@ -43,10 +50,20 @@ ENTROPY_ENFORCED_PREFIXES: tuple[str, ...] = (
     "runtime/governance/",
     "runtime/evolution/",
 )
+ENTROPY_ENFORCED_FILES: frozenset[str] = frozenset(
+    {
+        "app/dream_mode.py",
+        "app/beast_mode_loop.py",
+    }
+)
 ENTROPY_ALLOWLIST: frozenset[str] = frozenset(
     {
         "runtime/governance/foundation/determinism.py",
         "runtime/governance/foundation/clock.py",
+        # Beast mode uses injected wall/monotonic clocks for operational
+        # throttling windows; banning all time sources here would block the
+        # module's deterministic-by-injection design.
+        "app/beast_mode_loop.py",
     }
 )
 FORBIDDEN_ENTROPY_IMPORTS: frozenset[str] = frozenset({"random", "secrets"})
@@ -201,8 +218,10 @@ def _path_as_posix(path: Path) -> str:
 
 def _is_entropy_enforced(path: Path) -> bool:
     normalized = _path_as_posix(path)
-    if normalized in ENTROPY_ALLOWLIST:
+    if any(normalized.endswith(allowed) or f"/{allowed}" in normalized for allowed in ENTROPY_ALLOWLIST):
         return False
+    if any(normalized.endswith(enforced) or f"/{enforced}" in normalized for enforced in ENTROPY_ENFORCED_FILES):
+        return True
     return any(normalized.endswith(prefix.removesuffix("/")) or f"/{prefix}" in normalized for prefix in ENTROPY_ENFORCED_PREFIXES)
 
 
@@ -373,6 +392,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         roots = [Path(arg).resolve() for arg in args]
     else:
         roots = [REPO_ROOT / relative for relative in TARGET_DIRS]
+        roots.extend((REPO_ROOT / relative).resolve() for relative in TARGET_FILES)
 
     issues: list[LintIssue] = []
     for required_relative in REQUIRED_GOVERNANCE_FILES:

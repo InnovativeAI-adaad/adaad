@@ -63,6 +63,33 @@ def test_lint_determinism_flags_entropy_imports_in_evolution_scope(tmp_path: Pat
     assert any(issue.message == "forbidden_entropy_import" for issue in issues)
 
 
+def test_lint_determinism_flags_entropy_calls_in_replay_sensitive_app_scope(tmp_path: Path) -> None:
+    target = tmp_path / "app" / "dream_mode.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "import time\n\ndef run():\n    return time.time()\n",
+        encoding="utf-8",
+    )
+
+    issues = lint_determinism._lint_file(target)
+
+    assert issues
+    assert any(issue.message == "forbidden_entropy_source" for issue in issues)
+
+
+def test_lint_determinism_allows_documented_entropy_exception_for_beast_mode(tmp_path: Path) -> None:
+    target = tmp_path / "app" / "beast_mode_loop.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        "import time\n\ndef _clock():\n    return time.time(), time.monotonic()\n",
+        encoding="utf-8",
+    )
+
+    issues = lint_determinism._lint_file(target)
+
+    assert all(issue.message != "forbidden_entropy_source" for issue in issues)
+
+
 def test_lint_determinism_accepts_clean_file(tmp_path: Path) -> None:
     target = tmp_path / "runtime" / "evolution" / "good.py"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -198,3 +225,9 @@ def test_lint_required_governance_files_include_federation_protocol_stack() -> N
     required = set(lint_determinism.REQUIRED_GOVERNANCE_FILES)
     assert "runtime/governance/federation/protocol.py" in required
     assert "runtime/governance/federation/manifest.py" in required
+
+
+def test_lint_targets_include_selected_replay_sensitive_app_modules() -> None:
+    targets = set(lint_determinism.TARGET_FILES)
+    assert "app/dream_mode.py" in targets
+    assert "app/beast_mode_loop.py" in targets
