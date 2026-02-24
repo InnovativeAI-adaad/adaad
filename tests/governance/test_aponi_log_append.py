@@ -87,3 +87,40 @@ def test_success_and_error_entries_share_timestamp_format(tmp_path: Path) -> Non
     assert isinstance(success_entry, dict)
     assert success_entry["ts"] == error_entry["ts"]
     assert success_entry["ts"].endswith("Z")
+
+
+def test_seeded_provider_timestamp_is_reused_for_success_and_error(tmp_path: Path) -> None:
+    provider = SeededDeterminismProvider(seed="stable-seed")
+    expected_ts = provider.iso_now()
+    log_path = tmp_path / "aponi.log"
+    captured: dict[str, object] = {}
+
+    def _ok(req, *_args, **_kwargs):
+        captured["success"] = json.loads(req.data.decode("utf-8"))
+        return _Response(status=202)
+
+    with mock.patch("runtime.integrations.aponi_sync.ERROR_LOG", log_path):
+        with mock.patch("urllib.request.urlopen", side_effect=_ok):
+            assert push_to_dashboard("TEST_EVENT", {"ok": True}, provider=provider) is True
+
+        with mock.patch("urllib.request.urlopen", side_effect=urllib.error.URLError("fail")):
+            assert push_to_dashboard("TEST_EVENT", {"ok": False}, provider=provider) is False
+
+    success_entry = captured["success"]
+    assert isinstance(success_entry, dict)
+    assert success_entry["ts"] == expected_ts
+
+    error_entry = json.loads(log_path.read_text(encoding="utf-8").splitlines()[0])
+    assert error_entry["ts"] == expected_ts
+
+
+def test_transport_failure_handling_is_unchanged(tmp_path: Path) -> None:
+    log_path = tmp_path / "aponi.log"
+    with mock.patch("runtime.integrations.aponi_sync.ERROR_LOG", log_path):
+        with mock.patch("urllib.request.urlopen", side_effect=TimeoutError("slow upstream")):
+            assert push_to_dashboard("TEST_EVENT", {"a": 1}) is False
+
+    entry = json.loads(log_path.read_text(encoding="utf-8").splitlines()[0])
+    assert entry["reason_code"] == "aponi_transport_failed"
+    assert entry["error_type"] == "TimeoutError"
+    assert entry["payload"] == {"a": 1}

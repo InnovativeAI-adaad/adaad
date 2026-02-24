@@ -30,7 +30,8 @@ def push_to_dashboard(
         recovery_tier=os.getenv("ADAAD_RECOVERY_TIER"),
     )
 
-    payload = {"ts": runtime_provider.iso_now(), "type": event_type, "payload": data}
+    event_ts = runtime_provider.iso_now()
+    payload = {"ts": event_ts, "type": event_type, "payload": data}
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 
     req = urllib.request.Request(
@@ -46,7 +47,7 @@ def push_to_dashboard(
     except (urllib.error.URLError, TimeoutError, OSError, ValueError) as exc:
         ERROR_LOG.parent.mkdir(parents=True, exist_ok=True)
         entry = {
-            "ts": payload["ts"],
+            "ts": event_ts,
             "type": event_type,
             "reason_code": "aponi_transport_failed",
             "error_type": type(exc).__name__,
