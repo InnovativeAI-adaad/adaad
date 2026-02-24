@@ -3,12 +3,15 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any, Dict
 
 from app.agents.mutation_request import MutationRequest
 from runtime.evolution.baseline import BaselineStore
 from runtime.evolution.epoch import EpochManager
+from runtime.evolution.fitness_regression import RegressionSeverity, emit_fitness_regression_signal
 from runtime.evolution.governor import EvolutionGovernor
+from runtime.evolution.entropy_forecast import EntropyBudgetForecaster
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 from runtime.evolution.metrics_schema import EvolutionMetricsEmitter
 from runtime.evolution.replay import ReplayEngine
@@ -48,6 +51,7 @@ class EvolutionRuntime:
         self.baseline_hash = ""
         self.epoch_cumulative_entropy_bits = 0
         self._continuity_verified_epoch_id = ""
+        self.fitness_regression_signal = {}
 
     @property
     def fail_closed(self) -> bool:
@@ -120,16 +124,83 @@ class EvolutionRuntime:
             self._sync_from_epoch(rotated)
             return {"epoch_id": rotated["epoch_id"]}
 
+        state = self.epoch_manager.get_active()
+        epoch_id = state.epoch_id
+        mutation_count = int(state.mutation_count)
+
+        entropy_forecast = self.entropy_forecaster.forecast(
+            epoch_id=epoch_id,
+            mutation_count=mutation_count,
+            epoch_entropy_bits=self.epoch_cumulative_entropy_bits,
+            per_mutation_ceiling_bits=int(os.getenv("ADAAD_MAX_MUTATION_ENTROPY_BITS", "128") or 128),
+            per_epoch_ceiling_bits=int(os.getenv("ADAAD_MAX_EPOCH_ENTROPY_BITS", "4096") or 4096),
+        )
+        self.ledger.append_event("EntropyForecastEvent", entropy_forecast)
+
+        entropy_advisory = str(entropy_forecast.get("advisory") or "clear")
+        entropy_action = "continue"
+        if entropy_advisory == "warn":
+            self.epoch_metadata["forecast_mutation_entropy_ceiling_bits"] = int(
+                entropy_forecast.get("recommended_per_mutation_ceiling_bits") or 0
+            )
+            entropy_action = "adjust_ceiling"
+        elif entropy_advisory == "block":
+            return {
+                "epoch_id": epoch_id,
+                "blocked": True,
+                "reason": "entropy_forecast_block",
+                "entropy_forecast": entropy_forecast,
+            }
+
+        threat_scan = self.threat_monitor.scan(
+            epoch_id=epoch_id,
+            mutation_count=mutation_count,
+            events=self.ledger.read_epoch(epoch_id),
+        )
+        self.ledger.append_event("ThreatScanEvent", threat_scan)
+
+        recommendation = str(threat_scan.get("recommendation") or "continue")
+        if recommendation == "halt":
+            self._enter_fail_closed_replay(epoch_id=epoch_id, reason="threat_scan_halt")
+            return {
+                "epoch_id": epoch_id,
+                "blocked": True,
+                "reason": "threat_scan_halt",
+                "entropy_forecast": entropy_forecast,
+                "threat_scan": threat_scan,
+            }
+        if recommendation == "escalate":
+            self.epoch_metadata["threat_scan_escalated"] = True
+            return {
+                "epoch_id": epoch_id,
+                "escalated": True,
+                "reason": "threat_scan_escalate",
+                "entropy_action": entropy_action,
+                "entropy_forecast": entropy_forecast,
+                "threat_scan": threat_scan,
+            }
+
         state = self.epoch_manager.increment_mutation_count()
         payload = state.to_dict()
         self._sync_from_epoch(payload)
-        return {"epoch_id": payload["epoch_id"]}
+        return {
+            "epoch_id": payload["epoch_id"],
+            "entropy_action": entropy_action,
+            "entropy_forecast": entropy_forecast,
+            "threat_scan": threat_scan,
+        }
 
     def after_mutation_cycle(self, result: Dict[str, Any]) -> Dict[str, Any]:
         state = self.epoch_manager.get_active()
         epoch_id = state.epoch_id
         cycle_id = str(result.get("cycle_id") or result.get("mutation_id") or f"cycle-{state.mutation_count:06d}")
         cycle_metrics = self.metrics_emitter.emit_cycle_metrics(epoch_id=epoch_id, cycle_id=cycle_id, result=result)
+        regression_signal = emit_fitness_regression_signal(self.metrics_emitter._read_history())
+        self.fitness_regression_signal = regression_signal.to_dict()
+        self.governor.apply_fitness_regression_signal(epoch_id=epoch_id, signal=regression_signal)
+        if regression_signal.severity == RegressionSeverity.SEVERE:
+            self.governor.escalate_governance_debt(epoch_id=epoch_id, signal=regression_signal)
+            self.epoch_manager.trigger_force_end("severe_fitness_regression")
 
         expected = self.ledger.get_epoch_digest(epoch_id) or "sha256:0"
         try:
@@ -142,6 +213,7 @@ class EvolutionRuntime:
             return {
                 "epoch": current,
                 "metrics": cycle_metrics,
+                "fitness_regression": self.fitness_regression_signal,
                 "replay": {
                     "epoch_id": epoch_id,
                     "replay_passed": False,
@@ -200,7 +272,7 @@ class EvolutionRuntime:
 
         current = self.epoch_manager.get_active().to_dict()
         self._sync_from_epoch(current)
-        return {"epoch": current, "replay": replay_result, "metrics": cycle_metrics}
+        return {"epoch": current, "replay": replay_result, "metrics": cycle_metrics, "fitness_regression": self.fitness_regression_signal}
 
     def before_epoch_rotation(self, reason: str) -> Dict[str, Any]:
         current = self.epoch_manager.get_active()
@@ -211,6 +283,7 @@ class EvolutionRuntime:
         payload = state.to_dict()
         self.epoch_digest = self.ledger.get_epoch_digest(payload["epoch_id"])
         self._continuity_verified_epoch_id = ""
+        self.fitness_regression_signal = {}
         self._sync_from_epoch(payload)
         return payload
 

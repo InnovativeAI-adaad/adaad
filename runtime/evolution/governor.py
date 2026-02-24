@@ -13,6 +13,7 @@ from typing import Any, Dict, List
 
 from app.agents.mutation_request import MutationRequest
 from runtime.evolution.checkpoint import checkpoint_digest
+from runtime.evolution.fitness_regression import FitnessRegressionSignal, RegressionSeverity
 from runtime.evolution.impact import ImpactScorer
 from runtime.evolution.lineage_v2 import EpochEndEvent, EpochStartEvent, LineageEvent, LineageLedgerV2
 from runtime.evolution.mutation_budget import MutationBudgetDecision, MutationBudgetManager
@@ -365,6 +366,56 @@ class EvolutionGovernor:
             },
             level="INFO",
         )
+
+    def apply_fitness_regression_signal(self, *, epoch_id: str, signal: FitnessRegressionSignal) -> None:
+        """Adjust adaptive autonomy budget inputs from a deterministic regression signal."""
+
+        budget_before = {
+            "roi_threshold": float(self.mutation_budget_manager.roi_threshold),
+            "per_cycle_budget": float(self.mutation_budget_manager.per_cycle_budget),
+            "exploration_rate": float(self.mutation_budget_manager.exploration_rate),
+        }
+        if signal.severity == RegressionSeverity.WATCH:
+            self.mutation_budget_manager.roi_threshold = min(1.0, self.mutation_budget_manager.roi_threshold * 1.05)
+            self.mutation_budget_manager.per_cycle_budget = max(1.0, self.mutation_budget_manager.per_cycle_budget * 0.95)
+        elif signal.severity == RegressionSeverity.SEVERE:
+            self.mutation_budget_manager.roi_threshold = min(1.0, self.mutation_budget_manager.roi_threshold * 1.15)
+            self.mutation_budget_manager.per_cycle_budget = max(1.0, self.mutation_budget_manager.per_cycle_budget * 0.85)
+            self.mutation_budget_manager.exploration_rate = max(
+                self.mutation_budget_manager.min_exploration_rate,
+                self.mutation_budget_manager.exploration_rate - max(self.mutation_budget_manager.exploration_step, 0.05),
+            )
+
+        budget_after = {
+            "roi_threshold": float(self.mutation_budget_manager.roi_threshold),
+            "per_cycle_budget": float(self.mutation_budget_manager.per_cycle_budget),
+            "exploration_rate": float(self.mutation_budget_manager.exploration_rate),
+        }
+        if budget_before != budget_after:
+            self.ledger.append_event(
+                "GovernorConfigEvent",
+                {
+                    "epoch_id": epoch_id,
+                    "config_key": "adaptive_autonomy_budget",
+                    "old_value": budget_before,
+                    "new_value": budget_after,
+                    "reason": "fitness_regression_signal",
+                    "severity": signal.severity.value,
+                    "ts": now_iso(),
+                },
+            )
+
+    def escalate_governance_debt(self, *, epoch_id: str, signal: FitnessRegressionSignal) -> None:
+        """Emit governance debt escalation hooks for severe fitness regressions."""
+
+        payload = {
+            "epoch_id": epoch_id,
+            "severity": signal.severity.value,
+            "slope": float(signal.slope),
+            "confidence_score": float(signal.confidence_score),
+            "rule_contributors": list(signal.rule_contributors),
+        }
+        self.ledger.append_event("GovernanceDebtEscalationEvent", payload)
 
     def _evaluate_mutation_budget(
         self,

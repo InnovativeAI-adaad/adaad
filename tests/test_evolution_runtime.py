@@ -66,6 +66,41 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
         self.assertFalse(decision.accepted)
         self.assertEqual(decision.reason, "governor_fail_closed")
 
+
+    def test_before_mutation_cycle_emits_forecast_and_scan_events(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+
+        result = runtime.before_mutation_cycle()
+
+        self.assertIn("entropy_forecast", result)
+        self.assertIn("threat_scan", result)
+        entries = runtime.ledger.read_all()
+        event_types = [item.get("type") for item in entries]
+        self.assertIn("EntropyForecastEvent", event_types)
+        self.assertIn("ThreatScanEvent", event_types)
+
+    def test_before_mutation_cycle_blocks_on_entropy_forecast(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+        runtime.epoch_cumulative_entropy_bits = 4096
+
+        with mock.patch.dict("os.environ", {"ADAAD_MAX_EPOCH_ENTROPY_BITS": "4096", "ADAAD_MAX_MUTATION_ENTROPY_BITS": "128"}):
+            result = runtime.before_mutation_cycle()
+
+        self.assertTrue(result.get("blocked"))
+        self.assertEqual(result.get("reason"), "entropy_forecast_block")
+
+    def test_before_mutation_cycle_escalates_on_threat_scan(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+        runtime.ledger.append_event("SyntheticMutationOutcome", {"epoch_id": runtime.current_epoch_id, "status": "failed"})
+        runtime.ledger.append_event("SyntheticMutationOutcome", {"epoch_id": runtime.current_epoch_id, "status": "failed"})
+
+        result = runtime.before_mutation_cycle()
+
+        self.assertTrue(result.get("escalated"))
+        self.assertEqual(result.get("reason"), "threat_scan_escalate")
     def test_replay_preflight_reports_explicit_divergence_fields(self) -> None:
         runtime = EvolutionRuntime()
         runtime.verify_epoch = mock.Mock(return_value={
@@ -133,6 +168,29 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
 
         first_call = runtime.ledger.append_event.call_args_list[0]
         self.assertEqual(first_call.args[0], "FederationCoherenceEvent")
+
+
+    def test_after_mutation_cycle_emits_regression_signal_and_forces_rotation_on_severe_decline(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.boot()
+
+        for index, score in enumerate([0.95, 0.91, 0.86, 0.80, 0.73, 0.66, 0.59, 0.52], start=1):
+            runtime.ledger.append_event(
+                "GovernanceDecisionEvent",
+                {"epoch_id": runtime.current_epoch_id, "accepted": True, "impact_score": 0.1},
+            )
+            result = runtime.after_mutation_cycle(
+                {
+                    "cycle_id": f"cycle-{index:03d}",
+                    "mutation_id": f"m-{index:03d}",
+                    "fitness_score": score,
+                    "status": "ok",
+                }
+            )
+
+        assert result["fitness_regression"]["severity"] == "severe"
+        assert runtime.epoch_manager.should_rotate() is True
+        assert runtime.epoch_manager.rotation_reason() == "severe_fitness_regression"
 
 
 if __name__ == "__main__":

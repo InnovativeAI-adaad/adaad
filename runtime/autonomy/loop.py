@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from runtime import metrics
+from runtime.autonomy.adaptive_budget import AutonomyBudgetEngine
 
 
 @dataclass(frozen=True)
@@ -33,7 +34,11 @@ def run_self_check_loop(
     actions: list[AgentAction],
     post_condition_checks: dict[str, Callable[[], bool]],
     mutation_score: float,
-    mutate_threshold: float = 0.7,
+    mutate_threshold: float | None = None,
+    budget_engine: AutonomyBudgetEngine | None = None,
+    governance_debt_score: float = 0.0,
+    fitness_trend_delta: float = 0.0,
+    epoch_pass_rate: float = 1.0,
 ) -> AutonomyLoopResult:
     started = time.time()
     all_actions_ok = True
@@ -65,9 +70,21 @@ def run_self_check_loop(
 
     post_conditions_passed = all(check_results.values()) if check_results else True
 
+    budget_snapshot = None
+    if budget_engine is not None:
+        budget_snapshot = budget_engine.record_snapshot(
+            cycle_id=cycle_id,
+            governance_debt_score=governance_debt_score,
+            fitness_trend_delta=fitness_trend_delta,
+            epoch_pass_rate=epoch_pass_rate,
+        )
+        active_threshold = budget_snapshot.threshold
+    else:
+        active_threshold = 0.7 if mutate_threshold is None else float(mutate_threshold)
+
     if not all_actions_ok or not post_conditions_passed:
         decision = "escalate"
-    elif mutation_score >= mutate_threshold:
+    elif mutation_score >= active_threshold:
         decision = "self_mutate"
     else:
         decision = "hold"
@@ -80,7 +97,9 @@ def run_self_check_loop(
             "all_actions_ok": all_actions_ok,
             "post_conditions_passed": post_conditions_passed,
             "mutation_score": mutation_score,
-            "mutate_threshold": mutate_threshold,
+            "mutate_threshold": active_threshold,
+            "threshold_source": "adaptive_budget" if budget_snapshot else "static",
+            "budget_snapshot_hash": budget_snapshot.snapshot_hash if budget_snapshot else None,
             "decision": decision,
             "total_duration_ms": total_duration_ms,
         },

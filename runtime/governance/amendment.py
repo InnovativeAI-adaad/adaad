@@ -8,10 +8,12 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
+from typing import Any, List
 
 from runtime import ROOT_DIR
+from runtime import constitution
 from runtime.constitution import CONSTITUTION_VERSION, reload_constitution_policy
+from runtime.governance.amendment_pipeline import AmendmentPipeline
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation import default_provider
 from runtime.governance.review_quality import record_review_quality
@@ -30,13 +32,15 @@ class AmendmentProposal:
     approvals: List[str]
     rejections: List[str]
     status: str
+    phase_transitions: List[dict[str, Any]]
 
 
 class AmendmentEngine:
-    def __init__(self, proposals_dir: Path | None = None, required_approvals: int = 2):
+    def __init__(self, proposals_dir: Path | None = None, required_approvals: int = 2, rejection_threshold: int = 1):
         self.proposals_dir = proposals_dir or (ROOT_DIR / "runtime" / "governance" / "proposals")
         self.proposals_dir.mkdir(parents=True, exist_ok=True)
         self.required_approvals = required_approvals
+        self.rejection_threshold = rejection_threshold
 
     def propose_amendment(self, *, proposer: str, new_policy_text: str, rationale: str, old_policy_hash: str) -> AmendmentProposal:
         provider = default_provider()
@@ -53,6 +57,7 @@ class AmendmentEngine:
             approvals=[],
             rejections=[],
             status="pending",
+            phase_transitions=[],
         )
         self._save_proposal(proposal)
         journal.write_entry(
@@ -76,13 +81,12 @@ class AmendmentEngine:
         overridden: bool = False,
     ) -> AmendmentProposal:
         proposal = self._load_proposal(proposal_id)
-        if proposal.status != "pending":
+        if proposal.status not in {"pending", "approved"}:
             return proposal
         if approver not in proposal.approvals:
             proposal.approvals.append(approver)
-        if len(proposal.approvals) >= self.required_approvals:
-            proposal.status = "approved"
-            self._apply_amendment(proposal)
+
+        self._run_pipeline(proposal)
         record_review_quality(
             {
                 "mutation_id": proposal.proposal_id,
@@ -109,7 +113,8 @@ class AmendmentEngine:
         proposal = self._load_proposal(proposal_id)
         if rejector not in proposal.rejections:
             proposal.rejections.append(rejector)
-        proposal.status = "rejected"
+
+        self._run_pipeline(proposal)
         self._save_proposal(proposal)
         record_review_quality(
             {
@@ -123,14 +128,44 @@ class AmendmentEngine:
                 "context": "constitutional_amendment",
             }
         )
-        journal.write_entry(
-            agent_id="system",
-            action="constitutional_amendment_rejected",
-            payload={"proposal_id": proposal_id, "rejector": rejector},
-        )
+        if proposal.status == "rejected":
+            journal.write_entry(
+                agent_id="system",
+                action="constitutional_amendment_rejected",
+                payload={"proposal_id": proposal_id, "rejector": rejector},
+            )
         return proposal
 
-    def _apply_amendment(self, proposal: AmendmentProposal) -> None:
+    def _run_pipeline(self, proposal: AmendmentProposal) -> None:
+        pipeline = AmendmentPipeline(
+            required_approvals=self.required_approvals,
+            rejection_threshold=self.rejection_threshold,
+            proposal_id=proposal.proposal_id,
+            transition_log=proposal.phase_transitions,
+            run_simulation_gate=self._simulation_gate,
+            apply_effectuation=lambda: self._effectuate_amendment(proposal),
+        )
+        result = pipeline.run(
+            approvals=len(proposal.approvals),
+            rejections=len(proposal.rejections),
+            status=proposal.status,
+        )
+        proposal.status = result.proposal_status
+
+    @staticmethod
+    def _simulation_gate() -> dict[str, Any]:
+        # pre-ADAAD-8 simulation integration is advisory; fail-closed ordering is still enforced.
+        return {"ok": True, "mode": "advisory_pre_adaad_8"}
+
+    def _effectuate_amendment(self, proposal: AmendmentProposal) -> bool:
+        if constitution.POLICY_HASH == proposal.new_policy_hash:
+            journal.write_entry(
+                agent_id="system",
+                action="constitutional_amendment_already_effective",
+                payload={"proposal_id": proposal.proposal_id, "new_policy_hash": proposal.new_policy_hash},
+            )
+            return False
+
         staged_policy = self.proposals_dir / f"{proposal.proposal_id}.policy.json"
         staged_policy.write_text(proposal.new_policy_text, encoding="utf-8")
         try:
@@ -149,6 +184,7 @@ class AmendmentEngine:
                 "version": CONSTITUTION_VERSION,
             },
         )
+        return True
 
     @staticmethod
     def _review_latency_seconds(submitted_ts: str) -> float:
@@ -163,6 +199,7 @@ class AmendmentEngine:
     def _load_proposal(self, proposal_id: str) -> AmendmentProposal:
         path = self.proposals_dir / f"{proposal_id}.json"
         data = json.loads(read_file_deterministic(path))
+        data.setdefault("phase_transitions", [])
         return AmendmentProposal(**data)
 
     def _save_proposal(self, proposal: AmendmentProposal) -> None:

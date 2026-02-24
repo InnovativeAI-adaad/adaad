@@ -100,11 +100,14 @@ class EvolutionMetricsEmitter:
 
         mutation_operator = str(result.get("mutation_operator") or result.get("operator") or "unknown")
 
+        fitness_score = float(result.get("fitness_score", result.get("score", 0.0)) or 0.0)
+
         return {
             "schema_version": METRICS_SCHEMA_VERSION,
             "epoch_id": epoch_id,
             "cycle_id": cycle_id,
             "status": str(result.get("status") or "unknown"),
+            "fitness_score": max(0.0, min(1.0, fitness_score)),
             "mutation_id": str(result.get("mutation_id") or ""),
             "mutation_operator": mutation_operator,
             "mutation_acceptance_rate": acceptance_rate,

@@ -6,6 +6,7 @@ from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.checkpoint_verifier import verify_checkpoint_chain
 from runtime.evolution.entropy_detector import detect_entropy_metadata
 from runtime.evolution.entropy_policy import EntropyPolicy, enforce_entropy_policy
+from runtime.evolution.entropy_forecast import EntropyBudgetForecaster
 from runtime.evolution.governor import EvolutionGovernor, GovernanceDecision, RecoveryTier
 from runtime.evolution.goal_graph import GoalGraph, GoalNode
 from runtime.evolution.impact import ImpactScorer, ImpactScore
@@ -24,6 +25,7 @@ from runtime.evolution.scoring_validator import validate_scoring_payload
 from runtime.evolution.replay_verifier import ReplayVerifier
 from runtime.evolution.replay_attestation import ReplayProofBuilder, verify_replay_proof_bundle
 from runtime.evolution.runtime import EvolutionRuntime
+from runtime.evolution.fitness_regression import FitnessRegressionSignal, RegressionSeverity, emit_fitness_regression_signal
 from runtime.evolution.telemetry_audit import (
     detect_entropy_drift,
     get_epoch_entropy_breakdown,
@@ -35,6 +37,7 @@ __all__ = [
     "EpochState",
     "enforce_entropy_policy",
     "EntropyPolicy",
+    "EntropyBudgetForecaster",
     "detect_entropy_metadata",
     "verify_checkpoint_chain",
     "CheckpointRegistry",
@@ -72,6 +75,9 @@ __all__ = [
     "ReplayProofBuilder",
     "verify_replay_proof_bundle",
     "EvolutionRuntime",
+    "FitnessRegressionSignal",
+    "RegressionSeverity",
+    "emit_fitness_regression_signal",
     "get_epoch_entropy_breakdown",
     "get_epoch_entropy_envelope_summary",
     "detect_entropy_drift",

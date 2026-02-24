@@ -85,6 +85,7 @@ class EpochManager:
         )
         self._state: EpochState | None = None
         self._force_end = False
+        self._force_end_reason = "replay_divergence"
 
     def load_or_create(self) -> EpochState:
         loaded = self._load_state()
@@ -101,8 +102,9 @@ class EpochManager:
             return self.load_or_create()
         return self._state
 
-    def trigger_force_end(self) -> None:
+    def trigger_force_end(self, reason: str = "replay_divergence") -> None:
         self._force_end = True
+        self._force_end_reason = str(reason or "replay_divergence")
 
     def should_rotate(self) -> bool:
         state = self.get_active()
@@ -117,7 +119,7 @@ class EpochManager:
     def rotation_reason(self) -> str:
         state = self.get_active()
         if self._force_end:
-            return "replay_divergence"
+            return self._force_end_reason
         if state.mutation_count >= self.max_mutations:
             return "mutation_threshold"
         if self._epoch_duration_exceeded(state.start_ts):
