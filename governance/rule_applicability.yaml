@@ -431,6 +431,45 @@
       "required_log_output": [
         "constitutional_evaluation.payload.verdicts[].details.reason"
       ]
+    },
+    {
+      "name": "ledger_anchored_adaptive_thresholding",
+      "scope": {
+        "directories": [
+          "runtime",
+          "governance",
+          "app"
+        ],
+        "change_types": [
+          "mutation_request",
+          "code",
+          "governance"
+        ]
+      },
+      "triggers": {
+        "min_ops": 0,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ],
+        "requires_signature": true
+      },
+      "severity": "blocking",
+      "fail_behavior": {
+        "on_fail": "block",
+        "log_level": "ERROR"
+      },
+      "required_evidence": [
+        "details.snapshot_hash",
+        "details.prev_hash",
+        "details.threshold"
+      ],
+      "required_log_output": [
+        "constitutional_evaluation.payload.verdicts[].details.details.snapshot_hash",
+        "constitutional_evaluation.payload.verdicts[].details.details.prev_hash",
+        "constitutional_evaluation.payload.verdicts[].details.details.threshold"
+      ]
     }
   ],
   "domain_classification": {

@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from runtime.autonomy.adaptive_budget import AutonomyBudgetEngine
 from runtime.autonomy.loop import AgentAction, run_self_check_loop
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from runtime.autonomy.roles import SandboxPermission, default_role_specs
@@ -90,6 +91,62 @@ class AutonomyEnhancementTest(unittest.TestCase):
 
         self.assertEqual(scoreboard["performance_by_agent"]["ExecutorAgent"]["avg_duration_ms"], 0.0)
         self.assertEqual(scoreboard["sandbox_failure_reasons"]["unknown"], 1)
+
+    def test_adaptive_budget_snapshot_persistence_and_hash_chain(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            snapshot_path = Path(tmp) / "budget.jsonl"
+            engine = AutonomyBudgetEngine(
+                snapshot_path=snapshot_path,
+                base_threshold=0.7,
+                threshold_floor=0.4,
+                threshold_ceiling=0.9,
+            )
+
+            first = engine.record_snapshot(
+                cycle_id="cycle-a",
+                governance_debt_score=0.2,
+                fitness_trend_delta=0.1,
+                epoch_pass_rate=0.8,
+                created_at_ms=101,
+            )
+            second = engine.record_snapshot(
+                cycle_id="cycle-b",
+                governance_debt_score=1.5,
+                fitness_trend_delta=-2.0,
+                epoch_pass_rate=-1.0,
+                created_at_ms=202,
+            )
+
+            self.assertEqual(second.prev_hash, first.snapshot_hash)
+            self.assertEqual(engine.latest_snapshot().snapshot_hash, second.snapshot_hash)
+            self.assertEqual(engine.get_current_threshold(), second.threshold)
+            self.assertGreaterEqual(second.threshold, 0.4)
+            self.assertLessEqual(second.threshold, 0.9)
+
+    def test_autonomy_loop_uses_budget_engine_threshold(self) -> None:
+        actions = [AgentAction(agent="ExecutorAgent", action="apply_patch", duration_ms=12, ok=True)]
+        with tempfile.TemporaryDirectory() as tmp:
+            engine = AutonomyBudgetEngine(
+                snapshot_path=Path(tmp) / "budget.jsonl",
+                base_threshold=0.7,
+                threshold_floor=0.35,
+                threshold_ceiling=0.9,
+            )
+            result = run_self_check_loop(
+                cycle_id="cycle-budget",
+                actions=actions,
+                post_condition_checks={"tests_pass": lambda: True},
+                mutation_score=0.65,
+                mutate_threshold=0.5,
+                budget_engine=engine,
+                governance_debt_score=0.5,
+                fitness_trend_delta=0.0,
+                epoch_pass_rate=0.9,
+            )
+
+            threshold = engine.get_current_threshold()
+            self.assertGreater(threshold, 0.5)
+            self.assertEqual(result.decision, "hold")
 
 
 if __name__ == "__main__":
