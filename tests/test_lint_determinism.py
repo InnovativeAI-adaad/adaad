@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import ast
 from pathlib import Path
 
 from tools import lint_determinism
@@ -231,3 +232,35 @@ def test_lint_targets_include_selected_replay_sensitive_app_modules() -> None:
     targets = set(lint_determinism.TARGET_FILES)
     assert "app/dream_mode.py" in targets
     assert "app/beast_mode_loop.py" in targets
+
+
+def _call_path(node):
+
+    if isinstance(node, ast.Name):
+        return (node.id,)
+    if isinstance(node, ast.Attribute):
+        return _call_path(node.value) + (node.attr,)
+    return ()
+
+
+def test_dream_mode_hardened_path_forbids_wall_clock_sources_but_allows_wrappers() -> None:
+    source = Path("app/dream_mode.py").read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    dream_mode = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "DreamMode")
+    run_cycle = next(node for node in dream_mode.body if isinstance(node, ast.FunctionDef) and node.name == "run_cycle")
+
+    forbidden_paths = {
+        ("time", "time"),
+        ("time", "strftime"),
+        ("time", "gmtime"),
+    }
+    approved_wrapper_paths = {
+        ("self", "provider", "next_token"),
+        ("self", "provider", "iso_now"),
+        ("deterministic_token_with_budget",),
+    }
+
+    run_cycle_calls = {_call_path(node.func) for node in ast.walk(run_cycle) if isinstance(node, ast.Call)}
+    assert forbidden_paths.isdisjoint(run_cycle_calls)
+    assert approved_wrapper_paths.intersection(run_cycle_calls)
+
