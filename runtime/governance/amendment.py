@@ -15,7 +15,7 @@ from runtime import constitution
 from runtime.constitution import CONSTITUTION_VERSION, reload_constitution_policy
 from runtime.governance.amendment_pipeline import AmendmentPipeline
 from runtime.governance.deterministic_filesystem import read_file_deterministic
-from runtime.governance.foundation import default_provider
+from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
 from runtime.governance.review_quality import record_review_quality
 from security.ledger import journal
 
@@ -36,20 +36,29 @@ class AmendmentProposal:
 
 
 class AmendmentEngine:
-    def __init__(self, proposals_dir: Path | None = None, required_approvals: int = 2, rejection_threshold: int = 1):
+    def __init__(
+        self,
+        proposals_dir: Path | None = None,
+        required_approvals: int = 2,
+        rejection_threshold: int = 1,
+        provider: RuntimeDeterminismProvider | None = None,
+        *,
+        replay_mode: str = "off",
+    ):
         self.proposals_dir = proposals_dir or (ROOT_DIR / "runtime" / "governance" / "proposals")
         self.proposals_dir.mkdir(parents=True, exist_ok=True)
         self.required_approvals = required_approvals
         self.rejection_threshold = rejection_threshold
+        self.provider = provider or default_provider()
+        require_replay_safe_provider(self.provider, replay_mode=replay_mode)
 
     def propose_amendment(self, *, proposer: str, new_policy_text: str, rationale: str, old_policy_hash: str) -> AmendmentProposal:
-        provider = default_provider()
         new_hash = hashlib.sha256(new_policy_text.encode("utf-8")).hexdigest()
-        proposal_id = f"amendment-{provider.format_utc('%Y%m%dT%H%M%SZ')}"
+        proposal_id = f"amendment-{self.provider.format_utc('%Y%m%dT%H%M%SZ')}"
         proposal = AmendmentProposal(
             proposal_id=proposal_id,
             proposer=proposer,
-            timestamp=provider.iso_now(),
+            timestamp=self.provider.iso_now(),
             old_policy_hash=old_policy_hash,
             new_policy_text=new_policy_text,
             new_policy_hash=new_hash,
@@ -186,13 +195,12 @@ class AmendmentEngine:
         )
         return True
 
-    @staticmethod
-    def _review_latency_seconds(submitted_ts: str) -> float:
+    def _review_latency_seconds(self, submitted_ts: str) -> float:
         try:
             start = datetime.fromisoformat(submitted_ts.replace("Z", "+00:00"))
         except ValueError:
             return 0.0
-        now = datetime.now(timezone.utc)
+        now = self.provider.now_utc().astimezone(timezone.utc)
         delta = (now - start).total_seconds()
         return round(max(0.0, float(delta)), 6)
 

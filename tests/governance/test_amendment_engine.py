@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+from datetime import datetime, timezone
 from pathlib import Path
 
 from runtime.constitution import POLICY_HASH
 from runtime.governance.amendment import AmendmentEngine
+from runtime.governance.foundation import SeededDeterminismProvider
 
 
 def test_amendment_lifecycle_propose_approve_reject(tmp_path: Path, monkeypatch) -> None:
@@ -58,6 +60,70 @@ def test_amendment_lifecycle_propose_approve_reject(tmp_path: Path, monkeypatch)
     assert review_events[0]["decision"] == "approve"
     assert review_events[-1]["decision"] == "reject"
     assert review_events[-1]["overridden"] is True
+
+
+def test_review_latency_uses_injected_provider_clock(tmp_path: Path, monkeypatch) -> None:
+    from runtime.governance import amendment
+
+    review_events = []
+    monkeypatch.setattr(amendment.journal, "write_entry", lambda **kwargs: None)
+    monkeypatch.setattr(
+        amendment.journal,
+        "append_tx",
+        lambda tx_type, payload, tx_id=None: {"tx": tx_id or "tx", "type": tx_type, "payload": payload},
+    )
+    monkeypatch.setattr(amendment, "record_review_quality", lambda payload: review_events.append(payload))
+
+    provider = SeededDeterminismProvider(seed="latency", fixed_now=datetime(2027, 1, 1, 0, 1, 30, tzinfo=timezone.utc))
+    engine = AmendmentEngine(proposals_dir=tmp_path / "proposals", required_approvals=1, provider=provider)
+    proposal = engine.propose_amendment(
+        proposer="alice",
+        new_policy_text='{"SANDBOX":"warning"}',
+        rationale="clock-injection",
+        old_policy_hash=POLICY_HASH,
+    )
+    proposal.timestamp = "2027-01-01T00:00:00Z"
+    engine._save_proposal(proposal)
+    engine.approve_amendment(proposal.proposal_id, "bob")
+
+    assert review_events
+    assert review_events[-1]["latency_seconds"] == 90.0
+
+
+def test_review_quality_payload_stable_under_replay(tmp_path: Path, monkeypatch) -> None:
+    from runtime.governance import amendment
+
+    payloads = []
+    monkeypatch.setattr(amendment.journal, "write_entry", lambda **kwargs: None)
+    monkeypatch.setattr(
+        amendment.journal,
+        "append_tx",
+        lambda tx_type, payload, tx_id=None: {"tx": tx_id or "tx", "type": tx_type, "payload": payload},
+    )
+    monkeypatch.setattr(amendment, "record_review_quality", lambda payload: payloads.append(payload))
+    monkeypatch.setattr(amendment, "reload_constitution_policy", lambda: hashlib.sha256('{"SANDBOX":"warning"}'.encode("utf-8")).hexdigest())
+
+    provider = SeededDeterminismProvider(seed="replay", fixed_now=datetime(2028, 2, 2, 8, 0, 0, tzinfo=timezone.utc))
+    engine = AmendmentEngine(
+        proposals_dir=tmp_path / "proposals",
+        required_approvals=1,
+        provider=provider,
+        replay_mode="strict",
+    )
+    proposal = engine.propose_amendment(
+        proposer="alice",
+        new_policy_text='{"SANDBOX":"warning"}',
+        rationale="replay-stability",
+        old_policy_hash=POLICY_HASH,
+    )
+    engine.approve_amendment(proposal.proposal_id, "bob", comment_count=3, overridden=False)
+    first_payload = dict(payloads[-1])
+
+    payloads.clear()
+    engine.approve_amendment(proposal.proposal_id, "bob", comment_count=3, overridden=False)
+    second_payload = dict(payloads[-1])
+
+    assert first_payload == second_payload
 
 
 def test_effectuation_idempotent_noop(tmp_path: Path, monkeypatch) -> None:
