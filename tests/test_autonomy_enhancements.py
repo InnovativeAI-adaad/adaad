@@ -340,6 +340,69 @@ class AutonomyEnhancementTest(unittest.TestCase):
                     epoch_pass_rate=1.0,
                 )
 
+
+    def test_run_agm_cycle_blocks_past_step_5_without_preflight(self) -> None:
+        from runtime.autonomy.loop import AGMStep, AGMStepOutput, run_agm_cycle
+
+        calls: list[int] = []
+
+        def handler(step_input):
+            calls.append(int(step_input.step))
+            if step_input.step == AGMStep.STEP_5:
+                return AGMStepOutput(ok=True, payload={}, preflight_passed=False)
+            return AGMStepOutput(ok=True, payload={})
+
+        result = run_agm_cycle(
+            cycle_id="cycle-preflight-gate",
+            step_handlers={step: handler for step in AGMStep},
+        )
+
+        self.assertEqual(result.completed_steps[-1], AGMStep.STEP_5)
+        self.assertNotIn(6, calls)
+
+    def test_run_agm_cycle_blocks_past_step_11_without_signature_commit(self) -> None:
+        from runtime.autonomy.loop import AGMStep, AGMStepOutput, run_agm_cycle
+
+        calls: list[int] = []
+
+        def handler(step_input):
+            calls.append(int(step_input.step))
+            if step_input.step == AGMStep.STEP_11:
+                return AGMStepOutput(ok=True, payload={}, signature_commit_succeeded=False)
+            return AGMStepOutput(ok=True, payload={})
+
+        result = run_agm_cycle(
+            cycle_id="cycle-signature-gate",
+            step_handlers={step: handler for step in AGMStep},
+        )
+
+        self.assertEqual(result.completed_steps[-1], AGMStep.STEP_11)
+        self.assertNotIn(12, calls)
+
+    def test_run_agm_cycle_step_8_revision_loops_and_recovery(self) -> None:
+        from runtime.autonomy.loop import AGMStep, AGMStepOutput, run_agm_cycle
+
+        revision_calls = {"count": 0}
+        recovery_calls: list[tuple[str, int, str]] = []
+
+        def step8_handler(step_input):
+            revision_calls["count"] += 1
+            return AGMStepOutput(ok=True, payload={}, requires_revision=True)
+
+        def recovery(cycle_id: str, step, reason: str) -> None:
+            recovery_calls.append((cycle_id, int(step), reason))
+
+        result = run_agm_cycle(
+            cycle_id="cycle-step-8",
+            step_handlers={AGMStep.STEP_8: step8_handler},
+            recovery_action=recovery,
+            max_revision_iterations=3,
+        )
+
+        self.assertEqual(revision_calls["count"], 4)
+        self.assertTrue(result.recovery_executed)
+        self.assertEqual(recovery_calls[0][1], 8)
+        self.assertEqual(recovery_calls[0][2], "step_8_revision_limit_reached")
     def test_adaptive_budget_hash_chain_continuity_across_appended_snapshots(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             snapshot_path = Path(tmp) / "continuity.jsonl"
