@@ -12,6 +12,8 @@ from typing import Any, Callable, Mapping
 from runtime import metrics
 from runtime.autonomy.adaptive_budget import AutonomyBudgetEngine
 from runtime.governance.foundation.determinism import RuntimeDeterminismProvider, default_provider
+from runtime.intelligence.router import IntelligenceRouter
+from runtime.intelligence.strategy import StrategyInput
 
 
 @dataclass(frozen=True)
@@ -245,83 +247,21 @@ def run_self_check_loop(
     budget_snapshot = None
     active_threshold = 0.7 if mutate_threshold is None else float(mutate_threshold)
 
-    step8_state = {"revision_remaining": 0}
-
-    def _step2_action_logger(step_input: AGMStepInput) -> AGMStepOutput:
-        all_actions_ok = True
-        for action in actions:
-            metrics.log(
-                event_type="autonomy_action",
-                payload={
-                    "cycle_id": cycle_id,
-                    "agent": action.agent,
-                    "action": action.action,
-                    "duration_ms": action.duration_ms,
-                    "ok": action.ok,
-                },
-                level="INFO" if action.ok else "ERROR",
-                element_id=action.agent,
-            )
-            if not action.ok:
-                all_actions_ok = False
-        return AGMStepOutput(ok=True, payload={"all_actions_ok": all_actions_ok})
-
-    def _step3_post_checks(step_input: AGMStepInput) -> AGMStepOutput:
-        check_results: dict[str, bool] = {}
-        for check_name, checker in sorted(post_condition_checks.items()):
-            result = bool(checker())
-            check_results[check_name] = result
-            metrics.log(
-                event_type="autonomy_post_condition",
-                payload={"cycle_id": cycle_id, "check": check_name, "passed": result},
-                level="INFO" if result else "ERROR",
-            )
-        return AGMStepOutput(ok=True, payload={"post_conditions_passed": all(check_results.values()) if check_results else True})
-
-    def _step4_threshold(step_input: AGMStepInput) -> AGMStepOutput:
-        nonlocal budget_snapshot, active_threshold
-        if budget_engine is not None:
-            budget_snapshot = budget_engine.record_snapshot(
-                cycle_id=cycle_id,
-                governance_debt_score=governance_debt_score,
-                fitness_trend_delta=fitness_trend_delta,
-                epoch_pass_rate=epoch_pass_rate,
-            )
-            active_threshold = budget_snapshot.threshold
-        return AGMStepOutput(ok=True, payload={"mutate_threshold": active_threshold})
-
-    def _step6_decide(step_input: AGMStepInput) -> AGMStepOutput:
-        all_actions_ok = bool(step_input.payload.get("all_actions_ok", True))
-        post_conditions_passed = bool(step_input.payload.get("post_conditions_passed", True))
-        if not all_actions_ok or not post_conditions_passed:
-            decision = "escalate"
-        elif mutation_score >= active_threshold:
-            decision = "self_mutate"
-        else:
-            decision = "hold"
-        return AGMStepOutput(ok=True, payload={"decision": decision, "mutation_score": mutation_score})
-
-    def _step8_revision(step_input: AGMStepInput) -> AGMStepOutput:
-        requires_revision = bool(step8_state["revision_remaining"] > 0)
-        if requires_revision:
-            step8_state["revision_remaining"] -= 1
-        return AGMStepOutput(ok=True, payload={}, requires_revision=requires_revision)
-
-    cycle_result = run_agm_cycle(
-        cycle_id=cycle_id,
-        initial_payload={
-            "mutation_score": mutation_score,
-            "all_actions_ok": True,
-            "post_conditions_passed": True,
-        },
-        step_handlers={
-            AGMStep.STEP_2: _step2_action_logger,
-            AGMStep.STEP_3: _step3_post_checks,
-            AGMStep.STEP_4: _step4_threshold,
-            AGMStep.STEP_6: _step6_decide,
-            AGMStep.STEP_8: _step8_revision,
-        },
+    routed_intelligence = IntelligenceRouter().route(
+        StrategyInput(
+            cycle_id=cycle_id,
+            mutation_score=mutation_score,
+            governance_debt_score=governance_debt_score,
+            signals={"epoch_pass_rate": epoch_pass_rate},
+        )
     )
+
+    if not all_actions_ok or not post_conditions_passed:
+        decision = "escalate"
+    elif mutation_score >= active_threshold:
+        decision = "self_mutate"
+    else:
+        decision = "hold"
 
     if duration_override_ms is not None:
         total_duration_ms = int(duration_override_ms)
