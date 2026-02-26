@@ -5,10 +5,14 @@ from unittest.mock import patch
 
 from runtime.governance.event_taxonomy import (
     EVENT_TYPE_CONSTITUTION_ESCALATION,
+    EVENT_TYPE_AGM_STEP_01,
+    EVENT_TYPE_BUDGET_MODE_CHANGED,
     EVENT_TYPE_OPERATOR_OVERRIDE,
     EVENT_TYPE_REPLAY_DIVERGENCE,
     EVENT_TYPE_REPLAY_FAILURE,
+    normalize_agm_step,
     normalize_event_type,
+    validate_event_type_for_agm_step,
 )
 from runtime.governance.policy_artifact import GovernanceModelMetadata, GovernancePolicy, GovernanceThresholds
 from ui import aponi_dashboard
@@ -872,3 +876,25 @@ def test_ux_summary_aggregates_recent_metrics_events() -> None:
     assert summary["event_count"] == 3
     assert summary["unique_sessions"] == 2
     assert summary["counts"]["interaction"] == 2
+
+def test_normalize_agm_step_supports_legacy_and_canonical_forms() -> None:
+    assert normalize_agm_step("1") == "agm_step_01"
+    assert normalize_agm_step("step_2") == "agm_step_02"
+    assert normalize_agm_step("agm_step_3") == "agm_step_03"
+    assert normalize_agm_step("agm_step_12") == "agm_step_12"
+
+
+def test_validate_event_type_for_agm_step_allows_control_and_step_specific_events() -> None:
+    assert validate_event_type_for_agm_step(event_type="step_1", agm_step="1") == EVENT_TYPE_AGM_STEP_01
+    assert (
+        validate_event_type_for_agm_step(event_type="budget_mode_change", agm_step="step_1")
+        == EVENT_TYPE_BUDGET_MODE_CHANGED
+    )
+
+
+def test_validate_event_type_for_agm_step_rejects_mismatched_event_type() -> None:
+    try:
+        validate_event_type_for_agm_step(event_type="agm_step_02", agm_step="agm_step_01")
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert str(exc) == "event_type_not_allowed:agm_step_02:agm_step_01"
