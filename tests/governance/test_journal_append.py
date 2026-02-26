@@ -92,3 +92,17 @@ def test_concurrent_process_appends_preserve_chain(tmp_path: Path) -> None:
         assert len({entry["tx"] for entry in entries}) == tx_count
     finally:
         _restore_paths(original_paths)
+
+
+def test_append_rejects_unknown_event_type(tmp_path: Path) -> None:
+    original_paths = _set_temp_paths(tmp_path)
+    try:
+        try:
+            journal.append_tx("unknown_type", {"agm_step": "step_1"}, tx_id="TX-BAD")
+            assert False, "expected ValueError"
+        except ValueError as exc:
+            assert str(exc) == "event_type_not_allowed:unknown_type:agm_step_01"
+
+        assert not journal.JOURNAL_PATH.exists() or journal.JOURNAL_PATH.read_text(encoding="utf-8").strip() == ""
+    finally:
+        _restore_paths(original_paths)

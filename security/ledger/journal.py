@@ -25,6 +25,7 @@ from contextlib import contextmanager
 from typing import Dict, List, Optional, Protocol
 
 from runtime import metrics
+from runtime.governance.event_taxonomy import validate_event_type_for_agm_step
 from security.ledger import LEDGER_ROOT
 
 ELEMENT_ID = "Water"
@@ -282,13 +283,14 @@ def verify_journal_integrity(
 
 
 def append_tx(tx_type: str, payload: Dict[str, object], tx_id: Optional[str] = None) -> Dict[str, object]:
+    normalized_type = validate_event_type_for_agm_step(event_type=tx_type, agm_step=payload.get("agm_step") if isinstance(payload, dict) else None)
     JOURNAL_PATH.parent.mkdir(parents=True, exist_ok=True)
     with _journal_append_lock(JOURNAL_PATH):
         prev, offset = _validated_last_hash()
         entry = {
-            "tx": tx_id or f"TX-{tx_type}-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}",
+            "tx": tx_id or f"TX-{normalized_type}-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}",
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "type": tx_type,
+            "type": normalized_type,
             "payload": payload,
             "prev_hash": prev,
         }
