@@ -10,6 +10,8 @@ from typing import Callable
 from runtime import metrics
 from runtime.autonomy.adaptive_budget import AutonomyBudgetEngine
 from runtime.governance.foundation.determinism import RuntimeDeterminismProvider, default_provider
+from runtime.intelligence.router import IntelligenceRouter
+from runtime.intelligence.strategy import StrategyInput
 
 
 @dataclass(frozen=True)
@@ -102,6 +104,15 @@ def run_self_check_loop(
         active_threshold = budget_snapshot.threshold
     else:
         active_threshold = 0.7 if mutate_threshold is None else float(mutate_threshold)
+
+    routed_intelligence = IntelligenceRouter().route(
+        StrategyInput(
+            cycle_id=cycle_id,
+            mutation_score=mutation_score,
+            governance_debt_score=governance_debt_score,
+            signals={"epoch_pass_rate": epoch_pass_rate},
+        )
+    )
 
     if not all_actions_ok or not post_conditions_passed:
         decision = "escalate"
