@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from runtime.state.ledger_store import ScoringLedgerStore
+from runtime.evolution.agm_event import ScoringEvent
 from runtime.state.migration import migrate_json_state_to_sqlite
 from runtime.state.registry_store import CryovantRegistryStore
+from runtime.evolution.scoring_ledger import ScoringLedger
 
 
 def test_state_migration_and_idempotency_report(tmp_path) -> None:
@@ -14,8 +15,8 @@ def test_state_migration_and_idempotency_report(tmp_path) -> None:
     registry_store = CryovantRegistryStore(registry_json, backend="json")
     registry_store.save_registry({"capability-a": {"score": 1.0, "owner": "Earth"}})
 
-    ledger_store = ScoringLedgerStore(path=ledger_json, backend="json")
-    ledger_store.append({"mutation": "m1", "score": 0.9})
+    scoring_ledger = ScoringLedger(ledger_json)
+    scoring_ledger.append(ScoringEvent(mutation_id="m1", score=0.9))
 
     first_report = migrate_json_state_to_sqlite(
         registry_json_path=registry_json,

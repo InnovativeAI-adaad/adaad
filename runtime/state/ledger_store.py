@@ -16,6 +16,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from runtime.evolution.agm_event import AGMEventEnvelope, AGMEventValidationError, validate_event_envelope
+from runtime.evolution.event_signing import EventVerifier, SignatureBundle
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
 
@@ -41,9 +43,12 @@ class ScoringLedgerStore:
                 """
                 CREATE TABLE IF NOT EXISTS scoring_ledger (
                     seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                    scoring_result_json TEXT NOT NULL,
+                    event_json TEXT NOT NULL,
                     prev_hash TEXT NOT NULL,
-                    record_hash TEXT NOT NULL UNIQUE
+                    record_hash TEXT NOT NULL UNIQUE,
+                    signature TEXT NOT NULL,
+                    signing_key_id TEXT NOT NULL,
+                    signature_algorithm TEXT NOT NULL
                 )
                 """
             )
@@ -63,15 +68,18 @@ class ScoringLedgerStore:
         if self.backend == "sqlite":
             with sqlite3.connect(self.sqlite_path) as conn:
                 rows = conn.execute(
-                    "SELECT scoring_result_json, prev_hash, record_hash FROM scoring_ledger ORDER BY seq ASC"
+                    "SELECT event_json, prev_hash, record_hash, signature, signing_key_id, signature_algorithm FROM scoring_ledger ORDER BY seq ASC"
                 ).fetchall()
             return [
                 {
-                    "scoring_result": json.loads(scoring_result_json),
+                    "event": json.loads(event_json),
                     "prev_hash": prev_hash,
                     "record_hash": record_hash,
+                    "signature": signature,
+                    "signing_key_id": signing_key_id,
+                    "signature_algorithm": signature_algorithm,
                 }
-                for scoring_result_json, prev_hash, record_hash in rows
+                for event_json, prev_hash, record_hash, signature, signing_key_id, signature_algorithm in rows
             ]
         return self._iter_json_records()
 
@@ -83,11 +91,35 @@ class ScoringLedgerStore:
                 last = candidate
         return last
 
-    def append(self, scoring_result: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def canonical_event_content(envelope: AGMEventEnvelope) -> str:
+        payload = envelope.as_dict()
+        payload.pop("signature", None)
+        payload.pop("signing_key_id", None)
+        payload.pop("signature_algorithm", None)
+        return canonical_json(payload)
+
+    def append_event(self, envelope: AGMEventEnvelope, *, verifier: EventVerifier) -> dict[str, Any]:
+        try:
+            validate_event_envelope(envelope)
+        except AGMEventValidationError as exc:
+            raise ValueError(f"invalid_event_envelope:{exc}") from exc
+
+        signed = SignatureBundle(
+            signature=envelope.signature,
+            signing_key_id=envelope.signing_key_id,
+            algorithm=envelope.signature_algorithm,
+        )
+        if not verifier.verify(message=self.canonical_event_content(envelope), signature=signed):
+            raise ValueError("invalid_event_signature")
+
         prev_hash = self.last_hash()
         record = {
-            "scoring_result": dict(scoring_result),
+            "event": envelope.as_dict(),
             "prev_hash": prev_hash,
+            "signature": envelope.signature,
+            "signing_key_id": envelope.signing_key_id,
+            "signature_algorithm": envelope.signature_algorithm,
         }
         record["record_hash"] = sha256_prefixed_digest(canonical_json(record))
 
@@ -95,8 +127,24 @@ class ScoringLedgerStore:
             self._init_sqlite()
             with sqlite3.connect(self.sqlite_path) as conn:
                 conn.execute(
-                    "INSERT INTO scoring_ledger(scoring_result_json, prev_hash, record_hash) VALUES (?, ?, ?)",
-                    (canonical_json(record["scoring_result"]), record["prev_hash"], record["record_hash"]),
+                    """
+                    INSERT INTO scoring_ledger(
+                        event_json,
+                        prev_hash,
+                        record_hash,
+                        signature,
+                        signing_key_id,
+                        signature_algorithm
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        canonical_json(record["event"]),
+                        record["prev_hash"],
+                        record["record_hash"],
+                        record["signature"],
+                        record["signing_key_id"],
+                        record["signature_algorithm"],
+                    ),
                 )
             return record
 
@@ -104,19 +152,56 @@ class ScoringLedgerStore:
             handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
         return record
 
-    def verify_chain(self) -> dict[str, Any]:
+    def verify_chain(self, verifier: EventVerifier | None = None) -> dict[str, Any]:
+        if verifier is None:
+            return {"ok": False, "count": 0, "error": "signature_verifier_missing", "index": 0}
+
         expected_prev = _ZERO_HASH
         records = self.iter_records()
         for index, record in enumerate(records):
             observed_prev = record.get("prev_hash")
             if observed_prev != expected_prev:
                 return {"ok": False, "count": index, "error": "prev_hash_mismatch", "index": index}
+
+            event_payload = record.get("event")
+            if not isinstance(event_payload, dict):
+                return {"ok": False, "count": index, "error": "invalid_event_payload", "index": index}
+
+            try:
+                envelope = AGMEventEnvelope(
+                    schema_version=str(event_payload.get("schema_version", "")),
+                    event_id=str(event_payload.get("event_id", "")),
+                    event_type=str(event_payload.get("event_type", "")),
+                    emitted_at=str(event_payload.get("emitted_at", "")),
+                    payload=dict(event_payload.get("payload") or {}),
+                    signature=str(event_payload.get("signature", "")),
+                    signing_key_id=str(event_payload.get("signing_key_id", "")),
+                    signature_algorithm=str(event_payload.get("signature_algorithm", "")),
+                )
+                validate_event_envelope(envelope)
+            except (ValueError, AGMEventValidationError):
+                return {"ok": False, "count": index, "error": "invalid_event_envelope", "index": index}
+
+            signature = SignatureBundle(
+                signature=envelope.signature,
+                signing_key_id=envelope.signing_key_id,
+                algorithm=envelope.signature_algorithm,
+            )
+            if not verifier.verify(message=self.canonical_event_content(envelope), signature=signature):
+                return {"ok": False, "count": index, "error": "signature_invalid", "index": index}
+
             computed_record = {
-                "scoring_result": dict(record.get("scoring_result") or {}),
+                "event": envelope.as_dict(),
                 "prev_hash": observed_prev,
+                "signature": envelope.signature,
+                "signing_key_id": envelope.signing_key_id,
+                "signature_algorithm": envelope.signature_algorithm,
             }
             expected_hash = sha256_prefixed_digest(canonical_json(computed_record))
             if record.get("record_hash") != expected_hash:
                 return {"ok": False, "count": index, "error": "record_hash_mismatch", "index": index}
             expected_prev = expected_hash
         return {"ok": True, "count": len(records), "tip_hash": expected_prev}
+
+    def append(self, scoring_result: dict[str, Any]) -> dict[str, Any]:
+        raise TypeError("append_removed_use_append_event")

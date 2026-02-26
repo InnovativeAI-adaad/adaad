@@ -16,6 +16,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from runtime.evolution.agm_event import AGMEventEnvelope
+from runtime.evolution.event_signing import DeterministicMockSigner
 from runtime.state.ledger_store import ScoringLedgerStore
 from runtime.state.registry_store import CryovantRegistryStore
 
@@ -57,8 +59,22 @@ def migrate_ledger_json_to_sqlite(json_path: Path, sqlite_path: Path) -> dict[st
     with sqlite3.connect(target.sqlite_path) as conn:
         conn.execute("DELETE FROM scoring_ledger")
 
+    verifier = DeterministicMockSigner()
     for record in source_records:
-        target.append(dict(record.get("scoring_result") or {}))
+        event_payload = record.get("event")
+        if not isinstance(event_payload, dict):
+            continue
+        envelope = AGMEventEnvelope(
+            schema_version=str(event_payload.get("schema_version", "")),
+            event_id=str(event_payload.get("event_id", "")),
+            event_type=str(event_payload.get("event_type", "")),
+            emitted_at=str(event_payload.get("emitted_at", "")),
+            payload=dict(event_payload.get("payload") or {}),
+            signature=str(event_payload.get("signature", "")),
+            signing_key_id=str(event_payload.get("signing_key_id", "")),
+            signature_algorithm=str(event_payload.get("signature_algorithm", "")),
+        )
+        target.append_event(envelope, verifier=verifier)
 
     return {
         "store": "ledger",
