@@ -6,19 +6,29 @@ import json
 import logging
 import os
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Literal
 
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
+from pydantic import BaseModel
 from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import FileResponse
 
 from runtime import metrics
+from runtime import constitution
 from runtime.evolution.evidence_bundle import EvidenceBundleBuilder, FORENSIC_EXPORT_DIR
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.replay_attestation import REPLAY_PROOFS_DIR, load_replay_proof, verify_replay_proof_bundle
+from runtime.governance.foundation.determinism import default_provider
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.review_quality import DEFAULT_REVIEW_SLA_SECONDS, summarize_review_quality
+from runtime.intelligence.router import IntelligenceRouter
+from runtime.intelligence.strategy import StrategyInput
+from runtime.mcp.proposal_queue import append_proposal
+from runtime.mcp.proposal_validator import ProposalValidationError, validate_proposal
+from runtime.metrics_analysis import mutation_rate_snapshot, rolling_determinism_score
 from security.ledger import journal
 
 
@@ -61,6 +71,46 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="InnovativeAI-adaad Unified Server", lifespan=lifespan)
 
 AUDIT_READ_SCOPE = "audit:read"
+
+
+class MutationView(BaseModel):
+    mutation_id: str
+    epoch_id: str
+    impact: float | None = None
+    risk_tier: str = "unknown"
+    applied: bool = True
+    timestamp: str = ""
+
+
+class EpochView(BaseModel):
+    epoch_id: str
+    mutation_count: int
+    event_count: int
+    latest_timestamp: str = ""
+    expected_digest: str | None = None
+    computed_digest: str
+
+
+class ConstitutionStatus(BaseModel):
+    constitution_version: str
+    policy_hash: str
+    policy_path: str
+    policy_exists: bool
+    boot_sanity: dict[str, bool]
+
+
+class SystemIntelligenceView(BaseModel):
+    determinism: dict[str, Any]
+    mutation_rate: dict[str, Any]
+    routed_decision: dict[str, Any]
+
+
+class ProposalResponse(BaseModel):
+    ok: bool
+    proposal_id: str
+    authority_level: str
+    verdict: dict[str, Any]
+    queue_hash: str
 
 
 def _load_audit_tokens() -> dict[str, set[str]]:
@@ -183,6 +233,8 @@ def _current_ui() -> tuple[Path, Path, Path, str]:
 
 
 def _load_mock(name: str) -> Any:
+    if os.getenv("ADAAD_UI_MOCKS", "").strip() not in {"1", "true", "TRUE", "yes", "on"}:
+        raise HTTPException(status_code=404, detail="mock_endpoints_disabled")
     _, _, mock_dir, _ = _current_ui()
     p = mock_dir / f"{name}.json"
     if not p.exists():
@@ -244,12 +296,30 @@ def _event_batch(metrics_marker: str | None, journal_marker: str | None) -> tupl
 @app.get("/api/health")
 def api_health() -> dict[str, Any]:
     ui_dir, ui_index, mock_dir, ui_source = _current_ui()
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip() if (ROOT / "VERSION").exists() else "unknown"
+    profile_path = ROOT / "governance_runtime_profile.lock.json"
+    runtime_profile: dict[str, Any] = {"present": profile_path.exists()}
+    if profile_path.exists():
+        try:
+            payload = json.loads(profile_path.read_text(encoding="utf-8"))
+            runtime_profile.update(
+                {
+                    "version": payload.get("version", ""),
+                    "dependency_lock": bool(payload.get("dependency_lock")),
+                    "runtime_manifest_keys": sorted((payload.get("runtime_manifest") or {}).keys()),
+                }
+            )
+        except (OSError, ValueError, TypeError):
+            runtime_profile["parse_error"] = True
     return {
         "ok": True,
+        "version": version,
+        "runtime_profile": runtime_profile,
         "ui_source": ui_source,
         "ui_dir": str(ui_dir.relative_to(ROOT)),
         "ui_index": str(ui_index.relative_to(ROOT)),
         "mock_present": mock_dir.exists(),
+        "mocks_enabled": os.getenv("ADAAD_UI_MOCKS", "").strip() in {"1", "true", "TRUE", "yes", "on"},
     }
 
 
@@ -270,20 +340,104 @@ def metrics_review_quality(
     return summary
 
 
-@app.websocket("/ws/events")
-async def ws_events(websocket: WebSocket) -> None:
-    await websocket.accept()
-    await websocket.send_json({"type": "hello", "channels": ["metrics", "journal"], "status": "live"})
-    metrics_marker: str | None = None
-    journal_marker: str | None = None
+@app.get("/api/mutations", response_model=list[MutationView])
+def api_mutations(limit: int = Query(default=100, ge=1, le=1000)) -> list[dict[str, Any]]:
+    ledger = LineageLedgerV2()
+    items: list[dict[str, Any]] = []
+    for entry in reversed(ledger.read_all()):
+        if entry.get("type") != "MutationBundleEvent":
+            continue
+        payload = dict(entry.get("payload") or {})
+        certificate = dict(payload.get("certificate") or {})
+        items.append(
+            {
+                "mutation_id": str(payload.get("bundle_id") or certificate.get("bundle_id") or ""),
+                "epoch_id": str(payload.get("epoch_id") or ""),
+                "impact": payload.get("impact"),
+                "risk_tier": str(payload.get("risk_tier") or "unknown"),
+                "applied": bool(payload.get("applied", True)),
+                "timestamp": str(entry.get("ts") or payload.get("ts") or ""),
+            }
+        )
+        if len(items) >= limit:
+            break
+    return items
+
+
+@app.get("/api/epochs", response_model=list[EpochView])
+def api_epochs() -> list[dict[str, Any]]:
+    ledger = LineageLedgerV2()
+    response: list[dict[str, Any]] = []
+    for epoch_id in ledger.list_epoch_ids():
+        entries = ledger.read_epoch(epoch_id)
+        mutation_count = sum(1 for entry in entries if entry.get("type") == "MutationBundleEvent")
+        latest_timestamp = str(entries[-1].get("ts") or "") if entries else ""
+        response.append(
+            {
+                "epoch_id": epoch_id,
+                "mutation_count": mutation_count,
+                "event_count": len(entries),
+                "latest_timestamp": latest_timestamp,
+                "expected_digest": ledger.get_expected_epoch_digest(epoch_id),
+                "computed_digest": ledger.compute_incremental_epoch_digest(epoch_id),
+            }
+        )
+    return response
+
+
+@app.get("/api/constitution/status", response_model=ConstitutionStatus)
+def api_constitution_status() -> dict[str, Any]:
+    return {
+        "constitution_version": constitution.CONSTITUTION_VERSION,
+        "policy_hash": constitution.POLICY_HASH,
+        "policy_path": str(constitution.POLICY_PATH),
+        "policy_exists": constitution.POLICY_PATH.exists(),
+        "boot_sanity": constitution.boot_sanity_check(),
+    }
+
+
+@app.get("/api/system/intelligence", response_model=SystemIntelligenceView)
+def api_system_intelligence() -> dict[str, Any]:
+    determinism = rolling_determinism_score(window=100)
+    mutation_rate = mutation_rate_snapshot(window_sec=3600)
+    router = IntelligenceRouter()
+    decision = router.route(
+        StrategyInput(
+            cycle_id="api-snapshot",
+            mutation_score=min(1.0, mutation_rate["rate_per_hour"] / 60.0),
+            governance_debt_score=max(0.0, 1.0 - float(determinism.get("rolling_score", 1.0))),
+            signals={"window_count": mutation_rate["count"]},
+        )
+    )
+    routed_decision = {
+        "strategy": asdict(decision.strategy),
+        "proposal": asdict(decision.proposal),
+        "critique": asdict(decision.critique),
+        "outcome": decision.outcome,
+    }
+    return {
+        "determinism": determinism,
+        "mutation_rate": mutation_rate,
+        "routed_decision": routed_decision,
+    }
+
+
+@app.post("/api/mutations/proposals", response_model=ProposalResponse)
+def api_submit_proposal(payload: dict[str, Any]) -> dict[str, Any]:
     try:
-        while True:
-            batch, metrics_marker, journal_marker = _event_batch(metrics_marker, journal_marker)
-            if batch:
-                await websocket.send_json({"type": "event_batch", "events": batch})
-            await asyncio.sleep(1.0)
-    except WebSocketDisconnect:
-        return
+        request, verdict = validate_proposal(payload)
+    except ProposalValidationError as exc:
+        body: dict[str, Any] = {"ok": False, "error": exc.code, "detail": exc.detail}
+        raise HTTPException(status_code=exc.status_code, detail=body) from exc
+    proposal_id = default_provider().next_id(label="mcp-proposal", length=32)
+    queue_entry = append_proposal(proposal_id=proposal_id, request=request)
+    return {
+        "ok": True,
+        "proposal_id": proposal_id,
+        "authority_level": request.authority_level,
+        "verdict": verdict,
+        "queue_hash": queue_entry["hash"],
+    }
 
 
 @app.get("/api/audit/epochs/{epoch_id}/replay-proof")
