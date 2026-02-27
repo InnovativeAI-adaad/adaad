@@ -49,6 +49,30 @@ class AutonomyEnhancementTest(unittest.TestCase):
         self.assertEqual([item.mutation_id for item in ranked], ["m1", "m2", "m3"])
         self.assertTrue(ranked[0].accepted)
 
+    def test_rank_mutation_candidates_uses_forecast_roi_and_horizon(self) -> None:
+        candidates = [
+            MutationCandidate(
+                "short_horizon",
+                expected_gain=0.6,
+                risk_score=0.2,
+                complexity=0.1,
+                coverage_delta=0.1,
+                strategic_horizon=1.0,
+                forecast_roi=0.4,
+            ),
+            MutationCandidate(
+                "long_horizon",
+                expected_gain=0.6,
+                risk_score=0.2,
+                complexity=0.1,
+                coverage_delta=0.1,
+                strategic_horizon=2.0,
+                forecast_roi=1.2,
+            ),
+        ]
+        ranked = rank_mutation_candidates(candidates, acceptance_threshold=0.2)
+        self.assertEqual(ranked[0].mutation_id, "long_horizon")
+
     def test_scoreboard_builds_required_views(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             metrics_path = Path(tmp) / "metrics.jsonl"

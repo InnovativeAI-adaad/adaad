@@ -42,17 +42,29 @@ class ResourceSnapshot:
     memory_mb: float
     storage_mb: float
     cpu_percent: float
+    dynamic_agent_pressure: float = 0.0
+
+    def _pressure_adjustment(self) -> float:
+        return max(0.0, min(1.0, self.dynamic_agent_pressure))
 
     def is_constrained(self) -> bool:
+        pressure = self._pressure_adjustment()
+        memory_floor = 500.0 + (700.0 * pressure)
+        storage_floor = 1000.0 + (1500.0 * pressure)
+        cpu_ceiling = 80.0 - (10.0 * pressure)
         return (
             self.battery_percent < 20.0
-            or self.memory_mb < 500.0
-            or self.storage_mb < 1000.0
-            or self.cpu_percent > 80.0
+            or self.memory_mb < memory_floor
+            or self.storage_mb < storage_floor
+            or self.cpu_percent > cpu_ceiling
         )
 
     def should_throttle(self) -> bool:
-        return self.battery_percent < 50.0 or self.memory_mb < 1000.0 or self.storage_mb < 2000.0
+        pressure = self._pressure_adjustment()
+        memory_floor = 1000.0 + (900.0 * pressure)
+        storage_floor = 2000.0 + (2200.0 * pressure)
+        battery_floor = 50.0 + (10.0 * pressure)
+        return self.battery_percent < battery_floor or self.memory_mb < memory_floor or self.storage_mb < storage_floor
 
 
 class AndroidMonitor:
@@ -67,9 +79,23 @@ class AndroidMonitor:
         return Path("/system/build.prop").exists()
 
     def snapshot(self) -> ResourceSnapshot:
+        dynamic_pressure = self._dynamic_agent_pressure()
         if not self.is_android:
-            return ResourceSnapshot(100.0, self._read_memory(), self._read_storage(), self._read_cpu())
-        return ResourceSnapshot(self._read_battery(), self._read_memory(), self._read_storage(), self._read_cpu())
+            return ResourceSnapshot(100.0, self._read_memory(), self._read_storage(), self._read_cpu(), dynamic_pressure)
+        return ResourceSnapshot(self._read_battery(), self._read_memory(), self._read_storage(), self._read_cpu(), dynamic_pressure)
+
+    @staticmethod
+    def _dynamic_agent_pressure() -> float:
+        raw = os.getenv("ADAAD_DYNAMIC_AGENT_PRESSURE", "0.0").strip()
+        try:
+            return max(0.0, min(1.0, float(raw)))
+        except ValueError:
+            _emit_probe_fallback(
+                probe="dynamic_agent_pressure",
+                reason_code="dynamic_agent_pressure_parse_error",
+                fallback_value=0.0,
+            )
+            return 0.0
 
     @staticmethod
     def _read_battery() -> float:

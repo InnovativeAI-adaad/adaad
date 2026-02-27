@@ -55,6 +55,19 @@ def test_evaluation_state_merges_android_telemetry(monkeypatch) -> None:
     assert telemetry["storage_mb"] == 900.0
 
 
+
+
+def test_resource_snapshot_tightens_thresholds_with_dynamic_agent_pressure() -> None:
+    snap = ResourceSnapshot(
+        battery_percent=60.0,
+        memory_mb=1300.0,
+        storage_mb=2400.0,
+        cpu_percent=72.0,
+        dynamic_agent_pressure=1.0,
+    )
+    assert snap.is_constrained()
+    assert snap.should_throttle()
+
 def test_probe_fallback_values_unchanged_and_diagnostics_emitted(monkeypatch) -> None:
     signals: list[dict[str, str]] = []
 

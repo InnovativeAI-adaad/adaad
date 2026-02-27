@@ -54,27 +54,36 @@ class StorageManager:
             governance_config,
             key="minimum_reclaim_target_mb",
         )
+        self.dynamic_agent_pressure = self._coerce_optional_float(
+            None,
+            runtime_config,
+            governance_config,
+            key="dynamic_agent_pressure",
+        )
 
     def check_and_prune(self) -> dict:
         current_mb = self._get_usage_mb()
-        if current_mb < self.max_storage_mb:
-            return {"pruned": False, "current_mb": round(current_mb, 3)}
+        pressure = self._effective_dynamic_pressure()
+        storage_cap_mb = self.max_storage_mb * (1.0 - (0.25 * pressure))
+        if current_mb < storage_cap_mb:
+            return {"pruned": False, "current_mb": round(current_mb, 3), "dynamic_agent_pressure": round(pressure, 3)}
 
         baseline_mb = current_mb
-        pruned_count = self._prune_failed_candidates()
+        pruned_count = self._prune_failed_candidates(pressure=pressure)
         current_mb = self._get_usage_mb()
-        should_prune_snapshots = current_mb >= self.max_storage_mb
+        should_prune_snapshots = current_mb >= storage_cap_mb
         if self.minimum_reclaim_target_mb is not None:
             reclaimed_mb = max(0.0, baseline_mb - current_mb)
             should_prune_snapshots = should_prune_snapshots or reclaimed_mb < self.minimum_reclaim_target_mb
 
         if should_prune_snapshots:
-            pruned_count += self._prune_old_snapshots()
+            pruned_count += self._prune_old_snapshots(pressure=pressure)
 
         return {
             "pruned": True,
             "pruned_count": pruned_count,
             "current_mb": round(self._get_usage_mb(), 3),
+            "dynamic_agent_pressure": round(pressure, 3),
         }
 
     def _get_usage_mb(self) -> float:
@@ -86,7 +95,7 @@ class StorageManager:
                 total_bytes += path.stat().st_size
         return total_bytes / (1024.0 * 1024.0)
 
-    def _prune_failed_candidates(self) -> int:
+    def _prune_failed_candidates(self, *, pressure: float = 0.0) -> int:
         candidates_dir = self.data_root / "candidates"
         if not candidates_dir.exists():
             return 0
@@ -115,16 +124,18 @@ class StorageManager:
                     context={"candidate": str(candidate), "error": type(exc).__name__},
                 )
                 continue
-            if score < self.failed_candidate_score_threshold:
+            threshold = max(0.05, self.failed_candidate_score_threshold + (0.20 * max(0.0, pressure)))
+            if score < threshold:
                 shutil.rmtree(candidate, ignore_errors=True)
                 pruned += 1
         return pruned
 
-    def _prune_old_snapshots(self) -> int:
+    def _prune_old_snapshots(self, *, pressure: float = 0.0) -> int:
         snapshots_dir = self.data_root / "snapshots"
         if not snapshots_dir.exists():
             return 0
-        threshold = time.time() - (self.snapshot_max_age_days * 24 * 60 * 60)
+        effective_days = max(1, int(self.snapshot_max_age_days * (1.0 - (0.5 * max(0.0, pressure)))))
+        threshold = time.time() - (effective_days * 24 * 60 * 60)
         pruned = 0
         for snapshot in sorted(snapshots_dir.glob("*"), key=lambda path: path.name):
             try:
@@ -153,6 +164,11 @@ class StorageManager:
         LOG.warning("storage manager prune fallback", extra=details)
         metrics.log(event_type=METRIC_EVENT, payload=details, level="WARNING")
         warnings.warn(json.dumps(details, sort_keys=True), stacklevel=2)
+
+    def _effective_dynamic_pressure(self) -> float:
+        if self.dynamic_agent_pressure is None:
+            return 0.0
+        return max(0.0, min(1.0, float(self.dynamic_agent_pressure)))
 
     @staticmethod
     def _coerce_float(

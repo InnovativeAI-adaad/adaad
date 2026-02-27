@@ -13,6 +13,8 @@ class MutationCandidate:
     risk_score: float
     complexity: float
     coverage_delta: float
+    strategic_horizon: float = 1.0
+    forecast_roi: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -23,9 +25,12 @@ class MutationScore:
 
 
 def score_candidate(candidate: MutationCandidate, acceptance_threshold: float = 0.25) -> MutationScore:
+    horizon_factor = max(0.1, candidate.strategic_horizon)
+    horizon_roi = candidate.forecast_roi / horizon_factor
     weighted = (
-        (candidate.expected_gain * 0.45)
+        (candidate.expected_gain * 0.35)
         + (candidate.coverage_delta * 0.25)
+        + (horizon_roi * 0.20)
         - (candidate.risk_score * 0.20)
         - (candidate.complexity * 0.10)
     )

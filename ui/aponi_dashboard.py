@@ -765,6 +765,15 @@ class AponiDashboard:
                 if path.startswith("/evolution/timeline"):
                     self._send_validated_response("/evolution/timeline", "evolution_timeline.schema.json", self._evolution_timeline())
                     return
+                if path.startswith("/projection/mutation-roi"):
+                    self._send_json(self._mutation_roi_projection())
+                    return
+                if path.startswith("/projection/lineage-trajectory"):
+                    self._send_json(self._lineage_trajectory_projection())
+                    return
+                if path.startswith("/projection/confidence-bands"):
+                    self._send_json(self._projection_confidence_bands())
+                    return
                 if path.startswith("/mutations"):
                     self._send_json(self._collect_mutations(lineage_dir))
                     return
@@ -1552,6 +1561,77 @@ class AponiDashboard:
                         }
                     )
                 return timeline
+
+            @staticmethod
+            def _series_confidence_band(values: List[float]) -> Dict[str, float]:
+                if not values:
+                    return {"low": 0.0, "high": 0.0, "mean": 0.0, "sample_size": 0}
+                mean = sum(values) / len(values)
+                spread = (sum((value - mean) ** 2 for value in values) / len(values)) ** 0.5
+                return {
+                    "low": round(mean - (1.96 * spread), 6),
+                    "high": round(mean + (1.96 * spread), 6),
+                    "mean": round(mean, 6),
+                    "sample_size": len(values),
+                }
+
+            @classmethod
+            def _mutation_roi_projection(cls) -> Dict[str, object]:
+                timeline = cls._evolution_timeline()
+                recent = timeline[-24:]
+                gains = [float(item.get("fitness_score", 0.0)) for item in recent]
+                if len(gains) >= 2:
+                    slope = (gains[-1] - gains[0]) / max(1, len(gains) - 1)
+                else:
+                    slope = 0.0
+                projected = round((gains[-1] if gains else 0.0) + (slope * 6), 6)
+                return {
+                    "window": len(recent),
+                    "trend_slope": round(slope, 6),
+                    "forecast_horizon": 6,
+                    "forecast_roi": projected,
+                    "confidence_band": cls._series_confidence_band(gains),
+                }
+
+            @classmethod
+            def _lineage_trajectory_projection(cls) -> Dict[str, object]:
+                timeline = cls._evolution_timeline()
+                recent = timeline[-24:]
+                applied_rate = 0.0
+                if recent:
+                    applied_rate = sum(1 for item in recent if bool(item.get("applied", False))) / len(recent)
+                risk_counts: Dict[str, int] = {}
+                for item in recent:
+                    risk_tier = str(item.get("risk_tier", "unknown")).lower()
+                    risk_counts[risk_tier] = risk_counts.get(risk_tier, 0) + 1
+                dominant_risk_tier = max(risk_counts, key=risk_counts.get) if risk_counts else "unknown"
+                return {
+                    "window": len(recent),
+                    "applied_rate": round(applied_rate, 6),
+                    "dominant_risk_tier": dominant_risk_tier,
+                    "risk_distribution": dict(sorted(risk_counts.items())),
+                    "trajectory": "stabilizing" if applied_rate >= 0.75 else "volatile",
+                }
+
+            @classmethod
+            def _projection_confidence_bands(cls) -> Dict[str, object]:
+                timeline = cls._evolution_timeline()
+                recent = timeline[-24:]
+                roi_series = [float(item.get("fitness_score", 0.0)) for item in recent]
+                applied_series = [1.0 if bool(item.get("applied", False)) else 0.0 for item in recent]
+                risk_series = [
+                    1.0
+                    for item in recent
+                    if str(item.get("risk_tier", "unknown")).lower() in {"high", "critical", "unknown"}
+                ]
+                return {
+                    "window": len(recent),
+                    "bands": {
+                        "roi": cls._series_confidence_band(roi_series),
+                        "applied_rate": cls._series_confidence_band(applied_series),
+                        "risk_instability": cls._series_confidence_band(risk_series),
+                    },
+                }
             @staticmethod
             def _user_console() -> str:
                 return f"""<!doctype html>
@@ -3382,7 +3462,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[APONI] dashboard running on http://{dashboard.host}:{dashboard.port}")
     print(
         "[APONI] endpoints: / /state /metrics /fitness /system/intelligence /risk/summary /risk/instability /policy/simulate /alerts/evaluate /replay/divergence /replay/diff?epoch_id=... "
-        "/capabilities /lineage /mutations /staging /evolution/epoch?epoch_id=... /evolution/live /evolution/active /evolution/timeline /control/free-sources /control/skill-profiles /control/capability-matrix /control/policy-summary /control/templates /control/environment-health /control/queue /control/queue/verify /ux/summary /ux/events"
+        "/capabilities /lineage /mutations /staging /evolution/epoch?epoch_id=... /evolution/live /evolution/active /evolution/timeline /projection/mutation-roi /projection/lineage-trajectory /projection/confidence-bands /control/free-sources /control/skill-profiles /control/capability-matrix /control/policy-summary /control/templates /control/environment-health /control/queue /control/queue/verify /ux/summary /ux/events"
     )
     try:
         while True:

@@ -380,6 +380,8 @@ class LegacyBeastModeCompatibilityAdapter:
         risk_score = self._float_feature(payload, "risk_score", "risk", "estimated_risk")
         complexity = self._float_feature(payload, "complexity", "complexity_score", "estimated_complexity")
         coverage_delta = self._float_feature(payload, "coverage_delta", "test_coverage_delta", "coverage_change")
+        strategic_horizon = self._float_feature(payload, "strategic_horizon", "horizon_quarters", "strategic_window")
+        forecast_roi = self._float_feature(payload, "forecast_roi", "roi_forecast", "projected_roi")
 
         missing_fields: List[str] = []
         if expected_gain is None:
@@ -398,6 +400,11 @@ class LegacyBeastModeCompatibilityAdapter:
         assert complexity is not None
         assert coverage_delta is not None
 
+        if strategic_horizon is None:
+            strategic_horizon = 1.0
+        if forecast_roi is None:
+            forecast_roi = expected_gain
+
         mutation_id = self._canonical_mutation_id(payload)
         candidate = MutationCandidate(
             mutation_id=mutation_id,
@@ -405,6 +412,8 @@ class LegacyBeastModeCompatibilityAdapter:
             risk_score=risk_score,
             complexity=complexity,
             coverage_delta=coverage_delta,
+            strategic_horizon=strategic_horizon,
+            forecast_roi=forecast_roi,
         )
         return candidate, []
 

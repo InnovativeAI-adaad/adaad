@@ -112,7 +112,7 @@ def test_storage_manager_prune_report_and_counts_are_deterministic(
     assert result["pruned"] is True
     assert result["pruned_count"] == 2
     assert isinstance(result["current_mb"], float)
-    assert set(result.keys()) == {"pruned", "pruned_count", "current_mb"}
+    assert set(result.keys()) == {"pruned", "pruned_count", "current_mb", "dynamic_agent_pressure"}
     assert not low.exists()
     assert high.exists()
     assert not old.exists()
@@ -173,3 +173,22 @@ def test_storage_manager_minimum_reclaim_target_forces_snapshot_prune(tmp_path: 
     assert result["pruned_count"] == 2
     assert not low.exists()
     assert not old.exists()
+
+
+def test_storage_manager_dynamic_agent_pressure_tightens_pruning(tmp_path: Path) -> None:
+    candidates = tmp_path / "candidates"
+    candidate = candidates / "borderline"
+    candidate.mkdir(parents=True)
+    (candidate / "fitness.json").write_text(json.dumps({"score": 0.35}), encoding="utf-8")
+
+    mgr = StorageManager(
+        tmp_path,
+        max_storage_mb=0.0,
+        failed_candidate_score_threshold=0.3,
+        runtime_config={"dynamic_agent_pressure": 1.0},
+    )
+    result = mgr.check_and_prune()
+
+    assert result["pruned"] is True
+    assert result["dynamic_agent_pressure"] == 1.0
+    assert not candidate.exists()
