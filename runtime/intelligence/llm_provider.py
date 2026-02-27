@@ -6,7 +6,16 @@ import json
 import os
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
+
+SENSITIVE_CONTEXT_KEYS: tuple[str, ...] = (
+    "api_key",
+    "authorization",
+    "credential",
+    "password",
+    "secret",
+    "token",
+)
 
 
 def _noop_proposal(reason: str) -> dict[str, Any]:
@@ -60,6 +69,74 @@ class LLMProviderResult:
         }
 
 
+@dataclass(frozen=True)
+class EvolutionContextContract:
+    prior_cycle_summaries: Sequence[str]
+    top_strategy_lineage: Sequence[str]
+    rejection_causes: Sequence[str]
+    accepted_mutations: Sequence[Mapping[str, Any]] = ()
+    rejected_mutations: Sequence[Mapping[str, Any]] = ()
+    federated_insight_summaries: Sequence[str] = ()
+
+
+def sanitize_context_payload(payload: Any) -> Any:
+    if isinstance(payload, Mapping):
+        sanitized: dict[str, Any] = {}
+        for key in sorted(payload.keys(), key=lambda item: str(item)):
+            key_text = str(key)
+            key_lower = key_text.lower()
+            value = payload[key]
+            if any(marker in key_lower for marker in SENSITIVE_CONTEXT_KEYS):
+                sanitized[key_text] = "[redacted]"
+                continue
+            sanitized[key_text] = sanitize_context_payload(value)
+        return sanitized
+
+    if isinstance(payload, (list, tuple)):
+        return [sanitize_context_payload(item) for item in payload]
+
+    return payload
+
+
+def build_evolution_user_prompt(context: EvolutionContextContract, *, history_window: int = 3, federated_window: int = 3) -> str:
+    sanitized_context = sanitize_context_payload(
+        {
+            "prior_cycle_summaries": list(context.prior_cycle_summaries),
+            "top_strategy_lineage": list(context.top_strategy_lineage),
+            "rejection_causes": list(context.rejection_causes),
+            "accepted_mutations": list(context.accepted_mutations)[-history_window:],
+            "rejected_mutations": list(context.rejected_mutations)[-history_window:],
+            "federated_insight_summaries": list(context.federated_insight_summaries)[-federated_window:],
+        }
+    )
+    return (
+        "Generate a JSON-only evolution proposal with adaptive reasoning.\n"
+        "Historical context and federated insights:\n"
+        f"{json.dumps(sanitized_context, sort_keys=True, separators=(',', ':'))}"
+    )
+
+
+def validate_adaptive_proposal_schema(payload: dict[str, Any]) -> bool:
+    if payload.get("proposal_type") == "noop":
+        return True
+
+    required: dict[str, type] = {
+        "proposal_hypothesis": str,
+        "expected_roi": (float, int),
+        "risk_confidence": (float, int),
+        "fallback_plan": str,
+    }
+    for field_name, expected_type in required.items():
+        value = payload.get(field_name)
+        if not isinstance(value, expected_type):
+            return False
+        if isinstance(value, str) and not value.strip():
+            return False
+
+    risk_confidence = float(payload["risk_confidence"])
+    return 0.0 <= risk_confidence <= 1.0
+
+
 def load_provider_config(env: Mapping[str, str] | None = None) -> LLMProviderConfig:
     source = env or os.environ
     return LLMProviderConfig(
@@ -80,7 +157,7 @@ class LLMProviderClient:
     ) -> None:
         self.config = config
         self.retry_policy = retry_policy or RetryPolicy()
-        self.schema_validator = schema_validator or (lambda payload: isinstance(payload, dict))
+        self.schema_validator = schema_validator or validate_adaptive_proposal_schema
 
     def request_json(self, *, system_prompt: str, user_prompt: str) -> LLMProviderResult:
         if not self.config.api_key:
@@ -162,9 +239,13 @@ class LLMProviderClient:
 
 
 __all__ = [
+    "EvolutionContextContract",
     "LLMProviderClient",
     "LLMProviderConfig",
     "LLMProviderResult",
     "RetryPolicy",
+    "build_evolution_user_prompt",
     "load_provider_config",
+    "sanitize_context_payload",
+    "validate_adaptive_proposal_schema",
 ]
