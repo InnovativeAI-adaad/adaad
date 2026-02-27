@@ -9,6 +9,10 @@ Use this checklist before approving any governed release state transition.
 - [ ] Evidence bundle includes `scoring_algorithm_version` and `constitution_version` provenance fields.
 - [ ] Evidence matrix complete
 
+- [ ] Replay on two independent environments produces matching digest outputs
+- [ ] Constitution checksum verified
+- [ ] Evidence bundle reproducibility test completed
+- [ ] Port canonicalization verification completed (Aponi constants)
 ## Evidence pointers
 
 - Replay and determinism: [`docs/DETERMINISM.md`](../DETERMINISM.md)

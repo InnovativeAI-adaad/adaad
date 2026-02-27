@@ -87,6 +87,7 @@ from runtime.governance.resource_accounting import (
     normalize_resource_usage_snapshot,
 )
 from runtime.platform.android_monitor import AndroidMonitor
+from runtime.governance_surface import canonicalize_governance_details
 from security.ledger import journal
 
 CONSTITUTION_VERSION = "0.2.0"
@@ -202,37 +203,6 @@ def _governance_fingerprint_components() -> Dict[str, Any]:
 def _current_governance_fingerprint() -> str:
     return _canonical_digest(_governance_fingerprint_components())
 
-
-_VOLATILE_ENVELOPE_DETAIL_KEYS = frozenset(
-    {
-        "window_start_ts",
-        "window_end_ts",
-        "resource_usage_snapshot",
-        "limits_snapshot",
-        "platform_telemetry",
-        "observed_measurements",
-        "count",
-        "rate_per_hour",
-        "entries_considered",
-        "entries_scoped",
-        "event_types",
-        "scope",
-        "source",
-    }
-)
-
-
-def _stable_envelope_details(value: Any) -> Any:
-    if isinstance(value, Mapping):
-        cleaned = {
-            str(key): _stable_envelope_details(item)
-            for key, item in value.items()
-            if str(key) not in _VOLATILE_ENVELOPE_DETAIL_KEYS
-        }
-        return cleaned
-    if isinstance(value, list):
-        return [_stable_envelope_details(item) for item in value]
-    return value
 
 class Severity(Enum):
     """Rule enforcement severity levels."""
@@ -1742,7 +1712,7 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
             "severity": item["severity"],
             "passed": item["passed"],
             "applicable": item["applicable"],
-            "details_hash": _canonical_digest(_stable_envelope_details(item.get("details", {}))),
+            "details_hash": _canonical_digest(canonicalize_governance_details(item.get("details", {}))),
             "provenance_hash": _canonical_digest(item.get("provenance", {})),
         }
         for item in sorted(verdicts, key=lambda row: str(row.get("rule", "")))

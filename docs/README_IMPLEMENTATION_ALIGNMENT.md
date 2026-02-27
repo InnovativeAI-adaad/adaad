@@ -198,3 +198,10 @@ Recommended validation set:
 ```bash
 pytest -q tests/test_constitution_policy.py tests/test_economic_fitness.py tests/evolution/test_evidence_bundle.py tests/test_intelligence_router.py tests/test_intelligence_proposal_adapter.py tests/test_orchestrator_dispatcher.py
 ```
+
+
+## Governance surface registry
+
+- Canonical governance digest surfaces are now centralized in `runtime/governance_surface.py` using explicit whitelist + volatile-key exclusion semantics.
+- `ADAAD_DETERMINISTIC_LOCK` disables adaptive runtime tuning paths where configured.
+- Dispatcher supports `ADAAD_DISPATCH_LATENCY_MODE=static|adaptive`; adaptive behavior is environment-derived and auditable via runtime metrics events.

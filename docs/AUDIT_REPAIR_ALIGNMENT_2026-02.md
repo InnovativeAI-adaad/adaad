@@ -68,3 +68,13 @@ Validation extension:
 ```bash
 pytest -q tests/governance/test_policy_artifact.py tests/test_import_roots.py tests/determinism/test_replay_equivalence.py::test_dream_mutation_token_determinism tests/determinism/test_replay_runtime_harness.py tests/test_lint_determinism.py
 ```
+
+
+13. **README drift guard**
+   - Added `scripts/validate_readme_alignment.py` to enforce key implementation-status/configuration statements across root/module/release documentation.
+
+Validation extension (documentation guard):
+
+```bash
+python scripts/validate_readme_alignment.py
+```

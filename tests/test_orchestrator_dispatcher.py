@@ -168,3 +168,23 @@ def test_dispatch_latency_budget_honors_env_override(monkeypatch) -> None:
 
     assert dispatcher_module.MAX_LATENCY_MS == 75.0
     assert response["metadata"]["latency_target_ms"] == 75.0
+
+
+def test_dispatch_latency_budget_adaptive_mode_respects_replay(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_DISPATCH_LATENCY_BUDGET_MS", "100")
+    monkeypatch.setenv("ADAAD_DISPATCH_LATENCY_MODE", "adaptive")
+    monkeypatch.setenv("ADAAD_REPLAY_MODE", "strict")
+    monkeypatch.delenv("ADAAD_DETERMINISTIC_LOCK", raising=False)
+    importlib.reload(dispatcher_module)
+
+    assert dispatcher_module.MAX_LATENCY_MS == 80.0
+
+
+def test_dispatch_latency_budget_adaptive_mode_disabled_by_deterministic_lock(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_DISPATCH_LATENCY_BUDGET_MS", "100")
+    monkeypatch.setenv("ADAAD_DISPATCH_LATENCY_MODE", "adaptive")
+    monkeypatch.setenv("ADAAD_REPLAY_MODE", "strict")
+    monkeypatch.setenv("ADAAD_DETERMINISTIC_LOCK", "1")
+    importlib.reload(dispatcher_module)
+
+    assert dispatcher_module.MAX_LATENCY_MS == 100.0

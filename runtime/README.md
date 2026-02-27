@@ -77,3 +77,12 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 - `runtime/__init__.py` is an adapter-only root surface (`ROOT_DIR`, `REPO_ROOT`, import-guard install), not an orchestration layer.
 - Import boundary checks are enforced by `tools/lint_import_paths.py` and must pass in CI.
 - See `docs/ARCHITECTURE_CONTRACT.md` for strict layer ownership and forbidden import edges.
+
+
+## Deterministic Guarantees
+
+This runtime layer guarantees:
+
+- Stable governance envelope hashing over canonical detail surfaces
+- Replay-stable constitution loading with hermetic fallback behavior
+- Environment-configurable and ledger-visible dispatcher latency configuration

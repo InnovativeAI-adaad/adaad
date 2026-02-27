@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import platform
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict, List
@@ -295,6 +296,13 @@ class EvidenceBundleBuilder:
             "path": str(self.export_dir / f"{bundle_id}.json"),
             "retention_days": int(os.getenv("ADAAD_FORENSIC_RETENTION_DAYS", str(DEFAULT_RETENTION_DAYS)) or DEFAULT_RETENTION_DAYS),
             "access_scope": os.getenv("ADAAD_FORENSIC_EXPORT_SCOPE", DEFAULT_ACCESS_SCOPE).strip() or DEFAULT_ACCESS_SCOPE,
+            "environment": {
+                "dispatcher_version": os.getenv("ADAAD_DISPATCHER_VERSION", "v1"),
+                "digest_algorithm": "sha256",
+                "runtime_build_hash": os.getenv("ADAAD_RUNTIME_BUILD_HASH", "unavailable"),
+                "python_version": platform.python_version(),
+                "container_hash": os.getenv("ADAAD_CONTAINER_HASH", "unavailable"),
+            },
             "signer": {
                 "key_id": key_id,
                 "algorithm": algorithm,

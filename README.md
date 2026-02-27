@@ -174,3 +174,30 @@ ADAAD does not:
 ## Start here next
 
 See role-based paths in [docs/README.md](docs/README.md).
+
+
+## Governance & Determinism Guarantees (Current State)
+
+ADAAD currently guarantees:
+
+- Deterministic constitutional envelope hashing
+- Replay-stable governance evaluation
+- Canonicalized Aponi integration port
+- Configurable and ledger-visible dispatcher latency
+- YAML hermetic fallback for constitution loading
+
+ADAAD does **not** yet implement:
+
+- Live market signal adapters
+- True Darwinian agent budget competition
+- Real container-level isolation backend
+- Fully autonomous multi-node federation
+
+### Environment Configuration
+
+| Variable | Purpose |
+| --- | --- |
+| `ADAAD_DISPATCH_LATENCY_BUDGET_MS` | Dispatcher latency budget |
+| `ADAAD_DISPATCH_LATENCY_MODE` | Dispatcher latency mode (`static`/`adaptive`) |
+| `ADAAD_DETERMINISTIC_LOCK` | Freeze deterministic runtime behavior |
+| `ADAAD_CONSTITUTION_STRICT` | Strict constitution enforcement mode |

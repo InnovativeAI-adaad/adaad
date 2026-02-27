@@ -9,6 +9,7 @@ from time import monotonic_ns, perf_counter
 from typing import Any
 
 from adaad.orchestrator.registry import HandlerRegistry, get_tool
+from runtime.governance_surface import deterministic_lock_enabled
 
 try:
     from runtime import metrics as runtime_metrics
@@ -16,12 +17,14 @@ except Exception:  # pragma: no cover - runtime package optional for isolated us
     runtime_metrics = None
 
 _LATENCY_BUDGET_ENV_VAR = "ADAAD_DISPATCH_LATENCY_BUDGET_MS"
+_LATENCY_MODE_ENV_VAR = "ADAAD_DISPATCH_LATENCY_MODE"
 _DEFAULT_MAX_LATENCY_MS = 50.0
 _LOGGER = logging.getLogger("adaad.dispatcher")
 
 
 def _resolve_max_latency_ms() -> float:
     configured = os.getenv(_LATENCY_BUDGET_ENV_VAR)
+    mode = (os.getenv(_LATENCY_MODE_ENV_VAR) or "static").strip().lower()
     source = "default"
     resolved = _DEFAULT_MAX_LATENCY_MS
     invalid_value = False
@@ -33,6 +36,16 @@ def _resolve_max_latency_ms() -> float:
         except (TypeError, ValueError):
             invalid_value = True
 
+    if mode == "adaptive" and not deterministic_lock_enabled():
+        replay_mode = (os.getenv("ADAAD_REPLAY_MODE") or "off").strip().lower()
+        recovery_tier = (os.getenv("ADAAD_RECOVERY_TIER") or "").strip().lower()
+        if replay_mode == "strict" or recovery_tier == "audit":
+            resolved = max(1.0, resolved * 0.8)
+            source = f"{source}+adaptive_replay"
+        elif replay_mode in {"off", "audit"}:
+            resolved = min(500.0, resolved * 1.2)
+            source = f"{source}+adaptive_runtime"
+
     if runtime_metrics is not None:
         try:
             runtime_metrics.log(
@@ -43,6 +56,8 @@ def _resolve_max_latency_ms() -> float:
                     "resolved_value": resolved,
                     "source": source,
                     "invalid_value": invalid_value,
+                    "mode": mode,
+                    "deterministic_lock": deterministic_lock_enabled(),
                 },
                 level="WARNING" if invalid_value else "INFO",
             )

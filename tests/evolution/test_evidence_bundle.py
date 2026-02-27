@@ -66,6 +66,7 @@ def test_export_bundle_conforms_to_schema_and_is_immutable(tmp_path: Path) -> No
     assert bundle["export_metadata"]["retention_days"] >= 1
     assert bundle["export_metadata"]["access_scope"]
     assert bundle["export_metadata"]["signer"]["signed_digest"] == bundle["export_metadata"]["digest"]
+    assert bundle["export_metadata"]["environment"]["digest_algorithm"] == "sha256"
 
 
 def test_export_bundle_digest_is_reproducible_for_unchanged_ledger(tmp_path: Path) -> None:
