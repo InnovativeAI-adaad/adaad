@@ -15,7 +15,7 @@ from runtime.governance.foundation import (
     sha256_prefixed_digest,
 )
 
-ALGORITHM_VERSION = "v1.0.0"
+ALGORITHM_VERSION = "v1.1.0"
 
 SEVERITY_WEIGHTS = MappingProxyType(
     {
@@ -38,6 +38,7 @@ RISK_WEIGHTS = MappingProxyType(
 MAX_LOC = 100_000
 MAX_FILES = 1_000
 MAX_ISSUES = 10_000
+MAX_COMPONENT_TERM = 300
 
 
 class ScoringValidationError(ValueError):
@@ -117,6 +118,41 @@ def compute_risk_penalty(code_diff: Dict[str, Any]) -> int:
     return penalty
 
 
+def _clamp_term(value: Any, *, max_value: int = MAX_COMPONENT_TERM) -> int:
+    try:
+        numeric = int(round(float(value)))
+    except (TypeError, ValueError):
+        return 0
+    return max(0, min(max_value, numeric))
+
+
+def compute_long_horizon_sustainability_term(scoring_input: Dict[str, Any]) -> int:
+    sustainability = scoring_input.get("sustainability")
+    if isinstance(sustainability, dict):
+        score = sustainability.get("score", sustainability.get("long_horizon_score", 0))
+    else:
+        score = scoring_input.get("long_horizon_sustainability_score", 0)
+    return _clamp_term(score)
+
+
+def compute_resource_efficiency_term(scoring_input: Dict[str, Any]) -> int:
+    efficiency = scoring_input.get("resource_efficiency")
+    if isinstance(efficiency, dict):
+        score = efficiency.get("score", efficiency.get("efficiency_score", 0))
+    else:
+        score = scoring_input.get("resource_efficiency_score", 0)
+    return _clamp_term(score)
+
+
+def compute_cross_agent_synergy_term(scoring_input: Dict[str, Any]) -> int:
+    synergy = scoring_input.get("cross_agent_synergy")
+    if isinstance(synergy, dict):
+        score = synergy.get("score", synergy.get("synergy_score", 0))
+    else:
+        score = scoring_input.get("cross_agent_synergy_score", 0)
+    return _clamp_term(score)
+
+
 def compute_score(
     scoring_input: Dict[str, Any],
     *,
@@ -136,8 +172,20 @@ def compute_score(
     static_penalty = compute_static_penalty(scoring_input.get("static_analysis", {}))
     diff_penalty = compute_diff_penalty(scoring_input.get("code_diff", {}))
     risk_penalty = compute_risk_penalty(scoring_input.get("code_diff", {}))
+    sustainability_term = compute_long_horizon_sustainability_term(scoring_input)
+    resource_efficiency_term = compute_resource_efficiency_term(scoring_input)
+    cross_agent_synergy_term = compute_cross_agent_synergy_term(scoring_input)
 
-    final_score = max(0, test_score - static_penalty - diff_penalty - risk_penalty)
+    final_score = max(
+        0,
+        test_score
+        + sustainability_term
+        + resource_efficiency_term
+        + cross_agent_synergy_term
+        - static_penalty
+        - diff_penalty
+        - risk_penalty,
+    )
 
     return {
         "mutation_id": scoring_input.get("mutation_id", ""),
@@ -152,6 +200,9 @@ def compute_score(
             "static_penalty": int(static_penalty),
             "diff_penalty": int(diff_penalty),
             "risk_penalty": int(risk_penalty),
+            "long_horizon_sustainability_term": int(sustainability_term),
+            "resource_efficiency_term": int(resource_efficiency_term),
+            "cross_agent_synergy_term": int(cross_agent_synergy_term),
         },
     }
 
@@ -159,15 +210,19 @@ def compute_score(
 __all__ = [
     "ALGORITHM_VERSION",
     "MAX_FILES",
+    "MAX_COMPONENT_TERM",
     "MAX_ISSUES",
     "MAX_LOC",
     "RISK_WEIGHTS",
     "SEVERITY_WEIGHTS",
     "ScoringValidationError",
     "canonicalize_input",
+    "compute_cross_agent_synergy_term",
     "compute_diff_penalty",
     "compute_input_hash",
+    "compute_long_horizon_sustainability_term",
     "compute_risk_penalty",
+    "compute_resource_efficiency_term",
     "compute_score",
     "compute_static_penalty",
     "score_tests",

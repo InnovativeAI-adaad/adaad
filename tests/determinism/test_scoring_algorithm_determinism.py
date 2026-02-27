@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import copy
+import json
 
 import pytest
 
+from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
 from runtime.evolution.scoring_algorithm import (
     RISK_WEIGHTS,
     SEVERITY_WEIGHTS,
@@ -33,6 +35,9 @@ def _sample() -> dict:
             "files_touched": 1,
             "risk_tags": ["API", "SECURITY"],
         },
+        "sustainability": {"score": 120},
+        "resource_efficiency": {"score": 80},
+        "cross_agent_synergy": {"score": 55},
     }
 
 
@@ -74,3 +79,44 @@ def test_weight_tables_immutable() -> None:
         SEVERITY_WEIGHTS["NEW"] = 1
     with pytest.raises(TypeError):
         RISK_WEIGHTS["NEW"] = 1
+
+
+def test_scoring_algorithm_clamps_new_terms() -> None:
+    sample = _sample()
+    sample["sustainability"]["score"] = 99999
+    sample["resource_efficiency"]["score"] = -5
+    sample["cross_agent_synergy"]["score"] = "invalid"
+
+    result = compute_score(sample, provider=SeededDeterminismProvider(seed="clamp"), replay_mode="strict")
+    components = result["components"]
+
+    assert components["long_horizon_sustainability_term"] == 300
+    assert components["resource_efficiency_term"] == 0
+    assert components["cross_agent_synergy_term"] == 0
+
+
+def test_identical_tuned_weights_produce_identical_scores(tmp_path) -> None:
+    tuned_weights = {
+        "version": 3,
+        "weights": {
+            "correctness_score": 0.28,
+            "efficiency_score": 0.22,
+            "policy_compliance_score": 0.21,
+            "goal_alignment_score": 0.14,
+            "simulated_market_score": 0.15,
+        },
+    }
+    config_path = tmp_path / "fitness_weights.json"
+    config_path.write_text(json.dumps(tuned_weights), encoding="utf-8")
+
+    evaluator_a = EconomicFitnessEvaluator(config_path=config_path)
+    evaluator_b = EconomicFitnessEvaluator(config_path=config_path)
+    payload = {
+        "tests_ok": True,
+        "sandbox_ok": True,
+        "constitution_ok": True,
+        "policy_valid": True,
+        "task_value_proxy": {"value_score": 0.7},
+        "platform": {"memory_mb": 1024, "cpu_percent": 30, "runtime_ms": 5000},
+    }
+    assert evaluator_a.evaluate(payload).score == evaluator_b.evaluate(payload).score
