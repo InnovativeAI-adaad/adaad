@@ -13,8 +13,11 @@ from runtime.governance.federation.coordination import (
     FileBackedFederationRegistry,
     acquire_mutation_lock,
     classify_manifest_compatibility,
+    make_strategy_digest_exchange,
+    merge_federated_strategy_exchanges,
     run_coordination_cycle,
     release_mutation_lock,
+    StrategyDigest,
 )
 from runtime.governance.federation.manifest import FederationManifest
 
@@ -119,3 +122,67 @@ def test_split_brain_escalation_behavior() -> None:
     assert result.decision.decision_class == DECISION_CLASS_SPLIT_BRAIN
     assert result.fail_closed
     assert "escalate_split_brain_review" in result.decision.reconciliation_actions
+
+
+def test_strategy_digest_merge_is_deterministic_with_tie_break() -> None:
+    key_a = "peer-a-key"
+    key_b = "peer-b-key"
+    exchange_a = make_strategy_digest_exchange(
+        peer_id="peer-a",
+        generated_at=100,
+        signing_key=key_a,
+        digests=[
+            StrategyDigest(strategy_id="s1", policy_version="2.0.0", score=0.9, safety_tier="safe", metadata_digest="sha256:aaa"),
+        ],
+    )
+    exchange_b = make_strategy_digest_exchange(
+        peer_id="peer-b",
+        generated_at=100,
+        signing_key=key_b,
+        digests=[
+            StrategyDigest(strategy_id="s1", policy_version="2.0.0", score=0.9, safety_tier="safe", metadata_digest="sha256:bbb"),
+        ],
+    )
+
+    result = merge_federated_strategy_exchanges(
+        [exchange_b, exchange_a],
+        trusted_peer_ids=["peer-a", "peer-b"],
+        signing_keys={"peer-a": key_a, "peer-b": key_b},
+        local_policy_validator=lambda row: row.get("safety_tier") == "safe",
+    )
+
+    assert not result.fail_closed
+    assert len(result.activated_strategies) == 1
+    assert result.activated_strategies[0]["source_peer_id"] == "peer-b"
+
+
+def test_strategy_digest_merge_fails_closed_for_untrusted_and_invalid() -> None:
+    good_key = "trusted-key"
+    trusted = make_strategy_digest_exchange(
+        peer_id="peer-trusted",
+        generated_at=50,
+        signing_key=good_key,
+        digests=[
+            StrategyDigest(strategy_id="stable", policy_version="2.0.0", score=0.8, safety_tier="safe", metadata_digest="sha256:111"),
+            StrategyDigest(strategy_id="blocked", policy_version="2.0.0", score=0.95, safety_tier="unsafe", metadata_digest="sha256:222"),
+        ],
+    )
+    untrusted = make_strategy_digest_exchange(
+        peer_id="peer-untrusted",
+        generated_at=50,
+        signing_key="rogue-key",
+        digests=[
+            StrategyDigest(strategy_id="rogue", policy_version="9.9.9", score=1.0, safety_tier="safe", metadata_digest="sha256:999"),
+        ],
+    )
+
+    result = merge_federated_strategy_exchanges(
+        [trusted, untrusted],
+        trusted_peer_ids=["peer-trusted"],
+        signing_keys={"peer-trusted": "wrong-key"},
+        local_policy_validator=lambda row: row.get("safety_tier") == "safe",
+    )
+
+    assert result.fail_closed
+    assert result.activated_strategies == []
+    assert {item["reason"] for item in result.rejected_bundles} >= {"untrusted_peer", "invalid_signature"}

@@ -20,12 +20,13 @@ Expected invariants:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from hmac import compare_digest, new as hmac_new
 from hashlib import sha256
 import json
 import os
 from pathlib import Path
 from time import time
-from typing import TYPE_CHECKING, Dict, Iterable, List, Literal, Optional
+from typing import TYPE_CHECKING, Callable, Dict, Iterable, List, Literal, Optional
 
 from runtime.governance.federation.manifest import FederationManifest
 
@@ -104,6 +105,30 @@ class LockAcquisitionResult:
     lock_path: Path
 
 
+@dataclass(frozen=True)
+class StrategyDigest:
+    strategy_id: str
+    policy_version: str
+    score: float
+    safety_tier: str = "restricted"
+    metadata_digest: str = ""
+
+
+@dataclass(frozen=True)
+class StrategyDigestExchange:
+    peer_id: str
+    generated_at: int
+    digests: List[StrategyDigest]
+    signature: str
+
+
+@dataclass(frozen=True)
+class StrategyActivationResult:
+    activated_strategies: List[Dict[str, object]]
+    rejected_bundles: List[Dict[str, str]]
+    fail_closed: bool
+
+
 def _now_epoch_seconds() -> int:
     return int(time())
 
@@ -125,6 +150,101 @@ def _read_json_file(path: Path) -> Optional[Dict[str, object]]:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError, TypeError, ValueError):
         return None
+
+
+def _strategy_digest_payload(peer_id: str, generated_at: int, digests: Iterable[StrategyDigest]) -> Dict[str, object]:
+    rows = [
+        {
+            "strategy_id": digest.strategy_id,
+            "policy_version": digest.policy_version,
+            "score": float(digest.score),
+            "safety_tier": digest.safety_tier,
+            "metadata_digest": digest.metadata_digest,
+        }
+        for digest in digests
+    ]
+    return {
+        "peer_id": str(peer_id),
+        "generated_at": int(generated_at),
+        "digests": sorted(rows, key=lambda row: (row["strategy_id"], row["policy_version"], -row["score"], row["metadata_digest"])),
+    }
+
+
+def _strategy_exchange_signature(payload: Dict[str, object], signing_key: str) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    signature = hmac_new(signing_key.encode("utf-8"), encoded, sha256).hexdigest()
+    return "sha256:" + signature
+
+
+def make_strategy_digest_exchange(
+    *,
+    peer_id: str,
+    digests: List[StrategyDigest],
+    signing_key: str,
+    generated_at: Optional[int] = None,
+) -> StrategyDigestExchange:
+    timestamp = _now_epoch_seconds() if generated_at is None else int(generated_at)
+    payload = _strategy_digest_payload(peer_id, timestamp, digests)
+    signature = _strategy_exchange_signature(payload, signing_key)
+    return StrategyDigestExchange(peer_id=peer_id, generated_at=timestamp, digests=list(digests), signature=signature)
+
+
+def verify_strategy_digest_exchange(exchange: StrategyDigestExchange, signing_key: str) -> bool:
+    payload = _strategy_digest_payload(exchange.peer_id, exchange.generated_at, exchange.digests)
+    expected = _strategy_exchange_signature(payload, signing_key)
+    return compare_digest(expected, exchange.signature)
+
+
+def merge_federated_strategy_exchanges(
+    exchanges: List[StrategyDigestExchange],
+    *,
+    trusted_peer_ids: Iterable[str],
+    signing_keys: Dict[str, str],
+    local_policy_validator: Optional[Callable[[Dict[str, object]], bool]] = None,
+) -> StrategyActivationResult:
+    trusted = set(str(peer_id) for peer_id in trusted_peer_ids)
+    rejected: List[Dict[str, str]] = []
+    candidates: Dict[str, Dict[str, object]] = {}
+
+    for exchange in sorted(exchanges, key=lambda row: (row.peer_id, row.generated_at, row.signature)):
+        if exchange.peer_id not in trusted:
+            rejected.append({"peer_id": exchange.peer_id, "reason": "untrusted_peer"})
+            continue
+        signing_key = signing_keys.get(exchange.peer_id)
+        if not signing_key or not verify_strategy_digest_exchange(exchange, signing_key):
+            rejected.append({"peer_id": exchange.peer_id, "reason": "invalid_signature"})
+            continue
+
+        for digest in sorted(exchange.digests, key=lambda item: (item.strategy_id, item.policy_version, -item.score, item.metadata_digest)):
+            strategy_record = {
+                "source_peer_id": exchange.peer_id,
+                "strategy_id": digest.strategy_id,
+                "policy_version": digest.policy_version,
+                "score": float(digest.score),
+                "safety_tier": digest.safety_tier,
+                "metadata_digest": digest.metadata_digest,
+            }
+            if local_policy_validator is not None and not bool(local_policy_validator(strategy_record)):
+                rejected.append({"peer_id": exchange.peer_id, "reason": f"policy_validation_failed:{digest.strategy_id}"})
+                continue
+
+            existing = candidates.get(digest.strategy_id)
+            if existing is None or (
+                strategy_record["score"],
+                str(strategy_record["source_peer_id"]),
+                str(strategy_record["policy_version"]),
+                str(strategy_record["metadata_digest"]),
+            ) > (
+                float(existing["score"]),
+                str(existing["source_peer_id"]),
+                str(existing["policy_version"]),
+                str(existing["metadata_digest"]),
+            ):
+                candidates[digest.strategy_id] = strategy_record
+
+    fail_closed = bool(rejected)
+    activated = [candidates[key] for key in sorted(candidates)]
+    return StrategyActivationResult(activated_strategies=activated, rejected_bundles=rejected, fail_closed=fail_closed)
 
 
 class FileBackedFederationRegistry:
@@ -446,4 +566,10 @@ __all__ = [
     "release_mutation_lock",
     "resolve_governance_precedence",
     "run_coordination_cycle",
+    "make_strategy_digest_exchange",
+    "merge_federated_strategy_exchanges",
+    "verify_strategy_digest_exchange",
+    "StrategyActivationResult",
+    "StrategyDigest",
+    "StrategyDigestExchange",
 ]
