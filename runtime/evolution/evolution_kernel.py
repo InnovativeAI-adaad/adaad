@@ -171,7 +171,8 @@ class EvolutionKernel:
                 },
                 "kernel_path": True,
             }
-        validation = self.validate_mutation(None, mutation.get("request") or mutation)
+        mutation_payload = mutation.get("request") or mutation
+        validation = self.validate_mutation(None, mutation_payload)
         if not validation.get("valid"):
             return {
                 "status": "rejected",
@@ -180,6 +181,21 @@ class EvolutionKernel:
                 **validation,
                 "change_classification": change_decision.classification,
                 "change_reason": change_decision.reason,
+            }
+
+        forecast = self.fitness_evaluator.forecast(
+            mutation_payload,
+            agent_type=str((agent.get("meta") or {}).get("type") or "unknown"),
+        )
+        if not forecast.get("forecast_passed"):
+            return {
+                "status": "rejected",
+                "reason": "forecast_gate_failed",
+                "agent_id": agent.get("agent_id"),
+                "forecast": forecast,
+                "change_classification": change_decision.classification,
+                "change_reason": change_decision.reason,
+                "kernel_path": True,
             }
 
         execution_result = self.execute_in_sandbox(agent, mutation)

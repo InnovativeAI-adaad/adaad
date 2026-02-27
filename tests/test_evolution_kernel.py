@@ -50,6 +50,7 @@ class EvolutionKernelTest(unittest.TestCase):
         with (
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
+            mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
             mock.patch.object(kernel, "execute_in_sandbox", return_value={"status": "applied", "mutation_id": "m-1"}) as execute,
             mock.patch.object(kernel, "evaluate_fitness", return_value={"score": 0.9, "passed": True}) as evaluate,
             mock.patch.object(kernel, "sign_certificate", return_value={"certificate_id": "c-1"}) as sign,
@@ -72,6 +73,7 @@ class EvolutionKernelTest(unittest.TestCase):
             mock.patch("runtime.evolution.evolution_kernel.iter_agent_dirs", return_value=[self.agent_dir.resolve()]),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
+            mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
             mock.patch.object(kernel, "execute_in_sandbox", return_value={"status": "applied", "mutation_id": "m-2"}),
             mock.patch.object(kernel, "evaluate_fitness", return_value={"score": 0.8, "passed": True}),
             mock.patch.object(kernel, "sign_certificate", return_value={"certificate_id": "c-2"}),
@@ -82,6 +84,26 @@ class EvolutionKernelTest(unittest.TestCase):
         self.assertTrue(result["kernel_path"])
 
 
+
+    def test_run_cycle_rejects_when_forecast_gate_fails(self) -> None:
+        adapter = mock.Mock()
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=adapter)
+
+        with (
+            mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
+            mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
+            mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.1, "forecast_gate_threshold": 0.45, "forecast_passed": False, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:1"}}),
+            mock.patch.object(kernel, "execute_in_sandbox") as execute,
+            mock.patch.object(kernel, "evaluate_fitness") as evaluate,
+            mock.patch.object(kernel, "sign_certificate") as sign,
+        ):
+            result = kernel.run_cycle("agent-x")
+
+        execute.assert_not_called()
+        evaluate.assert_not_called()
+        sign.assert_not_called()
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "forecast_gate_failed")
 
     def test_execute_in_sandbox_rejects_invalid_schema_before_executor(self) -> None:
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
