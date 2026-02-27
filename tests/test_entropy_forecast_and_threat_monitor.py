@@ -67,3 +67,49 @@ def test_default_threat_monitor_halts_on_failure_spike() -> None:
     )
 
     assert result["recommendation"] == "halt"
+
+
+def test_default_threat_monitor_reports_predicted_risk_and_attributions() -> None:
+    monitor = ThreatMonitor(detectors=default_detectors(), default_window_size=6)
+    result = monitor.scan(
+        epoch_id="epoch-risk",
+        mutation_count=6,
+        events=[
+            {"status": "ok", "divergence": False, "resource_pressure": 1.0},
+            {"status": "failed", "divergence": False, "resource_pressure": 1.0},
+            {"status": "ok", "divergence": False, "resource_pressure": 1.0},
+            {"status": "failed", "divergence": True, "resource_pressure": 1.2},
+            {"status": "failed", "divergence": True, "resource_pressure": 1.3},
+            {"status": "failed", "divergence": True, "resource_pressure": 4.5},
+        ],
+        window_size=6,
+    )
+
+    assert "predicted_risk" in result
+    assert result["predicted_risk"]["score"] > 0.0
+    assert result["predicted_risk"]["risk_level"] in {"medium", "high", "critical"}
+    assert len(result["predicted_risk"]["attributions"]) == len(result["findings"])
+    assert result["predicted_risk"]["attributions"][0]["contribution"] >= result["predicted_risk"]["attributions"][-1]["contribution"]
+
+
+def test_threat_monitor_anomaly_detectors_use_bounded_window() -> None:
+    monitor = ThreatMonitor(detectors=default_detectors(), default_window_size=4)
+    result = monitor.scan(
+        epoch_id="epoch-window",
+        mutation_count=8,
+        events=[
+            {"status": "failed", "divergence": False, "resource_pressure": 99.0},
+            {"status": "failed", "divergence": False, "resource_pressure": 99.0},
+            {"status": "ok", "divergence": False, "resource_pressure": 1.0},
+            {"status": "ok", "divergence": False, "resource_pressure": 1.0},
+            {"status": "ok", "divergence": False, "resource_pressure": 1.0},
+            {"status": "ok", "divergence": True, "resource_pressure": 1.0},
+            {"status": "failed", "divergence": True, "resource_pressure": 1.0},
+            {"status": "failed", "divergence": True, "resource_pressure": 4.0},
+        ],
+    )
+
+    assert result["window_event_count"] == 4
+    findings = {item["detector"]: item for item in result["findings"]}
+    assert findings["failure_density_shift"]["triggered"]
+    assert findings["resource_spike"]["triggered"]
