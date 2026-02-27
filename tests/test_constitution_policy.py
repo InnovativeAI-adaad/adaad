@@ -23,6 +23,13 @@ def test_load_constitution_policy_parses_rules() -> None:
     assert mutation_rate.tier_overrides[constitution.Tier.SANDBOX] == constitution.Severity.ADVISORY
     assert mutation_rate.applicability["name"] == "max_mutation_rate"
 
+    advisory_rule_names = {"deployment_authority_tier", "revenue_credit_floor", "reviewer_calibration"}
+    advisory_rules = [rule for rule in rules if rule.name in advisory_rule_names]
+    assert {rule.name for rule in advisory_rules} == advisory_rule_names
+    assert all(rule.enabled for rule in advisory_rules)
+    assert all(rule.severity == constitution.Severity.ADVISORY for rule in advisory_rules)
+    assert all(rule.tier_overrides == {} for rule in advisory_rules)
+
 
 def test_entropy_budget_validator_contract() -> None:
     validator = constitution.VALIDATOR_REGISTRY["entropy_budget_limit"]
@@ -77,6 +84,35 @@ def test_entropy_budget_validator_blocks_disabled_budget_in_production(monkeypat
     assert result["ok"] is False
     assert result["reason"] == "entropy_budget_disabled_in_production"
 
+
+
+def test_advisory_rule_failures_do_not_block_evaluation(monkeypatch: pytest.MonkeyPatch) -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+    )
+
+    original_validator = constitution.VALIDATOR_REGISTRY["deployment_authority_tier"]
+    monkeypatch.setitem(
+        constitution.VALIDATOR_REGISTRY,
+        "deployment_authority_tier",
+        lambda _request: {"ok": False, "reason": "simulated_advisory_failure", "details": {}},
+    )
+    constitution.reload_constitution_policy(path=constitution.POLICY_PATH)
+    try:
+        verdict = constitution.evaluate_mutation(request, constitution.Tier.STABLE)
+        assert "deployment_authority_tier" not in verdict["blocking_failures"]
+        assert "deployment_authority_tier" not in verdict["warnings"]
+        advisory_row = next(item for item in verdict["verdicts"] if item["rule"] == "deployment_authority_tier")
+        assert advisory_row["passed"] is False
+        assert advisory_row["severity"] == constitution.Severity.ADVISORY.value
+    finally:
+        monkeypatch.setitem(constitution.VALIDATOR_REGISTRY, "deployment_authority_tier", original_validator)
+        constitution.reload_constitution_policy(path=constitution.POLICY_PATH)
 
 def test_tier_override_behavior_from_policy() -> None:
     import_rule = next(rule for rule in constitution.RULES if rule.name == "import_smoke_test")
@@ -174,7 +210,7 @@ def test_reload_logs_amendment_hashes(tmp_path: Path, monkeypatch: pytest.Monkey
 
 def test_version_mismatch_fails_close(tmp_path: Path) -> None:
     mismatch = tmp_path / "constitution.yaml"
-    body = constitution.POLICY_PATH.read_text(encoding="utf-8").replace('"0.2.0"', '"9.9.9"', 1)
+    body = constitution.POLICY_PATH.read_text(encoding="utf-8").replace('"version": "0.2.0"', '"version": "9.9.9"', 1)
     _write_policy(mismatch, body)
     with pytest.raises(ValueError, match="version_mismatch"):
         constitution.load_constitution_policy(path=mismatch, expected_version=constitution.CONSTITUTION_VERSION)
@@ -677,3 +713,162 @@ def test_resource_bounds_logs_warning_when_policy_document_empty(monkeypatch: py
     assert result["ok"] is True
     warning = next(item for item in events if item["event_type"] == "resource_bounds_policy_unavailable")
     assert warning["level"] == "WARNING"
+
+
+
+def test_enabled_policy_rules_have_validator_registry_and_version_entries() -> None:
+    enabled_rules = [rule for rule in constitution.RULES if rule.enabled]
+    assert enabled_rules
+
+    for rule in enabled_rules:
+        validator_name = getattr(rule.validator, "__name__", "")
+        assert rule.name in constitution.VALIDATOR_REGISTRY
+        assert callable(rule.validator)
+        assert validator_name in constitution.VALIDATOR_VERSIONS
+
+
+def test_governance_envelope_digest_is_stable_over_100_identical_evaluations() -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+        epoch_id="epoch-stability-100",
+        targets=[MutationTarget(agent_id="test_subject", path="app/agents/test_subject/agent.py", target_type="file", ops=[])],
+    )
+
+    digests = []
+    for _ in range(100):
+        with constitution.deterministic_envelope_scope(
+            {
+                "tier": constitution.Tier.SANDBOX.name,
+                "epoch_id": "epoch-stability-100",
+                "window_start_ts": 111.0,
+                "window_end_ts": 222.0,
+                "rate_per_hour": 1.0,
+                "resource_measurements": {"peak_rss_mb": 32.0, "cpu_seconds": 0.1, "wall_seconds": 0.2},
+            }
+        ):
+            verdict = constitution.evaluate_mutation(request, constitution.Tier.SANDBOX)
+        digests.append(verdict["governance_envelope"]["digest"])
+
+    assert len(set(digests)) == 1
+
+
+def test_evaluation_envelope_includes_policy_hash() -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+    )
+
+    verdict = constitution.evaluate_mutation(request, constitution.Tier.SANDBOX)
+
+    assert verdict["governance_envelope"]["policy_hash"] == constitution.POLICY_HASH
+
+
+def test_advisory_validators_do_not_mutate_envelope_state() -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+    )
+    initial_state = {
+        "tier": constitution.Tier.SANDBOX.name,
+        "deployment_authority_tier": {"allowed": {"stable", "sandbox"}},
+        "revenue_credit_floor": {"min": 100, "currency": "USD"},
+        "reviewer_calibration": {"weights": ("latency", "alignment")},
+    }
+
+    with constitution.deterministic_envelope_scope(initial_state):
+        before = constitution.get_deterministic_envelope_state()
+        _ = constitution.evaluate_mutation(request, constitution.Tier.SANDBOX)
+        after = constitution.get_deterministic_envelope_state()
+
+    assert after == before
+
+
+def test_cross_environment_digest_stability_with_equivalent_envelope_state() -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+        epoch_id="epoch-cross-env",
+    )
+
+    linux_state = {
+        "tier": constitution.Tier.SANDBOX.name,
+        "epoch_id": "epoch-cross-env",
+        "reviewer_calibration": {"weights": {"alignment", "latency"}},
+        "revenue_credit_floor": {"currency": "USD", "min": 50},
+    }
+    android_state = {
+        "epoch_id": "epoch-cross-env",
+        "tier": constitution.Tier.SANDBOX.name,
+        "revenue_credit_floor": {"min": 50, "currency": "USD"},
+        "reviewer_calibration": {"weights": {"latency", "alignment"}},
+    }
+
+    with constitution.deterministic_envelope_scope(linux_state):
+        linux_digest = constitution.evaluate_mutation(request, constitution.Tier.SANDBOX)["governance_envelope"]["digest"]
+    with constitution.deterministic_envelope_scope(android_state):
+        android_digest = constitution.evaluate_mutation(request, constitution.Tier.SANDBOX)["governance_envelope"]["digest"]
+
+    assert linux_digest == android_digest
+
+
+def test_severity_escalation_framework_supports_warning_and_blocking() -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+    )
+
+    with constitution.deterministic_envelope_scope(
+        {
+            "severity_escalations": {
+                "deployment_authority_tier": "warning",
+                "reviewer_calibration": "blocking",
+            }
+        }
+    ):
+        verdict = constitution.evaluate_mutation(request, constitution.Tier.STABLE)
+
+    deployment_row = next(item for item in verdict["verdicts"] if item["rule"] == "deployment_authority_tier")
+    reviewer_row = next(item for item in verdict["verdicts"] if item["rule"] == "reviewer_calibration")
+
+    assert deployment_row["severity"] == constitution.Severity.WARNING.value
+    assert deployment_row["base_severity"] == constitution.Severity.ADVISORY.value
+    assert reviewer_row["severity"] == constitution.Severity.BLOCKING.value
+    assert reviewer_row["base_severity"] == constitution.Severity.ADVISORY.value
+
+
+def test_severity_escalation_does_not_allow_deescalation() -> None:
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="now",
+        intent="test",
+        ops=[],
+        signature="cryovant-dev-test",
+        nonce="n",
+    )
+
+    with constitution.deterministic_envelope_scope({"severity_escalations": {"resource_bounds": "advisory"}}):
+        verdict = constitution.evaluate_mutation(request, constitution.Tier.STABLE)
+
+    row = next(item for item in verdict["verdicts"] if item["rule"] == "resource_bounds")
+    assert row["severity"] == constitution.Severity.BLOCKING.value

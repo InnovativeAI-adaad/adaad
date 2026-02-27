@@ -129,6 +129,7 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 - Portable cryptographic replay proof bundles suitable for external verifier exchange.
 - Federation and cross-instance sovereignty hardening beyond current in-tree coordination/protocol baseline.
 - Key-rotation enforcement escalation and audit closure before 1.0 freeze.
+- ADAAD-10/11/14 follow-on modules remain roadmap items until merged and file-presence-verified in this branch snapshot; `runtime/evolution/mutation_credit_ledger.py` is now present with append-only replay verification, while deployment authority/reviewer-pressure tracks remain roadmap.
 
 ## 0.65.0 - Initial import of ADAAD He65 tree
 

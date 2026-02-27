@@ -1,5 +1,5 @@
 {
-  "policy_version": "0.1.0",
+  "policy_version": "0.2.0",
   "version": "0.2.0",
   "tiers": {
     "PRODUCTION": 0,
@@ -125,6 +125,30 @@
       },
       "reason": "Prevent entropy budget overruns per mutation",
       "validator": "entropy_budget_limit"
+    },
+    {
+      "name": "deployment_authority_tier",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Surface deployment authority context for audit and review workflows",
+      "validator": "deployment_authority_tier"
+    },
+    {
+      "name": "revenue_credit_floor",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Track revenue-credit floor posture without gating mutation execution",
+      "validator": "revenue_credit_floor"
+    },
+    {
+      "name": "reviewer_calibration",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Expose reviewer calibration context as governance telemetry",
+      "validator": "reviewer_calibration"
     }
   ],
   "resource_bounds_policy": {

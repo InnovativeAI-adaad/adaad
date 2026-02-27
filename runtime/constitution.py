@@ -112,6 +112,9 @@ VALIDATOR_VERSIONS: Dict[str, str] = {
     "_validate_mutation_rate": "2.1.0",
     "_validate_resources": "1.3.0",
     "_validate_entropy_budget_limit": "1.0.0",
+    "_validate_deployment_authority_tier": "1.0.0",
+    "_validate_revenue_credit_floor": "1.0.0",
+    "_validate_reviewer_calibration": "1.0.0",
 }
 _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
 _POLICY_DOCUMENT: Dict[str, Any] = {}
@@ -210,6 +213,13 @@ class Severity(Enum):
     BLOCKING = "blocking"
     WARNING = "warning"
     ADVISORY = "advisory"
+
+
+_SEVERITY_ORDER: Dict[Severity, int] = {
+    Severity.ADVISORY: 0,
+    Severity.WARNING: 1,
+    Severity.BLOCKING: 2,
+}
 
 
 class Tier(Enum):
@@ -1430,6 +1440,60 @@ def _validate_entropy_budget_limit(request: MutationRequest) -> Dict[str, Any]:
     }
 
 
+def _normalize_advisory_detail_value(value: Any) -> Any:
+    """Normalize advisory detail payloads for deterministic envelope serialization."""
+    if isinstance(value, Mapping):
+        return {str(key): _normalize_advisory_detail_value(item) for key, item in sorted(value.items(), key=lambda kv: str(kv[0]))}
+    if isinstance(value, (list, tuple)):
+        return [_normalize_advisory_detail_value(item) for item in value]
+    if isinstance(value, set):
+        normalized = [_normalize_advisory_detail_value(item) for item in value]
+        return sorted(normalized, key=lambda item: _canonical_json(item))
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    return str(value)
+
+
+def _validate_deployment_authority_tier(_: MutationRequest) -> Dict[str, Any]:
+    """Emit deployment authority tier context as advisory governance telemetry."""
+    envelope_state = get_deterministic_envelope_state()
+    authority_tier = _normalize_advisory_detail_value(envelope_state.get("deployment_authority_tier"))
+    authority_tier = str(authority_tier or "unspecified").strip() or "unspecified"
+    return {
+        "ok": True,
+        "reason": "deployment_authority_tier_recorded",
+        "details": {"deployment_authority_tier": authority_tier},
+    }
+
+
+def _validate_revenue_credit_floor(_: MutationRequest) -> Dict[str, Any]:
+    """Record revenue-credit floor context for non-blocking economic governance review."""
+    envelope_state = get_deterministic_envelope_state()
+    credit_floor = _normalize_advisory_detail_value(envelope_state.get("revenue_credit_floor"))
+    return {
+        "ok": True,
+        "reason": "revenue_credit_floor_recorded",
+        "details": {
+            "revenue_credit_floor": credit_floor,
+            "present": credit_floor is not None,
+        },
+    }
+
+
+def _validate_reviewer_calibration(_: MutationRequest) -> Dict[str, Any]:
+    """Capture reviewer calibration metadata as advisory constitutional evidence."""
+    envelope_state = get_deterministic_envelope_state()
+    calibration = _normalize_advisory_detail_value(envelope_state.get("reviewer_calibration"))
+    return {
+        "ok": True,
+        "reason": "reviewer_calibration_recorded",
+        "details": {
+            "reviewer_calibration": calibration,
+            "present": calibration is not None,
+        },
+    }
+
+
 VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "single_file_scope": _validate_single_file,
     "ast_validity": _validate_ast,
@@ -1442,6 +1506,9 @@ VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "max_mutation_rate": _validate_mutation_rate,
     "resource_bounds": _validate_resources,
     "entropy_budget_limit": _validate_entropy_budget_limit,
+    "deployment_authority_tier": _validate_deployment_authority_tier,
+    "revenue_credit_floor": _validate_revenue_credit_floor,
+    "reviewer_calibration": _validate_reviewer_calibration,
 }
 
 
@@ -1615,6 +1682,48 @@ def get_rules_for_tier(tier: Tier) -> List[tuple[Rule, Severity]]:
     return result
 
 
+
+
+def _parse_severity_escalations(envelope_state: Mapping[str, Any]) -> Dict[str, Severity]:
+    """Parse optional rule severity escalation directives.
+
+    Sources (later overrides earlier):
+    - `ADAAD_SEVERITY_ESCALATIONS` env var containing JSON object `{rule: severity}`
+    - `severity_escalations` mapping in deterministic envelope state
+    """
+    escalations: Dict[str, Severity] = {}
+
+    raw_env = os.getenv("ADAAD_SEVERITY_ESCALATIONS", "").strip()
+    if raw_env:
+        try:
+            parsed_env = json.loads(raw_env)
+        except json.JSONDecodeError:
+            parsed_env = {}
+        if isinstance(parsed_env, Mapping):
+            for rule_name, raw_sev in parsed_env.items():
+                key = str(rule_name).strip()
+                sev_name = str(raw_sev).strip().upper()
+                if key and sev_name in Severity.__members__:
+                    escalations[key] = Severity[sev_name]
+
+    state_map = envelope_state.get("severity_escalations")
+    if isinstance(state_map, Mapping):
+        for rule_name, raw_sev in state_map.items():
+            key = str(rule_name).strip()
+            sev_name = str(raw_sev).strip().upper()
+            if key and sev_name in Severity.__members__:
+                escalations[key] = Severity[sev_name]
+
+    return escalations
+
+
+def _resolve_rule_severity(rule_name: str, default: Severity, escalations: Mapping[str, Severity]) -> Severity:
+    candidate = escalations.get(rule_name, default)
+    if _SEVERITY_ORDER.get(candidate, 0) < _SEVERITY_ORDER.get(default, 0):
+        return default
+    return candidate
+
+
 def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
     """
     Apply all constitutional rules to a mutation request.
@@ -1653,15 +1762,17 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
     }
 
     with deterministic_envelope_scope(evaluation_state):
+        escalations = _parse_severity_escalations(evaluation_state)
         applicability_matrix: List[Dict[str, Any]] = []
         for rule, severity in rules:
+            effective_severity = _resolve_rule_severity(rule.name, severity, escalations)
             applicability_row = _evaluate_rule_applicability(rule, request, tier)
             applicability_matrix.append(applicability_row)
             if not applicability_row["applicable"]:
                 verdicts.append(
                     {
                         "rule": rule.name,
-                        "severity": severity.value,
+                        "severity": effective_severity.value,
                         "passed": True,
                         "applicable": False,
                         "provenance": _validator_provenance(rule),
@@ -1680,7 +1791,8 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
 
             verdict = {
                 "rule": rule.name,
-                "severity": severity.value,
+                "severity": effective_severity.value,
+                "base_severity": severity.value,
                 "passed": result.get("ok", False),
                 "applicable": True,
                 "provenance": _validator_provenance(rule),
@@ -1689,9 +1801,9 @@ def evaluate_mutation(request: MutationRequest, tier: Tier) -> Dict[str, Any]:
             verdicts.append(verdict)
 
             if not verdict["passed"]:
-                if severity == Severity.BLOCKING:
+                if effective_severity == Severity.BLOCKING:
                     blocking_failures.append(rule.name)
-                elif severity == Severity.WARNING:
+                elif effective_severity == Severity.WARNING:
                     warnings.append(rule.name)
 
     fingerprint_components = _governance_fingerprint_components()

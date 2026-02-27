@@ -30,7 +30,7 @@ Every mutation passes through constitutional evaluation. Every rule is versioned
 
 ---
 
-## The Ten Rules
+## The Fourteen Rules
 
 | Rule | Enabled | Severity | Purpose |
 |------|---------|----------|---------|
@@ -44,7 +44,10 @@ Every mutation passes through constitutional evaluation. Every rule is versioned
 | `max_mutation_rate` | ✅ | WARNING (SANDBOX: ADVISORY, PRODUCTION: BLOCKING) | Prevents runaway loops |
 | `lineage_continuity` | ✅ | BLOCKING | Traceability |
 | `resource_bounds` | ✅ | BLOCKING | Android/mobile safety; strict tiers require resource telemetry evidence |
-
+| `entropy_budget_limit` | ✅ | WARNING (PRODUCTION: BLOCKING) | Prevents entropy budget overruns per mutation |
+| `deployment_authority_tier` | ✅ | ADVISORY | Surfaces deployment authority context for governance audit trails |
+| `revenue_credit_floor` | ✅ | ADVISORY | Records revenue-credit floor posture for economic governance telemetry |
+| `reviewer_calibration` | ✅ | ADVISORY | Captures reviewer calibration context for audit evidence |
 
 
 ### Resource Telemetry Prerequisites (`resource_bounds`)
@@ -63,6 +66,18 @@ Every mutation passes through constitutional evaluation. Every rule is versioned
 - **ADVISORY**: Informational only. Logged as INFO.
 
 Severity can be overridden per tier (e.g., `import_smoke_test` is WARNING for tier-1 but BLOCKING for tier-0).
+
+---
+
+
+## Severity Escalation Framework
+
+Default severities are defined in policy and tier overrides. Runtime can **escalate only** (never de-escalate) a rule severity through deterministic directives:
+
+- Environment variable `ADAAD_SEVERITY_ESCALATIONS` with JSON object (example: `{"reviewer_calibration":"blocking"}`)
+- Deterministic envelope state key `severity_escalations`
+
+Escalation ordering is `advisory -> warning -> blocking`. Any downgrade request is ignored fail-safe.
 
 ---
 

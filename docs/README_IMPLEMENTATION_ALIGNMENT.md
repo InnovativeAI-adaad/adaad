@@ -1,6 +1,17 @@
 # ADAAD Implementation ↔ Documentation Alignment
 
-**Authoritative version and posture:** `0.65.x` (latest tagged release: `0.65.0`), **Experimental / pre-1.0**. Governance/replay controls are validated in-tree; mutation autonomy and sovereignty federation remain staged.
+<!-- ARCH_SNAPSHOT_METADATA:START -->
+## Architecture Deep-Dive Snapshot
+
+| Metric | Value |
+| --- | --- |
+| Report version | `1.0.0` |
+| Branch | `work` |
+| Tag | `(none)` |
+| Short SHA | `fd41317` |
+
+All future architecture snapshots MUST include branch, tag (if any), and short SHA.
+<!-- ARCH_SNAPSHOT_METADATA:END -->
 
 This document cross-references `README.md` operational claims with concrete implementation modules and tests.
 
@@ -70,6 +81,10 @@ README mutation lifecycle concepts map to:
 - **Promotion transition + events**: `runtime/evolution/promotion_state_machine.py`, `runtime/evolution/promotion_events.py`, `runtime/evolution/promotion_policy.py`, `runtime/evolution/simulation_runner.py`
 - **Fitness scoring support**: `runtime/evolution/fitness.py`, `runtime/fitness_pipeline.py`, `runtime/evolution/scoring_algorithm.py`, `runtime/evolution/scoring_validator.py`, `runtime/evolution/scoring_ledger.py`
 - **Lineage digest verification**: `runtime/evolution/lineage_v2.py`, `runtime/evolution/replay.py`
+- **Economic mutation credit ledger (append-only, replay-verifiable)**: `runtime/evolution/mutation_credit_ledger.py`
+  - Hash-chained JSONL entries (`prev_hash` + `record_hash`)
+  - Idempotency-key enforcement
+  - `verify_integrity()` + deterministic `replay_balances()`
 - **Null-safe governance accessors for mutable logs/state**: `runtime/governance/foundation/safe_access.py`, consumed in `app/beast_mode_loop.py`, `runtime/evolution/checkpoint_registry.py`, and audit/entropy tools under `tools/`.
 
 ## Validation Coverage
@@ -174,6 +189,10 @@ For `CHANGELOG.md` and release notes:
 - Put only tested, branch-validated behavior under **Validated guarantees**.
 - Put future work and unverified posture claims under **Roadmap**.
 - Do not label planned federation or deep hardening items as production guarantees until explicit validation artifacts/tests are present.
+
+### Roadmap clarification for absent expected modules
+
+- `runtime/evolution/mutation_credit_ledger.py` is implemented in this snapshot; remaining ADAAD-11/14 controls still require merged modules plus validation evidence before promotion to guarantees.
 
 
 - Fail-closed recovery runbook: `docs/governance/fail_closed_recovery_runbook.md`
