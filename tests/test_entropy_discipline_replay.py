@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest import mock
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from app.dream_mode import DreamMode
 from app.mutation_executor import MutationExecutor
 from runtime.evolution.epoch import EpochManager

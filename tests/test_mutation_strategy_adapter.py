@@ -2,8 +2,8 @@
 
 import unittest
 
-from app.agents.mutation_request import MutationRequest
-from app.agents.mutation_strategies import adapt_generated_request_payload, canonicalize_generated_op
+from adaad.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_strategies import adapt_generated_request_payload, canonicalize_generated_op
 from runtime.preflight import validate_mutation_proposal_schema
 
 

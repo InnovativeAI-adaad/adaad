@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.analysis.impact_predictor import ImpactPredictor
 
 

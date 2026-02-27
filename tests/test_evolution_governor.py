@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.evolution import EvolutionGovernor, LineageLedgerV2, ReplayEngine
 from runtime.evolution.mutation_budget import MutationBudgetManager
 from runtime.governance.foundation import SeededDeterminismProvider

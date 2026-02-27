@@ -1,37 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""Compatibility shim; import from adaad.agents.sample_agent instead."""
 
-"""
-Sample agent implementation used for boot health checks.
-"""
-
-from app.agents.base_agent import BaseAgent
-from runtime.api.app_layer import metrics
-
-
-class SampleAgent(BaseAgent):
-    def info(self) -> dict:
-        return {"id": "sample-agent", "element": "Wood"}
-
-    def run(self, input=None) -> dict:
-        metrics.log(event_type="sample_agent_run", payload={"input": input or {}}, level="INFO")
-        return {"status": "ok", "input": input}
-
-    def mutate(self, src: str) -> str:
-        return src + "/*mutated*/"
-
-    def score(self, output: dict) -> float:
-        return 1.0
-
-
-__all__ = ["SampleAgent"]
+from adaad.agents.sample_agent import *  # noqa: F401,F403

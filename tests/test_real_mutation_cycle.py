@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app.agents.mutation_engine import MutationEngine
+from adaad.agents.mutation_engine import MutationEngine
 from app.architect_agent import ArchitectAgent
 from app.mutation_executor import MutationExecutor
 from runtime import metrics

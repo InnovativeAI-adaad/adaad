@@ -5,7 +5,7 @@ from unittest import mock
 
 import pytest
 
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from app.mutation_executor import MutationExecutor
 from runtime.evolution.epoch import EpochManager
 from runtime.evolution.governor import EvolutionGovernor

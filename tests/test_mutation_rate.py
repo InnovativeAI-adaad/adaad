@@ -2,7 +2,7 @@
 
 import json
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from runtime.constitution import VALIDATOR_REGISTRY, deterministic_envelope_scope
 from security.ledger import journal
 

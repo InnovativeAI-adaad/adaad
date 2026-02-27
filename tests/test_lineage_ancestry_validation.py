@@ -5,7 +5,7 @@ import json
 
 import pytest
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from runtime import constitution
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.runtime import EvolutionRuntime

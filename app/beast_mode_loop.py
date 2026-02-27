@@ -27,8 +27,8 @@ from typing import Callable, Dict, Iterator, List, Optional, TextIO, Tuple
 
 import fcntl
 
-from app.agents.base_agent import promote_offspring
-from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
+from adaad.agents.base_agent import promote_offspring
+from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.app_layer import (
     EvolutionKernel,
     MutationCandidate,

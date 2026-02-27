@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from runtime import constitution
 from runtime.governance.coverage_reporter import configure_coverage_artifact_env, write_coverage_artifact
 

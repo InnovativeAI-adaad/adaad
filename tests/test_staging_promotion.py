@@ -16,7 +16,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from app.agents.base_agent import promote_offspring, stage_offspring
+from adaad.agents.base_agent import promote_offspring, stage_offspring
 from runtime import metrics
 
 

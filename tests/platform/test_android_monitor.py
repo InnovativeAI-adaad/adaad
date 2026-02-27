@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.platform import android_monitor
 from runtime.platform.android_monitor import AndroidMonitor, ResourceSnapshot
 

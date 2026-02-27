@@ -250,3 +250,33 @@ def test_app_importing_runtime_api_is_allowed() -> None:
     issues = list(lint_import_paths._iter_app_runtime_facade_issues(path, tree))
 
     assert issues == []
+
+
+def test_legacy_agent_namespace_import_is_forbidden_outside_shims() -> None:
+    path = lint_import_paths.REPO_ROOT / "app" / "main.py"
+    tree = _parse("from app.agents.mutation_request import MutationRequest\n")
+
+    issues = list(lint_import_paths._iter_agent_namespace_drift_issues(path, tree))
+
+    assert any(issue.message == lint_import_paths.LEGACY_AGENT_NAMESPACE_VIOLATION_MESSAGE for issue in issues)
+
+
+def test_legacy_agent_namespace_import_is_allowed_inside_shims() -> None:
+    path = lint_import_paths.REPO_ROOT / "app" / "agents" / "shim.py"
+    tree = _parse("from app.agents.mutation_request import MutationRequest\n")
+
+    issues = list(lint_import_paths._iter_agent_namespace_drift_issues(path, tree))
+
+    assert issues == []
+
+
+def test_duplicate_namespace_pattern_is_reported() -> None:
+    path = lint_import_paths.REPO_ROOT / "runtime" / "x.py"
+    tree = _parse(
+        "from app.agents.discovery import resolve_agent_id\n"
+        "from adaad.agents.discovery import iter_agent_dirs\n"
+    )
+
+    issues = list(lint_import_paths._iter_agent_namespace_drift_issues(path, tree))
+
+    assert any(issue.message == lint_import_paths.DUPLICATE_AGENT_NAMESPACE_VIOLATION_MESSAGE for issue in issues)

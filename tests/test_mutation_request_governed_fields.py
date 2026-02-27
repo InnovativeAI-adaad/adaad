@@ -2,7 +2,7 @@
 
 import unittest
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 
 
 class MutationRequestGovernedFieldsTest(unittest.TestCase):

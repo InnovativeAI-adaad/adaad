@@ -11,15 +11,15 @@ from importlib import import_module
 from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
-    "agent_path_from_id": ("app.agents.discovery", "agent_path_from_id"),
-    "iter_agent_dirs": ("app.agents.discovery", "iter_agent_dirs"),
-    "resolve_agent_id": ("app.agents.discovery", "resolve_agent_id"),
-    "MutationEngine": ("app.agents.mutation_engine", "MutationEngine"),
-    "MutationRequest": ("app.agents.mutation_request", "MutationRequest"),
-    "MutationTarget": ("app.agents.mutation_request", "MutationTarget"),
-    "adapt_generated_request_payload": ("app.agents.mutation_strategies", "adapt_generated_request_payload"),
-    "load_skill_weights": ("app.agents.mutation_strategies", "load_skill_weights"),
-    "select_strategy": ("app.agents.mutation_strategies", "select_strategy"),
+    "agent_path_from_id": ("adaad.agents.discovery", "agent_path_from_id"),
+    "iter_agent_dirs": ("adaad.agents.discovery", "iter_agent_dirs"),
+    "resolve_agent_id": ("adaad.agents.discovery", "resolve_agent_id"),
+    "MutationEngine": ("adaad.agents.mutation_engine", "MutationEngine"),
+    "MutationRequest": ("adaad.agents.mutation_request", "MutationRequest"),
+    "MutationTarget": ("adaad.agents.mutation_request", "MutationTarget"),
+    "adapt_generated_request_payload": ("adaad.agents.mutation_strategies", "adapt_generated_request_payload"),
+    "load_skill_weights": ("adaad.agents.mutation_strategies", "load_skill_weights"),
+    "select_strategy": ("adaad.agents.mutation_strategies", "select_strategy"),
 }
 
 __all__ = sorted(_EXPORTS.keys())

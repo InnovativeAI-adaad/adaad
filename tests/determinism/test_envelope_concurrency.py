@@ -7,7 +7,7 @@ import concurrent.futures
 from pathlib import Path
 from unittest import mock
 
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.evolution.governor import EvolutionGovernor
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.governance.deterministic_envelope import EntropySource, charge_entropy, deterministic_envelope

@@ -2,7 +2,7 @@
 
 import json
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from runtime.constitution import Tier, evaluate_mutation
 from security.ledger import journal
 

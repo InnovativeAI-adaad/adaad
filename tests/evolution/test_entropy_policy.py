@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from runtime.evolution.entropy_detector import detect_entropy_metadata, observed_entropy_from_telemetry
 from runtime.evolution.entropy_policy import EntropyPolicy, enforce_entropy_policy
 

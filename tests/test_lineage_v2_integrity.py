@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 from runtime.evolution.runtime import EvolutionRuntime
 from runtime.governance.foundation import SeededDeterminismProvider

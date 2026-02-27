@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 from app.dream_mode import DreamMode
 from app.mutation_executor import MutationExecutor
 from runtime.evolution.epoch import EpochManager

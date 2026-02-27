@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from app.agents.architect_graph_v1 import ArchitectGraph
+from adaad.agents.architect_graph_v1 import ArchitectGraph
 
 
 def _write_agent(root: Path, name: str, imports: list[str]) -> Path:
@@ -20,7 +20,7 @@ def _write_agent(root: Path, name: str, imports: list[str]) -> Path:
 
 def test_hidden_agents_are_excluded(tmp_path: Path) -> None:
     agents_root = tmp_path / "agents"
-    _write_agent(agents_root, "alpha", ["runtime.metrics", "app.agents.base_agent"])
+    _write_agent(agents_root, "alpha", ["runtime.metrics", "adaad.agents.base_agent"])
     _write_agent(agents_root, "beta", [])
     _write_agent(agents_root, ".hidden_agent", ["runtime.metrics"])
 
@@ -31,7 +31,7 @@ def test_hidden_agents_are_excluded(tmp_path: Path) -> None:
 
     edges = {(edge["source"], edge["target"]) for edge in graph["edges"]}
     assert ("alpha", "runtime.metrics") in edges
-    assert ("alpha", "app.agents.base_agent") in edges
+    assert ("alpha", "adaad.agents.base_agent") in edges
     assert all(src in agent_ids for src, _ in edges)
 
     dot = ArchitectGraph.to_dot(graph)

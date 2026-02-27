@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from app.agents.mutation_request import MutationTarget
+from adaad.agents.mutation_request import MutationTarget
 from runtime.governance.foundation import SeededDeterminismProvider
 from runtime.tools.mutation_fs import MutationTargetError, file_hash
 from runtime.tools.mutation_tx import MutationRecord, MutationTransaction, MutationVerificationError

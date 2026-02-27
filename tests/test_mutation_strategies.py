@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from app.agents.mutation_strategies import DEFAULT_REGISTRY, ai_propose_strategy
+from adaad.agents.mutation_strategies import DEFAULT_REGISTRY, ai_propose_strategy
 from runtime.intelligence.llm_provider import LLMProviderResult
 
 
@@ -25,7 +25,7 @@ class AiProposeStrategyTest(unittest.TestCase):
                 ok=True,
                 payload={"ops": [{"op": "replace", "filename": "agent.py", "new_code": "x = 1\n"}]},
             )
-            with mock.patch("app.agents.mutation_strategies.LLMProviderClient.request_json", return_value=provider_result) as request_json:
+            with mock.patch("adaad.agents.mutation_strategies.LLMProviderClient.request_json", return_value=provider_result) as request_json:
                 ops = ai_propose_strategy(agent_dir)
 
             request_json.assert_called_once()
@@ -42,7 +42,7 @@ class AiProposeStrategyTest(unittest.TestCase):
             os.environ["ADAAD_AI_STRATEGY_GOAL"] = "stabilize outputs"
             os.environ["ADAAD_AI_STRATEGY_CONTEXT"] = "beast_mode"
             try:
-                with mock.patch("app.agents.mutation_strategies.LLMProviderClient.request_json", return_value=provider_result) as request_json:
+                with mock.patch("adaad.agents.mutation_strategies.LLMProviderClient.request_json", return_value=provider_result) as request_json:
                     ops = ai_propose_strategy(agent_dir)
             finally:
                 if old_goal is None:
@@ -63,7 +63,7 @@ class AiProposeStrategyTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             agent_dir = self._write_dna(Path(tmp), {"goal": "maintain quality", "context": "mutation_cycle"})
             with mock.patch(
-                "app.agents.mutation_strategies.LLMProviderClient.request_json",
+                "adaad.agents.mutation_strategies.LLMProviderClient.request_json",
                 return_value=LLMProviderResult(ok=False, payload={"proposal_type": "noop"}, error_code="missing_api_key"),
             ):
                 ops = ai_propose_strategy(agent_dir)

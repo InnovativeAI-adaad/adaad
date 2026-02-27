@@ -31,6 +31,8 @@ LAYER_BOUNDARY_VIOLATION_MESSAGE = "forbidden cross-layer import; see docs/ARCHI
 ARCHIVE_IMPORT_VIOLATION_MESSAGE = "imports from archives/ are forbidden"
 RUNTIME_APP_IMPORT_VIOLATION_MESSAGE = "runtime/* must not import app/* (except runtime/api facade modules)"
 APP_RUNTIME_INTERNAL_VIOLATION_MESSAGE = "app/* must import runtime only via runtime.api facade"
+LEGACY_AGENT_NAMESPACE_VIOLATION_MESSAGE = "import app.agents.* is deprecated; use adaad.agents.* canonical namespace"
+DUPLICATE_AGENT_NAMESPACE_VIOLATION_MESSAGE = "duplicate agent namespace usage detected; keep a single canonical namespace (adaad.agents)"
 
 LAYER_IMPORT_BOUNDARIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     # Directory scopes MUST end with "/" so prefix checks remain segment-safe.
@@ -51,6 +53,8 @@ _RULE_MAP: dict[str, str] = {
     ARCHIVE_IMPORT_VIOLATION_MESSAGE: "archive_import_violation",
     RUNTIME_APP_IMPORT_VIOLATION_MESSAGE: "runtime_imports_app_violation",
     APP_RUNTIME_INTERNAL_VIOLATION_MESSAGE: "app_runtime_internal_violation",
+    LEGACY_AGENT_NAMESPACE_VIOLATION_MESSAGE: "legacy_agent_namespace_violation",
+    DUPLICATE_AGENT_NAMESPACE_VIOLATION_MESSAGE: "duplicate_agent_namespace_violation",
     "syntax_error": "syntax_error",
 }
 
@@ -255,6 +259,38 @@ def _iter_runtime_app_boundary_issues(path: Path, tree: ast.AST) -> Iterable[Lin
                 yield LintIssue(path, node.lineno, node.col_offset, RUNTIME_APP_IMPORT_VIOLATION_MESSAGE)
 
 
+
+
+def _iter_agent_namespace_drift_issues(path: Path, tree: ast.AST) -> Iterable[LintIssue]:
+    rel = _relative_path(path)
+    if rel.startswith("app/agents/"):
+        return
+
+    has_app_agents = False
+    has_adaad_agents = False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                name = alias.name
+                if name == "app.agents" or name.startswith("app.agents."):
+                    has_app_agents = True
+                    yield LintIssue(path, node.lineno, node.col_offset, LEGACY_AGENT_NAMESPACE_VIOLATION_MESSAGE)
+                if name == "adaad.agents" or name.startswith("adaad.agents."):
+                    has_adaad_agents = True
+        elif isinstance(node, ast.ImportFrom):
+            if node.level > 0:
+                continue
+            module_name = node.module or ""
+            if module_name == "app.agents" or module_name.startswith("app.agents."):
+                has_app_agents = True
+                yield LintIssue(path, node.lineno, node.col_offset, LEGACY_AGENT_NAMESPACE_VIOLATION_MESSAGE)
+            if module_name == "adaad.agents" or module_name.startswith("adaad.agents."):
+                has_adaad_agents = True
+
+    if has_app_agents and has_adaad_agents:
+        yield LintIssue(path, 1, 0, DUPLICATE_AGENT_NAMESPACE_VIOLATION_MESSAGE)
+
 def _iter_app_runtime_facade_issues(path: Path, tree: ast.AST) -> Iterable[LintIssue]:
     rel = _relative_path(path)
     if not rel.startswith("app/"):
@@ -300,6 +336,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         issues.extend(_iter_layer_boundary_issues(file_path, tree))
         issues.extend(_iter_runtime_app_boundary_issues(file_path, tree))
         issues.extend(_iter_app_runtime_facade_issues(file_path, tree))
+        issues.extend(_iter_agent_namespace_drift_issues(file_path, tree))
 
     sorted_issues = sorted(issues, key=lambda item: (str(item.path), item.line, item.column, item.message))
 

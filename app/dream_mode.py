@@ -19,8 +19,8 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from app.agents.base_agent import stage_offspring
-from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
+from adaad.agents.base_agent import stage_offspring
+from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.app_layer import (
     EntropyBudget,
     FitnessEvaluator,

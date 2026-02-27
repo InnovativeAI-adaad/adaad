@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.evolution.governor import EvolutionGovernor
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.runtime import EvolutionRuntime

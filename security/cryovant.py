@@ -24,7 +24,7 @@ from json import JSONDecodeError
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from app.agents.discovery import iter_agent_dirs, resolve_agent_id
+from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id
 from runtime import metrics
 from security import SECURITY_ROOT
 from security.ledger import journal

@@ -22,7 +22,7 @@ from unittest import mock
 
 import fcntl
 
-from app.agents.base_agent import stage_offspring
+from adaad.agents.base_agent import stage_offspring
 from app.beast_mode_loop import BeastModeLoop
 from runtime import capability_graph, metrics
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates

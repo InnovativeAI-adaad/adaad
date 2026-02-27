@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from app.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest
 import runtime.preflight as preflight
 from runtime.preflight import _import_smoke_check, _legacy_validate_mutation, validate_mutation_proposal_schema
 

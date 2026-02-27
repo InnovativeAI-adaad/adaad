@@ -19,7 +19,7 @@ from unittest import mock
 from pathlib import Path
 
 from app.mutation_executor import MutationExecutor
-from app.agents.mutation_request import MutationRequest, MutationTarget
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.tools import mutation_guard
 from runtime.tools.mutation_guard import apply_dna_mutation
 from runtime import metrics

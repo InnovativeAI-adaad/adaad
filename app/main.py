@@ -28,6 +28,7 @@ from typing import Any, Dict, Optional
 from app import APP_ROOT
 from app.architect_agent import ArchitectAgent
 from app.orchestration import MutationOrchestrationService
+from adaad.agents import AGENTS_ROOT
 from runtime.api.agents import MutationEngine, MutationRequest, agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.legacy_modes import BeastModeLoop, DreamMode
 from runtime.api.mutation import MutationExecutor
@@ -151,7 +152,7 @@ class Orchestrator:
     ) -> None:
         self.state: Dict[str, Any] = {"status": "initializing", "mutation_enabled": False}
         self.logger = _get_orchestrator_logger()
-        self.agents_root = APP_ROOT / "agents"
+        self.agents_root = AGENTS_ROOT
         self.lineage_dir = self.agents_root / "lineage"
         self.warm_pool = WarmPool(size=2)
         self.architect = ArchitectAgent(self.agents_root)

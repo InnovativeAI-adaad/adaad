@@ -57,6 +57,15 @@ Example:
 python -m pytest -q tests/test_preflight_import_smoke.py
 ```
 
+
+## Canonical agent runtime namespace
+
+`adaad.agents` is the canonical runtime namespace for agent implementation code.
+
+- Import agent modules from `adaad.agents.*` in new code.
+- `app.agents.*` exists only as a temporary compatibility shim during migration.
+- CI import-lint gates reject newly introduced `app.agents.*` imports outside the shim package.
+
 ## Code expectations
 
 - Follow existing code style and keep SPDX headers in source files.

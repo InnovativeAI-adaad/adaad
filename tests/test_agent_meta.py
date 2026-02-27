@@ -19,8 +19,8 @@ import sys  # noqa: E402
 
 sys.path.append(str(ROOT))
 
-from app.agents import AGENTS_ROOT  # noqa: E402
-from app.agents.base_agent import validate_agents  # noqa: E402
+from adaad.agents import AGENTS_ROOT  # noqa: E402
+from adaad.agents.base_agent import validate_agents  # noqa: E402
 
 
 class AgentMetadataTest(unittest.TestCase):

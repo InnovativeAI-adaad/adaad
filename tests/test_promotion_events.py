@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from app.agents.base_agent import stage_offspring
+from adaad.agents.base_agent import stage_offspring
 from app.beast_mode_loop import BeastModeLoop
 from runtime.evolution.promotion_events import create_promotion_event, derive_event_id
 from runtime.evolution.lineage_v2 import LineageLedgerV2
