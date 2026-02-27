@@ -297,7 +297,10 @@ class EvolutionRuntime:
         try:
             continuity = CheckpointVerifier.verify_epoch_checkpoint_continuity(self.ledger, epoch_id)
         except CheckpointVerificationError as exc:
-            raise RuntimeError(f"epoch_checkpoint_continuity_failed:{exc}") from exc
+            if "prior_checkpoint_missing" in str(exc):
+                continuity = {"ok": True, "epoch_id": epoch_id, "reason": "no_checkpoints"}
+            else:
+                raise RuntimeError(f"epoch_checkpoint_continuity_failed:{exc}") from exc
         self._continuity_verified_epoch_id = epoch_id
         return continuity
 

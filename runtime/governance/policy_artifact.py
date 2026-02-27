@@ -178,9 +178,14 @@ def _parse_envelope(artifact: dict[str, Any]) -> GovernancePolicyArtifactEnvelop
         effective_epoch=effective_epoch,
     )
     try:
-        signature_ok = cryovant.verify_signature(envelope.signature)
-    except (ValueError, OSError):
+        signature_ok = bool(cryovant.verify_payload_signature(envelope.payload, envelope.signature, signer.key_id))
+    except Exception:
         signature_ok = False
+    if not signature_ok:
+        try:
+            signature_ok = cryovant.verify_signature(envelope.signature)
+        except (ValueError, OSError):
+            signature_ok = False
     signature_ok = signature_ok or cryovant.dev_signature_allowed(envelope.signature)
     if not signature_ok and signer.algorithm == "hmac-sha256":
         signature_ok = cryovant.verify_artifact_hmac_digest_signature(

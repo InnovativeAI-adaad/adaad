@@ -61,6 +61,8 @@ def test_export_bundle_conforms_to_schema_and_is_immutable(tmp_path: Path) -> No
     export_path = tmp_path / "exports" / f"{bundle['bundle_id']}.json"
     assert export_path.exists()
     assert json.loads(export_path.read_text(encoding="utf-8")) == bundle
+    assert bundle["scoring_algorithm_version"]
+    assert bundle["constitution_version"]
     assert bundle["export_metadata"]["retention_days"] >= 1
     assert bundle["export_metadata"]["access_scope"]
     assert bundle["export_metadata"]["signer"]["signed_digest"] == bundle["export_metadata"]["digest"]
@@ -151,3 +153,25 @@ def test_export_bundle_rejects_immutable_overwrite(tmp_path: Path) -> None:
         assert False, "expected immutable_export_mismatch"
     except EvidenceBundleError as exc:
         assert "immutable_export_mismatch" in str(exc)
+
+
+def test_validate_bundle_legacy_mode_backfills_new_required_fields(tmp_path: Path) -> None:
+    ledger = LineageLedgerV2(ledger_path=tmp_path / "lineage_v2.jsonl")
+    ledger.append_event("EpochStartEvent", {"epoch_id": "epoch-1", "state": {}})
+
+    builder = EvidenceBundleBuilder(
+        ledger=ledger,
+        sandbox_evidence_path=tmp_path / "sandbox_evidence.jsonl",
+        export_dir=tmp_path / "exports",
+        schema_path=Path("schemas/evidence_bundle.v1.json"),
+    )
+    bundle = builder.build_bundle(epoch_start="epoch-1", persist=False)
+    legacy_bundle = dict(bundle)
+    legacy_bundle.pop("scoring_algorithm_version")
+    legacy_bundle.pop("constitution_version")
+
+    strict_errors = builder.validate_bundle(legacy_bundle)
+    assert "$.scoring_algorithm_version:missing_required" in strict_errors
+    assert "$.constitution_version:missing_required" in strict_errors
+
+    assert builder.validate_bundle(legacy_bundle, allow_legacy=True) == []

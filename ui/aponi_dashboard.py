@@ -30,6 +30,7 @@ from urllib.parse import parse_qs, urlparse
 
 from app import APP_ROOT
 from runtime import metrics
+from runtime.constants import APONI_PORT
 from runtime.governance.event_taxonomy import (
     EVENT_TYPE_CONSTITUTION_ESCALATION,
     EVENT_TYPE_OPERATOR_OVERRIDE,
@@ -112,6 +113,10 @@ def _extract_schema_version(raw: object) -> str:
         if isinstance(value, str):
             return value
     return ""
+
+
+def _resolve_aponi_port() -> int:
+    return int(os.environ.get("APONI_PORT", str(APONI_PORT)))
 
 
 def _schema_version_status(path: Path) -> Dict[str, object]:
@@ -3368,7 +3373,7 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = argparse.ArgumentParser(description="Run Aponi dashboard in standalone mode.")
     parser.add_argument("--host", default=os.environ.get("APONI_HOST", "0.0.0.0"), help="Host interface to bind (env: APONI_HOST)")
-    parser.add_argument("--port", type=int, default=int(os.environ.get("APONI_PORT", "8080")), help="Port to bind (env: APONI_PORT)")
+    parser.add_argument("--port", type=int, default=_resolve_aponi_port(), help="Port to bind (env: APONI_PORT)")
     parser.add_argument("--serve-mcp", action="store_true", help="Enable MCP mutation utility endpoints with JWT enforcement.")
     args = parser.parse_args(argv)
 

@@ -362,12 +362,45 @@ class EconomicFitnessEvaluator:
         if "simulated_market_score" in payload:
             return self._clamp(payload.get("simulated_market_score"))
 
+        adapter_market = self._market_adapter_score(payload)
+        if adapter_market is not None:
+            return adapter_market
+
         market = payload.get("task_value_proxy")
         if isinstance(market, Mapping):
             value = self._float_from(market, "value_score", "score", default=0.0)
             return self._clamp(value)
 
         return self._clamp(self._float_from(payload, "market_score", default=0.0))
+
+    def _market_adapter_score(self, payload: Mapping[str, Any]) -> float | None:
+        """Map market-adapter outputs into the canonical simulated market score input."""
+
+        adapter_payloads = (
+            payload.get("market_adapter"),
+            payload.get("market_adapter_output"),
+            payload.get("market_simulation"),
+        )
+
+        for adapter in adapter_payloads:
+            if not isinstance(adapter, Mapping):
+                continue
+
+            scoring_inputs = adapter.get("scoring_inputs")
+            if isinstance(scoring_inputs, Mapping) and "simulated_market_score" in scoring_inputs:
+                return self._clamp(scoring_inputs.get("simulated_market_score"))
+
+            for key in (
+                "simulated_market_score",
+                "market_score",
+                "value_score",
+                "score",
+                "expected_roi",
+            ):
+                if key in adapter:
+                    return self._clamp(adapter.get(key))
+
+        return None
 
 
 __all__ = ["EconomicFitnessResult", "EconomicFitnessEvaluator"]

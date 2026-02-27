@@ -25,6 +25,7 @@ from runtime.api.app_layer import (
     EntropyBudget,
     FitnessEvaluator,
     RuntimeDeterminismProvider,
+    SeededDeterminismProvider,
     default_provider,
     deterministic_context,
     deterministic_token_with_budget,
@@ -54,7 +55,12 @@ class DreamMode:
         self.lineage_dir = lineage_dir
         self.replay_mode = replay_mode
         self.recovery_tier = recovery_tier
-        self.provider = provider or default_provider()
+        if provider is not None:
+            self.provider = provider
+        elif (replay_mode or "off").strip().lower() == "strict":
+            self.provider = SeededDeterminismProvider(seed="dream-mode-strict")
+        else:
+            self.provider = default_provider()
         self._require_replay_safe_provider()
         self.entropy_budget = EntropyBudget()
         self.fitness_evaluator = FitnessEvaluator()

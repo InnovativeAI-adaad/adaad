@@ -198,3 +198,29 @@ def test_epoch_metadata_hash_mismatch_fails_closed() -> None:
         assert str(exc) == "fitness_weight_snapshot_hash_mismatch"
     else:
         raise AssertionError("expected RuntimeError")
+
+
+def test_market_adapter_output_maps_to_simulated_market_score() -> None:
+    evaluator = EconomicFitnessEvaluator()
+    result = evaluator.evaluate(
+        {
+            "market_adapter_output": {
+                "scoring_inputs": {"simulated_market_score": 0.83},
+                "expected_roi": 0.12,
+            }
+        }
+    )
+
+    assert result.simulated_market_score == 0.83
+
+
+def test_market_adapter_mapping_does_not_override_explicit_simulated_market_score() -> None:
+    evaluator = EconomicFitnessEvaluator()
+    result = evaluator.evaluate(
+        {
+            "simulated_market_score": 0.24,
+            "market_adapter": {"simulated_market_score": 0.91},
+        }
+    )
+
+    assert result.simulated_market_score == 0.24

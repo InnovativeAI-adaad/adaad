@@ -6,6 +6,7 @@ Use this checklist before approving any governed release state transition.
 - [ ] CI governance gates passed
 - [ ] Mutation lineage attached
 - [ ] Constitution version locked
+- [ ] Evidence bundle includes `scoring_algorithm_version` and `constitution_version` provenance fields.
 - [ ] Evidence matrix complete
 
 ## Evidence pointers

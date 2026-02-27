@@ -83,13 +83,12 @@ def merge_platform_telemetry(*, observed: Mapping[str, Any], android: Mapping[st
 
 
 def coalesce_resource_usage_snapshot(*, observed: Mapping[str, Any], telemetry: Mapping[str, Any]) -> dict[str, float]:
-    """Resolve deterministic resource usage by taking maxima across trusted aliases."""
+    """Resolve deterministic resource usage from observed measurements with telemetry fallback."""
 
-    memory_mb = max(
-        _parse_non_negative(observed.get("peak_rss_mb")),
-        _parse_non_negative(observed.get("memory_mb")),
-        _parse_non_negative(telemetry.get("memory_mb")),
-    )
+    observed_peak = _parse_non_negative(observed.get("peak_rss_mb"))
+    observed_memory = _parse_non_negative(observed.get("memory_mb"))
+    telemetry_memory = _parse_non_negative(telemetry.get("memory_mb"))
+    memory_mb = max(observed_peak, observed_memory) if max(observed_peak, observed_memory) > 0.0 else telemetry_memory
     cpu_seconds = max(
         _parse_non_negative(observed.get("cpu_seconds")),
         _parse_non_negative(observed.get("cpu_time_seconds")),

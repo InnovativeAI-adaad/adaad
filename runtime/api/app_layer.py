@@ -5,11 +5,10 @@ from runtime import ROOT_DIR, fitness, metrics
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from runtime.capability_graph import get_capabilities, register_capability
 from runtime.evolution.entropy_discipline import EntropyBudget, deterministic_context, deterministic_token_with_budget
-from runtime.evolution.evolution_kernel import EvolutionKernel
 from runtime.evolution.fitness import FitnessEvaluator
 from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_pr_lifecycle_event
 from runtime.governance.branch_manager import BranchManager
-from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
+from runtime.governance.foundation import RuntimeDeterminismProvider, SeededDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
 from runtime.governance.gate_certifier import GateCertifier
 from runtime.integrations.aponi_sync import push_to_dashboard
 from runtime.intelligence.llm_provider import LLMProviderClient, load_provider_config
@@ -29,6 +28,7 @@ __all__ = [
     "PromotionManifestWriter",
     "ROOT_DIR",
     "RuntimeDeterminismProvider",
+    "SeededDeterminismProvider",
     "default_provider",
     "deterministic_context",
     "deterministic_token_with_budget",
@@ -48,3 +48,12 @@ __all__ = [
     "summarize_preflight_rejections",
     "top_preflight_rejections",
 ]
+
+
+
+def __getattr__(name: str):
+    if name == "EvolutionKernel":
+        from runtime.evolution.evolution_kernel import EvolutionKernel
+
+        return EvolutionKernel
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

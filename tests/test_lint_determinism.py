@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import ast
 
 import pytest
 
@@ -134,6 +135,7 @@ def test_lint_determinism_allows_deterministic_filesystem_wrappers(tmp_path: Pat
 import glob
 import os
 from pathlib import Path
+import ast
 
 
 def listdir_deterministic(path):
@@ -197,10 +199,13 @@ def test_lint_determinism_allows_approved_wrapper_for_nondeterminism_calls(tmp_p
     assert all(issue.message != "forbidden_governance_nondeterminism_api" for issue in issues)
 
 
-def test_lint_required_governance_files_include_federation_protocol_stack() -> None:
+def test_lint_required_governance_files_include_runtime_evolution_and_federation_modules() -> None:
     required = set(lint_determinism.REQUIRED_GOVERNANCE_FILES)
+    assert "runtime/evolution/fitness_orchestrator.py" in required
+    assert "runtime/evolution/economic_fitness.py" in required
     assert "runtime/governance/federation/protocol.py" in required
     assert "runtime/governance/federation/manifest.py" in required
+    assert "runtime/fitness/orchestrator.py" not in required
 
 
 # QA-7 rollout tests (enable with QA7_LINT_ROLLOUT=1)

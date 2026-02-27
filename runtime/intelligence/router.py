@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from runtime.intelligence.critique import CritiqueModule, CritiqueResult
+from runtime.intelligence.critique import CRITIQUE_DIMENSIONS, CritiqueModule, CritiqueResult
 from runtime.intelligence.proposal import Proposal, ProposalModule
 from runtime.intelligence.strategy import StrategyDecision, StrategyInput, StrategyModule
 
@@ -43,4 +43,10 @@ class IntelligenceRouter:
             rationale=strategy.rationale,
         )
         critique = self._critique.review(proposal)
+        self._validate_critique(critique)
         return RoutedIntelligenceDecision(strategy=strategy, proposal=proposal, critique=critique)
+
+    def _validate_critique(self, critique: CritiqueResult) -> None:
+        missing_dimensions = [dimension for dimension in CRITIQUE_DIMENSIONS if dimension not in critique.per_dimension_scores]
+        if missing_dimensions:
+            raise ValueError(f"critique missing required dimensions: {', '.join(missing_dimensions)}")

@@ -9,7 +9,11 @@ from typing import Any, Dict, List
 
 @dataclass
 class ClaudeProposalAgent:
-    """Deterministic mutator-compatible proposal helper used by MCP flows."""
+    """Optional deterministic post-processor for already-generated candidates.
+
+    This helper does not call model APIs. Runtime proposal generation should flow
+    through ``runtime.intelligence.proposal_adapter.ProposalAdapter``.
+    """
 
     agent_id: str = "claude-proposal-agent"
 

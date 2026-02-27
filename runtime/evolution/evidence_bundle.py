@@ -12,9 +12,10 @@ from typing import Any, Dict, List
 from runtime import ROOT_DIR
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.replay import ReplayEngine
+from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation import ZERO_HASH, canonical_json, sha256_prefixed_digest
-from runtime.governance.policy_artifact import DEFAULT_GOVERNANCE_POLICY_PATH, load_governance_policy
+from runtime.governance.policy_artifact import DEFAULT_GOVERNANCE_POLICY_PATH, GovernancePolicyError, load_governance_policy
 from runtime.sandbox.evidence import SANDBOX_EVIDENCE_PATH
 from runtime.sandbox.namespace import namespace_isolation_available
 from runtime.sandbox.sandbox_policy import default_hardening_policy
@@ -24,6 +25,7 @@ EVIDENCE_BUNDLE_SCHEMA_VERSION = "1.0"
 DEFAULT_EXPORT_SIGNING_ALGORITHM = "hmac-sha256"
 DEFAULT_RETENTION_DAYS = 365
 DEFAULT_ACCESS_SCOPE = "governance_audit"
+DEFAULT_CONSTITUTION_VERSION = os.getenv("ADAAD_CONSTITUTION_VERSION", "0.2.0").strip() or "0.2.0"
 
 
 class EvidenceBundleError(RuntimeError):
@@ -228,17 +230,29 @@ class EvidenceBundleBuilder:
         sandbox_evidence = self._collect_sandbox_evidence(epoch_ids)
         replay_proofs = self._collect_replay_proofs(epoch_ids)
         lineage_anchors = self._collect_lineage_anchors(epoch_ids, bundles)
-        policy = load_governance_policy(self.policy_path)
-        policy_artifact_metadata = {
-            "path": str(self.policy_path),
-            "schema_version": policy.schema_version,
-            "fingerprint": policy.fingerprint,
-            "model": {"name": policy.model.name, "version": policy.model.version},
-            "thresholds": {
-                "determinism_pass": policy.thresholds.determinism_pass,
-                "determinism_warn": policy.thresholds.determinism_warn,
-            },
-        }
+        try:
+            policy = load_governance_policy(self.policy_path)
+            policy_artifact_metadata = {
+                "path": str(self.policy_path),
+                "schema_version": policy.schema_version,
+                "fingerprint": policy.fingerprint,
+                "model": {"name": policy.model.name, "version": policy.model.version},
+                "thresholds": {
+                    "determinism_pass": policy.thresholds.determinism_pass,
+                    "determinism_warn": policy.thresholds.determinism_warn,
+                },
+            }
+        except GovernancePolicyError:
+            policy_artifact_metadata = {
+                "path": str(self.policy_path),
+                "schema_version": "governance_policy_artifact.v1",
+                "fingerprint": "unavailable",
+                "model": {"name": "unavailable", "version": "unavailable"},
+                "thresholds": {
+                    "determinism_pass": 0.0,
+                    "determinism_warn": 0.0,
+                },
+            }
         hardening = default_hardening_policy()
         sandbox_snapshot = {
             "seccomp_available": hardening.seccomp_available,
@@ -248,6 +262,8 @@ class EvidenceBundleBuilder:
         }
         return {
             "schema_version": EVIDENCE_BUNDLE_SCHEMA_VERSION,
+            "scoring_algorithm_version": ALGORITHM_VERSION,
+            "constitution_version": DEFAULT_CONSTITUTION_VERSION,
             "export_scope": {
                 "epoch_start": epoch_ids[0],
                 "epoch_end": epoch_ids[-1],
@@ -311,14 +327,32 @@ class EvidenceBundleBuilder:
                 export_path.write_text(serialized, encoding="utf-8")
         return bundle
 
-    def validate_bundle(self, bundle: Dict[str, Any]) -> List[str]:
+    def _coerce_legacy_bundle(self, bundle: Dict[str, Any]) -> Dict[str, Any]:
+        coerced = dict(bundle)
+        coerced.setdefault("scoring_algorithm_version", ALGORITHM_VERSION)
+        coerced.setdefault("constitution_version", DEFAULT_CONSTITUTION_VERSION)
+        return coerced
+
+    def validate_bundle(self, bundle: Dict[str, Any], *, allow_legacy: bool = False) -> List[str]:
         if not self.schema_path.exists():
             raise EvidenceBundleError(f"missing_schema:{self.schema_path}")
         try:
             schema = json.loads(read_file_deterministic(self.schema_path))
         except json.JSONDecodeError as exc:
             raise EvidenceBundleError(f"invalid_schema_json:{self.schema_path}:{exc.msg}") from exc
-        return _validate_schema_subset(bundle, schema)
+
+        errors = _validate_schema_subset(bundle, schema)
+        if not allow_legacy:
+            return errors
+
+        legacy_missing = {
+            "$.scoring_algorithm_version:missing_required",
+            "$.constitution_version:missing_required",
+        }
+        if errors and set(errors).issubset(legacy_missing):
+            coerced_legacy = self._coerce_legacy_bundle(bundle)
+            return _validate_schema_subset(coerced_legacy, schema)
+        return errors
 
 
 __all__ = [

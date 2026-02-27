@@ -8,7 +8,8 @@ from runtime.intelligence.llm_provider import (
     RetryPolicy,
     load_provider_config,
 )
-from runtime.intelligence.proposal import Proposal, ProposalModule
+from runtime.intelligence.proposal import Proposal, ProposalModule, ProposalTargetFile
+from runtime.intelligence.proposal_adapter import ProposalAdapter
 from runtime.intelligence.router import IntelligenceRouter, RoutedIntelligenceDecision
 from runtime.intelligence.strategy import StrategyDecision, StrategyInput, StrategyModule
 
@@ -21,6 +22,8 @@ __all__ = [
     "LLMProviderResult",
     "Proposal",
     "ProposalModule",
+    "ProposalAdapter",
+    "ProposalTargetFile",
     "RetryPolicy",
     "RoutedIntelligenceDecision",
     "StrategyDecision",

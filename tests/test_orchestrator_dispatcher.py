@@ -4,6 +4,7 @@ import importlib
 import time
 
 from adaad.orchestrator import bootstrap as bootstrap_module
+import adaad.orchestrator.dispatcher as dispatcher_module
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import Dispatcher, dispatch, dispatch_result_or_raise
 from adaad.orchestrator.registry import HandlerRegistry, clear_registry, register_tool
@@ -145,3 +146,25 @@ def test_dispatch_result_or_raise_fails_closed_for_invalid_top_level_status() ->
         assert str(exc) == "dispatch failed:invalid_envelope_status"
     else:
         raise AssertionError("expected RuntimeError")
+
+
+def test_dispatch_latency_budget_defaults_to_50ms_when_env_not_set(monkeypatch) -> None:
+    monkeypatch.delenv("ADAAD_DISPATCH_LATENCY_BUDGET_MS", raising=False)
+    importlib.reload(dispatcher_module)
+
+    dispatcher = dispatcher_module.Dispatcher(HandlerRegistry.preload({"fast": lambda payload: payload}))
+    response = dispatcher.dispatch("fast", {"ok": True})
+
+    assert dispatcher_module.MAX_LATENCY_MS == 50.0
+    assert response["metadata"]["latency_target_ms"] == 50.0
+
+
+def test_dispatch_latency_budget_honors_env_override(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_DISPATCH_LATENCY_BUDGET_MS", "75")
+    importlib.reload(dispatcher_module)
+
+    dispatcher = dispatcher_module.Dispatcher(HandlerRegistry.preload({"fast": lambda payload: payload}))
+    response = dispatcher.dispatch("fast", {"ok": True})
+
+    assert dispatcher_module.MAX_LATENCY_MS == 75.0
+    assert response["metadata"]["latency_target_ms"] == 75.0

@@ -143,6 +143,7 @@ The lock file SHA256 has been advanced to `7b3d06cf33c0cae90708dce16e87d53738f34
 ```python
 REQUIRED_GOVERNANCE_FILES: tuple[str, ...] = (
     "runtime/evolution/fitness_orchestrator.py",
+    "runtime/evolution/economic_fitness.py",           # ← active evaluator path enforced
     "runtime/governance/federation/transport.py",
     "runtime/governance/federation/coordination.py",   # ← enforced
 )

@@ -9,11 +9,16 @@ from typing import Dict
 
 import logging
 
+from runtime.constants import APONI_URL
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
 
 LOG = logging.getLogger(__name__)
 
-DEFAULT_APONI_URL = os.environ.get("APONI_API_URL", "http://localhost:5000/api/v1/events")
+def _default_aponi_events_url() -> str:
+    return f"{APONI_URL}/api/v1/events"
+
+
+DEFAULT_APONI_URL = os.environ.get("APONI_API_URL", _default_aponi_events_url())
 ERROR_LOG = Path("logs/aponi_sync_errors.log")
 
 # Canonical Aponi transport error entry schema.

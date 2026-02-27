@@ -4,6 +4,8 @@
   "type": "object",
   "required": [
     "schema_version",
+    "constitution_version",
+    "scoring_algorithm_version",
     "bundle_id",
     "export_scope",
     "replay_proofs",
@@ -354,6 +356,12 @@
         "syscall_allowlist"
       ],
       "additionalProperties": false
+    },
+    "scoring_algorithm_version": {
+      "type": "string"
+    },
+    "constitution_version": {
+      "type": "string"
     }
   }
 }

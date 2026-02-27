@@ -27,6 +27,7 @@ TARGET_FILES: tuple[str, ...] = (
 
 REQUIRED_GOVERNANCE_FILES: tuple[str, ...] = (
     "runtime/evolution/fitness_orchestrator.py",
+    "runtime/evolution/economic_fitness.py",
     "runtime/governance/federation/transport.py",
     "runtime/governance/federation/coordination.py",
     "runtime/governance/federation/protocol.py",

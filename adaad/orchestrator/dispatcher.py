@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from time import monotonic_ns, perf_counter
 from typing import Any
 
@@ -14,8 +15,47 @@ try:
 except Exception:  # pragma: no cover - runtime package optional for isolated usage
     runtime_metrics = None
 
-MAX_LATENCY_MS = 50.0
+_LATENCY_BUDGET_ENV_VAR = "ADAAD_DISPATCH_LATENCY_BUDGET_MS"
+_DEFAULT_MAX_LATENCY_MS = 50.0
 _LOGGER = logging.getLogger("adaad.dispatcher")
+
+
+def _resolve_max_latency_ms() -> float:
+    configured = os.getenv(_LATENCY_BUDGET_ENV_VAR)
+    source = "default"
+    resolved = _DEFAULT_MAX_LATENCY_MS
+    invalid_value = False
+
+    if configured is not None:
+        try:
+            resolved = float(configured)
+            source = "env"
+        except (TypeError, ValueError):
+            invalid_value = True
+
+    if runtime_metrics is not None:
+        try:
+            runtime_metrics.log(
+                event_type="dispatch_latency_budget_config_loaded",
+                payload={
+                    "config_key": _LATENCY_BUDGET_ENV_VAR,
+                    "configured_value": configured,
+                    "resolved_value": resolved,
+                    "source": source,
+                    "invalid_value": invalid_value,
+                },
+                level="WARNING" if invalid_value else "INFO",
+            )
+        except Exception as exc:
+            _LOGGER.warning(
+                "dispatcher latency config telemetry failed",
+                extra={"exception": str(exc), "resolved_value": resolved},
+            )
+
+    return resolved
+
+
+MAX_LATENCY_MS = _resolve_max_latency_ms()
 
 
 def dispatch_result_or_raise(envelope: dict[str, Any]) -> Any:
