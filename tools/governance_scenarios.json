@@ -1,0 +1,34 @@
+{
+  "scenarios": [
+    {
+      "name": "benign_baseline",
+      "kind": "benign",
+      "description": "Stable baseline traffic with valid signatures.",
+      "config": {}
+    },
+    {
+      "name": "burst_failures",
+      "kind": "burst_failures",
+      "description": "Periodic bursts of invalid signatures to trigger blocking waves.",
+      "config": {"burst_every": 12, "burst_size": 4}
+    },
+    {
+      "name": "malformed_signatures",
+      "kind": "malformed_signatures",
+      "description": "Probabilistic malformed signatures to simulate signer faults.",
+      "config": {"malformed_ratio": 0.35}
+    },
+    {
+      "name": "replay_drifts",
+      "kind": "replay_drifts",
+      "description": "Replay nonce drifts and epoch jitter to stress lineage continuity.",
+      "config": {"replay_ratio": 0.5, "epoch_jitter": 3}
+    },
+    {
+      "name": "high_volume_mutation_spikes",
+      "kind": "high_volume_mutation_spikes",
+      "description": "Large mutation value spikes amid normal traffic.",
+      "config": {"spike_every": 15, "spike_magnitude": 2500}
+    }
+  ]
+}
