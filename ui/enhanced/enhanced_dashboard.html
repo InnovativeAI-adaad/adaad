@@ -98,6 +98,14 @@
             background: rgba(16, 185, 129, 0.1); border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.3);
         }
         .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: blink 2s infinite; }
+        .live-indicator.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .live-indicator.disconnected .live-dot {
+            background: #ef4444;
+            animation: none;
+        }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         .connection-error {
             background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
@@ -113,7 +121,7 @@
             <p class="subtitle">Autonomous Development with Accountable Architecture</p>
             <div class="live-indicator" id="liveIndicator">
                 <span class="live-dot"></span>
-                <span>Live Updates Active</span>
+                <span id="liveIndicatorText">Live</span>
             </div>
         </div>
 
@@ -159,7 +167,36 @@
         const API_BASE = 'http://localhost:8080';
         let updateInterval;
         let ws = null;
+        let reconnectTimer = null;
+        let reconnectAttempt = 0;
         let lastActivityCount = 0;
+
+        function setLiveStatus(isLive) {
+            const liveIndicator = document.getElementById('liveIndicator');
+            const liveIndicatorText = document.getElementById('liveIndicatorText');
+            if (isLive) {
+                liveIndicator.classList.remove('disconnected');
+                liveIndicatorText.textContent = 'Live';
+            } else {
+                liveIndicator.classList.add('disconnected');
+                liveIndicatorText.textContent = 'Disconnected';
+            }
+        }
+
+        function wsEndpoint() {
+            const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            return `${wsScheme}//${window.location.host}/ws/events`;
+        }
+
+        function scheduleReconnect() {
+            if (reconnectTimer) return;
+            reconnectAttempt += 1;
+            const delay = Math.min(30000, 1000 * Math.pow(2, reconnectAttempt - 1));
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
+                startRealtimeUpdates();
+            }, delay);
+        }
 
         async function updateDashboard() {
             try {
@@ -290,25 +327,49 @@
 
 
         function startRealtimeUpdates() {
-            const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-            const wsUrl = `${wsScheme}://${window.location.hostname}:8080/ws`;
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
+            const wsUrl = wsEndpoint();
             try {
                 ws = new WebSocket(wsUrl);
-                ws.onmessage = () => { updateDashboard(); };
+                ws.onopen = () => {
+                    reconnectAttempt = 0;
+                    setLiveStatus(true);
+                    document.getElementById('connectionError').classList.remove('show');
+                };
+                ws.onmessage = (message) => {
+                    try {
+                        const frame = JSON.parse(message.data);
+                        if (frame.type === 'event_batch' && Array.isArray(frame.events) && frame.events.length > 0) {
+                            updateDashboard();
+                        }
+                    } catch (_err) {
+                        updateDashboard();
+                    }
+                };
                 ws.onerror = () => {
+                    setLiveStatus(false);
+                    document.getElementById('connectionError').classList.add('show');
                     if (!updateInterval) {
                         updateInterval = setInterval(updateDashboard, 2000);
                     }
+                    scheduleReconnect();
                 };
                 ws.onclose = () => {
+                    setLiveStatus(false);
+                    document.getElementById('connectionError').classList.add('show');
                     if (!updateInterval) {
                         updateInterval = setInterval(updateDashboard, 2000);
                     }
+                    scheduleReconnect();
                 };
             } catch (_err) {
+                setLiveStatus(false);
                 if (!updateInterval) {
                     updateInterval = setInterval(updateDashboard, 2000);
                 }
+                scheduleReconnect();
             }
         }
 
@@ -341,6 +402,7 @@
         }
         window.addEventListener('beforeunload', () => {
             if (updateInterval) clearInterval(updateInterval);
+            if (reconnectTimer) clearTimeout(reconnectTimer);
             if (ws) ws.close();
         });
     </script>
