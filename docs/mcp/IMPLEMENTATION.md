@@ -42,3 +42,13 @@ JWT is required for all non-health routes.
 - Startup is validated before the mutation cycle transition decision, so boot fails closed if signing/audit prerequisites are unavailable.
 - Orchestrator MCP health checks verify required writer routes are present before mutation work proceeds.
 
+## Control-plane parity with MCP mutation auth
+
+Control-plane write routes must follow MCP mutation authentication guarantees. In practice:
+
+- `/control/queue`, `/control/queue/cancel`, and `/control/execution` require JWT validation for writes.
+- Browser-originated requests should pass origin/referer validation and nonce checks.
+- Auth failures return structured JSON `401/403` payloads and emit audit logs.
+
+This prevents privilege bypass where control-plane writes would otherwise be protected less strictly than MCP mutation endpoints.
+

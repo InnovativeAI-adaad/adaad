@@ -78,6 +78,7 @@ FREE_CAPABILITY_SOURCES_PATH = Path(os.environ.get("APONI_FREE_SOURCES_PATH", st
 SKILL_PROFILES_PATH = Path(os.environ.get("APONI_SKILL_PROFILES_PATH", str(APP_ROOT.parent / "data" / "governed_skill_profiles.json")))
 CONTROL_CAPABILITIES_MAX = 8
 CONTROL_TEXT_FIELD_MAX = 240
+MCP_MUTATION_ENDPOINTS = {"/mcp/tools/call", "/mcp/context/record"}
 CONTROL_DATA_SCHEMA_VERSION = "1"
 CONTROL_MODES = {"builder", "automation", "analysis", "growth"}
 CONTROL_JWT_TTL_SECONDS = 300
@@ -759,46 +760,78 @@ class AponiDashboard:
                     raise ValueError("invalid_jwt")
                 return json.loads(self._b64url_decode(payload_b64))
 
-            def _require_jwt(self) -> bool:
+            def _audit_log(self, event: str, payload: Dict[str, object]) -> None:
+                record = {
+                    "event": event,
+                    "client_ip": self.client_address[0] if self.client_address else "",
+                    "path": self.path,
+                    **payload,
+                }
+                logging.warning("CONTROL_AUDIT %s", json.dumps(record, sort_keys=True))
+
+            def _reject(self, status_code: int, reason: str, *, subject: str = "") -> None:
+                self._audit_log(
+                    "control_auth_reject",
+                    {
+                        "status": status_code,
+                        "reason": reason,
+                        "subject": subject,
+                    },
+                )
+                self._send_json({"ok": False, "error": reason}, status_code=status_code)
+
+            def _require_jwt(self) -> Dict[str, Any] | None:
                 jwt_required = serve_mcp or os.environ.get("APONI_CONTROL_REQUIRE_JWT", "1").strip() == "1"
                 if not jwt_required:
-                    return True
+                    return {}
                 auth = self.headers.get("Authorization", "")
                 if not auth.startswith("Bearer "):
-                    self._send_json({"ok": False, "error": "missing_jwt"}, status_code=401)
-                    return False
+                    self._reject(401, "missing_jwt")
+                    return None
                 if not jwt_secret:
                     self._send_json({"ok": False, "error": "jwt_misconfigured"}, status_code=503)
-                    return False
+                    return None
                 token = auth.split(" ", 1)[1].strip()
                 try:
                     payload = self._decode_jwt_payload(token)
                     if payload.get("aud") != "aponi-control":
-                        self._send_json({"ok": False, "error": "invalid_jwt_audience"}, status_code=401)
-                        return False
+                        self._reject(401, "invalid_jwt_audience", subject=str(payload.get("sub", "")))
+                        return None
                     if int(payload.get("exp", 0) or 0) < int(time.time()):
-                        self._send_json({"ok": False, "error": "expired_jwt"}, status_code=401)
-                        return False
+                        self._reject(401, "expired_jwt", subject=str(payload.get("sub", "")))
+                        return None
                 except Exception:
-                    self._send_json({"ok": False, "error": "invalid_jwt"}, status_code=401)
-                    return False
-                return True
+                    self._reject(401, "invalid_jwt")
+                    return None
+                return payload
 
             def _require_control_origin(self) -> bool:
                 allowed = _allowed_control_origins(self.headers.get("Host", ""))
                 origin = _origin_from_header(self.headers.get("Origin", ""))
                 referer_origin = _origin_from_header(self.headers.get("Referer", ""))
+                if not origin and not referer_origin:
+                    return True
                 if origin and origin in allowed:
                     return True
                 if referer_origin and referer_origin in allowed:
                     return True
-                self._send_json({"ok": False, "error": "invalid_origin"}, status_code=403)
+                self._reject(403, "invalid_origin")
                 return False
+
+            def _require_control_write_auth(self) -> Dict[str, Any] | None:
+                claims = self._require_jwt()
+                if claims is None:
+                    return None
+                if not self._require_control_origin():
+                    return None
+                if not self._require_control_nonce():
+                    return None
+                return claims
 
             def _require_control_nonce(self) -> bool:
                 nonce = self.headers.get("X-APONI-Nonce", "").strip()
                 if not nonce:
-                    self._send_json({"ok": False, "error": "missing_nonce"}, status_code=401)
+                    self._reject(401, "missing_nonce")
                     return False
                 now = time.time()
                 stale_cutoff = now - CONTROL_NONCE_TTL_SECONDS
@@ -806,6 +839,7 @@ class AponiDashboard:
                     if ts < stale_cutoff:
                         seen_control_nonces.pop(key, None)
                 if nonce in seen_control_nonces:
+                    self._audit_log("control_auth_reject", {"status": 409, "reason": "replayed_nonce", "subject": ""})
                     self._send_json({"ok": False, "error": "replayed_nonce"}, status_code=409)
                     return False
                 seen_control_nonces[nonce] = now
@@ -1029,27 +1063,23 @@ class AponiDashboard:
 
             def do_POST(self):  # noqa: N802 - required by base class
                 parsed = urlparse(self.path)
-                if serve_mcp and parsed.path in MCP_MUTATION_ENDPOINTS and not self._require_jwt():
+                if serve_mcp and parsed.path in MCP_MUTATION_ENDPOINTS and self._require_jwt() is None:
                     return
                 if parsed.path.startswith("/policy/simulate"):
                     self._send_json({"ok": False, "error": "method_not_allowed", "detail": "policy/simulate is GET only"}, status_code=405)
                     return
                 # Route priority: /ux/events and /control/telemetry are handled before generic
                 # /control/queue validation so observability stays available even when command surface is off.
-                if not (parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/telemetry") or parsed.path.startswith("/ux/events") or parsed.path.startswith("/control/cockpit/plan")):
+                if not (parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/telemetry") or parsed.path.startswith("/ux/events") or parsed.path.startswith("/control/cockpit/plan") or parsed.path.startswith("/control/execution")):
                     self.send_response(404)
                     self.end_headers()
                     return
                 # Observability endpoints remain available even when the command surface is disabled.
-                if (parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/cockpit/plan")) and not self._command_surface_enabled():
+                if (parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/cockpit/plan") or parsed.path.startswith("/control/execution")) and not self._command_surface_enabled():
                     self._send_json({"ok": False, "error": "command_surface_disabled"})
                     return
-                if parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/cockpit/plan"):
-                    if not self._require_control_origin():
-                        return
-                    if not self._require_jwt():
-                        return
-                    if not self._require_control_nonce():
+                if parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/cockpit/plan") or parsed.path.startswith("/control/execution"):
+                    if self._require_control_write_auth() is None:
                         return
                 content_length = int(self.headers.get("Content-Length", "0") or "0")
                 if content_length <= 0:
@@ -1101,6 +1131,25 @@ class AponiDashboard:
                     result = _cancel_control_command(command_id)
                     metrics.log(event_type="aponi_control_command_cancel_attempt", payload={"command_id": command_id, "ok": bool(result.get("ok"))}, level="INFO", element_id=ELEMENT_ID)
                     self._send_json(result)
+                    return
+
+                if parsed.path.startswith("/control/execution"):
+                    validated_execution = self._validate_execution_control_command(payload)
+                    if not validated_execution.get("ok"):
+                        self._send_json(validated_execution)
+                        return
+                    entry = _queue_control_command(validated_execution["command"])
+                    metrics.log(
+                        event_type="aponi_execution_control_queued",
+                        payload={
+                            "command_id": entry["command_id"],
+                            "action": validated_execution["command"].get("action", ""),
+                            "target_command_id": validated_execution["command"].get("target_command_id", ""),
+                        },
+                        level="INFO",
+                        element_id=ELEMENT_ID,
+                    )
+                    self._send_json({"ok": True, "entry": entry})
                     return
 
                 validated = self._validate_control_command(payload)

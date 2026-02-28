@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
+from urllib import error as urlerror, request as urlrequest
 from urllib.request import urlopen
 
 from runtime.evolution.evidence_bundle import EvidenceBundleBuilder
@@ -106,3 +108,98 @@ def test_replay_diff_http_endpoint_persists_export_bundle(tmp_path, monkeypatch)
     assert export_path.exists()
     persisted = json.loads(export_path.read_text(encoding="utf-8"))
     assert persisted["bundle_id"] == payload["bundle_id"]
+
+
+
+def _http_post_json(url: str, payload: dict, *, headers: dict[str, str] | None = None):
+    body = json.dumps(payload).encode("utf-8")
+    req_headers = {"Content-Type": "application/json", **(headers or {})}
+    req = urlrequest.Request(url, data=body, headers=req_headers, method="POST")
+    return urlrequest.urlopen(req, timeout=5)
+
+
+def _issue_control_headers(port: int) -> dict[str, str]:
+    with urlopen(f"http://127.0.0.1:{port}/control/auth-token", timeout=5) as response:
+        token_payload = json.loads(response.read().decode("utf-8"))
+    token = token_payload["token"]
+    return {
+        "Authorization": f"Bearer {token}",
+        "Origin": f"http://127.0.0.1:{port}",
+        "X-APONI-Nonce": f"nonce-{time.time_ns()}",
+    }
+
+
+def test_control_queue_write_requires_jwt(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("APONI_COMMAND_SURFACE", "1")
+    monkeypatch.setenv("APONI_CONTROL_REQUIRE_JWT", "1")
+    monkeypatch.setenv("APONI_DASHBOARD_JWT_SECRET", "test-secret")
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0, jwt_secret="test-secret")
+    dashboard.start({"status": "ok"})
+    try:
+        assert dashboard._server is not None
+        port = dashboard._server.server_port
+        try:
+            _http_post_json(
+                f"http://127.0.0.1:{port}/control/queue",
+                {"type": "run_task"},
+                headers={"Origin": f"http://127.0.0.1:{port}", "X-APONI-Nonce": "n-1"},
+            )
+            assert False, "expected unauthorized"
+        except urlerror.HTTPError as exc:
+            assert exc.code == 401
+            payload = json.loads(exc.read().decode("utf-8"))
+            assert payload["ok"] is False
+            assert payload["error"] == "missing_jwt"
+    finally:
+        dashboard.stop()
+
+
+def test_control_execution_write_rejects_invalid_origin(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("APONI_COMMAND_SURFACE", "1")
+    monkeypatch.setenv("APONI_CONTROL_REQUIRE_JWT", "1")
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0, jwt_secret="test-secret")
+    dashboard.start({"status": "ok"})
+    try:
+        assert dashboard._server is not None
+        port = dashboard._server.server_port
+        headers = _issue_control_headers(port)
+        headers["Origin"] = "http://evil.local"
+        headers["X-APONI-Nonce"] = f"nonce-{time.time_ns()}"
+        try:
+            _http_post_json(
+                f"http://127.0.0.1:{port}/control/execution",
+                {"type": "execution_control", "action": "cancel", "target_command_id": "cmd-000001-aaaaaaaaaaaa"},
+                headers=headers,
+            )
+            assert False, "expected forbidden"
+        except urlerror.HTTPError as exc:
+            assert exc.code == 403
+            payload = json.loads(exc.read().decode("utf-8"))
+            assert payload["ok"] is False
+            assert payload["error"] == "invalid_origin"
+    finally:
+        dashboard.stop()
+
+
+def test_control_execution_write_accepts_valid_auth(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("APONI_COMMAND_SURFACE", "1")
+    monkeypatch.setenv("APONI_CONTROL_REQUIRE_JWT", "1")
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0, jwt_secret="test-secret")
+    dashboard.start({"status": "ok"})
+    try:
+        assert dashboard._server is not None
+        port = dashboard._server.server_port
+        headers = _issue_control_headers(port)
+        with _http_post_json(
+            f"http://127.0.0.1:{port}/control/execution",
+            {"type": "execution_control", "action": "cancel", "target_command_id": "cmd-000001-aaaaaaaaaaaa"},
+            headers=headers,
+        ) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        assert payload["ok"] is True
+        assert payload["entry"]["payload"]["type"] == "execution_control"
+    finally:
+        dashboard.stop()
