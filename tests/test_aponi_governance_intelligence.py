@@ -237,7 +237,9 @@ def test_user_console_uses_external_script_for_csp_compatibility() -> None:
     assert "function wireExecutionActions()" in script
     assert "hydrateForkDraft(executionState.activeEntry);" in script
     assert "execution_backend: 'queue_bridge'" in script
-    assert "setInterval(refreshControlQueue, EXECUTION_POLL_MS);" in script
+    assert "scheduleNextQueueRefresh();" in script
+    assert "function computeAdaptiveDelay(baseDelayMs, elapsedMs, failureCount)" in script
+    assert "emitUXEvent('refresh_metrics', { loop: 'main', status: 'success'" in script
     assert "History" in html
     assert "Built agent pipeline" in script
     assert "Queued governed intent" in script
