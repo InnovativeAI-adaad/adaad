@@ -2186,6 +2186,11 @@ let uxFirstSuccessMarked = false;
 const DEFAULT_MODE = 'builder';
 const QUICK_ACTION_LIMIT = 3;
 const EXECUTION_POLL_MS = 1500;
+const REFRESH_TIMEOUT_MS = 7000;
+const QUEUE_REFRESH_TIMEOUT_MS = 7000;
+const REFRESH_BASE_DELAY_MS = 5000;
+const QUEUE_BASE_DELAY_MS = EXECUTION_POLL_MS || 4000;
+const REFRESH_MAX_BACKOFF_MULTIPLIER = 6;
 const UNDO_TOAST_MS = 5000;
 const CONTROL_AGENT_ID_RE = /^[a-z0-9_-]{3,64}$/;
 const ALLOWED_GOVERNANCE_PROFILES = ['strict', 'high-assurance'];
@@ -2206,6 +2211,15 @@ const executionState = {
 const controlAuthState = { token: '', expiresAtMs: 0 };
 
 const undoManager = { stack: [], toastTimer: null };
+
+let isRefreshing = false;
+let isQueueRefreshing = false;
+let refreshRequestId = 0;
+let queueRequestId = 0;
+let refreshTimer = null;
+let queueTimer = null;
+let refreshFailureCount = 0;
+let queueFailureCount = 0;
 
 // === Safe DOM Rendering Utilities ===
 // SECURITY: Do not use innerHTML for any API-derived content.
@@ -2958,18 +2972,70 @@ async function refreshHistory() {
   }
 }
 
+function emitUXEvent(eventType, payload = {}) {
+  postTelemetry(eventType, payload);
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = 7000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function computeAdaptiveDelay(baseDelayMs, elapsedMs, failureCount) {
+  const safeElapsed = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+  const safeFailures = Number.isFinite(failureCount) ? Math.max(0, failureCount) : 0;
+  const baseDelay = Math.max(500, Number(baseDelayMs) || 500);
+  const backoffMultiplier = Math.min(REFRESH_MAX_BACKOFF_MULTIPLIER, Math.pow(2, safeFailures));
+  const targetDelay = (baseDelay * backoffMultiplier) - safeElapsed;
+  return Math.max(500, Math.round(targetDelay));
+}
+
+function scheduleNextRefresh(startTime = performance.now()) {
+  if (refreshTimer) clearTimeout(refreshTimer);
+  const elapsed = performance.now() - startTime;
+  const delay = computeAdaptiveDelay(REFRESH_BASE_DELAY_MS, elapsed, refreshFailureCount);
+  refreshTimer = setTimeout(refresh, delay);
+}
+
+function scheduleNextQueueRefresh(startTime = performance.now()) {
+  if (queueTimer) clearTimeout(queueTimer);
+  const elapsed = performance.now() - startTime;
+  const delay = computeAdaptiveDelay(QUEUE_BASE_DELAY_MS, elapsed, queueFailureCount);
+  queueTimer = setTimeout(refreshControlQueue, delay);
+}
+
 async function refreshControlQueue() {
   const el = document.getElementById('queueSummary');
-  if (!el) return;
+  if (!el) {
+    scheduleNextQueueRefresh();
+    return;
+  }
+  if (isQueueRefreshing) {
+    emitUXEvent('refresh_skipped_inflight', { loop: 'queue' });
+    scheduleNextQueueRefresh();
+    return;
+  }
+
+  isQueueRefreshing = true;
+  const requestId = ++queueRequestId;
+  const startTime = performance.now();
+
   try {
     const [queueResponse, verifyResponse] = await Promise.all([
-      fetch('/control/queue', { cache: 'no-store' }),
-      fetch('/control/queue/verify', { cache: 'no-store' }),
+      fetchWithTimeout('/control/queue', { cache: 'no-store' }, QUEUE_REFRESH_TIMEOUT_MS),
+      fetchWithTimeout('/control/queue/verify', { cache: 'no-store' }, QUEUE_REFRESH_TIMEOUT_MS),
     ]);
     const [queueResult, verifyResult] = await Promise.allSettled([
       queueResponse.json(),
       verifyResponse.json(),
     ]);
+    if (requestId !== queueRequestId) return;
     const payload = queueResult.status === 'fulfilled' ? queueResult.value : {};
     const verify = verifyResult.status === 'fulfilled' ? verifyResult.value : {};
     const entries = Array.isArray(payload.entries) ? payload.entries : [];
@@ -2991,7 +3057,7 @@ async function refreshControlQueue() {
       verify_parse_error: verifyResult.status === 'rejected' ? String(verifyResult.reason) : null,
       execution_bridge: {
         backend: 'control/queue polling bridge',
-        poll_ms: EXECUTION_POLL_MS,
+        poll_ms: QUEUE_BASE_DELAY_MS,
         endpoint_todo: '/control/execution (pending)',
       },
       latest_entries: entries.slice(-3),
@@ -3000,8 +3066,23 @@ async function refreshControlQueue() {
     el.textContent = summaryText;
     const profileSummary = document.getElementById('queueSummaryProfile');
     if (profileSummary) profileSummary.textContent = summaryText;
+    queueFailureCount = 0;
+    emitUXEvent('refresh_metrics', { loop: 'queue', status: 'success', duration_ms: Math.round(performance.now() - startTime), failure_count: queueFailureCount });
   } catch (err) {
-    el.textContent = 'Failed to load queue surfaces: ' + err;
+    if (requestId !== queueRequestId) return;
+    queueFailureCount += 1;
+    if (err && err.name === 'AbortError') {
+      emitUXEvent('refresh_timeout', { loop: 'queue', failure_count: queueFailureCount });
+      el.textContent = 'Queue refresh timed out; retrying automatically.';
+      emitUXEvent('refresh_metrics', { loop: 'queue', status: 'timeout', duration_ms: Math.round(performance.now() - startTime), failure_count: queueFailureCount });
+    } else {
+      emitUXEvent('refresh_error', { loop: 'queue', failure_count: queueFailureCount, message: String(err) });
+      el.textContent = 'Failed to load queue surfaces: ' + err;
+      emitUXEvent('refresh_metrics', { loop: 'queue', status: 'error', duration_ms: Math.round(performance.now() - startTime), failure_count: queueFailureCount });
+    }
+  } finally {
+    if (requestId === queueRequestId) isQueueRefreshing = false;
+    scheduleNextQueueRefresh(startTime);
   }
 }
 
@@ -3667,45 +3748,74 @@ async function queueExecutionControlForLatest(type) {
 }
 
 async function refresh() {
-  const endpoints = {
-    state: '/state',
-    intelligence: '/system/intelligence',
-    risk: '/risk/summary',
-  };
-  const [stateResponse, intelligenceResponse, riskResponse] = await Promise.allSettled([
-    fetch(endpoints.state, { cache: 'no-store' }),
-    fetch(endpoints.intelligence, { cache: 'no-store' }),
-    fetch(endpoints.risk, { cache: 'no-store' }),
-  ]);
+  if (isRefreshing) {
+    emitUXEvent('refresh_skipped_inflight', { loop: 'main' });
+    scheduleNextRefresh();
+    return;
+  }
 
-  const parseResult = async (result) => {
-    if (result.status !== 'fulfilled') return null;
-    if (!result.value.ok) return null;
-    try {
-      return await result.value.json();
-    } catch (_) {
-      return null;
+  isRefreshing = true;
+  const requestId = ++refreshRequestId;
+  const startTime = performance.now();
+
+  try {
+    const endpoints = {
+      state: '/state',
+      intelligence: '/system/intelligence',
+      risk: '/risk/summary',
+    };
+    const [stateResponse, intelligenceResponse, riskResponse] = await Promise.allSettled([
+      fetchWithTimeout(endpoints.state, { cache: 'no-store' }, REFRESH_TIMEOUT_MS),
+      fetchWithTimeout(endpoints.intelligence, { cache: 'no-store' }, REFRESH_TIMEOUT_MS),
+      fetchWithTimeout(endpoints.risk, { cache: 'no-store' }, REFRESH_TIMEOUT_MS),
+    ]);
+
+    const parseResult = async (result) => {
+      if (result.status !== 'fulfilled') return null;
+      if (!result.value.ok) return null;
+      try {
+        return await result.value.json();
+      } catch (_) {
+        return null;
+      }
+    };
+
+    const state = await parseResult(stateResponse);
+    const intelligence = await parseResult(intelligenceResponse);
+    const risk = await parseResult(riskResponse);
+
+    if (requestId !== refreshRequestId) return;
+
+    if (state) document.getElementById('state').textContent = JSON.stringify(state, null, 2);
+    if (intelligence) document.getElementById('intelligence').textContent = JSON.stringify(intelligence, null, 2);
+    if (risk) document.getElementById('risk').textContent = JSON.stringify(risk, null, 2);
+
+    renderHome(state || {}, intelligence || {}, risk || {});
+
+    await Promise.all([
+      paint('instability', '/risk/instability'),
+      paint('replay', '/replay/divergence'),
+      paint('uxSummary', '/ux/summary'),
+      refreshHistory(),
+      refreshActionCards(),
+    ]);
+    renderInsights(normalizeInsights(intelligence || {}));
+    refreshFailureCount = 0;
+    emitUXEvent('refresh_metrics', { loop: 'main', status: 'success', duration_ms: Math.round(performance.now() - startTime), failure_count: refreshFailureCount });
+  } catch (err) {
+    if (requestId !== refreshRequestId) return;
+    refreshFailureCount += 1;
+    if (err && err.name === 'AbortError') {
+      emitUXEvent('refresh_timeout', { loop: 'main', failure_count: refreshFailureCount });
+      emitUXEvent('refresh_metrics', { loop: 'main', status: 'timeout', duration_ms: Math.round(performance.now() - startTime), failure_count: refreshFailureCount });
+    } else {
+      emitUXEvent('refresh_error', { loop: 'main', failure_count: refreshFailureCount, message: String(err) });
+      emitUXEvent('refresh_metrics', { loop: 'main', status: 'error', duration_ms: Math.round(performance.now() - startTime), failure_count: refreshFailureCount });
     }
-  };
-
-  const state = await parseResult(stateResponse);
-  const intelligence = await parseResult(intelligenceResponse);
-  const risk = await parseResult(riskResponse);
-
-  if (state) document.getElementById('state').textContent = JSON.stringify(state, null, 2);
-  if (intelligence) document.getElementById('intelligence').textContent = JSON.stringify(intelligence, null, 2);
-  if (risk) document.getElementById('risk').textContent = JSON.stringify(risk, null, 2);
-
-  renderHome(state || {}, intelligence || {}, risk || {});
-
-  await Promise.all([
-    paint('instability', '/risk/instability'),
-    paint('replay', '/replay/divergence'),
-    paint('uxSummary', '/ux/summary'),
-    refreshHistory(),
-    refreshActionCards(),
-  ]);
-  renderInsights(normalizeInsights(intelligence || {}));
+  } finally {
+    if (requestId === refreshRequestId) isRefreshing = false;
+    scheduleNextRefresh(startTime);
+  }
 }
 
 function rankRecommendedAction(state, intelligence, risk) {
@@ -3805,9 +3915,8 @@ document.getElementById('controlPromptRun')?.addEventListener('click', () => { m
 document.getElementById('historyTypeFilter')?.addEventListener('change', refreshHistory);
 document.getElementById('historyDateFrom')?.addEventListener('change', refreshHistory);
 document.getElementById('historyDateTo')?.addEventListener('change', refreshHistory);
-refresh();
-setInterval(refresh, 5000);
-setInterval(refreshControlQueue, EXECUTION_POLL_MS);
+scheduleNextRefresh();
+scheduleNextQueueRefresh();
 """
 
 
