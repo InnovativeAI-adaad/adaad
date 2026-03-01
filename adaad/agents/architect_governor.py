@@ -45,7 +45,7 @@ class ArchitectGovernor:
         token = (cryovant_token or "").strip()
         if not token:
             raise PermissionError("cryovant_token required for autonomous refactor.")
-        if not cryovant.verify_session(token):
+        if not cryovant.verify_governance_token(token):
             raise PermissionError("Invalid cryovant_token.")
 
         safe_targets = _validate_targets(targets)

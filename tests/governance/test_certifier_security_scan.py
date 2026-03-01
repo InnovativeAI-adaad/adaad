@@ -15,7 +15,7 @@ os.system('rm -rf /')
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "x" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["token_ok"] is False
@@ -28,7 +28,7 @@ def test_banned_imports_rejected(tmp_path: Path, monkeypatch) -> None:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "y" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["import_ok"] is False
@@ -43,7 +43,7 @@ runner('1 + 1')
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "z" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
@@ -58,7 +58,7 @@ sp.Popen(['echo', 'hi'])
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "a" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
@@ -73,7 +73,7 @@ client = sk()
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "b" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
@@ -99,7 +99,7 @@ def test_token_redacted(tmp_path: Path, monkeypatch) -> None:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "SENSITIVE"})
     assert cert["passed"] is True
     assert "cryovant_token" not in cert.get("metadata", {})
@@ -112,7 +112,7 @@ def test_generated_at_uses_injected_clock(tmp_path: Path, monkeypatch) -> None:
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier(clock_now_iso=lambda: "2030-01-01T00:00:00Z").certify(
         target, {"cryovant_token": "fixed"}
     )
@@ -129,7 +129,7 @@ invoke(['echo', 'hi'])
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "c" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
@@ -146,7 +146,7 @@ compiler('1 + 1', '<x>', 'eval')
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "d" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
@@ -162,7 +162,7 @@ getattr(builtins, 'exec')('x = 42')
 """,
         encoding="utf-8",
     )
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "e" * 24})
     assert cert["passed"] is False
     assert cert["checks"]["ast_ok"] is False
@@ -178,7 +178,7 @@ def test_certify_result_contains_semantic_violations_field(tmp_path: Path, monke
         encoding="utf-8",
     )
 
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
 
     monkeypatch.setattr(
         "runtime.governance.gate_certifier.load_canon_law",
@@ -231,3 +231,29 @@ def test_certify_result_contains_semantic_violations_field(tmp_path: Path, monke
     assert isinstance(semantic_violations, list)
     assert semantic_violations
     assert {"kind", "detail", "line"}.issubset(semantic_violations[0].keys())
+
+
+def test_token_scan_is_binding_for_certification(tmp_path: Path, monkeypatch) -> None:
+    target = tmp_path / "token_only_violation.py"
+    target.write_text(
+        'SAFE = "eval("\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
+    cert = GateCertifier().certify(target, {"cryovant_token": "ok-token"})
+    assert cert["checks"]["token_ok"] is False
+    assert cert["checks"]["ast_ok"] is True
+    assert cert["checks"]["import_ok"] is True
+    assert cert["passed"] is False
+
+
+def test_certifier_does_not_call_deprecated_verify_session(tmp_path: Path, monkeypatch) -> None:
+    target = tmp_path / "ok_no_verify_session.py"
+    target.write_text("print('ok')\n", encoding="utf-8")
+
+    monkeypatch.setattr("security.cryovant.verify_session", lambda _token: (_ for _ in ()).throw(AssertionError("verify_session should not be called")))
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda _token: True)
+
+    cert = GateCertifier().certify(target, {"cryovant_token": "token-ok"})
+    assert cert["checks"]["auth_ok"] is True
+    assert cert["passed"] is True

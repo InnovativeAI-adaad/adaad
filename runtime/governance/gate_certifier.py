@@ -215,14 +215,16 @@ class GateCertifier:
         auth_ok = False
         if token:
             try:
-                auth_ok = bool(cryovant.verify_session(token))
+                auth_ok = bool(cryovant.verify_governance_token(token))
             except Exception:
                 auth_ok = False
 
-        passed = import_ok and ast_ok and auth_ok
+        passed = import_ok and token_ok and ast_ok and auth_ok
         violation_events: list[dict[str, object]] = []
         if not import_ok or not ast_ok:
             violation_events.append(_record("IV.gate_forbidden_code_block", "forbidden_code_or_import"))
+        if not token_ok:
+            violation_events.append(_record("IV.gate_forbidden_code_block", "forbidden_token_detected"))
         if not auth_ok:
             violation_events.append(_record("V.gate_authentication_required", "auth_failed"))
         metadata.pop("cryovant_token", None)

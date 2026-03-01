@@ -34,7 +34,7 @@ def test_escalation_tier_per_article_breach(tmp_path: Path, monkeypatch) -> None
 
     target = tmp_path / "bad_import.py"
     target.write_text("import subprocess\n", encoding="utf-8")
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     cert = GateCertifier().certify(target, {"cryovant_token": "token"})
     assert cert["escalation"] == "governance"
 
@@ -52,7 +52,7 @@ def test_mutation_blocking_for_governance_and_critical_tiers(tmp_path: Path, mon
     monkeypatch.setattr("runtime.governance.canon_law.append_tx", lambda **kwargs: {"hash": "h", **kwargs})
     target = tmp_path / "bad.py"
     target.write_text("import subprocess\n", encoding="utf-8")
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
 
     cert = GateCertifier().certify(target, {"cryovant_token": "token"})
     assert cert["mutation_blocked"] is True
@@ -77,7 +77,7 @@ def test_ledger_event_emission_hash_stable_payload_structure(tmp_path: Path, mon
     monkeypatch.setattr("runtime.governance.canon_law.append_tx", _append_tx)
     target = tmp_path / "bad.py"
     target.write_text("import subprocess\n", encoding="utf-8")
-    monkeypatch.setattr("security.cryovant.verify_session", lambda token: True)
+    monkeypatch.setattr("security.cryovant.verify_governance_token", lambda token: True)
     GateCertifier().certify(target, {"cryovant_token": "token"})
 
     assert events

@@ -76,3 +76,24 @@ def test_tier_manager_escalation_signals() -> None:
     manager.record_governance_violation()
     manager.record_governance_violation()
     assert manager.evaluate_tier() == RecoveryTierLevel.GOVERNANCE
+
+
+def test_tier_manager_deescalates_only_after_recovery_window() -> None:
+    manager = TierManager(violation_window_seconds=3600, recovery_window_seconds=60)
+    manager.apply_tier(RecoveryTierLevel.GOVERNANCE, "seed")
+    manager.tier_history[-1] = manager.tier_history[-1].__class__(
+        timestamp=manager.tier_history[-1].timestamp - 120,
+        from_tier=manager.tier_history[-1].from_tier,
+        to_tier=manager.tier_history[-1].to_tier,
+        reason=manager.tier_history[-1].reason,
+        metrics_snapshot=manager.tier_history[-1].metrics_snapshot,
+    )
+    manager.auto_evaluate_and_apply("auto")
+    assert manager.current_tier == RecoveryTierLevel.NONE
+
+
+def test_tier_manager_does_not_deescalate_before_recovery_window() -> None:
+    manager = TierManager(violation_window_seconds=3600, recovery_window_seconds=10_000)
+    manager.apply_tier(RecoveryTierLevel.GOVERNANCE, "seed")
+    manager.auto_evaluate_and_apply("auto")
+    assert manager.current_tier == RecoveryTierLevel.GOVERNANCE

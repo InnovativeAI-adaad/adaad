@@ -102,10 +102,25 @@ class CryovantDevSignatureTest(unittest.TestCase):
         self.assertTrue(cryovant.verify_signature(f"sha256:{old_digest}"))
 
 
-    def test_verify_payload_signature_accepts_payload_bound_static_signature(self) -> None:
+    def test_verify_payload_signature_accepts_payload_bound_static_signature_in_dev_mode(self) -> None:
         payload = b"governance-envelope"
         digest = "sha256:" + cryovant.hashlib.sha256(payload).hexdigest()
+        os.environ["ADAAD_ENV"] = "dev"
+        os.environ["CRYOVANT_DEV_MODE"] = "1"
         self.assertTrue(
+            cryovant.verify_payload_signature(
+                payload,
+                f"cryovant-static-{digest}",
+                "policy-key",
+            )
+        )
+
+    def test_verify_payload_signature_rejects_payload_bound_static_signature_in_prod(self) -> None:
+        payload = b"governance-envelope"
+        digest = "sha256:" + cryovant.hashlib.sha256(payload).hexdigest()
+        os.environ["ADAAD_ENV"] = "prod"
+        os.environ.pop("CRYOVANT_DEV_MODE", None)
+        self.assertFalse(
             cryovant.verify_payload_signature(
                 payload,
                 f"cryovant-static-{digest}",
@@ -212,6 +227,45 @@ class CryovantDevSignatureTest(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual(errors, [])
         self.assertEqual(call_counter["count"], 1)
+
+
+    def test_verify_governance_token_accepts_signed_token(self) -> None:
+        os.environ["ADAAD_GOVERNANCE_SESSION_SIGNING_KEY"] = "gov-secret"
+        self.addCleanup(os.environ.pop, "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY", None)
+        token = cryovant.sign_governance_token(key_id="orchestrator", expires_at=4102444800, nonce="abc123")
+        self.assertTrue(cryovant.verify_governance_token(token))
+
+    def test_verify_governance_token_rejects_expired_token(self) -> None:
+        os.environ["ADAAD_GOVERNANCE_SESSION_SIGNING_KEY"] = "gov-secret"
+        self.addCleanup(os.environ.pop, "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY", None)
+        token = cryovant.sign_governance_token(key_id="orchestrator", expires_at=1, nonce="expired")
+        self.assertFalse(cryovant.verify_governance_token(token))
+
+    def test_verify_governance_token_allows_dev_override_only_in_explicit_dev_mode(self) -> None:
+        os.environ["CRYOVANT_DEV_TOKEN"] = "dev-token"
+        self.addCleanup(os.environ.pop, "CRYOVANT_DEV_TOKEN", None)
+
+        os.environ["ADAAD_ENV"] = "prod"
+        os.environ.pop("CRYOVANT_DEV_MODE", None)
+        self.assertFalse(cryovant.verify_governance_token("dev-token"))
+
+        os.environ["ADAAD_ENV"] = "dev"
+        os.environ["CRYOVANT_DEV_MODE"] = "1"
+        self.assertTrue(cryovant.verify_governance_token("dev-token"))
+
+
+    def test_sign_governance_token_rejects_delimiter_in_fields(self) -> None:
+        with self.assertRaises(ValueError):
+            cryovant.sign_governance_token(key_id="bad:key", expires_at=4102444800, nonce="ok")
+        with self.assertRaises(ValueError):
+            cryovant.sign_governance_token(key_id="ok", expires_at=4102444800, nonce="bad:nonce")
+
+    def test_verify_governance_token_rejects_field_delimiter_in_payload(self) -> None:
+        os.environ["ADAAD_GOVERNANCE_SESSION_SIGNING_KEY"] = "gov-secret"
+        self.addCleanup(os.environ.pop, "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY", None)
+        token = cryovant.sign_governance_token(key_id="orchestrator", expires_at=4102444800, nonce="abc123")
+        tampered = token.replace(":abc123:", ":abc:123:")
+        self.assertFalse(cryovant.verify_governance_token(tampered))
 
 
 if __name__ == "__main__":

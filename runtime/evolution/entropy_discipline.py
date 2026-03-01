@@ -92,7 +92,7 @@ def deterministic_context(*, replay_mode: str = "off", recovery_tier: str | None
 
     if normalized_mode in {"strict", "audit"}:
         return True
-    if normalized_tier == "audit":
+    if normalized_tier in {"audit", "governance", "critical"}:
         return True
 
     return not _env_enabled("ADAAD_ALLOW_NONDETERMINISTIC_IDS")

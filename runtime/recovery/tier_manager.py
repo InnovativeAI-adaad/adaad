@@ -200,10 +200,12 @@ class TierManager:
 
     def auto_evaluate_and_apply(self, reason: str = "auto_evaluation") -> RecoveryTierLevel:
         tier = self.evaluate_tier()
-        if tier != self.current_tier:
+        if tier.severity > self.current_tier.severity:
             self.apply_tier(tier, reason)
-        elif tier == RecoveryTierLevel.NONE and self._can_deescalate():
-            self.apply_tier(RecoveryTierLevel.NONE, reason)
+            return self.current_tier
+
+        if tier.severity < self.current_tier.severity and self._can_deescalate():
+            self.apply_tier(tier, reason)
         return self.current_tier
 
     def get_policy(self) -> RecoveryPolicy:

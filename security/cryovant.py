@@ -222,7 +222,21 @@ def verify_payload_signature(
     else:
         signed_digest = "sha256:" + hashlib.sha256(payload).hexdigest()
     if signature in {f"cryovant-static-{signed_digest}", f"cryovant-static-{signed_digest.split(':', 1)[1]}"}:
-        return True
+        if env_mode() == "dev" and dev_mode():
+            metrics.log(
+                event_type="cryovant_legacy_static_payload_signature_accepted",
+                payload={"key_id": key_id, "env_mode": env_mode()},
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            return True
+        metrics.log(
+            event_type="cryovant_legacy_static_payload_signature_rejected",
+            payload={"key_id": key_id, "env_mode": env_mode()},
+            level="CRITICAL",
+            element_id=ELEMENT_ID,
+        )
+        return False
     if verify_hmac_digest_signature(
         key_id=key_id,
         signed_digest=signed_digest,
@@ -257,6 +271,100 @@ def verify_session(token: str) -> bool:
     if dev_token and token == dev_token:
         return True
     return False
+
+
+
+
+def _is_valid_governance_token_field(value: str) -> bool:
+    """Validate governance token fields for delimiter and whitespace safety."""
+
+    candidate = str(value or "")
+    if not candidate.strip() or candidate != candidate.strip():
+        return False
+    return ":" not in candidate
+
+def sign_governance_token(
+    *,
+    key_id: str,
+    expires_at: int,
+    nonce: str,
+    specific_env_prefix: str = "ADAAD_GOVERNANCE_SESSION_KEY_",
+    generic_env_var: str = "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY",
+    fallback_namespace: str = "adaad-governance-session-dev-secret",
+) -> str:
+    """Create deterministic governance bearer token for local runtime verification.
+
+    Format: ``cryovant-gov-v1:<key_id>:<expires_at>:<nonce>:<sha256>``.
+    """
+
+    expiry = int(expires_at)
+    if expiry <= 0:
+        raise ValueError("expires_at must be > 0")
+    normalized_key_id = str(key_id or "").strip()
+    if not _is_valid_governance_token_field(normalized_key_id):
+        raise ValueError("key_id required and must not contain ':' or edge whitespace")
+    normalized_nonce = str(nonce or "").strip()
+    if not _is_valid_governance_token_field(normalized_nonce):
+        raise ValueError("nonce required and must not contain ':' or edge whitespace")
+
+    signed_digest = f"sha256:{normalized_key_id}:{expiry}:{normalized_nonce}"
+    signature = sign_hmac_digest(
+        key_id=key_id,
+        signed_digest=signed_digest,
+        specific_env_prefix=specific_env_prefix,
+        generic_env_var=generic_env_var,
+        fallback_namespace=fallback_namespace,
+    )
+    return f"cryovant-gov-v1:{normalized_key_id}:{expiry}:{normalized_nonce}:{signature}"
+
+
+def verify_governance_token(
+    token: str,
+    *,
+    specific_env_prefix: str = "ADAAD_GOVERNANCE_SESSION_KEY_",
+    generic_env_var: str = "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY",
+    fallback_namespace: str = "adaad-governance-session-dev-secret",
+) -> bool:
+    """Verify production governance token with explicit dev-mode fallback.
+
+    Accepted tokens are HMAC-signed ``cryovant-gov-v1`` envelopes with expiry.
+    Legacy ``CRYOVANT_DEV_TOKEN`` override remains available only for explicit
+    development mode (``ADAAD_ENV=dev`` and ``CRYOVANT_DEV_MODE`` enabled).
+    """
+
+    candidate = str(token or "").strip()
+    if not candidate:
+        return False
+
+    dev_token = os.environ.get("CRYOVANT_DEV_TOKEN", "").strip()
+    if dev_token and candidate == dev_token:
+        return env_mode() == "dev" and dev_mode()
+
+    parts = candidate.split(":", 5)
+    if len(parts) != 6:
+        return False
+    prefix, key_id, expires_at_raw, nonce, sig_prefix, digest = parts
+    if prefix != "cryovant-gov-v1" or sig_prefix != "sha256":
+        return False
+    if not _is_valid_governance_token_field(key_id) or not _is_valid_governance_token_field(nonce):
+        return False
+    try:
+        expires_at = int(expires_at_raw)
+    except ValueError:
+        return False
+    if expires_at <= int(time.time()):
+        return False
+
+    signature = f"{sig_prefix}:{digest}"
+    signed_digest = f"sha256:{key_id}:{expires_at}:{nonce}"
+    return verify_hmac_digest_signature(
+        key_id=key_id,
+        signed_digest=signed_digest,
+        signature=signature,
+        specific_env_prefix=specific_env_prefix,
+        generic_env_var=generic_env_var,
+        fallback_namespace=fallback_namespace,
+    )
 
 
 def _dev_signature_allowed(signature: str) -> bool:

@@ -64,6 +64,27 @@ Discover candidate → Simulate safely → Replay-verify outcomes → Enforce co
 </details>
 
 
+
+## ❤️ Built for humans operating high-stakes autonomy
+
+ADAAD is designed to be technically strict **and** operator-friendly.
+
+### Choose your path
+
+| If you are... | Start here | Outcome |
+| --- | --- | --- |
+| 🧪 First-time evaluator | [QUICKSTART.md](QUICKSTART.md) | Get a governed run in minutes. |
+| 👩‍💻 Contributor | [docs/ARCHITECTURE_CONTRACT.md](docs/ARCHITECTURE_CONTRACT.md) + [docs/README.md](docs/README.md) | Change code without breaking governance boundaries. |
+| 🔐 Security reviewer | [docs/SECURITY.md](docs/SECURITY.md) + [docs/governance/SECURITY_INVARIANTS_MATRIX.md](docs/governance/SECURITY_INVARIANTS_MATRIX.md) | Validate auth/signing and fail-closed controls. |
+| 🧾 Auditor / release owner | [docs/releases/RELEASE_AUDIT_CHECKLIST.md](docs/releases/RELEASE_AUDIT_CHECKLIST.md) + [docs/RELEASE_EVIDENCE_MATRIX.md](docs/RELEASE_EVIDENCE_MATRIX.md) | Verify evidence completeness and release readiness. |
+
+### Operator promises
+
+- Clear fail-closed behavior over silent success.
+- Replay-verifiable decisions over opaque automation.
+- Evidence-first workflows over hand-wavy “it works on my machine.”
+- Explicit contracts (architecture, determinism, auth) for safer collaboration.
+
 ## Why ADAAD Exists
 
 Unconstrained autonomous mutation introduces systemic risk.
@@ -196,7 +217,7 @@ Recent improvements to `server.py` and dashboard integration:
 
 ## Start here next
 
-See role-based paths in [docs/README.md](docs/README.md).
+See role-based paths in [docs/README.md](docs/README.md) and pick the route that matches your current role (new user, contributor, or governance reviewer).
 
 
 ## Governance & Determinism Guarantees (Current State)
@@ -224,3 +245,14 @@ ADAAD does **not** yet implement:
 | `ADAAD_DISPATCH_LATENCY_MODE` | Dispatcher latency mode (`static`/`adaptive`) |
 | `ADAAD_DETERMINISTIC_LOCK` | Freeze deterministic runtime behavior |
 | `ADAAD_CONSTITUTION_STRICT` | Strict constitution enforcement mode |
+
+
+## Security and determinism enforcement updates
+
+- Payload-bound legacy static signatures (`cryovant-static-*`) are now accepted only in explicit dev mode (`ADAAD_ENV=dev` + `CRYOVANT_DEV_MODE`).
+- Governance token verification paths use production-capable deterministic token verification (`verify_governance_token`) instead of deprecated session-helper semantics.
+- Governance certification now binds `token_ok` into certification pass/fail decisions.
+- Deterministic-provider enforcement explicitly covers governance-critical recovery tiers (`governance`, `critical`) while retaining `audit` alias compatibility.
+- Recovery tier auto-application now enforces explicit escalation/de-escalation semantics with recovery-window gating.
+
+See also: `docs/governance/SECURITY_INVARIANTS_MATRIX.md` and `docs/governance/DETERMINISM_CONTRACT_SPEC.md`.

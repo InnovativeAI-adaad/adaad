@@ -1,3 +1,11 @@
+## Governance
+
+- [Security Invariants Matrix](governance/SECURITY_INVARIANTS_MATRIX.md)
+- [Determinism Contract Specification](governance/DETERMINISM_CONTRACT_SPEC.md)
+- [Governance State Machine Normalization](governance/GOVERNANCE_STATE_MACHINE_NORMALIZATION.md)
+- [Production Auth Contract Design](governance/PRODUCTION_AUTH_CONTRACT_DESIGN.md)
+- [Red-Team Threat Model — Next Phase Plan](governance/RED_TEAM_THREAT_MODEL_NEXT_PHASE.md)
+
 # 📚 ADAAD Documentation Hub
 
 Welcome to the central navigation page for ADAAD docs.

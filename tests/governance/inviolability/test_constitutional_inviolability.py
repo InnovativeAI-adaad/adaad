@@ -23,7 +23,7 @@ class _Impact:
 
 def _mutation_request(*, authority_level: str = "low-impact") -> MutationRequest:
     return MutationRequest(
-        agent_id="test_subject",
+        agent_id="sample-agent",
         generation_ts="2026-01-01T00:00:00Z",
         intent="governance-inviolability",
         ops=[{"op": "replace", "path": "runtime/constitution.py", "value": "harden"}],
@@ -31,7 +31,7 @@ def _mutation_request(*, authority_level: str = "low-impact") -> MutationRequest
         nonce="nonce-1",
         targets=[
             MutationTarget(
-                agent_id="test_subject",
+                agent_id="sample-agent",
                 path="runtime/constitution.py",
                 target_type="file",
                 ops=[{"op": "replace", "path": "runtime/constitution.py", "value": "harden"}],
@@ -54,14 +54,17 @@ def test_invariant_mutation_execution_requires_constitutional_guard_path_with_po
     )
     monkeypatch.setattr(
         "runtime.mutation_lifecycle.journal.append_tx",
-        lambda tx_type, payload, tx_id=None: tx_events.append(
-            {"tx_type": tx_type, "payload": payload, "tx_id": tx_id}
+        lambda tx_type, payload, tx_id=None: (
+            tx_events.append({"tx_type": tx_type, "payload": payload, "tx_id": tx_id})
+            or {"hash": "h"}
         ),
     )
 
+    monkeypatch.setattr("runtime.mutation_lifecycle.cryovant.verify_payload_signature", lambda *_args, **_kwargs: True)
+
     context = MutationLifecycleContext(
         mutation_id="mut-pass-1",
-        agent_id="test_subject",
+        agent_id="sample-agent",
         epoch_id="epoch-1",
         signature="cryovant-static-allow",
         cert_refs={"certificate_digest": "sha256:" + ("a" * 64)},
@@ -98,9 +101,11 @@ def test_invariant_mutation_execution_rejects_adversarial_bypass_without_explici
         ),
     )
 
+    monkeypatch.setattr("runtime.mutation_lifecycle.cryovant.verify_payload_signature", lambda *_args, **_kwargs: True)
+
     context = MutationLifecycleContext(
         mutation_id="mut-fail-1",
-        agent_id="test_subject",
+        agent_id="sample-agent",
         epoch_id="epoch-1",
         signature="cryovant-static-allow",
         cert_refs={},
