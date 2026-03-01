@@ -283,6 +283,7 @@ ADAAD does **not** yet implement:
 | `ADAAD_DISPATCH_LATENCY_MODE` | Dispatcher latency mode (`static`/`adaptive`) |
 | `ADAAD_DETERMINISTIC_LOCK` | Freeze deterministic runtime behavior |
 | `ADAAD_CONSTITUTION_STRICT` | Strict constitution enforcement mode |
+| `ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY` | Legacy compatibility escape hatch for unsupported DNA payload deepcopy in simulation (default fail-closed) |
 
 
 ## Security and determinism enforcement updates

@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 from collections import OrderedDict
 from dataclasses import is_dataclass, asdict
 from typing import Any, Dict
@@ -31,7 +32,7 @@ class LRUCache(OrderedDict[str, float]):
 
 
 def clone_dna_for_simulation(dna: Dict[str, Any]) -> Dict[str, Any]:
-    """Deterministically clone DNA with a structural fast path and fail-closed fallback."""
+    """Deterministically clone DNA with a structural fast path and fail-closed semantics."""
 
     if all(isinstance(v, (str, int, float, bool)) or v is None for v in dna.values()):
         return dict(dna)
@@ -70,8 +71,16 @@ def clone_dna_for_simulation(dna: Dict[str, Any]) -> Dict[str, Any]:
         if not isinstance(cloned, dict):
             raise TypeError("unsupported_root_type")
         return cloned
-    except TypeError:
-        return copy.deepcopy(dna)
+    except TypeError as exc:
+        allow_unsafe_deepcopy = os.getenv("ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY", "").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        if allow_unsafe_deepcopy:
+            return copy.deepcopy(dna)
+        raise TypeError(str(exc)) from None
 
 
 def _normalize_for_hash(value: Any) -> Any:

@@ -130,6 +130,50 @@ def test_clone_fallback_to_deepcopy_for_unsupported_type() -> None:
     hint = MutationHint(name="fallback", weight=0.9)
     dna = {"lineage": "agent-epsilon", "metadata": {"hint": hint}}
 
+    try:
+        clone_dna_for_simulation(dna)
+    except TypeError as exc:
+        assert str(exc) == "unsupported_dna_type:MutationHint"
+    else:
+        raise AssertionError("unsupported custom DNA payload should fail-closed")
+
+
+def test_clone_supports_primitive_collection_payloads() -> None:
+    dna = {
+        "lineage": "agent-zeta",
+        "flags": [True, False, None],
+        "metrics": {"score": 0.91, "count": 4},
+        "shape": ("stable", 3),
+    }
+
+    simulated = clone_dna_for_simulation(dna)
+
+    assert simulated == dna
+    assert simulated is not dna
+    assert simulated["flags"] is not dna["flags"]
+    assert simulated["metrics"] is not dna["metrics"]
+
+
+def test_clone_rejection_keeps_original_dna_unchanged() -> None:
+    hint = MutationHint(name="immutable", weight=0.4)
+    dna = {"lineage": "agent-theta", "metadata": {"hint": hint}}
+    original = copy.deepcopy(dna)
+
+    try:
+        clone_dna_for_simulation(dna)
+    except TypeError as exc:
+        assert str(exc) == "unsupported_dna_type:MutationHint"
+    else:
+        raise AssertionError("unsupported custom DNA payload should fail-closed")
+
+    assert dna == original
+
+
+def test_clone_permissive_fallback_requires_explicit_flag(monkeypatch) -> None:
+    hint = MutationHint(name="legacy", weight=0.7)
+    dna = {"lineage": "agent-iota", "metadata": {"hint": hint}}
+
+    monkeypatch.setenv("ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY", "1")
     simulated = clone_dna_for_simulation(dna)
 
     assert simulated == dna
