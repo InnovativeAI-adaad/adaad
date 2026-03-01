@@ -64,6 +64,7 @@ or adjacent documentation to support auditability.
 | --- | --- | --- | --- |
 | Duplicate/whitespace task input noise | Deterministic task normalization before orchestration decisions | `tests/test_orchestration_contracts.py` task normalization tests | `reports/metrics.jsonl` + replay manifests |
 | Malformed/non-string task entries | Ignore malformed labels and preserve fail-closed semantics | `tests/test_orchestration_contracts.py` non-string normalization test | Mutation orchestration status envelopes |
+| Null/non-iterable task payloads | Fail closed early with `invalid_tasks_payload` and `safe_boot=True` | `tests/test_orchestration_contracts.py` invalid payload tests | Mutation orchestration status envelopes |
 | License drift in release artifacts | MIT baseline + SPDX/license checks in scripts | `python scripts/validate_license_compliance.py` | Release evidence checklist + CI logs |
 
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
+
 from app.orchestration.contracts import StatusEnvelope
 
 
@@ -21,7 +23,7 @@ class MutationOrchestrationService:
         return cls._RUN_CYCLE_FALSE.copy()
 
     @staticmethod
-    def _normalize_tasks(tasks: list[str]) -> tuple[str, ...]:
+    def _normalize_tasks(tasks: Sequence[str] | Iterable[object]) -> tuple[str, ...]:
         """Return deterministic, non-empty task labels.
 
         Rationale: mutation boot decisions should not depend on duplicate/whitespace
@@ -42,8 +44,33 @@ class MutationOrchestrationService:
             normalized.append(candidate)
         return tuple(normalized)
 
-    def evaluate_dream_tasks(self, tasks: list[str]) -> StatusEnvelope:
-        normalized_tasks = self._normalize_tasks(tasks)
+    def evaluate_dream_tasks(self, tasks: Sequence[str] | Iterable[object] | None) -> StatusEnvelope:
+        """Evaluate dream tasks with fail-closed handling for malformed payloads.
+
+        Rationale: safety-critical mutation orchestration should reject absent or
+        structurally invalid task payloads before normalization. Invariant: invalid
+        payloads always return a deterministic warn envelope with safe boot enabled.
+        """
+
+        if tasks is None or isinstance(tasks, (str, bytes)):
+            return StatusEnvelope(
+                status="warn",
+                reason="invalid_tasks_payload",
+                evidence_refs=("dream.discover_tasks",),
+                payload={"safe_boot": True},
+            )
+
+        try:
+            iterator = iter(tasks)
+        except TypeError:
+            return StatusEnvelope(
+                status="warn",
+                reason="invalid_tasks_payload",
+                evidence_refs=("dream.discover_tasks",),
+                payload={"safe_boot": True},
+            )
+
+        normalized_tasks = self._normalize_tasks(iterator)
         if not normalized_tasks:
             return StatusEnvelope(status="warn", reason="no_tasks", evidence_refs=("dream.discover_tasks",), payload={"safe_boot": True})
         return StatusEnvelope(

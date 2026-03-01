@@ -71,6 +71,38 @@ def test_mutation_orchestration_warns_when_tasks_collapse_to_empty() -> None:
     assert envelope.payload == {"safe_boot": True}
 
 
+def test_mutation_orchestration_warns_on_none_payload() -> None:
+    service = MutationOrchestrationService()
+
+    envelope = service.evaluate_dream_tasks(None)
+
+    assert envelope.status == "warn"
+    assert envelope.reason == "invalid_tasks_payload"
+    assert envelope.evidence_refs == ("dream.discover_tasks",)
+    assert envelope.payload == {"safe_boot": True}
+
+
+def test_mutation_orchestration_warns_on_non_iterable_payload() -> None:
+    service = MutationOrchestrationService()
+
+    envelope = service.evaluate_dream_tasks(42)  # type: ignore[arg-type]
+
+    assert envelope.status == "warn"
+    assert envelope.reason == "invalid_tasks_payload"
+    assert envelope.evidence_refs == ("dream.discover_tasks",)
+    assert envelope.payload == {"safe_boot": True}
+
+
+def test_mutation_orchestration_accepts_iterator_payload_deterministically() -> None:
+    service = MutationOrchestrationService()
+
+    envelope = service.evaluate_dream_tasks(iter([" task-a ", "task-b", "task-a", ""]))
+
+    assert envelope.status == "ok"
+    assert envelope.reason == "tasks_ready"
+    assert envelope.payload == {"safe_boot": False, "task_count": 2}
+
+
 
 def test_mutation_orchestration_ignores_non_string_tasks_deterministically() -> None:
     service = MutationOrchestrationService()
