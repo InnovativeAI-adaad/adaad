@@ -192,6 +192,7 @@ engineering priority is:
 - **Deterministic normalization** (stable dedupe/ordering for replay parity).
 - **Low-risk performance wins** (avoid repeated allocations in high-frequency control paths).
 - **Fail-closed defaults** for unresolved governance state.
+- **Telemetry minimization for dream-task observability** (`dream_discovery`, `dream_health_ok`, `dream_safe_boot` now emit `task_count` and deterministic samples by default; full task lists are debug-only via `ADAAD_METRICS_INCLUDE_FULL_TASKS=1`).
 
 See also:
 - [docs/SECURITY.md](docs/SECURITY.md)

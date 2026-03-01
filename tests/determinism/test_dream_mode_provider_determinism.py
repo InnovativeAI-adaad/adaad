@@ -142,3 +142,23 @@ def test_discover_tasks_debug_flag_allows_full_task_payload(tmp_path: Path, monk
     assert payload["task_count"] == 3
     assert payload["task_sample"] == ["agent_a", "agent_b"]
     assert payload["tasks"] == ["agent_a", "agent_b", "agent_c"]
+
+
+def test_discover_tasks_invalid_sample_env_falls_back_to_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _create_agent_fixture(tmp_path, agent_id="agent_d")
+    _create_agent_fixture(tmp_path, agent_id="agent_c")
+    _create_agent_fixture(tmp_path, agent_id="agent_b")
+    _create_agent_fixture(tmp_path, agent_id="agent_a")
+    monkeypatch.setenv("ADAAD_DREAM_DISCOVERY_SAMPLE_SIZE", "not-an-int")
+
+    DreamMode = _dream_mode_cls()
+    dream = DreamMode(tmp_path, tmp_path / "lineage", replay_mode="strict", provider=SeededDeterminismProvider(seed="metrics-invalid-sample"))
+
+    with mock.patch("app.dream_mode.metrics.log") as log_metric:
+        tasks = dream.discover_tasks()
+
+    assert tasks == ["agent_a", "agent_b", "agent_c", "agent_d"]
+    payload = log_metric.call_args.kwargs["payload"]
+    assert payload["task_count"] == 4
+    assert payload["task_sample"] == ["agent_a", "agent_b", "agent_c"]
+    assert "tasks" not in payload
