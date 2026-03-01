@@ -756,7 +756,42 @@ class Orchestrator:
             level="INFO",
         )
         if self.dry_run:
-            fitness_score = self._simulate_fitness_score(selected)
+            try:
+                fitness_score = self._simulate_fitness_score(selected)
+            except ValueError as exc:
+                metrics.log(
+                    event_type="mutation_dry_run_simulation_rejected",
+                    payload={
+                        "agent_id": selected.agent_id,
+                        "epoch_id": active_epoch_id,
+                        "strategy_id": selected.intent or "default",
+                        "tier": tier.name,
+                        "constitution_version": constitutional_verdict.get("constitution_version"),
+                        "constitutional_verdict": constitutional_verdict,
+                        "reason": str(exc),
+                        "decision": "rejected",
+                        "evidence": {
+                            "rule": "simulation_clone_type_safety",
+                            "error": str(exc),
+                        },
+                    },
+                    level="ERROR",
+                )
+                journal.write_entry(
+                    agent_id=selected.agent_id,
+                    action="mutation_dry_run",
+                    payload={
+                        "epoch_id": active_epoch_id,
+                        "strategy_id": selected.intent or "default",
+                        "tier": tier.name,
+                        "constitutional_verdict": constitutional_verdict,
+                        "fitness_score": None,
+                        "status": "rejected",
+                        "reason": str(exc),
+                        "ts": now_iso(),
+                    },
+                )
+                return
             bias = self.mutation_engine.bias_details(selected)
             metrics.log(
                 event_type="mutation_dry_run",
@@ -831,7 +866,23 @@ class Orchestrator:
         # Expected invariants: original DNA remains unchanged; identical payloads yield identical score lookups.
         sim_start = time.perf_counter()
         dna_integrity_digest = stable_hash(dna)
-        simulated = clone_dna_for_simulation(dna)
+        try:
+            simulated = clone_dna_for_simulation(dna)
+        except TypeError as exc:
+            metrics.log(
+                event_type="mutation_simulation_rejected",
+                payload={
+                    "agent_id": request.agent_id,
+                    "reason": str(exc),
+                    "decision": "rejected",
+                    "evidence": {
+                        "rule": "simulation_clone_type_safety",
+                        "error": str(exc),
+                    },
+                },
+                level="ERROR",
+            )
+            raise ValueError(f"simulation_clone_rejected:{request.agent_id}:{exc}") from None
         if "lineage" not in simulated:
             raise ValueError("Invalid DNA: missing lineage")
         if request.targets:
