@@ -75,8 +75,24 @@ def clone_dna_for_simulation(dna: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _normalize_for_hash(value: Any) -> Any:
+    def _normalize_key(key: Any) -> str:
+        key_type = type(key).__name__
+        if isinstance(key, (str, int, float, bool)) or key is None:
+            normalized_key_value = str(key)
+        else:
+            normalized_key_payload = _normalize_for_hash(key)
+            try:
+                normalized_key_value = json.dumps(
+                    normalized_key_payload,
+                    separators=(",", ":"),
+                )
+            except TypeError:
+                normalized_key_value = repr(normalized_key_payload)
+        return f"{key_type}:{normalized_key_value}"
+
     if isinstance(value, dict):
-        return {k: _normalize_for_hash(v) for k, v in sorted(value.items(), key=lambda item: str(item[0]))}
+        normalized_items = sorted(value.items(), key=lambda item: _normalize_key(item[0]))
+        return {_normalize_key(k): _normalize_for_hash(v) for k, v in normalized_items}
     if isinstance(value, list):
         return [_normalize_for_hash(v) for v in value]
     if isinstance(value, tuple):
@@ -90,5 +106,5 @@ def _normalize_for_hash(value: Any) -> Any:
 
 def stable_hash(payload: Any) -> str:
     normalized = _normalize_for_hash(payload)
-    serialized = json.dumps(normalized, sort_keys=True, separators=(",", ":"))
+    serialized = json.dumps(normalized, separators=(",", ":"))
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()

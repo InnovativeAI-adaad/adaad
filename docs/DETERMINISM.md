@@ -14,6 +14,8 @@ A replay pass requires:
 
 ## Hash boundaries
 
+Hash normalization in `app.simulation_utils.stable_hash` coerces dictionary keys to typed string markers (for example `int:1` and `str:1`) before serialization so mixed key types remain replay-stable without relying on runtime key comparisons.
+
 Deterministic boundaries include (at minimum):
 - mutation manifest and governance payload hashes,
 - replay attestation contract fields,
