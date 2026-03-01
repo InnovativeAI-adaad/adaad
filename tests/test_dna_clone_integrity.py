@@ -140,3 +140,38 @@ def test_clone_fallback_to_deepcopy_for_unsupported_type() -> None:
 
 def test_stable_hash_supports_non_dict_payloads() -> None:
     assert stable_hash([1, 2, {"k": "v"}]) == stable_hash([1, 2, {"k": "v"}])
+
+
+def test_stable_hash_supports_mixed_dict_key_types() -> None:
+    payload_a = {"1": "string", 1: "int", b"1": "bytes", None: "none"}
+    payload_b = {None: "none", b"1": "bytes", 1: "int", "1": "string"}
+
+    assert stable_hash(payload_a) == stable_hash(payload_b)
+
+
+def test_stable_hash_supports_nested_mixed_dict_key_types() -> None:
+    payload_a = {
+        "outer": {
+            ("x", 1): {"1": "s", 1: "i"},
+            3: {False: "b", None: "n"},
+        }
+    }
+    payload_b = {
+        "outer": {
+            3: {None: "n", False: "b"},
+            ("x", 1): {1: "i", "1": "s"},
+        }
+    }
+
+    assert stable_hash(payload_a) == stable_hash(payload_b)
+
+
+def test_stable_hash_digest_is_replay_stable_across_repeated_runs() -> None:
+    payload = {
+        "meta": {"run": 1, "flags": {"safe": True, "tier": 2}},
+        "content": [{"id": i, "score": i / 10} for i in range(5)],
+    }
+
+    digest = stable_hash(payload)
+    for _ in range(25):
+        assert stable_hash(payload) == digest
