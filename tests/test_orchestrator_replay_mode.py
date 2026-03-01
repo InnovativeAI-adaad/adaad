@@ -201,6 +201,52 @@ class GovernanceCIModeTest(unittest.TestCase):
             self.assertEqual(os.getenv("ADAAD_DETERMINISTIC_SEED"), "adaad-governance-ci")
 
 
+
+class OrchestratorDreamHealthMetricsTest(unittest.TestCase):
+    def test_health_check_dream_logs_summary_for_ready_transition(self) -> None:
+        orch = Orchestrator(replay_mode="off")
+        orch.dream = mock.Mock()
+        orch.dream.discover_tasks.return_value = ["task-a", "task-b"]
+        orch.mutation_orchestrator = mock.Mock()
+        orch.mutation_orchestrator.evaluate_dream_tasks.return_value = mock.Mock(
+            status="ok",
+            reason="tasks_ready",
+            payload={"safe_boot": False, "task_count": 2},
+        )
+
+        with mock.patch("app.main.metrics.log") as log_metric:
+            orch._health_check_dream()
+
+        self.assertTrue(orch.state["mutation_enabled"])
+        self.assertFalse(orch.state["safe_boot"])
+        log_metric.assert_called_once_with(
+            event_type="dream_health_ok",
+            payload={"task_count": 2, "safe_boot": False},
+            level="INFO",
+        )
+
+    def test_health_check_dream_logs_summary_for_safe_boot_transition(self) -> None:
+        orch = Orchestrator(replay_mode="off")
+        orch.dream = mock.Mock()
+        orch.dream.discover_tasks.return_value = []
+        orch.mutation_orchestrator = mock.Mock()
+        orch.mutation_orchestrator.evaluate_dream_tasks.return_value = mock.Mock(
+            status="warn",
+            reason="no_tasks",
+            payload={"safe_boot": True},
+        )
+
+        with mock.patch("app.main.metrics.log") as log_metric:
+            orch._health_check_dream()
+
+        self.assertFalse(orch.state["mutation_enabled"])
+        self.assertTrue(orch.state["safe_boot"])
+        log_metric.assert_called_once_with(
+            event_type="dream_safe_boot",
+            payload={"task_count": 0, "safe_boot": True, "reason": "no_tasks"},
+            level="WARN",
+        )
+
 if __name__ == "__main__":
     unittest.main()
 

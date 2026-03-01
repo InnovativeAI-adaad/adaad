@@ -16,6 +16,7 @@ Dream mode handles mutation cycles for agents.
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -35,6 +36,9 @@ from runtime.api.app_layer import (
 from security import cryovant
 
 ELEMENT_ID = "Fire"
+DEFAULT_TASK_SAMPLE_SIZE = 3
+FULL_TASK_PAYLOAD_ENV = "ADAAD_METRICS_INCLUDE_FULL_TASKS"
+TASK_SAMPLE_SIZE_ENV = "ADAAD_DREAM_DISCOVERY_SAMPLE_SIZE"
 
 
 class DreamMode:
@@ -142,8 +146,33 @@ class DreamMode:
                 )
                 continue
             tasks.append(agent_id)
-        metrics.log(event_type="dream_discovery", payload={"tasks": tasks}, level="INFO")
+
+        # Deterministic observability contract:
+        # - task ordering follows iter_agent_dirs + resolve_agent_id ordering.
+        # - sample uses a stable prefix so replay/audit payloads remain equivalent.
+        sample_size = self._task_sample_size()
+        payload: Dict[str, object] = {
+            "task_count": len(tasks),
+            "task_sample": tasks[:sample_size],
+        }
+        if self._include_full_task_metrics_payload():
+            payload["tasks"] = tasks
+
+        metrics.log(event_type="dream_discovery", payload=payload, level="INFO")
         return tasks
+
+    @staticmethod
+    def _include_full_task_metrics_payload() -> bool:
+        value = os.getenv(FULL_TASK_PAYLOAD_ENV, "").strip().lower()
+        return value in {"1", "true", "yes", "on"}
+
+    @staticmethod
+    def _task_sample_size() -> int:
+        configured = os.getenv(TASK_SAMPLE_SIZE_ENV, str(DEFAULT_TASK_SAMPLE_SIZE)).strip()
+        try:
+            return max(0, int(configured))
+        except ValueError:
+            return DEFAULT_TASK_SAMPLE_SIZE
 
     def run_cycle(self, agent_id: Optional[str] = None, *, epoch_id: str = "", bundle_id: str = "dream") -> Dict[str, str]:
         """

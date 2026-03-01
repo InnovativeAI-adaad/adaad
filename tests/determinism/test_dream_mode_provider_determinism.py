@@ -106,3 +106,39 @@ def test_dream_mode_rejects_nondeterministic_provider_for_audit_and_strict() -> 
 
     with pytest.raises(RuntimeError, match="audit_tier_requires_deterministic_provider"):
         DreamMode(Path("/tmp"), Path("/tmp"), replay_mode="off", recovery_tier="critical", provider=SystemDeterminismProvider())
+
+
+def test_discover_tasks_logs_summary_payload_by_default(tmp_path: Path) -> None:
+    _create_agent_fixture(tmp_path, agent_id="agent_b")
+    _create_agent_fixture(tmp_path, agent_id="agent_a")
+    DreamMode = _dream_mode_cls()
+    dream = DreamMode(tmp_path, tmp_path / "lineage", replay_mode="strict", provider=SeededDeterminismProvider(seed="metrics"))
+
+    with mock.patch("app.dream_mode.metrics.log") as log_metric:
+        tasks = dream.discover_tasks()
+
+    assert tasks == ["agent_a", "agent_b"]
+    log_metric.assert_called_once()
+    kwargs = log_metric.call_args.kwargs
+    assert kwargs["event_type"] == "dream_discovery"
+    assert kwargs["payload"] == {"task_count": 2, "task_sample": ["agent_a", "agent_b"]}
+
+
+def test_discover_tasks_debug_flag_allows_full_task_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _create_agent_fixture(tmp_path, agent_id="agent_c")
+    _create_agent_fixture(tmp_path, agent_id="agent_a")
+    _create_agent_fixture(tmp_path, agent_id="agent_b")
+    monkeypatch.setenv("ADAAD_METRICS_INCLUDE_FULL_TASKS", "1")
+    monkeypatch.setenv("ADAAD_DREAM_DISCOVERY_SAMPLE_SIZE", "2")
+
+    DreamMode = _dream_mode_cls()
+    dream = DreamMode(tmp_path, tmp_path / "lineage", replay_mode="strict", provider=SeededDeterminismProvider(seed="metrics-debug"))
+
+    with mock.patch("app.dream_mode.metrics.log") as log_metric:
+        tasks = dream.discover_tasks()
+
+    assert tasks == ["agent_a", "agent_b", "agent_c"]
+    payload = log_metric.call_args.kwargs["payload"]
+    assert payload["task_count"] == 3
+    assert payload["task_sample"] == ["agent_a", "agent_b"]
+    assert payload["tasks"] == ["agent_a", "agent_b", "agent_c"]

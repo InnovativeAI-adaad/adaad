@@ -33,6 +33,13 @@ Relative imports that resolve to forbidden modules are also blocked.
 
 Legitimate exceptions require updating both `tools/lint_import_paths.py` and `docs/ARCHITECTURE_CONTRACT.md` in the same PR with rationale.
 
+## Metrics payload minimization for dream tasks
+
+- `dream_discovery` metrics in `app/dream_mode.py` emit deterministic summaries by default (`task_count` + ordered `task_sample`) instead of full task arrays.
+- Full task lists are opt-in for debug-only diagnostics via `ADAAD_METRICS_INCLUDE_FULL_TASKS=1`.
+- Sample size is deterministic and configurable with `ADAAD_DREAM_DISCOVERY_SAMPLE_SIZE` (default `3`).
+- `_health_check_dream` in `app/main.py` emits normalized summary payloads (`task_count`, `safe_boot`) to reduce noisy telemetry while preserving replay-safe observability.
+
 ## Key-rotation boot gate behavior
 
 - `Orchestrator._check_key_rotation_status()` now validates `security/keys/rotation.json` via the key-rotation attestation path when the attestation file exists.

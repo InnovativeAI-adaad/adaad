@@ -390,14 +390,21 @@ class Orchestrator:
         assert self.dream is not None
         tasks = self.dream.discover_tasks()
         transition = self.mutation_orchestrator.evaluate_dream_tasks(tasks)
+        task_count = len(tasks)
+        safe_boot = transition.payload.get("safe_boot", transition.status != "ok")
+        summary_payload = {"task_count": task_count, "safe_boot": safe_boot}
         if transition.status != "ok":
-            metrics.log(event_type="dream_safe_boot", payload={"reason": transition.reason}, level="WARN")
+            metrics.log(
+                event_type="dream_safe_boot",
+                payload={**summary_payload, "reason": transition.reason},
+                level="WARN",
+            )
             self.state["mutation_enabled"] = False
-            self.state["safe_boot"] = transition.payload.get("safe_boot", True)
+            self.state["safe_boot"] = safe_boot
             return
-        metrics.log(event_type="dream_health_ok", payload={"tasks": tasks}, level="INFO")
+        metrics.log(event_type="dream_health_ok", payload=summary_payload, level="INFO")
         self.state["mutation_enabled"] = True
-        self.state["safe_boot"] = transition.payload.get("safe_boot", False)
+        self.state["safe_boot"] = safe_boot
 
     def _health_check_beast(self) -> None:
         assert self.beast is not None
