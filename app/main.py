@@ -23,11 +23,13 @@ import os
 import re
 import time
 import sys
+import threading
 from typing import Any, Dict, Optional
 
 from app import APP_ROOT
 from app.architect_agent import ArchitectAgent
 from app.orchestration import MutationOrchestrationService
+from app.simulation_utils import LRUCache, clone_dna_for_simulation, stable_hash
 from adaad.agents import AGENTS_ROOT
 from runtime.api.agents import MutationEngine, MutationRequest, agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.legacy_modes import BeastModeLoop, DreamMode
@@ -184,6 +186,11 @@ class Orchestrator:
         self.replay_epoch = replay_epoch.strip()
         self.exit_after_boot = exit_after_boot
         self.evolution_runtime.set_replay_mode(self.replay_mode)
+        self._fitness_cache = LRUCache(maxsize=int(os.getenv("ADAAD_FITNESS_CACHE_MAXSIZE", "2048")))
+        self._fitness_cache_hits = 0
+        self._fitness_cache_misses = 0
+        self._fitness_cache_lock = threading.Lock()
+        self._sim_budget_seconds = float(os.getenv("ADAAD_FITNESS_SIMULATION_BUDGET_SECONDS", "0.25"))
 
     def _v(self, message: str) -> None:
         if not self.verbose:
@@ -820,7 +827,13 @@ class Orchestrator:
         dna = {}
         if dna_path.exists():
             dna = json.loads(dna_path.read_text(encoding="utf-8"))
-        simulated = json.loads(json.dumps(dna))
+        # Mutation rationale: use deterministic clone + cache to reduce redundant dry-run scoring cost.
+        # Expected invariants: original DNA remains unchanged; identical payloads yield identical score lookups.
+        sim_start = time.perf_counter()
+        dna_integrity_digest = stable_hash(dna)
+        simulated = clone_dna_for_simulation(dna)
+        if "lineage" not in simulated:
+            raise ValueError("Invalid DNA: missing lineage")
         if request.targets:
             for target in request.targets:
                 if target.path == "dna.json":
@@ -833,12 +846,54 @@ class Orchestrator:
             # Mutation rationale: fail closed on dispatch envelope errors.
             # Expected invariants: only success envelopes can mutate simulated DNA.
             dispatch_result_or_raise(envelope)
+        if os.getenv("ADAAD_DEBUG_SIMULATION_INVARIANTS", "").strip().lower() in {"1", "true", "yes", "on"}:
+            assert dna_integrity_digest == stable_hash(dna), "Original DNA mutated during simulation"
         payload = {
             "parent": dna.get("lineage") or "dry_run",
             "intent": request.intent,
             "content": simulated,
         }
-        return score_mutation_enhanced(request.agent_id, payload)
+        payload_hash = f"{request.agent_id}:{stable_hash(payload)}"
+        sim_budget_seconds = self._sim_budget_seconds
+        should_log_cache_stats = False
+        with self._fitness_cache_lock:
+            cached_score = self._fitness_cache.get(payload_hash)
+            if cached_score is not None:
+                self._fitness_cache_hits += 1
+                should_log_cache_stats = (self._fitness_cache_hits + self._fitness_cache_misses) % 100 == 0
+                if should_log_cache_stats:
+                    metrics.log(
+                        event_type="fitness_cache_stats",
+                        payload={
+                            "hits": self._fitness_cache_hits,
+                            "misses": self._fitness_cache_misses,
+                            "size": len(self._fitness_cache),
+                        },
+                    )
+                return cached_score
+            self._fitness_cache_misses += 1
+            should_log_cache_stats = (self._fitness_cache_hits + self._fitness_cache_misses) % 100 == 0
+        elapsed_before_score = time.perf_counter() - sim_start
+        if elapsed_before_score > sim_budget_seconds:
+            raise TimeoutError("fitness_simulation_budget_exceeded")
+        score = score_mutation_enhanced(request.agent_id, payload)
+        elapsed = time.perf_counter() - sim_start
+        # Budget semantics: fail-closed after scoring if total elapsed exceeds budget.
+        # Expected invariant: no over-budget simulation result is cached or returned.
+        if elapsed > sim_budget_seconds:
+            raise TimeoutError("fitness_simulation_budget_exceeded")
+        with self._fitness_cache_lock:
+            self._fitness_cache.set(payload_hash, score)
+            if should_log_cache_stats:
+                metrics.log(
+                    event_type="fitness_cache_stats",
+                    payload={
+                        "hits": self._fitness_cache_hits,
+                        "misses": self._fitness_cache_misses,
+                        "size": len(self._fitness_cache),
+                    },
+                )
+        return score
 
 
 def main() -> None:
