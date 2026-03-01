@@ -14,7 +14,7 @@ ADAAD is a governance layer for autonomous code mutation. It exists to ensure au
   <a href="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg"></a>
   <a href="QUICKSTART.md"><img alt="Quick Start" src="https://img.shields.io/badge/Quick_Start-5%20Minutes-success"></a>
   <img alt="Python" src="https://img.shields.io/badge/python-3.10+-blue.svg">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache%202.0-blue.svg"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
   <img alt="Governance" src="https://img.shields.io/badge/Governance-Fail--Closed-critical">
 </p>
 
@@ -176,6 +176,44 @@ Recent improvements to `server.py` and dashboard integration:
 - `GET /api/audit/epochs/{epoch_id}/lineage`
 - `GET /api/audit/bundles/{bundle_id}`
 - `WS /ws/events`
+
+
+## Licensing
+
+ADAAD is now distributed under the **MIT License**. See [LICENSE](LICENSE) and
+[LICENSES.md](LICENSES.md) for repository and third-party licensing context.
+
+## Weak-Point Hardening and Optimization Focus
+
+To reduce operational weak points while preserving deterministic behavior, current
+engineering priority is:
+
+- **Input hardening at orchestration boundaries** (reject empty/noise task payloads).
+- **Deterministic normalization** (stable dedupe/ordering for replay parity).
+- **Low-risk performance wins** (avoid repeated allocations in high-frequency control paths).
+- **Fail-closed defaults** for unresolved governance state.
+
+See also:
+- [docs/SECURITY.md](docs/SECURITY.md)
+- [docs/DETERMINISM.md](docs/DETERMINISM.md)
+- [docs/README_IMPLEMENTATION_ALIGNMENT.md](docs/README_IMPLEMENTATION_ALIGNMENT.md)
+- `python scripts/validate_license_compliance.py` for MIT baseline and SPDX compliance checks.
+
+
+## MIT Licensing Rationale
+
+ADAAD uses MIT to simplify contributor and enterprise adoption while preserving
+strict governance and evidence requirements at runtime. Teams integrating ADAAD
+should still validate third-party dependency license obligations per release.
+
+## Hardening Quick Links
+
+| Focus area | Link |
+| --- | --- |
+| Security controls and threat posture | [docs/SECURITY.md](docs/SECURITY.md) |
+| Deterministic replay contract | [docs/DETERMINISM.md](docs/DETERMINISM.md) |
+| Governance mutation lifecycle | [docs/governance/mutation_lifecycle.md](docs/governance/mutation_lifecycle.md) |
+| Release evidence and audit gates | [docs/RELEASE_EVIDENCE_MATRIX.md](docs/RELEASE_EVIDENCE_MATRIX.md) |
 
 ## Quick Start
 

@@ -72,3 +72,35 @@ Welcome to the central navigation page for ADAAD docs.
 - [Diagram ownership contract](DIAGRAM_OWNERSHIP.md)
 
 </details>
+
+
+## License and Compliance Baseline
+
+- Repository license: **MIT** (root `LICENSE`).
+- Compliance metadata: `LICENSES.md` and `NOTICE` in repository root.
+- Automated license compliance gate: `python scripts/validate_license_compliance.py`.
+- Safety-critical use should record third-party license attestations in release evidence.
+
+## Current Weak-Point Mitigation Priorities
+
+The documentation set tracks hardening and optimization priorities around:
+
+1. deterministic orchestration contracts and replay parity,
+2. fail-closed governance paths under missing or malformed inputs, and
+3. conservative performance improvements that do not alter public APIs.
+
+Use the release checklist and evidence matrix to show each mitigation is backed
+by deterministic tests before merge.
+
+
+## Orchestration hardening invariants
+
+`app/orchestration/mutation_orchestration_service.py` enforces these invariants:
+
+- Task normalization is deterministic (first-seen order, deduplicated labels).
+- Empty/whitespace-only task batches resolve to `safe_boot=True`.
+- Malformed/non-string task records are ignored without raising side effects.
+- Transition failures preserve fail-closed behavior (`run_cycle=False`).
+- Blocked transition payloads are isolated per envelope to prevent cross-call mutation bleed.
+
+Related: [governance mutation lifecycle](governance/mutation_lifecycle.md).

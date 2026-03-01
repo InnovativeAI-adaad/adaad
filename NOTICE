@@ -1,8 +1,7 @@
-InnovativeAI ADAAD
+ADAAD
+Copyright (c) 2026-2027 ADAAD contributors
 
-Copyright 2025 InnovativeAI
+This repository is distributed under the MIT License. See `LICENSE`.
 
-This product includes software licensed under the Apache License 2.0.
-See LICENSE.
-“InnovativeAI”, “ADAAD”, “Aponi”, and “Cryovant” are trademarks of InnovativeAI.
-No trademark rights are granted.
+Third-party dependencies and bundled artifacts remain subject to their own
+respective licenses.

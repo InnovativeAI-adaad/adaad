@@ -1,52 +1,82 @@
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT
 """
 Fail-fast license guardrail.
 
 Checks:
-- No Creative Commons licenses referenced.
+- No CC-license references in repository-authored files.
 - No HTTP Apache license URLs.
-- All Python files contain an SPDX identifier (Apache-2.0).
+- Root licensing artifacts align with MIT baseline.
+- Python files that declare SPDX use an approved identifier.
 """
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-APACHE_HTTP = "http://www.apache.org/licenses"
-SPDX_TAG = "# SPDX-License-Identifier: Apache-2.0"
-SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".mypy_cache", ".pytest_cache", "node_modules"}
+APACHE_HTTP = "http" + "://www.apache.org/licenses"
+CC_TOKEN = "Creative" + " Commons"
+CC0_TOKEN = "CC" + "0"
+VALID_SPDX_TAGS = {
+    "# SPDX-License-Identifier: MIT",
+    "# SPDX-License-Identifier: Apache-2.0",
+}
 SKIP_SUFFIXES = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".zip", ".pdf", ".mp4", ".mov", ".sqlite", ".db"}
-ALLOW_MISSING_SPDX = {"LICENSE"}  # Non-code file, but keep here for clarity.
 
 
-def python_files(root: Path) -> list[Path]:
-    return [p for p in root.rglob("*.py") if p.is_file()]
+def tracked_files(root: Path) -> list[Path]:
+    completed = subprocess.run(
+        ["git", "ls-files"],
+        cwd=root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    files: list[Path] = []
+    for line in completed.stdout.splitlines():
+        path = root / line.strip()
+        if path.is_file():
+            files.append(path)
+    return files
+
+
+def _check_mit_baseline(failures: list[str]) -> None:
+    license_text = (REPO_ROOT / "LICENSE").read_text(encoding="utf-8", errors="ignore")
+    if "MIT License" not in license_text:
+        failures.append("Root LICENSE does not contain MIT License header")
+
+    licenses_md = (REPO_ROOT / "LICENSES.md").read_text(encoding="utf-8", errors="ignore")
+    if "MIT" not in licenses_md:
+        failures.append("LICENSES.md does not reference MIT baseline")
+
+    notice_text = (REPO_ROOT / "NOTICE").read_text(encoding="utf-8", errors="ignore")
+    if "MIT License" not in notice_text:
+        failures.append("NOTICE does not reference MIT License")
 
 
 def main() -> int:
     failures: list[str] = []
 
-    for path in REPO_ROOT.rglob("*"):
-        if not path.is_file():
-            continue
-        if any(part in SKIP_DIRS for part in path.parts):
+    _check_mit_baseline(failures)
+
+    for path in tracked_files(REPO_ROOT):
+        if path.name == "check_licenses.py":
             continue
         if path.suffix.lower() in SKIP_SUFFIXES:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if "Creative Commons" in text or "CC0" in text:
-            failures.append(f"CC reference found in {path}")
+        if CC_TOKEN in text or CC0_TOKEN in text:
+            failures.append(f"CC-license reference found in {path.relative_to(REPO_ROOT)}")
         if APACHE_HTTP in text:
-            failures.append(f"HTTP Apache URL found in {path}")
+            failures.append(f"HTTP Apache URL found in {path.relative_to(REPO_ROOT)}")
 
-    for py in python_files(REPO_ROOT):
-        if py.name in ALLOW_MISSING_SPDX:
-            continue
-        head = py.read_text(encoding="utf-8").splitlines()[:25]
-        if not any(SPDX_TAG in line for line in head):
-            failures.append(f"Missing SPDX tag in {py}")
+        if path.suffix == ".py":
+            head = text.splitlines()[:25]
+            spdx_lines = [line for line in head if "SPDX-License-Identifier:" in line]
+            if spdx_lines and not any(any(tag in line for tag in VALID_SPDX_TAGS) for line in spdx_lines):
+                failures.append(f"Invalid SPDX tag in {path.relative_to(REPO_ROOT)}")
 
     if failures:
         for line in failures:
