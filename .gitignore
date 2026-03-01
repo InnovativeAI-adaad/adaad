@@ -48,3 +48,11 @@ security/ledger/*.lock
 *.lock
 runtime/evolution/state/
 app/agents/
+venv/
+reports/
+data/work/
+data/logs/
+security/ledger/*.lock
+*.lock
+runtime/evolution/state/
+app/agents/
