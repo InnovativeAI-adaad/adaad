@@ -9,6 +9,7 @@ on:
 jobs:
   classify:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     outputs:
       docs: ${{ steps.filter.outputs.docs }}
       tests: ${{ steps.filter.outputs.tests }}
