@@ -16,6 +16,7 @@ Minimal HTTP dashboard served with the standard library.
 """
 
 import argparse
+import concurrent.futures
 import json
 import logging
 import os
@@ -23,7 +24,7 @@ import re
 import threading
 import time
 from hashlib import sha256
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List
 from urllib import error as urlerror, request as urlrequest
@@ -84,6 +85,12 @@ CONTROL_MODES = {"builder", "automation", "analysis", "growth"}
 CONTROL_JWT_TTL_SECONDS = 300
 CONTROL_NONCE_TTL_SECONDS = 300
 CONTROL_NONCE_CACHE_LIMIT = 1024
+CONTROL_BACKGROUND_TIMEOUT_SECONDS = 5.0
+CONTROL_ALLOWED_ROLES = {"viewer", "operator", "approver", "admin"}
+CONTROL_WRITE_ROLES = {"operator", "admin"}
+CONTROL_SIGNOFF_ROLES = {"approver", "admin"}
+CONTROL_HIGH_IMPACT_ACTIONS = {"fork", "cancel"}
+CONTROL_REQUIRE_SIGNOFF = os.environ.get("APONI_CONTROL_REQUIRE_SIGNOFF", "0").strip() == "1"
 UX_EVENT_TYPES = {
     "feature_entry",
     "feature_completion",
@@ -684,16 +691,17 @@ class AponiDashboard:
     def __init__(self, host: str = "0.0.0.0", port: int = 8080, *, serve_mcp: bool = False, jwt_secret: str = "") -> None:
         self.host = host
         self.port = port
-        self._server: HTTPServer | None = None
+        self._server: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
         self._state: Dict[str, str] = {}
         self.serve_mcp = bool(serve_mcp)
         self.jwt_secret = jwt_secret
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max(4, (os.cpu_count() or 2)))
 
     def start(self, orchestrator_state: Dict[str, str]) -> None:
         self._state = orchestrator_state
         handler = self._build_handler()
-        self._server = HTTPServer((self.host, self.port), handler)
+        self._server = ThreadingHTTPServer((self.host, self.port), handler)
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
         self._thread.start()
         metrics.log(event_type="aponi_dashboard_started", payload={"host": self.host, "port": self.port}, level="INFO", element_id=ELEMENT_ID)
@@ -709,20 +717,43 @@ class AponiDashboard:
         replay = ReplayEngine(lineage_v2)
         bundle_builder = EvidenceBundleBuilder(ledger=lineage_v2, replay_engine=replay)
         seen_control_nonces: Dict[str, float] = {}
+        executor = self._executor
 
         class Handler(SimpleHTTPRequestHandler):
             _replay_engine = replay
             _bundle_builder = bundle_builder
+            _trace_id: str = ""
+
+            def handle_one_request(self) -> None:
+                self._trace_id = self.headers.get("X-Trace-Id", "").strip() if hasattr(self, "headers") and self.headers else ""
+                if not self._trace_id:
+                    self._trace_id = sha256(f"{time.time_ns()}:{id(self)}".encode("utf-8")).hexdigest()[:16]
+                started = time.perf_counter()
+                try:
+                    super().handle_one_request()
+                finally:
+                    elapsed_ms = round((time.perf_counter() - started) * 1000.0, 3)
+                    metrics.log(
+                        event_type="aponi_http_request",
+                        payload={"path": getattr(self, "path", ""), "method": getattr(self, "command", ""), "duration_ms": elapsed_ms, "trace_id": self._trace_id},
+                        level="INFO",
+                        element_id=ELEMENT_ID,
+                    )
             def _send_json(self, payload, *, status_code: int = 200) -> None:
                 body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
                 self.send_response(status_code)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Trace-Id", self._trace_id)
                 self.send_header("Content-Length", str(len(body)))
                 self.end_headers()
                 self.wfile.write(body)
 
 
+
+            def _run_background(self, fn, *args, **kwargs):
+                future = executor.submit(fn, *args, **kwargs)
+                return future.result(timeout=CONTROL_BACKGROUND_TIMEOUT_SECONDS)
             @staticmethod
             def _b64url(data: bytes) -> str:
                 import base64
@@ -743,8 +774,22 @@ class AponiDashboard:
                 if not jwt_secret:
                     raise ValueError("jwt_secret_missing")
                 now = int(time.time())
+                role = os.environ.get("APONI_CONTROL_DEFAULT_ROLE", "operator").strip().lower() or "operator"
+                if role not in CONTROL_ALLOWED_ROLES:
+                    role = "operator"
                 header = self._b64url(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode("utf-8"))
-                payload = self._b64url(json.dumps({"aud": "aponi-control", "iat": now, "exp": now + int(ttl_seconds)}, separators=(",", ":")).encode("utf-8"))
+                payload = self._b64url(
+                    json.dumps(
+                        {
+                            "aud": "aponi-control",
+                            "sub": os.environ.get("APONI_CONTROL_DEFAULT_SUBJECT", "aponi-operator"),
+                            "role": role,
+                            "iat": now,
+                            "exp": now + int(ttl_seconds),
+                        },
+                        separators=(",", ":"),
+                    ).encode("utf-8")
+                )
                 message = f"{header}.{payload}".encode("utf-8")
                 sig = self._b64url(hmac.new(jwt_secret.encode("utf-8"), message, hashlib.sha256).digest())
                 return f"{header}.{payload}.{sig}"
@@ -768,6 +813,17 @@ class AponiDashboard:
                     **payload,
                 }
                 logging.warning("CONTROL_AUDIT %s", json.dumps(record, sort_keys=True))
+                try:
+                    journal.append_tx("aponi_control_audit", record)
+                except Exception:
+                    logging.exception("CONTROL_AUDIT_LEDGER_WRITE_FAILED")
+
+            @staticmethod
+            def _claim_role(claims: Dict[str, Any]) -> str:
+                role = str(claims.get("role", "")).strip().lower()
+                if role in CONTROL_ALLOWED_ROLES:
+                    return role
+                return ""
 
             def _reject(self, status_code: int, reason: str, *, subject: str = "") -> None:
                 self._audit_log(
@@ -822,11 +878,38 @@ class AponiDashboard:
                 claims = self._require_jwt()
                 if claims is None:
                     return None
+                if self._claim_role(claims) not in CONTROL_WRITE_ROLES:
+                    self._reject(403, "insufficient_role", subject=str(claims.get("sub", "")))
+                    return None
                 if not self._require_control_origin():
                     return None
                 if not self._require_control_nonce():
                     return None
                 return claims
+
+            def _require_multi_party_signoff(self, claims: Dict[str, Any], *, action: str) -> bool:
+                if not CONTROL_REQUIRE_SIGNOFF or action not in CONTROL_HIGH_IMPACT_ACTIONS:
+                    return True
+                signoff = self.headers.get("X-APONI-Signoff-Token", "").strip()
+                if not signoff:
+                    self._reject(403, "missing_signoff_token", subject=str(claims.get("sub", "")))
+                    return False
+                try:
+                    signoff_claims = self._decode_jwt_payload(signoff)
+                except Exception:
+                    self._reject(403, "invalid_signoff_token", subject=str(claims.get("sub", "")))
+                    return False
+                if int(signoff_claims.get("exp", 0) or 0) < int(time.time()):
+                    self._reject(403, "expired_signoff_token", subject=str(signoff_claims.get("sub", "")))
+                    return False
+                if self._claim_role(signoff_claims) not in CONTROL_SIGNOFF_ROLES:
+                    self._reject(403, "insufficient_signoff_role", subject=str(signoff_claims.get("sub", "")))
+                    return False
+                if str(signoff_claims.get("sub", "")) == str(claims.get("sub", "")):
+                    self._reject(403, "signoff_subject_conflict", subject=str(signoff_claims.get("sub", "")))
+                    return False
+                self._audit_log("control_signoff_accepted", {"subject": str(claims.get("sub", "")), "signoff_subject": str(signoff_claims.get("sub", "")), "action": action})
+                return True
 
             def _require_control_nonce(self) -> bool:
                 nonce = self.headers.get("X-APONI-Nonce", "").strip()
@@ -909,9 +992,9 @@ class AponiDashboard:
                     self._send_js(self._user_console_js())
                     return
                 if path.startswith("/state"):
-                    state_payload = dict(state_ref)
-                    state_payload["mutation_rate_limit"] = self._mutation_rate_state()
-                    state_payload["determinism_panel"] = self._determinism_panel()
+                    state_payload = self._run_background(dict, state_ref)
+                    state_payload["mutation_rate_limit"] = self._run_background(self._mutation_rate_state)
+                    state_payload["determinism_panel"] = self._run_background(self._determinism_panel)
                     self._send_json(state_payload)
                     return
                 if path.startswith("/metrics/review-quality"):
@@ -936,8 +1019,8 @@ class AponiDashboard:
                 if path.startswith("/metrics"):
                     self._send_json(
                         {
-                            "entries": metrics.tail(limit=50),
-                            "determinism": self._rolling_determinism_score(window=200),
+                            "entries": self._run_background(metrics.tail, 50),
+                            "determinism": self._run_background(self._rolling_determinism_score, window=200),
                         }
                     )
                     return
@@ -945,14 +1028,14 @@ class AponiDashboard:
                     self._send_json(self._fitness_events())
                     return
                 if path.startswith("/system/intelligence"):
-                    self._send_validated_response("/system/intelligence", "system_intelligence.schema.json", self._intelligence_snapshot())
+                    self._send_validated_response("/system/intelligence", "system_intelligence.schema.json", self._run_background(self._intelligence_snapshot))
                     return
                 if path.startswith("/risk/summary"):
-                    self._send_validated_response("/risk/summary", "risk_summary.schema.json", self._risk_summary())
+                    self._send_validated_response("/risk/summary", "risk_summary.schema.json", self._run_background(self._risk_summary))
                     return
                 if path.startswith("/risk/instability"):
                     try:
-                        payload = self._risk_instability()
+                        payload = self._run_background(self._risk_instability)
                     except GovernancePolicyError as exc:
                         self._send_governance_error("/risk/instability", "instability_policy_unavailable", str(exc))
                         return
@@ -969,7 +1052,7 @@ class AponiDashboard:
                     return
                 if path.startswith("/alerts/evaluate"):
                     try:
-                        payload = self._alerts_evaluate()
+                        payload = self._run_background(self._alerts_evaluate)
                     except GovernancePolicyError as exc:
                         self._send_governance_error("/alerts/evaluate", "instability_policy_unavailable", str(exc))
                         return
@@ -1079,7 +1162,8 @@ class AponiDashboard:
                     self._send_json({"ok": False, "error": "command_surface_disabled"})
                     return
                 if parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/cockpit/plan") or parsed.path.startswith("/control/execution"):
-                    if self._require_control_write_auth() is None:
+                    claims = self._require_control_write_auth()
+                    if claims is None:
                         return
                 content_length = int(self.headers.get("Content-Length", "0") or "0")
                 if content_length <= 0:
@@ -1124,6 +1208,8 @@ class AponiDashboard:
                     return
 
                 if parsed.path.startswith("/control/queue/cancel"):
+                    if not self._require_multi_party_signoff(claims, action="cancel"):
+                        return
                     command_id = _normalized_field(payload, "command_id")
                     if not command_id:
                         self._send_json({"ok": False, "error": "missing_command_id"})
@@ -1137,6 +1223,8 @@ class AponiDashboard:
                     validated_execution = self._validate_execution_control_command(payload)
                     if not validated_execution.get("ok"):
                         self._send_json(validated_execution)
+                        return
+                    if not self._require_multi_party_signoff(claims, action=str(validated_execution["command"].get("action", ""))):
                         return
                     entry = _queue_control_command(validated_execution["command"])
                     metrics.log(
@@ -3928,6 +4016,7 @@ scheduleNextQueueRefresh();
             self._server.shutdown()
         if self._thread:
             self._thread.join(timeout=1)
+        self._executor.shutdown(wait=False, cancel_futures=True)
 
 
 def main(argv: list[str] | None = None) -> int:
