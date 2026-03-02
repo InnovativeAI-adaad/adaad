@@ -6,7 +6,7 @@ import json
 
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.replay_attestation import ReplayProofBuilder, validate_replay_proof_schema, verify_replay_proof_bundle
-from runtime.governance.foundation import canonical_json, sha256_digest, sha256_prefixed_digest
+from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
 from security import cryovant
 
 
@@ -166,7 +166,7 @@ def test_replay_attestation_rejects_tampered_bundle(tmp_path) -> None:
     signature_tampered["signature_bundle"]["signature"] = "bad-signature"
     signature_result = verify_replay_proof_bundle(signature_tampered)
     assert not signature_result["ok"]
-    assert signature_result["signature_results"][0]["error"] == "signature_mismatch"
+    assert signature_result["error"] == "schema_validation_failed"
 
 
 def test_replay_attestation_verify_uses_explicit_keyring(tmp_path) -> None:
@@ -264,3 +264,74 @@ def test_replay_attestation_cross_instance_revocation_check(tmp_path) -> None:
     )
     assert not result["ok"]
     assert result["signature_results"][0]["error"] == "key_revoked"
+
+
+def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
+    epoch_id = "epoch-ed25519"
+    ledger = LineageLedgerV2(tmp_path / "lineage_ed25519.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(
+        ledger=ledger,
+        proofs_dir=tmp_path / "proofs",
+        key_id="replay-proof-ed25519-dev",
+        algorithm="ed25519",
+    )
+    bundle = builder.build_bundle(epoch_id)
+    assert bundle["signature_bundle"]["algorithm"] == "ed25519"
+    assert validate_replay_proof_schema(bundle) == []
+    assert verify_replay_proof_bundle(bundle)["ok"]
+
+
+def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
+    epoch_id = "epoch-ed25519-tamper"
+    ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_tamper.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(
+        ledger=ledger,
+        proofs_dir=tmp_path / "proofs",
+        key_id="replay-proof-ed25519-dev",
+        algorithm="ed25519",
+    )
+    bundle = builder.build_bundle(epoch_id)
+    tampered = json.loads(json.dumps(bundle))
+    tampered["signature_bundle"]["signature"] = "ed25519:Zm9v"
+    tampered["signatures"][0]["signature"] = "ed25519:Zm9v"
+    result = verify_replay_proof_bundle(tampered)
+    assert not result["ok"]
+    assert result["signature_results"][0]["error"] == "signature_mismatch"
+
+
+def test_replay_attestation_ed25519_unknown_key_id(tmp_path) -> None:
+    epoch_id = "epoch-ed25519-unknown"
+    ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_unknown.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(
+        ledger=ledger,
+        proofs_dir=tmp_path / "proofs",
+        key_id="replay-proof-ed25519-dev",
+        algorithm="ed25519",
+    )
+    bundle = builder.build_bundle(epoch_id)
+    bundle["signature_bundle"]["key_id"] = "missing-key"
+    bundle["signatures"][0]["key_id"] = "missing-key"
+
+    result = verify_replay_proof_bundle(bundle)
+    assert not result["ok"]
+    assert result["signature_results"][0]["error"] == "unknown_key_id"
+
+
+def test_replay_attestation_schema_rejects_algorithm_incompatible_signature(tmp_path) -> None:
+    epoch_id = "epoch-schema-compat"
+    ledger = LineageLedgerV2(tmp_path / "lineage_schema_compat.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(ledger=ledger, proofs_dir=tmp_path / "proofs", key_id="proof-key", algorithm="hmac-sha256")
+    bundle = builder.build_bundle(epoch_id)
+    bundle["signatures"][0]["algorithm"] = "ed25519"
+    bundle["signature_bundle"]["algorithm"] = "ed25519"
+
+    errors = validate_replay_proof_schema(bundle)
+    assert any("invalid_ed25519_signature" in err for err in errors)
