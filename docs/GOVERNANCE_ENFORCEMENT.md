@@ -38,6 +38,32 @@ Required CI checks:
 - Lineage continuity helper is wired conservatively: enforced when lineage_v2 chain resolves for the request agent; genesis/journal invariants remain authoritative fallback.
 
 
+
+## CI/CD posture (audit mirror)
+
+The repository no longer fits a "No CI" classification. Active workflows cover core CI, CodeQL, release gating, red-team, determinism lint, entropy health, and branch-protection validation.
+
+### Current-state matrix
+
+| Workflow file | Triggers | Purpose |
+|---|---|---|
+| `.github/workflows/ci.yml` | `push`/`pull_request` on `main` | Primary CI, governance and replay/evidence gates |
+| `.github/workflows/codeql.yml` | `push`/`pull_request` on `main`, weekly cron | CodeQL security analysis |
+| `.github/workflows/governance_strict_release_gate.yml` | Governance/public-readiness tag pushes, manual dispatch | Strict governance release gate |
+| `.github/workflows/redteam_nightly.yml` | Nightly cron, manual dispatch | Deterministic red-team corpus run |
+| `.github/workflows/determinism_lint.yml` | `pull_request` (critical paths) | Determinism lint lane |
+| `.github/workflows/entropy_health.yml` | Daily cron, manual dispatch | Entropy health monitoring |
+
+### Remaining automation gaps
+
+- No dedicated secret-scanning workflow lane is present under `.github/workflows/`.
+- `.github/dependabot.yml` is not present, so automated dependency update PRs are not configured.
+
+### Audit freshness
+
+- Baseline commit: `0df3d3f7a3befe91faf6b327505a8f3e9ae31d49`
+- Baseline date: `2026-03-02T07:34:19-06:00`
+
 ## Canonical Governance Law (v1)
 
 Runtime governance validators are now bound to `runtime/governance/canon_law_v1.yaml`, which defines machine-enforceable Articles I–VIII and escalation tiers (`advisory`, `conservative`, `governance`, `critical`).

@@ -72,3 +72,34 @@ Result: no `runtime/governance/auth` module references remain for token validati
 ## Risk Classification
 - **Operational risk:** Low (documentation/spec realignment only)
 - **Governance correctness impact:** High (prevents hardening being applied to non-active paths)
+
+## CI/CD Coverage Finding (Reclassified)
+
+Previous wording that described ADAAD as having "missing CI/CD" is no longer accurate. The repository has multiple active GitHub Actions workflows, so the finding is reclassified from **No CI** to **targeted automation gaps**.
+
+### Current-State Workflow Matrix
+
+| Workflow file | Triggers | Primary purpose | Finding status |
+|---|---|---|---|
+| `.github/workflows/ci.yml` | `push`/`pull_request` on `main` | Primary CI pipeline (tests, governance checks, strict replay, evidence and promotion lanes) | Present |
+| `.github/workflows/ci-generated.yml` | `pull_request`, `push` on `main`, `workflow_dispatch` | Generated-artifact CI validation for deterministic fixtures | Present |
+| `.github/workflows/codeql.yml` | `push`/`pull_request` on `main`, weekly cron | CodeQL static analysis security lane | Present |
+| `.github/workflows/governance_strict_release_gate.yml` | Release/governance tag pushes, `workflow_dispatch` | Strict release gate for governance/public-readiness tags | Present |
+| `.github/workflows/release_evidence_gate.yml` | `push` for `v0.70.0` tag | Legacy tag-specific release evidence gate | Present (narrow scope) |
+| `.github/workflows/redteam_nightly.yml` | Nightly cron, `workflow_dispatch` | Red-team nightly harness execution | Present |
+| `.github/workflows/determinism_lint.yml` | `pull_request` on determinism-critical paths | Determinism lint lane for governance/evolution/security surfaces | Present |
+| `.github/workflows/entropy_health.yml` | Daily cron, `workflow_dispatch` | Entropy health profile checks | Present |
+| `.github/workflows/entropy_baseline.yml` | `push` on `main` | Entropy baseline generation/comparison baseline updates | Present |
+| `.github/workflows/branch_protection_check.yml` | `pull_request` on `main`, `workflow_dispatch` | Branch protection policy verification gate | Present |
+
+### Remaining Gaps (Specific, Not "No CI")
+
+- **Secret-scanning CI lane gap:** no dedicated secret scanning workflow (for example, gitleaks/trufflehog) is defined under `.github/workflows/`.
+- **Dependabot automation gap:** `.github/dependabot.yml` is absent, so dependency update PR automation is not currently configured.
+- **Release gate consolidation gap:** both a strict governance release gate and a legacy fixed-tag release evidence gate exist; scope rationalization is still advisable.
+
+## Audit Freshness
+
+- **Assessment baseline commit SHA:** `0df3d3f7a3befe91faf6b327505a8f3e9ae31d49`
+- **Baseline commit date:** `2026-03-02T07:34:19-06:00`
+- **Workflow inventory source:** `.github/workflows/*.yml` at the baseline commit above.
