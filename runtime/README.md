@@ -53,6 +53,7 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 - Deterministic promotion simulation runner: `runtime/evolution/simulation_runner.py` with CI entrypoint `scripts/run_simulation_runner.py`.
 - Deterministic epoch-frozen fitness orchestration: `runtime/evolution/fitness_orchestrator.py` (`survival_only`/`hybrid`/`economic_full` regimes, epoch snapshot ledger emission, stable config hashing).
 - Canon Law v1.0 YAML enforcement is wired through `runtime/governance/{canon_law.py,policy_validator.py,gate_certifier.py}` with deterministic escalation tiers and fail-closed defaults.
+- Policy-driven privileged-operation governance adapter: `runtime/governance/policy_adapter.py` with orchestration gate `runtime/director.py`, baseline Rego policy at `governance/policies.rego`, deterministic decision audit records (`input_digest`, `policy_hash`, `decision`, `reason`) to metrics + journal evidence streams.
 - Goal graph supports signed hot-reload via `GoalGraph.reload_goal_graph(...)` with Cryovant payload signature verification before activation.
 - MCP proposal writer runtime: `runtime/mcp/` deterministic FastAPI endpoints and hash-linked queue append flow.
 - Canonical governance event taxonomy/normalization: `runtime/governance/event_taxonomy.py`.

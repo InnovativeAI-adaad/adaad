@@ -47,6 +47,7 @@ from runtime.api.mutation_runtime import (
 # bootstrap_tool_registry remains intentionally imported from orchestrator wiring layer
 # so tool adapters are available before execution-cycle startup.
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
+from runtime.director import GovernanceDeniedError, RuntimeDirector
 from security.ledger import journal
 
 
@@ -81,6 +82,7 @@ class MutationExecutor:
             resolved_provider = runtime_provider
         self.governor = self.evolution_runtime.governor
         self.provider = resolved_provider
+        self.director = RuntimeDirector()
         self.test_sandbox = TestSandbox(root_dir=ROOT_DIR, timeout_s=60)
         self.hardened_sandbox = HardenedSandboxExecutor(self.test_sandbox, provider=self.provider)
         self.impact_predictor = ImpactPredictor(agents_root)
@@ -424,7 +426,17 @@ class MutationExecutor:
                 provider=self.provider,
             ) as tx:
                 for target in mutation_targets:
-                    mutation_records.append(tx.apply(target))
+                    mutation_records.append(
+                        self.director.execute_privileged(
+                            "mutation.apply",
+                            {
+                                "actor": request.agent_id,
+                                "actor_tier": self.governor.tier.name.lower(),
+                                "fail_closed": self.evolution_runtime.fail_closed,
+                            },
+                            lambda target=target: tx.apply(target),
+                        )
+                    )
                 tx.verify()
                 test_result = self._normalize_test_result(
                     self._call_run_tests(mutation_id=mutation_id, epoch_id=epoch_id, replay_seed=str(replay_seed or "0000000000000001"))
@@ -435,7 +447,7 @@ class MutationExecutor:
                     tx.commit()
                 else:
                     tx.rollback()
-        except MutationTargetError as exc:
+        except (MutationTargetError, GovernanceDeniedError) as exc:
             metrics.log(event_type="mutation_rejected_preflight", payload={"agent": request.agent_id, "reason": str(exc)}, level="ERROR", element_id=ELEMENT_ID)
             journal.write_entry(agent_id=request.agent_id, action="mutation_failed", payload={"mutation_id": mutation_id, "epoch_id": epoch_id, "error": str(exc), "ts": now_iso()})
             self.evolution_runtime.after_mutation_cycle({"status": "skipped"})
@@ -612,9 +624,26 @@ class MutationExecutor:
                 return {"status": "rejected", "reason": str(exc), "mutation_id": mutation_id, "epoch_id": epoch_id}
             lifecycle.current_state = lifecycle_state
             try:
+                self.director.execute_privileged(
+                    "mutation.promote",
+                    {
+                        "actor": request.agent_id,
+                        "actor_tier": self.governor.tier.name.lower(),
+                        "fail_closed": self.evolution_runtime.fail_closed,
+                    },
+                    lambda: None,
+                )
                 manifest = generate_manifest(lifecycle, "completed", risk_score=float(impact.risk_score))
                 manifest_path = agent_dir / "manifests" / f"{mutation_id}.manifest.json"
-                manifest_hash = write_manifest(manifest_path, manifest)
+                manifest_hash = self.director.execute_privileged(
+                    "mutation.manifest.write",
+                    {
+                        "actor": request.agent_id,
+                        "actor_tier": self.governor.tier.name.lower(),
+                        "fail_closed": self.evolution_runtime.fail_closed,
+                    },
+                    lambda: write_manifest(manifest_path, manifest),
+                )
                 journal.write_entry(
                     agent_id=request.agent_id,
                     action="mutation_manifest_written",
