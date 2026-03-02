@@ -106,3 +106,60 @@ def test_snapshot_manager_prunes_deterministically_with_rapid_calls(tmp_path: Pa
     expected_ids = [item.snapshot_id for item in created[-5:]][::-1]
     assert [item.snapshot_id for item in remaining] == expected_ids
     assert [item.creation_sequence for item in remaining] == [12, 11, 10, 9, 8]
+
+
+def test_latest_valid_snapshot_ignores_incomplete_directories(tmp_path: Path) -> None:
+    source = tmp_path / "lineage_v2.jsonl"
+    source.write_text('{"type":"EpochStartEvent"}\n', encoding="utf-8")
+
+    snapshots = SnapshotManager(tmp_path / "snaps")
+    complete = snapshots.create_snapshot_set([source])
+
+    partial_dir = snapshots.snapshot_dir / "snapshot-partial"
+    partial_dir.mkdir(parents=True)
+    (partial_dir / source.name).write_text("valid-but-incomplete\n", encoding="utf-8")
+
+    metadata = json.loads(snapshots.metadata_path.read_text(encoding="utf-8"))
+    metadata["snapshot-partial"] = {
+        "snapshot_id": "snapshot-partial",
+        "timestamp": "2100-01-01T00:00:00Z",
+        "file_count": 1,
+        "total_bytes": 1,
+        "files": {source.name: "dummy"},
+        "epoch_id": "",
+        "creation_sequence": 999,
+    }
+    snapshots.metadata_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+
+    refreshed = SnapshotManager(snapshots.snapshot_dir)
+    def _validate_exists(path: Path) -> None:
+        path.read_text(encoding="utf-8")
+
+    latest = refreshed.get_latest_valid_snapshot(source.name, _validate_exists)
+    assert latest is not None
+    assert latest.parent.name == complete.snapshot_id
+
+
+def test_latest_valid_snapshot_orders_by_creation_sequence_not_mtime(tmp_path: Path) -> None:
+    source = tmp_path / "lineage_v2.jsonl"
+    source.write_text('{"type":"EpochStartEvent"}\n', encoding="utf-8")
+
+    snapshots = SnapshotManager(tmp_path / "snaps")
+    first = snapshots.create_snapshot_set([source])
+
+    source.write_text('{"type":"EpochStartEvent","n":2}\n', encoding="utf-8")
+    second = snapshots.create_snapshot_set([source])
+
+    first_file = snapshots.snapshot_dir / first.snapshot_id / source.name
+    second_file = snapshots.snapshot_dir / second.snapshot_id / source.name
+    # Make the older snapshot look newer by mtime to ensure ordering ignores mtime.
+    first_file.touch()
+    (snapshots.snapshot_dir / first.snapshot_id).touch()
+
+    def _validate_exists(path: Path) -> None:
+        path.read_text(encoding="utf-8")
+
+    latest = snapshots.get_latest_valid_snapshot(source.name, _validate_exists)
+    assert latest is not None
+    assert latest.parent.name == second.snapshot_id
+    assert latest.read_text(encoding="utf-8") == second_file.read_text(encoding="utf-8")

@@ -41,6 +41,8 @@ class SnapshotMetadata:
 class SnapshotManager:
     """Manages rotating snapshots with retention policy and metadata."""
 
+    _completion_marker_name = "snapshot_complete"
+
     def __init__(
         self,
         snapshot_dir: Path,
@@ -129,18 +131,28 @@ class SnapshotManager:
 
     def create_snapshot_set(self, sources: list[Path], epoch_id: str = "") -> SnapshotMetadata:
         require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
-        snapshot_id, snapshot_path = self._reserve_snapshot_dir()
+        snapshot_id = self._reserve_snapshot_id()
+        snapshot_path = self.snapshot_dir / snapshot_id
+        temp_snapshot_path = self.snapshot_dir / f"{snapshot_id}.tmp"
+        temp_snapshot_path.mkdir(parents=True, exist_ok=False)
 
-        file_hashes: dict[str, str] = {}
-        total_bytes = 0
-        for source in sources:
-            source.parent.mkdir(parents=True, exist_ok=True)
-            if not source.exists():
-                source.touch()
-            target = snapshot_path / source.name
-            shutil.copy2(source, target)
-            file_hashes[source.name] = self._hash_file(target)
-            total_bytes += target.stat().st_size
+        try:
+            file_hashes: dict[str, str] = {}
+            total_bytes = 0
+            for source in sources:
+                source.parent.mkdir(parents=True, exist_ok=True)
+                if not source.exists():
+                    source.touch()
+                target = temp_snapshot_path / source.name
+                shutil.copy2(source, target)
+                file_hashes[source.name] = self._hash_file(target)
+                total_bytes += target.stat().st_size
+
+            (temp_snapshot_path / self._completion_marker_name).write_text("complete\n", encoding="utf-8")
+            temp_snapshot_path.replace(snapshot_path)
+        except Exception:
+            shutil.rmtree(temp_snapshot_path, ignore_errors=True)
+            raise
 
         creation_sequence = self._next_creation_sequence
         self._next_creation_sequence += 1
@@ -200,17 +212,16 @@ class SnapshotManager:
             self._metadata.pop(old.snapshot_id, None)
         self._save_metadata()
 
-    def _reserve_snapshot_dir(self) -> tuple[str, Path]:
+    def _reserve_snapshot_id(self) -> str:
         for _ in range(32):
             snapshot_id = self._generate_snapshot_id()
             if snapshot_id in self._metadata:
                 continue
             snapshot_path = self.snapshot_dir / snapshot_id
-            try:
-                snapshot_path.mkdir(parents=True, exist_ok=False)
-                return snapshot_id, snapshot_path
-            except FileExistsError:
+            temp_snapshot_path = self.snapshot_dir / f"{snapshot_id}.tmp"
+            if snapshot_path.exists() or temp_snapshot_path.exists():
                 continue
+            return snapshot_id
         raise RuntimeError("unable_to_reserve_unique_snapshot_id")
 
     def _generate_snapshot_id(self) -> str:
@@ -219,12 +230,13 @@ class SnapshotManager:
         return f"snapshot-{timestamp}-{suffix:04x}"
 
     def get_latest_valid_snapshot(self, source_name: str, validator: Callable[[Path], None]) -> Path | None:
-        snapshots = sorted(
-            [d for d in self.snapshot_dir.glob("snapshot-*") if d.is_dir()],
-            key=lambda p: p.stat().st_mtime,
-            reverse=True,
-        )
-        for snapshot_dir in snapshots:
+        snapshots = sorted(self._metadata.values(), key=lambda m: m.creation_sequence, reverse=True)
+        for metadata in snapshots:
+            snapshot_dir = self.snapshot_dir / metadata.snapshot_id
+            if not snapshot_dir.is_dir():
+                continue
+            if not (snapshot_dir / self._completion_marker_name).exists():
+                continue
             snapshot = snapshot_dir / source_name
             if not snapshot.exists():
                 continue
