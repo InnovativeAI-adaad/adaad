@@ -44,6 +44,7 @@ ADAAD is a governance layer for autonomous code mutation. It exists to ensure au
 | 🛡️ Fail-closed constitutional gating | Mutations halt automatically when policy/replay/evidence constraints fail. |
 | 🧾 Ledger-anchored evidence | Every governed step can be traced to durable artifacts for audit and review. |
 | 🚦 Release evidence gates | Public-readiness milestones require objective evidence completion before release. |
+| 🧠 Versioned memory subsystem | Runtime memory state now supports append-only versions with confidence metadata and non-destructive rollback pointers. |
 
 ## 🎬 Operator Journey (at a glance)
 

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.dev/schemas/memoryschema.json",
+  "title": "Versioned Memory Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version_id",
+    "parent_version_id",
+    "created_at",
+    "payload",
+    "confidence"
+  ],
+  "properties": {
+    "version_id": {
+      "type": "string",
+      "pattern": "^v[0-9]{8}$"
+    },
+    "parent_version_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^v[0-9]{8}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    }
+  }
+}

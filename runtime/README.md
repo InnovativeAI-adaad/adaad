@@ -87,3 +87,4 @@ This runtime layer guarantees:
 - Replay/version validation comparisons strip ephemeral runtime fields via `runtime/governance_surface.py::strip_version_comparison_ephemerals` to prevent false divergence (e.g., `nonce`, `generated_at`, `run_id`).
 - Replay-stable constitution loading with hermetic fallback behavior
 - Environment-configurable and ledger-visible dispatcher latency configuration
+- Versioned runtime memory adapter (`runtime/memory_adapter.py`) backed by append-only version history with confidence metadata and rollback via head-pointer rewinding (no destructive history rewrites)
