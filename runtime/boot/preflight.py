@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from runtime.api.orchestration import StatusEnvelope
+from runtime.boot.artifact_verifier import verify_required_artifacts
 from runtime.invariants import verify_all
 from runtime.preflight import validate_boot_runtime_profile
 from security import cryovant
@@ -67,3 +68,19 @@ class BootPreflightService:
                 payload={"errors": errors},
             )
         return StatusEnvelope(status="ok", evidence_refs=("security.cryovant.certify_agents",), payload={})
+
+    def validate_signed_artifacts(self) -> StatusEnvelope:
+        try:
+            checks = verify_required_artifacts()
+        except ValueError as exc:
+            return StatusEnvelope(
+                status="error",
+                reason=f"critical_artifact_verification:{exc}",
+                evidence_refs=("runtime.boot.artifact_verifier.verify_required_artifacts",),
+                payload={},
+            )
+        return StatusEnvelope(
+            status="ok",
+            evidence_refs=("runtime.boot.artifact_verifier.verify_required_artifacts",),
+            payload={"checks": checks},
+        )

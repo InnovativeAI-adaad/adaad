@@ -155,6 +155,17 @@ jobs:
       - name: Validate governance policy schemas
         run: python scripts/validate_governance_schemas.py
 
+  artifact-trust-verification:
+    runs-on: ubuntu-latest
+    needs: classify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify required signed artifacts
+        run: PYTHONPATH=. python scripts/verify_critical_artifacts.py
+
   full-test-suite:
     runs-on: ubuntu-latest
     needs: classify
@@ -294,6 +305,7 @@ jobs:
     needs:
       - classify
       - schema-validation
+      - artifact-trust-verification
       - determinism-lint
       - import-boundary-lint
       - confidence-fast
@@ -317,6 +329,7 @@ jobs:
             echo "| Job | Result | Gate reason |"
             echo "| --- | --- | --- |"
             echo "| schema-validation | ${{ needs.schema-validation.result }} | Always-on baseline. |"
+            echo "| artifact-trust-verification | ${{ needs.artifact-trust-verification.result }} | Always-on signature/tamper gate for required artifacts. |"
             echo "| determinism-lint | ${{ needs.determinism-lint.result }} | Always-on baseline. |"
             echo "| import-boundary-lint | ${{ needs.import-boundary-lint.result }} | Always-on architecture boundary gate. |"
             echo "| confidence-fast | ${{ needs.confidence-fast.result }} | Always-on baseline. |"

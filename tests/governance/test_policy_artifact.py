@@ -119,6 +119,87 @@ def test_load_governance_policy_accepts_hmac_signature(tmp_path, monkeypatch) ->
     assert policy.signer.algorithm == "hmac-sha256"
 
 
+def test_load_governance_policy_allows_overlap_key_within_window(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_POLICY_ARTIFACT_SIGNING_KEY", "policy-secret")
+    artifact = _artifact(signature="placeholder")
+    artifact["effective_epoch"] = 5
+    artifact["signer"] = {
+        "key_id": "policy-signer-prev",
+        "algorithm": "hmac-sha256",
+        "trusted_key_ids": ["policy-signer-next", "policy-signer-prev"],
+    }
+    artifact["key_rotation"] = {
+        "active_key_id": "policy-signer-next",
+        "overlap_key_ids": ["policy-signer-prev"],
+        "overlap_until_epoch": 6,
+    }
+
+    envelope = GovernancePolicyArtifactEnvelope(
+        schema_version=artifact["schema_version"],
+        payload=artifact["payload"],
+        signer=GovernanceSignerMetadata(
+            key_id="policy-signer-prev",
+            algorithm="hmac-sha256",
+            trusted_key_ids=("policy-signer-next", "policy-signer-prev"),
+        ),
+        signature="",
+        previous_artifact_hash=artifact["previous_artifact_hash"],
+        effective_epoch=artifact["effective_epoch"],
+        key_rotation=None,
+    )
+    from runtime.governance.policy_artifact import GovernanceKeyRotationMetadata
+
+    envelope = GovernancePolicyArtifactEnvelope(
+        schema_version=envelope.schema_version,
+        payload=envelope.payload,
+        signer=envelope.signer,
+        signature="",
+        previous_artifact_hash=envelope.previous_artifact_hash,
+        effective_epoch=envelope.effective_epoch,
+        key_rotation=GovernanceKeyRotationMetadata(
+            active_key_id="policy-signer-next",
+            overlap_key_ids=("policy-signer-prev",),
+            overlap_until_epoch=6,
+        ),
+    )
+    digest = policy_artifact_digest(envelope)
+    from security import cryovant
+
+    artifact["signature"] = cryovant.sign_hmac_digest(
+        key_id="policy-signer-prev",
+        signed_digest=digest,
+        specific_env_prefix="ADAAD_POLICY_ARTIFACT_KEY_",
+        generic_env_var="ADAAD_POLICY_ARTIFACT_SIGNING_KEY",
+        fallback_namespace="adaad-policy-artifact-dev-secret",
+    )
+    policy_path = tmp_path / "rotation_overlap.json"
+    policy_path.write_text(json.dumps(artifact), encoding="utf-8")
+
+    policy = load_governance_policy(policy_path)
+    assert policy.signer.key_id == "policy-signer-prev"
+
+
+def test_load_governance_policy_rejects_overlap_key_after_window(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_POLICY_ARTIFACT_SIGNING_KEY", "policy-secret")
+    artifact = _artifact(signature="placeholder")
+    artifact["effective_epoch"] = 9
+    artifact["signer"] = {
+        "key_id": "policy-signer-prev",
+        "algorithm": "hmac-sha256",
+        "trusted_key_ids": ["policy-signer-next", "policy-signer-prev"],
+    }
+    artifact["key_rotation"] = {
+        "active_key_id": "policy-signer-next",
+        "overlap_key_ids": ["policy-signer-prev"],
+        "overlap_until_epoch": 6,
+    }
+    policy_path = tmp_path / "rotation_expired.json"
+    policy_path.write_text(json.dumps(artifact), encoding="utf-8")
+
+    with pytest.raises(GovernancePolicyError, match="not trusted"):
+        load_governance_policy(policy_path)
+
+
 def test_load_governance_policy_accepts_dev_signature_via_public_helper(tmp_path, monkeypatch) -> None:
     monkeypatch.setenv("ADAAD_ENV", "dev")
     monkeypatch.setenv("CRYOVANT_DEV_MODE", "1")

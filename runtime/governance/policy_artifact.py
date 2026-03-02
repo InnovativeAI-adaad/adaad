@@ -43,6 +43,14 @@ class GovernanceModelMetadata:
 class GovernanceSignerMetadata:
     key_id: str
     algorithm: str
+    trusted_key_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class GovernanceKeyRotationMetadata:
+    active_key_id: str
+    overlap_key_ids: tuple[str, ...]
+    overlap_until_epoch: int
 
 
 @dataclass(frozen=True)
@@ -68,6 +76,7 @@ class GovernancePolicyArtifactEnvelope:
     signature: str
     previous_artifact_hash: str
     effective_epoch: int
+    key_rotation: GovernanceKeyRotationMetadata | None = None
 
 
 def _require_mapping(value: Any, field_name: str) -> dict[str, Any]:
@@ -140,14 +149,53 @@ def _parse_payload(root: dict[str, Any]) -> tuple[str, GovernanceModelMetadata, 
 def policy_artifact_digest(envelope: GovernancePolicyArtifactEnvelope) -> str:
     """Return replay-safe deterministic digest for signed policy envelope fields."""
 
-    digest_payload = {
+    digest_payload: dict[str, Any] = {
         "schema_version": envelope.schema_version,
         "payload": envelope.payload,
-        "signer": {"key_id": envelope.signer.key_id, "algorithm": envelope.signer.algorithm},
+        "signer": {
+            "key_id": envelope.signer.key_id,
+            "algorithm": envelope.signer.algorithm,
+            "trusted_key_ids": sorted(envelope.signer.trusted_key_ids),
+        },
         "previous_artifact_hash": envelope.previous_artifact_hash,
         "effective_epoch": envelope.effective_epoch,
     }
+    if envelope.key_rotation is not None:
+        digest_payload["key_rotation"] = {
+            "active_key_id": envelope.key_rotation.active_key_id,
+            "overlap_key_ids": sorted(envelope.key_rotation.overlap_key_ids),
+            "overlap_until_epoch": envelope.key_rotation.overlap_until_epoch,
+        }
     return canonical_policy_fingerprint(digest_payload)
+
+
+def _require_str_seq(value: Any, field_name: str) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if not isinstance(value, list):
+        raise GovernancePolicyError(f"{field_name} must be an array of non-empty strings")
+    normalized: list[str] = []
+    for idx, item in enumerate(value):
+        normalized.append(_require_str(item, f"{field_name}[{idx}]").strip())
+    return tuple(sorted(dict.fromkeys(normalized)))
+
+
+def _signer_permits_epoch(
+    signer: GovernanceSignerMetadata,
+    key_rotation: GovernanceKeyRotationMetadata | None,
+    *,
+    effective_epoch: int,
+) -> bool:
+    trusted = set(signer.trusted_key_ids)
+    if trusted and signer.key_id not in trusted:
+        return False
+    if key_rotation is None:
+        return True
+    if signer.key_id == key_rotation.active_key_id:
+        return True
+    if effective_epoch <= key_rotation.overlap_until_epoch and signer.key_id in set(key_rotation.overlap_key_ids):
+        return True
+    return False
 
 
 def _parse_envelope(artifact: dict[str, Any]) -> GovernancePolicyArtifactEnvelope:
@@ -162,12 +210,30 @@ def _parse_envelope(artifact: dict[str, Any]) -> GovernancePolicyArtifactEnvelop
     previous_artifact_hash = _require_hash(artifact.get("previous_artifact_hash"), "previous_artifact_hash")
     effective_epoch = _require_int(artifact.get("effective_epoch"), "effective_epoch")
 
+    trusted_key_ids = _require_str_seq(signer_obj.get("trusted_key_ids"), "signer.trusted_key_ids")
     signer = GovernanceSignerMetadata(
         key_id=_require_str(signer_obj.get("key_id"), "signer.key_id"),
         algorithm=_require_str(signer_obj.get("algorithm"), "signer.algorithm"),
+        trusted_key_ids=trusted_key_ids,
     )
     if effective_epoch < 0:
         raise GovernancePolicyError("effective_epoch must be >= 0")
+
+    key_rotation_obj = artifact.get("key_rotation")
+    key_rotation: GovernanceKeyRotationMetadata | None = None
+    if key_rotation_obj is not None:
+        key_rotation_mapping = _require_mapping(key_rotation_obj, "key_rotation")
+        overlap_until_epoch = _require_int(key_rotation_mapping.get("overlap_until_epoch", -1), "key_rotation.overlap_until_epoch")
+        if overlap_until_epoch < 0:
+            raise GovernancePolicyError("key_rotation.overlap_until_epoch must be >= 0")
+        key_rotation = GovernanceKeyRotationMetadata(
+            active_key_id=_require_str(key_rotation_mapping.get("active_key_id"), "key_rotation.active_key_id"),
+            overlap_key_ids=_require_str_seq(key_rotation_mapping.get("overlap_key_ids"), "key_rotation.overlap_key_ids"),
+            overlap_until_epoch=overlap_until_epoch,
+        )
+
+    if not _signer_permits_epoch(signer, key_rotation, effective_epoch=effective_epoch):
+        raise GovernancePolicyError("signer.key_id is not trusted for effective_epoch")
 
     envelope = GovernancePolicyArtifactEnvelope(
         schema_version=schema_version,
@@ -176,6 +242,7 @@ def _parse_envelope(artifact: dict[str, Any]) -> GovernancePolicyArtifactEnvelop
         signature=signature,
         previous_artifact_hash=previous_artifact_hash,
         effective_epoch=effective_epoch,
+        key_rotation=key_rotation,
     )
     try:
         signature_ok = bool(cryovant.verify_payload_signature(envelope.payload, envelope.signature, signer.key_id))
@@ -245,6 +312,7 @@ __all__ = [
     "GovernanceModelMetadata",
     "GovernancePolicy",
     "GovernancePolicyArtifactEnvelope",
+    "GovernanceKeyRotationMetadata",
     "GovernancePolicyError",
     "GovernanceSignerMetadata",
     "GovernanceThresholds",

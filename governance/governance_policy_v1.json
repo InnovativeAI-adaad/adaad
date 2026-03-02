@@ -38,10 +38,11 @@
     }
   },
   "signer": {
-    "key_id": "policy-signer-dev",
-    "algorithm": "ed25519"
+    "key_id": "policy-signer-prod-1",
+    "algorithm": "hmac-sha256",
+    "trusted_key_ids": []
   },
-  "signature": "cryovant-static-governance-policy-v1",
+  "signature": "sha256:5de21d3e8dd9087eaece4250aad5ae01c215d8df019f8cc2be1ec58d917fb240",
   "previous_artifact_hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
   "effective_epoch": 0
 }

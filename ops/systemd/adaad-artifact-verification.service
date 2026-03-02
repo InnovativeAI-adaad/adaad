@@ -1,0 +1,16 @@
+[Unit]
+Description=ADAAD critical artifact signature verification
+After=network.target
+Before=adaad.service
+
+[Service]
+Type=oneshot
+Environment=ADAAD_ROOT=/opt/adaad
+EnvironmentFile=-/etc/default/adaad
+WorkingDirectory=/
+Environment=PYTHONPATH=.
+ExecStart=/usr/bin/env bash -lc '"${ADAAD_ROOT:-/opt/adaad}/ops/systemd/run_artifact_verification.sh"'
+
+[Install]
+WantedBy=multi-user.target
+
