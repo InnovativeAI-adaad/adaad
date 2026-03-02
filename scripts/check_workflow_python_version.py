@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Fail when GitHub workflows use multiple setup-python versions."""
 
 from __future__ import annotations
@@ -27,14 +28,14 @@ def parse_args() -> argparse.Namespace:
 
 def collect_versions(workflows_dir: Path) -> dict[str, list[str]]:
     found: dict[str, list[str]] = {}
-    for workflow in sorted(workflows_dir.glob("*.yml")):
+    for workflow in sorted([*workflows_dir.glob("*.yml"), *workflows_dir.glob("*.yaml")]):
         versions: list[str] = []
         for line in workflow.read_text(encoding="utf-8").splitlines():
             match = PYTHON_VERSION_PATTERN.match(line)
             if match:
                 versions.append(match.group(1))
         if versions:
-            found[str(workflow)] = versions
+            found[str(workflow.relative_to(Path.cwd())) if workflow.is_absolute() else str(workflow)] = versions
     return found
 
 
