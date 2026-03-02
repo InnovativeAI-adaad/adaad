@@ -20,6 +20,8 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from core.random_control import DeterministicSeedManager
+
 from adaad.agents.base_agent import stage_offspring
 from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.app_layer import (
@@ -54,6 +56,7 @@ class DreamMode:
         replay_mode: str = "off",
         recovery_tier: str | None = None,
         provider: RuntimeDeterminismProvider | None = None,
+        aggression: float = 0.5,
     ):
         self.agents_root = agents_root
         self.lineage_dir = lineage_dir
@@ -66,6 +69,8 @@ class DreamMode:
         else:
             self.provider = default_provider()
         self._require_replay_safe_provider()
+        self.aggression = self._clamp_aggression(aggression)
+        self.seed_manager = DeterministicSeedManager(self.provider.next_token(label="dream-global-seed", length=16))
         self.entropy_budget = EntropyBudget()
         self.fitness_evaluator = FitnessEvaluator()
 
@@ -104,6 +109,20 @@ class DreamMode:
         if "mutation" not in allow:
             return None
         return scope
+
+
+    @staticmethod
+    def _clamp_aggression(aggression: float) -> float:
+        return max(0.0, min(1.0, float(aggression)))
+
+    def mutation_profile(self) -> dict[str, float]:
+        structural_preservation_probability = 1.0 - self.aggression
+        token_rewrite_upper_bound = max(1, int(64 * self.aggression))
+        return {
+            "aggression": self.aggression,
+            "structural_preservation_probability": structural_preservation_probability,
+            "token_rewrite_upper_bound": float(token_rewrite_upper_bound),
+        }
 
     def write_dream_manifest(
         self,
@@ -219,7 +238,9 @@ class DreamMode:
                 label=f"dream_token:{epoch_id}:{selected}:{bundle_id}",
                 length=16,
             )
-        mutation_content = f"{selected}-mutation-{token}"
+        profile = self.mutation_profile()
+        namespace_seed = self.seed_manager.derive(f"dream:{selected}:{bundle_id}").seed
+        mutation_content = f"{selected}-mutation-{token}-a{profile['aggression']:.2f}-n{namespace_seed}"
         handoff_contract = {
             "schema_version": "1.0",
             "issued_at": self.provider.iso_now(),
