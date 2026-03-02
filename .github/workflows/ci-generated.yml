@@ -1,0 +1,137 @@
+name: ci-generated
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  generated-validation:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture:
+          - solo-agent-baseline
+          - solo-agent-replay
+    env:
+      ADAAD_ENV: dev
+      CRYOVANT_DEV_MODE: "1"
+      ADAAD_FORCE_DETERMINISTIC_PROVIDER: "1"
+      ADAAD_DETERMINISTIC_SEED: ci-generated-seed
+      GENERATED_FIXTURE: ${{ matrix.fixture }}
+      GENERATED_EVIDENCE_DIR: tests/generated/evidence/${{ matrix.fixture }}
+      GENERATED_REPORTS_DIR: tests/generated/reports/${{ matrix.fixture }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pinned Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10.14"
+
+      - name: Install tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest mypy bandit
+
+      - name: Prepare deterministic output folders
+        run: |
+          rm -rf "$GENERATED_EVIDENCE_DIR" "$GENERATED_REPORTS_DIR"
+          mkdir -p "$GENERATED_EVIDENCE_DIR" "$GENERATED_REPORTS_DIR"
+
+      - name: Generate artifacts from single-agent loop
+        run: |
+          python examples/single-agent-loop/run.py > "$GENERATED_EVIDENCE_DIR/run.log" 2>&1
+          cp -R examples/single-agent-loop/.run "$GENERATED_EVIDENCE_DIR/runtime_run"
+          cp -R examples/single-agent-loop/.run/agents "$GENERATED_EVIDENCE_DIR/agents"
+          if [ -f runtime/state/ledger.jsonl ]; then
+            cp runtime/state/ledger.jsonl "$GENERATED_EVIDENCE_DIR/ledger.jsonl"
+          fi
+
+      - name: Functional lane (pytest)
+        id: lane_pytest
+        continue-on-error: true
+        run: |
+          python -m pytest tests/generated/test_generated_artifacts.py -q --junitxml "$GENERATED_REPORTS_DIR/pytest.xml"
+
+      - name: Type lane (mypy)
+        id: lane_mypy
+        continue-on-error: true
+        run: |
+          python -m mypy --pretty --show-error-codes tests/generated/adapters.py tests/generated/parsers.py \
+            > "$GENERATED_REPORTS_DIR/mypy.txt"
+
+      - name: Security lane (bandit)
+        id: lane_bandit
+        continue-on-error: true
+        run: |
+          python -m bandit -q -r tests/generated -s B101 -f json -o "$GENERATED_REPORTS_DIR/bandit.json"
+
+      - name: Sandboxed lane via runtime.test_sandbox
+        id: lane_sandbox
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+          from runtime.test_sandbox import TestSandbox
+
+          result = TestSandbox(timeout_s=60).run_tests(args=["tests/generated/test_sandbox_runtime.py", "-q"])
+          reports_dir = Path(os.environ["GENERATED_REPORTS_DIR"])
+          reports_dir.mkdir(parents=True, exist_ok=True)
+          payload = {
+              "ok": result.ok,
+              "status": result.status.value,
+              "returncode": result.returncode,
+              "duration_s": result.duration_s,
+              "timeout_s": result.timeout_s,
+              "sandbox_dir": result.sandbox_dir,
+              "observed_syscalls": list(result.observed_syscalls),
+              "attempted_write_paths": list(result.attempted_write_paths),
+              "attempted_network_hosts": list(result.attempted_network_hosts),
+          }
+          (reports_dir / "sandbox.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          if not result.ok:
+              sys.exit(1)
+          PY
+
+      - name: Emit metadata summary
+        if: always()
+        env:
+          LANE_PYTEST: ${{ steps.lane_pytest.outcome }}
+          LANE_MYPY: ${{ steps.lane_mypy.outcome }}
+          LANE_BANDIT: ${{ steps.lane_bandit.outcome }}
+          LANE_SANDBOX: ${{ steps.lane_sandbox.outcome }}
+        run: |
+          python tests/generated/emit_metadata.py
+
+      - name: Upload generated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-evidence-${{ matrix.fixture }}
+          path: |
+            tests/generated/evidence/${{ matrix.fixture }}
+            tests/generated/reports/${{ matrix.fixture }}
+
+      - name: Fail closed when any lane fails
+        if: always()
+        env:
+          LANE_PYTEST: ${{ steps.lane_pytest.outcome }}
+          LANE_MYPY: ${{ steps.lane_mypy.outcome }}
+          LANE_BANDIT: ${{ steps.lane_bandit.outcome }}
+          LANE_SANDBOX: ${{ steps.lane_sandbox.outcome }}
+        run: |
+          for lane in "$LANE_PYTEST" "$LANE_MYPY" "$LANE_BANDIT" "$LANE_SANDBOX"; do
+            if [ "$lane" != "success" ]; then
+              echo "Fail-closed: at least one generated lane failed."
+              exit 1
+            fi
+          done

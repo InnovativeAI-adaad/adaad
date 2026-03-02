@@ -115,3 +115,16 @@ The terminal `release-gate` job is fail-closed and requires each upstream job re
 
 
 - The strict release rule-activation assertion uses the runtime constitution policy loader (`runtime.constitution.load_constitution_policy`) to avoid parser drift between CI checks and runtime governance evaluation.
+
+## Generated artifact validation workflow
+
+A dedicated workflow, `.github/workflows/ci-generated.yml`, validates deterministic outputs from `examples/single-agent-loop/run.py`.
+
+It runs a matrix over generated fixtures and enforces fail-closed validation lanes for:
+
+- targeted generated-artifact functional checks (`pytest` under `tests/generated/`),
+- static typing checks (`mypy` on generated adapters/parsers),
+- security scanning (`bandit` on generated Python artifacts),
+- sandboxed execution checks using `runtime.test_sandbox` and `runtime/sandbox/*` integration.
+
+Each matrix leg stores deterministic evidence under `tests/generated/evidence/<fixture>/` and lane reports under `tests/generated/reports/<fixture>/`, then uploads both as CI artifacts together with `metadata-summary.json` for dashboard ingestion.
