@@ -2,6 +2,14 @@
 
 ## Token Format
 
+## Canonical Implementation Location
+
+Session and governance token validation logic is implemented in:
+
+- `security/cryovant.py`
+
+Do not target `runtime/governance/auth/` for auth hardening patches; that path is non-canonical for token validation.
+
 `cryovant-gov-v1:<key_id>:<expires_at_unix>:<nonce>:sha256:<digest>`
 
 Digest verification input:
@@ -13,6 +21,7 @@ Signature key resolution follows deterministic precedence:
 1. `ADAAD_GOVERNANCE_SESSION_KEY_<KEY_ID>`
 2. `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY`
 3. fallback namespace secret (`adaad-governance-session-dev-secret:<key_id>`)
+   (defined and resolved in `security/cryovant.py`)
 
 ## Security Properties
 
@@ -37,3 +46,4 @@ Signature key resolution follows deterministic precedence:
 
 - Existing callers should migrate from `verify_session(...)` to `verify_governance_token(...)`.
 - Keep `verify_session` for backward compatibility only; do not use for new governance paths.
+- Boot-time validation examples must patch `app/main.py` (or the active runtime boot entrypoint), not a `runtime/governance/auth` module.
