@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import base64
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping
@@ -20,7 +21,111 @@ from security import cryovant
 
 REPLAY_PROOFS_DIR = ROOT_DIR / "security" / "ledger" / "replay_proofs"
 DEFAULT_PROOF_SIGNING_ALGORITHM = "hmac-sha256"
+PREFERRED_PROOF_SIGNING_ALGORITHM = "ed25519"
+PROOF_KEYRING_PATH = ROOT_DIR / "security" / "replay_proof_keyring.json"
 REPLAY_ATTESTATION_SCHEMA_PATH = ROOT_DIR / "schemas" / "replay_attestation.v1.json"
+
+
+def _load_ed25519_signing_key():
+    from nacl.signing import SigningKey
+
+    return SigningKey
+
+
+def _load_ed25519_verify_key():
+    from nacl.signing import VerifyKey
+
+    return VerifyKey
+
+
+def _load_replay_proof_keyring(path: Path | None = None) -> Dict[str, Dict[str, str]]:
+    target = path or Path(os.getenv("ADAAD_REPLAY_PROOF_KEYRING_PATH", str(PROOF_KEYRING_PATH)))
+    if not target.exists():
+        return {}
+    raw = json.loads(read_file_deterministic(target))
+    if not isinstance(raw, dict):
+        return {}
+    keys = raw.get("keys")
+    if not isinstance(keys, dict):
+        return {}
+    normalized: Dict[str, Dict[str, str]] = {}
+    for key_id, payload in keys.items():
+        if not isinstance(key_id, str) or not isinstance(payload, dict):
+            continue
+        normalized[key_id] = {str(k): str(v) for k, v in payload.items() if isinstance(v, str)}
+    return normalized
+
+
+class ReplayProofSigner:
+    def sign(self, *, key_id: str, signed_digest: str) -> str:
+        raise NotImplementedError
+
+    def verify(self, *, key_id: str, signed_digest: str, signature: str) -> bool:
+        raise NotImplementedError
+
+
+class HmacReplayProofSigner(ReplayProofSigner):
+    def __init__(self, *, keyring: Mapping[str, str] | None = None):
+        self.keyring = keyring
+
+    def sign(self, *, key_id: str, signed_digest: str) -> str:
+        secret = self.keyring.get(key_id) if self.keyring is not None else None
+        return cryovant.sign_artifact_hmac_digest(
+            artifact_type="replay_proof",
+            key_id=key_id,
+            signed_digest=signed_digest,
+            hmac_secret=secret,
+        )
+
+    def verify(self, *, key_id: str, signed_digest: str, signature: str) -> bool:
+        secret = self.keyring.get(key_id) if self.keyring is not None else None
+        if self.keyring is not None and not secret:
+            return False
+        return cryovant.verify_artifact_hmac_digest_signature(
+            artifact_type="replay_proof",
+            key_id=key_id,
+            signed_digest=signed_digest,
+            signature=signature,
+            hmac_secret=secret,
+        )
+
+
+class Ed25519ReplayProofSigner(ReplayProofSigner):
+    def __init__(self, *, keyring: Mapping[str, Mapping[str, str]]):
+        self.keyring = keyring
+
+    def sign(self, *, key_id: str, signed_digest: str) -> str:
+        key_payload = self.keyring.get(key_id) or {}
+        seed_b64 = key_payload.get("private_key")
+        if not seed_b64:
+            raise ValueError(f"missing_private_key:{key_id}")
+        SigningKey = _load_ed25519_signing_key()
+        signing_key = SigningKey(base64.b64decode(seed_b64))
+        signature = signing_key.sign(signed_digest.encode("utf-8")).signature
+        return "ed25519:" + base64.b64encode(signature).decode("ascii")
+
+    def verify(self, *, key_id: str, signed_digest: str, signature: str) -> bool:
+        key_payload = self.keyring.get(key_id) or {}
+        verify_key_b64 = key_payload.get("public_key")
+        if not verify_key_b64:
+            return False
+        if not isinstance(signature, str) or not signature.startswith("ed25519:"):
+            return False
+        VerifyKey = _load_ed25519_verify_key()
+        verify_key = VerifyKey(base64.b64decode(verify_key_b64))
+        try:
+            verify_key.verify(signed_digest.encode("utf-8"), base64.b64decode(signature.split(":", 1)[1]))
+        except Exception:
+            return False
+        return True
+
+
+def _build_signer(algorithm: str, *, keyring: Any = None) -> ReplayProofSigner:
+    if algorithm == "hmac-sha256":
+        return HmacReplayProofSigner(keyring=keyring)
+    if algorithm == "ed25519":
+        return Ed25519ReplayProofSigner(keyring=keyring or {})
+    raise ValueError(f"unsupported_signing_algorithm:{algorithm}")
 
 
 def _normalize_checkpoint_event(payload: Dict[str, Any]) -> Dict[str, str]:
@@ -121,7 +226,7 @@ class ReplayProofBuilder:
         self.replay_engine = replay_engine or ReplayEngine(self.ledger)
         self.proofs_dir = proofs_dir or REPLAY_PROOFS_DIR
         self.key_id = (key_id or os.getenv("ADAAD_REPLAY_PROOF_KEY_ID", "replay-proof-dev")).strip()
-        self.algorithm = (algorithm or os.getenv("ADAAD_REPLAY_PROOF_ALGO", DEFAULT_PROOF_SIGNING_ALGORITHM)).strip()
+        self.algorithm = (algorithm or os.getenv("ADAAD_REPLAY_PROOF_ALGO", PREFERRED_PROOF_SIGNING_ALGORITHM if os.getenv("ADAAD_ENV", "dev").strip().lower() in {"production", "prod", "staging"} else DEFAULT_PROOF_SIGNING_ALGORITHM)).strip()
 
     def _collect_checkpoint_chain(self, epoch_id: str) -> List[Dict[str, str]]:
         checkpoints: List[Dict[str, str]] = []
@@ -169,9 +274,11 @@ class ReplayProofBuilder:
     def _fitness_weight_snapshot_hash(self, epoch_id: str) -> str:
         events = self.ledger.read_epoch(epoch_id)
         for entry in reversed(events):
-            payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+            payload_raw = entry.get("payload")
+            payload: Dict[str, Any] = payload_raw if isinstance(payload_raw, dict) else {}
             if entry.get("type") == "EpochMetadataEvent":
-                metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+                metadata_raw = payload.get("metadata")
+                metadata: Dict[str, Any] = metadata_raw if isinstance(metadata_raw, dict) else {}
                 candidate = metadata.get("fitness_weight_snapshot_hash")
                 if isinstance(candidate, str) and candidate:
                     return candidate
@@ -210,15 +317,15 @@ class ReplayProofBuilder:
         }
         proof_digest = sha256_prefixed_digest(unsigned_bundle)
         signed_digest = proof_digest
+        signer = _build_signer(
+            self.algorithm,
+            keyring=_load_replay_proof_keyring() if self.algorithm == "ed25519" else None,
+        )
         signature_bundle = {
             "key_id": self.key_id,
             "algorithm": self.algorithm,
             "signed_digest": signed_digest,
-            "signature": cryovant.sign_artifact_hmac_digest(
-                artifact_type="replay_proof",
-                key_id=self.key_id,
-                signed_digest=signed_digest,
-            ),
+            "signature": signer.sign(key_id=self.key_id, signed_digest=signed_digest),
         }
         bundle = {**unsigned_bundle, "proof_digest": proof_digest, "signature_bundle": signature_bundle, "signatures": [signature_bundle]}
         errors = validate_replay_proof_schema(bundle)
@@ -237,7 +344,7 @@ class ReplayProofBuilder:
 def verify_replay_proof_bundle(
     bundle: Dict[str, Any],
     *,
-    keyring: Mapping[str, str] | None = None,
+    keyring: Mapping[str, Any] | None = None,
     accepted_issuers: Iterable[str] | None = None,
     key_validity_windows: Mapping[str, Mapping[str, str]] | None = None,
     revocation_source: Any | None = None,
@@ -363,6 +470,7 @@ def verify_replay_proof_bundle(
                     }
                 )
                 continue
+            assert actual_from is not None and actual_until is not None and expected_from is not None and expected_until is not None
             if actual_from < expected_from or actual_until > expected_until:
                 validation.append(
                     {
@@ -381,33 +489,20 @@ def verify_replay_proof_bundle(
             if revoked:
                 validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "key_revoked"})
                 continue
-        if keyring is not None:
-            secret = (keyring or {}).get(key_id)
-            if not secret:
+        if algorithm == "ed25519":
+            signer = _build_signer("ed25519", keyring=keyring or _load_replay_proof_keyring())
+            if key_id not in (keyring or _load_replay_proof_keyring()):
                 validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "unknown_key_id"})
                 continue
-            matches = cryovant.verify_artifact_hmac_digest_signature(
-                artifact_type="replay_proof",
-                key_id=key_id,
-                signed_digest=signed_digest,
-                signature=provided,
-                hmac_secret=secret,
-            )
+            matches = signer.verify(key_id=key_id, signed_digest=signed_digest, signature=provided)
+        elif algorithm == "hmac-sha256":
+            signer = _build_signer("hmac-sha256", keyring=keyring)
+            if keyring is not None and key_id not in keyring:
+                validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "unknown_key_id"})
+                continue
+            matches = signer.verify(key_id=key_id, signed_digest=signed_digest, signature=provided)
         else:
-            matches = cryovant.verify_artifact_hmac_digest_signature(
-                artifact_type="replay_proof",
-                key_id=key_id,
-                signed_digest=signed_digest,
-                signature=provided,
-            )
-            validation.append(
-                {
-                    "ok": matches,
-                    "key_id": key_id,
-                    "algorithm": algorithm,
-                    "error": "" if matches else "signature_mismatch",
-                }
-            )
+            validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "unsupported_algorithm"})
             continue
         validation.append(
             {
@@ -428,7 +523,24 @@ def load_replay_proof(path: Path) -> Dict[str, Any]:
 
 def validate_replay_proof_schema(bundle: Dict[str, Any]) -> List[str]:
     schema = json.loads(read_file_deterministic(REPLAY_ATTESTATION_SCHEMA_PATH))
-    return _validate_schema_subset(bundle, schema)
+    errors = _validate_schema_subset(bundle, schema)
+
+    signatures = bundle.get("signatures")
+    if isinstance(signatures, list):
+        for idx, signature in enumerate(signatures):
+            if not isinstance(signature, dict):
+                continue
+            algorithm = str(signature.get("algorithm") or "")
+            value = str(signature.get("signature") or "")
+            if algorithm == "hmac-sha256" and not re.fullmatch(r"(?:sha256:)?[a-f0-9]{64}", value):
+                errors.append(f"$.signatures[{idx}].signature:invalid_hmac_signature")
+            if algorithm == "ed25519" and not re.fullmatch(r"ed25519:[A-Za-z0-9+/=]+", value):
+                errors.append(f"$.signatures[{idx}].signature:invalid_ed25519_signature")
+            if algorithm == "ed25519" and not str(signature.get("key_id") or ""):
+                errors.append(f"$.signatures[{idx}].key_id:missing_required")
+            if algorithm not in {"hmac-sha256", "ed25519"}:
+                errors.append(f"$.signatures[{idx}].algorithm:unsupported")
+    return errors
 
 
 __all__ = [
