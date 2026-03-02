@@ -2,6 +2,8 @@
 
 This repository uses tiered CI gating to keep pull request feedback fast while preserving strict checks for governance-critical changes.
 
+All CI workflows that invoke `actions/setup-python` are pinned to Python `3.11.9`; version drift is fail-closed by `scripts/check_workflow_python_version.py` in CI.
+
 ## Inputs used by the CI classifier
 
 The CI classifier computes gate decisions from three signal groups:

@@ -16,6 +16,9 @@ TARGET_DIRS: tuple[str, ...] = (
     "runtime/evolution",
     "runtime/autonomy",
     "security",
+    # Orchestrator routing/dispatch code stamps replay and audit envelopes that
+    # must stay deterministic across reruns for governance traceability.
+    "adaad/orchestrator",
 )
 
 # Replay-sensitive app modules that must be linted even though the full app tree is
@@ -50,6 +53,9 @@ FORBIDDEN_IMPORTLIB_SYMBOLS: frozenset[str] = frozenset({"import_module"})
 ENTROPY_ENFORCED_PREFIXES: tuple[str, ...] = (
     "runtime/governance/",
     "runtime/evolution/",
+    # Orchestrator dispatch paths generate replay/audit envelopes consumed by
+    # downstream governance checks; entropy here breaks reproducibility.
+    "adaad/orchestrator/",
 )
 ENTROPY_ENFORCED_FILES: frozenset[str] = frozenset(
     {

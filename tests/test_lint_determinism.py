@@ -52,6 +52,17 @@ def test_lint_determinism_flags_from_import_alias_usage(tmp_path: Path) -> None:
     assert any(issue.message == "forbidden_dynamic_execution" for issue in issues)
 
 
+def test_lint_determinism_flags_importlib_alias_usage_in_orchestrator_scope(tmp_path: Path) -> None:
+    target = tmp_path / "adaad" / "orchestrator" / "dispatch_bad_alias.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("import importlib as il\n\ndef route():\n    return il.import_module('json')\n", encoding="utf-8")
+
+    issues = lint_determinism._lint_file(target)
+
+    assert issues
+    assert any(issue.message == "forbidden_dynamic_execution" for issue in issues)
+
+
 def test_lint_determinism_flags_entropy_calls_in_governance_scope(tmp_path: Path) -> None:
     target = tmp_path / "runtime" / "governance" / "entropy.py"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -75,6 +86,17 @@ def test_lint_determinism_flags_entropy_imports_in_evolution_scope(tmp_path: Pat
 
     assert issues
     assert any(issue.message == "forbidden_entropy_import" for issue in issues)
+
+
+def test_lint_determinism_flags_entropy_calls_in_orchestrator_scope(tmp_path: Path) -> None:
+    target = tmp_path / "adaad" / "orchestrator" / "dispatch_entropy.py"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("import time\n\ndef route():\n    return time.time()\n", encoding="utf-8")
+
+    issues = lint_determinism._lint_file(target)
+
+    assert issues
+    assert any(issue.message == "forbidden_entropy_source" for issue in issues)
 
 
 def test_lint_determinism_accepts_clean_file(tmp_path: Path) -> None:
@@ -291,4 +313,3 @@ def test_dream_mode_hardened_path_forbids_wall_clock_sources_but_allows_wrappers
     run_cycle_calls = {_call_path(node.func) for node in ast.walk(run_cycle) if isinstance(node, ast.Call)}
     assert forbidden_paths.isdisjoint(run_cycle_calls)
     assert approved_wrapper_paths.intersection(run_cycle_calls)
-

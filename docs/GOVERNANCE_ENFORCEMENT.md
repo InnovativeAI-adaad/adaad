@@ -26,7 +26,7 @@ Required CI checks:
 
 - Branch protection check requires `GITHUB_TOKEN` permission `administration: read` (granted by org admin).
 - Branch protection check enforces `required_pull_request_reviews.required_approving_review_count >= 2`.
-- Release evidence gate executes governance/sandbox tests with `PYTHONPATH=.` on Python 3.11 for parity with CI.
+- Release evidence gate executes governance/sandbox tests with `PYTHONPATH=.` on Python 3.11.9 for parity with CI.
 
 
 ## Implementation status alignment (v0.70.0)
@@ -34,7 +34,7 @@ Required CI checks:
 - CI enforces full suite, governance suite, and required determinism lint checks.
 - Determinism lint required-scope enforcement includes federation transport/coordination/protocol/manifest modules and fails closed when any required governance file is missing.
 - Branch protection verification checks `required_status_checks`, `enforce_admins`, and a minimum of 2 required approvals.
-- Release evidence gate runs replay-proof verification and governance/sandbox suites with `PYTHONPATH=.` on Python 3.11.
+- Release evidence gate runs replay-proof verification and governance/sandbox suites with `PYTHONPATH=.` on Python 3.11.9.
 - Lineage continuity helper is wired conservatively: enforced when lineage_v2 chain resolves for the request agent; genesis/journal invariants remain authoritative fallback.
 
 
