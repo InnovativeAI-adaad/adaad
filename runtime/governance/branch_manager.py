@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import os
 import shutil
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, List, Sequence
 
 from runtime import REPO_ROOT
+from runtime.governance.foundation.determinism import RuntimeDeterminismProvider, default_provider
 
 DEFAULT_SOURCES: Sequence[str] = ("app", "runtime", "security", "server.py")
 EXCLUDE_PATTERNS: Sequence[str] = (".git", ".pytest_cache", "__pycache__", "*.log", "*.pyc", "node_modules")
@@ -51,6 +51,7 @@ class BranchManager:
     repo_root: Path = REPO_ROOT
     branches_dir: Path = field(default_factory=lambda: REPO_ROOT / "experiments" / "branches")
     sources: Sequence[str] = DEFAULT_SOURCES
+    provider: RuntimeDeterminismProvider = field(default_factory=default_provider)
 
     def _source_paths(self) -> Iterable[Path]:
         for rel in self.sources:
@@ -73,14 +74,15 @@ class BranchManager:
             shutil.rmtree(branch_path)
         branch_path.mkdir(parents=True, exist_ok=True)
 
-        manifest = {"created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "sources": []}
+        copied_sources: List[str] = []
+        manifest: dict[str, object] = {"created_at": self.provider.iso_now(), "sources": copied_sources}
         for src_path in self._source_paths():
             dest = branch_path / src_path.relative_to(self.repo_root)
             if src_path.is_dir():
                 shutil.copytree(src_path, dest, ignore=self._ignore)
             else:
                 _atomic_copy(src_path, dest)
-            manifest["sources"].append(str(src_path.relative_to(self.repo_root)))
+            copied_sources.append(str(src_path.relative_to(self.repo_root)))
 
         (branch_path / ".manifest.json").write_text(json_dump(manifest), encoding="utf-8")
         return branch_path
