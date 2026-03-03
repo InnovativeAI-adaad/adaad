@@ -11,6 +11,21 @@ from runtime.sandbox.policy import SandboxPolicy
 
 _DISALLOWED_ENV_KEYS = frozenset({"LD_PRELOAD", "PYTHONINSPECT"})
 _DISALLOWED_TOKEN_FRAGMENTS = ("&&", "||", ";", "|", "`", "$(", "${", ">", "<")
+_MAX_TOKEN_LENGTH = 512
+_MAX_TOKEN_PREVIEW_LENGTH = 80
+
+
+def _token_preview(token: str) -> str:
+    return token[:_MAX_TOKEN_PREVIEW_LENGTH]
+
+
+def _validate_command_token(token: str) -> tuple[str, ...]:
+    violations: list[str] = []
+    if any(fragment in token for fragment in _DISALLOWED_TOKEN_FRAGMENTS):
+        violations.append(f"disallowed_command_token:{_token_preview(token)}")
+    if len(token) > _MAX_TOKEN_LENGTH:
+        violations.append(f"oversized_command_token:{len(token)}")
+    return tuple(violations)
 
 
 def analyze_execution_plan(*, manifest: SandboxManifest, policy: SandboxPolicy) -> dict[str, Any]:
@@ -21,8 +36,7 @@ def analyze_execution_plan(*, manifest: SandboxManifest, policy: SandboxPolicy) 
     if not command:
         violations.append("missing_command")
     for token in command:
-        if any(fragment in token for fragment in _DISALLOWED_TOKEN_FRAGMENTS):
-            violations.append(f"disallowed_command_token:{token}")
+        violations.extend(_validate_command_token(token))
     for key, _ in manifest.env:
         if key in _DISALLOWED_ENV_KEYS:
             violations.append(f"disallowed_env:{key}")
