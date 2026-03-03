@@ -45,5 +45,30 @@ class ChangeClassifierTest(unittest.TestCase):
             self.assertTrue(decision.run_mutation)
 
 
+    def test_classify_markdown_path_change_non_functional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            request = {"ops": [{"file": "README.md", "path": "/content", "value": "updated"}]}
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.classification, "NON_FUNCTIONAL_CHANGE")
+            self.assertFalse(decision.run_mutation)
+
+    def test_classify_python_body_path_change_functional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            request = {
+                "ops": [
+                    {
+                        "file": "agent.py",
+                        "path": "/body/0",
+                        "value": "def run(input=None):\n    return {'ok': True}\n",
+                    }
+                ]
+            }
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.classification, "FUNCTIONAL_CHANGE")
+            self.assertTrue(decision.run_mutation)
+
+
 if __name__ == "__main__":
     unittest.main()

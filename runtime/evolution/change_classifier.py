@@ -33,6 +33,7 @@ FUNCTIONAL_NODE_TYPES = (
     ast.BoolOp,
 )
 _ALLOWED_METADATA_PATHS = {"/last_mutation", "/mutation_count", "/version"}
+_DOCUMENTATION_EXTENSIONS = {".md", ".txt", ".comment"}
 
 
 @dataclass(frozen=True)
@@ -173,14 +174,26 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
             return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unknown_op_shape")
         file_candidate = op.get("file") or op.get("target") or op.get("filepath")
         path_candidate = str(op.get("path") or "")
-        if path_candidate and path_candidate not in _ALLOWED_METADATA_PATHS:
-            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "non_metadata_path_change")
+
+        file_name = file_candidate.strip() if isinstance(file_candidate, str) else ""
+        ext = ""
+        if file_name:
+            ext = (agent_path / file_name).suffix.lower()
+
+            in_docs_dir = any(part == "docs" for part in Path(file_name).parts)
+            starts_with_comment_marker = Path(file_name).name.startswith("#")
+            if ext in _DOCUMENTATION_EXTENSIONS or in_docs_dir or starts_with_comment_marker:
+                continue
+
+            if Path(file_name).name == "dna.json" and path_candidate and path_candidate not in _ALLOWED_METADATA_PATHS:
+                return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "non_metadata_path_change")
+
         if not isinstance(file_candidate, str) or not file_candidate.strip():
+            if path_candidate and path_candidate not in _ALLOWED_METADATA_PATHS:
+                return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "non_metadata_path_change")
             return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unscoped_op_change")
-        path = (agent_path / file_candidate).resolve()
-        ext = path.suffix.lower()
-        if ext in {".md", ".txt", ".comment"}:
-            continue
+
+        path = (agent_path / file_name).resolve()
         if ext == ".py":
             old_src = path.read_text(encoding="utf-8") if path.exists() else ""
             new_src = op.get("content") or op.get("value")

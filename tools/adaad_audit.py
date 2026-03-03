@@ -46,10 +46,11 @@ def _filter_entries(
     start: Optional[str],
     end: Optional[str],
     include_rejections: bool = False,
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], int]:
     start_dt = _parse_timestamp(start) if start else None
     end_dt = _parse_timestamp(end) if end else None
     filtered: List[Dict[str, Any]] = []
+    invalid_timestamp_entries = 0
     for entry in entries:
         normalized = coerce_log_entry(entry)
         payload = safe_get(entry, "payload", default={})
@@ -66,13 +67,17 @@ def _filter_entries(
             continue
         ts = safe_str(safe_get(entry, "timestamp"), default=normalized["timestamp"])
         if ts and (start_dt or end_dt):
-            ts_dt = _parse_timestamp(ts)
+            try:
+                ts_dt = _parse_timestamp(ts)
+            except ValueError:
+                invalid_timestamp_entries += 1
+                continue
             if start_dt and ts_dt < start_dt:
                 continue
             if end_dt and ts_dt > end_dt:
                 continue
         filtered.append(entry)
-    return filtered
+    return filtered, invalid_timestamp_entries
 
 
 def _summarize_violations(entries: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
@@ -163,8 +168,8 @@ def run_audit(
     output: str,
 ) -> str:
     entries = _load_entries()
-    filtered = _filter_entries(entries, agent_id, tier, start, end)
-    summary_entries = _filter_entries(
+    filtered, invalid_eval_timestamps = _filter_entries(entries, agent_id, tier, start, end)
+    summary_entries, invalid_summary_timestamps = _filter_entries(
         entries,
         agent_id,
         tier,
@@ -172,17 +177,31 @@ def run_audit(
         end,
         include_rejections=True,
     )
+    invalid_timestamp_entries = invalid_eval_timestamps + invalid_summary_timestamps
     violations = _summarize_violations(summary_entries)
     if output == "json":
-        return json.dumps({"evaluations": filtered, "violations": violations}, indent=2)
+        return json.dumps(
+            {
+                "evaluations": filtered,
+                "violations": violations,
+                "invalid_timestamp_entries": invalid_timestamp_entries,
+            },
+            indent=2,
+        )
     table = _format_table(filtered)
-    summary = json.dumps(violations, indent=2)
+    summary = json.dumps(
+        {
+            "violations": violations,
+            "invalid_timestamp_entries": invalid_timestamp_entries,
+        },
+        indent=2,
+    )
     return f"{table}\n\nViolations:\n{summary}"
 
 
 def run_pr_applicability(agent_id: Optional[str], tier: Optional[str], output: str) -> str:
     entries = _load_entries()
-    filtered = _filter_entries(entries, agent_id, tier, None, None)
+    filtered, _ = _filter_entries(entries, agent_id, tier, None, None)
     if not filtered:
         return json.dumps({"error": "no_constitutional_evaluations_found"}, indent=2)
     latest = sorted(filtered, key=lambda item: safe_str(safe_get(item, "timestamp")))[-1]

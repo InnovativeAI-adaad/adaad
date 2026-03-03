@@ -138,6 +138,68 @@ def test_audit_cli_summary_respects_filters() -> None:
         assert report["violations"]["constitutional"]["policy_violation"] == 1
 
 
+def test_audit_cli_invalid_timestamps_are_skipped_when_date_filters_active() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        metrics_path = Path(tmpdir) / "metrics.jsonl"
+        entries = [
+            {
+                "timestamp": "2026-02-06T00:00:00Z",
+                "event": "constitutional_evaluation",
+                "level": "INFO",
+                "element": "Earth",
+                "payload": {
+                    "agent_id": "alpha",
+                    "tier": "SANDBOX",
+                    "passed": True,
+                    "blocking_failures": [],
+                    "warnings": [],
+                },
+            },
+            {
+                "timestamp": "not-a-timestamp",
+                "event": "constitutional_evaluation",
+                "level": "INFO",
+                "element": "Earth",
+                "payload": {
+                    "agent_id": "alpha",
+                    "tier": "SANDBOX",
+                    "passed": False,
+                    "blocking_failures": ["policy_violation"],
+                    "warnings": [],
+                },
+            },
+            {
+                "timestamp": "also-bad",
+                "event": "mutation_rejected_preflight",
+                "level": "ERROR",
+                "element": "Earth",
+                "payload": {
+                    "agent_id": "alpha",
+                    "tier": "SANDBOX",
+                    "reason": "missing_signature",
+                },
+            },
+        ]
+        _write_metrics(metrics_path, entries)
+        original = metrics.METRICS_PATH
+        metrics.METRICS_PATH = metrics_path
+        try:
+            output = run_audit(
+                "alpha",
+                "SANDBOX",
+                "2026-02-06T00:00:00Z",
+                "2026-02-06T00:30:00Z",
+                "json",
+            )
+        finally:
+            metrics.METRICS_PATH = original
+
+        report = json.loads(output)
+        assert len(report["evaluations"]) == 1
+        assert report["invalid_timestamp_entries"] == 3
+        assert report["violations"]["preflight"] == {}
+
+
 def test_audit_cli_autonomy_scoreboard_action_json() -> None:
     from tools.adaad_audit import run_autonomy_scoreboard
 

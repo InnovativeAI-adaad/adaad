@@ -121,12 +121,17 @@ class EvolutionKernel:
             request.agent_id = str(agent.get("agent_id") or "")
         return self.mutation_executor.execute(request)
 
-    def evaluate_fitness(self, agent: Mapping[str, Any], goal_graph: Mapping[str, Any]) -> Dict[str, Any]:
+    def evaluate_fitness(
+        self,
+        agent: Mapping[str, Any],
+        mutation_payload: Mapping[str, Any],
+        goal_graph_optional: Mapping[str, Any] | None = None,
+    ) -> Dict[str, Any]:
         """Evaluate deterministic fitness using kernel evaluator module."""
         return self.fitness_evaluator.evaluate(
             str(agent.get("agent_id") or ""),
-            dict(goal_graph.get("mutation") or {}),
-            goal_graph,
+            dict(mutation_payload),
+            goal_graph_optional,
         )
 
     def sign_certificate(self, agent: Mapping[str, Any]) -> Dict[str, Any]:
@@ -134,6 +139,21 @@ class EvolutionKernel:
         agent_id = str(agent.get("agent_id") or "")
         agent_path = Path(str(agent.get("agent_path") or ""))
         return cryovant.evolve_certificate(agent_id, agent_path, self.lineage_dir, {})
+
+
+    @staticmethod
+    def _execution_succeeded(execution_result: Mapping[str, Any]) -> bool:
+        status = str(execution_result.get("status") or "").strip().lower()
+        return bool(status) and status not in {"rejected", "failed", "error"}
+
+    @staticmethod
+    def _fitness_accepted(fitness_result: Mapping[str, Any]) -> bool:
+        if bool(fitness_result.get("accepted")):
+            return True
+        policy = fitness_result.get("policy")
+        if isinstance(policy, Mapping) and bool(policy.get("accepted")):
+            return True
+        return bool(fitness_result.get("passed"))
 
     def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """Run one mutation cycle, preferring compatibility adapter when explicitly selected."""
@@ -199,8 +219,15 @@ class EvolutionKernel:
             }
 
         execution_result = self.execute_in_sandbox(agent, mutation)
-        fitness_result = self.evaluate_fitness(agent, mutation)
-        certificate_result = self.sign_certificate(agent)
+        fitness_result = self.evaluate_fitness(agent, mutation_payload)
+
+        if self._execution_succeeded(execution_result) and self._fitness_accepted(fitness_result):
+            certificate_result = self.sign_certificate(agent)
+        elif not self._execution_succeeded(execution_result):
+            certificate_result = {"status": "skipped", "reason": "execution_not_successful"}
+        else:
+            certificate_result = {"status": "skipped", "reason": "fitness_not_accepted"}
+
         return {
             **execution_result,
             "agent_id": agent.get("agent_id"),
