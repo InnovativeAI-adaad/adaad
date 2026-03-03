@@ -64,7 +64,6 @@ from runtime.api.runtime_services import (
     determine_tier,
     deterministic_envelope_scope,
     dump,
-    enforce_law,
     evaluate_mutation,
     generate_tool_manifest,
     get_forced_tier,
@@ -75,6 +74,7 @@ from runtime.api.runtime_services import (
     register_capability,
     score_mutation_enhanced,
 )
+from runtime.governance.gate import DeterministicAxisEvaluator, GovernanceGate
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch, dispatch_result_or_raise
 from security import cryovant
@@ -178,6 +178,7 @@ class Orchestrator:
         self.boot_preflight = BootPreflightService()
         self.replay_service = ReplayVerificationService(manifests_dir=APP_ROOT.parent / "security" / "replay_manifests")
         self.mutation_orchestrator = MutationOrchestrationService()
+        self.governance_gate = GovernanceGate()
         self.mcp_server_name = "mcp-proposal-writer"
         self.mcp_app: Any | None = None
         self.dry_run = dry_run
@@ -457,25 +458,46 @@ class Orchestrator:
         metrics.log(event_type="mcp_server_started", payload={"server": self.mcp_server_name}, level="INFO")
 
     def _governance_gate(self) -> bool:
-        checks = [
-            ("constitution_version", RULE_CONSTITUTION_VERSION, *self._check_constitution_version()),
-            ("key_rotation", RULE_KEY_ROTATION, *self._check_key_rotation_status()),
-            ("ledger_integrity", RULE_LEDGER_INTEGRITY, *self._check_ledger_integrity()),
-            ("mutation_engine", RULE_MUTATION_ENGINE, *self._check_mutation_engine_health()),
-            ("warm_pool", RULE_WARM_POOL, *self._check_warm_pool_ready()),
-            ("architect_invariants", RULE_ARCHITECT_SCAN, *self._check_architect_invariants()),
-            ("platform_resources", RULE_PLATFORM_RESOURCES, *self._check_platform_resources()),
+        evaluators = [
+            DeterministicAxisEvaluator("constitution_version", RULE_CONSTITUTION_VERSION, self._check_constitution_version),
+            DeterministicAxisEvaluator("key_rotation", RULE_KEY_ROTATION, self._check_key_rotation_status),
+            DeterministicAxisEvaluator("ledger_integrity", RULE_LEDGER_INTEGRITY, self._check_ledger_integrity),
+            DeterministicAxisEvaluator("mutation_engine", RULE_MUTATION_ENGINE, self._check_mutation_engine_health),
+            DeterministicAxisEvaluator("warm_pool", RULE_WARM_POOL, self._check_warm_pool_ready),
+            DeterministicAxisEvaluator("architect_invariants", RULE_ARCHITECT_SCAN, self._check_architect_invariants),
+            DeterministicAxisEvaluator("platform_resources", RULE_PLATFORM_RESOURCES, self._check_platform_resources),
         ]
-        decision = enforce_law(
-            {
-                "mutation_id": f"governance-gate-{self.evolution_runtime.current_epoch_id or 'boot'}",
-                "trust_mode": os.getenv("ADAAD_TRUST_MODE", "dev").strip().lower(),
-                "checks": [{"rule_id": rule_id, "ok": ok, "reason": reason} for _, rule_id, ok, reason in checks],
-            }
+        axis_results = [evaluator.evaluate() for evaluator in evaluators]
+        gate_decision = self.governance_gate.approve_mutation(
+            mutation_id=f"governance-gate-{self.evolution_runtime.current_epoch_id or 'boot'}",
+            trust_mode=os.getenv("ADAAD_TRUST_MODE", "dev").strip().lower(),
+            axis_results=axis_results,
+            human_override=os.getenv("ADAAD_GATE_HUMAN_OVERRIDE", "").strip() == "1",
         )
 
-        failures = [{"check": check_name, "reason": reason} for check_name, _, ok, reason in checks if not ok]
-        if not decision.passed:
+        failures = [
+            {"check": result.axis, "reason": result.reason}
+            for result in gate_decision.axis_results
+            if not result.ok
+        ]
+        self.state["governance_gate"] = {
+            "approved": gate_decision.approved,
+            "decision": gate_decision.decision,
+            "decision_id": gate_decision.decision_id,
+            "reason_codes": gate_decision.reason_codes,
+            "axis_results": [
+                {
+                    "axis": result.axis,
+                    "rule_id": result.rule_id,
+                    "ok": result.ok,
+                    "reason": result.reason,
+                }
+                for result in gate_decision.axis_results
+            ],
+            "human_override": gate_decision.human_override,
+        }
+
+        if not gate_decision.approved:
             tier = self.tier_manager.evaluate_escalation(
                 governance_violations=len(failures),
                 ledger_errors=sum(1 for f in failures if f.get("check") == "ledger_integrity"),
@@ -486,7 +508,13 @@ class Orchestrator:
             self.tier_manager.apply(tier, "governance_gate_failed")
             metrics.log(
                 event_type="governance_gate_failed",
-                payload={"failures": failures, "recovery_tier": tier.value, "recovery_policy": policy.__dict__},
+                payload={
+                    "failures": failures,
+                    "reason_codes": gate_decision.reason_codes,
+                    "decision_id": gate_decision.decision_id,
+                    "recovery_tier": tier.value,
+                    "recovery_policy": policy.__dict__,
+                },
                 level="ERROR",
             )
             self.state["mutation_enabled"] = False
@@ -496,7 +524,15 @@ class Orchestrator:
                 self._fail(f"recovery_tier_{tier.value}")
             return False
 
-        metrics.log(event_type="governance_gate_passed", payload={}, level="INFO")
+        metrics.log(
+            event_type="governance_gate_passed",
+            payload={
+                "decision_id": gate_decision.decision_id,
+                "reason_codes": gate_decision.reason_codes,
+                "human_override": gate_decision.human_override,
+            },
+            level="INFO",
+        )
         return True
 
     def _check_constitution_version(self) -> tuple[bool, str]:
