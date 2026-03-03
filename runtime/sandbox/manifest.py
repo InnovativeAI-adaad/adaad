@@ -4,7 +4,17 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import os
 from typing import Any, Dict, Mapping, Tuple
+
+
+def _timeout_default() -> int:
+    raw = str(os.getenv("ADAAD_SANDBOX_TIMEOUT_SECONDS", "30")).strip()
+    try:
+        timeout_s = int(float(raw))
+    except (TypeError, ValueError):
+        return 30
+    return timeout_s if timeout_s > 0 else 30
 
 
 @dataclass(frozen=True)
@@ -46,6 +56,7 @@ def validate_manifest(manifest: SandboxManifest) -> None:
 
 
 def manifest_from_mapping(raw: Mapping[str, Any]) -> SandboxManifest:
+    timeout_default = _timeout_default()
     env_items = tuple((str(item.get("name", "")), str(item.get("value", ""))) for item in (raw.get("env") or []))
     return SandboxManifest(
         mutation_id=str(raw.get("mutation_id") or ""),
@@ -59,7 +70,7 @@ def manifest_from_mapping(raw: Mapping[str, Any]) -> SandboxManifest:
         cpu_seconds=int(raw.get("cpu_seconds", 1) or 1),
         memory_mb=int(raw.get("memory_mb", 1) or 1),
         disk_mb=int(raw.get("disk_mb", 1) or 1),
-        timeout_s=int(raw.get("timeout_s", 1) or 1),
+        timeout_s=int(raw.get("timeout_s", timeout_default) or timeout_default),
         deterministic_clock=bool(raw.get("deterministic_clock", True)),
         deterministic_random=bool(raw.get("deterministic_random", True)),
     )

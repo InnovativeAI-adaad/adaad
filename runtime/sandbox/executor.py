@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 from dataclasses import asdict
+import hashlib
 import os
+import subprocess
 from typing import Any, Sequence
 
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider
 from runtime.governance.resource_accounting import coalesce_resource_usage_snapshot
-from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded
+from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded, ResourceLimitEvent
 from runtime.sandbox.evidence import SandboxEvidenceLedger, build_sandbox_evidence, sign_bundle
 from runtime.sandbox.fs_rules import enforce_write_path_allowlist
 from runtime.sandbox.isolation import ContainerIsolationBackend, IsolationBackend, ProcessIsolationBackend
@@ -20,6 +22,11 @@ from runtime.sandbox.preflight import analyze_execution_plan
 from runtime.sandbox.resources import enforce_resource_quotas
 from runtime.sandbox.syscall_filter import enforce_syscall_allowlist_with_fingerprint
 from runtime.test_sandbox import TestSandbox, TestSandboxResult
+from security.ledger import journal
+
+
+class SandboxTimeoutError(RuntimeError):
+    """Raised when sandbox execution exceeds configured timeout limits."""
 
 
 def _is_sandbox_tier() -> bool:
@@ -45,6 +52,20 @@ def _default_isolation_backend() -> IsolationBackend:
     return ProcessIsolationBackend()
 
 
+def _configured_sandbox_timeout_seconds(default: int = 30) -> int:
+    raw = str(os.getenv("ADAAD_SANDBOX_TIMEOUT_SECONDS", str(default))).strip()
+    try:
+        timeout_s = int(float(raw))
+    except (TypeError, ValueError):
+        return default
+    return timeout_s if timeout_s > 0 else default
+
+
+def _compute_code_hash(manifest: SandboxManifest) -> str:
+    code_bytes = "\x00".join(manifest.command).encode("utf-8")
+    return hashlib.sha256(code_bytes).hexdigest()
+
+
 class HardenedSandboxExecutor:
     def __init__(
         self,
@@ -61,6 +82,32 @@ class HardenedSandboxExecutor:
         self.evidence_ledger = SandboxEvidenceLedger()
         self.last_evidence_hash = ""
         self.last_evidence_payload: dict[str, object] = {}
+
+    def _build_end_payload(
+        self,
+        *,
+        manifest: SandboxManifest,
+        mutation_id: str,
+        epoch_id: str,
+        replay_seed: str,
+        duration_s: float,
+        peak_memory_mb: float,
+        status: str,
+    ) -> dict[str, object]:
+        return {
+            "mutation_id": mutation_id,
+            "epoch_id": epoch_id,
+            "replay_seed": replay_seed,
+            "status": status,
+            "timeout_s": manifest.timeout_s,
+            "duration_s": float(duration_s),
+            "peak_memory_mb": float(peak_memory_mb),
+            "code_hash": _compute_code_hash(manifest),
+            "completed_at": self.provider.iso_now(),
+        }
+
+    def _emit_end_event(self, *, payload: dict[str, object]) -> None:
+        journal.append_tx(tx_type="sandbox_execution_end.v1", payload=payload)
 
     def _record_evidence(
         self,
@@ -118,7 +165,7 @@ class HardenedSandboxExecutor:
             cpu_seconds=self.policy.cpu_seconds,
             memory_mb=self.policy.memory_mb,
             disk_mb=self.policy.disk_mb,
-            timeout_s=self.policy.timeout_s,
+            timeout_s=_configured_sandbox_timeout_seconds(self.policy.timeout_s),
             deterministic_clock=True,
             deterministic_random=True,
         )
@@ -133,7 +180,34 @@ class HardenedSandboxExecutor:
         if any(not control.enforced for control in isolation_preparation.controls):
             raise RuntimeError("sandbox_policy_unenforceable:control_not_enforced")
 
-        result = self.isolation_backend.run(test_sandbox=self.test_sandbox, manifest=manifest, args=args, retries=retries)
+        execution_started_at = self.provider.iso_now()
+        journal.append_tx(
+            tx_type="sandbox_execution_start.v1",
+            payload={
+                "mutation_id": mutation_id,
+                "epoch_id": epoch_id,
+                "replay_seed": replay_seed,
+                "timeout_s": manifest.timeout_s,
+                "started_at": execution_started_at,
+            },
+        )
+
+        try:
+            result = self.isolation_backend.run(test_sandbox=self.test_sandbox, manifest=manifest, args=args, retries=retries)
+        except subprocess.TimeoutExpired as exc:
+            timeout_payload = self._build_end_payload(
+                manifest=manifest,
+                mutation_id=mutation_id,
+                epoch_id=epoch_id,
+                replay_seed=replay_seed,
+                duration_s=float(manifest.timeout_s),
+                peak_memory_mb=0.0,
+                status="timeout",
+            )
+            journal.append_tx(tx_type="sandbox_timeout.v1", payload=timeout_payload)
+            self._emit_end_event(payload=timeout_payload)
+            raise SandboxTimeoutError(f"sandbox_timeout:{manifest.timeout_s}s") from exc
+
         result_payload = asdict(result)
         runtime_telemetry = dict(getattr(self.isolation_backend, "last_runtime_telemetry", {}) or {})
         runtime_telemetry.setdefault("syscall_validation", "telemetry_allowlist")
@@ -142,12 +216,42 @@ class HardenedSandboxExecutor:
         runtime_telemetry.setdefault("hard_isolation_namespaces", isolation_preparation.mode == "container")
         runtime_telemetry.setdefault("hard_isolation_cgroups", isolation_preparation.mode == "container")
 
-        max_wall = float(os.getenv("ADAAD_MAX_WALL_SECONDS", str(manifest.timeout_s)))
+        max_wall = float(manifest.timeout_s)
         max_memory = float(os.getenv("ADAAD_MAX_MEMORY_MB", str(manifest.memory_mb)))
-        if float(result.duration_s) > max_wall:
-            raise ResourceBoundsExceeded("resource_bounds_exceeded:wall_time")
+        if result.status.value == "timeout" or float(result.duration_s) > max_wall:
+            timeout_payload = self._build_end_payload(
+                manifest=manifest,
+                mutation_id=mutation_id,
+                epoch_id=epoch_id,
+                replay_seed=replay_seed,
+                duration_s=float(result.duration_s),
+                peak_memory_mb=float(result.memory_mb or 0.0),
+                status="timeout",
+            )
+            journal.append_tx(tx_type="sandbox_timeout.v1", payload=timeout_payload)
+            self._emit_end_event(payload=timeout_payload)
+            raise SandboxTimeoutError("sandbox_timeout_exceeded")
         if float(result.memory_mb or 0.0) > max_memory:
-            raise ResourceBoundsExceeded("resource_bounds_exceeded:memory")
+            self._emit_end_event(
+                payload=self._build_end_payload(
+                    manifest=manifest,
+                    mutation_id=mutation_id,
+                    epoch_id=epoch_id,
+                    replay_seed=replay_seed,
+                    duration_s=float(result.duration_s),
+                    peak_memory_mb=float(result.memory_mb or 0.0),
+                    status="resource_bounds_exceeded",
+                )
+            )
+            raise ResourceBoundsExceeded(
+                "resource_bounds_exceeded:memory",
+                event=ResourceLimitEvent(
+                    event="resource_bounds_exceeded",
+                    resource="memory_mb",
+                    limit=max_memory,
+                    observed=float(result.memory_mb or 0.0),
+                ),
+            )
         result_payload["disk_mb"] = 0.0
         result_payload["resource_bounds_snapshot"] = coalesce_resource_usage_snapshot(
             observed=result_payload, telemetry=result_payload
@@ -170,6 +274,17 @@ class HardenedSandboxExecutor:
                     },
                 ),
                 runtime_telemetry=runtime_telemetry,
+            )
+            self._emit_end_event(
+                payload=self._build_end_payload(
+                    manifest=manifest,
+                    mutation_id=mutation_id,
+                    epoch_id=epoch_id,
+                    replay_seed=replay_seed,
+                    duration_s=float(result.duration_s),
+                    peak_memory_mb=float(result.memory_mb or 0.0),
+                    status="missing_syscall_telemetry",
+                )
             )
             raise RuntimeError("sandbox_missing_syscall_telemetry")
 
@@ -195,6 +310,17 @@ class HardenedSandboxExecutor:
                 ),
                 runtime_telemetry=runtime_telemetry,
             )
+            self._emit_end_event(
+                payload=self._build_end_payload(
+                    manifest=manifest,
+                    mutation_id=mutation_id,
+                    epoch_id=epoch_id,
+                    replay_seed=replay_seed,
+                    duration_s=float(result.duration_s),
+                    peak_memory_mb=float(result.memory_mb or 0.0),
+                    status="syscall_violation",
+                )
+            )
             raise RuntimeError(f"sandbox_syscall_violation:{','.join(denied_syscalls)}")
 
         write_ok, write_violations = enforce_write_path_allowlist(result.attempted_write_paths, manifest.allowed_write_paths)
@@ -216,6 +342,17 @@ class HardenedSandboxExecutor:
                     },
                 ),
                 runtime_telemetry=runtime_telemetry,
+            )
+            self._emit_end_event(
+                payload=self._build_end_payload(
+                    manifest=manifest,
+                    mutation_id=mutation_id,
+                    epoch_id=epoch_id,
+                    replay_seed=replay_seed,
+                    duration_s=float(result.duration_s),
+                    peak_memory_mb=float(result.memory_mb or 0.0),
+                    status="write_path_violation",
+                )
             )
             raise RuntimeError(f"sandbox_write_path_violation:{','.join(write_violations)}")
 
@@ -242,6 +379,17 @@ class HardenedSandboxExecutor:
                     },
                 ),
                 runtime_telemetry=runtime_telemetry,
+            )
+            self._emit_end_event(
+                payload=self._build_end_payload(
+                    manifest=manifest,
+                    mutation_id=mutation_id,
+                    epoch_id=epoch_id,
+                    replay_seed=replay_seed,
+                    duration_s=float(result.duration_s),
+                    peak_memory_mb=float(result.memory_mb or 0.0),
+                    status="network_violation",
+                )
             )
             raise RuntimeError(f"sandbox_network_violation:{','.join(network_violations)}")
 
@@ -274,6 +422,17 @@ class HardenedSandboxExecutor:
                 ),
                 runtime_telemetry=runtime_telemetry,
             )
+            self._emit_end_event(
+                payload=self._build_end_payload(
+                    manifest=manifest,
+                    mutation_id=mutation_id,
+                    epoch_id=epoch_id,
+                    replay_seed=replay_seed,
+                    duration_s=float(result.duration_s),
+                    peak_memory_mb=float(result.memory_mb or 0.0),
+                    status="resource_quota_violation",
+                )
+            )
             raise RuntimeError("sandbox_resource_quota_violation")
 
         self._record_evidence(
@@ -292,7 +451,23 @@ class HardenedSandboxExecutor:
             ),
             runtime_telemetry=runtime_telemetry,
         )
+
+        peak_memory_mb = max(
+            float(result.memory_mb or 0.0),
+            float(((runtime_telemetry.get("resource_usage") or {}).get("memory_mb") or 0.0)),
+        )
+        self._emit_end_event(
+            payload=self._build_end_payload(
+                manifest=manifest,
+                mutation_id=mutation_id,
+                epoch_id=epoch_id,
+                replay_seed=replay_seed,
+                duration_s=float(result.duration_s),
+                peak_memory_mb=peak_memory_mb,
+                status="ok",
+            )
+        )
         return result
 
 
-__all__ = ["HardenedSandboxExecutor"]
+__all__ = ["HardenedSandboxExecutor", "SandboxTimeoutError"]
