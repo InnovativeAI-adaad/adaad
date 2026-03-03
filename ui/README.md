@@ -63,6 +63,15 @@ Validation invariants:
 This surface queues intents only and does not directly execute mutations.
 
 Replay forensics is now available as deterministic read-only projection endpoints.
+
+Replay inspector UI components now live under `ui/aponi/` and are loaded by the default dashboard page:
+
+- `ui/aponi/replay_inspector.js` renders a constrained-device-safe replay panel.
+- The panel fetches `/replay/divergence` plus `/replay/diff?epoch_id=...` with timeout-guarded requests.
+- It includes last-N epoch navigation, semantic divergence highlighting, and mutation-to-lineage drill-down using `lineage_chain.mutations` data.
+- Loading/error states are explicit and compact for Android and low-resource operation.
+
+`/replay/diff` now also includes a deterministic `lineage_chain` payload with per-mutation ancestry fields (`mutation_id`, `parent_mutation_id`, `ancestor_chain`, `certified_signature`) to support in-UI lineage inspection.
 `/replay/diff` includes a `semantic_drift` section with stable class counts and per-key class assignment across
 `config_drift`, `governance_drift`, `trait_drift`, `runtime_artifact_drift`, and `uncategorized_drift`.
 
@@ -133,3 +142,45 @@ Aponi governance intelligence responses are validated against draft-2020-12 sche
 - Federation support in this UI layer remains baseline and is not presented as hardened multi-node transport.
 
 For ADAAD-9 editor preflight, lint previews should be generated through `runtime/mcp/linting_bridge.py` so annotations remain deterministic and aligned with governed MCP analysis semantics.
+
+
+## Governed mutation proposal editor (default production UI)
+
+`ui/aponi/index.html` is the default production dashboard source served by `server.py`.
+
+The editor collects:
+
+- `target path`
+- `agent_id`
+- metadata (JSON object)
+- Python mutation content
+
+Submission behavior:
+
+- Primary governed endpoint: `POST /api/mutations/proposals`
+- Compatibility fallback: `POST /mutation/propose`
+- Preview endpoint: `GET /api/lint/preview` (debounced editor lint preview; advisory only)
+
+Authority boundary invariants:
+
+- The UI is proposal authoring only and does **not** grant mutation execution authority.
+- Proposal queue admission remains subject to constitutional policy checks, tier escalation controls, and human/governor review gates.
+
+
+Editor submission lineage emits `aponi_editor_proposal_submitted.v1` for editor-origin proposal intents to strengthen audit traceability without changing authority boundaries.
+
+
+## Editor proposal submission traceability event
+
+For proposal submissions that originate from the Aponi editor UI, the server emits `aponi_editor_proposal_submitted.v1` on successful `POST /api/mutations/proposals` intake.
+
+Expected traceability fields in the emitted payload are:
+
+- `proposal_id`
+- `session_id`
+- `actor_context` (`actor_id`, `actor_role`, `authn_scheme`)
+- `timestamp`
+- `endpoint_path`
+- `source` (`aponi_editor_ui`)
+
+This event intentionally excludes mutation request body fields so UI-linked telemetry preserves governance traceability without leaking sensitive proposal content.

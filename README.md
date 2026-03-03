@@ -162,6 +162,7 @@ Recent improvements to `server.py` and dashboard integration:
 - Added first-class real-time WebSocket stream at `/ws/events` with a stable frame contract (`hello` + `event_batch`).
 - Hardened API topology for operators with production endpoints for mutations, epochs, constitution status, and system intelligence.
 - Proposal intake endpoint `/api/mutations/proposals` now delegates to MCP validator + queue for governance-consistent submission.
+- Production dashboard default now resolves to `ui/aponi/index.html`, which presents a governed mutation proposal authoring editor with explicit authority-boundary messaging (authoring only, not execution authority).
 - Health payload now includes ADAAD version and runtime profile lock visibility to improve operator confidence.
 - UI mocks are disabled by default and can be enabled only via `ADAAD_UI_MOCKS=1` for local/demo usage.
 
@@ -176,7 +177,40 @@ Recent improvements to `server.py` and dashboard integration:
 - `GET /api/audit/epochs/{epoch_id}/replay-proof`
 - `GET /api/audit/epochs/{epoch_id}/lineage`
 - `GET /api/audit/bundles/{bundle_id}`
+- `GET /evidence/{bundle_id}`
+- `GET /api/lint/preview`
 - `WS /ws/events`
+
+
+
+## Aponi-as-IDE (ADAAD-9)
+
+Aponi now provides a governance-first authoring workflow for mutation proposals and replay forensics.
+
+### Authority invariant
+
+Aponi surfaces are **authoring and analysis only**; they do not grant execution authority.
+
+- Proposals are submitted through governed intake (`POST /api/mutations/proposals`, compatibility alias: `POST /mutation/propose`).
+- `authority_level` remains governed/clamped server-side by constitutional validation.
+- Queue admission is not deployment approval; constitutional checks, replay checks, and review gates still determine whether execution can occur.
+
+### Editor and telemetry surfaces
+
+- Default production UI source: `ui/aponi/index.html`.
+- Deterministic preflight lint preview: `GET /api/lint/preview`.
+- Editor-origin traceability event: `aponi_editor_proposal_submitted.v1` (metadata-only payload: proposal/session/actor/timestamp/endpoint/source, no proposal body leakage).
+
+### Replay and simulation operator tooling
+
+- Replay inspector UI asset: `/ui/aponi/replay_inspector.js`.
+- Replay diff includes deterministic lineage drill-down metadata (`lineage_chain` with `mutation_id`, `parent_mutation_id`, `ancestor_chain`, `certified_signature`).
+- Standalone Aponi simulation passthroughs:
+  - `GET /simulation/context`
+  - `POST /simulation/run`
+  - `GET /simulation/results/{run_id}`
+
+Simulation requests are bounded by deterministic epoch-range limits and include constitution-context provenance.
 
 
 ## Licensing

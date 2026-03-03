@@ -88,3 +88,60 @@ def test_serve_dashboard_blocks_path_traversal(tmp_path, monkeypatch):
         response = client.get("/%2e%2e/%2e%2e/etc/passwd")
 
     assert response.status_code == 404
+
+
+def test_serve_dashboard_supports_ui_aponi_prefixed_assets(tmp_path, monkeypatch):
+    root = tmp_path
+    aponi = root / "ui" / "aponi"
+    aponi.mkdir(parents=True)
+    (aponi / "index.html").write_text("<html>ok</html>", encoding="utf-8")
+    (aponi / "proposal_editor.js").write_text("console.log('ok')", encoding="utf-8")
+
+    monkeypatch.setattr(server, "ROOT", root)
+    monkeypatch.setattr(server, "APONI_DIR", aponi)
+    monkeypatch.setattr(server, "ENHANCED_DIR", root / "ui" / "enhanced")
+    monkeypatch.setattr(server, "INDEX", aponi / "index.html")
+    monkeypatch.setattr(server, "ENHANCED_INDEX", root / "ui" / "enhanced" / "enhanced_dashboard.html")
+
+    with TestClient(server.app) as client:
+        response = client.get("/ui/aponi/proposal_editor.js")
+
+    assert response.status_code == 200
+    assert "console.log" in response.text
+
+
+def test_serve_dashboard_aponi_prefix_blocks_traversal(tmp_path, monkeypatch):
+    root = tmp_path
+    aponi = root / "ui" / "aponi"
+    aponi.mkdir(parents=True)
+    (aponi / "index.html").write_text("<html>ok</html>", encoding="utf-8")
+
+    monkeypatch.setattr(server, "ROOT", root)
+    monkeypatch.setattr(server, "APONI_DIR", aponi)
+    monkeypatch.setattr(server, "ENHANCED_DIR", root / "ui" / "enhanced")
+    monkeypatch.setattr(server, "INDEX", aponi / "index.html")
+    monkeypatch.setattr(server, "ENHANCED_INDEX", root / "ui" / "enhanced" / "enhanced_dashboard.html")
+
+    with TestClient(server.app) as client:
+        response = client.get("/ui/aponi/%2e%2e/%2e%2e/etc/passwd")
+
+    assert response.status_code == 404
+
+
+def test_serve_dashboard_root_serves_index(tmp_path, monkeypatch):
+    root = tmp_path
+    aponi = root / "ui" / "aponi"
+    aponi.mkdir(parents=True)
+    (aponi / "index.html").write_text("<html>root</html>", encoding="utf-8")
+
+    monkeypatch.setattr(server, "ROOT", root)
+    monkeypatch.setattr(server, "APONI_DIR", aponi)
+    monkeypatch.setattr(server, "ENHANCED_DIR", root / "ui" / "enhanced")
+    monkeypatch.setattr(server, "INDEX", aponi / "index.html")
+    monkeypatch.setattr(server, "ENHANCED_INDEX", root / "ui" / "enhanced" / "enhanced_dashboard.html")
+
+    with TestClient(server.app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert "root" in response.text

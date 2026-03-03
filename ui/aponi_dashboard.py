@@ -31,6 +31,7 @@ from urllib import error as urlerror, request as urlrequest
 from urllib.parse import parse_qs, urlparse
 
 from app import APP_ROOT
+from runtime import constitution
 from runtime import metrics
 from runtime.constants import APONI_PORT
 from runtime.governance.event_taxonomy import (
@@ -45,6 +46,7 @@ from runtime.governance.policy_artifact import GovernancePolicyError, load_gover
 from runtime.governance.response_schema_validator import validate_response
 from runtime.evolution import EvidenceBundleBuilder, EvidenceBundleError, LineageLedgerV2, ReplayEngine
 from runtime.evolution.epoch import CURRENT_EPOCH_PATH
+from runtime.evolution.lineage_v2 import resolve_certified_ancestor_path
 from runtime.evolution.replay_attestation import REPLAY_PROOFS_DIR, load_replay_proof, verify_replay_proof_bundle
 from security.ledger import journal
 
@@ -77,6 +79,7 @@ CONTROL_EXECUTION_ACTIONS = {"cancel", "fork"}
 CONTROL_QUEUE_PATH = Path(os.environ.get("APONI_COMMAND_QUEUE_PATH", str(APP_ROOT.parent / "data" / "aponi_command_queue.jsonl")))
 FREE_CAPABILITY_SOURCES_PATH = Path(os.environ.get("APONI_FREE_SOURCES_PATH", str(APP_ROOT.parent / "data" / "free_capability_sources.json")))
 SKILL_PROFILES_PATH = Path(os.environ.get("APONI_SKILL_PROFILES_PATH", str(APP_ROOT.parent / "data" / "governed_skill_profiles.json")))
+REPLAY_INSPECTOR_JS_PATH = APP_ROOT.parent / "ui" / "aponi" / "replay_inspector.js"
 CONTROL_CAPABILITIES_MAX = 8
 CONTROL_TEXT_FIELD_MAX = 240
 MCP_MUTATION_ENDPOINTS = {"/mcp/tools/call", "/mcp/context/record"}
@@ -150,6 +153,63 @@ def _schema_version_status(path: Path) -> Dict[str, object]:
 
 
 
+
+
+
+
+def _simulation_max_epoch_range() -> int:
+    simulation_epoch_range_android = 2
+    simulation_epoch_range_linux = 5
+    override = os.environ.get("APONI_MAX_SIMULATION_EPOCH_RANGE", "").strip()
+    if override:
+        try:
+            return max(1, int(override))
+        except ValueError:
+            return simulation_epoch_range_android if os.path.exists("/system/build.prop") else simulation_epoch_range_linux
+    return simulation_epoch_range_android if os.path.exists("/system/build.prop") else simulation_epoch_range_linux
+
+
+def _active_constitution_context() -> Dict[str, str]:
+    return {
+        "constitution_version": constitution.CONSTITUTION_VERSION,
+        "policy_hash": constitution.POLICY_HASH,
+    }
+
+
+def _default_simulation_constraints() -> List[Dict[str, str]]:
+    context = _active_constitution_context()
+    return [
+        {
+            "type": "constitution_context",
+            "constitution_version": context["constitution_version"],
+            "policy_hash": context["policy_hash"],
+        }
+    ]
+
+
+def _simulation_api_request(method: str, path: str, payload: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    simulation_api_base_url = os.environ.get("APONI_SIMULATION_API_BASE", "").strip().rstrip("/")
+    if not simulation_api_base_url:
+        return {"ok": False, "error": "simulation_api_unconfigured"}
+    request_url = f"{simulation_api_base_url}{path}"
+    data = None
+    headers = {"Accept": "application/json"}
+    if payload is not None:
+        data = json.dumps(payload, sort_keys=True).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    request_obj = urlrequest.Request(request_url, method=method, data=data, headers=headers)
+    try:
+        with urlrequest.urlopen(request_obj, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urlerror.HTTPError as exc:
+        try:
+            err_payload = json.loads(exc.read().decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            err_payload = {"ok": False, "error": "simulation_upstream_http_error", "status": exc.code}
+        err_payload.setdefault("ok", False)
+        return err_payload
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return {"ok": False, "error": "simulation_upstream_unavailable", "detail": str(exc)}
 
 
 def _review_percentile(sorted_values: List[float], percentile: float) -> float:
@@ -991,6 +1051,12 @@ class AponiDashboard:
                 if path == "/ui/aponi.js":
                     self._send_js(self._user_console_js())
                     return
+                if path == "/ui/aponi/replay_inspector.js":
+                    try:
+                        self._send_js(REPLAY_INSPECTOR_JS_PATH.read_text(encoding="utf-8"))
+                    except OSError:
+                        self._send_json({"ok": False, "error": "replay_inspector_unavailable"}, status_code=503)
+                    return
                 if path.startswith("/state"):
                     state_payload = self._run_background(dict, state_ref)
                     state_payload["mutation_rate_limit"] = self._run_background(self._mutation_rate_state)
@@ -1049,6 +1115,35 @@ class AponiDashboard:
                         self._send_json({"ok": False, "error": "method_not_allowed", "detail": "policy/simulate is GET only"}, status_code=405)
                         return
                     self._send_validated_response("/policy/simulate", "policy_simulate.schema.json", self._policy_simulation(query))
+                    return
+                if path.startswith("/simulation/context"):
+                    self._send_json(
+                        {
+                            "ok": True,
+                            "constitution_context": _active_constitution_context(),
+                            "default_constraints": _default_simulation_constraints(),
+                            "max_epoch_range": _simulation_max_epoch_range(),
+                        }
+                    )
+                    return
+                if path.startswith("/simulation/results/"):
+                    run_id = path.rsplit("/", 1)[-1].strip()
+                    if not run_id:
+                        self._send_json({"ok": False, "error": "missing_run_id"}, status_code=400)
+                        return
+                    result = _simulation_api_request("GET", f"/simulation/results/{run_id}")
+                    result.setdefault("run_id", run_id)
+                    if result.get("ok") is False:
+                        self._send_json(result, status_code=502 if str(result.get("error", "")).startswith("simulation_upstream") else 400)
+                        return
+                    result["ok"] = True
+                    result["provenance"] = {
+                        **(result.get("provenance") if isinstance(result.get("provenance"), dict) else {}),
+                        **_active_constitution_context(),
+                        "source_endpoint": "/simulation/results/{run_id}",
+                        "max_epoch_range": _simulation_max_epoch_range(),
+                    }
+                    self._send_json(result)
                     return
                 if path.startswith("/alerts/evaluate"):
                     try:
@@ -1151,9 +1246,73 @@ class AponiDashboard:
                 if parsed.path.startswith("/policy/simulate"):
                     self._send_json({"ok": False, "error": "method_not_allowed", "detail": "policy/simulate is GET only"}, status_code=405)
                     return
+                if parsed.path.startswith("/simulation/run"):
+                    content_length = int(self.headers.get("Content-Length", "0") or "0")
+                    if content_length <= 0:
+                        self._send_json({"ok": False, "error": "empty_body"}, status_code=400)
+                        return
+                    try:
+                        payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+                    except json.JSONDecodeError:
+                        self._send_json({"ok": False, "error": "invalid_json"}, status_code=400)
+                        return
+                    if not isinstance(payload, dict):
+                        self._send_json({"ok": False, "error": "invalid_payload"}, status_code=400)
+                        return
+                    epoch_range = payload.get("epoch_range") if isinstance(payload.get("epoch_range"), dict) else {}
+                    start_raw = epoch_range.get("start", 0)
+                    end_raw = epoch_range.get("end", 0)
+                    try:
+                        start = int(start_raw)
+                        end = int(end_raw)
+                    except (TypeError, ValueError):
+                        self._send_json({"ok": False, "error": "invalid_epoch_range"}, status_code=400)
+                        return
+                    if end < start:
+                        self._send_json({"ok": False, "error": "invalid_epoch_range", "detail": "end_before_start"}, status_code=400)
+                        return
+                    max_range = _simulation_max_epoch_range()
+                    if (end - start + 1) > max_range:
+                        self._send_json(
+                            {
+                                "ok": False,
+                                "error": "epoch_range_exceeds_platform_limit",
+                                "max_epoch_range": max_range,
+                                "requested_span": end - start + 1,
+                            },
+                            status_code=400,
+                        )
+                        return
+                    constraints = payload.get("constraints")
+                    normalized_constraints = constraints if isinstance(constraints, list) and constraints else _default_simulation_constraints()
+                    forwarded_payload = {
+                        "dsl_text": str(payload.get("dsl_text") or "").strip(),
+                        "constraints": normalized_constraints,
+                        "epoch_range": {"start": start, "end": end},
+                        "constitution_context": _active_constitution_context(),
+                    }
+                    upstream = _simulation_api_request("POST", "/simulation/run", forwarded_payload)
+                    if upstream.get("ok") is False:
+                        self._send_json(upstream, status_code=502 if str(upstream.get("error", "")).startswith("simulation_upstream") else 400)
+                        return
+                    run_id = str(upstream.get("run_id") or "").strip()
+                    result_payload = {
+                        "ok": True,
+                        "run_id": run_id,
+                        "comparative_outcomes": upstream.get("comparative_outcomes", {}),
+                        "result": upstream.get("result", upstream),
+                        "provenance": {
+                            **_active_constitution_context(),
+                            "max_epoch_range": max_range,
+                            "source_endpoint": "/simulation/run",
+                            "request_digest": sha256(json.dumps(forwarded_payload, sort_keys=True).encode("utf-8")).hexdigest(),
+                        },
+                    }
+                    self._send_json(result_payload)
+                    return
                 # Route priority: /ux/events and /control/telemetry are handled before generic
                 # /control/queue validation so observability stays available even when command surface is off.
-                if not (parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/telemetry") or parsed.path.startswith("/ux/events") or parsed.path.startswith("/control/cockpit/plan") or parsed.path.startswith("/control/execution")):
+                if not (parsed.path.startswith("/simulation/run") or parsed.path.startswith("/control/queue") or parsed.path.startswith("/control/telemetry") or parsed.path.startswith("/ux/events") or parsed.path.startswith("/control/cockpit/plan") or parsed.path.startswith("/control/execution")):
                     self.send_response(404)
                     self.end_headers()
                     return
@@ -1834,7 +1993,58 @@ class AponiDashboard:
                     "epoch_chain_anchor": cls._epoch_chain_anchors(cls._evolution_timeline()).get(epoch_id, {}),
                     "bundle_count": len(epoch.get("bundles") or []),
                     "replay_proof": cls._replay_proof_status(epoch_id),
+                    "lineage_chain": cls._lineage_chain_for_epoch(epoch_id),
                 }
+
+            @classmethod
+            def _lineage_chain_for_epoch(cls, epoch_id: str) -> Dict[str, object]:
+                epoch_events = cls._replay_engine.ledger.read_epoch(epoch_id)
+                all_entries = cls._replay_engine.ledger.read_all()
+                by_mutation_id: Dict[str, Dict[str, object]] = {}
+                for entry in all_entries:
+                    if not isinstance(entry, dict):
+                        continue
+                    payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+                    certificate = payload.get("certificate") if isinstance(payload.get("certificate"), dict) else {}
+                    mutation_id = str(payload.get("mutation_id") or payload.get("bundle_id") or certificate.get("mutation_id") or certificate.get("bundle_id") or "").strip()
+                    if mutation_id:
+                        by_mutation_id[mutation_id] = entry
+
+                mutations: List[Dict[str, object]] = []
+                seen: set[str] = set()
+                for entry in epoch_events:
+                    if not isinstance(entry, dict) or entry.get("type") != "MutationBundleEvent":
+                        continue
+                    resolved = resolve_certified_ancestor_path(entry)
+                    mutation_id = str(resolved.get("mutation_id") or "").strip()
+                    if not mutation_id or mutation_id in seen:
+                        continue
+                    seen.add(mutation_id)
+                    ancestor_chain = [str(item) for item in resolved.get("ancestor_chain", []) if str(item)]
+                    parent_mutation_id = str(resolved.get("parent_mutation_id") or "").strip()
+                    if not ancestor_chain and parent_mutation_id:
+                        inferred: List[str] = []
+                        cursor = parent_mutation_id
+                        guard = 0
+                        while cursor and guard < 64 and cursor not in inferred:
+                            inferred.insert(0, cursor)
+                            parent_entry = by_mutation_id.get(cursor)
+                            if not parent_entry:
+                                break
+                            parent_payload = parent_entry.get("payload") if isinstance(parent_entry.get("payload"), dict) else {}
+                            parent_certificate = parent_payload.get("certificate") if isinstance(parent_payload.get("certificate"), dict) else {}
+                            cursor = str(parent_payload.get("parent_mutation_id") or parent_payload.get("parent_bundle_id") or parent_certificate.get("parent_mutation_id") or parent_certificate.get("parent_bundle_id") or "").strip()
+                            guard += 1
+                        ancestor_chain = inferred
+                    mutations.append(
+                        {
+                            "mutation_id": mutation_id,
+                            "parent_mutation_id": parent_mutation_id,
+                            "ancestor_chain": ancestor_chain,
+                            "certified_signature": str(resolved.get("certified_signature") or ""),
+                        }
+                    )
+                return {"epoch_id": epoch_id, "mutations": mutations}
 
             @staticmethod
             def _replay_proof_status(epoch_id: str) -> Dict:
@@ -2087,6 +2297,19 @@ class AponiDashboard:
     .insight-card h3 {{ margin: 0 0 0.3rem 0; font-size: 0.92rem; }}
     .insight-card p {{ margin: 0; color: #b7c9e2; font-size: 0.82rem; }}
     .insight-card details {{ margin-top: 0.4rem; }}
+
+    .replay-inspector {{ border-top: 1px solid #2a3d57; margin-top: 0.6rem; padding-top: 0.6rem; }}
+    .replay-status {{ font-size: 0.78rem; margin-bottom: 0.5rem; color: #9fb4d0; }}
+    .replay-status.loading {{ color: #f7cb78; }}
+    .replay-status.error {{ color: #ff8a8a; }}
+    .replay-status.ok {{ color: #8ef0a1; }}
+    .replay-chip-row {{ display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.5rem; }}
+    .replay-chip {{ border-radius: 999px; border: 1px solid #38577d; padding: 0.22rem 0.5rem; font-size: 0.72rem; background: #0f2034; color: #dbe9ff; }}
+    .replay-chip-link {{ cursor: pointer; }}
+    .replay-chip-selected {{ border-color: #8ef0a1; box-shadow: 0 0 0 1px #8ef0a1 inset; }}
+    .replay-chip-alert {{ border-color: #ff9b77; color: #ffd7c7; }}
+    .replay-note {{ font-size: 0.76rem; color: #b7c9e2; margin-bottom: 0.45rem; }}
+    .replay-detail {{ max-height: 220px; overflow: auto; font-size: 0.74rem; }}
   </style>
 </head>
 <body>
@@ -2158,7 +2381,13 @@ class AponiDashboard:
       <section id="card-uxSummary" data-card-key="uxSummary"><h2>UX summary</h2><pre id="uxSummary">Loading...</pre></section>
     </div>
     <div id="view-history" class="view" role="tabpanel" aria-hidden="true">
-      <section id="card-replay" data-card-key="replay"><h2>Replay divergence</h2><pre id="replay">Loading...</pre></section>
+      <section id="card-replay" data-card-key="replay"><h2>Replay divergence</h2><pre id="replay">Loading...</pre>
+        <div id="replayInspector" class="replay-inspector">
+          <div class="replay-status loading" data-replay-status>Loading replay inspector...</div>
+          <div class="replay-chip-row" data-replay-nav></div>
+          <div data-replay-body class="replay-body"></div>
+        </div>
+      </section>
       <section id="card-timeline" data-card-key="timeline">
         <h2>History</h2>
         <div class="history-toolbar">
@@ -2248,6 +2477,22 @@ class AponiDashboard:
       <select id="controlTask" class="floating-select"></select>
       <label class="floating-label" for="controlGeneralPrompt">General cockpit prompt</label>
       <textarea id="controlGeneralPrompt" class="floating-input" rows="4" placeholder="Describe your intent in natural language. The planner will map it to governed command fields."></textarea>
+      <div id="proposalSimulationPanel" class="simulation-panel" aria-live="polite">
+        <div class="floating-label">Inline proposal simulation</div>
+        <div class="simulation-grid">
+          <label class="floating-label" for="simulationEpochStart">Epoch start<input id="simulationEpochStart" class="floating-input" type="number" min="0" value="1" /></label>
+          <label class="floating-label" for="simulationEpochEnd">Epoch end<input id="simulationEpochEnd" class="floating-input" type="number" min="0" value="5" /></label>
+        </div>
+        <label class="floating-label" for="simulationConstraints">Simulation constraints (JSON array)</label>
+        <textarea id="simulationConstraints" class="floating-textarea" rows="4"></textarea>
+        <div class="floating-actions">
+          <button id="simulationRun" type="button" class="floating-btn">Run simulation</button>
+          <button id="simulationRefresh" type="button" class="floating-btn">Refresh result</button>
+        </div>
+        <div id="simulationStatus" class="floating-status">Simulation idle.</div>
+        <pre id="simulationResults">No simulation run yet.</pre>
+        <div id="simulationProvenance" class="simulation-provenance"></div>
+      </div>
       <div class="floating-actions">
         <button id="controlPromptRun" type="button" class="floating-btn">Analyze prompt</button>
         <button id="queueSubmit" type="button" class="floating-btn">Submit action</button>
@@ -2259,6 +2504,7 @@ class AponiDashboard:
       <div id="controlStatus" class="floating-status">Awaiting command input.</div>
     </div>
   </aside>
+  <script src="/ui/aponi/replay_inspector.js"></script>
   <script src="/ui/aponi.js"></script>
 </body>
 </html>
@@ -2308,6 +2554,7 @@ let refreshTimer = null;
 let queueTimer = null;
 let refreshFailureCount = 0;
 let queueFailureCount = 0;
+let replayInspector = null;
 
 // === Safe DOM Rendering Utilities ===
 // SECURITY: Do not use innerHTML for any API-derived content.
@@ -2617,6 +2864,13 @@ function setupViews() {
   document.querySelectorAll('[data-view]').forEach((btn) => {
     btn.addEventListener('click', () => activateView(btn.dataset.view || 'home'));
   });
+}
+
+function ensureReplayInspector() {
+  if (replayInspector) return replayInspector;
+  if (!window.AponiReplayInspector || typeof window.AponiReplayInspector.createInspector !== 'function') return null;
+  replayInspector = window.AponiReplayInspector.createInspector('replayInspector');
+  return replayInspector;
 }
 
 function openControlPanel() {
@@ -3880,12 +4134,14 @@ async function refresh() {
 
     renderHome(state || {}, intelligence || {}, risk || {});
 
+    const divergencePayload = await paint('replay', '/replay/divergence');
+    const replayInspectorRef = ensureReplayInspector();
     await Promise.all([
       paint('instability', '/risk/instability'),
-      paint('replay', '/replay/divergence'),
       paint('uxSummary', '/ux/summary'),
       refreshHistory(),
       refreshActionCards(),
+      replayInspectorRef && typeof replayInspectorRef.refresh === 'function' ? replayInspectorRef.refresh(divergencePayload || undefined) : Promise.resolve(),
     ]);
     renderInsights(normalizeInsights(intelligence || {}));
     refreshFailureCount = 0;
@@ -3988,6 +4244,105 @@ function renderHome(state, intelligence, risk) {
   });
 }
 
+
+async function loadSimulationContext() {
+  const status = document.getElementById('simulationStatus');
+  const constraintsInput = document.getElementById('simulationConstraints');
+  const provenance = document.getElementById('simulationProvenance');
+  if (!constraintsInput) return;
+  try {
+    const response = await fetch('/simulation/context', { cache: 'no-store' });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      if (status) status.textContent = 'Simulation context unavailable: ' + JSON.stringify(payload);
+      return;
+    }
+    const constraints = Array.isArray(payload.default_constraints) ? payload.default_constraints : [];
+    constraintsInput.value = JSON.stringify(constraints, null, 2);
+    const maxRange = Number(payload.max_epoch_range || 0);
+    const epochStart = document.getElementById('simulationEpochStart');
+    const epochEnd = document.getElementById('simulationEpochEnd');
+    if (epochStart && epochEnd && maxRange > 0) {
+      const start = Number(epochStart.value || 1);
+      epochEnd.value = String(start + Math.max(0, maxRange - 1));
+    }
+    if (provenance) provenance.textContent = 'Constitution context: ' + JSON.stringify(payload.constitution_context || {});
+  } catch (err) {
+    if (status) status.textContent = 'Failed to load simulation context: ' + err;
+  }
+}
+
+async function renderSimulationResult(resultPayload) {
+  const resultNode = document.getElementById('simulationResults');
+  const provenance = document.getElementById('simulationProvenance');
+  if (resultNode) resultNode.textContent = JSON.stringify({
+    comparative_outcomes: resultPayload.comparative_outcomes || {},
+    result: resultPayload.result || {},
+  }, null, 2);
+  if (provenance) provenance.textContent = 'Deterministic provenance: ' + JSON.stringify(resultPayload.provenance || {}, null, 2);
+}
+
+async function runProposalSimulation() {
+  const status = document.getElementById('simulationStatus');
+  const prompt = document.getElementById('controlGeneralPrompt');
+  const constraintsInput = document.getElementById('simulationConstraints');
+  const start = Number(document.getElementById('simulationEpochStart')?.value || 0);
+  const end = Number(document.getElementById('simulationEpochEnd')?.value || 0);
+  let constraints = [];
+  if (constraintsInput && String(constraintsInput.value || '').trim()) {
+    try {
+      constraints = JSON.parse(constraintsInput.value);
+    } catch (err) {
+      if (status) status.textContent = 'Constraint JSON is invalid: ' + err;
+      return;
+    }
+  }
+  if (status) status.textContent = 'Submitting simulation request...';
+  try {
+    const response = await fetch('/simulation/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        dsl_text: String(prompt?.value || '').trim(),
+        constraints,
+        epoch_range: { start, end },
+      }),
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      if (status) status.textContent = 'Simulation failed: ' + JSON.stringify(payload);
+      return;
+    }
+    window.aponiLastSimulationRunId = payload.run_id || '';
+    if (status) status.textContent = 'Simulation completed inline.';
+    await renderSimulationResult(payload);
+  } catch (err) {
+    if (status) status.textContent = 'Simulation request failed: ' + err;
+  }
+}
+
+async function refreshProposalSimulationResult() {
+  const status = document.getElementById('simulationStatus');
+  const runId = String(window.aponiLastSimulationRunId || '').trim();
+  if (!runId) {
+    if (status) status.textContent = 'No previous simulation run id available.';
+    return;
+  }
+  if (status) status.textContent = 'Refreshing simulation result...';
+  try {
+    const response = await fetch(`/simulation/results/${encodeURIComponent(runId)}`, { cache: 'no-store' });
+    const payload = await response.json();
+    if (!response.ok || !payload.ok) {
+      if (status) status.textContent = 'Result retrieval failed: ' + JSON.stringify(payload);
+      return;
+    }
+    if (status) status.textContent = 'Simulation result refreshed.';
+    await renderSimulationResult(payload);
+  } catch (err) {
+    if (status) status.textContent = 'Simulation result refresh failed: ' + err;
+  }
+}
+
 setupViews();
 markFeatureEntry('dashboard_loaded');
 setupFloatingPanel();
@@ -4000,6 +4355,9 @@ window.aponiControlMachine = createControlStateMachine();
 document.getElementById('queueSubmit')?.addEventListener('click', () => { markInteraction('queue_submit_click'); queueIntent(); });
 document.getElementById('queueRefresh')?.addEventListener('click', () => { markInteraction('queue_refresh_click'); refreshControlQueue(); });
 document.getElementById('controlPromptRun')?.addEventListener('click', () => { markInteraction('prompt_plan_click'); analyzeCockpitPrompt(); });
+document.getElementById('simulationRun')?.addEventListener('click', runProposalSimulation);
+document.getElementById('simulationRefresh')?.addEventListener('click', refreshProposalSimulationResult);
+loadSimulationContext();
 document.getElementById('historyTypeFilter')?.addEventListener('change', refreshHistory);
 document.getElementById('historyDateFrom')?.addEventListener('change', refreshHistory);
 document.getElementById('historyDateTo')?.addEventListener('change', refreshHistory);
@@ -4035,7 +4393,7 @@ def main(argv: list[str] | None = None) -> int:
     dashboard.start({"status": "dashboard_only"})
     print(f"[APONI] dashboard running on http://{dashboard.host}:{dashboard.port}")
     print(
-        "[APONI] endpoints: / /state /metrics /fitness /system/intelligence /risk/summary /risk/instability /policy/simulate /alerts/evaluate /replay/divergence /replay/diff?epoch_id=... "
+        "[APONI] endpoints: / /state /metrics /fitness /system/intelligence /risk/summary /risk/instability /policy/simulate /simulation/context /simulation/run /simulation/results/{run_id} /alerts/evaluate /replay/divergence /replay/diff?epoch_id=... "
         "/capabilities /lineage /mutations /staging /evolution/epoch?epoch_id=... /evolution/live /evolution/active /evolution/timeline /projection/mutation-roi /projection/lineage-trajectory /projection/confidence-bands /control/free-sources /control/skill-profiles /control/capability-matrix /control/policy-summary /control/templates /control/environment-health /control/queue /control/queue/verify /ux/summary /ux/events"
     )
     try:

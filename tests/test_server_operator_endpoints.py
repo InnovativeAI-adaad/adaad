@@ -169,3 +169,155 @@ def test_api_health_includes_version_and_runtime_profile() -> None:
     runtime_profile = payload.get("runtime_profile")
     assert isinstance(runtime_profile, dict)
     assert "present" in runtime_profile
+
+
+def test_post_proposal_alias_uses_same_handler(monkeypatch) -> None:
+    class _Request:
+        authority_level = "governor-review"
+
+    def _fake_validate(payload):
+        return _Request(), {"passed": True, "verdicts": []}
+
+    def _fake_append(*, proposal_id: str, request):
+        return {"hash": "queuehash"}
+
+    class _Provider:
+        def next_id(self, *, label: str, length: int):
+            return "proposal-999"
+
+    monkeypatch.setattr(server, "validate_proposal", _fake_validate)
+    monkeypatch.setattr(server, "append_proposal", _fake_append)
+    monkeypatch.setattr(server, "default_provider", lambda: _Provider())
+
+    with TestClient(server.app) as client:
+        response = client.post("/mutation/propose", json={"intent": "optimize"})
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["proposal_id"] == "proposal-999"
+    assert payload["ok"] is True
+
+
+def test_get_lint_preview_returns_bridge_output(monkeypatch) -> None:
+    observed: dict[str, object] = {}
+
+    class _Bridge:
+        def analyze(self, payload):
+            observed["payload"] = payload
+            return {"preview_authoritative": False, "annotations": [], "gate": "queue_append_constitutional_evaluation", "throttle": False}
+
+    monkeypatch.setattr(server, "MutationLintingBridge", _Bridge)
+
+    with TestClient(server.app) as client:
+        response = client.get(
+            "/api/lint/preview",
+            params={
+                "agent_id": "agent.test",
+                "target_path": "app/example.py",
+                "python_content": "print('ok')",
+                "metadata": '{"change_reason":"test"}',
+            },
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["preview_authoritative"] is False
+    assert observed["payload"]["agent_id"] == "agent.test"
+
+
+def test_post_proposal_emits_aponi_editor_submission_event(monkeypatch) -> None:
+    class _Request:
+        authority_level = "governor-review"
+
+    observed: dict[str, object] = {}
+
+    def _fake_validate(payload):
+        observed["payload"] = payload
+        return _Request(), {"passed": True, "verdicts": []}
+
+    def _fake_append(*, proposal_id: str, request):
+        observed["proposal_id"] = proposal_id
+        observed["request"] = request
+        return {"hash": "queuehash"}
+
+    class _Provider:
+        def next_id(self, *, label: str, length: int):
+            return "proposal-123"
+
+        def format_utc(self, fmt: str):
+            return "2026-01-01T00:00:00Z"
+
+    metric_calls: list[dict[str, object]] = []
+    journal_calls: list[dict[str, object]] = []
+
+    monkeypatch.setattr(server, "validate_proposal", _fake_validate)
+    monkeypatch.setattr(server, "append_proposal", _fake_append)
+    monkeypatch.setattr(server, "default_provider", lambda: _Provider())
+    monkeypatch.setattr(server.metrics, "log", lambda **kwargs: metric_calls.append(kwargs))
+    monkeypatch.setattr(server.journal, "append_tx", lambda *, tx_type, payload, tx_id=None: journal_calls.append({"tx_type": tx_type, "payload": payload, "tx_id": tx_id}))
+
+    headers = {
+        "X-Aponi-Session-Id": "session-1",
+        "X-Aponi-Submission-Origin": "editor_ui",
+        "X-Aponi-Actor-Id": "operator-42",
+        "X-Aponi-Actor-Role": "editor",
+    }
+
+    with TestClient(server.app) as client:
+        response = client.post("/api/mutations/proposals", json={"intent": "optimize"}, headers=headers)
+
+    assert response.status_code == 200
+    assert metric_calls
+    assert journal_calls
+
+    metric_event = metric_calls[-1]
+    assert metric_event["event_type"] == "aponi_editor_proposal_submitted.v1"
+    event_payload = metric_event["payload"]
+    assert event_payload["proposal_id"] == "proposal-123"
+    assert event_payload["session_id"] == "session-1"
+    assert event_payload["actor_context"] == {
+        "actor_id": "operator-42",
+        "actor_role": "editor",
+        "authn_scheme": "unspecified",
+    }
+    assert event_payload["endpoint_path"] == "/api/mutations/proposals"
+    assert event_payload["timestamp"] == "2026-01-01T00:00:00Z"
+    assert "intent" not in event_payload
+
+    journal_event = journal_calls[-1]
+    assert journal_event["tx_type"] == "aponi_editor_proposal_submitted.v1"
+    assert journal_event["payload"] == event_payload
+
+
+def test_post_proposal_skips_aponi_editor_event_without_editor_context(monkeypatch) -> None:
+    class _Request:
+        authority_level = "governor-review"
+
+    def _fake_validate(payload):
+        return _Request(), {"passed": True, "verdicts": []}
+
+    def _fake_append(*, proposal_id: str, request):
+        return {"hash": "queuehash"}
+
+    class _Provider:
+        def next_id(self, *, label: str, length: int):
+            return "proposal-123"
+
+        def format_utc(self, fmt: str):
+            return "2026-01-01T00:00:00Z"
+
+    metric_calls: list[dict[str, object]] = []
+    journal_calls: list[dict[str, object]] = []
+
+    monkeypatch.setattr(server, "validate_proposal", _fake_validate)
+    monkeypatch.setattr(server, "append_proposal", _fake_append)
+    monkeypatch.setattr(server, "default_provider", lambda: _Provider())
+    monkeypatch.setattr(server.metrics, "log", lambda **kwargs: metric_calls.append(kwargs))
+    monkeypatch.setattr(server.journal, "append_tx", lambda *, tx_type, payload, tx_id=None: journal_calls.append({"tx_type": tx_type, "payload": payload, "tx_id": tx_id}))
+
+    with TestClient(server.app) as client:
+        response = client.post("/api/mutations/proposals", json={"intent": "optimize"})
+
+    assert response.status_code == 200
+    assert metric_calls == []
+    assert journal_calls == []

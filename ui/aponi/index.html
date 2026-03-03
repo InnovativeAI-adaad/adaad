@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aponi Governed Mutation Proposal Editor</title>
+    <style>
+      body { font-family: Inter, Arial, sans-serif; margin: 0; background: #0b1020; color: #e6ecff; }
+      main { max-width: 900px; margin: 1.5rem auto; padding: 0 1rem 2rem; }
+      h1 { margin-bottom: 0.25rem; }
+      .card { background: #151d34; border: 1px solid #2a355a; border-radius: 10px; padding: 1rem; margin-top: 1rem; }
+      .notice { background: #1e2a4a; border-left: 4px solid #71a7ff; }
+      .warn { background: #3a1e1e; border-left: 4px solid #ff9d9d; }
+      label { display: block; margin-top: 0.8rem; font-weight: 600; }
+      input, textarea { width: 100%; box-sizing: border-box; margin-top: 0.35rem; padding: 0.55rem; border-radius: 6px; border: 1px solid #33426f; background: #0f1730; color: #f8f9ff; }
+      textarea { min-height: 120px; resize: vertical; }
+      button { margin-top: 1rem; padding: 0.65rem 1rem; border-radius: 6px; border: 0; font-weight: 700; background: #6ca8ff; color: #0a1022; cursor: pointer; }
+      pre { background: #0a1022; border: 1px solid #2a355a; border-radius: 8px; padding: 0.8rem; overflow: auto; }
+      .small { font-size: 0.9rem; opacity: 0.9; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Aponi Governed Mutation Proposal Authoring</h1>
+      <p class="small">Draft and submit mutation proposals for governor review. This page authorizes <strong>proposal authoring only</strong>; it does not grant direct mutation execution authority.</p>
+
+      <section class="card notice">
+        <strong>Authority boundary:</strong>
+        <p>
+          Submissions from this editor are queued as governed proposals and must pass constitutional and human/governor controls before any execution pathway can occur.
+          Operators should treat this as a drafting interface, not an execution console.
+        </p>
+      </section>
+
+      <section class="card">
+        <form id="proposal-form">
+          <label for="agent_id">Agent ID</label>
+          <input id="agent_id" name="agent_id" required placeholder="agent.example" />
+
+          <label for="target_path">Target Path</label>
+          <input id="target_path" name="target_path" required placeholder="app/example_module.py" />
+
+          <label for="metadata">Metadata (JSON object)</label>
+          <textarea id="metadata" name="metadata" placeholder='{"change_reason":"safety hardening"}'>{}</textarea>
+
+          <label for="python_content">Python Mutation Content</label>
+          <textarea id="python_content" name="python_content" required placeholder="def governed_change():\n    return 'example'\n"></textarea>
+
+          <label for="signature">Signature</label>
+          <input id="signature" name="signature" value="unsigned-local-draft" />
+
+          <label for="nonce">Nonce</label>
+          <input id="nonce" name="nonce" value="draft-nonce" />
+
+          <button type="submit">Submit Governed Proposal</button>
+        </form>
+      </section>
+
+      <section class="card warn">
+        <strong>Execution authority disclaimer:</strong>
+        <p>
+          Queue admission is not deployment approval. Accepted proposals may still be rejected by policy gates, tier escalation requirements,
+          replay checks, and human review controls.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>Last response</h2>
+        <pre id="response">No submission yet.</pre>
+      </section>
+    </main>
+
+    <script type="module" src="./proposal_editor.js"></script>
+  </body>
+</html>

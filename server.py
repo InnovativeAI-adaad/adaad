@@ -10,7 +10,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
 from fastapi.websockets import WebSocketDisconnect
 from fastapi.responses import FileResponse
@@ -25,6 +25,7 @@ from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.review_quality import DEFAULT_REVIEW_SLA_SECONDS, summarize_review_quality
 from runtime.intelligence.router import IntelligenceRouter
 from runtime.intelligence.strategy import StrategyInput
+from runtime.mcp.linting_bridge import MutationLintingBridge
 from runtime.mcp.proposal_queue import append_proposal
 from runtime.mcp.proposal_validator import ProposalValidationError, validate_proposal
 from runtime.metrics_analysis import mutation_rate_snapshot, rolling_determinism_score
@@ -70,6 +71,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="InnovativeAI-adaad Unified Server", lifespan=lifespan)
 
 AUDIT_READ_SCOPE = "audit:read"
+APONI_EDITOR_INTENT = "governed_mutation_proposal_authoring"
 
 
 class MutationView(BaseModel):
@@ -110,6 +112,33 @@ class ProposalResponse(BaseModel):
     authority_level: str
     verdict: dict[str, Any]
     queue_hash: str
+
+
+APONI_EDITOR_PROPOSAL_EVENT = "aponi_editor_proposal_submitted.v1"
+
+
+def _header_value(headers: dict[str, str], key: str) -> str:
+    return str(headers.get(key, "")).strip()
+
+
+def _aponi_editor_submission_context(request: Request) -> dict[str, Any] | None:
+    headers = {str(k).lower(): str(v) for k, v in request.headers.items()}
+    session_id = _header_value(headers, "x-aponi-session-id") or _header_value(headers, "x-aponi-editor-session-id")
+    submission_origin = _header_value(headers, "x-aponi-submission-origin").lower()
+    if submission_origin not in {"", "editor_ui", "aponi_editor_ui"}:
+        return None
+    if not session_id and submission_origin == "":
+        return None
+    actor_context = {
+        "actor_id": _header_value(headers, "x-aponi-actor-id") or "anonymous",
+        "actor_role": _header_value(headers, "x-aponi-actor-role") or "operator",
+        "authn_scheme": _header_value(headers, "x-aponi-authn-scheme") or "unspecified",
+    }
+    return {
+        "session_id": session_id,
+        "actor_context": actor_context,
+        "origin": _header_value(headers, "origin"),
+    }
 
 
 def _load_audit_tokens() -> dict[str, set[str]]:
@@ -437,22 +466,73 @@ def api_system_intelligence() -> dict[str, Any]:
     }
 
 
+@app.get("/api/lint/preview")
+def api_lint_preview(
+    agent_id: str = Query(default=""),
+    target_path: str = Query(default=""),
+    python_content: str = Query(default=""),
+    metadata: str = Query(default="{}"),
+) -> dict[str, Any]:
+    metadata_payload: dict[str, Any] = {}
+    metadata_raw = metadata.strip() if isinstance(metadata, str) else "{}"
+    if metadata_raw:
+        try:
+            parsed_metadata = json.loads(metadata_raw)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail={"ok": False, "error": "invalid_metadata_json", "detail": str(exc)}) from exc
+        if not isinstance(parsed_metadata, dict):
+            raise HTTPException(status_code=400, detail={"ok": False, "error": "invalid_metadata_json", "detail": "metadata must be an object"})
+        metadata_payload = parsed_metadata
+
+    bridge = MutationLintingBridge()
+    payload = {
+        "agent_id": agent_id,
+        "intent": APONI_EDITOR_INTENT,
+        "ops": [{"op": "replace_file_content", "language": "python", "content": python_content, "metadata": metadata_payload}],
+        "targets": [{"agent_id": agent_id, "path": target_path, "target_type": "python_module", "ops": [{"op": "replace_file_content"}]}],
+    }
+    return bridge.analyze(payload)
+
+
 @app.post("/api/mutations/proposals", response_model=ProposalResponse)
-def api_submit_proposal(payload: dict[str, Any]) -> dict[str, Any]:
+def api_submit_proposal(payload: dict[str, Any], http_request: Request) -> dict[str, Any]:
     try:
-        request, verdict = validate_proposal(payload)
+        proposal_request, verdict = validate_proposal(payload)
     except ProposalValidationError as exc:
         body: dict[str, Any] = {"ok": False, "error": exc.code, "detail": exc.detail}
         raise HTTPException(status_code=exc.status_code, detail=body) from exc
     proposal_id = default_provider().next_id(label="mcp-proposal", length=32)
-    queue_entry = append_proposal(proposal_id=proposal_id, request=request)
+    queue_entry = append_proposal(proposal_id=proposal_id, request=proposal_request)
+
+    # Rationale: emit explicit editor-submission lineage only for editor-origin
+    # HTTP contexts so governance traceability improves without altering proposal
+    # authority invariants (queue append + constitutional evaluation).
+    editor_context = _aponi_editor_submission_context(http_request)
+    if editor_context is not None:
+        event_payload = {
+            "proposal_id": proposal_id,
+            "session_id": editor_context["session_id"],
+            "actor_context": editor_context["actor_context"],
+            "timestamp": default_provider().format_utc("%Y-%m-%dT%H:%M:%SZ"),
+            "endpoint_path": http_request.url.path,
+            "source": "aponi_editor_ui",
+        }
+        metrics.log(event_type=APONI_EDITOR_PROPOSAL_EVENT, payload=event_payload, level="INFO")
+        journal.append_tx(tx_type=APONI_EDITOR_PROPOSAL_EVENT, payload=event_payload)
+
     return {
         "ok": True,
         "proposal_id": proposal_id,
-        "authority_level": request.authority_level,
+        "authority_level": proposal_request.authority_level,
         "verdict": verdict,
         "queue_hash": queue_entry["hash"],
     }
+
+
+@app.post("/mutation/propose", response_model=ProposalResponse)
+def mutation_propose_alias(payload: dict[str, Any], http_request: Request) -> dict[str, Any]:
+    """Compatibility alias for governed proposal submission."""
+    return api_submit_proposal(payload, http_request)
 
 
 @app.get("/api/audit/epochs/{epoch_id}/replay-proof")
@@ -543,6 +623,11 @@ for endpoint_name in MOCK_ENDPOINTS:
     )
 
 
+@app.get("/", include_in_schema=False)
+def serve_dashboard_root():
+    return serve_dashboard("")
+
+
 @app.get("/{full_path:path}", include_in_schema=False)
 def serve_dashboard(full_path: str):
     if full_path == "api" or full_path.startswith("api/"):
@@ -550,6 +635,16 @@ def serve_dashboard(full_path: str):
 
     ui_dir, ui_index, _, _ = _current_ui()
     ui_root = ui_dir.resolve()
+    if full_path.startswith("ui/aponi"):
+        suffix = full_path[len("ui/aponi") :].lstrip("/")
+        requested = (APONI_DIR.resolve() / suffix).resolve() if suffix else INDEX.resolve()
+        try:
+            requested.relative_to(APONI_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=404, detail="path outside dashboard root")
+        if requested.is_file():
+            return FileResponse(str(requested))
+
     if full_path:
         requested = (ui_root / full_path).resolve()
         try:
