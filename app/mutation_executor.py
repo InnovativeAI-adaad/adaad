@@ -21,6 +21,7 @@ from runtime.api.mutation_runtime import (
     MutationLifecycleContext,
     MutationTargetError,
     MutationTransaction,
+    MutationRiskScorer,
     PromotionPolicyEngine,
     PromotionState,
     ROOT_DIR,
@@ -87,6 +88,7 @@ class MutationExecutor:
         self.hardened_sandbox = HardenedSandboxExecutor(self.test_sandbox, provider=self.provider)
         self.impact_predictor = ImpactPredictor(agents_root)
         self.fitness_orchestrator = FitnessOrchestrator()
+        self.risk_scorer = MutationRiskScorer()
         self.promotion_policy = PromotionPolicyEngine({
             "schema_version": "1.0",
             "policy_id": "default",
@@ -223,6 +225,12 @@ class MutationExecutor:
             )
         return targets
 
+
+
+    def _actor_tier(self) -> str:
+        tier = getattr(self.governor, "tier", None)
+        name = getattr(tier, "name", None)
+        return str(name).lower() if isinstance(name, str) and name else "production"
 
     @staticmethod
     def _risk_tier(risk_score: float) -> str:
@@ -431,7 +439,7 @@ class MutationExecutor:
                             "mutation.apply",
                             {
                                 "actor": request.agent_id,
-                                "actor_tier": self.governor.tier.name.lower(),
+                                "actor_tier": self._actor_tier(),
                                 "fail_closed": self.evolution_runtime.fail_closed,
                             },
                             lambda target=target: tx.apply(target),
@@ -576,6 +584,47 @@ class MutationExecutor:
         epoch_state = self.evolution_runtime.epoch_manager.add_entropy_bits(mutation_total_bits)
         self.evolution_runtime.epoch_cumulative_entropy_bits = int(epoch_state.cumulative_entropy_bits)
 
+        risk_report = self.risk_scorer.score(
+            mutation_id=mutation_id,
+            changed_files=[
+                {
+                    "path": target.path,
+                    "changed_lines": max(1, len(target.ops)),
+                    "ast_relevant_change": True,
+                }
+                for target in mutation_targets
+            ],
+            base_risk_score=float(impact.risk_score),
+        )
+
+        if risk_report.threshold_exceeded:
+            metrics.log(
+                event_type="promotion_policy_rejected",
+                payload={
+                    "mutation_id": mutation_id,
+                    "epoch_id": epoch_id,
+                    "reason": "mutation_risk_threshold_exceeded",
+                    "risk_score": risk_report.score,
+                    "risk_threshold": risk_report.threshold,
+                    "risk_report_sha256": risk_report.report_sha256,
+                },
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            if decision.certificate:
+                self.governor.activate_certificate(epoch_id, decision.certificate.get("bundle_id", ""), False, "mutation_risk_threshold_exceeded")
+            self.evolution_runtime.after_mutation_cycle({"status": "rejected", "mutation_id": mutation_id, "epoch_id": epoch_id, "reason": "mutation_risk_threshold_exceeded", "goal_score_delta": 0.0, "entropy_spent": float(mutation_total_bits), "mutation_operator": request.intent or "default", "fitness_component_scores": fitness_component_scores})
+            return {
+                "status": "rejected",
+                "tests_ok": bool(tests_ok),
+                "reason": "mutation_risk_threshold_exceeded",
+                "risk_score": risk_report.score,
+                "risk_threshold": risk_report.threshold,
+                "risk_report_sha256": risk_report.report_sha256,
+                "mutation_id": mutation_id,
+                "epoch_id": epoch_id,
+            }
+
         promotion_mutation_data = {
             "score": float(survival_score),
             "goal_graph_score": float(goal_graph_score),
@@ -584,7 +633,8 @@ class MutationExecutor:
             "entropy_declared_bits": int(entropy_metadata.estimated_bits),
             "entropy_observed_bits": int(telemetry_observed_bits),
             "entropy_observed_sources": list(telemetry_sources),
-            "risk_score": float(impact.risk_score),
+            "risk_score": float(risk_report.score),
+            "risk_report_sha256": risk_report.report_sha256,
             "tests_ok": bool(tests_ok),
         }
         # Rationale: canary simulation evidence must gate promotion without mutating runtime state.
@@ -628,7 +678,7 @@ class MutationExecutor:
                     "mutation.promote",
                     {
                         "actor": request.agent_id,
-                        "actor_tier": self.governor.tier.name.lower(),
+                        "actor_tier": self._actor_tier(),
                         "fail_closed": self.evolution_runtime.fail_closed,
                     },
                     lambda: None,
@@ -639,7 +689,7 @@ class MutationExecutor:
                     "mutation.manifest.write",
                     {
                         "actor": request.agent_id,
-                        "actor_tier": self.governor.tier.name.lower(),
+                        "actor_tier": self._actor_tier(),
                         "fail_closed": self.evolution_runtime.fail_closed,
                     },
                     lambda: write_manifest(manifest_path, manifest),

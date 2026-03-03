@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/intake_manifest.v1.json",
+  "title": "Intake Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_version",
+    "intake_id",
+    "source_type",
+    "source_ref",
+    "extracted_at",
+    "extracted_file_count"
+  ],
+  "properties": {
+    "manifest_version": { "type": "string", "const": "1.0" },
+    "intake_id": { "type": "string", "minLength": 1 },
+    "source_type": { "type": "string", "minLength": 1 },
+    "source_ref": { "type": "string", "minLength": 1 },
+    "extracted_at": { "type": "string", "format": "date-time" },
+    "extracted_file_count": { "type": "integer", "minimum": 0 }
+  }
+}

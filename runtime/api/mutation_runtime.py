@@ -12,6 +12,7 @@ from runtime.evolution.goal_graph import GoalGraph
 from runtime.evolution.promotion_events import create_promotion_event
 from runtime.evolution.promotion_policy import PromotionPolicyEngine
 from runtime.evolution.promotion_state_machine import PromotionState, require_transition
+from runtime.governance.mutation_risk_scorer import MutationRiskScorer
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
 from runtime.invariants import verify_all
 from runtime.manifest.generator import generate_manifest, write_manifest
@@ -34,6 +35,7 @@ __all__ = [
     "MutationTransaction",
     "PromotionPolicyEngine",
     "PromotionState",
+    "MutationRiskScorer",
     "ROOT_DIR",
     "RuntimeDeterminismProvider",
     "TestSandbox",

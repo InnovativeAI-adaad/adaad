@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/scan_report.v1.json",
+  "title": "Scan Report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_version",
+    "scan_id",
+    "root",
+    "scanned_at",
+    "total_files",
+    "skipped_files",
+    "flagged_paths"
+  ],
+  "properties": {
+    "report_version": { "type": "string", "const": "1.0" },
+    "scan_id": { "type": "string", "minLength": 1 },
+    "root": { "type": "string", "minLength": 1 },
+    "scanned_at": { "type": "string", "format": "date-time" },
+    "total_files": { "type": "integer", "minimum": 0 },
+    "skipped_files": { "type": "integer", "minimum": 0 },
+    "flagged_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

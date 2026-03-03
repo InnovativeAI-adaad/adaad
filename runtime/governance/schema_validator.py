@@ -19,6 +19,7 @@ GOVERNANCE_SCHEMA_FILES: tuple[str, ...] = (
     "schemas/mutation_manifest.v1.json",
     "schemas/scoring_input.v1.json",
     "schemas/scoring_result.v1.json",
+    "schemas/mutation_risk_report.v1.json",
     "schemas/promotion_policy.v1.json",
     "schemas/checkpoint.v1.json",
     "schemas/manifest.v1.json",

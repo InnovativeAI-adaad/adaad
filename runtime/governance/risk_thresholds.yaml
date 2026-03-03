@@ -1,0 +1,11 @@
+promotion_block_threshold: 0.8
+weights:
+  .py: 0.55
+  .js: 0.5
+  .ts: 0.5
+  .rs: 0.65
+  default: 0.35
+sensitive_prefixes:
+  - security/
+  - runtime/governance/
+  - app/orchestration/

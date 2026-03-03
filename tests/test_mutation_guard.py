@@ -215,6 +215,44 @@ class MutationExecutorIntegrationTest(unittest.TestCase):
         dna_payload = json.loads((agent_dir / "dna.json").read_text(encoding="utf-8"))
         self.assertNotIn("lineage", dna_payload)
 
+
+    def test_executor_rejects_when_mutation_risk_threshold_exceeded(self) -> None:
+        agents_root = self.tmp_root / "agents"
+        agent_dir = agents_root / "sample"
+        agent_dir.mkdir(parents=True, exist_ok=True)
+        (agent_dir / "meta.json").write_text("{}", encoding="utf-8")
+        (agent_dir / "dna.json").write_text("{}", encoding="utf-8")
+        (agent_dir / "certificate.json").write_text(json.dumps({"signature": "cryovant-dev-seed"}), encoding="utf-8")
+
+        executor = MutationExecutor(agents_root=agents_root)
+        request = MutationRequest(
+            agent_id="sample",
+            generation_ts="now",
+            intent="test",
+            ops=[{"op": "set", "path": "/lineage", "value": "seed"}],
+            signature="cryovant-dev-seed",
+            nonce="n-risk-reject",
+        )
+
+        risk_report = SimpleNamespace(
+            score=0.95,
+            threshold=0.7,
+            threshold_exceeded=True,
+            report_sha256="a" * 64,
+        )
+
+        with mock.patch.dict("os.environ", {"ADAAD_TRUST_MODE": "dev", "ADAAD_ENV": "dev", "CRYOVANT_DEV_MODE": "1"}, clear=False), mock.patch("app.mutation_executor.verify_all", return_value=(True, [])), mock.patch(
+            "app.mutation_executor.journal.write_entry"
+        ), mock.patch("app.mutation_executor.journal.append_tx"), mock.patch("app.mutation_executor.metrics.log"), mock.patch.object(executor, "_run_tests", return_value=(True, "ok")), mock.patch.object(
+            executor.risk_scorer,
+            "score",
+            return_value=risk_report,
+        ):
+            result = executor.execute(request)
+
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "mutation_risk_threshold_exceeded")
+
     def test_executor_rejects_when_promotion_policy_rejects(self) -> None:
         agents_root = self.tmp_root / "agents"
         agent_dir = agents_root / "sample"
