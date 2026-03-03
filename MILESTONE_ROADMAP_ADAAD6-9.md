@@ -75,6 +75,9 @@ python -m app.main --replay strict --verbose → replay_verified emitted, zero d
 
 ## ADAAD-7 · Governance Hardening
 
+> **Execution detail update:** See `ADAAD_7_EXECUTION_PLAN.md` for the ordered four-phase closure plan spanning `v1.1-GA` compliance through federated readiness, and `docs/governance/ADAAD_7_GA_CLOSURE_TRACKER.md` for auditable control-by-control sign-off.
+
+
 **Version target:** 1.2 · **Depends on:** ADAAD-6 merged
 **Epic:** [Reviewer Reputation & Calibration Loop](./EPIC_1_Reviewer_Reputation.md)
 **Labels:** `governance` `runtime` `risk-tiering` `v1.2`

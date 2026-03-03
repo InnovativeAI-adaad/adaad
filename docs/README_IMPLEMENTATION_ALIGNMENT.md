@@ -178,6 +178,20 @@ Expected status in this repository branch: governance/intelligence/dispatcher ta
 - [x] `ui/aponi_dashboard.py` standalone `--port` fallback resolves from `runtime.constants.APONI_PORT` while preserving `APONI_PORT` env override behavior.
 - [x] Test coverage asserts both modules derive canonical defaults from the same runtime port source.
 
+
+## ADAAD-7 execution alignment addendum
+
+To close governance gaps before `v1.1-GA`, execution and release controls are now documented in:
+
+- `ADAAD_7_EXECUTION_PLAN.md` (ordered 4-phase operating plan)
+- `docs/governance/ADAAD_7_GA_CLOSURE_TRACKER.md` (control-by-control acceptance tracker)
+- `docs/RELEASE_EVIDENCE_MATRIX.md` (strict-gate evidence mapping including key-rotation closure)
+
+This preserves separation between:
+
+- **Validated implementation guarantees** (code + tests + replay evidence), and
+- **Planned hardening work** (tracked with explicit acceptance criteria and sign-off requirements).
+
 ## Next governance audit
 
 - Audit key-rotation enforcement next: verify epoch/key-rotation freshness policy coverage and escalation posture before 1.0 freeze.
