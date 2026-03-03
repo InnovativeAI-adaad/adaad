@@ -4,9 +4,19 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import os
 from typing import Any, Mapping, Tuple
 
 from runtime.governance.foundation import sha256_prefixed_digest
+
+
+def _timeout_default() -> int:
+    raw = str(os.getenv("ADAAD_SANDBOX_TIMEOUT_SECONDS", "30")).strip()
+    try:
+        timeout_s = int(float(raw))
+    except (TypeError, ValueError):
+        return 30
+    return timeout_s if timeout_s > 0 else 30
 
 
 @dataclass(frozen=True)
@@ -37,6 +47,7 @@ def validate_policy(policy: SandboxPolicy) -> None:
 
 
 def policy_from_mapping(raw: Mapping[str, Any]) -> SandboxPolicy:
+    timeout_default = _timeout_default()
     return SandboxPolicy(
         profile_id=str(raw.get("profile_id") or ""),
         syscall_allowlist=tuple(sorted(str(x) for x in (raw.get("syscall_allowlist") or []))),
@@ -47,11 +58,12 @@ def policy_from_mapping(raw: Mapping[str, Any]) -> SandboxPolicy:
         cpu_seconds=int(raw.get("cpu_seconds", 1) or 1),
         memory_mb=int(raw.get("memory_mb", 1) or 1),
         disk_mb=int(raw.get("disk_mb", 1) or 1),
-        timeout_s=int(raw.get("timeout_s", 1) or 1),
+        timeout_s=int(raw.get("timeout_s", timeout_default) or timeout_default),
     )
 
 
 def default_sandbox_policy() -> SandboxPolicy:
+    timeout_default = _timeout_default()
     return SandboxPolicy(
         profile_id="default-v1",
         syscall_allowlist=("close", "fstat", "mmap", "open", "read", "stat", "write"),
@@ -62,7 +74,7 @@ def default_sandbox_policy() -> SandboxPolicy:
         cpu_seconds=60,
         memory_mb=1024,
         disk_mb=2048,
-        timeout_s=60,
+        timeout_s=timeout_default,
     )
 
 

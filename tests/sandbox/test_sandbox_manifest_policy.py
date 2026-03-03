@@ -2,8 +2,8 @@
 
 import pytest
 
-from runtime.sandbox.manifest import SandboxManifest, validate_manifest
-from runtime.sandbox.policy import SandboxPolicy, validate_policy
+from runtime.sandbox.manifest import SandboxManifest, manifest_from_mapping, validate_manifest
+from runtime.sandbox.policy import SandboxPolicy, default_sandbox_policy, policy_from_mapping, validate_policy
 
 
 def test_manifest_validation_rejects_zero_seed():
@@ -42,3 +42,35 @@ def test_policy_validation_rejects_empty_profile():
     )
     with pytest.raises(ValueError, match="invalid_policy_profile_id"):
         validate_policy(policy)
+
+
+def test_timeout_defaults_to_sandbox_timeout_env(monkeypatch):
+    monkeypatch.setenv("ADAAD_SANDBOX_TIMEOUT_SECONDS", "37")
+
+    manifest = manifest_from_mapping(
+        {
+            "mutation_id": "m",
+            "epoch_id": "e",
+            "replay_seed": "0000000000000001",
+            "command": ["pytest"],
+            "env": [],
+            "mounts": [],
+        }
+    )
+    policy = policy_from_mapping(
+        {
+            "profile_id": "default-v1",
+            "syscall_allowlist": ["read"],
+            "write_path_allowlist": ["reports"],
+            "network_egress_allowlist": [],
+            "capability_drop": [],
+            "cpu_seconds": 1,
+            "memory_mb": 1,
+            "disk_mb": 1,
+        }
+    )
+    default_policy = default_sandbox_policy()
+
+    assert manifest.timeout_s == 37
+    assert policy.timeout_s == 37
+    assert default_policy.timeout_s == 37
