@@ -70,11 +70,13 @@ pytest -q tests/governance/test_policy_artifact.py tests/test_import_roots.py te
 ```
 
 
-13. **README drift guard**
+13. **README + docs integrity guards**
    - Added `scripts/validate_readme_alignment.py` to enforce key implementation-status/configuration statements across root/module/release documentation.
+   - Added `scripts/validate_docs_integrity.py` to scan all markdown files, validate local markdown links/image targets, and fail when image alt text is missing in markdown image syntax or HTML `<img>` tags.
 
-Validation extension (documentation guard):
+Validation extension (documentation guards):
 
 ```bash
-python scripts/validate_readme_alignment.py
+python scripts/validate_readme_alignment.py --format json
+python scripts/validate_docs_integrity.py --format json
 ```

@@ -2,6 +2,11 @@
 
 The Aponi dashboard provides HTTP endpoints for orchestrator state, metrics tailing, lineage entries, and mutation history. It should be started after core checks succeed and must surface health signals without external dependencies.
 
+<p align="center">
+  <img src="../docs/assets/brand/aponi-context.svg" width="820" alt="Aponi context showing proposal authoring and analysis feeding into ADAAD governance and approved runtime execution">
+</p>
+<p align="center"><em>Aponi context: operator-facing proposal tooling that remains bounded by ADAAD governance authority.</em></p>
+
 ## User interface standard
 
 The dashboard serves a human-readable default interface at `/` (also `/index.html`).

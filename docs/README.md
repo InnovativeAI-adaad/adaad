@@ -1,6 +1,14 @@
 # 📚 ADAAD Documentation Hub
 
+![Status: Stable](https://img.shields.io/badge/Status-Stable-2ea043)
+![Governance: Fail-Closed](https://img.shields.io/badge/Governance-Fail--Closed-critical)
+![Replay: Deterministic](https://img.shields.io/badge/Replay-Deterministic-0ea5e9)
+
 Welcome to the central navigation page for ADAAD docs.
+
+> Deterministic, governance-first entrypoint for canonical ADAAD references.
+
+**Last reviewed:** 2026-03-04
 
 <p align="center">
   <img src="assets/governance-flow.svg" width="760" alt="ADAAD governance flow from proposal to replay verification and evidence archival">
@@ -45,6 +53,24 @@ Welcome to the central navigation page for ADAAD docs.
 - [Repository README](../README.md)
 - [Governance policy artifact](../governance/governance_policy_v1.json)
 
+## ✅ Documentation validators
+
+CI now runs both documentation validators as fail-closed checks with machine-readable JSON output:
+
+- `python scripts/validate_readme_alignment.py --format json`
+  - Enforces strict contract snippets across key README/release files.
+- `python scripts/validate_docs_integrity.py --format json`
+  - Scans all `.md` files, validates local markdown links/image targets, and flags missing image alt text for both markdown image syntax and HTML `<img>` tags.
+
+### Local run commands
+
+Run both validators exactly as CI does:
+
+```bash
+python scripts/validate_readme_alignment.py --format json
+python scripts/validate_docs_integrity.py --format json
+```
+
 ### Governance/audit reviewer
 - [Constitution and governance boundaries](CONSTITUTION.md)
 - [Governance policy artifact](../governance/governance_policy_v1.json)
@@ -60,6 +86,15 @@ Welcome to the central navigation page for ADAAD docs.
 - [Diagram ownership contract](DIAGRAM_OWNERSHIP.md)
 
 </details>
+
+
+## Brand visual usage in docs and releases
+
+ADAAD visual assets in `docs/assets/` may be used for repository documentation and project release artifacts, subject to trademark and branding constraints.
+
+- For provenance and per-file usage notes, see [`assets/IMAGE_PROVENANCE.md`](assets/IMAGE_PROVENANCE.md).
+- `assets/adaad-banner.svg` is treated as a brand-restricted visual and requires owner approval for external packaging/marketing redistribution.
+- Use of ADAAD names/logos does not grant trademark rights; follow `../BRAND_LICENSE.md` for any non-routine usage.
 
 ## License and Compliance Baseline
 

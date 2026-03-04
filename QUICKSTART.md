@@ -1,5 +1,12 @@
 # ADAAD Quick Start (5 Minutes) ![Stable](https://img.shields.io/badge/Status-Stable-2ea043)
 
+![Governance: Fail-Closed](https://img.shields.io/badge/Governance-Fail--Closed-critical)
+![Replay: Deterministic](https://img.shields.io/badge/Replay-Deterministic-0ea5e9)
+
+> Deterministic, governance-first path for a first local ADAAD run.
+
+**Last reviewed:** 2026-03-04
+
 > 🎥 Prefer video? A walkthrough is not published yet; this guide is the canonical setup path today.
 
 This guide gives you the fastest path to a working ADAAD run, plus a clean reset path if state drifts.

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">Aponi context and authority boundary</title>
+  <desc id="desc">Aponi provides proposal authoring and analysis, while ADAAD governance decides execution.</desc>
+  <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L10,4 L0,8 z" fill="#78a6ff"/>
+      </marker>
+    </defs>
+  <rect width="1200" height="300" rx="18" fill="#0a1324"/>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif" fill="#e8eefc">
+    <rect x="50" y="65" width="360" height="170" rx="14" fill="#1b334f" stroke="#66b3ff"/>
+    <text x="230" y="120" text-anchor="middle" font-size="30" font-weight="700">Aponi UI</text>
+    <text x="230" y="155" text-anchor="middle" font-size="20">Authoring + Analysis</text>
+    <text x="230" y="184" text-anchor="middle" font-size="18">Proposal intake only</text>
+
+    <rect x="450" y="65" width="320" height="170" rx="14" fill="#25334a" stroke="#8fb7ff"/>
+    <text x="610" y="120" text-anchor="middle" font-size="27" font-weight="700">Governance Gates</text>
+    <text x="610" y="155" text-anchor="middle" font-size="18">Replay + policy + review</text>
+    <text x="610" y="184" text-anchor="middle" font-size="18">Fail-closed checks</text>
+
+    <rect x="810" y="65" width="340" height="170" rx="14" fill="#20422a" stroke="#6fd39a"/>
+    <text x="980" y="120" text-anchor="middle" font-size="27" font-weight="700">Mutation Runtime</text>
+    <text x="980" y="155" text-anchor="middle" font-size="18">Executes only after approval</text>
+    <text x="980" y="184" text-anchor="middle" font-size="18">Evidence + lineage output</text>
+  </g>
+  <g stroke="#78a6ff" stroke-width="4" fill="none" marker-end="url(#arrow)">
+    
+    <line x1="410" y1="150" x2="440" y2="150"/>
+    <line x1="770" y1="150" x2="800" y2="150"/>
+  </g>
+</svg>

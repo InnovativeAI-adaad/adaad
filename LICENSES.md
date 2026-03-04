@@ -22,3 +22,9 @@ upstream project notices before redistribution in regulated environments.
 
 Run `python scripts/validate_license_compliance.py` in CI to verify MIT baseline
 license artifacts and SPDX/header guardrails.
+
+## Documentation image provenance and brand constraints
+
+- Image provenance manifest: `docs/assets/IMAGE_PROVENANCE.md`.
+- All current `docs/assets/` images are repository-authored; no third-party image license is currently recorded.
+- ADAAD brand visuals and marks remain trademark-restricted; see `BRAND_LICENSE.md` and filename-level notes in the image manifest before reuse outside repository docs/releases.

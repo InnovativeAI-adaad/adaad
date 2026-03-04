@@ -1,5 +1,12 @@
 # Threat Model
 
+![Status: Stable](https://img.shields.io/badge/Status-Stable-2ea043)
+![Governance: Fail-Closed](https://img.shields.io/badge/Governance-Fail--Closed-critical)
+
+> Deterministic, governance-first threat assumptions for ADAAD mutation control surfaces.
+
+**Last reviewed:** 2026-03-04
+
 This document defines the core threat assumptions for ADAAD's governance-first mutation runtime.
 
 ## Scope

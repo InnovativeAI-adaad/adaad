@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="320" viewBox="0 0 1200 320" role="img" aria-labelledby="title desc">
+  <title id="title">ADAAD brand identity</title>
+  <desc id="desc">ADAAD governance-first autonomy identity panel with tagline and core trust attributes.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#18263a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="320" rx="22" fill="url(#bg)"/>
+  <rect x="36" y="36" width="1128" height="248" rx="16" fill="none" stroke="#66b3ff" stroke-opacity="0.55"/>
+  <text x="70" y="146" fill="#e6f7ff" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="92" font-weight="700">ADAAD</text>
+  <text x="72" y="198" fill="#91d5ff" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="31">Governed Autonomy Engine</text>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif" font-size="24" fill="#cfe8ff">
+    <text x="72" y="246">Deterministic Replay</text>
+    <text x="390" y="246">Constitutional Policy Gates</text>
+    <text x="850" y="246">Ledger-Anchored Evidence</text>
+  </g>
+</svg>

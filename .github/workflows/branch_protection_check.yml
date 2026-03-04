@@ -38,6 +38,13 @@ jobs:
               core.setFailed('required_status_checks must include the secret-scan workflow check');
               return;
             }
+            const hasDocsValidation = checks.contexts.some((ctx) =>
+              String(ctx).toLowerCase().includes('docs-validation')
+            );
+            if (!hasDocsValidation) {
+              core.setFailed('required_status_checks must include the docs-validation workflow check');
+              return;
+            }
             if (!protection.data.enforce_admins || protection.data.enforce_admins.enabled !== true) {
               core.setFailed('enforce_admins is not true');
               return;

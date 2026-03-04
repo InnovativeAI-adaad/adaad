@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240" role="img" aria-labelledby="title desc">
+  <title id="title">ADAAD governance model</title>
+  <desc id="desc">Governance lifecycle: propose, simulate, replay verify, policy gate, execute, evidence, archive.</desc>
+  <defs>
+      <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L10,4 L0,8 z" fill="#78a6ff"/>
+      </marker>
+    </defs>
+  <rect width="1200" height="240" rx="16" fill="#0b1220"/>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" fill="#e8eefc" text-anchor="middle">
+    
+    <g>
+      <rect x="30" y="90" width="145" height="68" rx="10" fill="#1d2a44" stroke="#5d85d6"/>
+      <text x="102" y="131">Propose</text>
+      <rect x="195" y="90" width="145" height="68" rx="10" fill="#1d2a44" stroke="#5d85d6"/>
+      <text x="267" y="131">Simulate</text>
+      <rect x="360" y="90" width="170" height="68" rx="10" fill="#1b334f" stroke="#66b3ff"/>
+      <text x="445" y="131">Replay Verify</text>
+      <rect x="550" y="90" width="150" height="68" rx="10" fill="#1b334f" stroke="#66b3ff"/>
+      <text x="625" y="131">Policy Gate</text>
+      <rect x="720" y="90" width="130" height="68" rx="10" fill="#20422a" stroke="#6fd39a"/>
+      <text x="785" y="131">Execute</text>
+      <rect x="870" y="90" width="190" height="68" rx="10" fill="#20422a" stroke="#6fd39a"/>
+      <text x="965" y="131">Evidence</text>
+      <rect x="1080" y="90" width="90" height="68" rx="10" fill="#3a2a1e" stroke="#d6a36a"/>
+      <text x="1125" y="131">Archive</text>
+    </g>
+    <g stroke="#78a6ff" stroke-width="3" fill="none" marker-end="url(#arrow)">
+      <line x1="175" y1="124" x2="193" y2="124"/>
+      <line x1="340" y1="124" x2="358" y2="124"/>
+      <line x1="530" y1="124" x2="548" y2="124"/>
+      <line x1="700" y1="124" x2="718" y2="124"/>
+      <line x1="850" y1="124" x2="868" y2="124"/>
+      <line x1="1060" y1="124" x2="1078" y2="124"/>
+    </g>
+  </g>
+</svg>

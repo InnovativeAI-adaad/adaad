@@ -167,6 +167,19 @@ jobs:
       - name: Validate governance policy schemas
         run: python scripts/validate_governance_schemas.py
 
+  docs-validation:
+    runs-on: ubuntu-latest
+    needs: classify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+      - name: Validate strict documentation snippets
+        run: python scripts/validate_readme_alignment.py --format json
+      - name: Validate markdown link and image integrity
+        run: python scripts/validate_docs_integrity.py --format json
+
   workflow-python-version-guard:
     runs-on: ubuntu-latest
     needs: classify

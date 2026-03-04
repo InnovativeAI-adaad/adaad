@@ -1,5 +1,12 @@
 # Architecture Summary
 
+![Status: Stable](https://img.shields.io/badge/Status-Stable-2ea043)
+![Governance: Fail-Closed](https://img.shields.io/badge/Governance-Fail--Closed-critical)
+
+> One-page, deterministic architecture orientation for governance-first ADAAD operation.
+
+**Last reviewed:** 2026-03-04
+
 A one-page overview of ADAAD's governance-first architecture for autonomous code evolution.
 
 ## Components

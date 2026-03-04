@@ -4,6 +4,10 @@
 > ADAAD enforces constitutional mutation gates, deterministic replay checks, and fail-closed execution behavior.
 > It is built for governed staging and audit workflows.
 
+**Last reviewed:** 2026-03-04
+
+> ℹ️ **Note:** Visual conventions in this document follow [docs/DOCS_VISUAL_STYLE_GUIDE.md](docs/DOCS_VISUAL_STYLE_GUIDE.md).
+
 ADAAD is a governance layer for autonomous code mutation. It exists to ensure autonomy remains reproducible, auditable, and constrained by constitutional policy.
 
 <p align="center">
@@ -186,6 +190,12 @@ Recent improvements to `server.py` and dashboard integration:
 ## Aponi-as-IDE (ADAAD-9)
 
 Aponi now provides a governance-first authoring workflow for mutation proposals and replay forensics.
+
+
+<p align="center">
+  <img src="docs/assets/brand/aponi-context.svg" width="780" alt="Aponi context showing authoring boundary before ADAAD governance gates and runtime execution">
+</p>
+<p align="center"><em>Aponi context: UI authoring and analysis feeds governed execution without bypassing constitutional gates.</em></p>
 
 ### Authority invariant
 
