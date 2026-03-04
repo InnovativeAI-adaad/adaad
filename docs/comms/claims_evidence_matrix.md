@@ -16,6 +16,7 @@ This matrix maps major external/public claims to objective, versioned repository
 | `replay-proof-bundle-verification` | "Replay proof bundles can be generated and verified." | [Replay proof runtime module](../../runtime/evolution/replay_proof.py); [replay proof verification tests](../../tests/test_replay_proof.py) | Complete |
 | `federation-precedence-local-runtime` | "Federation coordination and precedence resolution are policy-gated in local runtime flows." | [Federation coordination runtime](../../runtime/governance/federation/coordination.py); [federation coordination tests](../../tests/governance/test_federation_coordination.py) | Complete |
 | `cryovant-agent-cert-hmac` | "Agent certificate verification is payload-bound (HMAC/signature) with audited migration fallback." | [Cryovant certificate verifier](../../security/cryovant.py); [Cryovant signature tests](../../tests/test_cryovant_dev_signatures.py) | Complete |
+| `codex-governed-build-alignment` | "Codex governed-build behavior is discoverable, gate-tiered, and aligned with ADAAD v1.1 governance docs." | [Agent contract](../../AGENTS.md); [Codex setup runbook](../governance/CODEX_SETUP.md); [CI tier classifier](../governance/ci-gating.md) | Complete |
 
 ## Completion standard
 
