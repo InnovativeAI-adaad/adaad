@@ -165,13 +165,13 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-11 · True Darwinian Agent Budget Competition
 
-**Version:** 1.5.0 · **Status:** 🔵 In Progress · **Prerequisite:** ADAAD-10 ✅
+**Version:** 1.5.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05
 
 | PR | Deliverable | Status |
 |---|---|---|
 | PR-11-01 | AgentBudgetPool + BudgetArbitrator (Softmax fitness-weighted) + CompetitionLedger | ✅ 16 tests |
-| PR-11-02 | FitnessOrchestrator post-fitness hook + market signal coupling + starvation pipeline + tests | ⬜ |
-| PR-11-MS | VERSION 1.5.0 · docs · README | ⬜ |
+| PR-11-02 | DarwinianSelectionPipeline + fitness hook + 16 tests | ✅ |
+| PR-11-MS | VERSION 1.5.0 · docs · README | ✅ |
 
 **Value unlock:** Agents compete for a finite shared budget pool. High-fitness agents earn allocation; low-fitness agents are starved and evicted. Market signals modulate pressure in real time.
 
@@ -179,7 +179,7 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-12 · Real Container-Level Isolation Backend
 
-**Version:** 1.6.0 · **Status:** ⬜ Queued · **Prerequisite:** ADAAD-11 ✅
+**Version:** 1.6.0 · **Status:** 🔵 In Progress · **Prerequisite:** ADAAD-11 ✅
 
 | PR | Deliverable | Status |
 |---|---|---|
