@@ -1,8 +1,9 @@
 # ADAAD Milestone Roadmap · ADAAD-6 → ADAAD-9
 
 ![Status: Stable](https://img.shields.io/badge/Status-Stable-2ea043)
-![Milestone: ADAAD-7 Complete](https://img.shields.io/badge/Milestone-ADAAD--7_Complete-2ea043)
-![Next: ADAAD-8](https://img.shields.io/badge/Next-ADAAD--8-0ea5e9)
+![Milestone: ADAAD-8 Complete](https://img.shields.io/badge/Milestone-ADAAD--8_Complete-2ea043)
+![Milestone: ADAAD-8 Complete](https://img.shields.io/badge/Milestone-ADAAD--8_Complete-2ea043)
+![Next: ADAAD-9](https://img.shields.io/badge/Next-ADAAD--9-0ea5e9)
 
 > Governance-grade milestone plan · `innovative-ai/adaad` · Authoritative baseline: `1.1.0 (Stable)`
 
@@ -27,7 +28,7 @@ ADAAD-7 · Governance Hardening (v1.1)       ✅ COMPLETE — 2026-03-05
     │  Aponi reviewer panel · constitution v0.3.0
     │
     ▼
-ADAAD-8 · Policy Simulation Mode (v1.2)     ⬜ NEXT
+ADAAD-8 · Policy Simulation Mode (v1.2)     ✅ COMPLETE — 2026-03-05
     │       ↑ consumes ADAAD-7 reputation as simulation variable
     │
     │  Policy Simulation DSL
@@ -35,7 +36,7 @@ ADAAD-8 · Policy Simulation Mode (v1.2)     ⬜ NEXT
     │  Aponi simulation mode · exportable governance profiles
     │
     ▼
-ADAAD-9 · Developer Experience (v1.3)       ⬜ PLANNED
+ADAAD-9 · Developer Experience (v1.3)       ⬜ NEXT
             ↑ consumes ADAAD-8 simulation panel (Phase 5)
 
          Aponi-as-IDE
@@ -98,16 +99,16 @@ ADAAD-9 · Developer Experience (v1.3)       ⬜ PLANNED
 
 ## ADAAD-8 · Policy Simulation Mode
 
-**Version:** 1.2.0 · **Status:** ⬜ Next · **Prerequisite:** ADAAD-7 merged ✅
+**Version:** 1.2.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05 · **Prerequisite:** ADAAD-7 merged ✅
 
 ### Scope
 
 | PR | Title | CI tier | Deps |
 |---|---|---|---|
-| PR-10 | Simulation DSL Grammar + Interpreter | critical | ADAAD-7 ✅ |
-| PR-11 | Epoch Replay Simulator + Isolation Invariant | critical | PR-10 |
-| PR-12 | Simulation Aponi Endpoints | standard | PR-11 |
-| PR-13 | Governance Profile Exporter | critical (milestone) | PR-12 |
+| PR-10 | Simulation DSL Grammar + Interpreter | critical | ✅ Merged |
+| PR-11 | Epoch Replay Simulator + Isolation Invariant | critical | ✅ Merged |
+| PR-12 | Simulation Aponi Endpoints | standard | ✅ Merged |
+| PR-13 | Governance Profile Exporter | critical (milestone) | ✅ Merged |
 
 ### Architectural intent
 
@@ -120,7 +121,7 @@ ADAAD-9 · Developer Experience (v1.3)       ⬜ PLANNED
 
 ## ADAAD-9 · Developer Experience
 
-**Version:** 1.3.0 · **Status:** ⬜ Planned · **Prerequisite:** ADAAD-7 merged ✅
+**Version:** 1.3.0 · **Status:** ⬜ Next · **Prerequisite:** ADAAD-8 merged ✅
 
 ### Scope
 

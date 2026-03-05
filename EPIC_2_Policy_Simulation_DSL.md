@@ -1,11 +1,15 @@
-# Epic: Policy Simulation DSL
+# EPIC 2 · Policy Simulation DSL
 
-> **Labels:** `governance` `simulation` `Aponi` `enhancement` `v1.3`
-> **Milestone:** ADAAD-8 Policy Simulation Mode
-> **Complexity:** Major feature (> 8 hours)
-> **Governance impact:** Advances policy/constitution behavior (simulation only — zero live governance side effects)
+![Status: Complete](https://img.shields.io/badge/Status-Complete-2ea043)
+![Milestone: ADAAD-8](https://img.shields.io/badge/Milestone-ADAAD--8-2ea043)
+![Version: v1.2](https://img.shields.io/badge/Version-v1.2-2ea043)
+
+> Declarative governance sandbox — hypothetical constraints evaluated against historical epochs, with zero live governance side effects.
+
+**Last reviewed:** 2026-03-05 · **Merged:** 2026-03-05 · **PRs:** PR-10 → PR-13
 
 ---
+
 
 ## Problem Statement
 

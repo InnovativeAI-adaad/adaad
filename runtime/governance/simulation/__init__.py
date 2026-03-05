@@ -21,6 +21,13 @@ from runtime.governance.simulation.epoch_simulator import (
     SimulationIsolationError,
     EpochReplaySimulator,
 )
+from runtime.governance.simulation.profile_exporter import (
+    GovernanceProfile,
+    GOVERNANCE_PROFILE_SCHEMA_VERSION,
+    export_profile,
+    validate_profile_schema,
+    profile_digest,
+)
 
 __all__ = [
     "DSL_GRAMMAR_VERSION",
@@ -37,4 +44,9 @@ __all__ = [
     "SimulationRunResult",
     "SimulationIsolationError",
     "EpochReplaySimulator",
+    "GovernanceProfile",
+    "GOVERNANCE_PROFILE_SCHEMA_VERSION",
+    "export_profile",
+    "validate_profile_schema",
+    "profile_digest",
 ]

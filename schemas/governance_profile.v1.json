@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "governance_profile.v1",
+  "title": "GovernanceProfile",
+  "description": "Schema for an ADAAD-8 GovernanceProfile export artifact. The 'simulation' field must always be true — schema-enforced. Profiles are deterministic: identical inputs produce identical profile_digest values.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "simulation",
+    "generated_at",
+    "epoch_range",
+    "simulation_policy",
+    "summary",
+    "epoch_results",
+    "scoring_versions",
+    "profile_digest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "governance_profile.v1",
+      "description": "Always 'governance_profile.v1'."
+    },
+    "simulation": {
+      "type": "boolean",
+      "const": true,
+      "description": "Always true — profiles can only be produced from simulation runs."
+    },
+    "generated_at": {
+      "type": "string",
+      "description": "ISO-8601 timestamp or 'deterministic' for test contexts."
+    },
+    "epoch_range": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "oneOf": [{"type": "string"}, {"type": "null"}] },
+        "end": { "oneOf": [{"type": "string"}, {"type": "null"}] }
+      }
+    },
+    "simulation_policy": {
+      "type": "object",
+      "required": ["simulation"],
+      "properties": {
+        "simulation": { "type": "boolean", "const": true }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "epochs_evaluated",
+        "velocity_impact_pct",
+        "mutations_gated",
+        "drift_risk_delta_mean",
+        "governance_health_score_mean"
+      ],
+      "properties": {
+        "epochs_evaluated": { "type": "integer", "minimum": 0 },
+        "velocity_impact_pct": { "type": "number" },
+        "mutations_gated": { "type": "integer", "minimum": 0 },
+        "total_mutations_actual": { "type": "integer", "minimum": 0 },
+        "total_mutations_simulated": { "type": "integer", "minimum": 0 },
+        "drift_risk_delta_mean": { "type": "number" },
+        "governance_health_score_mean": { "type": "number" },
+        "policy_digest": { "type": "string" },
+        "run_digest": { "type": "string" }
+      }
+    },
+    "epoch_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "epoch_id",
+          "actual_mutations_advanced",
+          "simulated_mutations_advanced",
+          "blocked_by_simulation",
+          "velocity_delta_pct",
+          "drift_risk_delta",
+          "governance_health_score",
+          "scoring_algorithm_version"
+        ]
+      }
+    },
+    "scoring_versions": {
+      "type": "object",
+      "description": "Scoring algorithm versions used during epoch replay.",
+      "additionalProperties": { "type": "string" }
+    },
+    "profile_digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "SHA-256 digest of the canonical profile payload — for determinism verification."
+    }
+  }
+}

@@ -2,7 +2,15 @@
 
 ## [Unreleased]
 
+### ADAAD-8 — Policy Simulation Mode (v1.2)
+
+- **PR-10 — DSL Grammar + Constraint Interpreter:** `runtime/governance/simulation/constraint_interpreter.py` delivers `SimulationPolicy` (frozen dataclass, `simulation=True` structurally enforced) and `interpret_policy_block()`. 10 constraint types: approval thresholds, risk ceilings, rate limits, complexity deltas, tier lockdowns, rule assertions, coverage floors, entropy caps, reviewer escalation, lineage depth requirements. `schemas/governance_simulation_policy.v1.json` schema-enforces `simulation: true`. 50 tests.
+- **PR-11 — Epoch Replay Simulator + Isolation Invariant:** `runtime/governance/simulation/epoch_simulator.py` delivers `EpochReplaySimulator` as a read-only substrate over `ReplayEngine`. `SimulationPolicy.simulation=True` checked at `GovernanceGate` boundary before any evaluation. Zero ledger writes, zero constitution state transitions, zero mutation executor calls during simulation. `EpochSimulationResult` and `SimulationRunResult` are frozen dataclasses with deterministic `policy_digest` and `run_digest`. 38 tests including explicit isolation assertion tests.
+- **PR-12 — Aponi Simulation Endpoints:** `POST /simulation/run` and `GET /simulation/results/{run_id}` added to `server.py`. Both bearer-auth gated (`audit:read` scope). `simulation: true` structurally present in all responses. `simulation_only_notice` always in `POST` response. 422 on DSL parse error. 11 tests.
+- **PR-13 — Governance Profile Exporter (milestone):** `runtime/governance/simulation/profile_exporter.py` exports `SimulationRunResult` + `SimulationPolicy` as self-contained `GovernanceProfile` artifacts. `schemas/governance_profile.v1.json` schema-enforces `simulation: true` and `profile_digest` SHA-256 format. Determinism guarantee: identical inputs → identical `profile_digest`. `validate_profile_schema()` performs structural + optional JSON schema validation. 23 tests.
+
 ### CI / Governance
+
 - **PR-CI-01 — H-01 closure:** Unified Python version pin at `3.11.9` across all
   `.github/workflows/*.yml` files. `scripts/check_workflow_python_version.py` enforces
   the pin and is wired as a fail-closed CI guard. GA-1.1..GA-1.6 and GA-KR.1 controls
