@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Fail release validation when release notes over-claim unavailable sandbox hardening."""
 
 from __future__ import annotations

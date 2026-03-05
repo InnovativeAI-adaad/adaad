@@ -8,7 +8,6 @@ collection.
 
 from __future__ import annotations
 
-from importlib import import_module
 from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
@@ -69,11 +68,124 @@ _EXPORTS: dict[str, tuple[str, str]] = {
 __all__ = sorted(_EXPORTS.keys())
 
 
+def _resolve_module(module_name: str) -> Any:
+    # lint:fix forbidden_dynamic_execution — explicit module routing — governance-reviewed
+    if module_name == "runtime.evolution.epoch":
+        from runtime.evolution import epoch as module
+
+        return module
+    if module_name == "runtime.evolution.checkpoint_registry":
+        from runtime.evolution import checkpoint_registry as module
+
+        return module
+    if module_name == "runtime.evolution.checkpoint_verifier":
+        from runtime.evolution import checkpoint_verifier as module
+
+        return module
+    if module_name == "runtime.evolution.entropy_detector":
+        from runtime.evolution import entropy_detector as module
+
+        return module
+    if module_name == "runtime.evolution.entropy_policy":
+        from runtime.evolution import entropy_policy as module
+
+        return module
+    if module_name == "runtime.evolution.entropy_forecast":
+        from runtime.evolution import entropy_forecast as module
+
+        return module
+    if module_name == "runtime.evolution.governor":
+        from runtime.evolution import governor as module
+
+        return module
+    if module_name == "runtime.evolution.goal_graph":
+        from runtime.evolution import goal_graph as module
+
+        return module
+    if module_name == "runtime.evolution.impact":
+        from runtime.evolution import impact as module
+
+        return module
+    if module_name == "runtime.evolution.lineage_v2":
+        from runtime.evolution import lineage_v2 as module
+
+        return module
+    if module_name == "runtime.evolution.promotion_events":
+        from runtime.evolution import promotion_events as module
+
+        return module
+    if module_name == "runtime.evolution.promotion_policy":
+        from runtime.evolution import promotion_policy as module
+
+        return module
+    if module_name == "runtime.evolution.promotion_state_machine":
+        from runtime.evolution import promotion_state_machine as module
+
+        return module
+    if module_name == "runtime.evolution.replay":
+        from runtime.evolution import replay as module
+
+        return module
+    if module_name == "runtime.evolution.evidence_bundle":
+        from runtime.evolution import evidence_bundle as module
+
+        return module
+    if module_name == "runtime.evolution.economic_fitness":
+        from runtime.evolution import economic_fitness as module
+
+        return module
+    if module_name == "runtime.evolution.simulation_runner":
+        from runtime.evolution import simulation_runner as module
+
+        return module
+    if module_name == "runtime.evolution.scoring":
+        from runtime.evolution import scoring as module
+
+        return module
+    if module_name == "runtime.evolution.scoring_algorithm":
+        from runtime.evolution import scoring_algorithm as module
+
+        return module
+    if module_name == "runtime.evolution.scoring_ledger":
+        from runtime.evolution import scoring_ledger as module
+
+        return module
+    if module_name == "runtime.evolution.mutation_credit_ledger":
+        from runtime.evolution import mutation_credit_ledger as module
+
+        return module
+    if module_name == "runtime.evolution.scoring_validator":
+        from runtime.evolution import scoring_validator as module
+
+        return module
+    if module_name == "runtime.evolution.replay_verifier":
+        from runtime.evolution import replay_verifier as module
+
+        return module
+    if module_name == "runtime.evolution.replay_attestation":
+        from runtime.evolution import replay_attestation as module
+
+        return module
+    if module_name == "runtime.evolution.runtime":
+        from runtime.evolution import runtime as module
+
+        return module
+    if module_name == "runtime.evolution.fitness_regression":
+        from runtime.evolution import fitness_regression as module
+
+        return module
+    if module_name == "runtime.evolution.telemetry_audit":
+        from runtime.evolution import telemetry_audit as module
+
+        return module
+    raise ModuleNotFoundError(module_name)
+
+
 def __getattr__(name: str) -> Any:
     if name not in _EXPORTS:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module_name, attr_name = _EXPORTS[name]
-    module = import_module(module_name)
+    module = _resolve_module(module_name)
     value = getattr(module, attr_name)
     globals()[name] = value
     return value

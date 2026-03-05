@@ -7,7 +7,6 @@ between runtime/api and runtime/evolution modules during startup.
 
 from __future__ import annotations
 
-from importlib import import_module
 from typing import Any
 
 _EXPORTS: dict[str, tuple[str, str]] = {
@@ -25,11 +24,32 @@ _EXPORTS: dict[str, tuple[str, str]] = {
 __all__ = sorted(_EXPORTS.keys())
 
 
+def _resolve_module(module_name: str) -> Any:
+    # lint:fix forbidden_dynamic_execution — explicit module routing — governance-reviewed
+    if module_name == "adaad.agents.discovery":
+        from adaad.agents import discovery as module
+
+        return module
+    if module_name == "adaad.agents.mutation_engine":
+        from adaad.agents import mutation_engine as module
+
+        return module
+    if module_name == "adaad.agents.mutation_request":
+        from adaad.agents import mutation_request as module
+
+        return module
+    if module_name == "adaad.agents.mutation_strategies":
+        from adaad.agents import mutation_strategies as module
+
+        return module
+    raise ModuleNotFoundError(module_name)
+
+
 def __getattr__(name: str) -> Any:
     if name not in _EXPORTS:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     module_name, attr_name = _EXPORTS[name]
-    module = import_module(module_name)
+    module = _resolve_module(module_name)
     value = getattr(module, attr_name)
     globals()[name] = value
     return value

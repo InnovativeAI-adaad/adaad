@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Run release packaging and evidence validation for top policy-compliant candidates."""
 
 from __future__ import annotations

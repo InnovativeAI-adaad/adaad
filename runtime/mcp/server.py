@@ -10,6 +10,7 @@ import hmac
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from json import JSONDecodeError
 from pathlib import Path
@@ -61,7 +62,7 @@ def _verify_jwt(request: Request) -> None:
             raise HTTPException(status_code=401, detail="invalid_jwt")
         payload = json.loads(_b64url_decode(payload_b64))
         exp = int(payload.get("exp", 0) or 0)
-        if exp <= 0 or exp < int(__import__("time").time()):
+        if exp <= 0 or exp < int(time.time()):
             raise HTTPException(status_code=401, detail="expired_jwt")
     except HTTPException:
         raise

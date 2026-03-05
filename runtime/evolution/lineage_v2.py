@@ -4,13 +4,17 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
 
 from runtime import ROOT_DIR
 from runtime.governance.deterministic_filesystem import read_file_deterministic
+
+LOG = logging.getLogger(__name__)
 
 LEDGER_V2_PATH = ROOT_DIR / "security" / "ledger" / "lineage_v2.jsonl"
 LINEAGE_V2_PATH = LEDGER_V2_PATH
@@ -212,6 +216,7 @@ class LineageLedgerV2:
     def __init__(self, ledger_path: Path | None = None) -> None:
         self.ledger_path = ledger_path or LEDGER_V2_PATH
         self._epoch_digest_index: Dict[str, str] = {}
+        self._verified_tail_hash: str | None = None
 
     def _ensure(self) -> None:
         self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
@@ -219,47 +224,52 @@ class LineageLedgerV2:
             self.ledger_path.touch()
 
     def _last_hash(self) -> str:
+        if self._verified_tail_hash is not None:
+            return self._verified_tail_hash
         self.verify_integrity()
-        lines = read_file_deterministic(self.ledger_path).splitlines()
-        if not lines:
-            return "0" * 64
-        return str(json.loads(lines[-1]).get("hash", "0" * 64))
+        return self._verified_tail_hash or ("0" * 64)
 
-    def verify_integrity(self, recovery_hook: LineageRecoveryHook | None = None) -> None:
+    def verify_integrity(self, recovery_hook: LineageRecoveryHook | None = None, max_lines: int | None = None) -> None:
         """Recompute chain from genesis and verify each stored hash."""
         self._ensure()
+        self._verified_tail_hash = None
         prev_hash = "0" * 64
-        for line_no, line in enumerate(read_file_deterministic(self.ledger_path).splitlines(), start=1):
-            entry_text = line.strip()
-            if not entry_text:
-                continue
-            try:
-                entry = json.loads(entry_text)
-            except json.JSONDecodeError as exc:
-                error = LineageIntegrityError(f"lineage_invalid_json:line{line_no}:{exc}")
-                if recovery_hook is not None:
-                    recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
-                raise error from exc
-            if not isinstance(entry, dict):
-                error = LineageIntegrityError(f"lineage_malformed_entry:line{line_no}")
-                if recovery_hook is not None:
-                    recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
-                raise error
-            entry_prev_hash = str(entry.get("prev_hash") or "")
-            entry_hash = str(entry.get("hash") or "")
-            if entry_prev_hash != prev_hash:
-                error = LineageIntegrityError(f"lineage_prev_hash_mismatch:line{line_no}")
-                if recovery_hook is not None:
-                    recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
-                raise error
-            payload = {key: value for key, value in entry.items() if key != "hash"}
-            computed = self._compute_hash(prev_hash, payload)
-            if entry_hash != computed:
-                error = LineageIntegrityError(f"lineage_hash_mismatch:line{line_no}")
-                if recovery_hook is not None:
-                    recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
-                raise error
-            prev_hash = entry_hash
+        with self.ledger_path.open("r", encoding="utf-8") as handle:
+            for line_no, line in enumerate(handle, start=1):
+                if max_lines is not None and line_no > max_lines:
+                    LOG.warning("lineage_verify_integrity_truncated", extra={"line_no": line_no, "max_lines": max_lines})
+                    return
+                entry_text = line.strip()
+                if not entry_text:
+                    continue
+                try:
+                    entry = json.loads(entry_text)
+                except json.JSONDecodeError as exc:
+                    error = LineageIntegrityError(f"lineage_invalid_json:line{line_no}:{exc}")
+                    if recovery_hook is not None:
+                        recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
+                    raise error from exc
+                if not isinstance(entry, dict):
+                    error = LineageIntegrityError(f"lineage_malformed_entry:line{line_no}")
+                    if recovery_hook is not None:
+                        recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
+                    raise error
+                entry_prev_hash = str(entry.get("prev_hash") or "")
+                entry_hash = str(entry.get("hash") or "")
+                if not hmac.compare_digest(entry_prev_hash, prev_hash):
+                    error = LineageIntegrityError(f"lineage_prev_hash_mismatch:line{line_no}")
+                    if recovery_hook is not None:
+                        recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
+                    raise error
+                payload = {key: value for key, value in entry.items() if key != "hash"}
+                computed = self._compute_hash(prev_hash, payload)
+                if not hmac.compare_digest(entry_hash, computed):
+                    error = LineageIntegrityError(f"lineage_hash_mismatch:line{line_no}")
+                    if recovery_hook is not None:
+                        recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
+                    raise error
+                prev_hash = entry_hash
+        self._verified_tail_hash = prev_hash
 
     @staticmethod
     def _compute_hash(prev_hash: str, entry: Dict[str, Any]) -> str:
@@ -284,6 +294,7 @@ class LineageLedgerV2:
         entry["hash"] = self._compute_hash(prev_hash, entry)
         with self.ledger_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        self._verified_tail_hash = None
         if event_type == "MutationBundleEvent":
             epoch_id = str(payload.get("epoch_id") or "")
             digest = str(payload.get("epoch_digest") or "")
@@ -305,6 +316,9 @@ class LineageLedgerV2:
             if isinstance(entry, dict):
                 entries.append(entry)
         return entries
+
+    def get_verified_tail_hash(self) -> str | None:
+        return self._verified_tail_hash
 
     def read_all(self) -> List[Dict[str, Any]]:
         self.verify_integrity()

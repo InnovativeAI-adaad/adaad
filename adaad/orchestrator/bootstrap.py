@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-from importlib import import_module
 from threading import Lock
 from typing import Callable, Sequence, Tuple
 
@@ -23,9 +22,25 @@ _LOCK = Lock()
 
 
 def _load_callable(spec: str) -> Callable:
-    module_name, attr_name = spec.split(":", 1)
-    module = import_module(module_name)
-    fn = getattr(module, attr_name)
+    # lint:fix forbidden_dynamic_execution — explicit callable routing — governance-reviewed
+    if spec == "runtime.tools.mutation_guard:apply_dna_mutation":
+        from runtime.tools.mutation_guard import apply_dna_mutation
+
+        fn = apply_dna_mutation
+    elif spec == "runtime.tools.code_mutation_guard:apply_code_mutation":
+        from runtime.tools.code_mutation_guard import apply_code_mutation
+
+        fn = apply_code_mutation
+    elif spec == "runtime.tools.code_mutation_guard:extract_targets":
+        from runtime.tools.code_mutation_guard import extract_targets
+
+        fn = extract_targets
+    elif spec == "runtime.tools.mutation_guard:_apply_ops":
+        from runtime.tools.mutation_guard import _apply_ops
+
+        fn = _apply_ops
+    else:
+        raise ModuleNotFoundError(f"bootstrap_target_not_registered:{spec}")
     if not callable(fn):
         raise TypeError(f"bootstrap_target_not_callable:{spec}")
     return fn

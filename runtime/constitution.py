@@ -25,11 +25,10 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Mapping
 
-import importlib
 import importlib.util
 
 if importlib.util.find_spec("yaml") is not None:
-    yaml = importlib.import_module("yaml")
+    import yaml
 else:  # pragma: no cover - optional dependency fallback for hermetic environments
     class _YamlCompatError(ValueError):
         """Fallback yaml parse error."""

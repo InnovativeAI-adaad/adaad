@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Verify pinned dependency parity between runtime and archived backend requirements.
 
 This script resolves requirement file paths relative to the repository root so it can

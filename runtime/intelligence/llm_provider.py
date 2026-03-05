@@ -1,12 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import importlib
+import importlib.util
 import json
 import os
 import time
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping, Sequence
+
+if importlib.util.find_spec("anthropic") is not None:  # pragma: no cover - optional dependency
+    import anthropic as _anthropic
+else:
+    _anthropic = None
 
 SENSITIVE_CONTEXT_KEYS: tuple[str, ...] = (
     "api_key",
@@ -190,8 +195,9 @@ class LLMProviderClient:
 
     def _build_client(self) -> Any | None:
         try:
-            anthropic_module = importlib.import_module("anthropic")
-            return anthropic_module.Anthropic(api_key=self.config.api_key)
+            if _anthropic is None:
+                return None
+            return _anthropic.Anthropic(api_key=self.config.api_key)
         except Exception:  # noqa: BLE001
             return None
 

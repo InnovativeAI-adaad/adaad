@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Validate claims-to-evidence matrix entries for release readiness."""
 
 from __future__ import annotations

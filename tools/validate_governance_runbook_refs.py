@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
 """Validate governance runbook references to reduce documentation drift."""
 
 from __future__ import annotations

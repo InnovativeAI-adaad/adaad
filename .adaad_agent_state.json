@@ -1,25 +1,25 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-CI-01",
-  "next_pr": "PR-CI-02",
+  "last_completed_pr": "PR-PERF-01",
+  "next_pr": "PR-OPS-01",
   "active_phase": "Phase 0 Track A",
   "last_invocation": null,
   "blocked_reason": null,
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "last_gate_results": {
-    "tier_0": "not_run",
-    "tier_1": "not_run",
+    "tier_0": "pass",
+    "tier_1": "pass",
     "tier_2": "not_applicable",
     "tier_3": "not_run"
   },
-  "open_findings": ["C-02", "C-03", "C-04", "H-01"],
+  "open_findings": [
+    "C-02",
+    "H-01"
+  ],
   "value_checkpoints_reached": [],
   "pending_evidence_rows": [
-    "federation-key-pinning",
     "boot-env-validation",
-    "streaming-ledger-verification",
-    "spdx-header-compliance",
     "sandbox-injection-hardening",
     "snapshot-atomicity"
   ]
