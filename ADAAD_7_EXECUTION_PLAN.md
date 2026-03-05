@@ -92,3 +92,70 @@ These surfaces remain high-risk and should stay under continuous constitutional 
 1. Complete auth/CI closure (1.1–1.3) before gate/matrix updates (1.4–1.5).
 2. Complete deterministic gate refactor (1.5) before risk-suite expansion sign-off (1.6).
 3. Promote Phase 2 sandbox/runtime intake work only after Phase 1 closure is attested.
+
+---
+
+## §5 · Per-PR Gate Execution Protocol
+
+Use `AGENTS.md` **Gate Taxonomy** as canonical for Tier 0–3 gate definitions.
+For every PR, run the **full stack in sequence, stopping on first failure** (fail-closed).
+Do not skip tiers, and do not continue to the next command after any non-zero exit.
+
+### Tier 0 — Always-On Baseline Gates
+
+Run before code changes and again during verification:
+
+```bash
+python scripts/validate_governance_schemas.py
+python scripts/validate_architecture_snapshot.py
+python tools/lint_determinism.py runtime/ security/ adaad/orchestrator/ app/main.py
+python tools/lint_import_paths.py
+PYTHONPATH=. pytest tests/determinism/ tests/recovery/test_tier_manager.py \
+  -k "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode" -q
+```
+
+### Tier 1 — Standard Gate Stack
+
+Run only after Tier 0 is fully green:
+
+```bash
+PYTHONPATH=. pytest tests/ -q
+PYTHONPATH=. pytest tests/ -k governance -q
+python scripts/verify_critical_artifacts.py
+python scripts/validate_key_rotation_attestation.py
+python scripts/validate_readme_alignment.py
+python scripts/validate_release_evidence.py --require-complete
+```
+
+### Tier 2 — Escalated Gates
+
+Run when required by `docs/governance/ci-gating.md` (critical-tier, milestone, and flagged runtime/governance/security surfaces):
+
+```bash
+ADAAD_ENV=dev \
+CRYOVANT_DEV_MODE=1 \
+ADAAD_FORCE_DETERMINISTIC_PROVIDER=1 \
+ADAAD_DETERMINISTIC_SEED=ci-strict-replay \
+PYTHONPATH=. \
+  python -m app.main --verify-replay --replay strict
+
+python scripts/validate_release_hardening_claims.py
+```
+
+### Tier 3 — PR Governance Completeness Checks
+
+Before staging, confirm all of the following are complete:
+
+1. Evidence row added/updated in `docs/comms/claims_evidence_matrix.md`.
+2. `python scripts/validate_release_evidence.py --require-complete` passes.
+3. `.github/pull_request_template.md` fully completed with correct governance-impact and CI-tier selections.
+4. CI tier classification matches `docs/governance/ci-gating.md`.
+5. Required runbook/documentation updates are included in the same change set.
+6. Lane is identified and matches change surface.
+7. PR prerequisites are verified as merged.
+
+### PR-specific acceptance checks
+
+PR-specific checks are **not** part of global Tier 0.
+Examples like `python scripts/check_workflow_python_version.py` must live under the relevant PR's acceptance checks/specification and execute in that PR context.
+
