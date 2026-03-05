@@ -203,6 +203,19 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 
 - **PR-10-01 — MarketFitnessIntegrator + FitnessOrchestrator live signal injection:** `runtime/market/market_fitness_integrator.py` bridges `FeedRegistry.composite_reading()` into `FitnessOrchestrator.inject_live_signal()` replacing the static `simulated_market_score` with confidence-weighted live readings; synthetic fallback (0.5, zero confidence) on source failure. `runtime/evolution/fitness_orchestrator.py`: `inject_live_signal()` method + `_apply_live_override()` wired into `score()` pre-snapshot. `runtime/market/__init__.py` updated. Authority invariant: GovernanceGate retains final mutation-approval authority; market scores are fitness inputs only.
 
+## [1.4.0] — 2026-03-05 · ADAAD-10 Live Market Signal Adapters
+
+Live economic signals replace synthetic constants across the entire fitness pipeline.
+
+**FeedRegistry** (`runtime/market/feed_registry.py`): deterministic adapter ordering, TTL caching, fail-closed stale guard, confidence-weighted composite. Three concrete adapters: `VolatilityIndexAdapter` (inverted market stress), `ResourcePriceAdapter` (normalised compute cost), `DemandSignalAdapter` (DAU/WAU/retention composite).
+
+**MarketFitnessIntegrator** (`runtime/market/market_fitness_integrator.py`): bridges FeedRegistry composite into `FitnessOrchestrator.score()` as live `simulated_market_score`. Lineage digest + signal source propagated. Journal event `market_fitness_signal_enriched.v1`.
+
+**Schema**: `schemas/market_signal_reading.v1.json` — validated signal reading contract.
+
+Authority invariant: adapters are read-only; they influence fitness scoring but cannot approve mutations.
+
+
 ## [1.3.0] — 2026-03-05 · ADAAD-9 Developer Experience
 
 ### ADAAD-9 · Aponi-as-IDE — Governance-First Developer Environment
