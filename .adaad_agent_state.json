@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-PERF-01",
-  "next_pr": "PR-OPS-01",
+  "last_completed_pr": "PR-OPS-01",
+  "next_pr": "PR-HARDEN-01",
   "active_phase": "Phase 0 Track A",
   "last_invocation": null,
   "blocked_reason": null,
@@ -13,14 +13,10 @@
     "tier_2": "not_applicable",
     "tier_3": "not_run"
   },
-  "open_findings": [
-    "C-02",
-    "H-01"
-  ],
+  "open_findings": ["C-02", "H-01"],
   "value_checkpoints_reached": [],
   "pending_evidence_rows": [
     "boot-env-validation",
-    "sandbox-injection-hardening",
-    "snapshot-atomicity"
+    "sandbox-injection-hardening"
   ]
 }
