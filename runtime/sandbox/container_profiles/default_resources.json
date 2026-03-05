@@ -1,0 +1,13 @@
+{
+  "profile_id": "default_resources",
+  "version": "1.0.0",
+  "description": "Default ADAAD container resource quotas — cgroup v2",
+  "cpu_quota_percent": 50,
+  "memory_limit_mb": 256,
+  "memory_swap_limit_mb": 256,
+  "pids_limit": 64,
+  "disk_write_bps": 10485760,
+  "disk_read_bps": 52428800,
+  "network_ingress_bps": 0,
+  "network_egress_bps": 0
+}
