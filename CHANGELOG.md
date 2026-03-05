@@ -216,6 +216,10 @@ Live economic signals replace synthetic constants across the entire fitness pipe
 Authority invariant: adapters are read-only; they influence fitness scoring but cannot approve mutations.
 
 
+### ADAAD-11 Track B — Darwinian Agent Budget Competition
+
+- **PR-11-01 — AgentBudgetPool + BudgetArbitrator + CompetitionLedger:** `runtime/evolution/budget/` package: `pool.py` (finite pool, append-only allocation ledger, starvation detection, eviction), `arbitrator.py` (Softmax fitness-weighted reallocation, market pressure scalar, starvation accumulation, eviction at threshold), `competition_ledger.py` (append-only JSONL-backed event log, eviction history, audit export, sha256 lineage digests). Authority invariant: arbitrator writes to pool only; never approves or signs mutations.
+
 ## [1.3.0] — 2026-03-05 · ADAAD-9 Developer Experience
 
 ### ADAAD-9 · Aponi-as-IDE — Governance-First Developer Environment
