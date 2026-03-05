@@ -33,7 +33,7 @@
 > **Deterministic, policy-governed autonomous code evolution.**
 > ADAAD enforces constitutional mutation gates, deterministic replay verification, and fail-closed execution across every governed workflow.
 
-**Last reviewed:** 2026-03-05 · **Constitution:** v0.3.0 · **Version:** 1.7.0 · **Milestones:** ADAAD-7 ✅ · ADAAD-8 ✅ · ADAAD-9 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-13 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-13 ✅ · ADAAD-11 🔵
+**Last reviewed:** 2026-03-05 · **Constitution:** v0.3.0 · **Version:** 1.8.0 · **Milestones:** ADAAD-7 ✅ · ADAAD-8 ✅ · ADAAD-9 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-13 ✅ · ADAAD-14 ✅
 
 > ℹ️ Visual conventions follow [docs/DOCS_VISUAL_STYLE_GUIDE.md](docs/DOCS_VISUAL_STYLE_GUIDE.md).
 
@@ -70,6 +70,9 @@ Every step is ledger-anchored. Every decision is deterministic. Every failure is
 | 🛡️ **Federation key pinning** | Messages accepted only from registered key IDs; caller-supplied substitution rejected |
 | 🧹 **Sandbox injection hardening** | Preflight blocks shell metacharacters, IFS bypass, `eval`/`exec`/`source`, null-byte injection |
 | 🧠 **Versioned memory subsystem** | Append-only state versions with confidence metadata and non-destructive rollback pointers |
+| 📡 **Federated market signal routing** | Live market readings gossiped across federation nodes; `cluster_composite()` confidence-weighted aggregate |
+| 🏆 **Cross-node Darwinian competition** | Agent budget arbitration spans the full cluster; quorum gate blocks mass-eviction without consensus |
+| 🎛️ **Market-driven container profiles** | ResourcePrice/VolatilityIndex signals select CONSTRAINED / STANDARD / BURST cgroup v2 resource tier |
 
 ---
 

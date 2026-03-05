@@ -2,8 +2,8 @@
 
 ![Status: Stable](https://img.shields.io/badge/Status-Stable-2ea043)
 ![Milestone: ADAAD-8 Complete](https://img.shields.io/badge/Milestone-ADAAD--8_Complete-2ea043)
-![Milestone: ADAAD-8 Complete](https://img.shields.io/badge/Milestone-ADAAD--8_Complete-2ea043)
 ![Milestone: ADAAD-9 Complete](https://img.shields.io/badge/Milestone-ADAAD--9_Complete-2ea043)
+![Milestone: ADAAD-14 Complete](https://img.shields.io/badge/Milestone-ADAAD--14_Complete-2ea043)
 
 > Governance-grade milestone plan · `innovative-ai/adaad` · Authoritative baseline: `1.1.0 (Stable)`
 
@@ -202,3 +202,28 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 | PR-13-MS | VERSION 1.7.0 · docs · README | ✅ |
 
 **Value unlock:** Federation moves from file-based local coordination to autonomous peer discovery, HTTP gossip, quorum consensus, and cross-node constitutional enforcement without human intervention.
+
+---
+
+## ADAAD-14 · Cross-Track Convergence
+
+**Version:** 1.8.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05
+
+| PR | Deliverable | Status |
+|---|---|---|
+| PR-14-01 | FederatedSignalBroker — market × federation signal routing | ✅ |
+| PR-14-02 | CrossNodeBudgetArbitrator — Darwinian × federation cluster competition | ✅ |
+| PR-14-03 | MarketDrivenContainerProfiler — market × container resource selection | ✅ |
+| PR-14-MS | VERSION 1.8.0 · docs · README | ✅ |
+
+**Value unlock:** All four ADAAD-10–13 runtime tracks converge. Live market signals propagate
+across federation nodes and drive container resource tier selection. Darwinian budget competition
+spans the entire cluster with quorum-gated eviction. Every convergence surface preserves the
+GovernanceGate authority invariant.
+
+```
+ADAAD-14 · Cross-Track Convergence (v1.8.0)   ✅ COMPLETE — 2026-03-05
+      A×D: FederatedSignalBroker  (market readings gossiped, cluster_composite)
+      B×D: CrossNodeBudgetArbitrator (Softmax over merged cluster fitness, quorum gate)
+      A×C: MarketDrivenContainerProfiler (score → CONSTRAINED / STANDARD / BURST)
+```

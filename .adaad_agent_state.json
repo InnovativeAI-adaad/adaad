@@ -1,8 +1,8 @@
 {
-  "schema_version": "1.1.0",
-  "last_completed_pr": "PR-OPS-01",
-  "next_pr": "PR-DOCS-01",
-  "active_phase": "Phase 0 Track A",
+  "schema_version": "1.8.0",
+  "last_completed_pr": "PR-14-MILESTONE",
+  "next_pr": "ADAAD-15-pending",
+  "active_phase": "ADAAD-14 COMPLETE · v1.8.0 released",
   "last_invocation": "2026-03-05",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -11,7 +11,7 @@
     "tier_0": "pass",
     "tier_1": "pass",
     "tier_2": "pass",
-    "tier_3": "not_run"
+    "tier_3": "pass"
   },
   "open_findings": [],
   "value_checkpoints_reached": [
@@ -20,7 +20,23 @@
     "pr-harden-01-boot-env-signing-key",
     "pr-security-01-federation-key-pinning",
     "pr-perf-01-streaming-lineage-ledger",
-    "pr-ops-01-snapshot-atomicity"
+    "pr-ops-01-snapshot-atomicity",
+    "pr-docs-01-federation-registry-doc",
+    "adaad9-milestone-complete",
+    "v1.3.0-released",
+    "adaad10-market-signal-adapters",
+    "v1.4.0-released",
+    "adaad11-darwinian-budget-competition",
+    "v1.5.0-released",
+    "adaad12-container-isolation-backend",
+    "v1.6.0-released",
+    "adaad13-autonomous-federation",
+    "v1.7.0-released",
+    "adaad14-cross-track-convergence",
+    "pr-14-01-federated-signal-broker",
+    "pr-14-02-cross-node-budget-arbitrator",
+    "pr-14-03-market-driven-container-profiler",
+    "v1.8.0-released"
   ],
   "pending_evidence_rows": []
 }

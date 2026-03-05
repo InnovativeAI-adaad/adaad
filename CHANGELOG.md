@@ -238,6 +238,29 @@ Authority invariant: adapters are read-only; they influence fitness scoring but 
 - **PR-13-02 — Federation integration tests + split-brain resolution (ADAAD-13 complete):** `tests/test_federation_autonomous.py`: 26 tests — PeerRegistry (registration, heartbeat, stale/alive TTL detection, partition threshold, deregister, idempotent re-registration), GossipProtocol (valid/malformed event handling, queue drain, digest format), FederationConsensusEngine (initial follower, election→candidate→leader, majority vote, log append leader-only, commit_entry, quorum gate for policy_change, heartbeat reset, vote grant/deny), FederationNodeSupervisor (healthy/partitioned tick, safe_mode_active, partition journal event). ADAAD-13 Track D complete.
 - **PR-13-01 — PeerRegistry + GossipProtocol + FederationConsensusEngine + FederationNodeSupervisor:** `runtime/governance/federation/peer_discovery.py`: `PeerRegistry` (TTL-based liveness, stale/alive partition detection, idempotent registration, heartbeat update, partition threshold check), `GossipProtocol` (HTTP broadcast to alive peers, inbound event validation + queue, sha256 lineage digest per event, best-effort non-blocking). `runtime/governance/federation/consensus.py`: `FederationConsensusEngine` (Raft-inspired — leader election with term-based majority vote, append-only log with lineage digests, constitutional quorum gate for policy changes, heartbeat/rejoin). `runtime/governance/federation/node_supervisor.py`: `FederationNodeSupervisor` (heartbeat tick, partition detection → safe mode, autonomous rejoin broadcast, degraded state tracking). Authority invariant: consensus provides ordering only; GovernanceGate retains execution authority.
 
+## [1.8.0] — 2026-03-05 · ADAAD-14 Cross-Track Convergence
+
+All four ADAAD-10–13 runtime tracks converge into a unified, production-grade autonomous governance stack.
+
+### ADAAD-14 · Cross-Track Convergence — What shipped
+
+**PR-14-01 · FederatedSignalBroker (market × federation)**
+`runtime/market/federated_signal_broker.py` — `FederatedSignalBroker` publishes local `FeedRegistry` composite readings to all alive federation peers via `GossipProtocol` (`market_signal_broadcast.v1`); ingests peer readings with 60 s TTL freshness guard; `cluster_composite()` produces confidence-weighted aggregate across all nodes; graceful fallback to local reading on peer absence or feed failure. 24 tests.
+
+**PR-14-02 · CrossNodeBudgetArbitrator (Darwinian × federation)**
+`runtime/evolution/budget/cross_node_arbitrator.py` — `CrossNodeBudgetArbitrator` gossips local agent fitness scores to peers (`budget_fitness_broadcast.v1`), merges cluster-wide scores (local authoritative on conflict), runs Softmax reallocation across the cluster, broadcasts allocation decisions (`budget_allocation_broadcast.v1`). Quorum gate: evictions affecting >50% of cluster agents require `ConsensusEngine.has_quorum()` before applying (fail-open in single-node mode). 23 tests.
+
+**PR-14-03 · MarketDrivenContainerProfiler (market × container)**
+`runtime/sandbox/market_driven_profiler.py` — `MarketDrivenContainerProfiler` queries `FeedRegistry` or `FederatedSignalBroker` cluster composite to select cgroup v2 resource tier: CONSTRAINED (cpu=25%, mem=128 MB) below score 0.35; BURST (cpu=80%, mem=512 MB) at or above 0.65; STANDARD otherwise. Confidence guard (below 0.30 → STANDARD forced). Two new container profiles added: `market_constrained.json` + `market_burst.json`. 22 tests.
+
+### Authority invariants upheld
+- `FederatedSignalBroker` is advisory only — market readings influence fitness but never approve mutations.
+- `CrossNodeBudgetArbitrator` writes to local `AgentBudgetPool` only — consensus provides ordering, never execution authority.
+- `MarketDrivenContainerProfiler` is advisory — `ContainerOrchestrator` retains pool and lifecycle authority.
+- `GovernanceGate` remains the sole mutation approval authority across all convergence surfaces.
+
+---
+
 ## [1.7.0] — 2026-03-05 · ADAAD-13 Autonomous Multi-Node Federation
 
 ### ADAAD-10 · Live Market Signal Adapters
