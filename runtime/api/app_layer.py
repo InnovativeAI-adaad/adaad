@@ -10,6 +10,8 @@ from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_p
 from runtime.governance.branch_manager import BranchManager
 from runtime.governance.foundation import RuntimeDeterminismProvider, SeededDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
 from runtime.governance.gate_certifier import GateCertifier
+from runtime.governance.gate import DeterministicAxisEvaluator, GovernanceGate
+from runtime.director import GovernanceDeniedError, RuntimeDirector
 from runtime.integrations.aponi_sync import push_to_dashboard
 from runtime.intelligence.llm_provider import LLMProviderClient, load_provider_config
 from runtime.manifest.generator import generate_tool_manifest
@@ -22,7 +24,11 @@ __all__ = [
     "EntropyBudget",
     "EvolutionKernel",
     "FitnessEvaluator",
+    "DeterministicAxisEvaluator",
     "GateCertifier",
+    "GovernanceDeniedError",
+    "GovernanceGate",
+    "RuntimeDirector",
     "LLMProviderClient",
     "MutationCandidate",
     "PromotionManifestWriter",

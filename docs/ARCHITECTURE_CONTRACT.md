@@ -36,6 +36,7 @@ Allowed dependency direction is downward only:
 4. **Governance enforcement boundaries** (`runtime/governance/*`, replay/determinism checks in runtime)
    - Own policy, determinism providers, and enforcement primitives.
    - Root-level `governance/` remains compatibility adapter only.
+   - Adapter-only contract is enforced by `tools/lint_import_paths.py` (`governance_impl_leak`) and regression checks in `tests/governance/test_runtime_governance_adapters.py`.
 
 ## Forbidden import edges (CI-enforced)
 

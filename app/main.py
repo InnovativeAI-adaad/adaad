@@ -74,7 +74,7 @@ from runtime.api.runtime_services import (
     register_capability,
     score_mutation_enhanced,
 )
-from runtime.governance.gate import DeterministicAxisEvaluator, GovernanceGate
+from runtime.api.app_layer import DeterministicAxisEvaluator, GovernanceGate
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch, dispatch_result_or_raise
 from security import cryovant

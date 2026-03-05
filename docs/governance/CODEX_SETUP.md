@@ -83,3 +83,21 @@ Prevent recurrence by keeping the metadata block structure intact and re-running
 Changes to trigger contracts, gate order, workflow semantics, or tier taxonomy in
 `AGENTS.md` should be followed by a Codex prompt synchronization check in the
 same change window.
+
+
+## Environment bootstrap (recommended before ADAAD preflight)
+
+Run this once per fresh environment to avoid false gate failures from missing deterministic/security dependencies:
+
+```bash
+python -m pip install --upgrade pip
+pip install -r requirements.server.txt
+python - <<'PY'
+import importlib.util
+assert importlib.util.find_spec("yaml") is not None, "PyYAML missing"
+assert importlib.util.find_spec("nacl") is not None, "PyNaCl missing"
+print("dependency bootstrap ok: yaml + nacl present")
+PY
+```
+
+Then run Tier-0 preflight commands exactly as specified in `AGENTS.md`.

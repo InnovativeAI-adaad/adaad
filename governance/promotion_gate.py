@@ -1,31 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Promotion gate integrating sandbox and fitness thresholds."""
+"""Governance adapter: re-exports PromotionGate from canonical runtime module.
 
-from __future__ import annotations
+Implementation lives in runtime.governance.promotion_gate.
+This file is a pure re-export shim; no implementation code is permitted here.
+"""
 
-from dataclasses import dataclass
+from runtime.governance.promotion_gate import (
+    PromotionDecision,
+    PromotionPolicy,
+    evaluate_promotion,
+)
 
-from sandbox.sandbox_executor import SandboxResult
-
-
-@dataclass(frozen=True)
-class PromotionPolicy:
-    min_fitness: float = 0.6
-    min_revenue: float = 0.5
-
-
-@dataclass(frozen=True)
-class PromotionDecision:
-    approved: bool
-    reason: str
-    ledger_hash: str | None = None
-
-
-def evaluate_promotion(result: SandboxResult, policy: PromotionPolicy, *, ledger_hash: str | None = None) -> PromotionDecision:
-    if result.status != "pass":
-        return PromotionDecision(approved=False, reason="sandbox_failed")
-    if result.fitness_score < policy.min_fitness:
-        return PromotionDecision(approved=False, reason="fitness_below_threshold")
-    if result.revenue_score < policy.min_revenue:
-        return PromotionDecision(approved=False, reason="revenue_below_threshold")
-    return PromotionDecision(approved=True, reason="approved", ledger_hash=ledger_hash)
+__all__ = ["PromotionDecision", "PromotionPolicy", "evaluate_promotion"]
