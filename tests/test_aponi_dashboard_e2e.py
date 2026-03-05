@@ -432,3 +432,175 @@ def test_reviewer_panel_constitutional_floor_enforced(monkeypatch, tmp_path) -> 
     panel = AponiDashboard._reviewer_reputation_panel()
     for tier_data in panel["tier_calibration"].values():
         assert tier_data["constitutional_floor_enforced"] is True
+
+
+# ---------------------------------------------------------------------------
+# ADAAD-9 Phase 4 — Replay Inspector UI e2e extensions (PR-9-02)
+# ---------------------------------------------------------------------------
+
+def test_replay_inspector_epoch_chain_covers_last_n_epochs(tmp_path, monkeypatch) -> None:
+    """Replay inspector endpoint returns a navigable epoch chain (last N epochs)."""
+    ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
+    for i in range(1, 6):
+        epoch_id = f"epoch-chain-{i:02d}"
+        ledger.append_event("EpochStartEvent", {"epoch_id": epoch_id, "state": {"x": i}})
+        ledger.append_bundle_with_digest(
+            epoch_id,
+            {
+                "bundle_id": f"bundle-chain-{i:02d}",
+                "impact": 0.1 * i,
+                "risk_tier": "low",
+                "certificate": {"bundle_id": f"bundle-chain-{i:02d}"},
+                "strategy_set": [],
+            },
+        )
+        ledger.append_event("EpochEndEvent", {"epoch_id": epoch_id, "state": {"x": i + 1}})
+
+    monkeypatch.setattr(aponi_dashboard, "LineageLedgerV2", lambda: ledger)
+    monkeypatch.setattr(aponi_dashboard, "EvidenceBundleBuilder", _StaticBundleBuilder)
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0)
+    dashboard.start({"status": "ok"})
+    try:
+        port = dashboard._server.server_port
+        with urlopen(f"http://127.0.0.1:{port}/replay/divergence", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    finally:
+        dashboard.stop()
+
+    # All 5 epochs must appear in proof_status (epoch chain coverage)
+    proof_status = payload.get("proof_status", {})
+    for i in range(1, 6):
+        epoch_id = f"epoch-chain-{i:02d}"
+        assert epoch_id in proof_status, (
+            f"Inspector missing epoch {epoch_id} from proof_status; got keys: {list(proof_status.keys())}"
+        )
+
+
+def test_replay_inspector_diff_surfaces_canonical_digest(tmp_path, monkeypatch) -> None:
+    """Replay diff must include canonical_digest for deterministic verification."""
+    ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
+    epoch_id = "epoch-digest-check"
+    ledger.append_event("EpochStartEvent", {"epoch_id": epoch_id, "state": {"x": 10}})
+    ledger.append_bundle_with_digest(
+        epoch_id,
+        {
+            "bundle_id": "bundle-digest-check",
+            "impact": 0.3,
+            "risk_tier": "standard",
+            "certificate": {"bundle_id": "bundle-digest-check"},
+            "strategy_set": [],
+        },
+    )
+    ledger.append_event("EpochEndEvent", {"epoch_id": epoch_id, "state": {"x": 11}})
+
+    monkeypatch.setattr(aponi_dashboard, "LineageLedgerV2", lambda: ledger)
+    monkeypatch.setattr(aponi_dashboard, "EvidenceBundleBuilder", _StaticBundleBuilder)
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0)
+    dashboard.start({"status": "ok"})
+    try:
+        port = dashboard._server.server_port
+        with urlopen(f"http://127.0.0.1:{port}/replay/diff?epoch_id={epoch_id}", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    finally:
+        dashboard.stop()
+
+    assert payload.get("ok") is True
+    assert "export_metadata" in payload
+    digest = payload["export_metadata"].get("digest", "")
+    assert digest.startswith("sha256:"), (
+        f"export_metadata.digest must start with 'sha256:'; got: {digest!r}"
+    )
+
+
+def test_replay_inspector_divergence_alerts_visually_distinguished(tmp_path, monkeypatch) -> None:
+    """Divergence events must appear in proof_status with distinct error markers."""
+    ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
+    epoch_div = "epoch-div-alert"
+    ledger.append_event("EpochStartEvent", {"epoch_id": epoch_div, "state": {"x": 1}})
+    ledger.append_bundle_with_digest(
+        epoch_div,
+        {
+            "bundle_id": "bundle-div-alert",
+            "impact": 0.9,
+            "risk_tier": "high",
+            "certificate": {"bundle_id": "bundle-div-alert"},
+            "strategy_set": [],
+        },
+    )
+    ledger.append_event("EpochEndEvent", {"epoch_id": epoch_div, "state": {"x": 2}})
+
+    monkeypatch.setattr(aponi_dashboard, "LineageLedgerV2", lambda: ledger)
+    monkeypatch.setattr(
+        aponi_dashboard.metrics,
+        "tail",
+        lambda limit=200: [
+            {
+                "event": "replay_divergence",
+                "payload": {"epoch_id": epoch_div, "reason": "canonical_digest_mismatch"},
+            }
+        ],
+    )
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0)
+    dashboard.start({"status": "ok"})
+    try:
+        port = dashboard._server.server_port
+        with urlopen(f"http://127.0.0.1:{port}/replay/divergence", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    finally:
+        dashboard.stop()
+
+    assert payload["divergence_event_count"] >= 1
+    assert epoch_div in payload["proof_status"]
+
+
+def test_replay_inspector_lineage_navigation_from_mutation(tmp_path, monkeypatch) -> None:
+    """From a mutation in the replay trace, full lineage must be navigable."""
+    ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
+
+    for i, (epoch_id, bundle_id, parent) in enumerate([
+        ("epoch-nav-1", "mut-nav-1", None),
+        ("epoch-nav-2", "mut-nav-2", "mut-nav-1"),
+        ("epoch-nav-3", "mut-nav-3", "mut-nav-2"),
+    ]):
+        ledger.append_event("EpochStartEvent", {"epoch_id": epoch_id, "state": {"x": i}})
+        cert = {"bundle_id": bundle_id}
+        if parent:
+            cert["parent_bundle_id"] = parent
+            cert["ancestor_chain"] = [parent]
+        ledger.append_bundle_with_digest(
+            epoch_id,
+            {
+                "bundle_id": bundle_id,
+                "impact": 0.1 * (i + 1),
+                "risk_tier": "low",
+                "certificate": cert,
+                "strategy_set": [],
+            },
+        )
+        ledger.append_event("EpochEndEvent", {"epoch_id": epoch_id, "state": {"x": i + 1}})
+
+    monkeypatch.setattr(aponi_dashboard, "LineageLedgerV2", lambda: ledger)
+    monkeypatch.setattr(aponi_dashboard, "EvidenceBundleBuilder", _StaticBundleBuilder)
+
+    dashboard = aponi_dashboard.AponiDashboard(host="127.0.0.1", port=0)
+    dashboard.start({"status": "ok"})
+    try:
+        port = dashboard._server.server_port
+        with urlopen(f"http://127.0.0.1:{port}/replay/diff?epoch_id=epoch-nav-3", timeout=5) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    finally:
+        dashboard.stop()
+
+    assert payload.get("ok") is True
+    lineage = payload.get("lineage_chain", {})
+    mutations = lineage.get("mutations", [])
+    assert mutations, "lineage_chain.mutations must be non-empty for epoch-nav-3"
+    last = mutations[-1]
+    assert last["mutation_id"] == "mut-nav-3"
+    ancestor_chain = last.get("ancestor_chain", [])
+    assert "mut-nav-2" in ancestor_chain, (
+        f"Expected 'mut-nav-2' in ancestor_chain; got: {ancestor_chain}"
+    )
