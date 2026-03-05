@@ -4,7 +4,7 @@
 from runtime import ROOT_DIR, fitness, metrics
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from runtime.capability_graph import get_capabilities, register_capability
-from runtime.evolution.entropy_discipline import EntropyBudget, deterministic_context, deterministic_token_with_budget
+from runtime.evolution.entropy_discipline import EntropyBudget, derive_seed, deterministic_context, deterministic_token, deterministic_token_with_budget
 from runtime.evolution.fitness import FitnessEvaluator
 from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_pr_lifecycle_event
 from runtime.governance.branch_manager import BranchManager
@@ -37,7 +37,9 @@ __all__ = [
     "SeededDeterminismProvider",
     "default_provider",
     "deterministic_context",
+    "deterministic_token",
     "deterministic_token_with_budget",
+    "derive_seed",
     "emit_pr_lifecycle_event",
     "file_hash",
     "fitness",
