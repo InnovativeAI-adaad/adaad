@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/market_signal_reading.v1.json",
+  "title": "MarketSignalReading",
+  "description": "Validated, lineage-stamped market signal reading emitted by a FeedRegistry adapter.",
+  "type": "object",
+  "required": [
+    "adapter_id",
+    "signal_type",
+    "value",
+    "confidence",
+    "sampled_at",
+    "lineage_digest",
+    "source_uri"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "adapter_id": { "type": "string", "minLength": 1 },
+    "signal_type": {
+      "type": "string",
+      "enum": ["volatility_index", "resource_price", "demand_signal", "composite"]
+    },
+    "value": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "sampled_at": { "type": "number" },
+    "lineage_digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+    "source_uri": { "type": "string", "minLength": 1 },
+    "raw_payload": { "type": "object" },
+    "stale": { "type": "boolean" },
+    "stale_reason": { "type": "string" }
+  }
+}
