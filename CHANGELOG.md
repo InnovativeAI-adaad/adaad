@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### ADAAD-9 — Developer Experience (v1.3)
+
+- **PR-9-01 — Phase 3: Evidence Viewer (D4):** `ui/aponi/evidence_viewer.js` delivers a read-only, bearer-auth-gated evidence bundle inspector within the Aponi IDE. Fetches from `GET /evidence/{bundle_id}` and renders provenance fields (`bundle_id`, `constitution_version`, `scoring_algorithm_version`, `governor_version`, fitness/goal hashes), risk summaries (with high-risk highlighting), export metadata with signer fields, sandbox snapshot, and replay proof chain. `ui/aponi/index.html` gains section 03 · Evidence Viewer and wires `evidence_viewer.js` and `proposal_editor.js` as separate script modules. `tests/test_evidence_viewer.py` added: 17 tests covering schema conformance against `schemas/evidence_bundle.v1.json`, provenance field presence, auth gating, determinism, and high-risk flag propagation.
+
 ### ADAAD-8 — Policy Simulation Mode (v1.2)
 
 - **PR-10 — DSL Grammar + Constraint Interpreter:** `runtime/governance/simulation/constraint_interpreter.py` delivers `SimulationPolicy` (frozen dataclass, `simulation=True` structurally enforced) and `interpret_policy_block()`. 10 constraint types: approval thresholds, risk ceilings, rate limits, complexity deltas, tier lockdowns, rule assertions, coverage floors, entropy caps, reviewer escalation, lineage depth requirements. `schemas/governance_simulation_policy.v1.json` schema-enforces `simulation: true`. 50 tests.
