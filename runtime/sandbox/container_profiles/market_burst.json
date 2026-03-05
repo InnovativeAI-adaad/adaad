@@ -1,0 +1,14 @@
+{
+  "profile_id": "market_burst",
+  "version": "1.0.0",
+  "tier": "burst",
+  "description": "Low market pressure — expanded cgroup v2 resource allocation",
+  "cpu_quota_percent": 80,
+  "memory_limit_mb": 512,
+  "memory_swap_limit_mb": 512,
+  "pids_limit": 128,
+  "disk_write_bps": 20971520,
+  "disk_read_bps": 104857600,
+  "network_ingress_bps": 0,
+  "network_egress_bps": 0
+}

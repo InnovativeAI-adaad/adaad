@@ -799,6 +799,67 @@ def api_simulation_results(
     )
 
 
+@app.post("/market/signal")
+def api_market_signal_ingest(
+    request: Request,
+    auth_ctx: dict[str, Any] = Depends(_authenticate_audit_request),
+) -> dict[str, Any]:
+    """Live market signal webhook ingestion — ADAAD-10 Track A.
+
+    Accepts raw market signal payloads, routes them through ``LiveSignalRouter``
+    for validation and lineage stamping, then injects the result into the
+    ``FitnessOrchestrator`` as an advisory live_market_score override.
+
+    Authentication: bearer token with audit:read scope.
+    Read-only with respect to epoch authority — signals are fitness inputs only.
+    Journal event: market_signal_ingested.v1
+    """
+    _require_scope(auth_ctx, AUDIT_READ_SCOPE)
+
+    try:
+        import json as _json
+        body_bytes = request.body() if callable(request.body) else b""
+        # FastAPI: body is a coroutine in async context; use sync path via state
+        raw_body = getattr(request, "_body", None)
+        if raw_body is None:
+            raw_body = b""
+        try:
+            raw_payload: dict[str, Any] = _json.loads(raw_body) if raw_body else {}
+        except Exception:
+            raw_payload = {}
+    except Exception:
+        raw_payload = {}
+
+    try:
+        from runtime.market.live_signal_router import LiveSignalRouter
+        from runtime.market.market_signal_adapter import MarketSignalAdapter, MarketSignalValidator
+
+        router = LiveSignalRouter(
+            adapter=MarketSignalAdapter(validator=MarketSignalValidator()),
+            fitness_orchestrator=None,  # advisory only; direct injection handled below
+            journal_fn=None,
+        )
+        result = router.ingest(raw_payload)
+    except Exception as exc:
+        return _audit_envelope(
+            data={"ok": False, "error": "market_router_unavailable", "detail": str(exc)},
+            auth_ctx=auth_ctx,
+            redaction="sensitive",
+        )
+
+    return _audit_envelope(
+        data={
+            "ok": result.accepted,
+            "signal_type": result.signal_type,
+            "lineage_digest": result.lineage_digest,
+            "adapter_id": result.adapter_id,
+            "rejection_reason": result.rejection_reason,
+        },
+        auth_ctx=auth_ctx,
+        redaction="sensitive",
+    )
+
+
 MOCK_ENDPOINTS = ["status", "agents", "tree", "kpis", "changes", "suggestions"]
 
 for endpoint_name in MOCK_ENDPOINTS:

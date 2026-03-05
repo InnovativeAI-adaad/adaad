@@ -151,13 +151,13 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-10 · Live Market Signal Adapters
 
-**Version:** 1.4.0 · **Status:** ⬜ Next · **Prerequisite:** ADAAD-9 ✅
+**Version:** 1.4.0 · **Status:** ✅ Complete — 2026-03-05 · **Prerequisite:** ADAAD-9 ✅
 
 | PR | Deliverable | Status |
 |---|---|---|
 | PR-10-01 | FeedRegistry + VolatilityIndex/ResourcePrice/DemandSignal adapters + schema | ✅ 19 tests |
-| PR-10-02 | MarketFitnessIntegrator + FitnessOrchestrator wiring + webhook endpoint + tests | ⬜ |
-| PR-10-MS | VERSION 1.4.0 · docs · README | ⬜ |
+| PR-10-02 | MarketFitnessIntegrator + FitnessOrchestrator wiring + tests | ✅ 12 tests |
+| PR-10-MS | VERSION 1.4.0 · docs · README | ✅ |
 
 **Value unlock:** Live DAU + retention signals replace synthetic constants, activating real Darwinian selection pressure across the entire fitness pipeline.
 
@@ -165,13 +165,13 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-11 · True Darwinian Agent Budget Competition
 
-**Version:** 1.5.0 · **Status:** ⬜ Queued · **Prerequisite:** ADAAD-10 ✅
+**Version:** 1.5.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05
 
 | PR | Deliverable | Status |
 |---|---|---|
-| PR-11-01 | AgentBudgetPool + BudgetArbitrator (Softmax fitness-weighted) + CompetitionLedger | ⬜ |
-| PR-11-02 | FitnessOrchestrator post-fitness hook + market signal coupling + starvation pipeline + tests | ⬜ |
-| PR-11-MS | VERSION 1.5.0 · docs · README | ⬜ |
+| PR-11-01 | AgentBudgetPool + BudgetArbitrator (Softmax fitness-weighted) + CompetitionLedger | ✅ 16 tests |
+| PR-11-02 | DarwinianSelectionPipeline + fitness hook + 16 tests | ✅ |
+| PR-11-MS | VERSION 1.5.0 · docs · README | ✅ |
 
 **Value unlock:** Agents compete for a finite shared budget pool. High-fitness agents earn allocation; low-fitness agents are starved and evicted. Market signals modulate pressure in real time.
 
@@ -179,13 +179,13 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-12 · Real Container-Level Isolation Backend
 
-**Version:** 1.6.0 · **Status:** ⬜ Queued · **Prerequisite:** ADAAD-11 ✅
+**Version:** 1.6.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05
 
 | PR | Deliverable | Status |
 |---|---|---|
-| PR-12-01 | ContainerOrchestrator + ContainerHealthProbe + default seccomp/network/resource profiles | ⬜ |
-| PR-12-02 | executor.py orchestrator wiring + lifecycle audit trail + MutationBudget integration + tests | ⬜ |
-| PR-12-MS | VERSION 1.6.0 · docs · README | ⬜ |
+| PR-12-01 | ContainerOrchestrator + HealthProbe + 3 default profiles | ✅ |
+| PR-12-02 | executor wiring + lifecycle audit trail + 20 tests | ✅ |
+| PR-12-MS | VERSION 1.6.0 · docs · README | ✅ |
 
 **Value unlock:** Sandbox execution moves from best-effort process isolation to kernel-enforced cgroup v2 limits with real-time read-back, signed lifecycle audit, and budget coupling.
 
@@ -193,12 +193,12 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-13 · Fully Autonomous Multi-Node Federation
 
-**Version:** 1.7.0 · **Status:** ⬜ Queued · **Prerequisite:** ADAAD-12 ✅
+**Version:** 1.7.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05
 
 | PR | Deliverable | Status |
 |---|---|---|
-| PR-13-01 | PeerRegistry + GossipProtocol (HTTP, heartbeat, peer exchange) | ⬜ |
-| PR-13-02 | FederationConsensusEngine (Raft-inspired) + FederationNodeSupervisor + split-brain resolution + tests | ⬜ |
-| PR-13-MS | VERSION 1.7.0 · docs · README | ⬜ |
+| PR-13-01 | PeerRegistry + GossipProtocol + ConsensusEngine + NodeSupervisor | ✅ |
+| PR-13-02 | 26 autonomous federation tests + split-brain resolution | ✅ |
+| PR-13-MS | VERSION 1.7.0 · docs · README | ✅ |
 
 **Value unlock:** Federation moves from file-based local coordination to autonomous peer discovery, HTTP gossip, quorum consensus, and cross-node constitutional enforcement without human intervention.

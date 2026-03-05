@@ -1,0 +1,14 @@
+{
+  "profile_id": "market_constrained",
+  "version": "1.0.0",
+  "tier": "constrained",
+  "description": "High market pressure — reduced cgroup v2 resource allocation",
+  "cpu_quota_percent": 25,
+  "memory_limit_mb": 128,
+  "memory_swap_limit_mb": 128,
+  "pids_limit": 32,
+  "disk_write_bps": 5242880,
+  "disk_read_bps": 26214400,
+  "network_ingress_bps": 0,
+  "network_egress_bps": 0
+}

@@ -1,0 +1,10 @@
+{
+  "profile_id": "default_network",
+  "version": "1.0.0",
+  "description": "Default ADAAD container network egress policy — deny all external",
+  "mode": "deny_all",
+  "egress_allowlist": [],
+  "ingress_allowlist": [],
+  "loopback_allowed": true,
+  "inter_container_allowed": false
+}

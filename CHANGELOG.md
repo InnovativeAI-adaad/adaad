@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### ADAAD-14 — Cross-Track Convergence (v1.8)
+
+- **PR-14-03 — MarketDrivenContainerProfiler: market × container convergence:** `runtime/sandbox/market_driven_profiler.py` — `MarketDrivenContainerProfiler` uses `score_provider` callable (wrapping `FeedRegistry` or `FederatedSignalBroker`) to select `ContainerProfileTier` (CONSTRAINED / STANDARD / BURST); thresholds: <0.35 → CONSTRAINED (cpu=25%, mem=128MB), ≥0.65 → BURST (cpu=80%, mem=512MB); confidence guard (below 0.30 → STANDARD forced, `overridden=True`); `ProfileSelection` dataclass with lineage digest + journal event; `profile_for_slot()` convenience returning resource dict directly. Two new container profiles: `container_profiles/market_constrained.json` + `market_burst.json`. Factory helpers: `make_profiler_from_feed_registry()` + `make_profiler_from_federated_broker()`. Authority invariant: profiler is advisory; ContainerOrchestrator retains pool authority. 22 tests in `tests/test_market_driven_profiler.py`.
+
+: Darwinian × federation convergence:** `runtime/evolution/budget/cross_node_arbitrator.py` — `CrossNodeBudgetArbitrator` merges peer fitness reports (via `FederationBudgetGossip` + `GossipProtocol`) with local `BudgetArbitrator` for cluster-wide Softmax reallocation; `PeerFitnessReport` with 45 s freshness TTL; `ClusterArbitrationResult` with `effective_evictions` quorum gate (blocks eviction when >50% cluster agents evicted and `ConsensusEngine.has_quorum()` returns false); lineage digest per cluster epoch; allocation broadcast after each run. Authority invariant: writes only to local AgentBudgetPool; never approves mutations. 23 tests in `tests/test_cross_node_budget_arbitrator.py`.
+
+: market × federation convergence:** `runtime/market/federated_signal_broker.py` — `FederatedSignalBroker` bridges `FeedRegistry` live composite readings into `GossipProtocol` broadcasts; `FederationMarketGossip` serialises `MarketSignalReading` ↔ `GossipEvent` (`market_signal_broadcast.v1`); `PeerReading` dataclass with freshness guard (60 s TTL, zero-confidence filter, stale-flag). `cluster_composite()` produces confidence-weighted aggregate across all alive nodes with graceful fallback to local reading on peer absence/failure. Authority invariant: broker never calls GovernanceGate. 24 tests in `tests/market/test_federated_signal_broker.py`.
+
 ### ADAAD-10 — Live Market Signal Adapters (v1.4)
 
 - **PR-10-02 — MarketFitnessIntegrator + FitnessOrchestrator live wiring:** `runtime/market/market_fitness_integrator.py` — confidence-weighted composite from FeedRegistry injected into FitnessOrchestrator scoring context as `simulated_market_score`. Lineage digest + signal source propagated. Fail-closed: broken registry yields synthetic fallback. Journal event `market_fitness_signal_enriched.v1`. 12 tests in `tests/market/test_market_fitness_integrator.py` including end-to-end orchestrator integration.
@@ -193,6 +201,63 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 - Added Cryovant gating with ledger/keys scaffolding and certification checks to block uncertified Dream/Beast execution.
 - Normalized imports to canonical roots and consolidated metrics into `reports/metrics.jsonl`.
 - Introduced deterministic orchestrator boot order, warm pool startup, and minimal Aponi dashboard endpoints.
+
+## [Unreleased] — ADAAD-10 · v1.4.0
+
+### ADAAD-10 Track A — Live Market Signal Adapters
+
+- **PR-10-02 — POST /market/signal webhook endpoint + integration tests:** `server.py` gains `POST /market/signal` bearer-auth-gated endpoint routing raw payloads through `LiveSignalRouter` → lineage-stamped `MarketSignalReading` → fitness advisory injection; journal event `market_signal_ingested.v1`. `tests/test_market_fitness_integrator.py`: 11 tests covering integrator bridging (live, synthetic fallback, lineage propagation, journal), `FitnessOrchestrator.inject_live_signal()` override (score override, no-override passthrough, clamping, bad epoch silent drop). ADAAD-10 Track A complete.
+
+- **PR-10-01 — MarketFitnessIntegrator + FitnessOrchestrator live signal injection:** `runtime/market/market_fitness_integrator.py` bridges `FeedRegistry.composite_reading()` into `FitnessOrchestrator.inject_live_signal()` replacing the static `simulated_market_score` with confidence-weighted live readings; synthetic fallback (0.5, zero confidence) on source failure. `runtime/evolution/fitness_orchestrator.py`: `inject_live_signal()` method + `_apply_live_override()` wired into `score()` pre-snapshot. `runtime/market/__init__.py` updated. Authority invariant: GovernanceGate retains final mutation-approval authority; market scores are fitness inputs only.
+
+## [1.4.0] — 2026-03-05 · ADAAD-10 Live Market Signal Adapters
+
+Live economic signals replace synthetic constants across the entire fitness pipeline.
+
+**FeedRegistry** (`runtime/market/feed_registry.py`): deterministic adapter ordering, TTL caching, fail-closed stale guard, confidence-weighted composite. Three concrete adapters: `VolatilityIndexAdapter` (inverted market stress), `ResourcePriceAdapter` (normalised compute cost), `DemandSignalAdapter` (DAU/WAU/retention composite).
+
+**MarketFitnessIntegrator** (`runtime/market/market_fitness_integrator.py`): bridges FeedRegistry composite into `FitnessOrchestrator.score()` as live `simulated_market_score`. Lineage digest + signal source propagated. Journal event `market_fitness_signal_enriched.v1`.
+
+**Schema**: `schemas/market_signal_reading.v1.json` — validated signal reading contract.
+
+Authority invariant: adapters are read-only; they influence fitness scoring but cannot approve mutations.
+
+
+### ADAAD-11 Track B — Darwinian Agent Budget Competition
+
+- **PR-11-02 — DarwinianSelectionPipeline + tests (ADAAD-11 complete):** `runtime/evolution/budget/darwinian_pipeline.py` post-fitness hook couples `FitnessOrchestrator` scores to `BudgetArbitrator` completing the Darwinian selection loop; `darwinian_selection_complete.v1` journal event. `tests/test_darwinian_budget.py`: 16 tests — AgentBudgetPool (invariants, reallocation, eviction, ledger), BudgetArbitrator (Softmax, starvation, market scalar), CompetitionLedger (append-only, persist, audit export), FitnessOrchestrator post-fitness wire. ADAAD-11 Track B complete.
+- **PR-11-01 — AgentBudgetPool + BudgetArbitrator + CompetitionLedger:** `runtime/evolution/budget/` package: `pool.py` (finite pool, append-only allocation ledger, starvation detection, eviction), `arbitrator.py` (Softmax fitness-weighted reallocation, market pressure scalar, starvation accumulation, eviction at threshold), `competition_ledger.py` (append-only JSONL-backed event log, eviction history, audit export, sha256 lineage digests). Authority invariant: arbitrator writes to pool only; never approves or signs mutations.
+
+### ADAAD-12 Track C — Real Container-Level Isolation Backend
+
+- **PR-12-02 — executor.py orchestrator wiring + lifecycle audit trail + tests:** `tests/test_container_orchestrator.py`: 20 tests covering ContainerPool (bounded pool, acquire/release/quarantine), ContainerOrchestrator (allocate, mark_running, release, health checks, journal events, pool_status), ContainerHealthProbe (liveness/readiness, quarantine detection, empty container_id), lifecycle FSM (IDLE→PREPARING→RUNNING→IDLE/QUARANTINE, lineage digest on transition). ADAAD_SANDBOX_CONTAINER_ROLLOUT=true activates ContainerOrchestrator as default. ADAAD-12 Track C complete.
+- **PR-12-01 — ContainerOrchestrator + ContainerHealthProbe + default profiles:** `runtime/sandbox/container_orchestrator.py`: `ContainerOrchestrator` (pool management, lifecycle state machine IDLE→PREPARING→RUNNING→DONE/FAILED/QUARANTINE, journal events for allocation/release/health), `ContainerPool` (bounded slot ceiling, acquire/release, quarantine), `ContainerSlot` (sha256 lineage digest per transition). `runtime/sandbox/container_health.py`: `ContainerHealthProbe` (liveness + readiness checks, graceful degradation in CI). `runtime/sandbox/container_profiles/`: `default_seccomp.json` (syscall allowlist), `default_network.json` (deny-all egress), `default_resources.json` (cgroup v2 quotas: 50% CPU, 256MB RAM, 64 PIDs). Authority invariant: container backend does not expand mutation authority.
+
+### ADAAD-13 Track D — Fully Autonomous Multi-Node Federation
+
+- **PR-13-02 — Federation integration tests + split-brain resolution (ADAAD-13 complete):** `tests/test_federation_autonomous.py`: 26 tests — PeerRegistry (registration, heartbeat, stale/alive TTL detection, partition threshold, deregister, idempotent re-registration), GossipProtocol (valid/malformed event handling, queue drain, digest format), FederationConsensusEngine (initial follower, election→candidate→leader, majority vote, log append leader-only, commit_entry, quorum gate for policy_change, heartbeat reset, vote grant/deny), FederationNodeSupervisor (healthy/partitioned tick, safe_mode_active, partition journal event). ADAAD-13 Track D complete.
+- **PR-13-01 — PeerRegistry + GossipProtocol + FederationConsensusEngine + FederationNodeSupervisor:** `runtime/governance/federation/peer_discovery.py`: `PeerRegistry` (TTL-based liveness, stale/alive partition detection, idempotent registration, heartbeat update, partition threshold check), `GossipProtocol` (HTTP broadcast to alive peers, inbound event validation + queue, sha256 lineage digest per event, best-effort non-blocking). `runtime/governance/federation/consensus.py`: `FederationConsensusEngine` (Raft-inspired — leader election with term-based majority vote, append-only log with lineage digests, constitutional quorum gate for policy changes, heartbeat/rejoin). `runtime/governance/federation/node_supervisor.py`: `FederationNodeSupervisor` (heartbeat tick, partition detection → safe mode, autonomous rejoin broadcast, degraded state tracking). Authority invariant: consensus provides ordering only; GovernanceGate retains execution authority.
+
+## [1.7.0] — 2026-03-05 · ADAAD-13 Autonomous Multi-Node Federation
+
+### ADAAD-10 · Live Market Signal Adapters
+FeedRegistry + VolatilityIndex/ResourcePrice/DemandSignal adapters + MarketSignalReading schema + MarketFitnessIntegrator + FitnessOrchestrator.inject_live_signal() + POST /market/signal webhook. Live DAU/retention signals replace synthetic constants activating real Darwinian selection pressure.
+
+### ADAAD-11 · Darwinian Agent Budget Competition
+AgentBudgetPool + BudgetArbitrator (Softmax, market pressure scalar, starvation/eviction) + CompetitionLedger (append-only, sha256 lineage) + DarwinianSelectionPipeline (post-fitness hook). High-fitness agents earn allocation; low-fitness agents starve and are evicted.
+
+### ADAAD-12 · Real Container-Level Isolation Backend
+ContainerOrchestrator (pool lifecycle FSM, health probes, journal events) + ContainerHealthProbe + 3 default profiles (seccomp/network/resources). ADAAD_SANDBOX_CONTAINER_ROLLOUT=true activates kernel-enforced cgroup v2 limits.
+
+### ADAAD-13 · Fully Autonomous Multi-Node Federation
+PeerRegistry (TTL liveness, partition detection) + GossipProtocol (HTTP broadcast, inbound queue, sha256 lineage) + FederationConsensusEngine (Raft-inspired — term election, log replication, constitutional quorum gate) + FederationNodeSupervisor (heartbeat, safe mode, autonomous rejoin). Federation moves from file-based to autonomous peer discovery, quorum consensus, and cross-node constitutional enforcement.
+
+**Authority invariants maintained throughout all four milestones:**
+- Market adapters influence fitness only; GovernanceGate retains mutation authority.
+- Budget arbitration reallocates pool shares; never approves mutations.
+- Container backend hardens execution surface; does not expand mutation authority.
+- Consensus provides ordering; GovernanceGate retains execution authority for cross-node policy changes.
+
 
 ## [1.3.0] — 2026-03-05 · ADAAD-9 Developer Experience
 
