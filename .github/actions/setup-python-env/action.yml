@@ -1,0 +1,35 @@
+name: Setup Python environment
+description: Configure Python with shared pip cache settings and optional dependency install.
+
+inputs:
+  python-version:
+    description: Python version to use.
+    required: false
+    default: "3.11.9"
+  requirements-file:
+    description: Requirements file to install when install-deps is true.
+    required: false
+    default: requirements.server.txt
+  install-deps:
+    description: Install dependencies from requirements-file.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: pip
+        cache-dependency-path: |
+          requirements*.txt
+          pyproject.toml
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        python -m pip install --upgrade pip
+        pip install -r "${{ inputs.requirements-file }}"

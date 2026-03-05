@@ -157,13 +157,9 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Validate governance policy schemas
         run: python scripts/validate_governance_schemas.py
 
@@ -172,9 +168,7 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
+      - uses: ./.github/actions/setup-python-env
       - name: Validate strict documentation snippets
         run: python scripts/validate_readme_alignment.py --format json
       - name: Validate markdown link and image integrity
@@ -185,9 +179,7 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
+      - uses: ./.github/actions/setup-python-env
       - name: Validate setup-python version pinning
         run: python scripts/check_workflow_python_version.py --expected-version 3.11.9
 
@@ -196,9 +188,7 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
+      - uses: ./.github/actions/setup-python-env
       - name: Verify required signed artifacts
         run: PYTHONPATH=. python scripts/verify_critical_artifacts.py
 
@@ -207,13 +197,9 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Run full test suite
         run: PYTHONPATH=. pytest tests/ -q
 
@@ -222,13 +208,9 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Run governance tests
         run: PYTHONPATH=. pytest tests/ -k governance -q
 
@@ -237,9 +219,7 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
+      - uses: ./.github/actions/setup-python-env
       - name: Run determinism lint
         run: python tools/lint_determinism.py runtime/ security/ adaad/orchestrator/ app/main.py
 
@@ -249,9 +229,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
+      - uses: ./.github/actions/setup-python-env
       - name: Run import boundary lint
         # No pip install required — lint_import_paths.py uses stdlib only.
         run: python tools/lint_import_paths.py
@@ -261,13 +239,9 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Run fast confidence tests
         run: PYTHONPATH=. pytest tests/determinism/ tests/recovery/test_tier_manager.py -k "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode" -q
 
@@ -277,13 +251,9 @@ jobs:
     if: needs.classify.outputs.run_strict_replay == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Verify strict replay
         env:
           ADAAD_ENV: dev
@@ -298,13 +268,9 @@ jobs:
     if: needs.classify.outputs.run_evidence_suite == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Run evidence/sandbox tests
         run: PYTHONPATH=. pytest tests/sandbox/ -q
 
@@ -314,13 +280,9 @@ jobs:
     if: needs.classify.outputs.run_promotion_suite == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Run promotion/governance tests
         run: PYTHONPATH=. pytest tests/governance/ tests/test_promotion_policy.py tests/test_promotion_state_machine.py -q
 
@@ -331,13 +293,9 @@ jobs:
     if: needs.classify.outputs.run_redteam_subset == 'true'
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: ./.github/actions/setup-python-env
         with:
-          python-version: "3.11.9"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.server.txt
+          install-deps: "true"
       - name: Run deterministic red-team critical subset
         run: PYTHONPATH=. python tools/run_redteam_harness.py --subset critical --output reports/redteam/critical.json
 
@@ -346,9 +304,7 @@ jobs:
     needs: classify
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11.9"
+      - uses: ./.github/actions/setup-python-env
       - name: Validate claims evidence matrix links
         run: python scripts/validate_release_evidence.py
       - name: Validate release hardening claims against runtime capability checks

@@ -139,3 +139,22 @@ It runs a matrix over generated fixtures and enforces fail-closed validation lan
 - sandboxed execution checks using `runtime.test_sandbox` and `runtime/sandbox/*` integration.
 
 Each matrix leg stores deterministic evidence under `tests/generated/evidence/<fixture>/` and lane reports under `tests/generated/reports/<fixture>/`, then uploads both as CI artifacts together with `metadata-summary.json` for dashboard ingestion.
+
+## Python dependency cache policy in CI
+
+`CI` now uses a shared composite action at `.github/actions/setup-python-env/action.yml` for all Python jobs in `.github/workflows/ci.yml`.
+
+- `actions/setup-python@v5` is configured with `cache: pip`.
+- `cache-dependency-path` includes both `requirements*.txt` and `pyproject.toml`.
+- Jobs that execute tests or tooling with third-party dependencies set `install-deps: "true"` to run the same pip upgrade and requirements install logic.
+- Jobs that only execute stdlib scripts still use the same cache configuration for consistency, without forcing unnecessary installs.
+
+Cache invalidation is automatic when any file matching `requirements*.txt` or `pyproject.toml` changes, because those files are included in the dependency hash.
+
+Expected performance impact (typical PR runs):
+
+- First run after dependency changes: near current baseline (cache miss).
+- Subsequent runs with unchanged dependency manifests: reduced setup/install wall time, typically saving ~30-60 seconds per Python job depending on runner load and wheel availability.
+- Overall CI time improves most on workflows with multiple dependency-installing jobs (`schema-validation`, `full-test-suite`, `governance-tests`, `confidence-fast`, and conditional critical suites).
+
+This optimization preserves fail-closed behavior: no mandatory gate was changed to `continue-on-error`, and existing gating semantics remain intact.
