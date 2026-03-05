@@ -30,7 +30,8 @@
         "replay_verified",
         "promotion_policy_evaluated",
         "sandbox_preflight_passed",
-        "forensic_bundle_exported"
+        "forensic_bundle_exported",
+        "reviewer_action_outcome"
       ]
     },
     "pr_number": {"type": "integer", "minimum": 1},
@@ -145,6 +146,45 @@
               "bundle_uri": {"type": "string", "minLength": 1},
               "bundle_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
               "exported_at": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "reviewer_action_outcome"}}},
+      "then": {
+        "properties": {
+          "payload": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reviewer_id",
+              "review_id",
+              "mutation_id",
+              "decision",
+              "latency_seconds",
+              "epoch_id",
+              "scoring_algorithm_version"
+            ],
+            "properties": {
+              "reviewer_id": {"type": "string", "minLength": 1},
+              "review_id": {"type": "string", "minLength": 1},
+              "mutation_id": {"type": "string", "minLength": 1},
+              "decision": {
+                "type": "string",
+                "enum": ["approve", "reject", "abstain", "escalate"]
+              },
+              "latency_seconds": {"type": "number", "minimum": 0},
+              "overridden_by_authority": {"type": "boolean"},
+              "override_authority_level": {"type": "string", "minLength": 1},
+              "long_term_mutation_impact_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+              "governance_alignment_score": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+              "epoch_id": {"type": "string", "minLength": 1},
+              "scoring_algorithm_version": {"type": "string", "minLength": 1},
+              "sla_seconds": {"type": "integer", "minimum": 1},
+              "tier": {"type": "string", "minLength": 1},
+              "constitutional_floor_enforced": {"type": "boolean"}
             }
           }
         }
