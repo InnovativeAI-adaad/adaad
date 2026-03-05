@@ -20,8 +20,6 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from core.random_control import DeterministicSeedManager
-
 from adaad.agents.base_agent import stage_offspring
 from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.app_layer import (
@@ -30,8 +28,7 @@ from runtime.api.app_layer import (
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
     default_provider,
-    deterministic_context,
-    deterministic_token_with_budget,
+    deterministic_token,
     metrics,
     require_replay_safe_provider,
 )
@@ -70,7 +67,6 @@ class DreamMode:
             self.provider = default_provider()
         self._require_replay_safe_provider()
         self.aggression = self._clamp_aggression(aggression)
-        self.seed_manager = DeterministicSeedManager(self.provider.next_token(label="dream-global-seed", length=16))
         self.entropy_budget = EntropyBudget()
         self.fitness_evaluator = FitnessEvaluator()
 
@@ -222,25 +218,18 @@ class DreamMode:
 
         metrics.log(event_type="evolution_cycle_decision", payload={"selected_agent": selected}, level="INFO", element_id=ELEMENT_ID)
         self._require_replay_safe_provider()
-        if deterministic_context(replay_mode=self.replay_mode, recovery_tier=self.recovery_tier):
-            seed = self.provider.next_token(
-                label=f"dream_seed:{epoch_id}:{selected}:{bundle_id}",
-                length=32,
-            )
-            numeric_token, self.entropy_budget = deterministic_token_with_budget(
-                seed,
-                f"mutation_{bundle_id}",
-                budget=self.entropy_budget,
-            )
-            token = str(numeric_token)
-        else:
-            token = self.provider.next_token(
-                label=f"dream_token:{epoch_id}:{selected}:{bundle_id}",
-                length=16,
-            )
-        profile = self.mutation_profile()
-        namespace_seed = self.seed_manager.derive(f"dream:{selected}:{bundle_id}").seed
-        mutation_content = f"{selected}-mutation-{token}-a{profile['aggression']:.2f}-n{namespace_seed}"
+        # Token is derived exclusively from stable replay inputs — never from provider
+        # call-count position. This guarantees identical mutation_content for identical
+        # (epoch_id, bundle_id, agent_id) inputs across any number of run_cycle calls
+        # on the same instance, satisfying the strict-mode reproducibility invariant.
+        token = deterministic_token(
+            epoch_id=epoch_id,
+            bundle_id=bundle_id,
+            agent_id=selected,
+            label="dream_token",
+            length=16,
+        )
+        mutation_content = f"{selected}-mutation-{token}"
         handoff_contract = {
             "schema_version": "1.0",
             "issued_at": self.provider.iso_now(),

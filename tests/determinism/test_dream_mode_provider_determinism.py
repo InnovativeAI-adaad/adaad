@@ -53,7 +53,14 @@ def test_non_strict_mode_uses_provider_token_generation(tmp_path: Path) -> None:
         dream.run_cycle(agent_id="sample_agent", epoch_id="epoch-1", bundle_id="bundle-a")
 
         content = stage_offspring.call_args.kwargs["content"]
-    expected_token = provider.next_token(label="dream_token:epoch-1:sample_agent:bundle-a", length=16)
+    from runtime.evolution.entropy_discipline import deterministic_token
+    expected_token = deterministic_token(
+        epoch_id="epoch-1",
+        bundle_id="bundle-a",
+        agent_id="sample_agent",
+        label="dream_token",
+        length=16,
+    )
     assert content == f"sample_agent-mutation-{expected_token}"
 
 
