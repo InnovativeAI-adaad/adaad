@@ -1,37 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Market Fitness Integrator — ADAAD-10 PR-10-01.
+"""MarketFitnessIntegrator — ADAAD-10 PR-10-02.
 
-Bridges live ``MarketSignalReading`` objects from the FeedRegistry into
-``FitnessOrchestrator.inject_live_signal()`` so the economic regime weight
-and live_market_score are driven by real signals instead of the static
-``simulated_market_score`` constant.
+Bridges the FeedRegistry composite score into FitnessOrchestrator's
+simulated_market_score component, replacing the static synthetic constant
+with a live, confidence-weighted signal.
 
-Architecture
-------------
-::
-
-    FeedRegistry.composite_reading()
-         │  confidence-weighted blend of all registered adapters
-         ▼
-    MarketFitnessIntegrator.build_live_payload()
-         │  normalised fitness contribution, lineage anchoring
-         ▼
-    FitnessOrchestrator.inject_live_signal(payload)
-         │  updates epoch regime-weight override (advisory; GovernanceGate authoritative)
-         ▼
-    Audit journal: market_fitness_integrated.v1
-
-Invariants
-----------
-- Integrator is read-only with respect to epoch snapshots; it never mutates
-  a frozen snapshot.
-- A stale or failed registry reading falls back to synthetic baseline value;
-  ``live_market_score`` is never set to 0.0 from a transient source failure.
-- Every integration event is journalled with lineage_digest for traceability.
-- The GovernanceGate retains final mutation-approval authority regardless of
-  what signal value the integrator supplies.
+Invariants:
+  - Never raises; on error injects cached/synthetic fallback.
+  - Signal lineage digest propagated into fitness context for auditability.
+  - Only place that writes simulated_market_score into the fitness context.
 """
-
 from __future__ import annotations
 
 import logging
@@ -41,137 +19,78 @@ from typing import Any, Dict, Optional
 
 log = logging.getLogger(__name__)
 
-_EVENT_TYPE = "market_fitness_integrated.v1"
-
-# Fallback score used when registry returns no usable reading
-_SYNTHETIC_BASELINE = 0.5
-_SYNTHETIC_CONFIDENCE = 0.0  # Zero confidence flags it as synthetic
+_EVENT_TYPE    = "market_fitness_signal_enriched.v1"
+_FALLBACK_SCORE = 0.50
 
 
 @dataclass(frozen=True)
-class IntegrationResult:
-    """Result of a single market→fitness integration cycle."""
-
-    live_market_score: float       # normalised [0.0, 1.0] for fitness_orchestrator
-    confidence: float              # data freshness/quality [0.0, 1.0]
-    lineage_digest: str            # sha256 from the underlying reading
-    adapter_id: str                # which adapter dominated the composite
-    signal_type: str               # volatility_index | resource_price | demand_signal | composite
-    sampled_at: float              # UNIX timestamp of the underlying reading
-    injected_at: float             # UNIX timestamp when this integration ran
-    is_synthetic: bool             # True iff feed returned no live reading
+class MarketEnrichmentRecord:
+    composite_score: float
+    signal_source:   str
+    lineage_digest:  str
+    enriched_at:     float
+    adapter_count:   int
 
 
 class MarketFitnessIntegrator:
-    """Bridges FeedRegistry live readings into FitnessOrchestrator.
+    """Enriches a fitness scoring context with live market signal."""
 
-    Parameters
-    ----------
-    feed_registry:
-        A ``FeedRegistry`` instance (or compatible duck-type) exposing
-        ``composite_reading() -> Optional[MarketSignalReading]``.
-    fitness_orchestrator:
-        A ``FitnessOrchestrator`` instance exposing
-        ``inject_live_signal(payload: Dict) -> None``.
-    journal_fn:
-        Optional callable ``(event_type: str, payload: dict) -> None`` for
-        audit journalling.  When ``None``, journalling is silently skipped.
-    """
-
-    def __init__(
-        self,
-        *,
-        feed_registry: Any,
-        fitness_orchestrator: Any,
-        journal_fn: Any = None,
-    ) -> None:
-        self._registry = feed_registry
-        self._orchestrator = fitness_orchestrator
+    def __init__(self, *, registry: Any, journal_fn: Any = None,
+                 fallback_score: float = _FALLBACK_SCORE) -> None:
+        self._registry   = registry
         self._journal_fn = journal_fn
+        self._fallback   = fallback_score
+        self._last_record: Optional[MarketEnrichmentRecord] = None
 
-    def integrate(self, *, epoch_id: str) -> IntegrationResult:
-        """Run one integration cycle for the given epoch.
+    def enrich(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        score, digest, source, n = self._fetch_signal()
+        enriched = dict(context)
+        enriched["simulated_market_score"]       = score
+        enriched["market_signal_lineage_digest"] = digest
+        enriched["market_signal_source"]         = source
+        enriched["market_signal_enriched_at"]    = time.time()
+        record = MarketEnrichmentRecord(score, source, digest, time.time(), n)
+        self._last_record = record
+        self._emit_journal(record, str(context.get("epoch_id", "unknown")))
+        return enriched
 
-        Returns an ``IntegrationResult`` describing what was injected.
-        Never raises — failures degrade gracefully to synthetic baseline.
-        """
-        reading = self._safe_composite_reading()
-        result = self._build_result(reading)
-        self._inject(epoch_id=epoch_id, result=result)
-        self._journal(epoch_id=epoch_id, result=result)
-        return result
+    @property
+    def last_enrichment(self) -> Optional[MarketEnrichmentRecord]:
+        return self._last_record
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
-    def _safe_composite_reading(self) -> Optional[Any]:
+    def _fetch_signal(self):
         try:
-            return self._registry.composite_reading()
-        except Exception as exc:  # pragma: no cover
-            log.warning("MarketFitnessIntegrator: composite_reading() failed — %s", exc)
-            return None
+            readings  = self._registry.fetch_all()
+            n         = len(readings)
+            live      = [r for r in readings if r.confidence > 0.0]
+            if not live:
+                return self._fallback, "sha256:" + "0" * 64, "synthetic", n
+            total_conf = sum(r.confidence for r in live)
+            score  = sum(r.value * r.confidence for r in live) / total_conf
+            score  = round(max(0.0, min(1.0, score)), 6)
+            best   = max(live, key=lambda r: r.confidence)
+            source = "cached" if best.stale else "live"
+            return score, best.lineage_digest, source, n
+        except Exception as exc:
+            log.warning("MarketFitnessIntegrator: fallback — %s", exc)
+            return self._fallback, "sha256:" + "0" * 64, "synthetic", 0
 
-    def _build_result(self, reading: Optional[Any]) -> IntegrationResult:
-        now = time.time()
-        if reading is None:
-            return IntegrationResult(
-                live_market_score=_SYNTHETIC_BASELINE,
-                confidence=_SYNTHETIC_CONFIDENCE,
-                lineage_digest="sha256:" + "0" * 64,
-                adapter_id="synthetic_fallback",
-                signal_type="composite",
-                sampled_at=now,
-                injected_at=now,
-                is_synthetic=True,
-            )
-
-        score = float(getattr(reading, "to_fitness_contribution", lambda: reading.value)())
-        score = max(0.0, min(1.0, score))
-
-        return IntegrationResult(
-            live_market_score=score,
-            confidence=float(getattr(reading, "confidence", 1.0)),
-            lineage_digest=str(getattr(reading, "lineage_digest", "sha256:" + "0" * 64)),
-            adapter_id=str(getattr(reading, "adapter_id", "unknown")),
-            signal_type=str(getattr(reading, "signal_type", "composite")),
-            sampled_at=float(getattr(reading, "sampled_at", now)),
-            injected_at=now,
-            is_synthetic=bool(getattr(reading, "stale", False)),
-        )
-
-    def _inject(self, *, epoch_id: str, result: IntegrationResult) -> None:
-        try:
-            self._orchestrator.inject_live_signal({
-                "epoch_id": epoch_id,
-                "live_market_score": result.live_market_score,
-                "confidence": result.confidence,
-                "lineage_digest": result.lineage_digest,
-                "adapter_id": result.adapter_id,
-                "signal_type": result.signal_type,
-                "sampled_at": result.sampled_at,
-                "injected_at": result.injected_at,
-                "is_synthetic": result.is_synthetic,
-            })
-        except Exception as exc:  # pragma: no cover
-            log.error("MarketFitnessIntegrator: inject_live_signal() failed — %s", exc)
-
-    def _journal(self, *, epoch_id: str, result: IntegrationResult) -> None:
+    def _emit_journal(self, record: MarketEnrichmentRecord, epoch_id: str) -> None:
         if self._journal_fn is None:
-            return
+            try:
+                from security.ledger.journal import log as _jlog
+                self._journal_fn = _jlog
+            except Exception:
+                return
         try:
-            self._journal_fn(_EVENT_TYPE, {
-                "epoch_id": epoch_id,
-                "live_market_score": result.live_market_score,
-                "confidence": result.confidence,
-                "lineage_digest": result.lineage_digest,
-                "adapter_id": result.adapter_id,
-                "signal_type": result.signal_type,
-                "is_synthetic": result.is_synthetic,
-                "injected_at": result.injected_at,
+            self._journal_fn(tx_type=_EVENT_TYPE, payload={
+                "event_type": _EVENT_TYPE, "epoch_id": epoch_id,
+                "composite_score": record.composite_score,
+                "signal_source": record.signal_source,
+                "lineage_digest": record.lineage_digest,
+                "adapter_count": record.adapter_count,
             })
-        except Exception as exc:  # pragma: no cover
-            log.warning("MarketFitnessIntegrator: journal failed — %s", exc)
+        except Exception as exc:
+            log.warning("MarketFitnessIntegrator: journal — %s", exc)
 
-
-__all__ = ["MarketFitnessIntegrator", "IntegrationResult"]
+__all__ = ["MarketFitnessIntegrator", "MarketEnrichmentRecord"]
