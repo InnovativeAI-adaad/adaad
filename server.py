@@ -703,6 +703,102 @@ def api_governance_reviewer_calibration(
     )
 
 
+
+
+# ---------------------------------------------------------------------------
+# Simulation endpoints — ADAAD-8 / PR-12
+# ---------------------------------------------------------------------------
+
+@app.post("/simulation/run")
+def api_simulation_run(
+    request: Request,
+    auth_ctx: dict[str, Any] = Depends(_authenticate_audit_request),
+) -> dict[str, Any]:
+    """Policy simulation run endpoint — ADAAD-8.
+
+    Accepts a DSL policy block and an epoch range, replays historical epochs
+    under the hypothetical policy, and returns a SimulationRunResult.
+
+    Authentication: bearer token with audit:read scope.
+    Read-only: zero ledger writes, zero constitution state transitions,
+    zero mutation executor calls. SimulationPolicy.simulation=True enforced
+    at the GovernanceGate boundary before any evaluation.
+
+    Request body (JSON):
+        dsl_text (str): Multi-line DSL policy block.
+        epoch_ids (list[str]): Ordered list of epoch IDs to simulate.
+        epoch_data_map (dict, optional): Pre-fetched {epoch_id: epoch_data}.
+
+    Returns: SimulationRunResult wrapped in audit envelope.
+    Note: SIMULATION ONLY — results are hypothetical and do not reflect
+    live governance decisions or amend any constitutional rule.
+    """
+    from runtime.governance.simulation.constraint_interpreter import interpret_policy_block
+    from runtime.governance.simulation.epoch_simulator import EpochReplaySimulator
+    from runtime.governance.simulation.dsl_grammar import SimulationDSLError
+    from runtime.governance.simulation.constraint_interpreter import SimulationPolicyError
+    import json as _json
+
+    _require_scope(auth_ctx, AUDIT_READ_SCOPE)
+
+    try:
+        import asyncio
+        loop = asyncio.new_event_loop()
+        raw = loop.run_until_complete(request.body())
+        loop.close()
+        body = _json.loads(raw) if raw else {}
+    except Exception:
+        body = {}
+
+    dsl_text = str(body.get("dsl_text", ""))
+    epoch_ids = list(body.get("epoch_ids", []))
+    epoch_data_map = dict(body.get("epoch_data_map") or {})
+
+    try:
+        policy = interpret_policy_block(dsl_text)
+    except SimulationDSLError as exc:
+        raise HTTPException(status_code=422, detail=f"dsl_parse_error: {exc}")
+    except SimulationPolicyError as exc:
+        raise HTTPException(status_code=422, detail=f"policy_error: {exc}")
+
+    sim = EpochReplaySimulator(policy)
+    result = sim.simulate_epoch_range(epoch_ids, epoch_data_map=epoch_data_map or None)
+
+    return _audit_envelope(
+        data={
+            "simulation": True,
+            "simulation_only_notice": "Results are hypothetical. This endpoint has no live governance side effects.",
+            "result": result.to_dict(),
+        },
+        auth_ctx=auth_ctx,
+        redaction="none",
+    )
+
+
+@app.get("/simulation/results/{run_id}")
+def api_simulation_results(
+    run_id: str,
+    auth_ctx: dict[str, Any] = Depends(_authenticate_audit_request),
+) -> dict[str, Any]:
+    """Retrieve a completed simulation run by ID — ADAAD-8.
+
+    Returns run metadata. Full persistence introduced in PR-13.
+    Authentication: bearer token with audit:read scope. Read-only.
+    """
+    _require_scope(auth_ctx, AUDIT_READ_SCOPE)
+
+    return _audit_envelope(
+        data={
+            "simulation": True,
+            "run_id": run_id,
+            "status": "not_found",
+            "detail": "Simulation run persistence is introduced in PR-13 (Governance Profile Exporter).",
+        },
+        auth_ctx=auth_ctx,
+        redaction="none",
+    )
+
+
 MOCK_ENDPOINTS = ["status", "agents", "tree", "kpis", "changes", "suggestions"]
 
 for endpoint_name in MOCK_ENDPOINTS:
