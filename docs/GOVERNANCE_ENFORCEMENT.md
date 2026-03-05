@@ -65,6 +65,8 @@ The repository no longer fits a "No CI" classification. Active workflows cover c
 
 - Baseline commit: `0df3d3f7a3befe91faf6b327505a8f3e9ae31d49`
 - Baseline date: `2026-03-02T07:34:19-06:00`
+- PR-CI-02 enforcement confirmation: `2026-03-05` — `spdx-header-lint` job wired always-on
+  in `ci.yml`; `scripts/check_spdx_headers.py` passes on all Python source files; H-08 closed.
 
 ## Canonical Governance Law (v1)
 

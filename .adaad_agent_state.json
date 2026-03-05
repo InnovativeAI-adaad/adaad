@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-CI-01",
-  "next_pr": "PR-CI-02",
+  "last_completed_pr": "PR-CI-02",
+  "next_pr": "PR-LINT-01",
   "active_phase": "Phase 0 Track A \u2014 COMPLETE",
   "last_invocation": "2026-03-05",
   "blocked_reason": null,

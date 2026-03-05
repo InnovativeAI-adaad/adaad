@@ -7,6 +7,12 @@
   `.github/workflows/*.yml` files. `scripts/check_workflow_python_version.py` enforces
   the pin and is wired as a fail-closed CI guard. GA-1.1..GA-1.6 and GA-KR.1 controls
   confirmed complete in `docs/governance/ADAAD_7_GA_CLOSURE_TRACKER.md`.
+- **PR-CI-02 — H-08 closure:** SPDX license header enforcement wired always-on as
+  `spdx-header-lint` job in `.github/workflows/ci.yml`. `scripts/check_spdx_headers.py`
+  confirms all Python source files carry `SPDX-License-Identifier: Apache-2.0`.
+  Fixed missing header in `tests/test_branch_protection_policy_workflow.py`.
+  `docs/GOVERNANCE_ENFORCEMENT.md` required checks table updated. Claims evidence matrix
+  `spdx-header-compliance` row marked Complete.
 
 ### Fixed
 - Mutation fitness simulation now uses a deterministic structural DNA clone with `deepcopy` fallback, bounded LRU stable-hash score caching, agent-scoped cache keys within a shared bounded LRU cache, tuple-marker hash hardening, and a fail-closed simulation budget guard (resolved once at orchestrator boot); simulation fails closed when required DNA lineage is missing.
