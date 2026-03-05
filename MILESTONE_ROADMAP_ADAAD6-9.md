@@ -193,12 +193,12 @@ Aponi surfaces are authoring and analysis only. They do not grant execution auth
 
 ## ADAAD-13 · Fully Autonomous Multi-Node Federation
 
-**Version:** 1.7.0 · **Status:** 🔵 In Progress · **Prerequisite:** ADAAD-12 ✅
+**Version:** 1.7.0 · **Status:** ✅ Complete · **Merged:** 2026-03-05
 
 | PR | Deliverable | Status |
 |---|---|---|
-| PR-13-01 | PeerRegistry + GossipProtocol (HTTP, heartbeat, peer exchange) | ⬜ |
-| PR-13-02 | FederationConsensusEngine (Raft-inspired) + FederationNodeSupervisor + split-brain resolution + tests | ⬜ |
-| PR-13-MS | VERSION 1.7.0 · docs · README | ⬜ |
+| PR-13-01 | PeerRegistry + GossipProtocol + ConsensusEngine + NodeSupervisor | ✅ |
+| PR-13-02 | 26 autonomous federation tests + split-brain resolution | ✅ |
+| PR-13-MS | VERSION 1.7.0 · docs · README | ✅ |
 
 **Value unlock:** Federation moves from file-based local coordination to autonomous peer discovery, HTTP gossip, quorum consensus, and cross-node constitutional enforcement without human intervention.

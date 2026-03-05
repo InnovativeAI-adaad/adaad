@@ -33,7 +33,7 @@
 > **Deterministic, policy-governed autonomous code evolution.**
 > ADAAD enforces constitutional mutation gates, deterministic replay verification, and fail-closed execution across every governed workflow.
 
-**Last reviewed:** 2026-03-05 · **Constitution:** v0.3.0 · **Version:** 1.6.0 · **Milestones:** ADAAD-7 ✅ · ADAAD-8 ✅ · ADAAD-9 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-11 🔵
+**Last reviewed:** 2026-03-05 · **Constitution:** v0.3.0 · **Version:** 1.7.0 · **Milestones:** ADAAD-7 ✅ · ADAAD-8 ✅ · ADAAD-9 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-13 ✅ · ADAAD-10 ✅ · ADAAD-11 ✅ · ADAAD-12 ✅ · ADAAD-13 ✅ · ADAAD-11 🔵
 
 > ℹ️ Visual conventions follow [docs/DOCS_VISUAL_STYLE_GUIDE.md](docs/DOCS_VISUAL_STYLE_GUIDE.md).
 
