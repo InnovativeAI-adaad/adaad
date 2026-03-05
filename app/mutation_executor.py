@@ -48,7 +48,7 @@ from runtime.api.mutation_runtime import (
 # bootstrap_tool_registry remains intentionally imported from orchestrator wiring layer
 # so tool adapters are available before execution-cycle startup.
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
-from runtime.director import GovernanceDeniedError, RuntimeDirector
+from runtime.api.app_layer import GovernanceDeniedError, RuntimeDirector
 from security.ledger import journal
 
 
