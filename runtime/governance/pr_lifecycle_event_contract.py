@@ -16,6 +16,18 @@ REQUIRED_PR_LIFECYCLE_EVENT_TYPES: tuple[str, ...] = (
     "promotion_policy_evaluated",
     "sandbox_preflight_passed",
     "forensic_bundle_exported",
+    "reviewer_action_outcome",
+)
+
+# Fields required in reviewer_action_outcome payload for reputation calibration input.
+REVIEWER_ACTION_OUTCOME_REQUIRED_FIELDS: tuple[str, ...] = (
+    "reviewer_id",
+    "review_id",
+    "mutation_id",
+    "decision",
+    "latency_seconds",
+    "epoch_id",
+    "scoring_algorithm_version",
 )
 
 CURRENT_PR_LIFECYCLE_SCHEMA_VERSION = "1.0"
@@ -115,6 +127,64 @@ def validate_append_only_invariants(events: Sequence[Mapping[str, Any]]) -> list
     return errors
 
 
+
+def build_reviewer_action_outcome_payload(
+    *,
+    reviewer_id: str,
+    review_id: str,
+    mutation_id: str,
+    decision: str,
+    latency_seconds: float,
+    epoch_id: str,
+    scoring_algorithm_version: str,
+    overridden_by_authority: bool = False,
+    override_authority_level: str = "",
+    long_term_mutation_impact_score: float | None = None,
+    governance_alignment_score: float | None = None,
+    sla_seconds: int = 86400,
+    tier: str = "",
+    constitutional_floor_enforced: bool = True,
+) -> Mapping[str, Any]:
+    """Build a validated reviewer_action_outcome payload.
+
+    All reputation calibration inputs route through this builder to enforce
+    schema invariants at the point of construction. Callers must not bypass
+    this function to write raw payloads; the schema contract is the single
+    source of truth.
+    """
+    valid_decisions = {"approve", "reject", "abstain", "escalate"}
+    if decision not in valid_decisions:
+        raise ValueError(f"reviewer_action_outcome: invalid decision {decision!r}; must be one of {valid_decisions}")
+    if latency_seconds < 0:
+        raise ValueError("reviewer_action_outcome: latency_seconds must be >= 0")
+    payload: dict[str, Any] = {
+        "reviewer_id": str(reviewer_id).strip(),
+        "review_id": str(review_id).strip(),
+        "mutation_id": str(mutation_id).strip(),
+        "decision": decision,
+        "latency_seconds": float(latency_seconds),
+        "epoch_id": str(epoch_id).strip(),
+        "scoring_algorithm_version": str(scoring_algorithm_version).strip(),
+        "overridden_by_authority": bool(overridden_by_authority),
+        "sla_seconds": int(max(1, sla_seconds)),
+        "constitutional_floor_enforced": bool(constitutional_floor_enforced),
+    }
+    if override_authority_level:
+        payload["override_authority_level"] = str(override_authority_level).strip()
+    if long_term_mutation_impact_score is not None:
+        score = float(long_term_mutation_impact_score)
+        if not (0.0 <= score <= 1.0):
+            raise ValueError("long_term_mutation_impact_score must be in [0.0, 1.0]")
+        payload["long_term_mutation_impact_score"] = score
+    if governance_alignment_score is not None:
+        score = float(governance_alignment_score)
+        if not (0.0 <= score <= 1.0):
+            raise ValueError("governance_alignment_score must be in [0.0, 1.0]")
+        payload["governance_alignment_score"] = score
+    if tier:
+        payload["tier"] = str(tier).strip()
+    return payload
+
 __all__ = [
     "CURRENT_PR_LIFECYCLE_SCHEMA_VERSION",
     "REQUIRED_PR_LIFECYCLE_EVENT_TYPES",
@@ -123,4 +193,6 @@ __all__ = [
     "derive_idempotency_key",
     "is_schema_version_compatible",
     "validate_append_only_invariants",
+    "build_reviewer_action_outcome_payload",
+    "REVIEWER_ACTION_OUTCOME_REQUIRED_FIELDS",
 ]
