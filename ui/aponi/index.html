@@ -303,9 +303,46 @@
     </div>
   </div>
 
+  <!-- Simulation Panel — D3 (Phase 5, Epic 2 live) -->
+  <div style="margin-top:1.75rem">
+    <div class="section-head">
+      <span class="section-label">04 · Inline Simulation</span>
+      <div class="section-line"></div>
+    </div>
+    <div id="proposalSimulationPanel" class="card" aria-live="polite">
+      <div class="card-title">▸ Simulate Against History
+        <span style="font-size:.62rem;color:var(--text3);font-family:var(--sans);font-weight:400;letter-spacing:0">Powered by Epic 2 · Read-only</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:.75rem">
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <input id="simulationDslInput" type="text"
+            placeholder="DSL constraint (e.g. max_mutations_per_epoch(5))…"
+            style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.42rem .7rem;font-family:var(--mono);font-size:.76rem;color:var(--text);outline:none" />
+          <input id="simulationEpochRange" type="number" min="1" max="50" value="10"
+            style="width:60px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.42rem .5rem;font-family:var(--mono);font-size:.76rem;color:var(--text);text-align:center;outline:none" />
+          <button id="simulationRunBtn"
+            style="background:var(--accent);color:#fff;border:none;border-radius:7px;padding:.42rem 1rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;cursor:pointer;white-space:nowrap">
+            Run
+          </button>
+        </div>
+        <div id="simulationStatus" style="font-family:var(--mono);font-size:.7rem;color:var(--text3)"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+        <div>
+          <div style="font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:var(--accent2);text-transform:uppercase;margin-bottom:.35rem">Run Result</div>
+          <pre id="simulationRun" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.6rem .75rem;font-family:var(--mono);font-size:.7rem;color:var(--text2);min-height:60px;white-space:pre-wrap;word-break:break-all;overflow:auto;max-height:180px"></pre>
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;color:var(--accent2);text-transform:uppercase;margin-bottom:.35rem">Detailed Results</div>
+          <pre id="simulationResults" style="background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:.6rem .75rem;font-family:var(--mono);font-size:.7rem;color:var(--text2);min-height:60px;white-space:pre-wrap;word-break:break-all;overflow:auto;max-height:180px"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Feed -->
   <div class="section-head" style="margin-top:1.5rem">
-    <span class="section-label">04 · Live Governance Feed</span>
+    <span class="section-label">05 · Live Governance Feed</span>
     <div class="section-line"></div>
   </div>
   <div class="card">
@@ -642,5 +679,6 @@ setInterval(()=>{const tab=document.querySelector('.cockpit-tab.active');if(tab?
 <script src="proposal_editor.js"></script>
 <script src="replay_inspector.js"></script>
 <script src="evidence_viewer.js"></script>
+<script src="simulation_panel.js"></script>
 </body>
 </html>
