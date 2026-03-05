@@ -20,6 +20,18 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const branch = 'main';
+            const normalizeContext = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+            // Keep required check-run contexts centralized and exact to reduce policy drift.
+            // Values should match GitHub branch protection required_status_checks.contexts exactly.
+            const REQUIRED_CONTEXTS = {
+              secretScan: [
+                'Secret Scan / secret-scan',
+              ],
+              docsValidation: [
+                'CI / docs-validation',
+              ],
+            };
+
             const branchResp = await github.rest.repos.getBranch({ owner, repo, branch });
             if (!branchResp || !branchResp.data || branchResp.data.name !== branch) {
               core.setFailed('main branch missing');
@@ -31,20 +43,30 @@ jobs:
               core.setFailed('required_status_checks missing');
               return;
             }
-            const hasSecretScan = checks.contexts.some((ctx) =>
-              String(ctx).toLowerCase().includes('secret-scan')
-            );
+
+            const actualContexts = checks.contexts.map((ctx) => String(ctx));
+            const normalizedActualContexts = new Set(actualContexts.map(normalizeContext));
+            core.info(`Branch protection required check contexts: ${JSON.stringify(actualContexts)}`);
+
+            const hasAnyRequiredContext = (candidates) =>
+              candidates.some((candidate) => normalizedActualContexts.has(normalizeContext(candidate)));
+
+            const hasSecretScan = hasAnyRequiredContext(REQUIRED_CONTEXTS.secretScan);
             if (!hasSecretScan) {
-              core.setFailed('required_status_checks must include the secret-scan workflow check');
+              core.setFailed(
+                `required_status_checks must include one of: ${REQUIRED_CONTEXTS.secretScan.join(', ')}`
+              );
               return;
             }
-            const hasDocsValidation = checks.contexts.some((ctx) =>
-              String(ctx).toLowerCase().includes('docs-validation')
-            );
+
+            const hasDocsValidation = hasAnyRequiredContext(REQUIRED_CONTEXTS.docsValidation);
             if (!hasDocsValidation) {
-              core.setFailed('required_status_checks must include the docs-validation workflow check');
+              core.setFailed(
+                `required_status_checks must include one of: ${REQUIRED_CONTEXTS.docsValidation.join(', ')}`
+              );
               return;
             }
+
             if (!protection.data.enforce_admins || protection.data.enforce_admins.enabled !== true) {
               core.setFailed('enforce_admins is not true');
               return;
