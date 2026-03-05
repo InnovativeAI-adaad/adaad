@@ -240,7 +240,13 @@ def _type_coerce_kwargs(constraint_type: ConstraintType, raw_kwargs: Dict[str, s
 
     for key in float_keys.get(constraint_type, []):
         if key in coerced:
-            coerced[key] = float(coerced[key])
+            try:
+                coerced[key] = float(coerced[key])
+            except (ValueError, TypeError):
+                raise SimulationDSLError(
+                    f"Parameter '{key}' must be a float, got {coerced[key]!r}",
+                    token=str(coerced[key]),
+                )
     for key in int_keys.get(constraint_type, []):
         if key in coerced:
             coerced[key] = int(coerced[key])

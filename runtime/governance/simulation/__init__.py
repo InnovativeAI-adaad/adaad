@@ -9,6 +9,12 @@ from runtime.governance.simulation.dsl_grammar import (
     parse_constraint,
     parse_policy_block,
 )
+from runtime.governance.simulation.constraint_interpreter import (
+    SimulationPolicy,
+    SimulationPolicyError,
+    interpret_policy,
+    interpret_policy_block,
+)
 
 __all__ = [
     "DSL_GRAMMAR_VERSION",
@@ -17,4 +23,8 @@ __all__ = [
     "ConstraintExpression",
     "parse_constraint",
     "parse_policy_block",
+    "SimulationPolicy",
+    "SimulationPolicyError",
+    "interpret_policy",
+    "interpret_policy_block",
 ]

@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "governance_simulation_policy.v1",
+  "title": "GovernanceSimulationPolicy",
+  "description": "Schema for a ADAAD-8 SimulationPolicy object serialised to JSON. The 'simulation' field must always be true; this is schema-enforced.",
+  "type": "object",
+  "required": ["simulation", "constraint_count", "grammar_version"],
+  "additionalProperties": false,
+  "properties": {
+    "simulation": {
+      "type": "boolean",
+      "const": true,
+      "description": "Isolation flag — always true. Checked at the GovernanceGate boundary before any state-affecting operation."
+    },
+    "constraint_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of constraint expressions used to build this policy."
+    },
+    "grammar_version": {
+      "type": "string",
+      "description": "DSL grammar version used to parse the source expressions."
+    },
+    "source_expressions": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Original DSL expression strings in declaration order."
+    },
+    "require_approvals": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["tier", "count"],
+          "additionalProperties": false,
+          "properties": {
+            "tier": {"type": "string"},
+            "count": {"type": "integer", "minimum": 1, "maximum": 20}
+          }
+        }
+      ]
+    },
+    "max_risk_score": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0.0, "maximum": 1.0}]
+    },
+    "max_mutations_per_epoch": {
+      "oneOf": [{"type": "null"}, {"type": "integer", "minimum": 1}]
+    },
+    "max_complexity_delta": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0.0, "maximum": 1.0}]
+    },
+    "freeze_tiers": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "require_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule_id", "severity"],
+        "additionalProperties": false,
+        "properties": {
+          "rule_id": {"type": "string"},
+          "severity": {"type": "string", "enum": ["BLOCKING", "WARNING", "INFO"]}
+        }
+      }
+    },
+    "min_test_coverage": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0.0, "maximum": 1.0}]
+    },
+    "max_entropy_per_epoch": {
+      "oneOf": [{"type": "null"}, {"type": "number", "minimum": 0.0, "maximum": 1.0}]
+    },
+    "escalate_reviewers_on_risk": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["threshold", "count"],
+          "additionalProperties": false,
+          "properties": {
+            "threshold": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+            "count": {"type": "integer", "minimum": 1}
+          }
+        }
+      ]
+    },
+    "require_lineage_depth": {
+      "oneOf": [{"type": "null"}, {"type": "integer", "minimum": 1}]
+    }
+  }
+}
