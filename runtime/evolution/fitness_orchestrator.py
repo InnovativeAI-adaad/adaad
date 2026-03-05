@@ -61,15 +61,59 @@ class _ScoreResult:
 
 
 class FitnessOrchestrator:
-    """Single-entry fitness scoring with deterministic epoch snapshots."""
+    """Single-entry fitness scoring with deterministic epoch snapshots.
+
+    Live market signal injection
+    ----------------------------
+    ``inject_live_signal(payload)`` accepts a dict from ``MarketFitnessIntegrator``
+    and stores an advisory ``live_market_score`` override keyed by epoch_id.
+    On the next ``score()`` call for that epoch the override replaces
+    ``simulated_market_score`` in the context before weight application.
+    Overrides are advisory — GovernanceGate retains final authority.
+    """
 
     def __init__(self) -> None:
         self._epoch_snapshots: MutableMapping[str, _Snapshot] = {}
+        self._live_signal_overrides: MutableMapping[str, Dict[str, Any]] = {}
+
+    def inject_live_signal(self, payload: Dict[str, Any]) -> None:
+        """Advisory live market signal override from MarketFitnessIntegrator.
+
+        Stores the payload keyed by epoch_id.  The next ``score()`` call for
+        that epoch will substitute ``payload['live_market_score']`` for
+        ``simulated_market_score`` in the scoring context.
+
+        Never raises — failures are logged and silently dropped.
+        """
+        try:
+            epoch_id = str(payload.get("epoch_id") or "")
+            if not epoch_id:
+                return
+            self._live_signal_overrides[epoch_id] = dict(payload)
+        except Exception:  # pragma: no cover
+            pass
+
+    def _apply_live_override(
+        self, epoch_id: str, context: Mapping[str, Any]
+    ) -> Mapping[str, Any]:
+        """Return a context with live_market_score substituted when available."""
+        override = self._live_signal_overrides.get(epoch_id)
+        if override is None:
+            return context
+        live_score = override.get("live_market_score")
+        if live_score is None:
+            return context
+        merged: Dict[str, Any] = dict(context)
+        merged["simulated_market_score"] = max(0.0, min(1.0, float(live_score)))
+        return merged
 
     def score(self, context: Mapping[str, Any]) -> _ScoreResult:
         epoch_id = str(context.get("epoch_id") or "")
         if not epoch_id:
             raise ValueError("fitness_context_missing_epoch_id")
+
+        # Apply live market signal override (advisory — no authority change)
+        context = self._apply_live_override(epoch_id, context)
 
         snapshot = self._epoch_snapshots.get(epoch_id)
         if snapshot is None:
