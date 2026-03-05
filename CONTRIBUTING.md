@@ -18,6 +18,45 @@ Use descriptive topic branches:
 - `feat/<short-description>`
 - `governance/<short-description>`
 
+## §6 · Commit Message Convention
+
+Commit messages for governed PR work should include structured trailers so reviewers
+can audit intent and gate evidence quickly.
+
+Required trailers:
+
+- `PR-ID: <id>`
+- `CI tier: <docs|low|standard|critical>`
+- `Replay proof: <value>`
+
+`Replay proof` is always required, but valid values depend on the `CI tier` field:
+
+- `critical` tier: must include the strict replay output artifact hash
+  (example format: `Replay proof: sha256:<hash>`).
+- non-critical tiers (`docs`, `low`, `standard`): must be exactly
+  `Replay proof: not-required`.
+
+Reviewers should validate `Replay proof` against `CI tier` using
+`docs/governance/ci-gating.md`.
+
+Examples:
+
+```text
+feat(governance): enforce token_ok in gate certifier
+
+PR-ID: PR-HARDEN-01
+CI tier: critical
+Replay proof: sha256:4f6b9f0c2d0f6e9f7fb9d4e35e8d7a2b8a5af1d4a7df6c2edc36f90bfed2ee11
+```
+
+```text
+docs(governance): document federation key registry controls
+
+PR-ID: PR-DOCS-01
+CI tier: docs
+Replay proof: not-required
+```
+
 ## Governed build-agent contract
 
 Contributor-facing governed automation behavior is defined in [`AGENTS.md`](AGENTS.md).
