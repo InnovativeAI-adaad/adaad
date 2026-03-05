@@ -15,6 +15,12 @@ from runtime.governance.simulation.constraint_interpreter import (
     interpret_policy,
     interpret_policy_block,
 )
+from runtime.governance.simulation.epoch_simulator import (
+    EpochSimulationResult,
+    SimulationRunResult,
+    SimulationIsolationError,
+    EpochReplaySimulator,
+)
 
 __all__ = [
     "DSL_GRAMMAR_VERSION",
@@ -27,4 +33,8 @@ __all__ = [
     "SimulationPolicyError",
     "interpret_policy",
     "interpret_policy_block",
+    "EpochSimulationResult",
+    "SimulationRunResult",
+    "SimulationIsolationError",
+    "EpochReplaySimulator",
 ]
