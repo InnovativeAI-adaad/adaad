@@ -22,6 +22,7 @@ Required CI checks:
 - Governance suite (`pytest tests/ -k governance -q`)
 - Secret scanning (`Secret Scan / secret-scan` from `.github/workflows/secret_scan.yml`) as a required branch-protection check.
 - Branch protection validation workflow.
+- SPDX header enforcement (`python scripts/check_spdx_headers.py`) — always-on; enforced via `spdx-header-lint` job in `ci.yml`.
 
 - `Branch Protection Check` workflow validates required branch settings via GitHub API.
 

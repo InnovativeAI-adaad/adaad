@@ -25,7 +25,7 @@ This matrix maps major external/public claims to objective, versioned repository
 
 | `federation-key-pinning` | "Federation messages are accepted only from registered, trusted key IDs; caller-supplied key substitution is rejected." | [Key registry loader](../../runtime/governance/federation/key_registry.py); [Transport enforcement](../../runtime/governance/federation/transport.py); [Registry file](../../governance/federation_trusted_keys.json); [Key registry tests](../../tests/governance/federation/test_federation_key_registry.py) | Complete |
 | `sandbox-injection-hardening` | "Sandbox preflight blocks shell metacharacter injection, IFS word-splitting bypasses, shell evaluation primitives, and disallowed environment variables." | [Preflight implementation](../../runtime/sandbox/preflight.py); [Injection hardening tests](../../tests/test_sandbox_injection_hardening.py) | Complete |
-| `spdx-header-compliance` | "All Python source files carry SPDX-License-Identifier headers, enforced by script." | [SPDX check script](../../scripts/check_spdx_headers.py) | Complete |
+| `spdx-header-compliance` | "All Python source files carry SPDX-License-Identifier headers, enforced in CI." | [SPDX check script](../../scripts/check_spdx_headers.py); [`ci.yml` `spdx-header-lint` job](../../.github/workflows/ci.yml) | Complete — CI enforced (PR-CI-02) |
 
 ## Completion standard
 
