@@ -502,7 +502,7 @@ Cross-track blocking does not exist unless explicitly noted.
 |---|---|---|---|---|
 | PR-CI-01 | Unify Python version pin | H-01 | standard | none |
 | PR-CI-02 | SPDX header enforcement | H-08 | standard | none |
-| PR-LINT-01 | Determinism lint: `adaad/orchestrator/` | H-05 | standard | none |
+| PR-LINT-01 | Determinism lint: `adaad/orchestrator/` | H-05 | critical | none |
 | PR-HARDEN-01 | Boot env validation + signing key assertion | C-01, H-02 | **critical** | none |
 | PR-SECURITY-01 | Federation key pinning registry | C-03 | **critical** | transport.py audit |
 | PR-PERF-01 | Streaming lineage ledger | C-04 | standard | none |
