@@ -597,7 +597,7 @@ Agent MUST emit `[ADAAD WAITING]` unless `PR-OPS-01` is merged and CI-green on m
 | Tier 2 replay divergence | 2 | `[ADAAD BLOCKED]`; emit divergence detail; do not open PR |
 | Tier 3 evidence row missing | 3 | `[ADAAD BLOCKED]`; write the evidence row; re-run validator; do not stage |
 | Tier 3 PR template incomplete | 3 | Complete template; re-verify; do not stage |
-| Dependency PR unmerged | — | `[ADAAD WAITING]`; emit dependency list |
+| Dependency PR unmerged | — | `[ADAAD WAITING]`; emit dependency list; no repository source/docs/workflow writes; only `.adaad_agent_state.json` operational state write allowed (non-product artifact, gitignored, never in PR diffs) |
 | Internal doc conflict | — | `[ADAAD CONFLICT]`; surface to operator; do not resolve autonomously |
 | Canonical path violation | — | `[ADAAD REJECT]`; emit path correction; reject the change |
 | Out-of-sequence merge | — | `[ADAAD REJECT]`; require lane-owner sign-off |
@@ -610,7 +610,7 @@ the PR from scratch and does not advance to the next PR.
 
 ## Session State Schema
 
-`.adaad_agent_state.json` (gitignored) — read at session start, written at session end.
+`.adaad_agent_state.json` (gitignored) — read at session start, written at session end only as operational state output (non-product artifact). It must never be included in PR diffs.
 
 ```json
 {

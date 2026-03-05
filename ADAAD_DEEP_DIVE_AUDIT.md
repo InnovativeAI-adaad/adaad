@@ -147,6 +147,7 @@ When the first unmerged PR has unmet prerequisites:
 
 - Emit status prefix exactly as: `[ADAAD WAITING]`
 - Report the blocked PR ID/title and enumerate each unmet dependency.
-- Stop progression immediately (no code writes, no PR staging, no next-PR advancement).
-- Persist block context in `.adaad_agent_state.json` (`blocked_reason`, `blocked_at_gate`, `blocked_at_tier` as applicable).
+- Stop progression immediately (no repository source/docs/workflow writes, no PR staging, no next-PR advancement).
+- Operational exception: `.adaad_agent_state.json` may be written only to persist agent runtime state (`blocked_reason`, `blocked_at_gate`, `blocked_at_tier` as applicable).
+- `.adaad_agent_state.json` is a non-product artifact, is gitignored, and must never appear in PR diffs.
 - Resume only after operator remediation confirms all prerequisite dependencies are merged/satisfied.
