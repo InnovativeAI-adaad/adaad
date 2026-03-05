@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import os
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,7 +15,11 @@ from typing import Any, Callable
 from runtime import metrics
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2, LineageRecoveryHook
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
+from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError, JournalRecoveryHook, verify_journal_integrity
+
+
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -133,8 +139,10 @@ class SnapshotManager:
         require_replay_safe_provider(self.provider, replay_mode=self.replay_mode, recovery_tier=self.recovery_tier)
         snapshot_id = self._reserve_snapshot_id()
         snapshot_path = self.snapshot_dir / snapshot_id
-        temp_snapshot_path = self.snapshot_dir / f"{snapshot_id}.tmp"
-        temp_snapshot_path.mkdir(parents=True, exist_ok=False)
+        staging_dir = snapshot_path.parent / f"{snapshot_path.name}.tmp"
+        staging_dir.mkdir(parents=True, exist_ok=False)
+
+        creation_sequence = self._next_creation_sequence
 
         try:
             file_hashes: dict[str, str] = {}
@@ -143,18 +151,29 @@ class SnapshotManager:
                 source.parent.mkdir(parents=True, exist_ok=True)
                 if not source.exists():
                     source.touch()
-                target = temp_snapshot_path / source.name
+                target = staging_dir / source.name
                 shutil.copy2(source, target)
                 file_hashes[source.name] = self._hash_file(target)
                 total_bytes += target.stat().st_size
 
-            (temp_snapshot_path / self._completion_marker_name).write_text("complete\n", encoding="utf-8")
-            temp_snapshot_path.replace(snapshot_path)
+            (staging_dir / "metadata.json").write_text(
+                json.dumps({"creation_sequence": creation_sequence}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            (staging_dir / self._completion_marker_name).write_text("1", encoding="utf-8")
+            os.rename(staging_dir, snapshot_path)
+
+            journal.append_tx(
+                "SNAPSHOT_CREATED",
+                {
+                    "snapshot_id": str(snapshot_path.name),
+                    "creation_sequence": creation_sequence,
+                },
+            )
         except Exception:
-            shutil.rmtree(temp_snapshot_path, ignore_errors=True)
+            shutil.rmtree(staging_dir, ignore_errors=True)
             raise
 
-        creation_sequence = self._next_creation_sequence
         self._next_creation_sequence += 1
         metadata = SnapshotMetadata(
             snapshot_id=snapshot_id,
@@ -230,13 +249,31 @@ class SnapshotManager:
         return f"snapshot-{timestamp}-{suffix:04x}"
 
     def get_latest_valid_snapshot(self, source_name: str, validator: Callable[[Path], None]) -> Path | None:
-        snapshots = sorted(self._metadata.values(), key=lambda m: m.creation_sequence, reverse=True)
-        for metadata in snapshots:
-            snapshot_dir = self.snapshot_dir / metadata.snapshot_id
-            if not snapshot_dir.is_dir():
-                continue
-            if not (snapshot_dir / self._completion_marker_name).exists():
-                continue
+        snapshot_dirs = [
+            candidate
+            for candidate in self.snapshot_dir.iterdir()
+            if candidate.is_dir() and (candidate / self._completion_marker_name).exists()
+        ]
+
+        ranked_candidates: list[tuple[int, float, Path]] = []
+        for candidate in snapshot_dirs:
+            sequence: int | None = None
+            metadata_path = candidate / "metadata.json"
+            try:
+                sequence_value = json.loads(metadata_path.read_text(encoding="utf-8")).get("creation_sequence")
+                if isinstance(sequence_value, int):
+                    sequence = sequence_value
+            except Exception:
+                sequence = None
+
+            if sequence is None:
+                LOG.warning("snapshot_ordering_fallback_to_mtime: %s", candidate)
+
+            ranked_candidates.append((sequence if sequence is not None else -1, candidate.stat().st_mtime, candidate))
+
+        ranked_candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+
+        for _, _, snapshot_dir in ranked_candidates:
             snapshot = snapshot_dir / source_name
             if not snapshot.exists():
                 continue

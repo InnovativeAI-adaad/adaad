@@ -19,6 +19,7 @@ This matrix maps major external/public claims to objective, versioned repository
 | `codex-governed-build-alignment` | "Codex governed-build behavior is discoverable, gate-tiered, and aligned with ADAAD v1.1 governance docs." | [Agent contract](../../AGENTS.md); [Codex setup runbook](../governance/CODEX_SETUP.md); [CI tier classifier](../governance/ci-gating.md) | Complete |
 | `strict-replay-provider-enforcement` | "Strict replay mode never falls back to non-deterministic entropy providers for envelope generation." | [Determinism provider selection](../../runtime/governance/foundation/determinism.py); [AGM envelope enforcement](../../runtime/evolution/agm_event.py); [strict replay provider tests](../../tests/test_default_provider_strict_replay.py) | Complete |
 | `architecture-snapshot-build-hygiene` | "Architecture snapshot metadata remains structurally valid and report-version aligned in the build lane before implementation edits proceed." | [Architecture snapshot validator](../../scripts/validate_architecture_snapshot.py); [Implementation alignment snapshot target](../README_IMPLEMENTATION_ALIGNMENT.md); [Codex setup remediation runbook](../governance/CODEX_SETUP.md) | Complete |
+| `snapshot-atomicity` | "Ledger snapshots are staged atomically and latest valid recovery snapshot selection is sequence-ordered." | [Snapshot manager implementation](../../runtime/recovery/ledger_guardian.py); [Snapshot guardian tests](../../tests/governance/test_ledger_guardian.py) | Complete |
 
 ## Completion standard
 

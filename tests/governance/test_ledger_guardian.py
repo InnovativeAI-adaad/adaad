@@ -3,13 +3,24 @@
 from __future__ import annotations
 
 import json
+import os
+import time
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 from runtime.recovery.ledger_guardian import AutoRecoveryHook, SnapshotManager
 from security.ledger.journal import JournalIntegrityError, append_tx, verify_journal_integrity
+
+
+@pytest.fixture(autouse=True)
+def _isolate_journal_paths(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from security.ledger import journal
+
+    monkeypatch.setattr(journal, "JOURNAL_PATH", tmp_path / "cryovant_journal.jsonl")
+    monkeypatch.setattr(journal, "GENESIS_PATH", tmp_path / "cryovant_journal.genesis.jsonl")
 
 
 def test_lineage_auto_recovery_from_snapshot(tmp_path: Path) -> None:
@@ -60,7 +71,7 @@ def test_journal_auto_recovery_from_snapshot(tmp_path: Path, monkeypatch: pytest
 
 def test_snapshot_manager_list_restore_and_latest(tmp_path: Path) -> None:
     lineage = tmp_path / "lineage_v2.jsonl"
-    journal = tmp_path / "cryovant_journal.jsonl"
+    journal = tmp_path / "journal_state.jsonl"
     lineage.write_text('{"type":"EpochStartEvent"}\n', encoding="utf-8")
     journal.write_text('{"tx":"ok"}\n', encoding="utf-8")
 
@@ -163,3 +174,71 @@ def test_latest_valid_snapshot_orders_by_creation_sequence_not_mtime(tmp_path: P
     assert latest is not None
     assert latest.parent.name == second.snapshot_id
     assert latest.read_text(encoding="utf-8") == second_file.read_text(encoding="utf-8")
+
+
+def test_snapshot_write_is_atomic(tmp_path: Path) -> None:
+    """Staging .tmp dir must exist before rename; snapshot dir must not exist before rename."""
+    source = tmp_path / "lineage_v2.jsonl"
+    source.write_text('{"type":"EpochStartEvent"}\n', encoding="utf-8")
+
+    manager = SnapshotManager(tmp_path / "snaps")
+    rename_calls: list[tuple[Path, Path]] = []
+    original_rename = os.rename
+
+    def tracking_rename(src: str | os.PathLike[str], dst: str | os.PathLike[str]) -> None:
+        src_path = Path(src)
+        dst_path = Path(dst)
+        rename_calls.append((src_path, dst_path))
+        assert src_path.exists(), "staging dir must exist before rename"
+        assert not dst_path.exists(), "final dir must not exist before rename"
+        assert (src_path / "snapshot_complete").exists(), "sentinel must be in staging before rename"
+        original_rename(src, dst)
+
+    with patch("os.rename", side_effect=tracking_rename):
+        manager.create_snapshot_set([source])
+
+    assert len(rename_calls) == 1
+    final = rename_calls[0][1]
+    assert final.exists()
+    assert (final / "snapshot_complete").exists()
+
+
+def test_partial_snapshot_excluded(tmp_path: Path) -> None:
+    """Snapshot directories without sentinel must be excluded from candidate set."""
+    source = tmp_path / "lineage_v2.jsonl"
+    source.write_text('{"type":"EpochStartEvent"}\n', encoding="utf-8")
+
+    manager = SnapshotManager(tmp_path / "snaps")
+
+    partial = manager.snapshot_dir / "snap-000"
+    partial.mkdir(parents=True)
+    (partial / "metadata.json").write_text(json.dumps({"creation_sequence": 999}), encoding="utf-8")
+
+    result = manager.get_latest_valid_snapshot(source.name, lambda path: path.read_text(encoding="utf-8"))
+    assert result is None or result.parent != partial
+
+
+def test_ordering_uses_creation_sequence_not_mtime(tmp_path: Path) -> None:
+    """Snapshot with higher creation_sequence wins even if its mtime is older."""
+    manager = SnapshotManager(tmp_path / "snaps")
+
+    snap1 = manager.snapshot_dir / "snap-001"
+    snap1.mkdir(parents=True)
+    (snap1 / "lineage_v2.jsonl").write_text("one\n", encoding="utf-8")
+    (snap1 / "metadata.json").write_text(json.dumps({"creation_sequence": 1}), encoding="utf-8")
+    (snap1 / "snapshot_complete").write_text("1", encoding="utf-8")
+
+    time.sleep(0.01)
+
+    snap2 = manager.snapshot_dir / "snap-002"
+    snap2.mkdir(parents=True)
+    (snap2 / "lineage_v2.jsonl").write_text("two\n", encoding="utf-8")
+    (snap2 / "metadata.json").write_text(json.dumps({"creation_sequence": 2}), encoding="utf-8")
+    (snap2 / "snapshot_complete").write_text("1", encoding="utf-8")
+
+    old_time = time.time() - 3600
+    os.utime(snap2, (old_time, old_time))
+
+    result = manager.get_latest_valid_snapshot("lineage_v2.jsonl", lambda path: path.read_text(encoding="utf-8"))
+    assert result is not None
+    assert result.parent == snap2
