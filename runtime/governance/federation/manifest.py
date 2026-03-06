@@ -7,11 +7,54 @@ from dataclasses import dataclass
 import hashlib
 import hmac
 import json
+import logging
 import os
 from typing import Any, Dict, List
 
 _MANIFEST_HMAC_ENV = "ADAAD_FEDERATION_MANIFEST_HMAC_KEY"
 _MANIFEST_HMAC_DEFAULT = "adaad-federation-v0.70.0"
+_HMAC_KEY_MIN_LENGTH = 32
+
+log = logging.getLogger(__name__)
+
+
+class FederationHMACKeyError(RuntimeError):
+    """Raised when the federation HMAC key fails the minimum-length contract.
+
+    Invariant: federation_hmac_key_weak is a fail-closed boot contract violation.
+    Any federation subsystem initialised without a key of at least
+    ``_HMAC_KEY_MIN_LENGTH`` bytes is considered operationally unsafe.
+    """
+
+
+def validate_hmac_key(key: str, *, federation_mode_enabled: bool = False) -> None:
+    """Assert HMAC key meets minimum length contract (M-05).
+
+    Parameters
+    ----------
+    key:
+        Raw HMAC key string sourced from ``ADAAD_FEDERATION_MANIFEST_HMAC_KEY``.
+    federation_mode_enabled:
+        When *True*, a weak key causes a fail-closed ``FederationHMACKeyError``.
+        When *False*, the violation is emitted as a ``WARNING`` only (dev/test
+        environments where the default placeholder key is acceptable).
+
+    Raises
+    ------
+    FederationHMACKeyError
+        If ``federation_mode_enabled`` is *True* and ``len(key) < 32``.
+    """
+    if len(key) >= _HMAC_KEY_MIN_LENGTH:
+        return
+
+    msg = (
+        f"federation_hmac_key_weak: ADAAD_FEDERATION_MANIFEST_HMAC_KEY is only "
+        f"{len(key)} bytes; minimum required is {_HMAC_KEY_MIN_LENGTH}. "
+        "Rotate the key before enabling federation mode."
+    )
+    if federation_mode_enabled:
+        raise FederationHMACKeyError(msg)
+    log.warning(msg)
 
 
 @dataclass(frozen=True)
@@ -51,8 +94,18 @@ class FederationManifest:
         return hmac.compare_digest(self.hmac_signature, expected)
 
     @classmethod
-    def deterministic_key_from_env(cls) -> str:
-        return os.getenv(_MANIFEST_HMAC_ENV, _MANIFEST_HMAC_DEFAULT)
+    def deterministic_key_from_env(cls, *, federation_mode_enabled: bool = False) -> str:
+        """Load HMAC key from environment and validate minimum length (M-05).
+
+        Parameters
+        ----------
+        federation_mode_enabled:
+            Passed through to :func:`validate_hmac_key`; when *True* a weak
+            key raises :class:`FederationHMACKeyError` (fail-closed).
+        """
+        key = os.getenv(_MANIFEST_HMAC_ENV, _MANIFEST_HMAC_DEFAULT)
+        validate_hmac_key(key, federation_mode_enabled=federation_mode_enabled)
+        return key
 
     def to_dict(self) -> Dict[str, Any]:
         payload = self.canonical_payload()
@@ -71,4 +124,4 @@ class FederationManifest:
         )
 
 
-__all__ = ["FederationManifest"]
+__all__ = ["FederationManifest", "FederationHMACKeyError", "validate_hmac_key"]
