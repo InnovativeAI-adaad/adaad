@@ -38,6 +38,7 @@ class GateDecision:
     axis_results: list[GateAxisResult]
     human_override: bool
     decision_id: str
+    gate_mode: str = "serial"  # PR-PHASE4-06: 'serial' | 'parallel'
 
     def to_payload(self) -> dict[str, object]:
         payload = asdict(self)
@@ -74,7 +75,39 @@ class GovernanceGate:
         trust_mode: str,
         axis_results: Sequence[GateAxisResult],
         human_override: bool = False,
+        parallel: bool = False,  # PR-PHASE4-06: delegate to ParallelGovernanceGate
     ) -> GateDecision:
+        # PR-PHASE4-06: parallel path
+        if parallel:
+            try:
+                from runtime.governance.parallel_gate import (
+                    ParallelGovernanceGate,
+                    ParallelAxisSpec,
+                )
+                _axis_specs = [
+                    ParallelAxisSpec(
+                        axis=item.axis,
+                        rule_id=item.rule_id,
+                        probe=lambda _ok=item.ok, _r=item.reason: (_ok, _r),
+                    )
+                    for item in axis_results
+                ]
+                _pgate = ParallelGovernanceGate(
+                    law_enforcer=self._law_enforcer,
+                    tx_writer=self._tx_writer,
+                )
+                _pdecision = _pgate.approve_mutation_parallel(
+                    mutation_id=mutation_id,
+                    trust_mode=trust_mode,
+                    axis_specs=_axis_specs,
+                    human_override=human_override,
+                )
+                # Re-build with gate_mode='parallel' (frozen dataclass — use replace pattern)
+                import dataclasses as _dc
+                return _dc.replace(_pdecision, gate_mode="parallel")
+            except Exception:  # noqa: BLE001 — fall through to serial on any failure
+                pass
+
         ordered_axis = sorted(axis_results, key=lambda item: (item.axis, item.rule_id))
         law_context = {
             "mutation_id": mutation_id,
@@ -121,6 +154,7 @@ class GovernanceGate:
             axis_results=list(ordered_axis),
             human_override=human_override,
             decision_id=decision_id,
+            gate_mode="serial",
         )
 
         self._tx_writer("governance_gate_decision.v1", gate_decision.to_payload())
