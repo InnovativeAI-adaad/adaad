@@ -46,5 +46,6 @@
     "architect-spec-v2.0.0-issued",
     "v2.0.0-released"
   ],
-  "pending_evidence_rows": []
+  "pending_evidence_rows": [],
+  "last_sync_sha": "c051542"
 }

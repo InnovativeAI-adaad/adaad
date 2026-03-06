@@ -44,7 +44,7 @@ Currently `risk_penalty` (0.20) and `complexity_penalty` (0.10) are static. Phas
 
 ## Phase 4 — Semantic Mutation Diff Engine
 
-**Target:** v2.2.0 · Requires: Phase 3 shipped
+**Target:** v2.2.0 ✅ · Requires: Phase 3 shipped
 
 Replace the heuristic complexity/risk scoring with AST-aware semantic analysis:
 
