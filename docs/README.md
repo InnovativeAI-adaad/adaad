@@ -59,7 +59,8 @@
 
 | Document | Purpose |
 |---|---|
-| [**ArchitectAgent Spec v2.0.0**](governance/ARCHITECT_SPEC_v2.0.0.md) | Canonical architectural + constitutional specification |
+| [**ArchitectAgent Spec v3.0.0**](governance/ARCHITECT_SPEC_v3.0.0.md) | Canonical architectural + constitutional specification for the active Phase 5 sequence |
+| [ArchitectAgent Spec v2.0.0](governance/ARCHITECT_SPEC_v2.0.0.md) | Historical baseline (superseded by v3.0.0 for canonical sequence control) |
 | [Constitution](CONSTITUTION.md) | Hard governance constraints; 14 rules; cannot be overridden |
 | [Architecture Contract](ARCHITECTURE_CONTRACT.md) | Interface and boundary contracts |
 | [Security](SECURITY.md) | Auth, signing, fail-closed controls |
@@ -150,6 +151,5 @@ ADAAD visual assets in `docs/assets/` are available for repository documentation
 | [Founder Plan Proposal](ADAAD_FOUNDER_PLAN_PROPOSAL.md) | Markdown | 8 structural governance commitments, milestone gates, next actions |
 | [Founder Plan Proposal](ADAAD_Founder_Plan_Proposal.html) | HTML | Interactive visual proposal — print-optimized founder document |
 
-> **Current system state:** v2.1.0 · Phase 3 shipped · Phase 4 in progress · CI gates: all passing  
+> **Current system state:** v2.3.0 · Phase 5 sequence active (PR-PHASE5-01 next) · CI gates: all passing  
 > **Forecast last updated:** March 6, 2026
-

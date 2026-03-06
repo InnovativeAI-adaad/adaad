@@ -122,6 +122,15 @@ After `python onboard.py`:
 
 ---
 
+## Governance entrypoints
+
+- Canonical architectural spec (active): [`docs/governance/ARCHITECT_SPEC_v3.0.0.md`](docs/governance/ARCHITECT_SPEC_v3.0.0.md)
+- Governance constitution: [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)
+- Documentation index: [`docs/README.md`](docs/README.md)
+- Manifest inventory: [`docs/manifest.txt`](docs/manifest.txt)
+
+---
+
 ## How the evolution loop works
 
 ```python
@@ -248,7 +257,7 @@ This is architecturally enforced, not just documented.
 | v1.3 | Aponi IDE — proposal editor, linter, evidence viewer, replay inspector |
 | v1.0 | Stable release — HMAC, 11 constitutional rules, MCP co-pilot |
 
-See [ROADMAP.md](ROADMAP.md) for Phase 3–6 plans.
+See [ROADMAP.md](ROADMAP.md) for historical Phase 3–6 plans (superseded by the active Phase 5 sequence in the v3.0.0 spec).
 
 ---
 
@@ -272,6 +281,7 @@ All constitutional guarantees are replay-verifiable. Divergence between any two 
 ---
 
 <p align="center">
+  <a href="docs/governance/ARCHITECT_SPEC_v3.0.0.md">Canonical Spec (v3.0.0)</a> ·
   <a href="docs/CONSTITUTION.md">Constitution</a> ·
   <a href="docs/EVOLUTION_ARCHITECTURE.md">Architecture</a> ·
   <a href="ROADMAP.md">Roadmap</a> ·

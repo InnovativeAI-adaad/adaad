@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Validate active phase and next-PR consistency across governance sources."""
+"""Validate active phase/PR alignment and canonical-spec consistency across active docs."""
 
 from __future__ import annotations
 
@@ -11,6 +11,14 @@ from pathlib import Path
 AGENTS_PATH = Path("AGENTS.md")
 STATE_PATH = Path(".adaad_agent_state.json")
 SPEC_PATH = Path("docs/governance/ARCHITECT_SPEC_v3.0.0.md")
+CANONICAL_SPEC_PATH = "docs/governance/ARCHITECT_SPEC_v3.0.0.md"
+CANONICAL_SPEC_BASENAME = "ARCHITECT_SPEC_v3.0.0.md"
+
+HIGH_VISIBILITY_ENTRYPOINTS = [
+    Path("README.md"),
+    Path("docs/README.md"),
+    Path("docs/manifest.txt"),
+]
 
 
 def _extract_agents_next_heading(text: str) -> str | None:
@@ -37,6 +45,30 @@ def _extract_phase5_first_pr_from_spec(text: str) -> str | None:
         return None
     pr_match = re.search(r"^###\s+(PR-PHASE5-\d{2})\s*:", section.group(1), flags=re.MULTILINE)
     return pr_match.group(1).strip() if pr_match else None
+
+
+def _validate_canonical_spec_claims(errors: list[str]) -> None:
+    for entrypoint in HIGH_VISIBILITY_ENTRYPOINTS:
+        text = entrypoint.read_text(encoding="utf-8")
+        if CANONICAL_SPEC_BASENAME not in text:
+            errors.append(f"{entrypoint}: missing active canonical spec reference: {CANONICAL_SPEC_PATH}")
+
+    docs_root = Path("docs")
+    for path in docs_root.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in {".md", ".txt"}:
+            continue
+        rel = path.as_posix()
+        if rel.startswith("docs/archive/"):
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        for line_no, line in enumerate(text.splitlines(), start=1):
+            lower = line.lower()
+            if "canonical" in lower and "architect_spec_v2.0.0.md" in lower:
+                if "superseded" not in lower and "historical" not in lower:
+                    errors.append(
+                        f"{path}:{line_no}: canonical claim points to v2 without explicit historical/superseded labeling"
+                    )
 
 
 def main() -> int:
@@ -93,6 +125,8 @@ def main() -> int:
             f"state next_pr={state_next_pr!r}, spec phase-5 first PR={spec_phase5_first_pr!r}"
         )
 
+    _validate_canonical_spec_claims(errors)
+
     if errors:
         print("Phase sequence consistency validation failed:")
         for error in errors:
@@ -101,7 +135,8 @@ def main() -> int:
 
     print(
         "Phase sequence consistency validation passed: "
-        f"active_phase=Phase 5, next_pr={state_next_pr}, spec_first_pr={spec_phase5_first_pr}"
+        f"active_phase=Phase 5, next_pr={state_next_pr}, spec_first_pr={spec_phase5_first_pr}, "
+        f"canonical_spec={CANONICAL_SPEC_PATH}"
     )
     return 0
 
