@@ -202,6 +202,66 @@ class EpochEndEvent:
 
 
 @dataclass(frozen=True)
+class FederationOrigin:
+    """Provenance record for a mutation that originated in a remote repository.
+
+    Phase 5 — Multi-Repo Federation lineage extension.
+
+    Fields
+    ------
+    source_repo:
+        Canonical repository identifier (e.g. ``InnovativeAI-adaad/ADAAD-payments``).
+    source_epoch_id:
+        Epoch identifier in the *source* repo at the time the mutation was accepted
+        and proposed for federation.
+    source_mutation_id:
+        Mutation / bundle identifier in the source repo's GovernanceGate approval
+        record.  Used for cross-repo deduplication and replay tracing.
+    source_chain_digest:
+        SHA-256 tip digest of the source repo's lineage ledger at the epoch boundary
+        when the mutation was packaged.  Enables federated determinism verification
+        (Phase 5 evidence matrix gate).
+    federation_gate_id:
+        Identifier of the ``FederationMutationBroker`` gate event that authorised
+        propagation.  Absent (empty string) for locally-accepted mutations.
+
+    Serialisation contract
+    ----------------------
+    ``FederationOrigin`` is serialised inside ``MutationBundleEvent.certificate``
+    under the key ``"federation_origin"`` so existing lineage consumers that do not
+    understand Phase 5 fields remain unaffected.  When ``federation_origin`` is
+    ``None`` on a ``MutationBundleEvent``, the mutation is local-only and the key
+    is omitted from the serialised form entirely.
+    """
+
+    source_repo: str
+    source_epoch_id: str
+    source_mutation_id: str
+    source_chain_digest: str
+    federation_gate_id: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Deterministic canonical serialisation — sort_keys applied by caller."""
+        return {
+            "federation_gate_id": self.federation_gate_id,
+            "source_chain_digest": self.source_chain_digest,
+            "source_epoch_id": self.source_epoch_id,
+            "source_mutation_id": self.source_mutation_id,
+            "source_repo": self.source_repo,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "FederationOrigin":
+        return cls(
+            source_repo=str(data["source_repo"]),
+            source_epoch_id=str(data["source_epoch_id"]),
+            source_mutation_id=str(data["source_mutation_id"]),
+            source_chain_digest=str(data["source_chain_digest"]),
+            federation_gate_id=str(data.get("federation_gate_id", "")),
+        )
+
+
+@dataclass(frozen=True)
 class MutationBundleEvent:
     epoch_id: str
     bundle_id: str
@@ -210,6 +270,24 @@ class MutationBundleEvent:
     strategy_set: List[str] = field(default_factory=list)
     bundle_digest: str = ""
     epoch_digest: str = ""
+    # Phase 5: present only for cross-repo federated mutations; None for local.
+    federation_origin: Optional[FederationOrigin] = None
+
+    def is_federated(self) -> bool:
+        """Return True when this mutation was proposed by a remote repository."""
+        return self.federation_origin is not None
+
+    def to_certificate_dict(self) -> Dict[str, Any]:
+        """Return certificate dict enriched with federation_origin when present.
+
+        This method is the canonical serialisation surface for Phase 5 lineage
+        consumers.  Callers that only read ``certificate`` directly continue to
+        work; this method is the *write* path used by ``LineageLedgerV2``.
+        """
+        cert: Dict[str, Any] = dict(self.certificate)
+        if self.federation_origin is not None:
+            cert["federation_origin"] = self.federation_origin.to_dict()
+        return cert
 
 
 class LineageLedgerV2:
@@ -302,8 +380,27 @@ class LineageLedgerV2:
                 self._update_epoch_digest(epoch_id, digest)
         return entry
 
-    def append_typed_event(self, event: EpochStartEvent | EpochEndEvent | MutationBundleEvent) -> Dict[str, Any]:
+    def append_typed_event(self, event) -> Dict[str, Any]:
+        """Append a typed lineage event to the ledger.
+
+        Phase 5 extension: ``MutationBundleEvent`` with a non-None
+        ``federation_origin`` field is serialised via
+        :meth:`MutationBundleEvent.to_certificate_dict` so that the
+        ``federation_origin`` provenance is embedded inside the ``certificate``
+        dict.  Consumers that only read ``certificate`` directly are unaffected.
+        """
         event_type = event.__class__.__name__
+        if isinstance(event, MutationBundleEvent):
+            payload: Dict[str, Any] = {
+                "epoch_id": event.epoch_id,
+                "bundle_id": event.bundle_id,
+                "impact": event.impact,
+                "certificate": event.to_certificate_dict(),
+                "strategy_set": list(event.strategy_set),
+                "bundle_digest": event.bundle_digest,
+                "epoch_digest": event.epoch_digest,
+            }
+            return self.append_event(event_type, payload)
         return self.append_event(event_type, asdict(event))
 
     def _read_entries_unverified(self) -> List[Dict[str, Any]]:
