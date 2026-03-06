@@ -44,6 +44,7 @@ from runtime.autonomy.explore_exploit_controller import (
 from runtime.evolution.population_manager import PopulationManager
 from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, RouteTier
 from runtime.evolution.fast_path_scorer import fast_path_score as _fast_path_score
+from runtime.evolution.entropy_fast_gate import EntropyFastGate, GateVerdict as _GateVerdict
 
 # ---------------------------------------------------------------------------
 # EpochResult
@@ -73,6 +74,9 @@ class EpochResult:
     # PR-PHASE4-03: route gate fields
     elevated_mutation_ids:  List[str]      = field(default_factory=list)
     trivial_fast_pathed:    int            = 0
+    # PR-PHASE4-04: entropy gate fields
+    entropy_quarantined:    int            = 0
+    entropy_warned:         int            = 0
 
 
 # ---------------------------------------------------------------------------
@@ -108,6 +112,7 @@ class EvolutionLoop:
         self._manager          = PopulationManager()
         self._controller       = controller or ExploreExploitController()
         self._route_optimizer  = MutationRouteOptimizer()
+        self._entropy_gate     = EntropyFastGate(strict=True)
 
     # ------------------------------------------------------------------
     # Public API
@@ -152,6 +157,42 @@ class EvolutionLoop:
             pass  # Empty population handled by PopulationManager
 
         total_candidates = len(all_proposals)
+
+        # Phase 1.5: Entropy preflight — quarantine nondeterministic proposals
+        _entropy_quarantined = 0
+        _entropy_warned = 0
+        _clean_proposals: List[MutationCandidate] = []
+        for _prop in all_proposals:
+            try:
+                _content = getattr(_prop, 'python_content', None) or ''
+                # Estimate entropy: scan for nondeterministic imports
+                _nondeterministic = [
+                    src for src in ["random", "uuid", "time.time", "os.urandom"]
+                    if src in _content
+                ]
+                _est_bits = len(_nondeterministic) * 24
+                _sources = _nondeterministic if _nondeterministic else ["mutation_ops"]
+                _eg = self._entropy_gate.evaluate(
+                    mutation_id=_prop.mutation_id,
+                    estimated_bits=_est_bits,
+                    sources=_sources,
+                )
+                if _eg.is_denied():
+                    _entropy_quarantined += 1
+                    if journal_module:
+                        journal_module.append_tx(
+                            "entropy_gate_quarantine",
+                            {"mutation_id": _prop.mutation_id,
+                             "reason": _eg.reason,
+                             "epoch_id": epoch_id},
+                        )
+                    continue  # exclude from population
+                elif _eg.verdict.value == "WARN":
+                    _entropy_warned += 1
+                _clean_proposals.append(_prop)
+            except Exception:  # noqa: BLE001
+                _clean_proposals.append(_prop)
+        all_proposals = _clean_proposals
 
         # Phase 2: Seed population
         self._manager.set_weights(self._adaptor.current_weights)
@@ -252,6 +293,8 @@ class EvolutionLoop:
             scoring_algorithm_version="v1.2.0+semantic_diff_v1.0",
             elevated_mutation_ids=_elevated_ids,
             trivial_fast_pathed=_trivial_count,
+            entropy_quarantined=_entropy_quarantined,
+            entropy_warned=_entropy_warned,
         )
 
     # ------------------------------------------------------------------
