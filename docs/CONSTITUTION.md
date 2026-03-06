@@ -1,4 +1,4 @@
-# ADAAD Constitutional Framework v0.2.0
+# ADAAD Constitutional Framework v0.3.0
 
 ## Philosophy
 
@@ -48,6 +48,8 @@ Every mutation passes through constitutional evaluation. Every rule is versioned
 | `deployment_authority_tier` | ✅ | ADVISORY | Surfaces deployment authority context for governance audit trails |
 | `revenue_credit_floor` | ✅ | ADVISORY | Records revenue-credit floor posture for economic governance telemetry |
 | `reviewer_calibration` | ✅ | ADVISORY | Captures reviewer calibration context for audit evidence |
+| `federation_dual_gate` | ✅ | BLOCKING | Federated mutation requires GovernanceGate approval in both source and destination repos |
+| `federation_hmac_required` | ✅ | BLOCKING | Federation-enabled nodes must present valid HMAC key material at boot; absent key halts with fail-closed |
 
 
 ### Resource Telemetry Prerequisites (`resource_bounds`)
@@ -56,6 +58,20 @@ Every mutation passes through constitutional evaluation. Every rule is versioned
 - `platform_telemetry` may provide fallback evidence via `memory_mb` when direct measurements are incomplete.
 - Governance policy can configure `resource_bounds_policy.strict_telemetry_tiers` (default: `PRODUCTION`) to enforce fail-closed behavior when both sources are missing.
 - Non-strict tiers remain configurable fail-open, but emit a `resource_measurements_missing` warning event that explicitly records the fail-open rationale.
+
+---
+
+## Phase 5 Federation Extensions (v0.3.0)
+
+Two new BLOCKING rules were added in v0.3.0 to enforce constitutional governance over multi-repo federation:
+
+### `federation_dual_gate`
+Every federated mutation must receive `GovernanceGate.approve_mutation()` approval in **both** the source repository and the destination repository before any cross-repo propagation may execute. A gate failure in either repo rejects the federated proposal unconditionally (fail-closed). Enforced in `runtime/governance/federation/mutation_broker.py`.
+
+### `federation_hmac_required`
+Any ADAAD node with `ADAAD_FEDERATION_ENABLED=true` must present valid HMAC key material (`ADAAD_FEDERATION_HMAC_KEY`) at boot. Key absent or below minimum length → `FederationKeyError` raised at startup; process does not proceed. Enforced in `runtime/governance/federation/key_registry.py`.
+
+Both rules are replay-verified. Their enforcement is tested in `tests/test_federation_mutation_broker.py` and `tests/governance/federation/test_federation_hmac_key_validation.py` respectively.
 
 ---
 
@@ -110,7 +126,7 @@ Every constitutional evaluation generates:
 {
   "event": "constitutional_evaluation",
   "payload": {
-    "constitution_version": "0.2.0",
+    "constitution_version": "0.3.0",
     "tier": "SANDBOX",
     "passed": true,
     "verdicts": [...],
