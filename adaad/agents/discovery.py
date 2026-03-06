@@ -1,5 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 """
+
+
 Canonical agent discovery for He65.
 
 Supports both layouts:
@@ -9,7 +12,7 @@ Supports both layouts:
 An agent directory is defined by the presence of the REQUIRED_FILES set.
 """
 
-from __future__ import annotations
+_AGENT_CONTRACT_EXCLUDED = True  # utility module — not a governed agent contract
 
 from pathlib import Path
 from typing import Iterable
