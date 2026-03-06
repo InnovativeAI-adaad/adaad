@@ -1,9 +1,11 @@
-# ADAAD v2.0.0 — Repository Manifest
+# ADAAD v2.3.0 — Repository Manifest
 # Human readers: start at docs/README.md
-# Governance spec: docs/governance/ARCHITECT_SPEC_v2.0.0.md
+# Governance spec: docs/governance/ARCHITECT_SPEC_v3.0.0.md
+# Generated-on: release-maintained document; refresh on every VERSION or inventory-affecting change.
+# Maintenance policy: CI enforces VERSION, canonical spec path, latest release-note path, and numeric inventory claims.
 
 ## Root
-VERSION                          — Canonical version string (2.0.0)
+VERSION                          — Canonical version string (2.3.0)
 Latest tagged release notes      — docs/releases/2.3.0.md
 CHANGELOG.md                     — Release history
 README.md                        — Project overview and quickstart
@@ -79,7 +81,7 @@ docs/SECURITY.md                 — Security posture
 docs/ENVIRONMENT_VARIABLES.md    — All env vars reference
 docs/RELEASE_EVIDENCE_MATRIX.md  — Release evidence claims
 docs/governance/                 — Governance runbooks, specs, plans
-  ARCHITECT_SPEC_v2.0.0.md       — CANONICAL architectural specification (v2.0.0)
+  ARCHITECT_SPEC_v3.0.0.md       — CANONICAL architectural specification (v3.0.0)
   SECURITY_INVARIANTS_MATRIX.md
   DETERMINISM_CONTRACT_SPEC.md
   STRICT_REPLAY_INVARIANTS.md
@@ -94,7 +96,7 @@ docs/comms/claims_evidence_matrix.md
 docs/archive/                    — Superseded planning docs (audit lineage only)
 
 ## tests/
-tests/                           — Full test suite (644 Python files)
+tests/                           — Full test suite (276 Python files)
 tests/determinism/               — Determinism and replay equivalence
 tests/governance/                — GovernanceGate, certifier, ledger, federation
 tests/evolution/                 — Evolution loop, checkpoints, fitness
