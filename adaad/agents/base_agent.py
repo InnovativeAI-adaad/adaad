@@ -75,6 +75,8 @@ def validate_agents(agents_root: Path) -> Tuple[bool, List[str]]:
     for agent_dir in iter_agent_dirs(agents_root):
         if agent_dir.name == "agent_template":
             continue
+        if agent_dir.name.startswith(("__", ".")):
+            continue
         valid, missing = validate_agent_home(agent_dir)
         if not valid:
             errors.append(f"{resolve_agent_id(agent_dir, agents_root)}: {','.join(missing)}")
