@@ -1,147 +1,192 @@
-# Evolution Architecture Spec
+# ADAAD Evolution Architecture — v2.0
 
-## Concepts
-- **EvolutionRuntime**: constitutional coordinator for epoch lifecycle, governance decisions, lineage digesting, and replay verification.
-- **Active epoch state**: persisted at `runtime/evolution/state/current_epoch.json` and treated as the operational source of truth for epoch identity and counters.
-- **Lineage**: append-only hash-linked `security/ledger/lineage_v2.jsonl` stream (replay/governance source of truth).
-- **Journal projection**: `security/ledger/cryovant_journal.jsonl` is a projection derived from lineage-v2 events.
-- **Replay legitimacy**: replay digest must match expected epoch digest checkpoints; mismatches trigger fail-closed.
+> **Status:** Production-Ready | **Updated:** 2026-03-06
 
-## Active Epoch State Schema
-```json
-{
-  "epoch_id": "epoch-20260210T140000Z-abc123",
-  "start_ts": "2026-02-10T14:00:00Z",
-  "mutation_count": 12,
-  "metadata": {},
-  "governor_version": "3.0.0"
-}
+This document describes the complete AI mutation capability pipeline introduced
+in the v2.0 principal-engineer capability expansion.
+
+---
+
+## Component Topology
+
+```
+                    ┌─────────────────────────────────────────────────┐
+                    │              EVOLUTION LOOP                      │
+                    │         run_epoch(CodebaseContext)               │
+                    │  Phase0:Strategy → Phase1:Propose → Phase2:Seed │
+                    │  Phase3:Evolve → Phase4:Adapt → Phase5:Record   │
+                    │  → EpochResult                                   │
+                    └────────────┬─────────────────────────────────────┘
+                                 │
+          ┌──────────────────────┼──────────────────────┐
+          ▼                      ▼                       ▼
+  ┌──────────────────┐  ┌────────────────────┐  ┌──────────────────┐
+  │  AI MUTATION     │  │   POPULATION        │  │ FITNESS          │
+  │  PROPOSER        │  │   MANAGER           │  │ LANDSCAPE        │
+  │                  │  │                     │  │                  │
+  │ ARCHITECT ───────┼─▶│ seed(candidates)    │  │ win_rate/type    │
+  │ DREAM     ───────┼─▶│ evolve_generation() │  │ plateau detect   │
+  │ BEAST     ───────┘  │ crossover()         │  │ agent recommend  │
+  │                     │ diversity_enforce() │  └──────────────────┘
+  │ CodebaseContext      └────────────────────┘           │
+  │ context_hash()                │                        │
+  └──────────────────┐            │                        │
+                     │            ▼                        ▼
+              ┌──────▼──────────────────────────────────────────────┐
+              │           WEIGHT ADAPTOR                             │
+              │  adapt(outcomes) → new ScoringWeights per epoch     │
+              │  momentum velocity | prediction_accuracy rolling     │
+              └──────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+              ┌──────────────────────────────────────────────────────┐
+              │          MUTATION SCAFFOLD v2                         │
+              │  ScoringWeights (adaptive)  | MutationLineage DAG    │
+              │  PopulationState            | Dynamic threshold       │
+              │  Elitism bonus              | Epoch binding           │
+              └──────────────────────────────────────────────────────┘
 ```
 
-## Invariants
-1. Epoch digest authority is ledger-derived (`EpochCheckpointEvent`), not state-file stored.
-2. Every mutation executes inside an active started epoch (`EpochStartEvent` exists and `EpochEndEvent` does not).
-3. Epoch transitions emit typed events plus `EpochCheckpointEvent` snapshots.
-4. Replay verification emits `ReplayVerificationEvent` with `epoch_digest`, `replay_digest`, and `replay_passed`.
-5. Replay divergence forces governor fail-closed and blocks mutation execution until human recovery.
-6. Certificates are issued pre-execution and explicitly activated/deactivated after post-mutation tests.
+---
 
-## Governance Policies
-### Authority vs impact matrix
-- `low-impact`: max impact `0.20`
-- `governor-review`: max impact `0.50`
-- `high-impact`: max impact `1.00`
+## Epoch Lifecycle
 
-### Signature authority
-`MutationExecutor` does not perform independent signature checks. Signature authority is centralized in `EvolutionGovernor.validate_bundle`.
+| Phase | Action | Output |
+|---|---|---|
+| **0: Strategy** | `FitnessLandscape.recommended_agent()` | agent preference string |
+| **1: Propose** | `propose_from_all_agents()` → Claude API | `list[MutationCandidate]` × 3 agents |
+| **2: Seed** | `PopulationManager.seed()` — dedup + cap at 12 | Diverse population |
+| **3: Evolve** | N generations: score → elites → crossover → advance | `list[MutationScore]` per gen |
+| **4: Adapt** | `WeightAdaptor.adapt(outcomes)` — momentum descent | Updated `ScoringWeights` |
+| **5: Record** | `FitnessLandscape.record()` — win/loss per type | Persistent JSON state |
+| **Return** | `EpochResult` dataclass | Consumed by Orchestrator |
 
-### Bundle ID ownership
-`MutationRequest.bundle_id` is treated as a proposal hint. Governor certificate stores `bundle_id` and `bundle_id_source` (`request`/`governor`).
-When governor-generated, `bundle_id` is deterministic from replay-stable request identity fields (no runtime RNG dependency).
+---
 
-### Replay seed integrity
-Governor certificates include `replay_seed` (16 hex chars) used by mutation manifests as a replay witness.
-`replay_seed` must never be the all-zero sentinel (`0000000000000000`); both schema validation and runtime execution guards enforce this.
+## File Map
 
-### Strategy anchoring
-Certificates include `strategy_snapshot` and `strategy_snapshot_hash`, and cumulative bundle digesting includes those fields.
+| File | Type | Lines | Purpose |
+|---|---|---|---|
+| `runtime/autonomy/mutation_scaffold.py` | MODIFIED | +120 | ScoringWeights, PopulationState, lineage, adaptive threshold |
+| `runtime/autonomy/ai_mutation_proposer.py` | NEW | 198 | Claude API integration, 3 agent personas |
+| `runtime/autonomy/weight_adaptor.py` | NEW | 122 | Momentum weight learning, JSON persistence |
+| `runtime/autonomy/fitness_landscape.py` | NEW | 100 | Win/loss tracking, plateau detection |
+| `runtime/evolution/population_manager.py` | NEW | 130 | GA: BLX crossover, elitism, diversity |
+| `runtime/evolution/evolution_loop.py` | NEW | 110 | Full epoch orchestration, EpochResult |
+| `adaad/core/health.py` | FIXED | +4 | gate_ok added (PR #12) |
 
-### Mutation target normalization
-`MutationExecutor.execute` preserves backward compatibility for both `MutationRequest.targets` and legacy `MutationRequest.ops`, but both forms are normalized into a shared `MutationTarget[]` plan before applying any file changes.
+---
 
-Rationale: a single transaction gate keeps governance/test/journal/lineage handling consistent across request formats.
+## Adaptive Scoring Formulas
 
-Expected invariants:
-- all mutation applications run through `MutationTransaction`
-- test failures always rollback mutated targets before returning
-- mutation lineage payload shape is consistent (`[{path, checksum, applied, skipped}]`) for both request forms
+### Acceptance Threshold
 
-## Runtime Hooks
-- `boot()`
-- `before_mutation_cycle()`
-- `after_mutation_cycle(result)`
-- `verify_epoch(epoch_id)`
-- `verify_all_epochs()`
-- `before_epoch_rotation(reason)`
-- `after_epoch_rotation(reason)`
+```
+adjusted_threshold = base_threshold × (1.0 - diversity_pressure × 0.4)
 
-## Rotation Defaults
-- `max_mutations = 50`
-- `max_duration_minutes = 30`
-- force-end when replay divergence occurs
+Examples:
+  diversity_pressure = 0.0 (exploit): threshold = 0.25  (unchanged)
+  diversity_pressure = 0.5 (balanced): threshold = 0.20
+  diversity_pressure = 1.0 (explore): threshold = 0.15
+```
 
+### Elitism Bonus
 
-## EvolutionKernel Execution Routing
-- `runtime.evolution.evolution_kernel.EvolutionKernel.run_cycle(agent_id=None)` preserves legacy behavior by delegating to `compatibility_adapter.run_cycle(None)` when an adapter is configured and no explicit target agent is requested.
-- `run_cycle(agent_id=...)` executes the kernel-native pipeline (`load_agent -> propose_mutation -> validate_mutation -> execute_in_sandbox -> evaluate_fitness -> sign_certificate`) and marks the response with `kernel_path: true`.
-- Fitness acceptance and ranking are intentionally separated:
-  - **Acceptance** uses base fitness score compared to `fitness_threshold` (default `0.70`).
-  - **Ranking** uses objective weighting (`objective_weight`) to prioritize accepted candidates without redefining the acceptance gate.
-  - Explainability payloads include weighted contributions and threshold rationale for every decision.
-- Agent resolution is canonicalized via `Path.resolve()` for both discovered agent directories and explicit `agent_id` candidate paths to avoid false-negative lookup failures under symlinked or aliased roots.
-- Deterministic failure semantics:
-  - `RuntimeError("no_agents_available")` when discovery yields no valid agents.
-  - `RuntimeError("agent_not_found:<agent_id>")` when explicit target lookup fails after canonicalization.
-  - Structured policy rejection payload (`status="rejected", reason="policy_invalid"`) when validation fails.
+```
+if candidate.parent_id in population_state.elite_ids:
+    score += 0.05  (clamped to 1.0)
+```
 
-## Interfaces
-- `runtime.evolution.runtime.EvolutionRuntime`
-- `runtime.evolution.epoch.EpochManager`
-- `runtime.evolution.governor.EvolutionGovernor`
-- `runtime.evolution.replay.ReplayEngine`
-- `runtime.evolution.lineage_v2.LineageLedgerV2.compute_epoch_digest`
-- `runtime.evolution.lineage_v2.LineageLedgerV2.compute_cumulative_epoch_digest`
+Applied AFTER threshold adjustment — elites compare against the adjusted bar.
 
+### Weight Adaptation (Momentum)
 
-## Replay Integration Harness Parity
-- Determinism integration tests use `EvolutionRuntime.verify_epoch(...)` and `EvolutionRuntime.replay_preflight(...)` directly, then cross-check with `ReplayEngine.replay_epoch(...)` so tests execute the same replay primitives as production.
-- Canonical verification artifacts are the lineage cumulative digest (`LineageLedgerV2.get_epoch_digest`) and emitted `ReplayVerificationEvent` payloads; the harness asserts parity instead of maintaining a parallel scoring-only replay implementation.
-- Deterministic fixtures are generated from mutation indices and serialized with sorted-key compact JSON before hashing, so fixture manifests and manifest hashes are stable across runs and environments.
+```
+velocity[dim] = 0.85 × velocity[dim] + 0.05 × error_signal
+new_weight[dim] = clamp(current + velocity[dim], min=0.05, max=0.70)
 
-## Constitutional Invariants
-1. LineageLedgerV2 is the sole source of evolutionary truth.
-2. All epoch digests are cumulative chained hashes (`sha256(previous + bundle_digest)`).
-3. Replay checks must match lineage cumulative digest exactly.
-4. Authority matrix is declarative and governor-enforced.
-5. Journal is projection-only and never an authority source.
-6. Fail-closed recovery requires explicit recovery tier events.
+prediction_accuracy = 0.3 × epoch_accuracy + 0.7 × previous_accuracy
+```
 
+### BLX-Alpha Crossover (α=0.5)
 
-## Deterministic Entropy Contract
-- Replay-sensitive IDs/tokens are generated by `runtime.evolution.entropy_discipline` from stable seed inputs: `epoch_id`, `bundle_id`, and optional `agent_id`.
-- In `strict` replay mode and `audit` recovery tier, mutation IDs, epoch suffixes, and dream mutation tokens must be deterministic for identical inputs.
-- Outside strict/audit contexts, runtime may use nondeterministic UUID/time entropy only when explicitly enabled via `ADAAD_ALLOW_NONDETERMINISTIC_IDS=1` (or `true/yes/on`).
-- Deterministic generation is label-scoped (`mutation`, `epoch`, `dream-mutation`) to avoid collisions across domains while preserving replay equivalence.
+```
+lo, hi = min(a,b), max(a,b)
+extent = (hi - lo) × 0.5
+child_value ~ Uniform(lo - extent, hi + extent)
+```
 
+---
 
-## Deterministic Scoring Foundation
-- Scoring logic lives in `runtime/evolution/scoring_algorithm.py` with bounded input validation and canonical hashing.
-- Payload shape checks live in `runtime/evolution/scoring_validator.py`.
-- Append-only scoring evidence chain lives in `runtime/evolution/scoring_ledger.py`.
-- Determinism invariant: identical scoring payload + seeded provider => identical score, input hash, and component penalties.
+## Agent Specialisation
 
+| Agent | System Prompt Focus | Expected gain | Risk | mutation_type |
+|---|---|---|---|---|
+| **Architect** | Structural cohesion, interface contracts, coupling | 0.3–0.6 | 0.1–0.4 | `structural` |
+| **Dream** | Novelty, breadth, cross-domain, experimental | 0.5–0.9 | 0.4–0.8 | `experimental` |
+| **Beast** | Conservative, measurable, micro-optimisation | 0.2–0.5 | 0.05–0.2 | `performance`/`coverage` |
 
-## Promotion Event Model
-- Deterministic event IDs derive from `(mutation_id, from_state, to_state, prev_event_hash)` in `runtime/evolution/promotion_events.py`.
-- Promotion events are hash-chained with `prev_event_hash` and `event_hash` for replay-stable auditability.
-- `MutationExecutor` now emits only legal transitions (`certified -> activated|rejected`) and fails closed when policy resolves to `rejected`.
-- Policy evaluation is priority-ordered in `runtime/evolution/promotion_policy.py`; highest matching priority wins and no match resolves to `rejected`.
+---
 
+## Plateau Detection & Agent Selection
 
-## Epoch Checkpoint Registry
-- `CheckpointRegistry` emits deterministic `EpochCheckpointEvent` records with `ZERO_HASH` genesis anchoring and checkpoint hash chaining.
-- `verify_checkpoint_chain(...)` enforces previous-hash continuity and checkpoint hash recomputation.
+```python
+# Plateau: all types with >= 3 attempts below 20% win rate
+if is_plateau():       return 'dream'        # Maximum exploration
+if best == structural: return 'architect'    # Exploit structural wins
+if best in (perf,cov): return 'beast'        # Exploit safe wins
+else:                  return 'beast'        # Conservative default
+```
 
-## Entropy Ceiling Enforcement
-- Mutation execution computes deterministic declared entropy metadata from mutation request shape, augments it with observed sandbox/runtime telemetry entropy (e.g., unseeded RNG, wall-clock reads, external IO attempts), persists cumulative epoch entropy in epoch state, and enforces per-mutation/per-epoch ceilings fail-closed.
+### Phase 2 Extension: Bandit Selector (UCB1 / Thompson Sampling)
 
-## Hardened Sandbox Isolation
-- Test execution uses `HardenedSandboxExecutor`, records sandbox evidence hashes in append-only ledger storage, and feeds evidence hashes into epoch checkpoint aggregation.
-- Sandbox enforcement includes deterministic syscall, filesystem, network, and resource policy checks prior to execution.
-- Sandbox replay verification computes deterministic evidence/hash parity via `runtime.sandbox.replay`.
+```python
+# UCB1 per agent:
+score(agent) = win_rate(agent) + sqrt(2 × log(total_pulls) / pulls(agent))
 
-## Android Telemetry → Constitutional Resource Bounds
-- During `evaluate_mutation`, the runtime samples `AndroidMonitor.snapshot()` and normalizes it via `runtime.governance.resource_accounting.normalize_platform_telemetry_snapshot`.
-- The deterministic envelope state stores merged `platform_telemetry` that `_validate_resources` consumes for `memory_mb`/`cpu_percent` pressure signals plus contextual `battery_percent`/`storage_mb`.
-- Merge precedence is conservative and deterministic: memory/cpu use `max(sandbox_observed, android_monitor)`, while battery/storage use `min(...)` to retain the most constrained mobile context.
-- Resource usage enforcement still resolves hard limits through `coalesce_resource_usage_snapshot(...)` and blocks fail-closed when bounds are exceeded.
+# Thompson Sampling alternative:
+sample from Beta(successes+1, failures+1) per agent
+select agent with highest sample
+```
+
+---
+
+## Measurable Success Criteria
+
+| Metric | Target | Measurement |
+|---|---|---|
+| New test pass rate | 44/44 (100%) | `pytest tests/test_*.py` |
+| Existing test regressions | 0 | `pytest tests/test_orchestrator_replay_mode.py` |
+| Weight prediction accuracy | > 0.60 by epoch 5 | `WeightAdaptor.prediction_accuracy` |
+| Weight bounds | All in [0.05, 0.70] | `ScoringWeights` field assertions |
+| Plateau detection | `True` when all < 20% | `FitnessLandscape.is_plateau()` |
+| BLX crossover validity | 100% in range | `population_manager.py::test_crossover_child_in_blx_range` |
+| gate_ok presence | Always in health payload | `test_pr12_gate_ok.py` |
+| Epoch duration | < 45s with real API | `EpochResult.duration_seconds` |
+| Mutation acceptance rate | 0.20–0.60 | `accepted_count / total_candidates` |
+
+---
+
+## System-Level Health Indicators (after 10 live epochs)
+
+| Indicator | Formula | Healthy Range |
+|---|---|---|
+| Acceptance rate | `accepted / total_candidates` | 0.20–0.60 |
+| Weight accuracy | `WeightAdaptor.prediction_accuracy` | > 0.55 by epoch 10 |
+| Plateau frequency | `is_plateau()` triggers | < 2 per 10 epochs |
+| Agent distribution | Proposals per agent | Balanced unless landscape biased |
+| Crossover utilisation | Children in pop / total pop | 0.05–0.25 |
+| Epoch duration trend | `avg(duration_seconds)` over 5 epochs | Stable or decreasing |
+
+---
+
+## Extension Roadmap
+
+| Phase | Feature | Module |
+|---|---|---|
+| 2 | Bandit agent selector (UCB1/Thompson) | `runtime/autonomy/bandit_selector.py` |
+| 2 | Semantic mutation diff engine (AST-based risk scoring) | `runtime/autonomy/semantic_diff.py` |
+| 3 | Cross-agent synthesis pipeline (Arch→Dream→Beast chain) | `runtime/evolution/synthesis_pipeline.py` |
+| 3 | Cryovant epoch snapshot/restore integration | `runtime/cryovant/snapshot.py` |
+| 4 | Real test coverage binding (`pytest --cov` delta) | `runtime/testing/coverage_runner.py` |
+| 4 | Auto-context builder (AST + git history extraction) | `runtime/autonomy/context_builder.py` |

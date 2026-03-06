@@ -1,16 +1,30 @@
 # SPDX-License-Identifier: Apache-2.0
 """
-Deterministic mutation scaffolding and scoring helpers.
+Deterministic mutation scaffolding and scoring helpers — v2.
 
-Senior-grade enhancements in this revision:
-- horizon_roi is normalized to [0,1] before weighting. Prior version could
-  produce unbounded positive values when strategic_horizon approaches zero,
-  inflating composite scores past 1.0 and bypassing acceptance thresholds.
-- Hard floor/ceiling clamp [0.0, 1.0] applied after composite computation.
-  No mutation can score outside this range regardless of extreme inputs.
-- Out-of-range input warnings surfaced in MutationScore for governance audit.
-- Dimension breakdown returned for full scoring transparency.
-- Weight constants declared at module level for auditability and override.
+v2 enhancements over v1:
+- ScoringWeights dataclass: replaces module-level float constants with an
+  externally-injectable, epoch-scoped weight bundle.  WeightAdaptor owns and
+  mutates these; the scaffold is a pure consumer.
+- PopulationState dataclass: GA bookkeeping (generation counter, elite roster,
+  diversity pressure signal) owned by PopulationManager.
+- MutationCandidate lineage extension: five Optional fields (parent_id,
+  generation, agent_origin, epoch_id, source_context_hash) appended with
+  keyword-only defaults — all existing positional constructors continue to work
+  unchanged.
+- Adaptive acceptance threshold: threshold is scaled down when diversity_pressure
+  is high (exploration epochs), enabling more permissive candidate acceptance.
+- Elitism bonus: +0.05 flat score bonus applied *after* threshold adjustment for
+  children whose parent_id appears in PopulationState.elite_ids.
+- score_candidate() / rank_mutation_candidates() remain 100% backward-compatible:
+  both functions accept optional ScoringWeights and PopulationState kwargs;
+  omitting them reproduces identical v1 behaviour.
+
+Senior-grade invariants preserved from v1:
+- horizon_roi normalised to [0, 1].
+- Hard floor/ceiling clamp [0.0, 1.0].
+- Out-of-range input warnings surfaced for governance audit.
+- Full dimension breakdown returned.
 """
 
 from __future__ import annotations
@@ -18,95 +32,212 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-# -- Constants ----------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Module-level constants (v1 compat — still used as ScoringWeights defaults)
+# ---------------------------------------------------------------------------
 
-# Composite weights. Must sum to 1.0 for gain terms (penalties are subtractive).
 COMPOSITE_WEIGHTS: Dict[str, float] = {
-    "expected_gain":     0.35,
-    "coverage_delta":    0.25,
-    "horizon_roi":       0.20,
-    "risk_penalty":      0.20,   # applied negated
-    "complexity_penalty": 0.10,  # applied negated
+    "expected_gain":      0.35,
+    "coverage_delta":     0.25,
+    "horizon_roi":        0.20,
+    "risk_penalty":       0.20,
+    "complexity_penalty": 0.10,
 }
 
 DEFAULT_ACCEPTANCE_THRESHOLD: float = 0.25
-HARD_FLOOR:    float = 0.0
-HARD_CEILING:  float = 1.0
+HARD_FLOOR:   float = 0.0
+HARD_CEILING: float = 1.0
+
+ELITISM_BONUS: float = 0.05  # flat score bonus for elite-parent children
 
 
-# -- Dataclasses --------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# v2 Data Structures
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ScoringWeights:
+    """
+    Mutable, epoch-scoped weight bundle owned by WeightAdaptor.
+
+    All fields are initialised to v1 COMPOSITE_WEIGHTS values so that
+    score_candidate(candidate) with no extra kwargs produces the same
+    result as v1 for identical inputs.
+    """
+    gain_weight:          float = 0.35
+    coverage_weight:      float = 0.25
+    horizon_weight:       float = 0.20
+    risk_penalty:         float = 0.20   # static in v1 — Phase 2 extension point
+    complexity_penalty:   float = 0.10   # static in v1 — Phase 2 extension point
+    acceptance_threshold: float = DEFAULT_ACCEPTANCE_THRESHOLD
+
+    def as_composite_dict(self) -> Dict[str, float]:
+        """Convert to the legacy COMPOSITE_WEIGHTS key schema."""
+        return {
+            "expected_gain":      self.gain_weight,
+            "coverage_delta":     self.coverage_weight,
+            "horizon_roi":        self.horizon_weight,
+            "risk_penalty":       self.risk_penalty,
+            "complexity_penalty": self.complexity_penalty,
+        }
+
+
+@dataclass
+class PopulationState:
+    """
+    GA bookkeeping for a single epoch, owned by PopulationManager.
+
+    diversity_pressure in [0.0, 1.0]:
+      0.0 = pure exploitation (threshold unchanged)
+      1.0 = pure exploration  (threshold scaled down by 40%)
+    """
+    generation:         int       = 0
+    elite_ids:          List[str] = field(default_factory=list)
+    diversity_pressure: float     = 0.0
+    _max_elite:         int       = field(default=5, repr=False)
+
+    def advance_generation(self) -> None:
+        """Increment generation counter in-place."""
+        self.generation += 1
+
+    def record_elite(self, mutation_id: str) -> None:
+        """Add mutation_id to elite roster, capped at _max_elite."""
+        if mutation_id not in self.elite_ids:
+            self.elite_ids.append(mutation_id)
+        if len(self.elite_ids) > self._max_elite:
+            self.elite_ids = self.elite_ids[-self._max_elite:]
+
+
+# ---------------------------------------------------------------------------
+# Core Dataclasses (v2 — backward-compatible)
+# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class MutationCandidate:
-    mutation_id: str
-    expected_gain: float
-    risk_score: float
-    complexity: float
-    coverage_delta: float
-    strategic_horizon: float = 1.0
-    forecast_roi: float = 0.0
-    # Optional per-candidate weight override. When provided, overrides
-    # COMPOSITE_WEIGHTS for this candidate only.
-    weight_override: Optional[Dict[str, float]] = None
+    """
+    Immutable mutation proposal.
+
+    v1 positional fields (mutation_id, expected_gain, risk_score, complexity,
+    coverage_delta) are unchanged.  All v2 lineage fields are keyword-only with
+    safe defaults — existing test constructors continue to work without change.
+    """
+    # v1 fields — positional
+    mutation_id:       str
+    expected_gain:     float
+    risk_score:        float
+    complexity:        float
+    coverage_delta:    float
+    # v1 optional fields
+    strategic_horizon: float                    = 1.0
+    forecast_roi:      float                    = 0.0
+    weight_override:   Optional[Dict[str, float]] = None
+    # v2 lineage fields — keyword, optional
+    parent_id:             Optional[str] = None
+    generation:            int           = 0
+    agent_origin:          str           = "unknown"
+    epoch_id:              str           = ""
+    source_context_hash:   str           = ""
 
 
 @dataclass(frozen=True)
 class MutationScore:
-    mutation_id: str
-    score: float
-    accepted: bool
+    """Scored evaluation of a MutationCandidate."""
+    mutation_id:         str
+    score:               float
+    accepted:            bool
     dimension_breakdown: Optional[Dict[str, float]] = None
-    warnings: Optional[List[str]] = None
+    warnings:            Optional[List[str]]         = None
+    # v2 passthrough lineage fields
+    epoch_id:            str                         = ""
+    parent_id:           Optional[str]               = None
+    agent_origin:        str                         = "unknown"
+    elitism_applied:     bool                        = False
 
 
-# -- Scoring ------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Scoring Engine
+# ---------------------------------------------------------------------------
 
 
 def score_candidate(
-    candidate: MutationCandidate,
-    acceptance_threshold: float = DEFAULT_ACCEPTANCE_THRESHOLD,
+    candidate:            MutationCandidate,
+    acceptance_threshold: float                    = DEFAULT_ACCEPTANCE_THRESHOLD,
+    weights:              Optional[ScoringWeights]  = None,
+    population_state:     Optional[PopulationState] = None,
 ) -> MutationScore:
     """
     Compute a deterministic, bounded composite mutation score.
 
-    Returns a MutationScore with:
-    - score in [0.0, 1.0] (hard-clamped, never out of range)
-    - accepted=True only when score >= threshold AND no hard input violations
-    - dimension_breakdown for audit/observability
-    - warnings for any out-of-range inputs (flags, does not auto-reject)
-    """
-    warnings: List[str] = []
-    weights = candidate.weight_override or COMPOSITE_WEIGHTS
+    v2 additions (all backward-compatible via optional kwargs):
+    - Accepts ScoringWeights; falls back to v1 COMPOSITE_WEIGHTS when None.
+    - Accepts PopulationState for adaptive threshold + elitism bonus.
+    - Propagates lineage fields from candidate into returned MutationScore.
 
-    # Normalize forecast_roi to [0, 1] relative to strategic horizon.
-    # Without this clamp, a near-zero horizon with any positive ROI produces
-    # a massive multiplier that can push composite far above 1.0.
+    Returns a MutationScore with:
+    - score in [0.0, 1.0] (hard-clamped)
+    - accepted=True when score >= adjusted_threshold AND no hard violations
+    - dimension_breakdown for governance audit
+    - warnings for out-of-range inputs
+    """
+    warnings_list: List[str] = []
+
+    # Weight resolution (v2: prefer ScoringWeights; fallback to v1 dict)
+    if weights is not None:
+        w_dict = weights.as_composite_dict()
+        base_threshold = weights.acceptance_threshold
+    elif candidate.weight_override is not None:
+        w_dict = candidate.weight_override
+        base_threshold = acceptance_threshold
+    else:
+        w_dict = COMPOSITE_WEIGHTS
+        base_threshold = acceptance_threshold
+
+    # Adaptive threshold (v2)
+    diversity_pressure = (
+        population_state.diversity_pressure if population_state is not None else 0.0
+    )
+    adjusted_threshold = base_threshold * (1.0 - (diversity_pressure * 0.4))
+
+    # horizon_roi normalisation (v1 invariant preserved)
     horizon_factor = max(0.10, float(candidate.strategic_horizon))
     horizon_roi_raw = float(candidate.forecast_roi) / horizon_factor
     if horizon_roi_raw > 1.0:
-        warnings.append(f"horizon_roi_clamped:{horizon_roi_raw:.4f}->1.0")
+        warnings_list.append(f"horizon_roi_clamped:{horizon_roi_raw:.4f}->1.0")
     horizon_roi = min(1.0, max(0.0, horizon_roi_raw))
 
-    # Input range warnings -- flag for governance, do not auto-reject.
+    # Input range warnings
     if not (0.0 <= candidate.expected_gain <= 1.0):
-        warnings.append(f"expected_gain_out_of_range:{candidate.expected_gain}")
+        warnings_list.append(f"expected_gain_out_of_range:{candidate.expected_gain}")
     if not (0.0 <= candidate.risk_score <= 1.0):
-        warnings.append(f"risk_score_out_of_range:{candidate.risk_score}")
+        warnings_list.append(f"risk_score_out_of_range:{candidate.risk_score}")
     if not (0.0 <= candidate.complexity <= 1.0):
-        warnings.append(f"complexity_out_of_range:{candidate.complexity}")
+        warnings_list.append(f"complexity_out_of_range:{candidate.complexity}")
     if not (0.0 <= candidate.coverage_delta <= 1.0):
-        warnings.append(f"coverage_delta_out_of_range:{candidate.coverage_delta}")
+        warnings_list.append(f"coverage_delta_out_of_range:{candidate.coverage_delta}")
 
-    # Dimension contributions.
-    eg_contrib   = float(candidate.expected_gain) * weights.get("expected_gain", 0.35)
-    cd_contrib   = float(candidate.coverage_delta) * weights.get("coverage_delta", 0.25)
-    hr_contrib   = horizon_roi * weights.get("horizon_roi", 0.20)
-    risk_pen     = float(candidate.risk_score) * weights.get("risk_penalty", 0.20)
-    complex_pen  = float(candidate.complexity) * weights.get("complexity_penalty", 0.10)
+    # Dimension contributions
+    eg_contrib  = float(candidate.expected_gain) * w_dict.get("expected_gain", 0.35)
+    cd_contrib  = float(candidate.coverage_delta) * w_dict.get("coverage_delta", 0.25)
+    hr_contrib  = horizon_roi * w_dict.get("horizon_roi", 0.20)
+    risk_pen    = float(candidate.risk_score) * w_dict.get("risk_penalty", 0.20)
+    complex_pen = float(candidate.complexity) * w_dict.get("complexity_penalty", 0.10)
 
     raw = eg_contrib + cd_contrib + hr_contrib - risk_pen - complex_pen
-    score = round(min(HARD_CEILING, max(HARD_FLOOR, raw)), 4)
+    base_score = round(min(HARD_CEILING, max(HARD_FLOOR, raw)), 4)
+
+    # Elitism bonus (v2) — applied AFTER threshold computation
+    elitism_applied = False
+    if (
+        population_state is not None
+        and candidate.parent_id is not None
+        and candidate.parent_id in population_state.elite_ids
+    ):
+        base_score = round(min(HARD_CEILING, base_score + ELITISM_BONUS), 4)
+        elitism_applied = True
+
+    score = base_score
 
     breakdown: Dict[str, float] = {
         "expected_gain_contrib":      round(eg_contrib, 4),
@@ -115,27 +246,45 @@ def score_candidate(
         "risk_penalty_contrib":       round(-risk_pen, 4),
         "complexity_penalty_contrib": round(-complex_pen, 4),
         "raw_before_clamp":           round(raw, 4),
+        "diversity_pressure":         round(diversity_pressure, 4),
+        "adjusted_threshold":         round(adjusted_threshold, 4),
     }
 
-    # Hard input violations downgrade acceptance regardless of threshold.
-    has_hard_violation = any("_out_of_range" in w for w in warnings)
-    accepted = (score >= acceptance_threshold) and not has_hard_violation
+    has_hard_violation = any("_out_of_range" in w for w in warnings_list)
+    accepted = (score >= adjusted_threshold) and not has_hard_violation
 
     return MutationScore(
         mutation_id=candidate.mutation_id,
         score=score,
         accepted=accepted,
         dimension_breakdown=breakdown,
-        warnings=warnings if warnings else None,
+        warnings=warnings_list if warnings_list else None,
+        epoch_id=candidate.epoch_id,
+        parent_id=candidate.parent_id,
+        agent_origin=candidate.agent_origin,
+        elitism_applied=elitism_applied,
     )
 
 
 def rank_mutation_candidates(
-    candidates: list[MutationCandidate],
-    acceptance_threshold: float = DEFAULT_ACCEPTANCE_THRESHOLD,
+    candidates:           list[MutationCandidate],
+    acceptance_threshold: float                    = DEFAULT_ACCEPTANCE_THRESHOLD,
+    weights:              Optional[ScoringWeights]  = None,
+    population_state:     Optional[PopulationState] = None,
 ) -> list[MutationScore]:
+    """
+    Score and sort all candidates, highest score first.
+
+    Accepts the same optional v2 kwargs as score_candidate; omitting them
+    reproduces v1 behaviour identically.
+    """
     scores = [
-        score_candidate(c, acceptance_threshold=acceptance_threshold)
+        score_candidate(
+            c,
+            acceptance_threshold=acceptance_threshold,
+            weights=weights,
+            population_state=population_state,
+        )
         for c in candidates
     ]
     return sorted(scores, key=lambda item: (-item.score, item.mutation_id))

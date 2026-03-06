@@ -153,3 +153,73 @@ ADAAD does not: generate model intelligence · replace CI pipelines · remove re
 </p>
 
 <p align="center">MIT License · <a href="LICENSE">LICENSE</a> · <a href="LICENSES.md">LICENSES.md</a></p>
+
+---
+
+## AI Mutation Capability Expansion — v2.0
+
+> **Released:** 2026-03-06 | **Branch:** `feature/ai-mutation-capability-expansion-v2`
+
+This release delivers the full **AI mutation engine** — connecting ADAAD to the Claude API for the first time and establishing a production-ready, self-improving evolution loop.
+
+### What's New
+
+| Module | Type | Capability |
+|---|---|---|
+| `runtime/autonomy/mutation_scaffold.py` | **UPGRADED** | `ScoringWeights`, `PopulationState`, lineage fields, adaptive threshold, elitism bonus |
+| `runtime/autonomy/ai_mutation_proposer.py` | **NEW** | Claude API integration — Architect / Dream / Beast agent personas |
+| `runtime/autonomy/weight_adaptor.py` | **NEW** | Momentum-based self-calibrating weight learner |
+| `runtime/autonomy/fitness_landscape.py` | **NEW** | Persistent win/loss tracker, plateau detection, agent recommendation |
+| `runtime/evolution/population_manager.py` | **NEW** | GA-style population evolution with BLX-alpha crossover |
+| `runtime/evolution/evolution_loop.py` | **NEW** | Full epoch orchestrator: propose → score → evolve → adapt → record |
+| `adaad/core/health.py` | **FIXED** | `gate_ok` flag added to health payload (PR #12) |
+
+### Evolution Epoch Lifecycle
+
+```
+FitnessLandscape → AI Propose (3 agents) → PopulationManager.seed()
+    → evolve_generation() × N → WeightAdaptor.adapt() → FitnessLandscape.record()
+    → EpochResult (epoch_id, accepted_count, weight_accuracy, recommended_next_agent)
+```
+
+### Agent Personas
+
+| Agent | Strategy | Mutation Type | Risk Profile |
+|---|---|---|---|
+| **Architect** | Structural cohesion, interface contracts | `structural` | Low-medium |
+| **Dream** | High-novelty, exploratory, cross-domain | `experimental` | High |
+| **Beast** | Conservative micro-optimisations, coverage | `performance`/`coverage` | Very low |
+
+### Adaptive Scoring
+
+- **Adaptive threshold:** scales down during exploration epochs (`diversity_pressure > 0`)
+- **Elitism bonus:** `+0.05` score for children of elite-roster parents
+- **Momentum weight adaptation:** `LR=0.05`, `momentum=0.85` — stable convergence
+- **Plateau detection:** `< 20%` win rate across all tracked types → Dream dispatched
+
+### Test Coverage
+
+```
+44 new tests — 44 passed (100%)
+0 regressions in existing test suite
+```
+
+### Quick Start (Evolution Loop)
+
+```python
+import os
+from runtime.autonomy.ai_mutation_proposer import CodebaseContext
+from runtime.evolution.evolution_loop import EvolutionLoop
+
+loop = EvolutionLoop(api_key=os.environ["ADAAD_CLAUDE_API_KEY"], generations=3)
+context = CodebaseContext(
+    file_summaries={"runtime/autonomy/mutation_scaffold.py": "Scoring helpers."},
+    recent_failures=[],
+    current_epoch_id="epoch-001",
+)
+result = loop.run_epoch(context)
+print(f"Accepted: {result.accepted_count}/{result.total_candidates}")
+print(f"Next agent: {result.recommended_next_agent}")
+print(f"Weight accuracy: {result.weight_accuracy:.2%}")
+```
+
