@@ -86,18 +86,22 @@ def test_propose_contracts_deterministic_ids_in_strict_and_audit_modes(tmp_path,
     }
 
     strict_provider = SeededDeterminismProvider("strict-seed")
+    # Compute expected id BEFORE posting: the POST consumes the first next_id call.
+    # Clone the provider at call-0 position to compute the expected value.
+    strict_expected = SeededDeterminismProvider("strict-seed").next_id(label="mcp-proposal", length=32)
     strict_client = TestClient(create_app(provider=strict_provider, replay_mode="strict"))
     tok = _jwt("secret", int(time.time()) + 500)
     hdr = {"Authorization": f"Bearer {tok}"}
     strict_resp = strict_client.post("/mutation/propose", json=payload, headers=hdr)
     assert strict_resp.status_code == 200
-    assert strict_resp.json()["proposal_id"] == strict_provider.next_id(label="mcp-proposal", length=32)
+    assert strict_resp.json()["proposal_id"] == strict_expected
 
     audit_provider = SeededDeterminismProvider("audit-seed")
+    audit_expected = SeededDeterminismProvider("audit-seed").next_id(label="mcp-proposal", length=32)
     audit_client = TestClient(create_app(provider=audit_provider, recovery_tier="audit"))
     audit_resp = audit_client.post("/mutation/propose", json=payload, headers=hdr)
     assert audit_resp.status_code == 200
-    assert audit_resp.json()["proposal_id"] == audit_provider.next_id(label="mcp-proposal", length=32)
+    assert audit_resp.json()["proposal_id"] == audit_expected
 
 
 def test_propose_contracts_live_mode_ids_are_unique_and_hex(tmp_path, monkeypatch):

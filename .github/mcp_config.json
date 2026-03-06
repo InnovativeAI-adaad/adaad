@@ -63,6 +63,23 @@
         "mutation_explain_rejection",
         "mutation_rank"
       ]
+    },
+    "evolution-pipeline": {
+      "type": "local",
+      "command": "python",
+      "args": [
+        "-m",
+        "runtime.mcp.server",
+        "--server",
+        "evolution-pipeline"
+      ],
+      "tools": [
+        "fitness_landscape_summary",
+        "weight_state",
+        "epoch_recommend",
+        "bandit_state",
+        "telemetry_health"
+      ]
     }
   }
 }

@@ -26,6 +26,7 @@ from runtime.mcp.proposal_queue import append_proposal
 from runtime.mcp.proposal_validator import ProposalValidationError, validate_proposal
 from runtime.mcp.rejection_explainer import explain_rejection
 from runtime.mcp.tools_registry import tools_list_response
+from runtime.mcp import evolution_pipeline_tools
 from security import cryovant
 
 LOG = logging.getLogger(__name__)
@@ -160,6 +161,29 @@ def create_app(
             return rank_candidates([str(mid) for mid in mutation_ids])
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # --- Evolution pipeline tools (read-only observability) -----------------
+
+    @app.get("/evolution/fitness-landscape")
+    async def evo_fitness_landscape() -> Dict[str, Any]:
+        return evolution_pipeline_tools.fitness_landscape_summary()
+
+    @app.get("/evolution/weight-state")
+    async def evo_weight_state() -> Dict[str, Any]:
+        return evolution_pipeline_tools.weight_state()
+
+    @app.get("/evolution/recommend")
+    async def evo_recommend() -> Dict[str, Any]:
+        return evolution_pipeline_tools.epoch_recommend()
+
+    @app.get("/evolution/bandit-state")
+    async def evo_bandit_state() -> Dict[str, Any]:
+        return evolution_pipeline_tools.bandit_state()
+
+    @app.get("/evolution/telemetry-health")
+    async def evo_telemetry_health() -> Dict[str, Any]:
+        return evolution_pipeline_tools.telemetry_health()
+
 
     return app
 
