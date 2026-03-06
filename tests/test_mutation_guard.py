@@ -23,6 +23,8 @@ from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.tools import mutation_guard
 from runtime.tools.mutation_guard import apply_dna_mutation
 from runtime import metrics
+from runtime.evolution import lineage_v2 as _lineage_v2_mod
+from runtime.evolution.runtime import EvolutionRuntime
 from security import cryovant
 
 
@@ -64,6 +66,15 @@ class MutationExecutorIntegrationTest(unittest.TestCase):
         cryovant.KEYS_DIR = self.tmp_root / "keys"
         cryovant.KEYS_DIR.mkdir(parents=True, exist_ok=True)
         self.addCleanup(setattr, cryovant, "KEYS_DIR", self._orig_keys_dir)
+
+        # Isolate the lineage ledger so each test gets a fresh epoch state
+        self._tmp_ledger_path = self.tmp_root / "lineage_v2.jsonl"
+        self._orig_ledger_v2 = _lineage_v2_mod.LEDGER_V2_PATH
+        self._orig_lineage_v2 = _lineage_v2_mod.LINEAGE_V2_PATH
+        _lineage_v2_mod.LEDGER_V2_PATH = self._tmp_ledger_path
+        _lineage_v2_mod.LINEAGE_V2_PATH = self._tmp_ledger_path
+        self.addCleanup(setattr, _lineage_v2_mod, "LEDGER_V2_PATH", self._orig_ledger_v2)
+        self.addCleanup(setattr, _lineage_v2_mod, "LINEAGE_V2_PATH", self._orig_lineage_v2)
 
     def test_executor_applies_mutation(self) -> None:
         agents_root = self.tmp_root / "agents"
@@ -389,7 +400,7 @@ class MutationExecutorIntegrationTest(unittest.TestCase):
         executor = MutationExecutor(agents_root=agents_root)
         from runtime.evolution.entropy_policy import EntropyPolicy
 
-        executor.entropy_policy = EntropyPolicy("tight", per_mutation_ceiling_bits=0, per_epoch_ceiling_bits=0)
+        executor.entropy_policy = EntropyPolicy("tight", per_mutation_ceiling_bits=1, per_epoch_ceiling_bits=1)
         request = MutationRequest(
             agent_id="sample",
             generation_ts="now",

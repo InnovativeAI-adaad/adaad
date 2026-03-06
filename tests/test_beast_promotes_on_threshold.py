@@ -28,6 +28,7 @@ from runtime import capability_graph, metrics
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from runtime.manifest.generator import generate_tool_manifest
 from security.ledger import journal
+from runtime.evolution import lineage_v2 as _lineage_v2_mod
 
 
 class _FakeClock:
@@ -71,6 +72,19 @@ class BeastPromotionTest(unittest.TestCase):
         os.environ["ADAAD_FITNESS_THRESHOLD"] = "0.1"
         self._orig_autonomy_threshold = os.environ.get("ADAAD_AUTONOMY_THRESHOLD")
         os.environ["ADAAD_AUTONOMY_THRESHOLD"] = "0.25"
+
+        # Isolate lineage ledger so each test starts with a fresh epoch
+        from runtime.evolution import promotion_manifest as _pm_mod
+        self._tmp_ledger = Path(self.tmp.name) / "lineage_v2.jsonl"
+        self._orig_ledger_v2 = _lineage_v2_mod.LEDGER_V2_PATH
+        self._orig_lineage_v2 = _lineage_v2_mod.LINEAGE_V2_PATH
+        self._orig_pm_ledger = _pm_mod.LEDGER_V2_PATH
+        _lineage_v2_mod.LEDGER_V2_PATH = self._tmp_ledger
+        _lineage_v2_mod.LINEAGE_V2_PATH = self._tmp_ledger
+        _pm_mod.LEDGER_V2_PATH = self._tmp_ledger
+        self.addCleanup(setattr, _lineage_v2_mod, "LEDGER_V2_PATH", self._orig_ledger_v2)
+        self.addCleanup(setattr, _lineage_v2_mod, "LINEAGE_V2_PATH", self._orig_lineage_v2)
+        self.addCleanup(setattr, _pm_mod, "LEDGER_V2_PATH", self._orig_pm_ledger)
 
         def _restore_threshold() -> None:
             if self._orig_threshold is None:

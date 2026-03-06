@@ -246,6 +246,14 @@ def run_self_check_loop(
             started_ts = time.time()
     budget_snapshot = None
     active_threshold = 0.7 if mutate_threshold is None else float(mutate_threshold)
+    if budget_engine is not None:
+        budget_snapshot = budget_engine.record_snapshot(
+            cycle_id=cycle_id,
+            governance_debt_score=governance_debt_score or 0.0,
+            fitness_trend_delta=fitness_trend_delta or 0.0,
+            epoch_pass_rate=epoch_pass_rate or 1.0,
+        )
+        active_threshold = budget_snapshot.threshold
 
     routed_intelligence = IntelligenceRouter().route(
         StrategyInput(
@@ -255,6 +263,9 @@ def run_self_check_loop(
             signals={"epoch_pass_rate": epoch_pass_rate},
         )
     )
+
+    all_actions_ok = all(a.ok for a in actions) if actions else True
+    post_conditions_passed = all(fn() for fn in post_condition_checks.values()) if post_condition_checks else True
 
     if not all_actions_ok or not post_conditions_passed:
         decision = "escalate"
@@ -274,21 +285,21 @@ def run_self_check_loop(
         event_type="autonomy_cycle_summary",
         payload={
             "cycle_id": cycle_id,
-            "all_actions_ok": cycle_result.loop_result.ok,
-            "post_conditions_passed": cycle_result.loop_result.post_conditions_passed,
+            "all_actions_ok": all_actions_ok,
+            "post_conditions_passed": post_conditions_passed,
             "mutation_score": mutation_score,
             "mutate_threshold": active_threshold,
             "threshold_source": "adaptive_budget" if budget_snapshot else "static",
             "budget_snapshot_hash": budget_snapshot.snapshot_hash if budget_snapshot else None,
-            "decision": cycle_result.loop_result.decision,
+            "decision": decision,
             "total_duration_ms": total_duration_ms,
         },
-        level="INFO" if cycle_result.loop_result.decision != "escalate" else "ERROR",
+        level="INFO" if decision != "escalate" else "ERROR",
     )
     return AutonomyLoopResult(
-        ok=cycle_result.loop_result.ok,
-        post_conditions_passed=cycle_result.loop_result.post_conditions_passed,
+        ok=all_actions_ok,
+        post_conditions_passed=post_conditions_passed,
         total_duration_ms=total_duration_ms,
         mutation_score=mutation_score,
-        decision=cycle_result.loop_result.decision,
+        decision=decision,
     )

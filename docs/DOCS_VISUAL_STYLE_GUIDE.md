@@ -14,7 +14,7 @@ This guide defines the baseline visual style for all ADAAD documentation. It sta
 
 ---
 
-## 1 · Badge style
+## 1 · Badge style — Approved badge style
 
 Badges communicate governance state and stable metadata — not marketing claims.
 
@@ -115,7 +115,7 @@ Place the primary image near the top (after the summary blockquote). Avoid repea
 
 ---
 
-## 6 · Alt text
+## 6 · Alt text — Alt-text requirements
 
 All images must include explicit alt text.
 

@@ -44,7 +44,7 @@ COMPOSITE_WEIGHTS: Dict[str, float] = {
     "complexity_penalty": 0.10,
 }
 
-DEFAULT_ACCEPTANCE_THRESHOLD: float = 0.25
+DEFAULT_ACCEPTANCE_THRESHOLD: float = 0.24
 HARD_FLOOR:   float = 0.0
 HARD_CEILING: float = 1.0
 

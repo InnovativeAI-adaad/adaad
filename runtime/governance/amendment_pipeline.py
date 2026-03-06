@@ -96,7 +96,7 @@ class AmendmentPipeline:
             "phase": phase,
             "state": state,
             "prev_phase_hash": previous_hash,
-            "tx_hash": tx["hash"],
+            "tx_hash": tx.get("hash") or tx.get("tx") or "",
         }
         self.transition_log.append(entry)
 

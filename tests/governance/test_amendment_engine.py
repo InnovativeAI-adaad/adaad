@@ -73,6 +73,7 @@ def test_review_latency_uses_injected_provider_clock(tmp_path: Path, monkeypatch
         lambda tx_type, payload, tx_id=None: {"tx": tx_id or "tx", "type": tx_type, "payload": payload},
     )
     monkeypatch.setattr(amendment, "record_review_quality", lambda payload: review_events.append(payload))
+    monkeypatch.setattr(amendment, "reload_constitution_policy", lambda **kwargs: hashlib.sha256(b'{"SANDBOX":"warning"}').hexdigest())
 
     provider = SeededDeterminismProvider(seed="latency", fixed_now=datetime(2027, 1, 1, 0, 1, 30, tzinfo=timezone.utc))
     engine = AmendmentEngine(proposals_dir=tmp_path / "proposals", required_approvals=1, provider=provider)

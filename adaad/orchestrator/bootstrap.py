@@ -39,6 +39,10 @@ def _load_callable(spec: str) -> Callable:
         from runtime.tools.mutation_guard import _apply_ops
 
         fn = _apply_ops
+    elif spec.startswith("builtins:"):
+        import builtins
+        attr = spec.split(":", 1)[1]
+        fn = getattr(builtins, attr)
     else:
         raise ModuleNotFoundError(f"bootstrap_target_not_registered:{spec}")
     if not callable(fn):

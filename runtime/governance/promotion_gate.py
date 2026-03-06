@@ -9,8 +9,19 @@ or via the runtime.api.app_layer facade.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Protocol, runtime_checkable
 
-from sandbox.sandbox_executor import SandboxResult
+
+@runtime_checkable
+class SandboxResult(Protocol):
+    """Structural protocol — compatible with sandbox.sandbox_executor.SandboxResult."""
+    variant_id: str
+    execution_time_ms: int
+    memory_kb: int
+    status: str
+    invariant_results: dict
+    fitness_score: float
+    revenue_score: float
 
 
 @dataclass(frozen=True)

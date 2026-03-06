@@ -42,7 +42,7 @@ class SystemDeterminismProvider:
         return datetime.now(timezone.utc)
 
     def iso_now(self) -> str:
-        return self.now_utc().isoformat().replace("+00:00", "Z")
+        return self.now_utc().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def format_utc(self, fmt: str) -> str:
         return self.now_utc().strftime(fmt)

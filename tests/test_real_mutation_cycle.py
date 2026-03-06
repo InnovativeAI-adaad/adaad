@@ -10,6 +10,7 @@ from adaad.agents.mutation_engine import MutationEngine
 from app.architect_agent import ArchitectAgent
 from app.mutation_executor import MutationExecutor
 from runtime import metrics
+from runtime.evolution import lineage_v2 as _lineage_v2_mod
 from runtime.tools import mutation_guard
 
 
@@ -31,6 +32,15 @@ class RealMutationCycleTest(unittest.TestCase):
         self.agents_root = Path(self.tmp.name) / "agents"
         self._orig_agents_root = mutation_guard.AGENTS_ROOT
         mutation_guard.AGENTS_ROOT = self.agents_root
+
+        # Isolate lineage ledger so each test starts with a fresh epoch
+        self._tmp_ledger = Path(self.tmp.name) / "lineage_v2.jsonl"
+        self._orig_ledger_v2 = _lineage_v2_mod.LEDGER_V2_PATH
+        self._orig_lineage_v2 = _lineage_v2_mod.LINEAGE_V2_PATH
+        _lineage_v2_mod.LEDGER_V2_PATH = self._tmp_ledger
+        _lineage_v2_mod.LINEAGE_V2_PATH = self._tmp_ledger
+        self.addCleanup(setattr, _lineage_v2_mod, "LEDGER_V2_PATH", self._orig_ledger_v2)
+        self.addCleanup(setattr, _lineage_v2_mod, "LINEAGE_V2_PATH", self._orig_lineage_v2)
         self.addCleanup(self._restore_agents_root)
         self._create_test_agent("test_subject")
         self._create_test_agent("sandbox_alpha")
@@ -81,7 +91,9 @@ class RealMutationCycleTest(unittest.TestCase):
 
         executor = MutationExecutor(self.agents_root)
         executor._run_tests = lambda: (True, "skipped")  # type: ignore[method-assign]
-        result = executor.execute(selected)
+        from unittest import mock
+        with mock.patch("app.mutation_executor.verify_all", return_value=(True, [])):
+            result = executor.execute(selected)
 
         self.assertIn("status", result)
         self.assertIn("mutation_id", result)

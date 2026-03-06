@@ -39,7 +39,7 @@ class MutationTransactionTest(unittest.TestCase):
         self.assertEqual(payload["version"], 1)
 
     def test_deterministic_mode_with_identical_context_generates_identical_tx_ids(self) -> None:
-        provider = SeededDeterminismProvider("seed-1")
+        provider1 = SeededDeterminismProvider("seed-1")
         tx1 = MutationTransaction(
             "alpha",
             agents_root=self.agents_root,
@@ -48,8 +48,9 @@ class MutationTransactionTest(unittest.TestCase):
             replay_seed="0000000000000001",
             replay_mode="strict",
             recovery_tier="audit",
-            provider=provider,
+            provider=provider1,
         )
+        provider2 = SeededDeterminismProvider("seed-1")
         tx2 = MutationTransaction(
             "alpha",
             agents_root=self.agents_root,
@@ -58,7 +59,7 @@ class MutationTransactionTest(unittest.TestCase):
             replay_seed="0000000000000001",
             replay_mode="strict",
             recovery_tier="audit",
-            provider=provider,
+            provider=provider2,
         )
         self.assertEqual(tx1.tx_id, tx2.tx_id)
 

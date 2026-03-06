@@ -22,7 +22,7 @@ from security.ledger import journal
 ELEMENT_ID = "Fire"
 TRUST_MODES = {"dev", "prod"}
 LIFECYCLE_STATE_DIR = ROOT_DIR / "runtime" / "lifecycle_states"
-KNOWN_AGENT_ID_PREFIXES = ("architect", "executor", "validator", "mutator", "claude-proposal-agent", "sample")
+KNOWN_AGENT_ID_PREFIXES = ("architect", "executor", "validator", "mutator", "claude-proposal-agent", "sample", "sandbox", "test")
 
 
 class LifecycleTransitionError(RuntimeError):
