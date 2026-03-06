@@ -36,6 +36,10 @@ This matrix maps major external/public claims to objective, versioned repository
 | `population-manager-ga-dedup` | "PopulationManager enforces MD5 fingerprint deduplication to prevent near-duplicate population lock-in; BLX-alpha crossover is bounds-correct." | [PopulationManager](../../runtime/autonomy/population_manager.py); [Population manager tests](../../tests/test_population_manager.py) | Complete |
 | `v2-constitutional-spec-issued` | "ArchitectAgent constitutional spec v2.0.0 is issued, machine-readable, and covers authority invariant, 14 rules, lifecycle phases, invariants matrix, subsystem blueprints, and gate specs." | [ARCHITECT_SPEC_v2.0.0.md](../governance/ARCHITECT_SPEC_v2.0.0.md) | Complete |
 
+| `ucb1-bandit-deterministic` | "UCB1 agent selection is deterministic: identical arm state and pull counts produce identical scores and selection, with no entropy sources." | [BanditSelector](../../runtime/autonomy/bandit_selector.py); [Bandit tests](../../tests/test_bandit_selector.py) (test_deterministic_select) | Complete |
+| `epoch-telemetry-append-only` | "EpochTelemetry is append-only: health_indicators() and generate_report() are pure functions producing deterministic output for identical inputs." | [EpochTelemetry](../../runtime/autonomy/epoch_telemetry.py); [Telemetry tests](../../tests/test_epoch_telemetry.py) (test_report_deterministic) | Complete |
+| `mcp-evolution-tools-read-only` | "All 5 evolution-pipeline MCP tools are read-only; none may write to governed surfaces, invoke GovernanceGate, or modify scoring weights." | [Evolution pipeline tools](../../runtime/mcp/evolution_pipeline_tools.py); [MCP server routes](../../runtime/mcp/server.py); [MCP config](../../.github/mcp_config.json) | Complete |
+
 ## Completion standard
 
 An entry is considered complete only when:

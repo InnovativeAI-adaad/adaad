@@ -146,6 +146,29 @@ print(f"Duration:     {result.duration_seconds:.1f}s")
 
 ---
 
+## Phase 2 — Live
+
+UCB1 bandit agent selection is active as of v2.0.0. The system now learns which agent persona performs best for each mutation type:
+
+```
+Phase 1 (< 10 pulls)     →  v1 decision tree (conservative default)
+Phase 2 (≥ 10 pulls)     →  UCB1 bandit: score = win_rate + √2 × √(ln N / nᵢ)
+Phase 3 (Thompson, TBD)  →  Beta sampling — adapts to non-stationary reward
+```
+
+Health targets (from `EVOLUTION_ARCHITECTURE.md`):
+
+| Metric | Target | Measured by |
+|--------|--------|-------------|
+| Acceptance rate | 0.20–0.60 | `EpochTelemetry.health_indicators()` |
+| Weight bounds | `[0.05, 0.70]` | `ScoringWeights` field assertions |
+| Plateau frequency | ≤ 2 per 10 epochs | `FitnessLandscape.is_plateau()` |
+| Epoch duration | < 45s with real API | `EpochResult.duration_seconds` |
+
+Weekly analytics report: `.github/workflows/epoch_analytics.yml` (every Monday 06:00 UTC).
+
+---
+
 ## Who is this for?
 
 ```
@@ -186,11 +209,11 @@ This is architecturally enforced, not just documented.
 
 ---
 
-## Milestones
+## Evolution History
 
 | Version | Capability |
 |---|---|
-| **v2.0** | AI mutation engine — Claude API, 3 agent personas, GA evolution, adaptive weights |
+| **v2.0** | AI mutation engine · UCB1 bandit · epoch telemetry · MCP pipeline tools |
 | v1.8 | Cross-track convergence — market × federation × container × Darwinian unified |
 | v1.7 | Fully autonomous multi-node federation — Raft consensus, gossip, node supervisor |
 | v1.6 | Real container-level isolation — cgroup v2, orchestrator, health probes |
@@ -198,6 +221,8 @@ This is architecturally enforced, not just documented.
 | v1.4 | Live market signal adapters — FeedRegistry, 3 adapters, webhook |
 | v1.3 | Aponi IDE — proposal editor, linter, evidence viewer, replay inspector |
 | v1.0 | Stable release — HMAC, 11 constitutional rules, MCP co-pilot |
+
+See [ROADMAP.md](ROADMAP.md) for Phase 3–6 plans.
 
 ---
 
@@ -207,9 +232,23 @@ ADAAD does not: replace human judgment · guarantee semantic correctness · remo
 
 ---
 
+## Governance & Determinism Guarantees (Current State)
+
+ADAAD enforces determinism at every layer of the mutation pipeline. The following environment controls are part of the determinism contract:
+
+| Variable | Purpose | Behavior |
+|---|---|---|
+| `ADAAD_DETERMINISTIC_LOCK` | Lock the entire pipeline to deterministic replay mode | When set, all entropy sources are suppressed; divergence halts the pipeline |
+| `ADAAD_DISPATCH_LATENCY_BUDGET_MS` | Maximum allowed dispatch latency before SLA breach event is emitted | Default: 200ms; breach emits `dispatch_latency_exceeded` governance event |
+
+All constitutional guarantees are replay-verifiable. Divergence between any two replay runs on identical inputs is treated as a governance fault.
+
+---
+
 <p align="center">
   <a href="docs/CONSTITUTION.md">Constitution</a> ·
   <a href="docs/EVOLUTION_ARCHITECTURE.md">Architecture</a> ·
+  <a href="ROADMAP.md">Roadmap</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="docs/SECURITY.md">Security</a> ·
   <a href="CHANGELOG.md">Changelog</a>

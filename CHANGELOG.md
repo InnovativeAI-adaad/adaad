@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+### Strategic Evolution — Post-v2.0.0 (2026-03-06)
+
+**PR-EVOLUTION-01: UCB1 Multi-Armed Bandit Agent Selection (Phase 2)**
+- `runtime/autonomy/bandit_selector.py` — UCB1 algorithm for agent persona selection
+  score(agent) = win_rate + √2 × √(ln N / nᵢ); unpulled arms score +inf
+- `FitnessLandscape.recommended_agent()` upgraded: UCB1 active when `total_pulls >= 10`
+- `ThompsonBanditSelector` implemented as Phase 3 extension point (not wired)
+- `BanditSelector.from_landscape_records()` bootstraps from existing TypeRecord data
+- Bandit state persisted alongside landscape in `data/fitness_landscape_state.json`
+- 26 tests: arm math, activation threshold, exploration/exploitation, persistence, bootstrap
+
+**PR-EVOLUTION-02: Epoch Telemetry Engine + Weekly Analytics CI**
+- `runtime/autonomy/epoch_telemetry.py` — Append-only epoch analytics engine
+  Collects: acceptance rate series, rolling mean, weight trajectory, agent distribution,
+  plateau events, bandit activation epoch, 5 health indicators
+- `tools/epoch_analytics.py` — CLI report generator with `--summary`, `--health`,
+  `--fail-on-warning` (CI gate), `--output` flags; exit codes: 0/1/2/3
+- `.github/workflows/epoch_analytics.yml` — Weekly CI (Monday 06:00 UTC):
+  generates report JSON artifact, writes summary to $GITHUB_STEP_SUMMARY, 90d retention
+- 32 tests: all health indicator scenarios, persistence round-trip, determinism
+
+**PR-MCP-01: Evolution Pipeline MCP Tool Registration**
+- `runtime/mcp/evolution_pipeline_tools.py` — 5 read-only tools:
+    fitness_landscape_summary, weight_state, epoch_recommend, bandit_state, telemetry_health
+- MCP server: 5 new GET routes (`/evolution/*`)
+- `.github/mcp_config.json`: `evolution-pipeline` server registered with 5 tools
+- Pre-existing MCP test bug fixed: `test_propose_contracts_deterministic_ids`
+  (off-by-one in SeededDeterminismProvider assertion); 7/7 tests now pass
+
+**PR-DOCS-01: ROADMAP.md + Strategic README**
+- `ROADMAP.md` — 6-phase evolution roadmap:
+    Phase 3: Adaptive penalty weights (Thompson Sampling unlock)
+    Phase 4: Semantic mutation diff engine (AST-based risk scoring)
+    Phase 5: Multi-repo federation (cross-repo governed mutations)
+    Phase 6: Autonomous roadmap self-amendment (constitutionally governed)
+  Measurement targets, hard non-goals, constitutional authority chain
+- `README.md`: Phase 2 live status, UCB1 algorithm, health targets table,
+  performance benchmarks, ROADMAP link in footer, Evolution History milestones
+
 ### Repository Hardening — v2.0.0 (2026-03-06)
 
 **Structural simplification**
