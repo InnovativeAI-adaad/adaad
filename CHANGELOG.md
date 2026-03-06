@@ -1,6 +1,49 @@
 # Changelog
 
-## [2.2.0] — 2026-03-06
+## [2.3.0] — 2026-03-06
+
+### Phase 4 — AST-Aware Scoring + Pipeline Intelligence (SHIPPED)
+
+#### PR-PHASE4-02: SemanticDiffEngine wired into scoring pipeline
+- **New:** `MutationFitnessEvaluator.evaluate()` enriches code_diff with AST-derived risk/complexity via `enrich_code_diff_with_semantic()` when `python_content` is available
+- **New:** `scoring_algorithm_version: "semantic_diff_v1.0"` injected into every scored payload
+- **New:** `EpochResult.semantic_scored_count` + `scoring_algorithm_version` fields
+- Graceful degradation: falls back to v1 LOC heuristics on SyntaxError or parse failure
+- Backward-compatible: all existing scoring consumers unaffected
+
+#### PR-PHASE4-03: MutationRouteOptimizer — Phase 2.5 pre-scoring gate
+- **New:** `EvolutionLoop.run_epoch()` Phase 2.5: routes each candidate (TRIVIAL / STANDARD / ELEVATED) before deep scoring
+- **New:** ELEVATED mutations annotated in `EpochResult.elevated_mutation_ids` for human-review
+- **New:** TRIVIAL count reported in `EpochResult.trivial_fast_pathed`
+- **New:** `mutation_route_decision` ledger event emitted per epoch
+- Fail-graceful: routing errors never halt the epoch
+
+#### PR-PHASE4-04: EntropyFastGate — Phase 1.5 entropy preflight
+- **New:** Phase 1.5 preflight: proposals containing nondeterministic sources (random, uuid, time.time, os.urandom) scanned before seeding
+- **New:** DENY → proposal quarantined, `entropy_gate_quarantine` ledger event emitted
+- **New:** `EpochResult.entropy_quarantined` + `entropy_warned` fields
+- Strict mode by default (`strict=True`): nondeterministic proposals never reach population
+
+#### PR-PHASE4-05: CheckpointChain — epoch transition anchoring
+- **New:** `EvolutionLoop.__init__` loads and verifies `data/checkpoint_chain.jsonl` at boot — halts on integrity failure (fail-closed)
+- **New:** Phase 5c: every epoch anchored to running `CheckpointChain` (append-only JSONL, hash-linked)
+- **New:** `EpochResult.checkpoint_digest` — chain_digest of the new epoch link
+- Chain integrity check via `verify_checkpoint_chain()` at boot; tampering → `RuntimeError`
+
+#### PR-PHASE4-06: ParallelGovernanceGate — concurrent axis evaluation
+- **New:** `GateDecision.gate_mode: str` field (`"serial"` | `"parallel"`) in all ledger events
+- **New:** `GovernanceGate.approve_mutation(parallel=True)` delegates to `ParallelGovernanceGate.approve_mutation_parallel()`
+- Serial path fully backward-compatible (default `parallel=False`)
+- Parallel fallback: any failure reverts to serial (fail-safe)
+
+#### PR-PHASE4-07: Lineage confidence scoring + semantic determinism CI
+- **New:** `LineageLedgerV2.semantic_proximity_score()` — cosine similarity in (risk, complexity) 2D space against rolling mean of last 10 accepted mutations
+  - `proximity_bonus ∈ [0.0, 0.15]` — semantic similarity to accepted lineage
+  - `exploration_bonus ∈ [0.0, 0.10]` — semantic novelty reward
+- **New:** `EpochResult.mean_lineage_proximity` — mean lineage score for accepted mutations
+- **New CI job:** `semantic-diff-determinism` — 10 fixed AST fixture proofs on every push
+
+[2.2.0] — 2026-03-06
 
 ### Phase 2 — Governed Explore/Exploit Loop (SHIPPED)
 

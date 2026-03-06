@@ -1,8 +1,8 @@
 {
-  "schema_version": "2.2.0",
+  "schema_version": "2.3.0",
   "last_completed_pr": "AI-MUTATION-v2.0-MILESTONE",
   "next_pr": "ADAAD-15-pending",
-  "active_phase": "v2.2.0 RELEASED \u00b7 post-merge doc sync",
+  "active_phase": "v2.3.0 RELEASED \u00b7 post-merge doc sync",
   "last_invocation": "2026-03-06",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -47,5 +47,5 @@
     "v2.0.0-released"
   ],
   "pending_evidence_rows": [],
-  "last_sync_sha": "c051542"
+  "last_sync_sha": "2de28a3"
 }

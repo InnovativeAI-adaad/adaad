@@ -202,6 +202,7 @@ def compute_score(
     recovery_tier: str | None = None,
     before_source: "str | None" = None,
     after_source: "str | None" = None,
+    lineage_ledger: "object | None" = None,  # PR-PHASE4-07: LineageLedgerV2 instance
 ) -> Dict[str, Any]:
     """Compute deterministic score with canonical hashing and bounded arithmetic.
 
@@ -261,6 +262,20 @@ def compute_score(
         - risk_penalty,
     )
 
+    # ── PR-PHASE4-07: Lineage confidence bonus ─────────────────────────
+    # Advisory only: any exception leaves final_score unchanged.
+    proximity_bonus:   float = 0.0
+    exploration_bonus: float = 0.0
+    if lineage_ledger is not None and after_source is not None:
+        try:
+            lineage_result = lineage_ledger.semantic_proximity_score(after_source)
+            proximity_bonus   = float(lineage_result.get("proximity_bonus", 0.0))
+            exploration_bonus = float(lineage_result.get("exploration_bonus", 0.0))
+            # Convert float bonuses to integer scoring domain (×100 scale)
+            final_score = max(0, final_score + int((proximity_bonus + exploration_bonus) * 100))
+        except Exception:  # noqa: BLE001 — advisory; never blocks scoring
+            pass
+
     result: Dict[str, Any] = {
         "mutation_id": scoring_input.get("mutation_id", ""),
         "epoch_id": scoring_input.get("epoch_id", ""),
@@ -277,6 +292,8 @@ def compute_score(
             "long_horizon_sustainability_term": int(sustainability_term),
             "resource_efficiency_term": int(resource_efficiency_term),
             "cross_agent_synergy_term": int(cross_agent_synergy_term),
+            "lineage_proximity_bonus": round(proximity_bonus, 6),
+            "lineage_exploration_bonus": round(exploration_bonus, 6),
         },
     }
 

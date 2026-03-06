@@ -4,7 +4,7 @@
 
 ---
 
-## What ships today — v2.2.0
+## What ships today — v2.3.0
 
 The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
 
@@ -26,7 +26,7 @@ The self-improving loop is live. Three AI agents compete. The fittest mutations 
 
 ## Phase 3 — Adaptive Penalty Weights
 
-**Target:** v2.1.0 · Requires: ≥10 live epochs with merged mutations
+**Status:** ✅ shipped (v2.1.0)
 
 Currently `risk_penalty` (0.20) and `complexity_penalty` (0.10) are static. Phase 3 makes them adaptive by harvesting post-merge telemetry:
 

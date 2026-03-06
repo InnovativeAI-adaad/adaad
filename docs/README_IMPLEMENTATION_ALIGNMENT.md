@@ -5,9 +5,9 @@
 
 | Metric | Value |
 | --- | --- |
-| Report version | `2.2.0` |
-| Branch | `feat/phase4-entropy-preflight` |
-| Short SHA | `c051542` |
+| Report version | `2.3.0` |
+| Branch | `main` |
+| Short SHA | `2de28a3` |
 | Last sync | 2026-03-06 |
 
 All future architecture snapshots MUST include branch, tag (if any), and short SHA.

@@ -346,6 +346,62 @@ jobs:
           print('ALL FAST-PATH MODULES IMPORTED OK')
           "
 
+  semantic-diff-determinism:
+    runs-on: ubuntu-latest
+    needs: classify
+    # PR-PHASE4-07: Verify SemanticDiffEngine produces identical scores on identical AST inputs.
+    # Runs on any runtime change; always-on for main pushes.
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Run semantic diff determinism verification
+        run: |
+          PYTHONPATH=. python - << 'PY'
+          import hashlib, json
+
+          FIXTURES = [
+              ("empty",    "", ""),
+              ("simple",   "def f(): pass", "def f(): return 1"),
+              ("import",   "import os", "import os
+import sys"),
+              ("class",    "class A: pass", "class A:
+    def m(self): pass"),
+              ("complex",  "x=1", "def g(a,b,c):\n  for i in range(a):\n    if b: c()\n  return a"),
+              ("noop",     "x=1", "x=1"),
+              ("multiline","a=1\nb=2", "a=1\nb=2\nc=3"),
+              ("risk_high", "pass", "\n".join(["import " + m for m in "os sys json re ast hashlib hmac secrets pathlib".split()])),
+              ("nested",   "def f(): pass", "def f():\n  def g():\n    def h(): return 1\n  return g"),
+              ("blank",    "   ", "   "),
+          ]
+
+          from runtime.evolution.semantic_diff import SemanticDiffEngine
+
+          run1 = {}
+          run2 = {}
+          engine = SemanticDiffEngine()
+
+          for name, before, after in FIXTURES:
+              result1 = engine.diff(before_source=before, after_source=after)
+              result2 = engine.diff(before_source=before, after_source=after)
+              run1[name] = {"risk": round(result1.risk_score, 8), "complexity": round(result1.complexity_score, 8)}
+              run2[name] = {"risk": round(result2.risk_score, 8), "complexity": round(result2.complexity_score, 8)}
+
+          diverged = []
+          for name in run1:
+              if run1[name] != run2[name]:
+                  diverged.append({"fixture": name, "run1": run1[name], "run2": run2[name]})
+
+          if diverged:
+              print("SEMANTIC_DIFF_DETERMINISM_FAILURE:", json.dumps(diverged, indent=2))
+              raise SystemExit(1)
+
+          digest = hashlib.sha256(json.dumps(run1, sort_keys=True).encode()).hexdigest()
+          print(f"semantic-diff-determinism PASSED — {len(FIXTURES)} fixtures verified, digest={digest[:16]}")
+          PY
+
   release-evidence-readiness:
     runs-on: ubuntu-latest
     needs: classify
@@ -454,5 +510,6 @@ jobs:
             echo "| redteam-critical-subset | ${{ needs.redteam-critical-subset.result }} | ${{ needs.classify.outputs.redteam_reason }} |"
             echo "| release-evidence-readiness | ${{ needs.release-evidence-readiness.result }} | Always-on matrix link validation. |"
             echo "| fast-path-innovations | ${{ needs.fast-path-innovations.result }} | Route optimizer / entropy gate / checkpoint chain / parallel gate — conditional on runtime or test changes. |"
+            echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | PR-PHASE4-07: SemanticDiffEngine determinism — 10 AST fixture pairs verified identical across two independent runs. |"
             echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | Always-on: 10 AST fixture determinism proofs for SemanticDiffEngine. |"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -6,7 +6,7 @@
   <a href="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml">
     <img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg"/>
   </a>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.2.0-00d4ff?style=flat-square&labelColor=060d14"/>
+  <img alt="Version" src="https://img.shields.io/badge/version-2.3.0-00d4ff?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11+-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-pydroid3-f59e0b?style=flat-square&labelColor=060d14"/>
@@ -17,17 +17,18 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `2.2.0` |
+| **Current version** | `2.3.0` |
 | **Released** | 2026-03-06 |
-| **Git SHA** | `c051542` |
-| **Branch** | `feat/phase4-entropy-preflight` |
+| **Git SHA** | `2de28a3` |
+| **Branch** | `main` |
 
-**New in this release:** Phase 2 — Governed Explore/Exploit Loop
+**New in this release:** Phase 4 — AST-Aware Scoring + Pipeline Intelligence · Phase 2 — Governed Explore/Exploit Loop
 
 **New modules in this release:**
 
 | Module |
 |--------|
+| `data/checkpoint_chain.jsonl` |
 | `runtime/autonomy/explore_exploit_controller.py` |
 | `runtime/governance/human_approval_gate.py` |
 | `runtime/evolution/lineage_dag.py` |
@@ -236,6 +237,7 @@ This is architecturally enforced, not just documented.
 
 | Version | Capability |
 |---|---|
+| **v2.3** | Phase 4 — AST-Aware Scoring + Pipeline Intelligence · Phase 2 — Governed Explore/Exploit Loop |
 | **v2.2** | Phase 2 — Governed Explore/Exploit Loop |
 | **v2.0** | AI mutation engine · UCB1 bandit · epoch telemetry · MCP pipeline tools |
 | v1.8 | Cross-track convergence — market × federation × container × Darwinian unified |
