@@ -41,7 +41,7 @@ def test_create_stage_branch_has_deterministic_name_and_manifest_provenance(tmp_
         sources=["app", "runtime"],
     )
 
-    assert branch_path.name == "stage-intake-7-ed3fcb1d1ee6"
+    assert branch_path.name == "stage-intake-7-def32df4987d"
     payload = json.loads((branch_path / ".manifest.json").read_text(encoding="utf-8"))
     assert payload["created_at"] == "2030-01-02T03:04:05Z"
     assert payload["intake_id"] == "intake-7"

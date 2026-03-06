@@ -1,0 +1,11 @@
+{
+  "velocity_risk": 0.000500831185237384,
+  "velocity_complexity": 0.00038328642570099164,
+  "ema_risk_rate": 0.09149516467957769,
+  "ema_complexity_rate": 0.09149516467957769,
+  "epoch_count": 52,
+  "total_outcomes": 104,
+  "last_risk_penalty": 0.1289,
+  "last_complexity_penalty": 0.128932,
+  "saved_at": 1772815511.9093795
+}
