@@ -117,6 +117,23 @@ Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
 ---
 
+## Federation mode (multi-repo)
+
+> Only needed for deployments connecting multiple ADAAD nodes. Single-repo deployments skip this entirely.
+
+```bash
+# Required: valid HMAC key material for the federation transport
+export ADAAD_FEDERATION_ENABLED=true
+export ADAAD_FEDERATION_HMAC_KEY=<your-key-from-secret-manager>
+
+# Start with federation enabled
+python -m app.main --verbose
+```
+
+The boot guard validates key material before any federation surface activates. Absent or undersized key → `FederationKeyError` (fail-closed). Key rotation procedure: `docs/runbooks/hmac_key_rotation.md`.
+
+---
+
 ## Clean reset
 
 ```bash

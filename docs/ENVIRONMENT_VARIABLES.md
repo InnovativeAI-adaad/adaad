@@ -8,6 +8,8 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 
 - **`ADAAD_ROOT`**: pin this explicitly in production service units to a trusted, immutable deployment root. Mis-pointing it can make maintenance jobs execute against the wrong tree or data directory.
 
+- **`ADAAD_FEDERATION_HMAC_KEY`**: required when federation is enabled. The platform boot-halts fail-closed if this is absent or below minimum length. Supply via a secret manager in every federation-enabled deployment.
+
 - Secrets (`*_KEY*`, `*_TOKEN*`, `*_SECRET*`) should come from a secret manager, not checked-in env files.
 
 - Boolean flags in ADAAD generally treat `1/true/yes/on` as enabled; any other value is treated as disabled unless code documents a stricter parser.
@@ -59,6 +61,7 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_EVIDENCE_BUNDLE_SIGNING_ALGO` | `unset` | string/JSON per caller contract | runtime/governance engine | `runtime/evolution/evidence_bundle.py` |
 | `ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY` | `'', unset` | secret string; required in secured deployments | runtime/governance engine | `runtime/evolution/evidence_bundle.py` |
 | `ADAAD_FEDERATION_ENABLED` | `'false'` | boolean-like: `1|true|yes|on` enables | runtime/governance engine | `runtime/governance/federation/coordination.py` |
+| `ADAAD_FEDERATION_HMAC_KEY` | `unset` | secret string; **required** when `ADAAD_FEDERATION_ENABLED=true`. Minimum length enforced at boot; absent or undersized key raises `FederationKeyError` (fail-closed). Must be sourced from a secret manager. | runtime/governance engine | `runtime/governance/federation/key_registry.py` |
 | `ADAAD_FEDERATION_LOCK_TTL` | `'120'` | numeric string parsed as int/float | runtime/governance engine | `runtime/governance/federation/coordination.py` |
 | `ADAAD_FEDERATION_MANIFEST_TTL` | `'300'` | numeric string parsed as int/float | runtime/governance engine | `runtime/governance/federation/coordination.py` |
 | `ADAAD_FITNESS_CACHE_MAXSIZE` | `'2048'` | numeric string parsed as int/float | application orchestration (app) | `app/main.py` |
