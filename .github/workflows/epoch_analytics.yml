@@ -1,0 +1,90 @@
+name: epoch-analytics
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC — weekly evolution health report
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      fail_on_warning:
+        description: "Exit non-zero if any health indicator is warning"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  epoch-analytics-report:
+    name: "Generate Epoch Telemetry Report"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install runtime dependencies
+        run: pip install -r requirements.server.txt
+
+      - name: Check for telemetry data
+        id: check_data
+        run: |
+          if [ -f "data/epoch_telemetry.json" ]; then
+            echo "has_data=true" >> $GITHUB_OUTPUT
+            echo "Epoch telemetry file found."
+          else
+            echo "has_data=false" >> $GITHUB_OUTPUT
+            echo "No epoch_telemetry.json yet — skipping analytics (expected on fresh repos)."
+          fi
+
+      - name: Generate analytics report
+        if: steps.check_data.outputs.has_data == 'true'
+        run: |
+          mkdir -p reports
+          python tools/epoch_analytics.py \
+            --input data/epoch_telemetry.json \
+            --output reports/epoch_report_latest.json \
+            --summary \
+            --health \
+            ${{ github.event.inputs.fail_on_warning == 'true' && '--fail-on-warning' || '' }}
+
+      - name: Upload report artifact
+        if: steps.check_data.outputs.has_data == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: epoch-analytics-report-${{ github.run_number }}
+          path: reports/epoch_report_latest.json
+          retention-days: 90
+
+      - name: Summarise to job output
+        if: steps.check_data.outputs.has_data == 'true'
+        run: |
+          echo "## Epoch Analytics Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          python -c "
+          import json, sys
+          r = json.load(open('reports/epoch_report_latest.json'))
+          s = r.get('summary', {})
+          hi = r.get('health_indicators', {})
+          print(f\"| Metric | Value |\")
+          print(f\"|--------|-------|\"  )
+          print(f\"| Epochs | {r.get('epoch_count', 0)} |\")
+          print(f\"| Acceptance rate | {s.get('overall_acceptance_rate', 0):.1%} |\")
+          print(f\"| Total accepted | {s.get('total_accepted', 0)} |\")
+          print(f\"| Plateau events | {s.get('plateau_events', 0)} |\")
+          bandit = s.get('bandit_activation_epoch')
+          print(f\"| Bandit activated | epoch {bandit} |\" if bandit is not None else f\"| Bandit activated | pending |\")
+          warnings = [k for k, v in hi.items() if v.get('status') == 'warning']
+          if warnings:
+              print(f\"\")
+              print(f\"⚠️ Health warnings: {', '.join(warnings)}\")
+          " >> $GITHUB_STEP_SUMMARY
+
+      - name: No data notice
+        if: steps.check_data.outputs.has_data == 'false'
+        run: |
+          echo "## Epoch Analytics Report" >> $GITHUB_STEP_SUMMARY
+          echo "No epoch telemetry data yet. Run at least one governed evolution epoch to generate data." >> $GITHUB_STEP_SUMMARY
