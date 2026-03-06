@@ -180,14 +180,23 @@ print(f"Duration:     {result.duration_seconds:.1f}s")
 
 ---
 
-## Phase 2 — Live
+## Phase 5 — Live (v3.0.0)
 
-UCB1 bandit agent selection is active as of v2.1.0. The system now learns which agent persona performs best for each mutation type:
+Multi-repo federation is active as of v3.0.0. ADAAD now governs cross-repo mutation propagation with constitutional dual-gate enforcement:
+
+- Every federated mutation requires `GovernanceGate` approval in **both** source and destination repos
+- `FederatedEvidenceMatrix` enforces zero-divergence before any cross-repo acceptance
+- `federation_origin` field in `LineageLedgerV2` provides full cross-repo lineage traceability
+- HMAC key material validated at boot; absent key → fail-closed
+
+Phase 6 (Autonomous Roadmap Self-Amendment) is now active. Target: v3.1.0.
+
+UCB1 bandit agent selection (introduced v2.1.0) remains active alongside federation:
 
 ```
 Phase 1 (< 10 pulls)     →  v1 decision tree (conservative default)
 Phase 2 (≥ 10 pulls)     →  UCB1 bandit: score = win_rate + √2 × √(ln N / nᵢ)
-Phase 3 (Thompson, TBD)  →  Beta sampling — adapts to non-stationary reward
+Phase 3 (Thompson)        →  Beta sampling — active when non-stationary reward detected
 ```
 
 Health targets (from `EVOLUTION_ARCHITECTURE.md`):
@@ -198,6 +207,7 @@ Health targets (from `EVOLUTION_ARCHITECTURE.md`):
 | Weight bounds | `[0.05, 0.70]` | `ScoringWeights` field assertions |
 | Plateau frequency | ≤ 2 per 10 epochs | `FitnessLandscape.is_plateau()` |
 | Epoch duration | < 45s with real API | `EpochResult.duration_seconds` |
+| Federation divergence | 0 per epoch | `FederatedEvidenceMatrix.divergence_count` |
 
 Weekly analytics report: `.github/workflows/epoch_analytics.yml` (every Monday 06:00 UTC).
 

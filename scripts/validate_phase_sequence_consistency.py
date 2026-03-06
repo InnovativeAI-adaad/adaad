@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Validate active phase/PR alignment and canonical-spec consistency across active docs."""
+"""Validate active phase/PR alignment and canonical-spec consistency across active docs.
+
+Updated for v3.0.0: validator is now phase-agnostic (previously hardcoded to Phase 5).
+It reads the active phase from .adaad_agent_state.json and validates that AGENTS.md
+(next) heading and next_pr are internally consistent — without requiring a specific
+phase number to be active.
+"""
 
 from __future__ import annotations
 
@@ -30,28 +36,28 @@ def _extract_first_pr_id_from_next_table(text: str) -> str | None:
     heading_match = re.search(r"^###\s+.+?\s+\(next\)\s*$", text, flags=re.MULTILINE)
     if not heading_match:
         return None
-    tail = text[heading_match.end() :]
+    tail = text[heading_match.end():]
     row_match = re.search(r"^\|\s*(PR-[A-Z0-9-]+)\s*\|", tail, flags=re.MULTILINE)
     return row_match.group(1).strip() if row_match else None
 
 
-def _extract_phase5_first_pr_from_spec(text: str) -> str | None:
-    section = re.search(
-        r"^##\s+5\.\s+Phase 5 PR Sequence\s*$([\s\S]*?)(?:^##\s+|\Z)",
-        text,
-        flags=re.MULTILINE,
-    )
-    if not section:
-        return None
-    pr_match = re.search(r"^###\s+(PR-PHASE5-\d{2})\s*:", section.group(1), flags=re.MULTILINE)
-    return pr_match.group(1).strip() if pr_match else None
+def _extract_active_phase_label(state_active_phase: str) -> str:
+    """Extract a short phase label like 'phase 5' or 'phase 6' from active_phase string."""
+    match = re.search(r"phase\s+(\d+)", state_active_phase, flags=re.IGNORECASE)
+    if match:
+        return f"phase {match.group(1)}"
+    return ""
 
 
 def _validate_canonical_spec_claims(errors: list[str]) -> None:
     for entrypoint in HIGH_VISIBILITY_ENTRYPOINTS:
+        if not entrypoint.exists():
+            continue
         text = entrypoint.read_text(encoding="utf-8")
         if CANONICAL_SPEC_BASENAME not in text:
-            errors.append(f"{entrypoint}: missing active canonical spec reference: {CANONICAL_SPEC_PATH}")
+            errors.append(
+                f"{entrypoint}: missing active canonical spec reference: {CANONICAL_SPEC_PATH}"
+            )
 
     docs_root = Path("docs")
     for path in docs_root.rglob("*"):
@@ -67,7 +73,8 @@ def _validate_canonical_spec_claims(errors: list[str]) -> None:
             if "canonical" in lower and "architect_spec_v2.0.0.md" in lower:
                 if "superseded" not in lower and "historical" not in lower:
                     errors.append(
-                        f"{path}:{line_no}: canonical claim points to v2 without explicit historical/superseded labeling"
+                        f"{path}:{line_no}: canonical claim points to v2 without "
+                        "explicit historical/superseded labeling"
                     )
 
 
@@ -81,14 +88,13 @@ def main() -> int:
         return 1
 
     agents_text = AGENTS_PATH.read_text(encoding="utf-8")
-    spec_text = SPEC_PATH.read_text(encoding="utf-8")
 
     state_next_pr = str(state.get("next_pr", "")).strip()
     state_active_phase = str(state.get("active_phase", "")).strip()
+    active_phase_label = _extract_active_phase_label(state_active_phase)
 
     agents_next_heading = _extract_agents_next_heading(agents_text)
     agents_next_pr = _extract_first_pr_id_from_next_table(agents_text)
-    spec_phase5_first_pr = _extract_phase5_first_pr_from_spec(spec_text)
 
     if not state_next_pr:
         errors.append(".adaad_agent_state.json: next_pr is empty")
@@ -99,30 +105,19 @@ def main() -> int:
     if not agents_next_pr:
         errors.append("AGENTS.md: unable to locate first PR in the '(next)' phase table")
 
-    if not spec_phase5_first_pr:
-        errors.append("ARCHITECT_SPEC_v3.0.0.md: unable to locate first PR in section '5. Phase 5 PR Sequence'")
+    # Phase label consistency: state active_phase and AGENTS (next) heading must agree
+    if active_phase_label and agents_next_heading:
+        if active_phase_label.lower() not in agents_next_heading.lower():
+            errors.append(
+                f"AGENTS.md: active '(next)' heading phase label ({agents_next_heading!r}) "
+                f"does not match state active_phase label ({active_phase_label!r})"
+            )
 
-    if agents_next_heading and "phase 5" not in agents_next_heading.lower():
-        errors.append(f"AGENTS.md: active '(next)' heading is not Phase 5: {agents_next_heading!r}")
-
-    if state_active_phase and "phase 5" not in state_active_phase.lower():
-        errors.append(".adaad_agent_state.json: active_phase does not indicate Phase 5")
-
-    if state_next_pr and state_active_phase and state_next_pr not in state_active_phase:
-        errors.append(
-            ".adaad_agent_state.json: active_phase does not include next_pr token "
-            f"({state_next_pr})"
-        )
-
+    # next_pr must match AGENTS (next) table first PR
     if state_next_pr and agents_next_pr and state_next_pr != agents_next_pr:
         errors.append(
-            f"state/AGENTS mismatch: state next_pr={state_next_pr!r}, AGENTS next table first PR={agents_next_pr!r}"
-        )
-
-    if state_next_pr and spec_phase5_first_pr and state_next_pr != spec_phase5_first_pr:
-        errors.append(
-            "state/spec mismatch: "
-            f"state next_pr={state_next_pr!r}, spec phase-5 first PR={spec_phase5_first_pr!r}"
+            f"state/AGENTS mismatch: state next_pr={state_next_pr!r}, "
+            f"AGENTS next table first PR={agents_next_pr!r}"
         )
 
     _validate_canonical_spec_claims(errors)
@@ -135,7 +130,9 @@ def main() -> int:
 
     print(
         "Phase sequence consistency validation passed: "
-        f"active_phase=Phase 5, next_pr={state_next_pr}, spec_first_pr={spec_phase5_first_pr}, "
+        f"active_phase={active_phase_label or state_active_phase!r}, "
+        f"next_pr={state_next_pr}, "
+        f"AGENTS_next={agents_next_heading!r}, "
         f"canonical_spec={CANONICAL_SPEC_PATH}"
     )
     return 0

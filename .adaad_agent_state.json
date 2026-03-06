@@ -1,8 +1,8 @@
 {
   "schema_version": "3.0.0",
   "last_completed_pr": "PR-PHASE5-07",
-  "next_pr": "PR-OPT-06",
-  "active_phase": "v3.0.0 SHIPPED \u00b7 Phase 5 Multi-Repo Federation COMPLETE \u00b7 Phase 6 Autonomous Roadmap Self-Amendment ACTIVE",
+  "next_pr": "PR-PHASE6-01",
+  "active_phase": "Phase 6 Autonomous Roadmap Self-Amendment ACTIVE \u00b7 v3.1.0 target \u00b7 Phase 5 Multi-Repo Federation COMPLETE (v3.0.0)",
   "last_invocation": "2026-03-06",
   "blocked_reason": null,
   "blocked_at_gate": null,
