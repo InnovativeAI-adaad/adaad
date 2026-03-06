@@ -425,6 +425,92 @@ class LineageLedgerV2:
         return self.compute_epoch_digest(epoch_id)
 
 
+    # ------------------------------------------------------------------
+    # PR-PHASE4-07: Lineage-based semantic proximity scoring
+    # ------------------------------------------------------------------
+
+    def semantic_proximity_score(
+        self,
+        candidate_content: str,
+        *,
+        window: int = 10,
+    ) -> dict[str, float]:
+        """Compute lineage-based semantic proximity bonuses.
+
+        Compares ``candidate_content`` AST metrics against a rolling mean
+        of the last ``window`` accepted mutations stored in the ledger.
+
+        Returns
+        -------
+        dict with keys:
+            proximity_bonus   float ∈ [0.0, 0.15]  — reward for being semantically
+                              close to recently accepted lineage
+            exploration_bonus float ∈ [0.0, 0.10]  — reward for semantic novelty
+        """
+        try:
+            from runtime.evolution.semantic_diff import SemanticDiffEngine as _SDE
+        except Exception:  # noqa: BLE001
+            return {"proximity_bonus": 0.0, "exploration_bonus": 0.0}
+
+        # ── Gather recent accepted entries ────────────────────────────
+        try:
+            entries = self._read_entries_unverified()
+        except Exception:  # noqa: BLE001
+            return {"proximity_bonus": 0.0, "exploration_bonus": 0.0}
+
+        accepted_entries = [
+            e for e in entries
+            if e.get("type") in {"mutation_accepted", "mutation_bundle"}
+            or (isinstance(e.get("payload"), dict)
+                and e["payload"].get("accepted") is True)
+        ][-window:]
+
+        if not accepted_entries:
+            # No lineage yet — return small exploration bonus for first mutation
+            return {"proximity_bonus": 0.0, "exploration_bonus": 0.05}
+
+        # ── Score candidate content ───────────────────────────────────
+        engine = _SDE()
+        try:
+            candidate_diff = engine.diff(before_source="", after_source=candidate_content)
+            candidate_risk = candidate_diff.risk_score
+            candidate_complexity = candidate_diff.complexity_score
+        except Exception:  # noqa: BLE001
+            return {"proximity_bonus": 0.0, "exploration_bonus": 0.0}
+
+        # ── Compute rolling mean of accepted lineage AST metrics ──────
+        # Use stored risk/complexity values if available, else 0.5 defaults
+        risk_vals: list[float] = []
+        complexity_vals: list[float] = []
+        for entry in accepted_entries:
+            payload = entry.get("payload") or entry
+            risk_vals.append(float(payload.get("risk_score", 0.5) or 0.5))
+            complexity_vals.append(float(payload.get("complexity", 0.5) or 0.5))
+
+        mean_risk = sum(risk_vals) / len(risk_vals)
+        mean_complexity = sum(complexity_vals) / len(complexity_vals)
+
+        # ── Cosine-like similarity in 2D (risk, complexity) ──────────
+        dot = candidate_risk * mean_risk + candidate_complexity * mean_complexity
+        mag_a = (candidate_risk**2 + candidate_complexity**2) ** 0.5
+        mag_b = (mean_risk**2 + mean_complexity**2) ** 0.5
+        if mag_a < 1e-9 or mag_b < 1e-9:
+            similarity = 0.5
+        else:
+            similarity = max(0.0, min(1.0, dot / (mag_a * mag_b)))
+
+        # ── Map similarity to bonuses ─────────────────────────────────
+        # High similarity  → proximity_bonus (similar to accepted ancestors)
+        # Low similarity   → exploration_bonus (semantically novel)
+        proximity_bonus  = round(min(0.15, similarity * 0.15), 6)
+        exploration_bonus = round(min(0.10, (1.0 - similarity) * 0.10), 6)
+
+        return {
+            "proximity_bonus": proximity_bonus,
+            "exploration_bonus": exploration_bonus,
+        }
+
+
 __all__ = [
     "LineageLedgerV2",
     "LineageEvent",

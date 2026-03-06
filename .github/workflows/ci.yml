@@ -357,6 +357,57 @@ jobs:
       - name: Validate release hardening claims against runtime capability checks
         run: python scripts/validate_release_hardening_claims.py
 
+
+  semantic-diff-determinism:
+    runs-on: ubuntu-latest
+    needs: classify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Run semantic-diff determinism verification
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import hashlib, json
+          from runtime.evolution.semantic_diff import SemanticDiffEngine
+
+          # 10 fixed AST fixtures (stable across runs)
+          FIXTURES = [
+              ("", "def foo(): pass"),
+              ("def foo(): pass", "def foo():\n    return 42"),
+              ("x = 1", "x = 1\ny = 2"),
+              ("import os", "import os\nimport sys"),
+              ("class A: pass", "class A:\n    def method(self): pass"),
+              ("def f(a, b): return a + b", "def f(a, b, c=0): return a + b + c"),
+              ("", "for i in range(10): print(i)"),
+              ("try:\n    pass\nexcept: pass", "try:\n    x = 1\nexcept Exception as e: pass"),
+              ("def a(): pass\ndef b(): pass", "def a():\n    return 1\ndef b():\n    return 2"),
+              ("x=1;y=2", "x=1\ny=2\nz=x+y"),
+          ]
+
+          engine = SemanticDiffEngine()
+          run1_digests, run2_digests = [], []
+          for before, after in FIXTURES:
+              d1 = engine.diff(before_source=before, after_source=after)
+              d2 = engine.diff(before_source=before, after_source=after)
+              digest1 = hashlib.sha256(json.dumps({
+                  "risk": d1.risk_score, "complexity": d1.complexity_score,
+                  "fallback": d1.fallback_used
+              }, sort_keys=True).encode()).hexdigest()
+              digest2 = hashlib.sha256(json.dumps({
+                  "risk": d2.risk_score, "complexity": d2.complexity_score,
+                  "fallback": d2.fallback_used
+              }, sort_keys=True).encode()).hexdigest()
+              run1_digests.append(digest1)
+              run2_digests.append(digest2)
+              if digest1 != digest2:
+                  raise SystemExit(f"DETERMINISM_VIOLATION: fixture {FIXTURES.index((before,after))} diverged")
+
+          assert run1_digests == run2_digests, "SemanticDiffEngine digest mismatch across runs"
+          print(f"OK: all {len(FIXTURES)} SemanticDiffEngine fixtures are deterministic")
+          PY
+
   ci-gating-summary:
     runs-on: ubuntu-latest
     needs:
@@ -374,6 +425,7 @@ jobs:
       - redteam-critical-subset
       - release-evidence-readiness
       - fast-path-innovations
+      - semantic-diff-determinism
     if: always()
     steps:
       - name: Write CI gating summary
@@ -402,4 +454,5 @@ jobs:
             echo "| redteam-critical-subset | ${{ needs.redteam-critical-subset.result }} | ${{ needs.classify.outputs.redteam_reason }} |"
             echo "| release-evidence-readiness | ${{ needs.release-evidence-readiness.result }} | Always-on matrix link validation. |"
             echo "| fast-path-innovations | ${{ needs.fast-path-innovations.result }} | Route optimizer / entropy gate / checkpoint chain / parallel gate — conditional on runtime or test changes. |"
+            echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | Always-on: 10 AST fixture determinism proofs for SemanticDiffEngine. |"
           } >> "$GITHUB_STEP_SUMMARY"
