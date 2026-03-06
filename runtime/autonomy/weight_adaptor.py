@@ -5,14 +5,16 @@ WeightAdaptor — self-calibrating scoring weight learner.
 Algorithm: coordinate descent with momentum (EMA smoothing).
 - For gain_weight and coverage_weight: momentum-based gradient descent keyed
   on prediction accuracy error signal.
-- risk_penalty and complexity_penalty remain static in v1 (see design note).
+- risk_penalty and complexity_penalty: Phase 3 adaptive via PenaltyAdaptor
+  (activates after MIN_EPOCHS_FOR_PENALTY=5 epochs of outcome data).
 - Prediction accuracy tracked as rolling EMA (alpha=0.3).
 - State persisted to JSON after every adapt() call for cross-session learning.
 
-Design note — why risk/complexity weights are static:
-  Adapting them requires outcome signals ("was this actually risky?", "was this
-  actually complex?") that a test runner does not produce automatically. This
-  requires structured post-merge telemetry. Deferred to Phase 2.
+Phase 3 — PenaltyAdaptor:
+  risk_penalty and complexity_penalty now adapt via momentum descent on
+  observed_risk_rate / observed_complexity_rate signals.
+  Activates after MIN_EPOCHS_FOR_PENALTY=5 epochs. Falls back to static
+  values below threshold.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from runtime.autonomy.mutation_scaffold import ScoringWeights
+from runtime.autonomy.penalty_adaptor import PenaltyAdaptor, PenaltyOutcome, build_penalty_outcomes_from_scores
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -81,6 +84,9 @@ class WeightAdaptor:
         self._prediction_accuracy: float = 0.5  # neutral prior
         self._velocity_gain:     float = 0.0
         self._velocity_coverage: float = 0.0
+        # Derive penalty adaptor state path alongside weight adaptor state
+        _penalty_path = state_path.parent / (state_path.stem + "_penalty.json")
+        self._penalty_adaptor = PenaltyAdaptor(state_path=_penalty_path)
         self._load()
 
     # ------------------------------------------------------------------
@@ -158,14 +164,31 @@ class WeightAdaptor:
         self._weights = ScoringWeights(
             gain_weight=new_gain,
             coverage_weight=new_coverage,
-            horizon_weight=self._weights.horizon_weight,     # static v1
-            risk_penalty=self._weights.risk_penalty,         # static v1
-            complexity_penalty=self._weights.complexity_penalty,  # static v1
+            horizon_weight=self._weights.horizon_weight,
+            risk_penalty=self._weights.risk_penalty,
+            complexity_penalty=self._weights.complexity_penalty,
             acceptance_threshold=self._weights.acceptance_threshold,
         )
 
         self._epoch_count    += 1
         self._total_outcomes += len(outcomes)
+
+        # Phase 3: adapt risk_penalty and complexity_penalty via PenaltyAdaptor
+        penalty_outcomes = [
+            PenaltyOutcome(
+                mutation_id=o.mutation_id,
+                accepted=o.accepted,
+                risk_score=0.5,        # heuristic default — improved signals injected post-merge
+                complexity_score=0.5,
+                actually_risky=None if not o.improved else (o.accepted and not o.improved),
+                actually_complex=None,
+            )
+            for o in outcomes
+        ]
+        self._weights = self._penalty_adaptor.adapt(
+            self._weights, penalty_outcomes, self._epoch_count
+        )
+
         self._save()
         return self.current_weights
 
@@ -180,8 +203,8 @@ class WeightAdaptor:
                 "gain_weight":          self._weights.gain_weight,
                 "coverage_weight":      self._weights.coverage_weight,
                 "horizon_weight":       self._weights.horizon_weight,
-                "risk_penalty":         self._weights.risk_penalty,
-                "complexity_penalty":   self._weights.complexity_penalty,
+                "risk_penalty":         self._weights.risk_penalty,      # Phase 3 adaptive
+                "complexity_penalty":   self._weights.complexity_penalty,  # Phase 3 adaptive
                 "acceptance_threshold": self._weights.acceptance_threshold,
             },
             "epoch_count":        self._epoch_count,

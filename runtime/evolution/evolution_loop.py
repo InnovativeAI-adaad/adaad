@@ -32,6 +32,7 @@ from runtime.autonomy.ai_mutation_proposer import CodebaseContext, propose_from_
 from runtime.autonomy.fitness_landscape import FitnessLandscape
 from runtime.autonomy.mutation_scaffold import MutationCandidate, MutationScore
 from runtime.autonomy.weight_adaptor import MutationOutcome, WeightAdaptor
+from runtime.autonomy.penalty_adaptor import build_penalty_outcomes_from_scores, PenaltyAdaptor
 from runtime.evolution.population_manager import PopulationManager
 
 # ---------------------------------------------------------------------------
@@ -135,6 +136,17 @@ class EvolutionLoop:
         # Phase 4: Adapt weights
         outcomes = self._build_outcomes(all_scores)
         updated_weights = self._adaptor.adapt(outcomes)
+
+        # Phase 3: inject scored candidates into PenaltyAdaptor for richer risk signals
+        penalty_outcomes = build_penalty_outcomes_from_scores(
+            all_scores, simulate=self._simulate
+        )
+        if hasattr(self._adaptor, '_penalty_adaptor'):
+            updated_weights = self._adaptor._penalty_adaptor.adapt(
+                updated_weights, penalty_outcomes, self._adaptor.epoch_count
+            )
+            # Write back adapted weights so evolution loop uses them
+            self._adaptor._weights = updated_weights
 
         # Phase 5: Record landscape
         for score in accepted:

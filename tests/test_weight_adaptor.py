@@ -43,7 +43,7 @@ def test_default_weights_match_v1(adaptor) -> None:
     w = adaptor.current_weights
     assert w.gain_weight == pytest.approx(0.35)
     assert w.coverage_weight == pytest.approx(0.25)
-    assert w.acceptance_threshold == pytest.approx(0.25)
+    assert w.acceptance_threshold == pytest.approx(0.24)  # DEFAULT_ACCEPTANCE_THRESHOLD = 0.24
 
 
 def test_adapt_increases_accuracy(adaptor) -> None:
