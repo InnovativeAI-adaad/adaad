@@ -226,12 +226,78 @@ class EvidenceBundleBuilder:
             )
         return anchors
 
+    def _collect_federated_evidence(self, epoch_ids: List[str]) -> Dict[str, Any]:
+        """Collect cross-repo federated evidence matrix results for the given epochs.
+
+        Reads ``federated_evidence_verified`` and ``federated_evidence_failed``
+        events from the lineage ledger and assembles a summary suitable for
+        inclusion in the release evidence bundle.
+
+        The summary follows the Phase 5 invariant: 0 divergences per federated
+        epoch.  If any ``no_divergence`` axis failure is present, the
+        ``invariant_ok`` flag is set to False.
+
+        Parameters
+        ----------
+        epoch_ids:
+            Epoch identifiers in scope for this evidence bundle.
+
+        Returns
+        -------
+        dict
+            ``federated_evidence`` section of the evidence bundle.
+        """
+        results: List[Dict[str, Any]] = []
+        epoch_set = set(epoch_ids)
+        divergence_count = 0
+        for epoch_id in epoch_ids:
+            for entry in self.ledger.read_epoch(epoch_id):
+                etype = entry.get("type") or ""
+                if etype not in {"federated_evidence_verified", "federated_evidence_failed"}:
+                    continue
+                payload = dict(entry.get("payload") or {})
+                proposal_id = str(payload.get("proposal_id") or "")
+                passed = bool(payload.get("passed", etype == "federated_evidence_verified"))
+                axes = list(payload.get("axes") or [])
+                failure_codes = list(payload.get("failure_codes") or [])
+                matrix_digest = str(payload.get("matrix_digest") or "")
+                # Phase 5 invariant check
+                no_div_fail = any(
+                    (isinstance(a, dict) and not a.get("ok") and a.get("axis") == "no_divergence")
+                    or (isinstance(a, str) and a == "no_divergence")
+                    for a in axes
+                ) or "no_divergence:digest_mismatch" in failure_codes
+                if no_div_fail:
+                    divergence_count += 1
+                results.append(
+                    {
+                        "epoch_id": epoch_id,
+                        "proposal_id": proposal_id,
+                        "passed": passed,
+                        "failure_codes": failure_codes,
+                        "matrix_digest": matrix_digest,
+                        "has_divergence": no_div_fail,
+                    }
+                )
+        results.sort(key=lambda r: (r["epoch_id"], r["proposal_id"]))
+        return {
+            "schema_version": "federated_evidence.v1",
+            "epoch_ids": sorted(epoch_set),
+            "verification_count": len(results),
+            "passed_count": sum(1 for r in results if r["passed"]),
+            "failed_count": sum(1 for r in results if not r["passed"]),
+            "divergence_count": divergence_count,
+            "invariant_ok": divergence_count == 0,
+            "verifications": results,
+        }
+
     def _build_core(self, epoch_start: str, epoch_end: str | None) -> Dict[str, Any]:
         epoch_ids = self._resolve_epoch_ids(epoch_start=epoch_start, epoch_end=epoch_end)
         bundles = self._collect_bundle_events(epoch_ids)
         sandbox_evidence = self._collect_sandbox_evidence(epoch_ids)
         replay_proofs = self._collect_replay_proofs(epoch_ids)
         lineage_anchors = self._collect_lineage_anchors(epoch_ids, bundles)
+        federated_evidence = self._collect_federated_evidence(epoch_ids)
         try:
             policy = load_governance_policy(self.policy_path)
             policy_artifact_metadata = {
@@ -286,6 +352,7 @@ class EvidenceBundleBuilder:
             },
             "lineage_anchors": lineage_anchors,
             "bundle_index": bundles,
+            "federated_evidence": federated_evidence,
         }
 
     def _export_metadata(self, *, bundle_id: str, digest: str) -> Dict[str, Any]:
