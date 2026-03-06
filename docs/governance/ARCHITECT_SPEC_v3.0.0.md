@@ -378,7 +378,7 @@ The following PRs are the canonical, ordered delivery sequence for Phase 5 under
 | Field | Value |
 |---|---|
 | **Purpose** | Finalize federated evidence/release gate and complete v3.0.0 milestone controls |
-| **Files modified** | `docs/RELEASE_EVIDENCE_MATRIX.md`, federation evidence/replay wiring, CI workflows, constitution rule updates |
+| **Files modified** | `docs/comms/claims_evidence_matrix.md`, federation evidence/replay wiring, CI workflows, constitution rule updates |
 | **Merged scope note** | Includes scope previously split as `PR-PHASE5-04` (broker replay-proof hardening) and `PR-PHASE5-05` (federated evidence matrix + full E2E CI) |
 | **Acceptance gates** | (1) `federated-determinism` CI job passes with zero matrix digest divergences (2) `validate_release_evidence.py --require-complete` passes (3) v3.0.0 release gate blocks until federated evidence completeness + dual-approval invariants are satisfied |
 | **Constitutional gate** | Tier 1 + Tier 2 + Tier 3 (milestone release gate) |

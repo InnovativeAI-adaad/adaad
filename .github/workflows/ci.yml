@@ -175,6 +175,8 @@ jobs:
       - uses: ./.github/actions/setup-python-env
       - name: Validate strict documentation snippets
         run: python scripts/validate_readme_alignment.py --format json
+      - name: Validate manifest inventory alignment
+        run: python scripts/validate_manifest_inventory.py --format json
       - name: Validate markdown link and image integrity
         run: python scripts/validate_docs_integrity.py --format json
       - name: Validate active docs dependency references

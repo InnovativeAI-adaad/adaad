@@ -202,7 +202,7 @@ Try it in 60 seconds                          python onboard.py
 Understand the architecture                   docs/EVOLUTION_ARCHITECTURE.md
 Contribute code                               CONTRIBUTING.md
 Review the governance model                   docs/CONSTITUTION.md
-Audit a release                               docs/RELEASE_EVIDENCE_MATRIX.md
+Audit a release                               docs/comms/claims_evidence_matrix.md
 Check security posture                        docs/SECURITY.md
 Run on Android / Pydroid3                     docs/ENVIRONMENT_VARIABLES.md
 Deploy to production                          docs/release/release_checklist.md

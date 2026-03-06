@@ -1,5 +1,7 @@
 # Claims-to-Evidence Matrix
 
+<!-- AUTHORITATIVE_EVIDENCE_MATRIX -->
+
 This matrix maps major external/public claims to objective, versioned repository artifacts. Release/governance announcements are blocked until every required entry is marked `Complete` with resolvable evidence links.
 
 | Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
@@ -27,7 +29,7 @@ This matrix maps major external/public claims to objective, versioned repository
 | `federation-key-pinning` | "Federation messages are accepted only from registered, trusted key IDs; caller-supplied key substitution is rejected." | [Key registry loader](../../runtime/governance/federation/key_registry.py); [Transport enforcement](../../runtime/governance/federation/transport.py); [Registry file](../../governance/federation_trusted_keys.json); [Key registry tests](../../tests/governance/federation/test_federation_key_registry.py) | Complete |
 | `dream-mode-input-determinism` | "DreamMode.run_cycle produces identical mutation_content for identical (epoch_id, bundle_id, agent_id) inputs regardless of provider call-count state; SeededDeterminismProvider call-sequence position never influences replay-critical token derivation." | [DreamMode fix](../../app/dream_mode.py); [Runtime api facade](../../runtime/api/app_layer.py); [Determinism tests](../../tests/determinism/test_dream_mode_provider_determinism.py); [Replay equivalence tests](../../tests/determinism/test_replay_equivalence.py); [Entropy discipline replay tests](../../tests/test_entropy_discipline_replay.py) | Complete |
 | `sandbox-injection-hardening` | "Sandbox preflight blocks shell metacharacter injection, IFS word-splitting bypasses, shell evaluation primitives, and disallowed environment variables." | [Preflight implementation](../../runtime/sandbox/preflight.py); [Injection hardening tests](../../tests/test_sandbox_injection_hardening.py) | Complete |
-| `spdx-header-compliance` | "All Python source files carry SPDX-License-Identifier headers, enforced in CI." | [SPDX check script](../../scripts/check_spdx_headers.py); [`ci.yml` `spdx-header-lint` job](../../.github/workflows/ci.yml) | Complete — CI enforced (PR-CI-02) |
+| `spdx-header-compliance` | "All Python source files carry SPDX-License-Identifier headers, enforced in CI." | [SPDX check script](../../scripts/check_spdx_headers.py); [`ci.yml` `spdx-header-lint` job](../../.github/workflows/ci.yml) | Complete |
 
 | `ai-mutation-authority-invariant` | "GovernanceGate is the only surface that may approve, sign, or execute a mutation. AI proposers, market adapters, and federation subsystems are advisory-only." | [Authority invariant spec](../governance/ARCHITECT_SPEC_v2.0.0.md#11-authority-invariant-non-negotiable); [GovernanceGate](../../runtime/governance/gate_certifier.py); [Architecture contract](../ARCHITECTURE_CONTRACT.md) | Complete |
 | `ai-mutation-proposer-lineage` | "All AI-proposed mutations carry epoch_id, parent_id, agent_origin, and source_context_hash for full DAG traceability." | [AIMutationProposer](../../runtime/autonomy/ai_mutation_proposer.py); [Mutation scaffold v2](../../runtime/autonomy/mutation_scaffold.py); [Proposer tests](../../tests/test_ai_mutation_proposer.py) | Complete |
@@ -40,14 +42,20 @@ This matrix maps major external/public claims to objective, versioned repository
 | `ucb1-bandit-deterministic` | "UCB1 agent selection is deterministic: identical arm state and pull counts produce identical scores and selection, with no entropy sources." | [BanditSelector](../../runtime/autonomy/bandit_selector.py); [Bandit tests](../../tests/test_bandit_selector.py) (test_deterministic_select) | Complete |
 | `epoch-telemetry-append-only` | "EpochTelemetry is append-only: health_indicators() and generate_report() are pure functions producing deterministic output for identical inputs." | [EpochTelemetry](../../runtime/autonomy/epoch_telemetry.py); [Telemetry tests](../../tests/test_epoch_telemetry.py) (test_report_deterministic) | Complete |
 | `mcp-evolution-tools-read-only` | "All 5 evolution-pipeline MCP tools are read-only; none may write to governed surfaces, invoke GovernanceGate, or modify scoring weights." | [Evolution pipeline tools](../../runtime/mcp/evolution_pipeline_tools.py); [MCP server routes](../../runtime/mcp/server.py); [MCP config](../../.github/mcp_config.json) | Complete |
-| `penalty-adaptor-activation-gate` | PenaltyAdaptor no-ops below epoch 5 | `tests/test_penalty_adaptor.py::TestActivationGate` | Complete |
-| `penalty-adaptor-bounds-enforced` | risk_penalty, complexity_penalty stay in [0.05, 0.70] | `tests/test_penalty_adaptor.py::TestBounds` | Complete |
-| `page-hinkley-stable-no-signal` | Stable win rates produce PH statistic < threshold | `tests/test_non_stationarity_detector.py::test_stable_environment_no_signal` | Complete |
-| `thompson-deterministic-seeded-rng` | Identical arm state → identical Thompson agent selection | `tests/test_fitness_landscape.py::test_thompson_flag_persists` | Complete |
-| `semantic-diff-deterministic` | Identical AST inputs → identical risk/complexity scores | `tests/test_semantic_diff.py::TestDiffFromCodeDiff::test_deterministic` | Complete |
-| `semantic-diff-fallback-safe` | None/SyntaxError input → 0.5/0.5 fallback, no exception | `tests/test_semantic_diff.py::TestSemanticDiff::test_none_fallback` | Complete |
+| `penalty-adaptor-activation-gate` | PenaltyAdaptor no-ops below epoch 5 | [Penalty adaptor tests](../../tests/test_penalty_adaptor.py) | Complete |
+| `penalty-adaptor-bounds-enforced` | risk_penalty, complexity_penalty stay in [0.05, 0.70] | [Penalty adaptor tests](../../tests/test_penalty_adaptor.py) | Complete |
+| `page-hinkley-stable-no-signal` | Stable win rates produce PH statistic < threshold | [Non-stationarity detector tests](../../tests/test_non_stationarity_detector.py) | Complete |
+| `thompson-deterministic-seeded-rng` | Identical arm state → identical Thompson agent selection | [Fitness landscape tests](../../tests/test_fitness_landscape.py) | Complete |
+| `semantic-diff-deterministic` | Identical AST inputs → identical risk/complexity scores | [Semantic diff tests](../../tests/test_semantic_diff.py) | Complete |
+| `semantic-diff-fallback-safe` | None/SyntaxError input → 0.5/0.5 fallback, no exception | [Semantic diff tests](../../tests/test_semantic_diff.py) | Complete |
 
 | `phase-sequence-source-consistency` | "Active phase and next PR are consistent across AGENTS guidance, agent state, and Architect v3.0.0 Phase 5 sequence." | [Governed agent contract phase table](../../AGENTS.md); [Agent state pointer](../../.adaad_agent_state.json); [Architect spec Phase 5 sequence](../governance/ARCHITECT_SPEC_v3.0.0.md#5-phase-5-pr-sequence); [Consistency validator](../../scripts/validate_phase_sequence_consistency.py); [CI docs-validation hook](../../.github/workflows/ci.yml) | Complete |
+
+| `lineage-continuity-enforcement` | "Lineage continuity enforcement is validated with ledger-backed tests and artifacts." | [Lineage continuity tests](../../tests/test_lineage_continuity.py); [Lineage ledger artifact](../../security/ledger/lineage_v2.jsonl) | Complete |
+| `resource-bounds-enforcement` | "Resource bound violations produce deterministic fail-closed governance outcomes." | [Resource bounds tests](../../tests/test_resource_bounds.py); [Resource bounds validator](../../runtime/governance/validators/resource_bounds.py) | Complete |
+| `replay-tamper-detection` | "Replay proof tampering is detected by verifier tooling and dedicated test coverage." | [Replay tamper tests](../../tests/test_replay_proof_tamper.py); [Replay bundle verifier](../../tools/verify_replay_bundle.py) | Complete |
+| `sandbox-hardening-controls` | "Sandbox hardening controls are test-backed for syscall filtering and file-system rule enforcement." | [Sandbox syscall tests](../../tests/sandbox/test_syscall_filter.py); [Sandbox FS rule tests](../../tests/sandbox/test_fs_rules.py) | Complete |
+| `governance-ci-branch-protection` | "Governance CI and branch-protection controls are enforced in workflow policy." | [CI workflow](../../.github/workflows/ci.yml); [Secret scan workflow](../../.github/workflows/secret_scan.yml); [Branch protection check workflow](../../.github/workflows/branch_protection_check.yml) | Complete |
 
 ## Completion standard
 

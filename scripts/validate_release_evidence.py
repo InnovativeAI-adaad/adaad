@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Iterable
 
 MATRIX_PATH = Path("docs/comms/claims_evidence_matrix.md")
+CANONICAL_MATRIX_MARKER = "<!-- AUTHORITATIVE_EVIDENCE_MATRIX -->"
 GOVERNANCE_DOCS_ROOT = Path("docs/governance")
+DOCS_ROOT = Path("docs")
 STALE_EVIDENCE_MATRIX_PATHS = (
     "docs/RELEASE_EVIDENCE_MATRIX.md",
     "../RELEASE_EVIDENCE_MATRIX.md",
@@ -51,11 +53,57 @@ def _normalize_local_target(link: str, base_dir: Path) -> Path:
     clean_link = link.split("#", 1)[0]
     return (base_dir / clean_link).resolve()
 
+
 def _parse_version_triplet(raw: str) -> tuple[int, int, int] | None:
     match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", raw.strip())
     if not match:
         return None
     return tuple(int(match.group(i)) for i in (1, 2, 3))
+
+
+def _collect_authoritative_matrix_marker_errors() -> list[str]:
+    if not DOCS_ROOT.exists():
+        return []
+
+    marker_locations: list[str] = []
+    for markdown_file in sorted(DOCS_ROOT.rglob("*.md")):
+        text = markdown_file.read_text(encoding="utf-8")
+        if CANONICAL_MATRIX_MARKER in text:
+            marker_locations.append(markdown_file.as_posix())
+
+    expected = MATRIX_PATH.as_posix()
+    if marker_locations != [expected]:
+        discovered = ", ".join(marker_locations) if marker_locations else "<none>"
+        return [
+            "authoritative evidence matrix marker must appear exactly once at "
+            f"{expected}; found: {discovered}"
+        ]
+    return []
+
+
+def _collect_duplicate_authoritative_matrix_errors() -> list[str]:
+    if not DOCS_ROOT.exists():
+        return []
+
+    duplicate_paths: list[str] = []
+    canonical_heading = "# Claims-to-Evidence Matrix"
+
+    for markdown_file in sorted(DOCS_ROOT.rglob("*.md")):
+        if markdown_file == MATRIX_PATH:
+            continue
+        text = markdown_file.read_text(encoding="utf-8")
+        if canonical_heading in text and "| Claim ID |" in text and "| Status |" in text:
+            duplicate_paths.append(markdown_file.as_posix())
+        if "Release Evidence Matrix" in text and "| Claim ID |" in text and "| Status |" in text:
+            duplicate_paths.append(markdown_file.as_posix())
+
+    if duplicate_paths:
+        deduped = ", ".join(sorted(set(duplicate_paths)))
+        return [
+            "duplicate authoritative evidence matrix content detected outside canonical path: "
+            f"{deduped}"
+        ]
+    return []
 
 
 def _iter_release_note_versions(release_dir: Path) -> Iterable[tuple[int, int, int]]:
@@ -76,6 +124,10 @@ def main() -> int:
         print(f"ERROR: missing matrix file: {MATRIX_PATH}")
         return 1
 
+    errors: list[str] = []
+    errors.extend(_collect_authoritative_matrix_marker_errors())
+    errors.extend(_collect_duplicate_authoritative_matrix_errors())
+
     matrix_text = MATRIX_PATH.read_text(encoding="utf-8")
     rows: dict[str, dict[str, str | list[str]]] = {}
 
@@ -91,8 +143,6 @@ def main() -> int:
         status_cell = cells[3]
         links = MARKDOWN_LINK_PATTERN.findall(evidence_cell)
         rows[claim_id] = {"status": status_cell, "links": links, "evidence": evidence_cell}
-
-    errors: list[str] = []
 
     version_path = Path("VERSION")
     release_dir = Path("docs/releases")
