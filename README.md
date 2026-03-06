@@ -18,23 +18,26 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `3.0.0` |
+| **Current version** | `3.1.0-dev` |
 | **Released** | 2026-03-06 |
-| **Git SHA** | `b0a4655` |
-| **Branch** | `chore/doc-sync-v3` |
+| **Git SHA** | `9d0ec29` |
+| **Branch** | `main` |
 
-**New in this release:** Phase 5 — Multi-Repo Federation
+**New in this release:** Phase 6 — Autonomous Roadmap Self-Amendment · Free Android Distribution
 
 **New modules in this release:**
 
-| Module |
-|--------|
-| `runtime/governance/federation/key_registry.py` |
-| `tests/governance/federation/test_federation_hmac_key_validation.py` |
-| `tests/test_lineage_federation_origin.py` |
-| `runtime/governance/federation/mutation_broker.py` |
-| `tests/test_federation_mutation_broker.py` |
-| `runtime/governance/federation/federated_evidence_matrix.py` |
+| Module | Purpose |
+|--------|---------|
+| `runtime/autonomy/roadmap_amendment_engine.py` | `RoadmapAmendmentEngine` — governed propose/approve/reject/replay lifecycle for ROADMAP.md |
+| `runtime/autonomy/proposal_diff_renderer.py` | Markdown diff renderer for Aponi IDE + PR descriptions |
+| `tests/autonomy/test_roadmap_amendment_engine.py` | 22 acceptance-criteria tests — 100% pass rate |
+| `.github/workflows/android-free-release.yml` | Free 5-job CI: governance gate → APK → GitHub Release → F-Droid → PWA |
+| `android/fdroid/com.innovativeai.adaad.yml` | F-Droid application metadata (reproducible build spec) |
+| `android/obtainium.json` | Obtainium one-tap import config |
+| `DISTRIBUTION.md` | Complete free public launch playbook ($0 total) |
+| `INSTALL_ANDROID.md` | Step-by-step Android install guide with QR codes |
+| `docs/install.html` | One-tap install landing page (GitHub Pages) |
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -192,22 +195,68 @@ Multi-repo federation is active as of v3.0.0. ADAAD now governs cross-repo mutat
 
 **Phase 6 (Autonomous Roadmap Self-Amendment) is now active. Target: v3.1.0.**
 
-`RoadmapAmendmentEngine` — shipped in v3.1.0-dev — enables the mutation pipeline to propose, score, and submit governed amendments to this roadmap. All proposals are constitutional-gated (`authority_level = governor-review`), require ≥2 human governor approvals, and are deterministically replayable.
+`RoadmapAmendmentEngine` — shipped in v3.1.0-dev — enables the mutation pipeline to propose, score, and submit governed amendments to this roadmap. All proposals are constitutional-gated (`authority_level = governor-review`), require ≥2 human governor approvals, and are deterministically replayable via `verify_replay()`. `DeterminismViolation` halts on any hash divergence — no silent failures.
 
 ---
 
 ## 📲 Get the Android App — Free
 
-ADAAD is publicly available on Android at zero cost. No Play Store account required.
+> No Play Store account required. No fee. Installs like any normal app.
 
-| Method | Instructions |
-|--------|-------------|
-| **Direct APK** | [Releases page](../../releases) → download `adaad-community-*.apk` → sideload |
-| **Obtainium** (auto-updates) | Add `https://github.com/InnovativeAI-adaad/ADAAD` in [Obtainium](https://github.com/ImranR98/Obtainium) |
-| **F-Droid** (in review) | Submission open — see [DISTRIBUTION.md](DISTRIBUTION.md) for self-hosted repo instructions |
-| **PWA** (web app) | Visit `https://InnovativeAI-adaad.github.io/ADAAD/` in Android Chrome → Add to Home Screen |
+### Choose your method
 
-See [DISTRIBUTION.md](DISTRIBUTION.md) for the full free launch playbook, day-0 checklist, and cost matrix ($0 total).
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**⚡ Fastest — Direct APK**
+
+1. On your phone, open the [**Releases page →**](../../releases/latest)
+2. Tap `adaad-community-*.apk` to download
+3. Open the download → tap **Install**
+4. If prompted: *Allow from this source* → Install
+
+</td>
+<td width="50%" valign="top">
+
+**🏆 Recommended — Obtainium (auto-updates)**
+
+1. Install [Obtainium](https://github.com/ImranR98/Obtainium/releases) (free)
+2. Tap **+** → paste `github.com/InnovativeAI-adaad/ADAAD`
+3. Tap **Save** → **Install**
+4. Updates install automatically on new releases
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🌐 No download — Web App (PWA)**
+
+1. Open Chrome on Android
+2. Visit `https://innovativeai-adaad.github.io/ADAAD/`
+3. ⋮ menu → **Add to Home screen** → Add
+4. Opens fullscreen like a native app
+
+</td>
+<td valign="top">
+
+**📦 F-Droid (privacy-first, reproducible builds)**
+
+1. Open F-Droid → Settings → Repositories → **+**
+2. Paste `https://innovativeai-adaad.github.io/adaad-fdroid/repo`
+3. Refresh → search *ADAAD* → Install
+
+</td>
+</tr>
+</table>
+
+📱 **On your phone right now?** → [**adaad.innovativeai.dev/install**](https://innovativeai-adaad.github.io/ADAAD/install) has QR codes + one-tap buttons for every method.
+
+🔐 **Verify integrity:** `apksigner verify --print-certs adaad-community-*.apk`
+SHA-256: `E2:04:C6:F3...BF:F2:E5:27:ED` · Full fingerprint in [INSTALL\_ANDROID.md](INSTALL_ANDROID.md)
+
+> **Android 8.0+ (API 26) required** · Detailed guide: [INSTALL\_ANDROID.md](INSTALL_ANDROID.md) · Full distribution playbook: [DISTRIBUTION.md](DISTRIBUTION.md)
 
 
 
@@ -239,6 +288,7 @@ Weekly analytics report: `.github/workflows/epoch_analytics.yml` (every Monday 0
 I want to...                                  Start here
 ─────────────────────────────────────────────────────────
 Try it in 60 seconds                          python onboard.py
+Install on Android                            INSTALL_ANDROID.md
 Understand the architecture                   docs/EVOLUTION_ARCHITECTURE.md
 Contribute code                               CONTRIBUTING.md
 Review the governance model                   docs/CONSTITUTION.md
@@ -246,6 +296,7 @@ Audit a release                               docs/comms/claims_evidence_matrix.
 Check security posture                        docs/SECURITY.md
 Run on Android / Pydroid3                     docs/ENVIRONMENT_VARIABLES.md
 Deploy to production                          docs/release/release_checklist.md
+Distribute the Android app                    DISTRIBUTION.md
 ```
 
 ---
@@ -277,6 +328,7 @@ This is architecturally enforced, not just documented.
 
 | Version | Capability |
 |---|---|
+| **v3.1.0-dev** | Phase 6 — Roadmap Self-Amendment · Free Android Distribution (GitHub Releases / F-Droid / Obtainium / PWA) |
 | **v3.0** | Phase 5 — Multi-Repo Federation |
 | **v2.3** | Phase 4 — AST-Aware Scoring + Pipeline Intelligence · Phase 2 — Governed Explore/Exploit Loop |
 | **v2.2** | Phase 2 — Governed Explore/Exploit Loop |
@@ -317,6 +369,8 @@ All constitutional guarantees are replay-verifiable. Divergence between any two 
   <a href="docs/CONSTITUTION.md">Constitution</a> ·
   <a href="docs/EVOLUTION_ARCHITECTURE.md">Architecture</a> ·
   <a href="ROADMAP.md">Roadmap</a> ·
+  <a href="INSTALL_ANDROID.md">Android Install</a> ·
+  <a href="DISTRIBUTION.md">Distribution</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
   <a href="docs/SECURITY.md">Security</a> ·
   <a href="CHANGELOG.md">Changelog</a>

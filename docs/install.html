@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <meta name="theme-color" content="#00d4ff"/>
+  <meta name="description" content="Install ADAAD — Constitutional Governance on Android. Free. No Play Store required."/>
+  <title>Install ADAAD on Android</title>
+  <link rel="manifest" href="/ADAAD/manifest.json"/>
+  <style>
+    :root {
+      --bg:       #060d14;
+      --surface:  #0d1e30;
+      --border:   #1a3a5c;
+      --cyan:     #00d4ff;
+      --violet:   #7b61ff;
+      --green:    #22c55e;
+      --amber:    #f59e0b;
+      --slate:    #94a3b8;
+      --white:    #e2e8f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────── */
+    header {
+      text-align: center;
+      padding: 2.5rem 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      color: var(--cyan);
+      letter-spacing: -0.02em;
+    }
+    header p {
+      color: var(--slate);
+      margin-top: .5rem;
+      font-size: 1.05rem;
+    }
+    .version-pill {
+      display: inline-block;
+      background: #0f2b4a;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: .2rem .75rem;
+      font-size: .75rem;
+      color: var(--cyan);
+      margin-top: .75rem;
+    }
+
+    /* ── Layout ──────────────────────────────────── */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Method cards ────────────────────────────── */
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 3rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      position: relative;
+      transition: border-color .2s, transform .15s;
+    }
+    .card:hover { border-color: var(--cyan); transform: translateY(-2px); }
+
+    .card-badge {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .2rem .55rem;
+      border-radius: 100px;
+    }
+    .badge-instant  { background: #0f3d1e; color: var(--green); border: 1px solid #1a6030; }
+    .badge-recommended { background: #1a2a50; color: var(--cyan); border: 1px solid #254080; }
+    .badge-web      { background: #2a1a50; color: var(--violet); border: 1px solid #3a2570; }
+    .badge-fdroid   { background: #2d2000; color: var(--amber); border: 1px solid #4a3500; }
+
+    .card-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+    .card h2   { font-size: 1.1rem; color: var(--white); margin-bottom: .4rem; }
+    .card p    { font-size: .875rem; color: var(--slate); margin-bottom: 1rem; }
+
+    .card-steps {
+      list-style: none;
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-steps li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: .6rem;
+      font-size: .85rem;
+    }
+    .card-steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 1.4rem; height: 1.4rem;
+      background: #0f2b4a;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-top: .1rem;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      width: 100%;
+      padding: .7rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: .9rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn:hover   { opacity: .9; transform: translateY(-1px); }
+    .btn:active  { transform: translateY(0); }
+    .btn-primary { background: var(--cyan); color: var(--bg); }
+    .btn-outline { background: transparent; color: var(--cyan); border: 1.5px solid var(--cyan); }
+    .btn-violet  { background: var(--violet); color: #fff; }
+    .btn-amber   { background: var(--amber); color: var(--bg); }
+
+    /* QR section */
+    .qr-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .qr-row img { width: 72px; height: 72px; border-radius: 6px; background: #fff; padding: 4px; }
+    .qr-label   { font-size: .75rem; color: var(--slate); }
+
+    /* ── Sideload explainer ───────────────────────── */
+    .explainer {
+      background: #0a1a2e;
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .explainer h3 { color: var(--cyan); margin-bottom: .6rem; font-size: 1rem; }
+    .explainer p  { font-size: .875rem; color: var(--slate); }
+    .explainer code {
+      background: #0f2b4a;
+      padding: .1rem .4rem;
+      border-radius: 4px;
+      font-size: .8rem;
+      color: var(--white);
+    }
+
+    /* ── Integrity block ─────────────────────────── */
+    .integrity {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .integrity h3 { color: var(--white); margin-bottom: .75rem; font-size: .95rem; }
+    .hash-line {
+      font-family: 'Courier New', monospace;
+      font-size: .75rem;
+      color: var(--slate);
+      word-break: break-all;
+      background: #0a1520;
+      padding: .6rem .8rem;
+      border-radius: 6px;
+      margin-bottom: .5rem;
+    }
+    .hash-line span { color: var(--cyan); }
+
+    /* ── Footer ──────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      border-top: 1px solid var(--border);
+      font-size: .8rem;
+      color: var(--slate);
+    }
+    footer a { color: var(--cyan); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .method-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>ADAAD</h1>
+  <p>Autonomous Development &amp; Adaptation Architecture</p>
+  <span class="version-pill">v3.1.0-dev · Community · Free</span>
+</header>
+
+<main>
+
+  <!-- ── Sideload note ───────────────────────────── -->
+  <div class="explainer">
+    <h3>📌 About sideloading</h3>
+    <p>
+      ADAAD is distributed outside the Play Store — entirely free. Android calls this
+      <strong style="color:var(--white)">sideloading</strong>. You download the APK file
+      and install it directly. Android will ask you to allow installations from your browser
+      once; after that it's a normal app. All builds are signed with the
+      <code>InnovativeAI LLC</code> certificate so your device can verify integrity.
+    </p>
+  </div>
+
+  <!-- ── Install method cards ───────────────────── -->
+  <div class="method-grid">
+
+    <!-- 1 · Direct APK -->
+    <div class="card">
+      <span class="card-badge badge-instant">Instant</span>
+      <div class="card-icon">📲</div>
+      <h2>Direct APK Download</h2>
+      <p>Fastest path. Download once, install in seconds. No account needed.</p>
+      <ol class="card-steps">
+        <li>Tap the button below on your Android device</li>
+        <li>Android downloads the <code>.apk</code> file to your Downloads folder</li>
+        <li>Open the notification or file — tap <strong>Install</strong></li>
+        <li>If prompted: Settings → Allow from this source → Install</li>
+      </ol>
+      <a class="btn btn-primary" href="https://github.com/InnovativeAI-adaad/ADAAD/releases/latest" id="apk-btn">
+        ⬇️ Download Latest APK
+      </a>
+      <div class="qr-row">
+        <img src="/ADAAD/assets/qr/releases.svg" alt="QR — APK download"/>
+        <span class="qr-label">Scan from another device to send the link to your phone</span>
+      </div>
+    </div>
+
+    <!-- 2 · Obtainium -->
+    <div class="card">
+      <span class="card-badge badge-recommended">Recommended</span>
+      <div class="card-icon">🔄</div>
+      <h2>Obtainium</h2>
+      <p>Auto-updates straight from GitHub Releases. Install once, stay current forever.</p>
+      <ol class="card-steps">
+        <li>Install Obtainium (free, on F-Droid or GitHub)</li>
+        <li>Tap the import button below — or open Obtainium → + → Add App</li>
+        <li>Paste: <code>github.com/InnovativeAI-adaad/ADAAD</code></li>
+        <li>Obtainium detects the APK automatically — tap Install</li>
+      </ol>
+      <a class="btn btn-outline" id="obtainium-btn"
+         href="obtainium://app/https://github.com/InnovativeAI-adaad/ADAAD">
+        🔄 Open in Obtainium
+      </a>
+      <div class="qr-row">
+        <img src="/ADAAD/assets/qr/obtainium.svg" alt="QR — Obtainium"/>
+        <span class="qr-label">One-tap import if Obtainium is already installed</span>
+      </div>
+    </div>
+
+    <!-- 3 · PWA -->
+    <div class="card">
+      <span class="card-badge badge-web">Web App</span>
+      <div class="card-icon">🌐</div>
+      <h2>Web App (PWA)</h2>
+      <p>No download at all. Install the governance dashboard directly from Chrome.</p>
+      <ol class="card-steps">
+        <li>Open the link below in <strong>Chrome on Android</strong></li>
+        <li>Tap the ⋮ menu → <strong>Add to Home screen</strong></li>
+        <li>Tap <strong>Add</strong> — icon appears on your home screen</li>
+        <li>Opens fullscreen like a native app</li>
+      </ol>
+      <a class="btn btn-violet" href="https://innovativeai-adaad.github.io/ADAAD/">
+        🌐 Open Web App
+      </a>
+      <div class="qr-row">
+        <img src="/ADAAD/assets/qr/pwa.svg" alt="QR — PWA"/>
+        <span class="qr-label">Scan to open on your Android device</span>
+      </div>
+    </div>
+
+    <!-- 4 · F-Droid -->
+    <div class="card">
+      <span class="card-badge badge-fdroid">F-Droid</span>
+      <div class="card-icon">📦</div>
+      <h2>F-Droid Repository</h2>
+      <p>Privacy-first. Reproducible builds. Auto-updates through F-Droid's client.</p>
+      <ol class="card-steps">
+        <li>Open <strong>F-Droid</strong> app → Settings → Repositories</li>
+        <li>Tap <strong>+</strong> → paste the repo URL below</li>
+        <li>Refresh repositories — search <em>ADAAD</em></li>
+        <li>Tap Install — F-Droid manages updates automatically</li>
+      </ol>
+      <button class="btn btn-amber" id="fdroid-copy-btn" onclick="copyFdroid()">
+        📋 Copy Repo URL
+      </button>
+      <p id="fdroid-copied" style="font-size:.75rem;color:var(--green);margin-top:.5rem;display:none">
+        ✓ Copied: https://innovativeai-adaad.github.io/adaad-fdroid/repo
+      </p>
+      <div class="qr-row">
+        <img src="/ADAAD/assets/qr/fdroid.svg" alt="QR — F-Droid repo"/>
+        <span class="qr-label">Scan to add the F-Droid repo on your device</span>
+      </div>
+    </div>
+
+  </div><!-- /method-grid -->
+
+  <!-- ── APK integrity ──────────────────────────── -->
+  <div class="integrity">
+    <h3>🔐 Certificate Integrity</h3>
+    <div class="hash-line">
+      <span>Signer:</span> CN=InnovativeAI LLC, OU=ADAAD Platform, L=Blackwell, ST=Oklahoma, C=US
+    </div>
+    <div class="hash-line">
+      <span>SHA-256:</span> E2:04:C6:F3:97:A2:58:D0:42:29:9E:F7:EC:6A:35:8D:64:2E:62:77:BD:32:42:B5:A4:85:81:BF:F2:E5:27:ED
+    </div>
+    <p style="font-size:.8rem;color:var(--slate);margin-top:.75rem">
+      Verify with:
+      <code>apksigner verify --print-certs adaad-community-*.apk</code>
+    </p>
+  </div>
+
+  <!-- ── Requirements ───────────────────────────── -->
+  <div class="explainer" style="border-left-color: var(--violet)">
+    <h3>📋 Requirements</h3>
+    <p>
+      <strong style="color:var(--white)">Android 8.0+</strong> (API 26) · Any device with ≥2 GB RAM ·
+      Internet connection to connect your ADAAD workspace (
+      <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/QUICKSTART.md"
+         style="color:var(--cyan)">free Community tier</a>
+      available — self-hosted, no subscription)
+    </p>
+  </div>
+
+</main>
+
+<footer>
+  <p>
+    ADAAD · InnovativeAI LLC · Blackwell, Oklahoma ·
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD">Source</a> ·
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/LICENSE">MIT License</a> ·
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/DISTRIBUTION.md">Distribution Guide</a>
+  </p>
+</footer>
+
+<script>
+  // ── Smart APK button: detect if on Android, link directly to latest APK ──
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const apkBtn = document.getElementById('apk-btn');
+  if (isAndroid) {
+    apkBtn.textContent = '⬇️ Tap to Download APK Now';
+    apkBtn.style.background = '#22c55e';
+    // Try to link to the direct .apk asset; fallback to releases page
+    fetch('https://api.github.com/repos/InnovativeAI-adaad/ADAAD/releases/latest')
+      .then(r => r.json())
+      .then(data => {
+        const asset = (data.assets || []).find(a => a.name.endsWith('.apk') && a.name.includes('community'));
+        if (asset) {
+          apkBtn.href = asset.browser_download_url;
+          apkBtn.textContent = `⬇️ Download ${asset.name}`;
+        }
+      })
+      .catch(() => {});
+  }
+
+  // ── Obtainium deep-link fallback ─────────────────────────────────────────
+  const obBtn = document.getElementById('obtainium-btn');
+  obBtn.addEventListener('click', function(e) {
+    // Try deep link first; fallback to GitHub after 1.5s if Obtainium not installed
+    const fallback = setTimeout(() => {
+      window.location = 'https://github.com/ImranR98/Obtainium/releases';
+    }, 1500);
+    window.addEventListener('blur', () => clearTimeout(fallback), { once: true });
+  });
+
+  // ── F-Droid URL copy ──────────────────────────────────────────────────────
+  function copyFdroid() {
+    const url = 'https://innovativeai-adaad.github.io/adaad-fdroid/repo';
+    navigator.clipboard.writeText(url).then(() => {
+      document.getElementById('fdroid-copied').style.display = 'block';
+    }).catch(() => {
+      // Fallback for older Android
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      document.getElementById('fdroid-copied').style.display = 'block';
+    });
+  }
+
+  // ── PWA install prompt ────────────────────────────────────────────────────
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/ADAAD/sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
