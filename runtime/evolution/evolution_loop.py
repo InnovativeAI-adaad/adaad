@@ -61,6 +61,9 @@ class EpochResult:
     duration_seconds:       float          = 0.0
     evolution_mode:         str            = EvolutionMode.EXPLORE.value
     window_explore_ratio:   float          = 1.0
+    # PR-PHASE4-02: semantic scoring provenance
+    semantic_scored_count:  int            = 0
+    scoring_algorithm_version: str         = "v1.2.0+semantic_diff_v1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -154,6 +157,12 @@ class EvolutionLoop:
         accepted = [s for s in all_scores if s.accepted]
         accepted_count = len(accepted)
 
+        # PR-PHASE4-02: count candidates where semantic scoring was active
+        semantic_scored_count = sum(
+            1 for c in all_proposals
+            if getattr(c, 'python_content', None) is not None
+        )
+
         # Phase 4: Adapt weights
         outcomes = self._build_outcomes(all_scores)
         updated_weights = self._adaptor.adapt(outcomes)
@@ -204,6 +213,8 @@ class EvolutionLoop:
             duration_seconds=round(time.monotonic() - t_start, 3),
             evolution_mode=evolution_mode.value,
             window_explore_ratio=round(self._controller.window_explore_ratio(), 4),
+            semantic_scored_count=semantic_scored_count,
+            scoring_algorithm_version="v1.2.0+semantic_diff_v1.0",
         )
 
     # ------------------------------------------------------------------
