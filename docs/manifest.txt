@@ -4,6 +4,7 @@
 
 ## Root
 VERSION                          — Canonical version string (2.0.0)
+Latest tagged release notes      — docs/releases/2.3.0.md
 CHANGELOG.md                     — Release history
 README.md                        — Project overview and quickstart
 AGENTS.md                        — Governed build agent contract

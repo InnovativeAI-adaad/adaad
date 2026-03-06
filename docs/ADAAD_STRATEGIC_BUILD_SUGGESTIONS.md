@@ -228,6 +228,19 @@ in the same PR:
 
 ---
 
+
+## Phase 5 canonical PR IDs (alignment note)
+
+For all planning, review, and release-gating references, Phase 5 uses the canonical **3-PR merged-scope** sequence:
+
+1. `PR-PHASE5-01`
+2. `PR-PHASE5-02`
+3. `PR-PHASE5-03`
+
+Legacy references to `PR-PHASE5-04` or `PR-PHASE5-05` are superseded and should be interpreted as scope now folded into `PR-PHASE5-03`. Canonical control lives in `docs/governance/ADAAD_PR_PROCESSION_2026-03.md`.
+
+---
+
 ## Evidence Lane Output Contract
 
 Evidence updates are mandatory in the same change set as any hardening or

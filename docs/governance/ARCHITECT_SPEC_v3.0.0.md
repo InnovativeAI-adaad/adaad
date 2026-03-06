@@ -11,6 +11,10 @@
 > **Supersedes:** `ARCHITECT_SPEC_v2.0.0.md` (v2.0.0–v2.3.0 coverage)
 > **Status:** CANONICAL — machine-interpretable, audit-ready, replay-verifiable
 
+
+> [!IMPORTANT]
+> **Canonical source (PR sequence control):** `docs/governance/ADAAD_PR_PROCESSION_2026-03.md` is the controlling source for Phase 5 PR IDs, dependency chain, milestone/CI tier flags, and per-PR acceptance gates. This document mirrors that sequence exactly.
+
 ---
 
 ## Preamble
@@ -341,63 +345,48 @@ All failure modes are deterministic, named, non-silent, and emitted to the evide
 
 ## 5. Phase 5 PR Sequence
 
-The following PRs are defined as the minimal, ordered delivery sequence for Phase 5. Each PR is self-contained. No PR may be merged without evidence from the prior PR's evidence matrix entry.
+The following PRs are the canonical, ordered delivery sequence for Phase 5 under the **3-PR merged-scope model**. No PR may merge without evidence from the prior PR entry.
 
-### PR-PHASE5-01: Security Invariants + Failure Mode Registry
+| PR ID | Milestone flag | CI tier | Blocked by |
+|---|---|---|---|
+| PR-PHASE5-01 | phase-5 / v3.0.0 | critical | v2.2.0 tag |
+| PR-PHASE5-02 | phase-5 / v3.0.0 | critical | PR-PHASE5-01 merged |
+| PR-PHASE5-03 | phase-5 / v3.0.0-release-gate | critical | PR-PHASE5-02 merged |
 
-| Field | Value |
-|---|---|
-| **Purpose** | Record all Phase 5 invariants and failure modes before any implementation begins |
-| **Files modified** | `docs/governance/SECURITY_INVARIANTS_MATRIX.md`, `docs/governance/mutation_lifecycle.md` |
-| **Evidence required** | ArchitectAgent review; no failing tests introduced |
-| **Constitutional gate** | Tier 1 (docs-only) |
-| **Blocked by** | Nothing — first PR in sequence |
-
-### PR-PHASE5-02: LineageLedgerV2 federation_origin Extension
+### PR-PHASE5-01: Federation Mutation Propagation
 
 | Field | Value |
 |---|---|
-| **Purpose** | Add `federation_origin: Optional[FederationOrigin]` to `LineageLedgerV2`; update serialization, hash computation, and replay |
-| **Files modified** | `runtime/evolution/lineage_v2.py`, `security/ledger/lineage_v2.py`, `tests/test_lineage_v2_integrity.py`, `tests/determinism/test_lineage_v2_streaming.py` |
-| **New tests required** | Single-repo entries with `federation_origin=None` hash identically to pre-Phase-5 entries; federated entries hash differently and include origin fields |
-| **Evidence required** | 100% determinism CI pass; no regression in `test_lineage_v2_integrity.py` |
-| **Constitutional gate** | Tier 0 (runtime modification) — human review required |
+| **Purpose** | Upgrade federated propagation from signal ingestion to governed mutation propagation with dual decision references |
+| **Files modified** | `runtime/market/federated_signal_broker.py`, `runtime/governance/federation/peer_discovery.py`, ledger schema/event contracts |
+| **Acceptance gates** | (1) Dual approval required before commit (`federated_mutation_dual_approval`) (2) `federated_mutation_accepted.v1` includes both decision IDs (3) Federation transport + governance suites pass without regressions |
+| **Constitutional gate** | Tier 1 + Tier 2 (critical, federation path) |
+| **Blocked by** | v2.2.0 tagged |
+
+### PR-PHASE5-02: Cross-Repo Lineage
+
+| Field | Value |
+|---|---|
+| **Purpose** | Extend `LineageLedgerV2` with `federation_origin` and preserve deterministic replay/hash behavior |
+| **Files modified** | `runtime/evolution/lineage_v2.py`, `security/ledger/lineage_v2.py`, lineage endpoint + tests |
+| **Acceptance gates** | (1) Deterministic serialization/hash for `federation_origin=None` and populated values (2) Existing lineage integrity tests pass unchanged (3) Governance blocks missing federation origin metadata |
+| **Constitutional gate** | Tier 1 + Tier 2 (critical, lineage/replay path) |
 | **Blocked by** | PR-PHASE5-01 merged |
 
-### PR-PHASE5-03: FederatedMutationReceiver + GovernanceGate Rule 15/16
+### PR-PHASE5-03: Federated Evidence Matrix + v3.0.0 Gate
 
 | Field | Value |
 |---|---|
-| **Purpose** | Implement `FederatedMutationReceiver`; add rules 15 and 16 to GovernanceGate evaluation sequence |
-| **Files modified** | `runtime/governance/federation/mutation_receiver.py` (new), `runtime/constitution.py`, `tests/governance/federation/test_mutation_receiver.py` (new) |
-| **New tests required** | Rule 15 blocks mutation when destination gate absent; Rule 16 blocks mutation when federation_origin absent; deduplication discards duplicate mutation_id silently |
-| **Evidence required** | GovernanceGate with rules 15/16 passes existing rule 1–14 test suite unmodified |
-| **Constitutional gate** | Tier 0 — human review required |
+| **Purpose** | Finalize federated evidence/release gate and complete v3.0.0 milestone controls |
+| **Files modified** | `docs/RELEASE_EVIDENCE_MATRIX.md`, federation evidence/replay wiring, CI workflows, constitution rule updates |
+| **Merged scope note** | Includes scope previously split as `PR-PHASE5-04` (broker replay-proof hardening) and `PR-PHASE5-05` (federated evidence matrix + full E2E CI) |
+| **Acceptance gates** | (1) `federated-determinism` CI job passes with zero matrix digest divergences (2) `validate_release_evidence.py --require-complete` passes (3) v3.0.0 release gate blocks until federated evidence completeness + dual-approval invariants are satisfied |
+| **Constitutional gate** | Tier 1 + Tier 2 + Tier 3 (milestone release gate) |
 | **Blocked by** | PR-PHASE5-02 merged |
 
-### PR-PHASE5-04: FederatedSignalBroker Upgrade + Replay Proof
+### Phase 5 sequence changelog note
 
-| Field | Value |
-|---|---|
-| **Purpose** | Upgrade `FederatedSignalBroker` from read-only to governed conduit; implement `dispatch_mutation_proposal()`; implement Step 7 replay proof |
-| **Files modified** | `runtime/market/federated_signal_broker.py`, `runtime/governance/federation/protocol.py`, `tests/market/test_federated_signal_broker.py` |
-| **New tests required** | Dispatch with unsigned payload emits `FEDERATION_DISPATCH_UNSIGNED_PAYLOAD`; replay divergence emits `FEDERATION_REPLAY_DIVERGENCE` and halts; authority invariant test confirms broker never calls GovernanceGate |
-| **Critical invariant test** | `test_federated_broker_never_calls_governance_gate` — must be present and passing |
-| **Evidence required** | All federation transport contract tests pass; authority invariant test passes |
-| **Constitutional gate** | Tier 0 — human review required |
-| **Blocked by** | PR-PHASE5-03 merged |
-
-### PR-PHASE5-05: FederatedEvidenceMatrix + Full End-to-End CI
-
-| Field | Value |
-|---|---|
-| **Purpose** | Implement `FederatedEvidenceMatrix`; wire Steps 5–10 into `EvolutionLoop`; add CI job `federated-epoch-determinism` |
-| **Files modified** | `runtime/governance/federation/evidence_matrix.py` (new), `runtime/evolution/evolution_loop.py`, `.github/workflows/ci.yml`, `tests/governance/test_federated_evidence_matrix.py` (new) |
-| **New CI job** | `federated-epoch-determinism`: runs a two-repo simulated federation epoch 10 times; asserts 0 matrix_digest divergences |
-| **New tests required** | `FEDERATION_EVIDENCE_MATRIX_INCOMPLETE` triggered when ledger hash absent; matrix_digest deterministic for identical inputs; release gate blocks on INCOMPLETE entry |
-| **Evidence required** | Full CI green including new federated determinism job; `federated_evidence_matrix.jsonl` produced with no INCOMPLETE entries |
-| **Constitutional gate** | Tier 0 — human review required |
-| **Blocked by** | PR-PHASE5-04 merged |
+- **2026-03-06:** Sequence normalized from historical 5-PR decomposition to canonical 3-PR merged-scope model. Scope formerly documented as `PR-PHASE5-04` and `PR-PHASE5-05` is now folded into `PR-PHASE5-03` to remove spec/procession drift and concentrate v3.0.0 acceptance gating.
 
 ---
 

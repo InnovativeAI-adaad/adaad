@@ -90,6 +90,7 @@
 |---|---|
 | [Release checklist](release/release_checklist.md) | Canonical operator preflight |
 | [Release audit checklist](releases/RELEASE_AUDIT_CHECKLIST.md) | Evidence verification |
+| [v2.3.0 Release notes](releases/2.3.0.md) | Phase 4 GA: AST scoring + pipeline intelligence |
 | [v2.0.0 Release notes](releases/2.0.0.md) | AI Mutation Capability Expansion · Principal/Staff grade |
 | [v1.1.0 Release notes](releases/1.1.0.md) | Phase 0 hardening complete |
 | [Claims-evidence matrix](comms/claims_evidence_matrix.md) | Evidence completeness gate |

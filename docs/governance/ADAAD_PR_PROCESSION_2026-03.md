@@ -1,5 +1,8 @@
 # ADAAD PR Procession Plan — 2026-03
 
+> [!IMPORTANT]
+> **Canonical source (PR sequence control):** This document is the controlling source for Phase 5 PR IDs, dependency order, milestone/CI tier flags, and per-PR acceptance gates. `docs/governance/ARCHITECT_SPEC_v3.0.0.md` must mirror this section exactly.
+
 **Authority chain:** `CONSTITUTION.md > ARCHITECTURE_CONTRACT.md > ROADMAP.md > this document`  
 **Baseline branch:** `feat/adaad-v066-core-optimizations` (3 commits ahead of `main`)  
 **Baseline state:** Phase 3 shipped (v2.1.0) · Phase 4 PR-PHASE4-01 merged · v0.66 branch ready  
@@ -217,12 +220,23 @@ Required before tagging `v2.2.0`:
 
 ## Tier 2 — Phase 5: Multi-Repo Federation (v3.0.0)
 
+### Canonical Phase 5 sequence model
+
+**Policy decision:** Phase 5 uses the **3-PR merged-scope model**. The previous 5-PR split is retired.
+
+| PR ID | Milestone flag | CI tier | Depends on |
+|---|---|---|---|
+| PR-PHASE5-01 | Phase 5 / v3.0.0 | critical | v2.2.0 tagged |
+| PR-PHASE5-02 | Phase 5 / v3.0.0 | critical | PR-PHASE5-01 merged |
+| PR-PHASE5-03 | Phase 5 / v3.0.0 (milestone release gate) | critical | PR-PHASE5-02 merged |
+
 ### PR-PHASE5-01 · Federation Mutation Propagation
 
 | Field | Value |
 |---|---|
 | Branch | `feat/phase5-federated-propagation` |
 | CI tier | `critical` |
+| Milestone flag | `phase-5` |
 | Depends on | v2.2.0 tagged |
 
 **Scope:**
@@ -230,6 +244,11 @@ Required before tagging `v2.2.0`:
 - `runtime/governance/federation/peer_discovery.py` — `PeerRegistry` gains `accept_mutation_proposal()` endpoint: validates `federation_origin` chain, routes to local `GovernanceGate` for independent approval
 - Authority invariant: **both** source and destination `GovernanceGate` must independently approve before propagation commits
 - New ledger event: `federated_mutation_accepted.v1` carrying dual `decision_id` references
+
+**Acceptance gates:**
+1. Source and destination approvals are both required before commit (`federated_mutation_dual_approval`).
+2. `federated_mutation_accepted.v1` ledger entries include both decision IDs.
+3. Federation transport/governance tests pass with no regression in existing governance suites.
 
 ---
 
@@ -239,6 +258,7 @@ Required before tagging `v2.2.0`:
 |---|---|
 | Branch | `feat/phase5-cross-repo-lineage` |
 | CI tier | `critical` |
+| Milestone flag | `phase-5` |
 | Depends on | PR-PHASE5-01 merged |
 
 **Scope:**
@@ -246,6 +266,11 @@ Required before tagging `v2.2.0`:
 - Cross-repo lineage entries carry source repo identity + epoch chain digest
 - `SemanticDiffEngine` proximity scoring works across federation origin (semantic proximity is repo-agnostic)
 - Federated mutations appear in `GET /api/audit/epochs/{epoch_id}/lineage` response with `federation_origin` annotation
+
+**Acceptance gates:**
+1. `LineageLedgerV2` serialization and hashing are deterministic for both `federation_origin=None` and populated origins.
+2. Existing lineage integrity tests pass unchanged; federated lineage tests pass.
+3. Governance blocks missing federation origin metadata by invariant.
 
 ---
 
@@ -255,12 +280,20 @@ Required before tagging `v2.2.0`:
 |---|---|
 | Branch | `feat/phase5-evidence-matrix` |
 | CI tier | `critical` |
+| Milestone flag | `phase-5` + `v3.0.0-release-gate` |
 | Depends on | PR-PHASE5-02 merged |
 
 **Scope:**
 - `docs/comms/claims_evidence_matrix.md` — Phase 5 row with cross-repo determinism verification requirements
 - CI job `federated-determinism`: verifies zero divergences in simulated two-node federation epoch
 - `CONSTITUTION.md` v0.5.0: adds `federated_mutation_dual_approval` as BLOCKING rule
+
+**Merged scope note:** This PR absorbs the previously split scopes of `PR-PHASE5-04` and `PR-PHASE5-05` (signal broker replay-proof hardening + federated evidence matrix wiring and CI).
+
+**Acceptance gates:**
+1. `federated-determinism` CI job is green with zero matrix digest divergences.
+2. Evidence matrix entries are complete and deterministic (`--require-complete` passes).
+3. v3.0.0 release gate is blocked unless federated evidence and dual-approval invariants are satisfied.
 
 **Release gate for v3.0.0:** same structure as v2.2.0 plus cross-repo determinism CI green.
 
@@ -317,3 +350,9 @@ Required before tagging `v2.2.0`:
 ---
 
 *This document is governed by `CONSTITUTION.md`. Amendments require ArchitectAgent approval and a CHANGELOG entry.*
+
+---
+
+## Changelog Notes
+
+- **2026-03-06 — Phase 5 sequencing normalization:** Adopted the canonical **3-PR merged-scope model** for Phase 5 across governance docs. `PR-PHASE5-04` and `PR-PHASE5-05` scope moved into `PR-PHASE5-03` to remove cross-document divergence and keep a single release-gate PR for v3.0.0.

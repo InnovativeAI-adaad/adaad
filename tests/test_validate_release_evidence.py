@@ -175,3 +175,62 @@ def test_governance_docs_reject_stale_evidence_matrix_links(tmp_path: Path) -> N
 
     assert result.returncode == 1
     assert "stale evidence matrix path reference" in result.stdout
+
+
+def _seed_version(repo: Path, value: str) -> None:
+    (repo / "VERSION").write_text(f"{value}\n", encoding="utf-8")
+
+
+def test_validator_fails_when_version_exceeds_latest_release_note(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "scripts").mkdir(parents=True, exist_ok=True)
+    src = Path(__file__).resolve().parents[1] / "scripts" / "validate_release_evidence.py"
+    (repo / "scripts" / "validate_release_evidence.py").write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    _seed_links(repo)
+    _seed_version(repo, "9.9.9")
+
+    _write_matrix(
+        repo,
+        """
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
+| --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+""".strip()
+        + "\n",
+    )
+
+    result = _run_validator(repo)
+
+    assert result.returncode == 1
+    assert "VERSION exceeds latest release note file" in result.stdout
+
+
+def test_validator_accepts_version_equal_to_latest_release_note(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "scripts").mkdir(parents=True, exist_ok=True)
+    src = Path(__file__).resolve().parents[1] / "scripts" / "validate_release_evidence.py"
+    (repo / "scripts" / "validate_release_evidence.py").write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    _seed_links(repo)
+    _seed_version(repo, "1.0.0")
+
+    _write_matrix(
+        repo,
+        """
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
+| --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+""".strip()
+        + "\n",
+    )
+
+    result = _run_validator(repo)
+
+    assert result.returncode == 0

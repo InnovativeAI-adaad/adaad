@@ -12,6 +12,7 @@ Canonical operator preflight checklist: [`docs/release/release_checklist.md`](..
 - [ ] Constitution version locked
 - [ ] Evidence bundle includes `scoring_algorithm_version`, `constitution_version`, `governor_version`, `fitness_weights_hash`, and `goal_graph_hash` provenance fields.
 - [ ] Evidence matrix complete
+- [ ] Tagged/release commit has matching release note in `docs/releases/<version>.md`
 - [ ] Replay on two independent environments produces matching digest outputs
 - [ ] Constitution checksum verified
 - [ ] Evidence bundle reproducibility test completed

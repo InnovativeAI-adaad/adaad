@@ -9,6 +9,7 @@ This matrix maps major external/public claims to objective, versioned repository
 | `forensic-bundle-examples` | "Forensic artifacts are available for incident reconstruction." | [Aponi v2 forensics + health model](../governance/APONI_V2_FORENSICS_AND_HEALTH_MODEL.md); [Forensic bundle lifecycle](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
 | `codeql-status` | "CodeQL analysis status is published and enforceable." | [CodeQL workflow](../../.github/workflows/codeql.yml) | Complete |
 | `versioned-docs-spec-links` | "Public claims are backed by versioned release/spec documentation." | [Versioned release notes (1.0.0)](../releases/1.0.0.md); [Governance schema versioning spec](../governance/schema_versioning_and_migration.md) | Complete |
+| `release-v2.3.0-phase4-ga` | "v2.3.0 release claims are backed by concrete release notes, version pin, and changelog evidence." | [v2.3.0 release notes](../releases/2.3.0.md); [VERSION](../../VERSION); [Changelog v2.3.0 section](../../CHANGELOG.md#230--2026-03-06) | Complete |
 | `stable-v1-maturity` | "ADAAD is stable for governed audit/replay workflows and staged mutation review." | [README project status + limitations](../../README.md); [1.0.0 release scope](../releases/1.0.0.md) | Complete |
 | `deterministic-governance-primitives` | "Governance primitives are deterministic and test-backed." | [Determinism foundation module](../../runtime/governance/foundation/determinism.py); [determinism test suite](../../tests/determinism/test_scoring_algorithm_determinism.py) | Complete |
 | `fail-closed-replay-enforcement` | "Replay divergence fail-closes execution." | [Replay runtime enforcement test](../../tests/determinism/test_replay_runtime_harness.py); [strict replay invariants spec](../governance/STRICT_REPLAY_INVARIANTS.md) | Complete |
@@ -45,6 +46,8 @@ This matrix maps major external/public claims to objective, versioned repository
 | `thompson-deterministic-seeded-rng` | Identical arm state → identical Thompson agent selection | `tests/test_fitness_landscape.py::test_thompson_flag_persists` | Complete |
 | `semantic-diff-deterministic` | Identical AST inputs → identical risk/complexity scores | `tests/test_semantic_diff.py::TestDiffFromCodeDiff::test_deterministic` | Complete |
 | `semantic-diff-fallback-safe` | None/SyntaxError input → 0.5/0.5 fallback, no exception | `tests/test_semantic_diff.py::TestSemanticDiff::test_none_fallback` | Complete |
+
+| `phase-sequence-source-consistency` | "Active phase and next PR are consistent across AGENTS guidance, agent state, and Architect v3.0.0 Phase 5 sequence." | [Governed agent contract phase table](../../AGENTS.md); [Agent state pointer](../../.adaad_agent_state.json); [Architect spec Phase 5 sequence](../governance/ARCHITECT_SPEC_v3.0.0.md#5-phase-5-pr-sequence); [Consistency validator](../../scripts/validate_phase_sequence_consistency.py); [CI docs-validation hook](../../.github/workflows/ci.yml) | Complete |
 
 ## Completion standard
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import re
 from pathlib import Path
+from typing import Iterable
 
 MATRIX_PATH = Path("docs/comms/claims_evidence_matrix.md")
 GOVERNANCE_DOCS_ROOT = Path("docs/governance")
@@ -50,6 +51,23 @@ def _normalize_local_target(link: str, base_dir: Path) -> Path:
     clean_link = link.split("#", 1)[0]
     return (base_dir / clean_link).resolve()
 
+def _parse_version_triplet(raw: str) -> tuple[int, int, int] | None:
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", raw.strip())
+    if not match:
+        return None
+    return tuple(int(match.group(i)) for i in (1, 2, 3))
+
+
+def _iter_release_note_versions(release_dir: Path) -> Iterable[tuple[int, int, int]]:
+    if not release_dir.exists():
+        return []
+    versions: list[tuple[int, int, int]] = []
+    for note_file in release_dir.glob("*.md"):
+        parsed = _parse_version_triplet(note_file.stem)
+        if parsed is not None:
+            versions.append(parsed)
+    return versions
+
 
 def main() -> int:
     args = _parse_args()
@@ -75,6 +93,27 @@ def main() -> int:
         rows[claim_id] = {"status": status_cell, "links": links, "evidence": evidence_cell}
 
     errors: list[str] = []
+
+    version_path = Path("VERSION")
+    release_dir = Path("docs/releases")
+
+    if version_path.exists():
+        version_raw = version_path.read_text(encoding="utf-8").strip()
+        version_triplet = _parse_version_triplet(version_raw)
+        if version_triplet is None:
+            errors.append(f"invalid VERSION format: {version_raw!r}; expected MAJOR.MINOR.PATCH")
+        else:
+            release_versions = list(_iter_release_note_versions(release_dir))
+            if not release_versions:
+                errors.append(f"no semantic release note files found in {release_dir.as_posix()}")
+            else:
+                latest_release_version = max(release_versions)
+                if version_triplet > latest_release_version:
+                    latest_str = ".".join(str(x) for x in latest_release_version)
+                    errors.append(
+                        "VERSION exceeds latest release note file: "
+                        f"VERSION={version_raw} > docs/releases/{latest_str}.md"
+                    )
 
     missing_claims = REQUIRED_CLAIM_IDS - rows.keys()
     if missing_claims:

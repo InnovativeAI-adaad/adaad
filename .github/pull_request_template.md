@@ -25,3 +25,6 @@ Briefly describe the change and why it is needed.
 
 ## CI gating
 Review the CI gating policy: [`docs/governance/ci-gating.md`](../docs/governance/ci-gating.md).
+
+## Phase 5 sequence reference (when applicable)
+- [ ] If this PR targets Phase 5, IDs and dependencies align to canonical sequence: `PR-PHASE5-01` → `PR-PHASE5-02` → `PR-PHASE5-03` (`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`).
