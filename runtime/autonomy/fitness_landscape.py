@@ -10,9 +10,10 @@ Purpose:
 
 State is persisted to JSON for cross-epoch continuity.
 
-Extension point (Phase 2):
-  Replace recommended_agent() decision tree with UCB1 or Thompson Sampling
-  bandit selector (see docs/EVOLUTION_ARCHITECTURE.md §4.1).
+Phase 2 (active):
+  recommended_agent() now uses BanditSelector (UCB1) when total_pulls >= 10.
+  Falls back to the v1 decision tree on sparse data (< 10 pulls).
+  See docs/EVOLUTION_ARCHITECTURE.md §4.1 and runtime/autonomy/bandit_selector.py.
 """
 
 from __future__ import annotations
@@ -22,6 +23,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional
+
+from runtime.autonomy.bandit_selector import BanditSelector, MIN_PULLS_FOR_BANDIT
 
 DEFAULT_LANDSCAPE_PATH = Path("data/fitness_landscape_state.json")
 
@@ -71,6 +74,7 @@ class FitnessLandscape:
     def __init__(self, state_path: Path = DEFAULT_LANDSCAPE_PATH) -> None:
         self._path    = state_path
         self._records: Dict[str, TypeRecord] = {}
+        self._bandit: BanditSelector = BanditSelector()
         self._load()
 
     # ------------------------------------------------------------------
@@ -86,6 +90,11 @@ class FitnessLandscape:
             rec.wins += 1
         else:
             rec.losses += 1
+        # Feed outcome into bandit arms via type→agent mapping
+        from runtime.autonomy.bandit_selector import AGENTS
+        _TYPE_TO_AGENT = {"structural": "architect", "performance": "beast", "coverage": "beast"}
+        agent_arm = _TYPE_TO_AGENT.get(mutation_type, "dream")
+        self._bandit.record(agent_arm, won=won)
         self._save()
 
     # ------------------------------------------------------------------
@@ -116,15 +125,23 @@ class FitnessLandscape:
         """
         Return the recommended agent persona for the next epoch.
 
-        Decision tree:
-          IF plateau:          return 'dream'      (max exploration)
-          IF best == struct:   return 'architect'  (structural exploit)
-          IF best in perf/cov: return 'beast'      (safe exploit)
-          ELSE:                return 'beast'      (conservative default)
+        Phase 2 (UCB1 active when total_pulls >= MIN_PULLS_FOR_BANDIT):
+          1. Plateau check always takes precedence — return 'dream' for max exploration.
+          2. If bandit is active: delegate to BanditSelector.select() (UCB1).
+          3. If bandit is inactive (sparse data): v1 decision tree fallback.
+
+        UCB1 algorithm:
+          score(agent) = win_rate(agent) + sqrt(2) × sqrt(ln(total_pulls) / pulls(agent))
+          Unpulled arms score +inf (guaranteed exploration).
         """
         if self.is_plateau():
             return "dream"
 
+        # Phase 2: UCB1 bandit when enough data has been collected
+        if self._bandit.is_active:
+            return self._bandit.select()
+
+        # Phase 1 fallback: deterministic decision tree (sparse data guard)
         best_type = self.best_mutation_type()
         if best_type == "structural":
             return "architect"
@@ -142,6 +159,7 @@ class FitnessLandscape:
             "is_plateau":           self.is_plateau(),
             "recommended_agent":    self.recommended_agent(),
             "best_mutation_type":   self.best_mutation_type(),
+            "bandit":               self._bandit.summary(),
         }
 
     # ------------------------------------------------------------------
@@ -155,6 +173,7 @@ class FitnessLandscape:
                 t: {"wins": r.wins, "losses": r.losses}
                 for t, r in self._records.items()
             },
+            "bandit": self._bandit.to_state(),
             "saved_at": time.time(),
         }
         self._path.write_text(json.dumps(state, indent=2))
@@ -169,5 +188,10 @@ class FitnessLandscape:
                 rec.wins   = int(data.get("wins",   0))
                 rec.losses = int(data.get("losses", 0))
                 self._records[mut_type] = rec
+            if "bandit" in state:
+                try:
+                    self._bandit = BanditSelector.from_state(state["bandit"])
+                except Exception:  # pragma: no cover — corrupt bandit state, reset
+                    self._bandit = BanditSelector()
         except (json.JSONDecodeError, KeyError, TypeError):
             pass  # Corrupt state — start fresh
