@@ -76,23 +76,113 @@ Extends ADAAD from single-repo mutation to governed cross-repo evolution:
 
 **Status:** 🟡 active · **Target:** v3.1.0 · Promoted from backlog: 2026-03-06
 
-The mutation engine proposes amendments to this roadmap itself. Phase 5 delivery confirms the constitutional and determinism infrastructure required for this capability is now in place.
+The mutation engine proposes amendments to this roadmap itself. Phase 5 delivery
+confirms the constitutional and determinism infrastructure required for this
+capability is now in place.
 
-**Active development targets for v3.1.0:**
+**Constitutional principle:** ADAAD proposes. Humans approve. The roadmap never
+self-promotes without a human governor sign-off recorded in the governance ledger.
 
-- ADAAD runs an evolution epoch against the codebase and roadmap simultaneously.
-- If the Architect agent identifies that Phase N+1 prerequisites are met and Phase N targets were achieved, it proposes a `ROADMAP.md` mutation advancing the milestone.
-- The mutation is governed like any other: GovernanceGate, constitutional compliance, replay proof, federated evidence matrix verification.
-- A human governance sign-off is required for any roadmap mutation — the system cannot self-promote without human approval.
-- **Phase 5 prerequisite fulfilled:** FederatedEvidenceMatrix and FederationMutationBroker provide the cross-repo propagation surface needed for roadmap self-amendment to operate safely across a federation.
+---
 
-This closes the loop: ADAAD evolves its own evolution plan, under the same constitutional constraints it applies to every other change.
+### M6-01 — RoadmapAmendmentEngine ✅ shipped (v3.1.0-dev)
+
+`runtime/autonomy/roadmap_amendment_engine.py`
+
+Governed propose → approve → reject → verify_replay lifecycle for ROADMAP.md
+amendments. Authority invariants:
+
+- `authority_level` hardcoded to `"governor-review"` — injection blocked
+- `diff_score ∈ [0.0, 1.0]` enforced; scoring penalises deferred/cancelled milestones
+- `lineage_chain_hash = SHA-256(prior_roadmap_hash:content_hash)` on every proposal
+- `DeterminismViolation` on replay hash divergence — proposal halts immediately
+- `GovernanceViolation` on short rationale (< 10 words) or invalid milestone status
 
 **Acceptance criteria:**
-- `ROADMAP.md` mutation proposed by ArchitectAgent, governed through full pipeline
-- Replay proof attached to roadmap amendment commit
-- Human sign-off recorded in governance ledger before merge
-- Federation evidence section non-empty for cross-repo roadmap propagation
+- ≥85% test pass rate across 22 replay scenarios: **✅ 100%**
+- JSON round-trip produces identical content_hash: **✅**
+- Double-approval by same governor rejected: **✅**
+- Terminal status blocks further transitions: **✅**
+
+---
+
+### M6-02 — ProposalDiffRenderer ✅ shipped (v3.1.0-dev)
+
+`runtime/autonomy/proposal_diff_renderer.py`
+
+Renders `RoadmapAmendmentProposal` as structured Markdown diff for:
+- GitHub PR description auto-population
+- Aponi IDE evidence viewer (D4 integration)
+- Governance audit bundle output
+
+Output sections: header + score bar, lineage fingerprints, rationale, milestone
+delta table, governance status, phase transition log.
+
+---
+
+### M6-03 — EvolutionLoop integration 🔵 proposed
+
+Wire `RoadmapAmendmentEngine.propose()` into the Phase 5 epoch orchestrator so
+that after every Nth successful epoch (N configurable, default 10), ArchitectAgent
+evaluates prerequisite gates and proposes a roadmap amendment if warranted.
+
+**Prerequisite gates (all must be true before a proposal is emitted):**
+1. `EpochTelemetry.health_score ≥ 0.80` over last 10 epochs
+2. `FederatedEvidenceMatrix.divergence_count == 0` in last federated epoch
+3. `WeightAdaptor.prediction_accuracy > 0.60`
+4. No pending roadmap amendment proposals (prevents amendment storm)
+
+**Acceptance criteria:**
+- ArchitectAgent emits at most 1 proposal per 10 epochs
+- Proposal content_hash matches re-computation from stored fields (replay proof)
+- `GovernanceGate` evaluates the amendment as a standard mutation type
+- Human-approval gate sign-off required; no auto-merge path exists
+
+---
+
+### M6-04 — Federated Roadmap Propagation 🔵 proposed
+
+When a federation node's evolution loop generates a roadmap amendment proposal,
+`FederationMutationBroker` propagates it to all peer nodes for their own governance
+review. Each peer's `GovernanceGate` evaluates independently.
+
+**Authority invariant:** Cross-repo roadmap promotion requires `divergence_count == 0`
+in `FederatedEvidenceMatrix` across all participating nodes. A single divergent node
+blocks the amendment.
+
+**Acceptance criteria:**
+- Amendment propagation leaves a `federation_origin` field in lineage chain
+- Any node can reject without blocking its own local roadmap
+- Evidence bundle includes `federated_roadmap_evidence` section before merge
+
+---
+
+### M6-05 — Autonomous Android Distribution 🟡 active (v3.1.0-dev)
+
+Free public distribution via four parallel zero-cost tracks:
+
+| Track | Status | Channel |
+|-------|--------|---------|
+| 1 | ✅ CI wired | GitHub Releases APK + Obtainium auto-update |
+| 2A | 🟡 MR pending | F-Droid Official (reproducible build, ~1–4 weeks) |
+| 2B | ✅ Documented | Self-Hosted F-Droid on GitHub Pages |
+| 3 | ✅ CI wired | GitHub Pages PWA (Aponi web shell, installable on Android Chrome) |
+
+**Governance invariant:** Every distributed APK is built by the `android-free-release.yml`
+workflow, which runs the full governance gate (constitutional lint + Android lint) before
+signing. No APK is distributed that has not passed the governance gate.
+
+**Acceptance criteria:**
+- `free-v*` tag triggers full pipeline in < 15 minutes end-to-end
+- GitHub Release includes SHA-256 integrity hash alongside APK asset
+- F-Droid metadata YAML passes `fdroid lint` without errors
+- Obtainium import JSON parses and resolves the correct APK asset filter
+- PWA manifests with `standalone` display mode on Android Chrome
+
+**Launch command (zero cost, immediate public availability):**
+```bash
+git tag free-v3.1.0 && git push origin free-v3.1.0
+```
 
 ---
 

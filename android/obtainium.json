@@ -1,0 +1,22 @@
+{
+  "_comment": "Import this file into Obtainium to track ADAAD APK releases automatically.",
+  "_obtainium_docs": "https://github.com/ImranR98/Obtainium#adding-an-app",
+  "id": "com.innovativeai.adaad",
+  "url": "https://github.com/InnovativeAI-adaad/ADAAD",
+  "author": "InnovativeAI-adaad",
+  "name": "ADAAD — Constitutional Governance",
+  "installedVersion": null,
+  "latestVersion": null,
+  "apkUrls": [],
+  "apkUrl": null,
+  "apkDateAsVersion": false,
+  "additionalSettings": {
+    "includePrereleases": false,
+    "fallbackToOlderReleases": false,
+    "filterReleaseTitlesByRegEx": "^ADAAD Community",
+    "filterAssetsByRegEx": "adaad-community-.*\\.apk$",
+    "verifyLatestTag": true,
+    "useLatestAssetUrl": false,
+    "releaseTitleAsVersion": false
+  }
+}
