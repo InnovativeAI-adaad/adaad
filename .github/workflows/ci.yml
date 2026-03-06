@@ -177,6 +177,8 @@ jobs:
         run: python scripts/validate_readme_alignment.py --format json
       - name: Validate markdown link and image integrity
         run: python scripts/validate_docs_integrity.py --format json
+      - name: Validate phase/next-PR governance source consistency
+        run: python scripts/validate_phase_sequence_consistency.py
 
   workflow-python-version-guard:
     runs-on: ubuntu-latest

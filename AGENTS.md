@@ -211,7 +211,7 @@ Awaiting:             2 human reviewer approvals before merge
 | PR-7-04 | `reviewer_calibration` advisory rule | ✅ Merged |
 | PR-7-05 | Aponi reviewer calibration endpoint + panel | ✅ Merged |
 
-### Phase 2 · ADAAD-8 (next)
+### Phase 2 · ADAAD-8 (historical — superseded by Phase 5 sequence below)
 
 | PR | Title | CI tier | Deps |
 |---|---|---|---|
@@ -220,7 +220,7 @@ Awaiting:             2 human reviewer approvals before merge
 | PR-12 | Simulation Aponi Endpoints | standard | PR-11 |
 | PR-13 | Governance Profile Exporter | critical (milestone) | PR-12 |
 
-### Phase 3 · ADAAD-9
+### Phase 3 · ADAAD-9 (historical — superseded by Phase 5 sequence below)
 
 | PR | Title | CI tier | Deps |
 |---|---|---|---|
@@ -229,6 +229,18 @@ Awaiting:             2 human reviewer approvals before merge
 | PR-16 | Evidence Viewer + Endpoint | standard | PR-15 |
 | PR-17 | Replay Inspector UI | standard | PR-16 |
 | PR-18 | Simulation Panel Integration | standard | PR-12 |
+
+### Phase 5 · Multi-Repo Federation (next)
+
+> Active execution order is governed by this Phase 5 table and `docs/governance/ARCHITECT_SPEC_v3.0.0.md` §5. Older phase tables above are retained for historical context only.
+
+| PR | Title | CI tier | Deps |
+|---|---|---|---|
+| PR-PHASE5-01 | Security Invariants + Failure Mode Registry | critical | Human sign-off on v3.0.0 spec ✅ |
+| PR-PHASE5-02 | LineageLedgerV2 federation_origin Extension | critical | PR-PHASE5-01 |
+| PR-PHASE5-03 | FederatedMutationReceiver + GovernanceGate Rule 15/16 | critical | PR-PHASE5-02 |
+| PR-PHASE5-04 | FederatedSignalBroker Upgrade + Replay Proof | critical | PR-PHASE5-03 |
+| PR-PHASE5-05 | FederatedEvidenceMatrix + Full End-to-End CI | critical | PR-PHASE5-04 |
 
 ---
 

@@ -46,6 +46,8 @@ This matrix maps major external/public claims to objective, versioned repository
 | `semantic-diff-deterministic` | Identical AST inputs → identical risk/complexity scores | `tests/test_semantic_diff.py::TestDiffFromCodeDiff::test_deterministic` | Complete |
 | `semantic-diff-fallback-safe` | None/SyntaxError input → 0.5/0.5 fallback, no exception | `tests/test_semantic_diff.py::TestSemanticDiff::test_none_fallback` | Complete |
 
+| `phase-sequence-source-consistency` | "Active phase and next PR are consistent across AGENTS guidance, agent state, and Architect v3.0.0 Phase 5 sequence." | [Governed agent contract phase table](../../AGENTS.md); [Agent state pointer](../../.adaad_agent_state.json); [Architect spec Phase 5 sequence](../governance/ARCHITECT_SPEC_v3.0.0.md#5-phase-5-pr-sequence); [Consistency validator](../../scripts/validate_phase_sequence_consistency.py); [CI docs-validation hook](../../.github/workflows/ci.yml) | Complete |
+
 ## Completion standard
 
 An entry is considered complete only when:
