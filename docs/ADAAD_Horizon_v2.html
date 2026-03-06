@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADAAD Horizon — Strategic Forecast 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:    #faf8f4;
+  --cream2:   #f4f0e8;
+  --cream3:   #ede7d8;
+  --ink:      #1a1714;
+  --ink2:     #3a3530;
+  --ink3:     #6a6258;
+  --ink4:     #a89e92;
+  --amber:    #c47c2a;
+  --amber2:   #e09a40;
+  --amber3:   #f5c878;
+  --amberBg:  rgba(196,124,42,0.08);
+  --navy:     #1e2d4a;
+  --navy2:    #2d4166;
+  --navyBg:   rgba(30,45,74,0.06);
+  --green:    #2d6a4a;
+  --greenBg:  rgba(45,106,74,0.08);
+  --red:      #9a3030;
+  --redBg:    rgba(154,48,48,0.08);
+  --border:   rgba(26,23,20,0.1);
+  --border2:  rgba(26,23,20,0.06);
+  --shadow:   0 2px 24px rgba(26,23,20,0.07);
+  --shadow2:  0 8px 48px rgba(26,23,20,0.12);
+  --r:        12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--cream);
+  color: var(--ink2);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── STICKY TOP BAR ─────────────────── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(250,248,244,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 54px;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-logo {
+  width: 28px; height: 28px;
+  background: var(--ink);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--amber3);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.topbar-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+}
+
+.topbar-nav a {
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink4);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.topbar-nav a:hover { color: var(--amber); }
+
+.topbar-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--greenBg);
+  border: 1px solid rgba(45,106,74,0.18);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── HERO ───────────────────────────── */
+.hero {
+  padding: 80px 48px 64px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 64px;
+  align-items: end;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--amberBg);
+  border: 1px solid rgba(196,124,42,0.2);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--amber);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+.hero h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 600;
+  line-height: 1.02;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--amber);
+}
+
+.hero-desc {
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--ink3);
+  line-height: 1.7;
+  max-width: 520px;
+  margin-bottom: 36px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-meta-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero-meta-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+}
+
+/* Hero right: stat cards */
+.hero-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow2);
+}
+
+.stat-card.accent {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.stat-card.accent .stat-value { color: var(--amber3); }
+
+.stat-unit {
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--ink4);
+}
+
+.stat-card.accent .stat-unit { color: rgba(245,200,120,0.5); }
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink4);
+  line-height: 1.4;
+}
+
+.stat-card.accent .stat-label { color: rgba(245,200,120,0.6); }
+
+/* ── SECTION WRAPPER ────────────────── */
+.section-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 48px;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--border2);
+  margin: 0 48px;
+}
+
+/* ── SECTION HEADER ─────────────────── */
+.section-hd {
+  padding: 64px 0 32px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 300;
+  color: var(--amber);
+  opacity: 0.7;
+  padding-bottom: 6px;
+  letter-spacing: 0.1em;
+}
+
+.section-hd h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.section-hd p {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink4);
+  padding-bottom: 6px;
+  margin-left: auto;
+  max-width: 340px;
+  text-align: right;
+  line-height: 1.5;
+}
+
+/* ── PHASE CARDS ────────────────────── */
+.phases {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.phase {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px 20px 20px;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.phase:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow2);
+}
+
+.phase-stripe {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  border-radius: var(--r) var(--r) 0 0;
+}
+
+.phase.done .phase-stripe   { background: linear-gradient(90deg, var(--green), #5aaa7a); }
+.phase.now .phase-stripe    { background: linear-gradient(90deg, var(--amber), var(--amber2)); }
+.phase.next .phase-stripe   { background: linear-gradient(90deg, var(--navy), var(--navy2)); }
+.phase.future .phase-stripe { background: linear-gradient(90deg, #7a5a9a, #a07ac8); }
+.phase.horizon .phase-stripe { background: linear-gradient(90deg, #9a4a3a, #c87a5a); }
+
+.phase-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  margin-top: 6px;
+}
+
+.phase.done .phase-tag   { background: var(--greenBg); color: var(--green); }
+.phase.now .phase-tag    { background: var(--amberBg); color: var(--amber); border: 1px solid rgba(196,124,42,0.2); }
+.phase.next .phase-tag   { background: var(--navyBg); color: var(--navy2); }
+.phase.future .phase-tag { background: rgba(122,90,154,0.08); color: #7a5a9a; }
+.phase.horizon .phase-tag { background: var(--redBg); color: var(--red); }
+
+.phase-period {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+
+.phase-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+
+.phase-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.phase-facts {
+  border-top: 1px solid var(--border2);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phase-fact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+}
+
+.phase-fact-key { color: var(--ink4); }
+.phase-fact-val { color: var(--ink2); font-weight: 500; }
+.phase.now .phase-fact-val { color: var(--amber); }
+
+/* ── NARRATIVE BAND ─────────────────── */
+.narrative-band {
+  background: var(--ink);
+  border-radius: 16px;
+  padding: 48px 56px;
+  margin: 48px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.narrative-band::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,124,42,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.narrative-pillar {
+  position: relative;
+}
+
+.np-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 60px;
+  font-weight: 700;
+  color: rgba(245,200,120,0.08);
+  line-height: 1;
+  position: absolute;
+  top: -8px; left: -4px;
+  pointer-events: none;
+}
+
+.np-icon {
+  font-size: 20px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.np-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--amber3);
+  margin-bottom: 10px;
+}
+
+.np-body {
+  font-size: 13px;
+  color: rgba(250,248,244,0.6);
+  line-height: 1.7;
+}
+
+/* ── ARCHITECTURE COMPARE ───────────── */
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.arch-col-wrap {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.arch-col-head {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arch-col-head.current { background: var(--cream2); }
+.arch-col-head.future  { background: var(--ink); }
+
+.arch-col-head-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.arch-col-head.current .arch-col-head-label { color: var(--ink3); }
+.arch-col-head.future  .arch-col-head-label { color: var(--amber3); }
+
+.arch-col-head-sub {
+  font-size: 11px;
+  margin-left: auto;
+}
+.arch-col-head.current .arch-col-head-sub { color: var(--ink4); }
+.arch-col-head.future  .arch-col-head-sub { color: rgba(245,200,120,0.4); }
+
+.arch-item-list {
+  padding: 8px 0;
+}
+
+.arch-item {
+  display: flex;
+  gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border2);
+  align-items: flex-start;
+  transition: background 0.15s;
+}
+
+.arch-item:last-child { border-bottom: none; }
+.arch-item:hover { background: var(--cream2); }
+
+.arch-item-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.arch-item.weak .arch-item-dot  { background: var(--ink4); }
+.arch-item.good .arch-item-dot  { background: var(--green); }
+.arch-item.evolve .arch-item-dot { background: var(--amber); }
+.arch-item.new .arch-item-dot   { background: var(--navy2); }
+
+.arch-item-body {}
+
+.arch-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.arch-item-desc {
+  font-size: 12px;
+  color: var(--ink4);
+  line-height: 1.55;
+}
+
+.arch-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-top: 6px;
+}
+
+.arch-chip.replace { background: var(--amberBg); color: var(--amber); }
+.arch-chip.add     { background: var(--greenBg); color: var(--green); }
+.arch-chip.evolve  { background: var(--navyBg); color: var(--navy2); }
+
+/* ── METRICS GRID ───────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px 20px;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.metric-card:hover { transform: translateY(-2px); }
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink4);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.metric-big {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.metric-big .mu {
+  font-size: 20px;
+  font-weight: 300;
+  color: var(--ink4);
+}
+
+.metric-big .mc {
+  font-size: 20px;
+  color: var(--amber);
+}
+
+.metric-context {
+  font-size: 12px;
+  color: var(--ink4);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.metric-bar {
+  height: 4px;
+  background: var(--cream3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  animation: grow 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin: left;
+}
+
+@keyframes grow {
+  from { width: 0 !important; }
+}
+
+.fill-amber  { background: linear-gradient(90deg, var(--amber), var(--amber2)); }
+.fill-green  { background: linear-gradient(90deg, var(--green), #5aaa7a); }
+.fill-navy   { background: linear-gradient(90deg, var(--navy), var(--navy2)); }
+.fill-purple { background: linear-gradient(90deg, #7a5a9a, #a07ac8); }
+
+/* ── GOVERNANCE PILLARS ─────────────── */
+.gov-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.gov-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.gov-card-head {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gov-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.gov-icon.green  { background: var(--greenBg); }
+.gov-icon.amber  { background: var(--amberBg); }
+.gov-icon.navy   { background: var(--navyBg); }
+
+.gov-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.gov-card-sub {
+  font-size: 11px;
+  color: var(--ink4);
+  margin-top: 2px;
+}
+
+.gov-list {
+  list-style: none;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gov-list li {
+  display: flex;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.55;
+  align-items: flex-start;
+}
+
+.gov-check {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+}
+
+.gov-check.green { background: var(--greenBg); color: var(--green); }
+.gov-check.amber { background: var(--amberBg); color: var(--amber); }
+.gov-check.navy  { background: var(--navyBg); color: var(--navy2); }
+
+/* ── RISK TABLE ─────────────────────── */
+.risk-wrap {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.risk-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.risk-table thead th {
+  background: var(--cream2);
+  padding: 12px 20px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+
+.risk-table tbody tr {
+  border-bottom: 1px solid var(--border2);
+  transition: background 0.15s;
+}
+.risk-table tbody tr:last-child { border-bottom: none; }
+.risk-table tbody tr:hover { background: var(--cream2); }
+
+.risk-table td {
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--ink3);
+  vertical-align: top;
+  line-height: 1.55;
+}
+
+.risk-table td.risk-name {
+  font-weight: 500;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.risk-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.risk-pill.high   { background: var(--redBg); color: var(--red); }
+.risk-pill.medium { background: var(--amberBg); color: var(--amber); }
+.risk-pill.low    { background: var(--greenBg); color: var(--green); }
+
+/* ── THESIS BLOCK ───────────────────── */
+.thesis-block {
+  background: linear-gradient(135deg, var(--navy) 0%, #0f1e38 100%);
+  border-radius: 20px;
+  padding: 64px 56px;
+  margin: 0 0 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.thesis-block::before {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: -80px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,124,42,0.1) 0%, transparent 70%);
+}
+
+.thesis-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(22px, 2.8vw, 32px);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--cream);
+  line-height: 1.55;
+  max-width: 780px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.thesis-quote::before {
+  content: '"';
+  font-size: 120px;
+  color: rgba(245,200,120,0.08);
+  position: absolute;
+  top: -30px; left: -20px;
+  line-height: 1;
+  pointer-events: none;
+  font-style: normal;
+}
+
+.thesis-attr {
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(245,200,120,0.4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 48px;
+}
+
+.thesis-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  border-top: 1px solid rgba(250,248,244,0.08);
+  padding-top: 40px;
+}
+
+.thesis-trio-item {}
+
+.trio-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber2);
+  margin-bottom: 10px;
+}
+
+.trio-text {
+  font-size: 14px;
+  color: rgba(250,248,244,0.65);
+  line-height: 1.65;
+}
+
+/* ── FOOTER ─────────────────────────── */
+footer {
+  background: var(--cream2);
+  border-top: 1px solid var(--border);
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.footer-left {
+  font-size: 12px;
+  color: var(--ink4);
+}
+
+.footer-mid {
+  display: flex;
+  gap: 3px;
+}
+
+.footer-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--cream3);
+  transition: background 0.2s;
+}
+.footer-dot:hover { background: var(--amber); }
+.footer-dot.active { background: var(--amber); }
+
+.footer-right {
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 0.06em;
+}
+
+/* ── ANIMATIONS ─────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── RESPONSIVE ─────────────────────── */
+@media (max-width: 900px) {
+  .phases { grid-template-columns: 1fr 1fr; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .gov-pillars { grid-template-columns: 1fr; }
+  .arch-grid { grid-template-columns: 1fr; }
+  .hero { grid-template-columns: 1fr; }
+  .hero-stats { display: none; }
+  .thesis-trio { grid-template-columns: 1fr; }
+  .narrative-band { grid-template-columns: 1fr; }
+  .topbar-nav { display: none; }
+  .section-wrap, .section-divider, .topbar, header { padding-left: 24px; padding-right: 24px; }
+  .hero { padding-left: 24px; padding-right: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BAR ── -->
+<nav class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">A</div>
+    <span class="topbar-name">ADAAD Horizon</span>
+  </div>
+  <ul class="topbar-nav">
+    <li><a href="#phases">Phases</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#metrics">Metrics</a></li>
+    <li><a href="#governance">Governance</a></li>
+    <li><a href="#risks">Risk</a></li>
+  </ul>
+  <div class="topbar-badge">
+    <span class="pulse"></span>
+    System Active
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="section-wrap">
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">
+        <span>◆</span> Strategic Forecast · Q1 2026 → Q2 2027
+      </div>
+      <h1>Where<br><em>ADAAD</em><br>Is Heading</h1>
+      <p class="hero-desc">
+        A 18-month directional forecast for the Autonomous Development &amp; Adaptation
+        Architecture — from supervised scaffold to governed, self-improving software evolution
+        engine. Built on the principle that autonomy is earned, not assumed.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Classification</span>
+          <span class="hero-meta-value">Strategic · Internal</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Current Phase</span>
+          <span class="hero-meta-value">Phase 1 — Active</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Autonomy Level</span>
+          <span class="hero-meta-value">L1 — Supervised</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Next Gate</span>
+          <span class="hero-meta-value">Q3 2026</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card accent">
+        <div class="stat-value">87<span class="stat-unit">%</span></div>
+        <div class="stat-label">Target mutation pass rate at Phase 3 maturity</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">100<span class="stat-unit">%</span></div>
+        <div class="stat-label">Lineage completeness — every mutation traceable</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">G7<span class="stat-unit">+</span></div>
+        <div class="stat-label">Active agent generations by 18-month horizon</div>
+      </div>
+      <div class="stat-card accent" style="background:var(--amberBg);border-color:rgba(196,124,42,0.2)">
+        <div class="stat-value" style="color:var(--amber)">&lt;15<span class="stat-unit" style="color:var(--amber3)">%</span></div>
+        <div class="stat-label" style="color:var(--amber)">Governance overhead ceiling vs. mutation throughput</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §01 THREE CORE PRINCIPLES ── -->
+<section class="section-wrap">
+  <div class="narrative-band reveal" id="principles">
+    <div class="narrative-pillar">
+      <div class="np-num">1</div>
+      <span class="np-icon">🔗</span>
+      <div class="np-title">Traceability First</div>
+      <div class="np-body">Every agent, mutation, and decision has a parent. Nothing enters production without a verified lineage chain. If we can't trace it, we don't ship it.</div>
+    </div>
+    <div class="narrative-pillar">
+      <div class="np-num">2</div>
+      <span class="np-icon">🛡️</span>
+      <div class="np-title">Autonomy Is Earned</div>
+      <div class="np-body">ADAAD gains operational freedom generation by generation — only after demonstrating stability at the prior level. No autonomy is assumed from the start.</div>
+    </div>
+    <div class="narrative-pillar">
+      <div class="np-num">3</div>
+      <span class="np-icon">↩️</span>
+      <div class="np-title">Always Reversible</div>
+      <div class="np-body">Every autonomous action must be fully undoable within the current generation window. If a mutation can't be rolled back cleanly, it doesn't run. Full stop.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §01 PHASE ROADMAP ── -->
+<section class="section-wrap" id="phases">
+  <div class="section-hd reveal">
+    <span class="section-num">01</span>
+    <h2>Phase Roadmap</h2>
+    <p>Five progressive milestones. Each phase unlocks a higher autonomy level only after governance gates are passed and stability is demonstrated.</p>
+  </div>
+
+  <div class="phases reveal">
+
+    <div class="phase done">
+      <div class="phase-stripe"></div>
+      <div class="phase-tag">✓ Complete</div>
+      <div class="phase-period">Q4 2025</div>
+      <div class="phase-name">Foundation &amp; Scaffold</div>
+      <div class="phase-desc">Core contracts established. Version schema, agent identity, lineage graph model, Android constraint layer, and GitHub governance scaffolding in place.</div>
+      <div class="phase-facts">
+        <div class="phase-fact"><span class="phase-fact-key">Autonomy</span><span class="phase-fact-val">L0 — Manual</span></div>
+        <div class="phase-fact"><span class="phase-fact-key">Lineage</span><span class="phase-fact-val">Partial</span></div>
+      </div>
+    </div>
+
+    <div class="phase now">
+      <div class="phase-stripe"></div>
+      <div class="phase-tag">◉ Now</div>
+      <div class="phase-period">Q1–Q2 2026</div>
+      <div class="phase-name">Meta-Controller Bootstrap</div>
+      <div class="phase-desc">Implementing the scheduling loop, Explore/Exploit mode switching, scoring rubric v1, and deterministic replay tests. Human gates at every mutation boundary.</div>
+      <div class="phase-facts">
+        <div class="phase-fact"><span class="phase-fact-key">Autonomy</span><span class="phase-fact-val">L1 — Supervised</span></div>
+        <div class="phase-fact"><span class="phase-fact-key">Lineage</span><span class="phase-fact-val">≥ 70%</span></div>
+      </div>
+    </div>
+
+    <div class="phase next">
+      <div class="phase-stripe"></div>
+      <div class="phase-tag">→ Next</div>
+      <div class="phase-period">Q3 2026</div>
+      <div class="phase-name">Governed Explore / Exploit</div>
+      <div class="phase-desc">First operational loop with human-gated releases. CI/CD integration, key rotation evidence binding, and audit replay verification. Scoring rubric v2 goes live.</div>
+      <div class="phase-facts">
+        <div class="phase-fact"><span class="phase-fact-key">Autonomy</span><span class="phase-fact-val">L2 — Constrained</span></div>
+        <div class="phase-fact"><span class="phase-fact-key">Lineage</span><span class="phase-fact-val">≥ 95%</span></div>
+      </div>
+    </div>
+
+    <div class="phase future">
+      <div class="phase-stripe"></div>
+      <div class="phase-tag">Planned</div>
+      <div class="phase-period">Q4 2026</div>
+      <div class="phase-name">Adaptive Scoring Engine</div>
+      <div class="phase-desc">Scoring becomes self-adjusting within human bounds. Multi-generational lineage tracking. First G3+ agent generation. Fitness comparison across branches.</div>
+      <div class="phase-facts">
+        <div class="phase-fact"><span class="phase-fact-key">Autonomy</span><span class="phase-fact-val">L3 — Adaptive</span></div>
+        <div class="phase-fact"><span class="phase-fact-key">Pass Rate</span><span class="phase-fact-val">≥ 87%</span></div>
+      </div>
+    </div>
+
+    <div class="phase horizon">
+      <div class="phase-stripe"></div>
+      <div class="phase-tag">Horizon</div>
+      <div class="phase-period">Q1–Q2 2027</div>
+      <div class="phase-name">Compound Evolution</div>
+      <div class="phase-desc">ADAAD evolves its own meta-controller heuristics inside governance-locked bounds. Human review shifts to per-generation. Lineage graph becomes the canonical artifact record.</div>
+      <div class="phase-facts">
+        <div class="phase-fact"><span class="phase-fact-key">Autonomy</span><span class="phase-fact-val">L4 — Gov. Auto</span></div>
+        <div class="phase-fact"><span class="phase-fact-key">Generation</span><span class="phase-fact-val">G7+</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §02 ARCHITECTURE DELTA ── -->
+<section class="section-wrap" id="architecture">
+  <div class="section-hd reveal">
+    <span class="section-num">02</span>
+    <h2>Architecture Delta</h2>
+    <p>Five core layers transform across the 18-month horizon. Here's exactly what changes, what gets replaced, and what gets added.</p>
+  </div>
+
+  <div class="arch-grid reveal">
+
+    <!-- CURRENT -->
+    <div class="arch-col-wrap">
+      <div class="arch-col-head current">
+        <div class="arch-col-head-label">Current State — Phase 0 / 1</div>
+        <span class="arch-col-head-sub">Today</span>
+      </div>
+      <div class="arch-item-list">
+        <div class="arch-item weak">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Manual Meta-Controller</div>
+            <div class="arch-item-desc">Operator triggers agent cycles by hand. No automated mode switching. Scheduling is ad hoc and session-bound.</div>
+          </div>
+        </div>
+        <div class="arch-item weak">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Flat Agent Registry</div>
+            <div class="arch-item-desc">Agents versioned as files with no cross-generation linkage. Lineage partially tracked through commit history only.</div>
+          </div>
+        </div>
+        <div class="arch-item weak">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Static Scoring Rubric</div>
+            <div class="arch-item-desc">Binary pass/fail only. No weighted fitness functions. Criteria defined manually per sprint cycle.</div>
+          </div>
+        </div>
+        <div class="arch-item weak">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Manual-Only Governance</div>
+            <div class="arch-item-desc">All approvals, constraint definitions, and releases are human-executed. No automated evidence collection.</div>
+          </div>
+        </div>
+        <div class="arch-item weak">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Pydroid3 Sandbox</div>
+            <div class="arch-item-desc">Android-only runtime. Pure Python. Proof-of-concept execution only. No CI pipeline.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TARGET -->
+    <div class="arch-col-wrap">
+      <div class="arch-col-head future">
+        <div class="arch-col-head-label">Target State — Phase 3 / 4</div>
+        <span class="arch-col-head-sub">18 Months Out</span>
+      </div>
+      <div class="arch-item-list">
+        <div class="arch-item evolve">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Governed Meta-Controller Loop</div>
+            <div class="arch-item-desc">Automated Explore/Exploit switching with human-gated release checkpoints. Every mode transition is logged and auditable.</div>
+            <span class="arch-chip evolve">Evolve</span>
+          </div>
+        </div>
+        <div class="arch-item good">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Multi-Gen Lineage Graph</div>
+            <div class="arch-item-desc">DAG-structured lineage G0 → G7+ with fitness scores, parent-child mutation deltas, and cross-branch comparison capability.</div>
+            <span class="arch-chip replace">Replace</span>
+          </div>
+        </div>
+        <div class="arch-item good">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Adaptive Fitness Functions</div>
+            <div class="arch-item-desc">Weighted multi-axis scoring: stability, traceability, mutation efficiency. Self-adjusting within human-defined parameter bounds.</div>
+            <span class="arch-chip replace">Replace</span>
+          </div>
+        </div>
+        <div class="arch-item new">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Hybrid Governance Engine</div>
+            <div class="arch-item-desc">Automated evidence binding, cryptographic audit chains, CI/CD compliance checks. Human review at generation — not mutation — boundaries.</div>
+            <span class="arch-chip add">Add</span>
+          </div>
+        </div>
+        <div class="arch-item evolve">
+          <div class="arch-item-dot"></div>
+          <div class="arch-item-body">
+            <div class="arch-item-title">Portable Execution Layer</div>
+            <div class="arch-item-desc">Android baseline preserved. Optional lightweight server runtime for CI. Deterministic replay verified across both environments.</div>
+            <span class="arch-chip evolve">Evolve</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §03 SUCCESS METRICS ── -->
+<section class="section-wrap" id="metrics">
+  <div class="section-hd reveal">
+    <span class="section-num">03</span>
+    <h2>Success Metrics</h2>
+    <p>Eight quantified targets with defined timelines. No vague goals — every criterion is measurable and phase-gated.</p>
+  </div>
+
+  <div class="metrics-grid reveal">
+
+    <div class="metric-card">
+      <div class="metric-label">Mutation Pass Rate</div>
+      <div class="metric-big">87<span class="mu">%</span></div>
+      <div class="metric-context">Mutations clearing automated test + replay gates. Baseline today: ~40% (manual review only). Gate: Phase 3.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-amber" style="width:87%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Lineage Completeness</div>
+      <div class="metric-big">100<span class="mu">%</span></div>
+      <div class="metric-context">Every mutation, score, and release decision traceable to a versioned ancestor agent. No orphan nodes in the graph.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-green" style="width:100%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">CI/CD Compliance</div>
+      <div class="metric-big">≥95<span class="mu">%</span></div>
+      <div class="metric-context">Key rotation, evidence binding, replay verification passing per pipeline run. Zero unapproved artifacts reach production.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-navy" style="width:95%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Governance Overhead</div>
+      <div class="metric-big">&lt;15<span class="mu">%</span></div>
+      <div class="metric-context">Audit and compliance cost as a share of total mutation throughput. Measured in compute time + human-hours per generation.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-purple" style="width:15%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Agent Generation Depth</div>
+      <div class="metric-big">G7<span class="mc">+</span></div>
+      <div class="metric-context">Active, scored lineage branches running across 7+ generational cycles by the 18-month horizon close.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-amber" style="width:70%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Explore / Exploit Balance</div>
+      <div class="metric-big">3<span class="mc">:1</span></div>
+      <div class="metric-context">Target breadth-to-depth ratio at Phase 2. Rebalances to 1:2 Exploit-dominant at Phase 3 maturity. Monitored per generation.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-purple" style="width:75%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Reversibility Rate</div>
+      <div class="metric-big">100<span class="mu">%</span></div>
+      <div class="metric-context">Every autonomous action must be fully undoable within the current generation window. Non-reversible mutations are blocked, not logged.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-green" style="width:100%"></div></div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Human Review Cadence</div>
+      <div class="metric-big">Δ<span class="mc">Gen</span></div>
+      <div class="metric-context">Shifting from per-mutation review (L1) to per-generation review (L4). Each cadence reduction requires demonstrated stability over N generations.</div>
+      <div class="metric-bar"><div class="metric-bar-fill fill-navy" style="width:50%"></div></div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §04 GOVERNANCE ── -->
+<section class="section-wrap" id="governance">
+  <div class="section-hd reveal">
+    <span class="section-num">04</span>
+    <h2>Governance Architecture</h2>
+    <p>Three interlocking pillars ensure every autonomous action is safe, auditable, and reversible — at every phase.</p>
+  </div>
+
+  <div class="gov-pillars reveal">
+
+    <div class="gov-card">
+      <div class="gov-card-head">
+        <div class="gov-icon green">🔒</div>
+        <div>
+          <div class="gov-card-title">Constraint Layer</div>
+          <div class="gov-card-sub">What the system can and cannot do</div>
+        </div>
+      </div>
+      <ul class="gov-list">
+        <li><span class="gov-check green">✓</span>Human-defined mutation bounds — zero autonomous override permitted at any level.</li>
+        <li><span class="gov-check green">✓</span>Android/Pydroid3 compatibility preserved as a hard floor across all phases.</li>
+        <li><span class="gov-check green">✓</span>Goal contracts are versioned and signed before every phase transition.</li>
+        <li><span class="gov-check green">✓</span>Release authority is exclusively human at all autonomy levels up to L4.</li>
+        <li><span class="gov-check green">✓</span>Constraint violations trigger immediate halt and automatic rollback.</li>
+      </ul>
+    </div>
+
+    <div class="gov-card">
+      <div class="gov-card-head">
+        <div class="gov-icon amber">📋</div>
+        <div>
+          <div class="gov-card-title">Audit Engine</div>
+          <div class="gov-card-sub">The immutable record of everything</div>
+        </div>
+      </div>
+      <ul class="gov-list">
+        <li><span class="gov-check amber">✓</span>Every mutation writes a signed log entry with agent ID, parent ID, score, and decision rationale.</li>
+        <li><span class="gov-check amber">✓</span>Audit logs are append-only and cryptographically chained to commit-bound evidence.</li>
+        <li><span class="gov-check amber">✓</span>Every decision must be deterministically replayable from its log entry.</li>
+        <li><span class="gov-check amber">✓</span>CI/CD validates audit chain integrity on every push. Broken chains block releases.</li>
+        <li><span class="gov-check amber">✓</span>Key rotation events are logged as first-class audit entries — never silent.</li>
+      </ul>
+    </div>
+
+    <div class="gov-card">
+      <div class="gov-card-head">
+        <div class="gov-icon navy">👁️</div>
+        <div>
+          <div class="gov-card-title">Human Oversight Protocol</div>
+          <div class="gov-card-sub">Who reviews what, and when</div>
+        </div>
+      </div>
+      <ul class="gov-list">
+        <li><span class="gov-check navy">✓</span>Autonomy level increases require a formal milestone: demonstrated stability over N generations.</li>
+        <li><span class="gov-check navy">✓</span>Per-mutation approval at L1. Per-generation approval from L3 onward.</li>
+        <li><span class="gov-check navy">✓</span>Outlier mutations flagged for mandatory human review regardless of autonomy level.</li>
+        <li><span class="gov-check navy">✓</span>Governance mode pauses all autonomous operations instantly — no quorum required.</li>
+        <li><span class="gov-check navy">✓</span>Any designated operator may invoke rollback immediately, at any time.</li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §05 RISK REGISTER ── -->
+<section class="section-wrap" id="risks">
+  <div class="section-hd reveal">
+    <span class="section-num">05</span>
+    <h2>Risk Register</h2>
+    <p>Six forecasted risks with severity ratings, root cause mechanisms, and concrete mitigations — not vague disclaimers.</p>
+  </div>
+
+  <div class="risk-wrap reveal">
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th style="width:20%">Risk</th>
+          <th style="width:9%">Severity</th>
+          <th style="width:9%">Likelihood</th>
+          <th style="width:30%">How It Happens</th>
+          <th>How We Prevent It</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="risk-name">Lineage Graph Corruption</td>
+          <td><span class="risk-pill high">High</span></td>
+          <td><span class="risk-pill medium">Medium</span></td>
+          <td>Concurrent writes or failed rollbacks leave dangling parent references, breaking traceability.</td>
+          <td>Write-ahead log with atomic commits. Nightly integrity checks. Automated repair with mandatory human sign-off.</td>
+        </tr>
+        <tr>
+          <td class="risk-name">Scoring Rubric Drift</td>
+          <td><span class="risk-pill high">High</span></td>
+          <td><span class="risk-pill medium">Medium</span></td>
+          <td>Adaptive fitness functions converge on a local optimum that scores well but degrades artifact quality in unmeasured dimensions.</td>
+          <td>Human-defined floor metrics. Adversarial test suites run periodically. Manual rubric audit at every generation boundary.</td>
+        </tr>
+        <tr>
+          <td class="risk-name">Exploit Mode Lock-in</td>
+          <td><span class="risk-pill medium">Medium</span></td>
+          <td><span class="risk-pill high">High</span></td>
+          <td>Meta-controller biases toward Exploit, eliminating breadth search and causing architectural stagnation over generations.</td>
+          <td>Mandatory Explore floor (≥20%) enforced by governance. Mode balance reviewed at every generation checkpoint.</td>
+        </tr>
+        <tr>
+          <td class="risk-name">Android Runtime Regression</td>
+          <td><span class="risk-pill medium">Medium</span></td>
+          <td><span class="risk-pill low">Low</span></td>
+          <td>Dependency drift or a mutation silently introduces a C-extension requirement, breaking Pydroid3 compatibility.</td>
+          <td>Dependency manifest validation in CI. Android-emulated replay in every pipeline run. Fail-fast on any extension import.</td>
+        </tr>
+        <tr>
+          <td class="risk-name">Audit Chain Tampering</td>
+          <td><span class="risk-pill high">High</span></td>
+          <td><span class="risk-pill low">Low</span></td>
+          <td>Accidental or deliberate modification of historical logs invalidates traceability and compliance posture entirely.</td>
+          <td>Cryptographic chaining of log entries. Append-only storage enforcement. External hash anchoring at every generation boundary.</td>
+        </tr>
+        <tr>
+          <td class="risk-name">Operator Review Fatigue</td>
+          <td><span class="risk-pill medium">Medium</span></td>
+          <td><span class="risk-pill medium">Medium</span></td>
+          <td>High mutation volume at L1/L2 creates approval bottlenecks; operators rubber-stamp without genuine review.</td>
+          <td>Anomaly-first queue surfacing only high-variance mutations. Digest summaries for batch approvals. Daily mutation cap per operator.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ── §06 THESIS ── -->
+<section class="section-wrap">
+  <div class="section-hd reveal">
+    <span class="section-num">06</span>
+    <h2>Strategic Thesis</h2>
+  </div>
+  <div class="thesis-block reveal">
+    <div class="thesis-quote">
+      ADAAD does not automate trust — it earns it. Every generation of agents that passes governance review extends
+      the envelope of what the system is permitted to do autonomously. Autonomy is the reward for demonstrated
+      reliability, not a premise we begin with.
+    </div>
+    <div class="thesis-attr">— ADAAD Design Principle · InnovativeAI-adaad · Forecast Q1 2026 → Q2 2027</div>
+
+    <div class="thesis-trio">
+      <div class="thesis-trio-item">
+        <div class="trio-label">North Star Metric</div>
+        <div class="trio-text">Useful mutation rate — not raw volume. Ten high-quality, traceable, human-approved improvements per generation outperforms one hundred unverified ones, every time.</div>
+      </div>
+      <div class="thesis-trio-item">
+        <div class="trio-label">Non-Negotiable Floor</div>
+        <div class="trio-text">Full reversibility at all autonomy levels. If a mutation cannot be cleanly rolled back, it does not enter production — regardless of fitness score or human approval status.</div>
+      </div>
+      <div class="thesis-trio-item">
+        <div class="trio-label">18-Month Conviction</div>
+        <div class="trio-text">By Q2 2027, ADAAD's lineage graph becomes the canonical system of record for every released artifact — a living, auditable genome of the software it has built.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-left">ADAAD Horizon · Strategic Forecast · InnovativeAI-adaad · March 2026</div>
+  <div class="footer-mid">
+    <div class="footer-dot active"></div>
+    <div class="footer-dot"></div>
+    <div class="footer-dot"></div>
+    <div class="footer-dot"></div>
+    <div class="footer-dot"></div>
+  </div>
+  <div class="footer-right">Version 2.0 · Directional / Internal · Governance: Human-in-Loop</div>
+</footer>
+
+<script>
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

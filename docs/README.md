@@ -137,3 +137,18 @@ ADAAD visual assets in `docs/assets/` are available for repository documentation
 - Repository license: **MIT** (root `LICENSE`)
 - Compliance metadata: `LICENSES.md` and `NOTICE`
 - Compliance gate: `python scripts/validate_license_compliance.py`
+
+---
+
+## Strategic Forecast & Founder Plan
+
+| Document | Format | Purpose |
+|----------|--------|---------|
+| [ADAAD Horizon Forecast 2026](ADAAD_HORIZON_FORECAST_2026.md) | Markdown | 18-month directional forecast — phases, metrics, governance, risks |
+| [ADAAD Horizon v2](ADAAD_Horizon_v2.html) | HTML | Interactive visual forecast — human-oriented editorial design |
+| [Founder Plan Proposal](ADAAD_FOUNDER_PLAN_PROPOSAL.md) | Markdown | 8 structural governance commitments, milestone gates, next actions |
+| [Founder Plan Proposal](ADAAD_Founder_Plan_Proposal.html) | HTML | Interactive visual proposal — print-optimized founder document |
+
+> **Current system state:** v2.1.0 · Phase 3 shipped · Phase 4 in progress · CI gates: all passing  
+> **Forecast last updated:** March 6, 2026
+
