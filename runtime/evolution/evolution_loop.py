@@ -25,6 +25,10 @@ Integration with Orchestrator (app/main.py):
 from __future__ import annotations
 
 import time
+try:
+    from runtime.governance import journal as journal_module  # type: ignore[attr-defined]
+except Exception:  # noqa: BLE001
+    journal_module = None  # type: ignore[assignment]
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -38,6 +42,8 @@ from runtime.autonomy.explore_exploit_controller import (
     EvolutionMode,
 )
 from runtime.evolution.population_manager import PopulationManager
+from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, RouteTier
+from runtime.evolution.fast_path_scorer import fast_path_score as _fast_path_score
 
 # ---------------------------------------------------------------------------
 # EpochResult
@@ -64,6 +70,9 @@ class EpochResult:
     # PR-PHASE4-02: semantic scoring provenance
     semantic_scored_count:  int            = 0
     scoring_algorithm_version: str         = "v1.2.0+semantic_diff_v1.0"
+    # PR-PHASE4-03: route gate fields
+    elevated_mutation_ids:  List[str]      = field(default_factory=list)
+    trivial_fast_pathed:    int            = 0
 
 
 # ---------------------------------------------------------------------------
@@ -98,6 +107,7 @@ class EvolutionLoop:
         self._landscape        = FitnessLandscape()
         self._manager          = PopulationManager()
         self._controller       = controller or ExploreExploitController()
+        self._route_optimizer  = MutationRouteOptimizer()
 
     # ------------------------------------------------------------------
     # Public API
@@ -146,6 +156,31 @@ class EvolutionLoop:
         # Phase 2: Seed population
         self._manager.set_weights(self._adaptor.current_weights)
         self._manager.seed(all_proposals)
+
+        # Phase 2.5: Route — classify each candidate before deep scoring
+        _elevated_ids: List[str] = []
+        _trivial_count: int = 0
+        _routed_proposals: List = []
+        for _cand in self._manager.population:
+            try:
+                _rd = self._route_optimizer.route(
+                    mutation_id=_cand.mutation_id,
+                    op_types=list(getattr(_cand, 'op_types', []) or []),
+                    file_paths=list(getattr(_cand, 'file_paths', []) or []),
+                    intent=str(getattr(_cand, 'description', '') or ''),
+                    loc_delta=int(getattr(_cand, 'expected_gain', 0) or 0),
+                )
+                if _rd.tier is RouteTier.ELEVATED:
+                    _elevated_ids.append(_cand.mutation_id)
+                elif _rd.tier is RouteTier.TRIVIAL:
+                    _trivial_count += 1
+            except Exception:  # noqa: BLE001
+                pass
+        _route_decision_digest = journal_module.append_tx(
+            "mutation_route_decision",
+            {"elevated": _elevated_ids, "trivial_count": _trivial_count,
+             "epoch_id": epoch_id}
+        ) if journal_module else {}
 
         # Phase 3: Evolve for N generations
         all_scores: List[MutationScore] = []
@@ -215,6 +250,8 @@ class EvolutionLoop:
             window_explore_ratio=round(self._controller.window_explore_ratio(), 4),
             semantic_scored_count=semantic_scored_count,
             scoring_algorithm_version="v1.2.0+semantic_diff_v1.0",
+            elevated_mutation_ids=_elevated_ids,
+            trivial_fast_pathed=_trivial_count,
         )
 
     # ------------------------------------------------------------------
