@@ -5,7 +5,7 @@
 
 > Governance-first contribution guide — read before opening any governance-impacting PR.
 
-**Last reviewed:** 2026-03-05
+**Last reviewed:** 2026-03-06
 
 By submitting a contribution, you agree that your work is licensed under the MIT License (see `LICENSE`). No trademark rights are granted or implied; see `TRADEMARKS.md` and `BRAND_LICENSE.md`.
 
@@ -89,6 +89,7 @@ Governance-critical paths include:
 
 - `runtime/constitution*`
 - `runtime/evolution/*`
+- `runtime/governance/federation/*`
 - `security/ledger/*`
 - `security/cryovant.py`
 - `app/mutation_executor.py`
@@ -135,6 +136,13 @@ python -m pytest -q tests/test_preflight_import_smoke.py
 - `datetime.now()` or time-based scoring
 - Environment-dependent policy evaluation
 - `uuid4()` without a deterministic provider
+- Federation HMAC key material in source files or log output
+
+---
+
+## Active phase
+
+Phase 6 — Autonomous Roadmap Self-Amendment is active (target v3.1.0). New PRs should reference `PR-PHASE6-*` IDs and follow the Phase 6 acceptance criteria in `ROADMAP.md`.
 
 ---
 
