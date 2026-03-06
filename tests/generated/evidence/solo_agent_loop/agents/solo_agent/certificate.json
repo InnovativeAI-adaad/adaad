@@ -1,0 +1,7 @@
+{
+  "agent_id": "solo_agent",
+  "fixture": "solo_agent_loop",
+  "issued_at": "2026-01-01T00:00:00Z",
+  "issuer": "adaad-ci-fixture",
+  "lineage_hash": "18aaf0c5e4ada2962fa1afe46818e2df1748db68fc048df0ece492cb98525b57"
+}

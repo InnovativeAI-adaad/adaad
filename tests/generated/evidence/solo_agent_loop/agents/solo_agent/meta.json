@@ -1,0 +1,24 @@
+{
+  "dream_scope": {
+    "allow": [
+      "filesystem_read",
+      "memory_read"
+    ],
+    "deny": [
+      "network",
+      "filesystem_write",
+      "subprocess"
+    ]
+  },
+  "id": "solo_agent",
+  "lineage": {
+    "agent_id": "solo_agent",
+    "epoch_id": "epoch-fixture-001"
+  },
+  "resource_envelope": {
+    "max_cpu_shares": 100,
+    "max_memory_mb": 256,
+    "profile": "sandbox"
+  },
+  "version": "1.0.0"
+}
