@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="120" viewBox="0 0 900 120" role="img" aria-label="ADAAD mutation flow: Propose to Archive">
+  <defs>
+    <linearGradient id="flowbg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#060d14"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#7b61ff" stop-opacity="0.6"/>
+    </linearGradient>
+    <filter id="g2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#2a4a6a"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="120" fill="url(#flowbg)" rx="12"/>
+  <rect x="0" y="0" width="900" height="3" rx="1" fill="url(#bar)"/>
+
+  <!-- Step nodes -->
+  <!-- Propose -->
+  <rect x="20" y="30" width="108" height="58" rx="8" fill="#0d1f33" stroke="#00d4ff" stroke-width="1.2" stroke-opacity="0.7"/>
+  <text x="74" y="54" fill="#00d4ff" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle" filter="url(#g2)">PROPOSE</text>
+  <text x="74" y="72" fill="#5a8ab0" font-family="monospace" font-size="9" text-anchor="middle">3 AI agents</text>
+  <text x="74" y="83" fill="#4a7090" font-family="monospace" font-size="8" text-anchor="middle">Arch · Dream · Beast</text>
+
+  <!-- arrow -->
+  <line x1="128" y1="59" x2="148" y2="59" stroke="#2a4a6a" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Simulate -->
+  <rect x="148" y="30" width="108" height="58" rx="8" fill="#0d1f33" stroke="#7b61ff" stroke-width="1.2" stroke-opacity="0.7"/>
+  <text x="202" y="54" fill="#7b61ff" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">SIMULATE</text>
+  <text x="202" y="72" fill="#5a6ab0" font-family="monospace" font-size="9" text-anchor="middle">score + evolve</text>
+  <text x="202" y="83" fill="#4a5090" font-family="monospace" font-size="8" text-anchor="middle">GA population</text>
+
+  <!-- arrow -->
+  <line x1="256" y1="59" x2="276" y2="59" stroke="#2a4a6a" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Replay-Verify -->
+  <rect x="276" y="30" width="118" height="58" rx="8" fill="#0d1f33" stroke="#22c55e" stroke-width="1.2" stroke-opacity="0.7"/>
+  <text x="335" y="54" fill="#22c55e" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">REPLAY-VERIFY</text>
+  <text x="335" y="72" fill="#3a8a5a" font-family="monospace" font-size="9" text-anchor="middle">deterministic</text>
+  <text x="335" y="83" fill="#2a6a4a" font-family="monospace" font-size="8" text-anchor="middle">byte-identical</text>
+
+  <!-- arrow -->
+  <line x1="394" y1="59" x2="414" y2="59" stroke="#2a4a6a" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Gate -->
+  <rect x="414" y="30" width="98" height="58" rx="8" fill="#0d1f33" stroke="#ff6b6b" stroke-width="1.5" stroke-opacity="0.9"/>
+  <text x="463" y="54" fill="#ff6b6b" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle" filter="url(#g2)">GATE</text>
+  <text x="463" y="72" fill="#8a3a3a" font-family="monospace" font-size="9" text-anchor="middle">constitutional</text>
+  <text x="463" y="83" fill="#6a2a2a" font-family="monospace" font-size="8" text-anchor="middle">fail-closed</text>
+
+  <!-- arrow -->
+  <line x1="512" y1="59" x2="532" y2="59" stroke="#2a4a6a" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Execute -->
+  <rect x="532" y="30" width="108" height="58" rx="8" fill="#0d1f33" stroke="#f59e0b" stroke-width="1.2" stroke-opacity="0.7"/>
+  <text x="586" y="54" fill="#f59e0b" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">EXECUTE</text>
+  <text x="586" y="72" fill="#8a6a2a" font-family="monospace" font-size="9" text-anchor="middle">sandboxed</text>
+  <text x="586" y="83" fill="#6a4a1a" font-family="monospace" font-size="8" text-anchor="middle">cgroup v2</text>
+
+  <!-- arrow -->
+  <line x1="640" y1="59" x2="660" y2="59" stroke="#2a4a6a" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Evidence -->
+  <rect x="660" y="30" width="108" height="58" rx="8" fill="#0d1f33" stroke="#06b6d4" stroke-width="1.2" stroke-opacity="0.7"/>
+  <text x="714" y="54" fill="#06b6d4" font-family="monospace" font-size="10" font-weight="700" text-anchor="middle">EVIDENCE</text>
+  <text x="714" y="72" fill="#2a7a8a" font-family="monospace" font-size="9" text-anchor="middle">ledger-bound</text>
+  <text x="714" y="83" fill="#1a5a6a" font-family="monospace" font-size="8" text-anchor="middle">signed + hashed</text>
+
+  <!-- arrow -->
+  <line x1="768" y1="59" x2="788" y2="59" stroke="#2a4a6a" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- Archive -->
+  <rect x="788" y="30" width="94" height="58" rx="8" fill="#0d1f33" stroke="#8b5cf6" stroke-width="1.2" stroke-opacity="0.7"/>
+  <text x="835" y="54" fill="#8b5cf6" font-family="monospace" font-size="11" font-weight="700" text-anchor="middle">ARCHIVE</text>
+  <text x="835" y="72" fill="#5a3a8a" font-family="monospace" font-size="9" text-anchor="middle">replay-ready</text>
+  <text x="835" y="83" fill="#3a1a6a" font-family="monospace" font-size="8" text-anchor="middle">immutable</text>
+
+  <!-- halt annotation under Gate -->
+  <text x="463" y="103" fill="#8a2a2a" font-family="monospace" font-size="8" text-anchor="middle">↑ halt on any failure</text>
+</svg>

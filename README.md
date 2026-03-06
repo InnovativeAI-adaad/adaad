@@ -1,225 +1,220 @@
-# ADAAD
-
 <p align="center">
-  <img src="docs/assets/adaad-banner.svg" width="860" alt="ADAAD — governed autonomy platform">
+  <img src="docs/assets/adaad-banner.svg" width="900" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
 </p>
 
 <p align="center">
   <a href="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml">
-    <img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg">
+    <img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg"/>
   </a>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.8.0-2ea043?style=flat-square">
-  <img alt="Governance" src="https://img.shields.io/badge/governance-fail--closed-dc2626?style=flat-square">
-  <img alt="Replay" src="https://img.shields.io/badge/replay-deterministic-0ea5e9?style=flat-square">
-  <img alt="Python" src="https://img.shields.io/badge/python-3.11+-3b82f6?style=flat-square">
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-6b7280?style=flat-square"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-2.0.0-00d4ff?style=flat-square&labelColor=060d14"/>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.11+-7b61ff?style=flat-square&labelColor=060d14"/>
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
+  <img alt="Android" src="https://img.shields.io/badge/android-pydroid3-f59e0b?style=flat-square&labelColor=060d14"/>
 </p>
 
 <p align="center">
-  <strong>Deterministic · Constitutional · Ledger-Anchored · Production-Grade</strong>
+  <b>Self-improving software. Governed at every step.</b><br/>
+  ADAAD proposes, tests, scores, and evolves code mutations — with deterministic replay, constitutional gating, and a full audit trail. Nothing executes without proof.
 </p>
 
 ---
 
-> **ADAAD is a governance platform for autonomous code mutation.**
-> Every proposal is simulated, replay-verified, constitutionally gated, and evidence-bound before a single line executes.
+## What it does
 
----
-
-## How It Works
-
-```
-Propose → Simulate → Replay-Verify → Gate → Execute → Attach Evidence → Archive
-```
-
-If replay diverges, policy fails, or evidence cannot be attached — **mutation halts. No exceptions.**
+ADAAD is an **autonomous mutation engine**: it generates, evaluates, and applies code improvements using AI agents, then verifies every decision can be replayed exactly. A human-readable governance constitution controls what's allowed. Every mutation either passes that constitution — or halts completely.
 
 <p align="center">
-  <img src="docs/assets/governance-flow.svg" width="680" alt="ADAAD governance flow">
+  <img src="docs/assets/adaad-flow.svg" width="860" alt="ADAAD mutation pipeline"/>
 </p>
+
+**The pipeline never advances past a failed step.** Replay divergence, policy rejection, or missing evidence all halt the cycle — no exceptions, no workarounds.
 
 ---
 
-## Platform
+## Three AI agents. One governed loop.
 
-| Capability | Delivery |
-|---|---|
-| 🔁 **Deterministic replay** | Re-runs produce byte-identical, auditable governance decisions |
-| 🛡️ **Fail-closed constitutional gating** | Mutations halt on any policy, replay, or evidence failure |
-| 🧾 **Ledger-anchored evidence** | Every governed step traces to durable, verifiable artifacts |
-| 👥 **Reviewer reputation engine** | Epoch-scoped calibration of reviewer panel size and signal weight |
-| 🧪 **Policy simulation mode** | Replay historical epochs under hypothetical constraints — zero live side-effects |
-| 🔒 **Fail-closed boot hardening** | Rejects unknown `ADAAD_ENV`, dev-mode in strict envs, missing signing keys |
-| 🐳 **Container isolation backend** | cgroup v2 enforced sandboxes — pool-managed, health-probed, lifecycle-audited |
-| 🏆 **Darwinian budget competition** | Softmax fitness-weighted reallocation; starvation detection; quorum-gated eviction |
-| 🌐 **Autonomous multi-node federation** | Raft-inspired consensus, HTTP gossip, constitutional quorum gate across nodes |
-| 📡 **Federated market signals** | Live VolatilityIndex / ResourcePrice / DemandSignal gossiped cluster-wide |
-| 🎛️ **Market-driven container profiles** | Signal composite selects CONSTRAINED / STANDARD / BURST resource tiers dynamically |
+<p align="center">
+  <img src="docs/assets/adaad-agents.svg" width="680" alt="ADAAD agent personas"/>
+</p>
+
+Each epoch, ADAAD asks all three agents to propose mutations. Their proposals compete in a genetic-algorithm population: scored, crossed-over, and ranked. The fittest survive. Weights self-calibrate across epochs.
+
+---
+
+## Start in 60 seconds
+
+```bash
+git clone https://github.com/InnovativeAI-adaad/ADAAD.git
+cd ADAAD
+python onboard.py
+```
+
+That's it. `onboard.py` handles environment setup, workspace initialization, schema validation, and a governed dry-run — then shows you exactly where to go next.
+
+> **Requirements:** Python 3.11+ · pip · git
+
+---
+
+## What onboarding does
+
+```
+onboard.py
+  │
+  ├─ 1. Check Python 3.11+
+  ├─ 2. Create .venv + install deps
+  ├─ 3. Set ADAAD_ENV=dev (safe default)
+  ├─ 4. Initialize workspace (nexus_setup.py)
+  ├─ 5. Validate governance schemas
+  ├─ 6. Run governed dry-run
+  │      python -m app.main --dry-run --replay audit
+  └─ 7. Print your personalized next steps
+```
+
+Every step is idempotent. Run it again at any time — it picks up where it left off.
+
+---
+
+## What you'll see
+
+After `python onboard.py`:
+
+```
+✔ Python 3.12.3
+✔ Virtual environment ready
+✔ Dependencies installed
+✔ ADAAD_ENV=dev
+✔ Workspace initialized
+✔ Governance schemas valid
+✔ Dry-run complete — no files modified
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ADAAD is ready.
+
+  Run the dashboard:   python server.py
+  Run an epoch:        python -m app.main --verbose
+  Explore the docs:    docs/README.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## How the evolution loop works
+
+```python
+from runtime.autonomy.ai_mutation_proposer import CodebaseContext
+from runtime.evolution.evolution_loop import EvolutionLoop
+import os
+
+loop = EvolutionLoop(
+    api_key=os.environ["ADAAD_CLAUDE_API_KEY"],
+    generations=3,
+)
+
+context = CodebaseContext(
+    file_summaries={"runtime/autonomy/mutation_scaffold.py": "Scoring engine."},
+    recent_failures=[],
+    current_epoch_id="epoch-001",
+)
+
+result = loop.run_epoch(context)
+
+print(f"Proposals:    {result.total_candidates}")
+print(f"Accepted:     {result.accepted_count}")
+print(f"Next agent:   {result.recommended_next_agent}")
+print(f"Accuracy:     {result.weight_accuracy:.1%}")
+print(f"Duration:     {result.duration_seconds:.1f}s")
+```
+
+---
+
+## Platform capabilities
+
+| | Capability | What it means |
+|---|---|---|
+| 🔁 | **Deterministic replay** | Every decision re-runs byte-identical. Divergence halts the pipeline. |
+| 🛡️ | **Constitutional gating** | 11 governance axes evaluated per mutation. One failure = full halt. |
+| 🧾 | **Ledger-anchored evidence** | Every governed step is signed, hashed, and durably attached. |
+| 🤖 | **AI mutation proposals** | Three Claude-powered agents produce diverse, scored candidates each epoch. |
+| 📈 | **Self-calibrating weights** | Scoring weights adapt via momentum gradient descent across epochs. |
+| 🧬 | **Genetic population evolution** | BLX-alpha crossover, elitism, diversity enforcement per generation. |
+| 🗺️ | **Fitness landscape memory** | Win/loss rates tracked per mutation type. Plateau triggers exploration mode. |
+| 👥 | **Reviewer reputation** | Epoch-scoped calibration of reviewer panel size and signal weight. |
+| 🧪 | **Policy simulation** | Replay historical epochs under hypothetical constraints — zero side-effects. |
+| 🐳 | **Container isolation** | cgroup v2 sandboxes — pool-managed, health-probed, lifecycle-audited. |
+| 🏆 | **Darwinian budgets** | Softmax fitness-weighted resource reallocation across competing agents. |
+| 🌐 | **Multi-node federation** | Raft-inspired consensus, HTTP gossip, constitutional quorum gating. |
+
+---
+
+## Who is this for?
+
+```
+I want to...                                  Start here
+─────────────────────────────────────────────────────────
+Try it in 60 seconds                          python onboard.py
+Understand the architecture                   docs/EVOLUTION_ARCHITECTURE.md
+Contribute code                               CONTRIBUTING.md
+Review the governance model                   docs/CONSTITUTION.md
+Audit a release                               docs/RELEASE_EVIDENCE_MATRIX.md
+Check security posture                        docs/SECURITY.md
+Run on Android / Pydroid3                     docs/ENVIRONMENT_VARIABLES.md
+Deploy to production                          docs/release/release_checklist.md
+```
+
+---
+
+## Configuration (the four essentials)
+
+| Variable | What it does | Default |
+|---|---|---|
+| `ADAAD_ENV` | Environment mode. Unknown values halt at boot. | — (required) |
+| `ADAAD_CLAUDE_API_KEY` | Anthropic API key for AI mutation proposals. | — (for AI mode) |
+| `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY` | HMAC key. Required in strict environments. | — (required in prod) |
+| `CRYOVANT_DEV_MODE` | Enables dev-only overrides. Rejected in strict envs. | `0` |
+
+Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
+
+---
+
+## The authority invariant
+
+> **One authority. No exceptions.**
+
+`GovernanceGate` is the only surface that can approve, sign, or execute a mutation. Market adapters, budget arbitrators, container profilers, and federation consensus all influence fitness scores and resource allocation — but **none of them can approve a mutation**. That authority belongs exclusively to the constitutional evaluation inside `GovernanceGate`.
+
+This is architecturally enforced, not just documented.
 
 ---
 
 ## Milestones
 
-| Milestone | Version | Capability | Status |
-|---|---|---|---|
-| ADAAD-6 | v1.0 | Stable Release — HMAC remediation, 11 constitutional rules, MCP co-pilot | ✅ |
-| ADAAD-7 | v1.1 | Reviewer Reputation & Calibration Loop | ✅ |
-| ADAAD-8 | v1.2 | Policy Simulation Mode — DSL, epoch replay, governance profile export | ✅ |
-| ADAAD-9 | v1.3 | Aponi IDE — proposal editor, constitutional linter, evidence viewer, replay inspector | ✅ |
-| ADAAD-10 | v1.4 | Live Market Signal Adapters — FeedRegistry, 3 concrete adapters, webhook | ✅ |
-| ADAAD-11 | v1.5 | Darwinian Agent Budget Competition — pool, arbitrator, competition ledger | ✅ |
-| ADAAD-12 | v1.6 | Real Container-Level Isolation Backend — orchestrator, health probes, profiles | ✅ |
-| ADAAD-13 | v1.7 | Fully Autonomous Multi-Node Federation — Raft consensus, gossip, node supervisor | ✅ |
-| ADAAD-14 | **v1.8** | Cross-Track Convergence — market × federation × container × Darwinian unified | ✅ |
-
----
-
-## Quick Start
-
-```bash
-git clone https://github.com/InnovativeAI-adaad/ADAAD.git && cd ADAAD
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.server.txt
-python nexus_setup.py && ./quickstart.sh
-```
-
-Governed dry-run:
-
-```bash
-python -m app.main --dry-run --replay audit --verbose
-```
-
-→ Full guide: [QUICKSTART.md](QUICKSTART.md)
-
----
-
-## Start Here
-
-| Role | Entry point |
+| Version | Capability |
 |---|---|
-| 🧪 First-time evaluator | [QUICKSTART.md](QUICKSTART.md) |
-| 👩‍💻 Contributor | [CONTRIBUTING.md](CONTRIBUTING.md) · [Architecture Contract](docs/ARCHITECTURE_CONTRACT.md) |
-| 🔐 Security reviewer | [SECURITY.md](docs/SECURITY.md) · [Invariants Matrix](docs/governance/SECURITY_INVARIANTS_MATRIX.md) |
-| 🧾 Auditor | [Release Checklist](docs/release/release_checklist.md) · [Evidence Matrix](docs/RELEASE_EVIDENCE_MATRIX.md) |
+| **v2.0** | AI mutation engine — Claude API, 3 agent personas, GA evolution, adaptive weights |
+| v1.8 | Cross-track convergence — market × federation × container × Darwinian unified |
+| v1.7 | Fully autonomous multi-node federation — Raft consensus, gossip, node supervisor |
+| v1.6 | Real container-level isolation — cgroup v2, orchestrator, health probes |
+| v1.5 | Darwinian agent budget competition — pool, arbitrator, ledger |
+| v1.4 | Live market signal adapters — FeedRegistry, 3 adapters, webhook |
+| v1.3 | Aponi IDE — proposal editor, linter, evidence viewer, replay inspector |
+| v1.0 | Stable release — HMAC, 11 constitutional rules, MCP co-pilot |
 
 ---
 
-## Authority Invariant
+## Non-goals
 
-> **GovernanceGate is the sole mutation-approval authority across every surface.**
-
-Market adapters influence fitness scores. Budget arbitrators reallocate pool shares. Container profilers select resource tiers. Federation consensus provides ordering. **None of these surfaces can approve, sign, or execute a mutation.** That authority belongs exclusively to `GovernanceGate`, and the constitutional evaluation it enforces.
-
-This invariant is architecturally enforced, not just documented.
-
----
-
-## Key Configuration
-
-| Variable | Purpose |
-|---|---|
-| `ADAAD_ENV` | **Required.** `dev` · `test` · `staging` · `production`. Unknown values cause `SystemExit` at boot. |
-| `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY` | **Required in strict envs.** HMAC key for session tokens. |
-| `ADAAD_SANDBOX_CONTAINER_ROLLOUT` | `true` activates `ContainerOrchestrator` as default execution backend. |
-| `CRYOVANT_DEV_MODE` | Dev-only overrides. Rejected in strict environments at boot. |
-
-→ Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
-
----
-
-## Reference
-
-**Governance** — [Constitution](docs/CONSTITUTION.md) · [Determinism Contract](docs/DETERMINISM.md) · [Architecture Contract](docs/ARCHITECTURE_CONTRACT.md) · [Threat Model](docs/THREAT_MODEL.md)
-
-**Security** — [SECURITY.md](docs/SECURITY.md) · [Federation Key Registry](docs/governance/FEDERATION_KEY_REGISTRY.md) · [Security Invariants Matrix](docs/governance/SECURITY_INVARIANTS_MATRIX.md)
-
-**Releases** — [Evidence Matrix](docs/RELEASE_EVIDENCE_MATRIX.md) · [Release Checklist](docs/release/release_checklist.md) · [Changelog](CHANGELOG.md) · [Milestone Roadmap](MILESTONE_ROADMAP_ADAAD6-9.md)
-
-**Docs Hub** — [docs/README.md](docs/README.md) · [Examples](examples/single-agent-loop/README.md)
-
----
-
-## Non-Goals
-
-ADAAD does not: generate model intelligence · replace CI pipelines · remove required human oversight · guarantee semantic correctness beyond governed constraints.
+ADAAD does not: replace human judgment · guarantee semantic correctness · remove required oversight · operate without an audit trail.
 
 ---
 
 <p align="center">
-  <img alt="Deterministic" src="https://img.shields.io/badge/Deterministic-Replay_Enforced-0ea5e9?style=for-the-badge">
-  <img alt="Governed" src="https://img.shields.io/badge/Governed-Constitutional-f97316?style=for-the-badge">
-  <img alt="Auditable" src="https://img.shields.io/badge/Auditable-Ledger_Anchored-22c55e?style=for-the-badge">
-  <img alt="Converged" src="https://img.shields.io/badge/v1.8-Cross--Track_Converged-a855f7?style=for-the-badge">
+  <a href="docs/CONSTITUTION.md">Constitution</a> ·
+  <a href="docs/EVOLUTION_ARCHITECTURE.md">Architecture</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a> ·
+  <a href="docs/SECURITY.md">Security</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
 </p>
 
-<p align="center">MIT License · <a href="LICENSE">LICENSE</a> · <a href="LICENSES.md">LICENSES.md</a></p>
-
----
-
-## AI Mutation Capability Expansion — v2.0
-
-> **Released:** 2026-03-06 | **Branch:** `feature/ai-mutation-capability-expansion-v2`
-
-This release delivers the full **AI mutation engine** — connecting ADAAD to the Claude API for the first time and establishing a production-ready, self-improving evolution loop.
-
-### What's New
-
-| Module | Type | Capability |
-|---|---|---|
-| `runtime/autonomy/mutation_scaffold.py` | **UPGRADED** | `ScoringWeights`, `PopulationState`, lineage fields, adaptive threshold, elitism bonus |
-| `runtime/autonomy/ai_mutation_proposer.py` | **NEW** | Claude API integration — Architect / Dream / Beast agent personas |
-| `runtime/autonomy/weight_adaptor.py` | **NEW** | Momentum-based self-calibrating weight learner |
-| `runtime/autonomy/fitness_landscape.py` | **NEW** | Persistent win/loss tracker, plateau detection, agent recommendation |
-| `runtime/evolution/population_manager.py` | **NEW** | GA-style population evolution with BLX-alpha crossover |
-| `runtime/evolution/evolution_loop.py` | **NEW** | Full epoch orchestrator: propose → score → evolve → adapt → record |
-| `adaad/core/health.py` | **FIXED** | `gate_ok` flag added to health payload (PR #12) |
-
-### Evolution Epoch Lifecycle
-
-```
-FitnessLandscape → AI Propose (3 agents) → PopulationManager.seed()
-    → evolve_generation() × N → WeightAdaptor.adapt() → FitnessLandscape.record()
-    → EpochResult (epoch_id, accepted_count, weight_accuracy, recommended_next_agent)
-```
-
-### Agent Personas
-
-| Agent | Strategy | Mutation Type | Risk Profile |
-|---|---|---|---|
-| **Architect** | Structural cohesion, interface contracts | `structural` | Low-medium |
-| **Dream** | High-novelty, exploratory, cross-domain | `experimental` | High |
-| **Beast** | Conservative micro-optimisations, coverage | `performance`/`coverage` | Very low |
-
-### Adaptive Scoring
-
-- **Adaptive threshold:** scales down during exploration epochs (`diversity_pressure > 0`)
-- **Elitism bonus:** `+0.05` score for children of elite-roster parents
-- **Momentum weight adaptation:** `LR=0.05`, `momentum=0.85` — stable convergence
-- **Plateau detection:** `< 20%` win rate across all tracked types → Dream dispatched
-
-### Test Coverage
-
-```
-44 new tests — 44 passed (100%)
-0 regressions in existing test suite
-```
-
-### Quick Start (Evolution Loop)
-
-```python
-import os
-from runtime.autonomy.ai_mutation_proposer import CodebaseContext
-from runtime.evolution.evolution_loop import EvolutionLoop
-
-loop = EvolutionLoop(api_key=os.environ["ADAAD_CLAUDE_API_KEY"], generations=3)
-context = CodebaseContext(
-    file_summaries={"runtime/autonomy/mutation_scaffold.py": "Scoring helpers."},
-    recent_failures=[],
-    current_epoch_id="epoch-001",
-)
-result = loop.run_epoch(context)
-print(f"Accepted: {result.accepted_count}/{result.total_candidates}")
-print(f"Next agent: {result.recommended_next_agent}")
-print(f"Weight accuracy: {result.weight_accuracy:.2%}")
-```
-
+<p align="center">
+  <sub>MIT License · <a href="LICENSE">LICENSE</a></sub>
+</p>
