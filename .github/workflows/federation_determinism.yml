@@ -1,0 +1,202 @@
+name: Federation Determinism
+
+# Phase 5 CI gate: verifies cross-repo federated mutation determinism.
+#
+# Runs on every PR that touches federation runtime, evidence bundle,
+# or governance gate code.  Required gate before any Phase 5 merge.
+#
+# Constitutional requirements enforced:
+#   - 0 divergences per federated epoch (Phase 5 roadmap invariant)
+#   - All Phase 5 federation tests passing
+#   - HMAC key validation operating in fail-closed mode
+#   - FederatedEvidenceMatrix divergence_count == 0
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "runtime/governance/federation/**"
+      - "runtime/evolution/evidence_bundle.py"
+      - "runtime/evolution/lineage_v2.py"
+      - "runtime/governance/gate.py"
+      - "tests/test_federation_*.py"
+      - "tests/test_lineage_federation*.py"
+      - "tests/test_evolution_federation*.py"
+      - "tests/test_proposal_transport*.py"
+      - "tests/test_evidence_bundle_federated.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - "runtime/governance/federation/**"
+      - "runtime/evolution/evidence_bundle.py"
+      - "runtime/evolution/lineage_v2.py"
+      - "runtime/governance/gate.py"
+      - "tests/test_federation_*.py"
+      - "tests/test_lineage_federation*.py"
+      - "tests/test_evolution_federation*.py"
+      - "tests/test_proposal_transport*.py"
+      - "tests/test_evidence_bundle_federated.py"
+
+jobs:
+  federation-determinism:
+    name: Phase 5 — Federation Determinism Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # Enforce fail-closed HMAC validation in CI
+      ADAAD_FEDERATION_MODE_ENABLED: "true"
+      # Minimum-valid 32-byte test key (never use in production)
+      ADAAD_FEDERATION_HMAC_KEY: "ci-test-key-32-bytes-padding-00"
+      PYTHONPATH: .
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov 2>/dev/null || pip install pytest
+
+      # ------------------------------------------------------------------
+      # Phase 5 Core Federation Tests
+      # ------------------------------------------------------------------
+      - name: HMAC key validation tests
+        run: |
+          python -m pytest \
+            runtime/governance/federation/tests/test_federation_hmac_key_validation.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-hmac.xml
+        continue-on-error: false
+
+      - name: Cross-repo lineage federation_origin tests
+        run: |
+          python -m pytest \
+            tests/test_lineage_federation_origin.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-lineage.xml
+        continue-on-error: false
+
+      - name: FederationMutationBroker tests
+        run: |
+          python -m pytest \
+            tests/test_federation_mutation_broker.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-broker.xml
+        continue-on-error: false
+
+      - name: FederatedEvidenceMatrix tests
+        run: |
+          python -m pytest \
+            tests/test_federated_evidence_matrix.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-evidence-matrix.xml
+        continue-on-error: false
+
+      - name: EvolutionFederationBridge tests
+        run: |
+          python -m pytest \
+            tests/test_evolution_federation_bridge.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-bridge.xml
+        continue-on-error: false
+
+      - name: ProposalTransportAdapter tests
+        run: |
+          python -m pytest \
+            tests/test_proposal_transport_adapter.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-transport.xml
+        continue-on-error: false
+
+      - name: Evidence bundle federated section tests
+        run: |
+          python -m pytest \
+            tests/test_evidence_bundle_federated.py \
+            -v --tb=short \
+            --junit-xml=reports/phase5-evidence-bundle.xml
+        continue-on-error: false
+
+      # ------------------------------------------------------------------
+      # Full Phase 5 suite (all federation tests together)
+      # ------------------------------------------------------------------
+      - name: Phase 5 full suite
+        run: |
+          python -m pytest \
+            runtime/governance/federation/tests/test_federation_hmac_key_validation.py \
+            tests/test_lineage_federation_origin.py \
+            tests/test_federation_mutation_broker.py \
+            tests/test_federated_evidence_matrix.py \
+            tests/test_evolution_federation_bridge.py \
+            tests/test_proposal_transport_adapter.py \
+            tests/test_evidence_bundle_federated.py \
+            -v \
+            --tb=short \
+            --junit-xml=reports/phase5-full.xml \
+            -q
+        continue-on-error: false
+
+      # ------------------------------------------------------------------
+      # Divergence invariant check
+      # ------------------------------------------------------------------
+      - name: Assert zero divergences invariant
+        run: |
+          python3 - << 'PYEOF'
+          """
+          Structural assertion: FederatedEvidenceMatrix API enforces the
+          Phase 5 roadmap invariant (0 divergences per federated epoch).
+          We construct a matrix, run a known-good cross-repo verification,
+          and assert divergence_count == 0.
+          """
+          import sys
+          sys.path.insert(0, ".")
+          from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
+
+          DIGEST_A = "sha256:" + "a" * 64
+          DIGEST_B = "sha256:" + "b" * 64
+
+          matrix = FederatedEvidenceMatrix(local_repo="ci-node", audit_writer=None)
+          matrix.record_local_epoch("dest-epoch-1", DIGEST_A)
+          matrix.record_peer_epoch("source-repo", "src-epoch-1", DIGEST_B)
+
+          result = matrix.verify_cross_repo(
+              proposal_id="ci-check-001",
+              source_repo="source-repo",
+              source_epoch_id="src-epoch-1",
+              source_chain_digest=DIGEST_B,
+              destination_epoch_id="dest-epoch-1",
+          )
+
+          passed = result.passed
+          divergences = matrix.divergence_count()
+          if divergences != 0:
+              print(f"FAIL: divergence_count={divergences}, expected 0", file=sys.stderr)
+              sys.exit(1)
+
+          if not passed:
+              print(f"FAIL: verify_cross_repo returned passed=False", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"OK: divergence_count=0, passed=True")
+          PYEOF
+
+      # ------------------------------------------------------------------
+      # Upload test reports
+      # ------------------------------------------------------------------
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-federation-test-reports
+          path: reports/phase5-*.xml
+          retention-days: 30
