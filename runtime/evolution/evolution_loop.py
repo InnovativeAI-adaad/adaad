@@ -33,6 +33,10 @@ from runtime.autonomy.fitness_landscape import FitnessLandscape
 from runtime.autonomy.mutation_scaffold import MutationCandidate, MutationScore
 from runtime.autonomy.weight_adaptor import MutationOutcome, WeightAdaptor
 from runtime.autonomy.penalty_adaptor import build_penalty_outcomes_from_scores, PenaltyAdaptor
+from runtime.autonomy.explore_exploit_controller import (
+    ExploreExploitController,
+    EvolutionMode,
+)
 from runtime.evolution.population_manager import PopulationManager
 
 # ---------------------------------------------------------------------------
@@ -55,6 +59,8 @@ class EpochResult:
     weight_accuracy:        float          = 0.0
     recommended_next_agent: str            = "beast"
     duration_seconds:       float          = 0.0
+    evolution_mode:         str            = EvolutionMode.EXPLORE.value
+    window_explore_ratio:   float          = 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -77,9 +83,10 @@ class EvolutionLoop:
 
     def __init__(
         self,
-        api_key:           str,
-        generations:       int  = 3,
-        simulate_outcomes: bool = False,
+        api_key:            str,
+        generations:        int  = 3,
+        simulate_outcomes:  bool = False,
+        controller:         Optional[ExploreExploitController] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -87,6 +94,7 @@ class EvolutionLoop:
         self._adaptor          = WeightAdaptor()
         self._landscape        = FitnessLandscape()
         self._manager          = PopulationManager()
+        self._controller       = controller or ExploreExploitController()
 
     # ------------------------------------------------------------------
     # Public API
@@ -107,6 +115,19 @@ class EvolutionLoop:
 
         # Phase 0: Strategy — which agent should lead this epoch?
         preferred_agent = self._landscape.recommended_agent()
+
+        # Phase 0b: Mode selection — Explore or Exploit?
+        #   epoch_score from prior epoch is not available at proposal time;
+        #   use landscape plateau signal as the primary driver.
+        is_plateau = self._landscape.is_plateau()
+        prior_epoch_score = float(
+            getattr(context, "prior_epoch_score", 0.0) or 0.0
+        )
+        evolution_mode = self._controller.select_mode(
+            epoch_id=epoch_id,
+            epoch_score=prior_epoch_score,
+            is_plateau=is_plateau,
+        )
 
         # Phase 1: Propose — call Claude for all three agents
         all_proposals: List[MutationCandidate] = []
@@ -154,6 +175,14 @@ class EvolutionLoop:
             mut_type = self._agent_to_type(score.agent_origin)
             self._landscape.record(mut_type, won=score.score > 0.50)
 
+        # Phase 5b: Commit epoch to E/E controller
+        #   Compute epoch fitness score as mean of accepted scores (or 0 if none)
+        epoch_fitness = (
+            round(sum(s.score for s in accepted) / len(accepted), 4)
+            if accepted else 0.0
+        )
+        self._controller.commit_epoch(epoch_id=epoch_id, mode=evolution_mode)
+
         # Top-5 mutation IDs by score
         unique_ids: List[str] = []
         seen_ids: set = set()
@@ -173,6 +202,8 @@ class EvolutionLoop:
             weight_accuracy=round(self._adaptor.prediction_accuracy, 4),
             recommended_next_agent=self._landscape.recommended_agent(),
             duration_seconds=round(time.monotonic() - t_start, 3),
+            evolution_mode=evolution_mode.value,
+            window_explore_ratio=round(self._controller.window_explore_ratio(), 4),
         )
 
     # ------------------------------------------------------------------
