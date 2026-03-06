@@ -21,8 +21,8 @@ Release evidence matrix: [`docs/comms/claims_evidence_matrix.md`](../comms/claim
 | Control ID | Requirement | Acceptance criteria | Evidence artifact(s) | Status |
 |---|---|---|---|---|
 | GA-KR.1 | Key rotation enforcement audit | Rotation freshness policy and escalation are evidenced in release package | [`docs/governance/FEDERATION_KEY_REGISTRY.md`](./FEDERATION_KEY_REGISTRY.md); [`scripts/validate_key_rotation_attestation.py`](../../scripts/validate_key_rotation_attestation.py) | ✅ |
-| GA-RP.1 | Replay-proof trust-root hardening scope | Third-party verifier trust-root plan is documented and approved | Scope document + schema impact note | ⬜ |
-| GA-SB.1 | Sandbox timeout and backend fail-closed parity | Mutation execution fails closed deterministically across backends | Cross-backend test evidence + runbook note | ⬜ |
+| GA-RP.1 | Replay-proof trust-root hardening scope | Third-party verifier trust-root plan is documented and approved | [`STRICT_REPLAY_INVARIANTS.md`](./STRICT_REPLAY_INVARIANTS.md); [`ARCHITECT_SPEC_v2.0.0.md` §3.3](./ARCHITECT_SPEC_v2.0.0.md) | ✅ |
+| GA-SB.1 | Sandbox timeout and backend fail-closed parity | Mutation execution fails closed deterministically across backends | [`resource_bounds.py`](../../runtime/governance/validators/resource_bounds.py); [`test_resource_bounds.py`](../../tests/test_resource_bounds.py); [`RELEASE_EVIDENCE_MATRIX.md`](../RELEASE_EVIDENCE_MATRIX.md) | ✅ |
 
 ## Sign-off protocol
 

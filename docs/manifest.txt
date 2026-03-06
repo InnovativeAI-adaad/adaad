@@ -1,17 +1,141 @@
-NOTE: Human readers should start at docs/README.md.
-app/
-runtime/
-security/
-tests/
-docs/
-data/
-reports/
-experiments/
-archives/
-scripts/
-ui/
-brand/
-releases/
-tools/
-VERSION
-CHANGELOG.md
+# ADAAD v2.0.0 — Repository Manifest
+# Human readers: start at docs/README.md
+# Governance spec: docs/governance/ARCHITECT_SPEC_v2.0.0.md
+
+## Root
+VERSION                          — Canonical version string (2.0.0)
+CHANGELOG.md                     — Release history
+README.md                        — Project overview and quickstart
+AGENTS.md                        — Governed build agent contract
+CONTRIBUTING.md                  — Contribution guidelines
+QUICKSTART.md                    — 60-second onboarding
+CODE_OF_CONDUCT.md
+LICENSE / LICENSES.md / THIRD_PARTY_NOTICES.md / TRADEMARKS.md / BRAND_LICENSE.md
+onboard.py                       — Unified onboarding gate
+server.py                        — FastAPI server entrypoint
+nexus_setup.py                   — Workspace initialization
+conftest.py                      — Pytest root configuration
+
+## app/
+app/main.py                      — PRIMARY PLATFORM ENTRYPOINT
+app/mutation_executor.py         — Pure mutation execution engine
+app/beast_mode_loop.py           — Beast agent loop
+app/dream_mode.py                — Dream agent loop
+app/architect_agent.py           — Architect agent
+app/simulation_utils.py          — Simulation helpers
+app/agents/                      — Agent implementations
+app/orchestration/               — Orchestration wiring
+
+## adaad/
+adaad/__init__.py
+adaad/agents/                    — Legacy agent base (deprecated, see DEPRECATION_REGISTRY)
+adaad/core/                      — Core health and primitives
+adaad/orchestrator/              — Tool dispatch and handler routing
+
+## runtime/                      — CANONICAL RUNTIME (all implementation lives here)
+runtime/autonomy/                — AI mutation proposer, roles, mutation scaffold
+runtime/evolution/               — Evolution loop, population manager, fitness landscape,
+                                   weight adaptor, scoring, replay, checkpoint, promotion
+runtime/governance/              — Constitution enforcement, GovernanceGate, validators,
+                                   foundation (determinism), federation, auth
+runtime/market/                  — Market signal adapters, fitness integrator, signal broker
+runtime/sandbox/                 — Container sandbox, preflight, market-driven profiler
+runtime/analysis/                — Analysis and redteam harness
+runtime/intelligence/            — Intelligence routing and critique
+runtime/intake/                  — Repo scanner and intake
+runtime/manifest/                — Manifest validator
+runtime/recovery/                — Ledger guardian and snapshot atomicity
+runtime/agents/                  — Runtime agent wrappers
+runtime/api/                     — Stable app-layer API facade
+runtime/mcp/                     — MCP server integration
+
+## security/
+security/cryovant.py             — CANONICAL trust validation and session management
+security/gatekeeper_protocol.py  — Gatekeeper enforcement
+security/ledger/                 — Append-only evidence ledger (JSONL)
+security/keys/                   — Key material (gitignored except .gitkeep)
+
+## governance/                   — ADAPTER LAYER ONLY (no implementation logic)
+governance/CANONICAL_ENGINE_DECLARATION.md
+governance/DEPRECATION_REGISTRY.md
+governance/federation_trusted_keys.json
+governance/governance_policy_v1.json
+governance/mutation_ledger.py    — Adapter → runtime/governance/mutation_ledger.py
+governance/promotion_gate.py     — Adapter → runtime/governance/promotion_gate.py
+governance/policies.rego
+governance/rule_applicability.yaml
+governance/tier_map.yaml
+governance/foundation/           — Foundation adapter shims
+
+## docs/
+docs/README.md                   — Documentation index
+docs/CONSTITUTION.md             — Constitutional framework
+docs/ARCHITECTURE_CONTRACT.md    — Layer ownership and boundary contract
+docs/ARCHITECTURE_SUMMARY.md     — One-page architecture orientation
+docs/EVOLUTION_ARCHITECTURE.md   — Evolution subsystem deep-dive
+docs/DETERMINISM.md              — Determinism contract
+docs/SECURITY.md                 — Security posture
+docs/ENVIRONMENT_VARIABLES.md    — All env vars reference
+docs/RELEASE_EVIDENCE_MATRIX.md  — Release evidence claims
+docs/governance/                 — Governance runbooks, specs, plans
+  ARCHITECT_SPEC_v2.0.0.md       — CANONICAL architectural specification (v2.0.0)
+  SECURITY_INVARIANTS_MATRIX.md
+  DETERMINISM_CONTRACT_SPEC.md
+  STRICT_REPLAY_INVARIANTS.md
+  FEDERATION_KEY_REGISTRY.md
+  FORENSIC_BUNDLE_LIFECYCLE.md
+  LANE_OWNERSHIP.md
+  ADAAD_7_GA_CLOSURE_TRACKER.md
+  CODEX_SETUP.md
+docs/releases/                   — Per-release notes
+docs/release/release_checklist.md
+docs/comms/claims_evidence_matrix.md
+docs/archive/                    — Superseded planning docs (audit lineage only)
+
+## tests/
+tests/                           — Full test suite (644 Python files)
+tests/determinism/               — Determinism and replay equivalence
+tests/governance/                — GovernanceGate, certifier, ledger, federation
+tests/evolution/                 — Evolution loop, checkpoints, fitness
+tests/market/                    — Market signal and fitness tests
+tests/sandbox/                   — Sandbox isolation and syscall filter
+tests/mcp/                       — MCP server tests
+tests/stability/                 — Null guard and stability tests
+
+## tools/
+tools/lint_determinism.py        — Entropy source linter (CI-enforced)
+tools/lint_import_paths.py       — Layer boundary linter (CI-enforced)
+tools/verify_replay_bundle.py    — Offline replay proof verifier
+tools/adaad_audit.py             — Governance audit runner
+tools/simulate_governance_harness.py
+tools/error_dictionary.py
+
+## scripts/
+scripts/check_spdx_headers.py    — SPDX header compliance (CI-enforced)
+scripts/validate_key_rotation_attestation.py
+scripts/validate_architecture_snapshot.py
+
+## data/                         — Runtime state (gitignored except .gitkeep + seeds)
+data/weight_adaptor_state.json   — Scoring weight momentum state
+data/fitness_landscape_state.json — Per-type win/loss ledger
+data/governed_skill_profiles.json
+data/free_capability_sources.json
+data/logs/                       — Runtime logs (gitignored)
+data/quarantine/                 — Quarantined artifacts (gitignored)
+
+## ops/
+ops/systemd/                     — Systemd service units
+
+## ui/
+ui/aponi_dashboard.py            — Aponi governance dashboard (read-only surface)
+ui/aponi/                        — Aponi component modules
+
+## evolution/ memory/ core/
+evolution/                       — Standalone evolution utilities
+memory/versionedstore.py         — Versioned state store
+core/random_control.py           — Seeded determinism control
+
+## archives/                     — Retired code (preserved for lineage audit only)
+## experiments/                  — Red-team and branch experiments
+## brand/                        — Brand assets
+## releases/                     — Empty (superseded by docs/releases/)

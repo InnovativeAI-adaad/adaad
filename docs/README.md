@@ -23,7 +23,7 @@
 | 🛡️ Validate governance posture | [Security](SECURITY.md) · [Constitution](CONSTITUTION.md) |
 | 📦 Ship with release discipline | [Release checklist](release/release_checklist.md) |
 | 🧱 Review build strategy | [Strategic build suggestions](ADAAD_STRATEGIC_BUILD_SUGGESTIONS.md) |
-| 👥 Understand reviewer calibration | [Reviewer Reputation Epic](../EPIC_1_Reviewer_Reputation.md) |
+| 👥 Understand reviewer calibration | [Reviewer Reputation Epic](archive/EPIC_1_Reviewer_Reputation.md) |
 
 ---
 
@@ -59,6 +59,7 @@
 
 | Document | Purpose |
 |---|---|
+| [**ArchitectAgent Spec v2.0.0**](governance/ARCHITECT_SPEC_v2.0.0.md) | Canonical architectural + constitutional specification |
 | [Constitution](CONSTITUTION.md) | Hard governance constraints; 14 rules; cannot be overridden |
 | [Architecture Contract](ARCHITECTURE_CONTRACT.md) | Interface and boundary contracts |
 | [Security](SECURITY.md) | Auth, signing, fail-closed controls |
@@ -89,6 +90,7 @@
 |---|---|
 | [Release checklist](release/release_checklist.md) | Canonical operator preflight |
 | [Release audit checklist](releases/RELEASE_AUDIT_CHECKLIST.md) | Evidence verification |
+| [v2.0.0 Release notes](releases/2.0.0.md) | AI Mutation Capability Expansion · Principal/Staff grade |
 | [v1.1.0 Release notes](releases/1.1.0.md) | Phase 0 hardening complete |
 | [Claims-evidence matrix](comms/claims_evidence_matrix.md) | Evidence completeness gate |
 

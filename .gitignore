@@ -60,3 +60,16 @@ app/agents/
 # ADAAD governed build agent state
 .adaad_agent_state.json
 .adaad_operator_contacts.json
+
+# Runtime federation state (generated at runtime)
+/federation_state.json
+
+# Runtime generated artifacts (not source)
+/data/aponi_command_queue.jsonl
+/data/fitness_landscape_state.json
+/data/weight_adaptor_state.json
+/runtime/lifecycle_states/
+/runtime/mcp/proposal_queue.jsonl
+/security/ledger/cryovant_journal.tail.json
+/security/promotion_manifests/*.json
+/security/replay_manifests/

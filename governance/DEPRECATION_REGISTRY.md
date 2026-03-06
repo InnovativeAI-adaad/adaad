@@ -1,9 +1,10 @@
 # DEPRECATION REGISTRY
 
 - **record_type**: deprecation_registry
-- **schema_version**: 1.0.0
+- **schema_version**: 2.0.0
 - **registry_status**: active
 - **maintainer_group**: governance-council
+- **last_updated**: 2026-03-06
 
 ## Process Metadata
 
@@ -13,22 +14,21 @@
 - **signature_threshold**: 2-of-3
 - **registry_artifact**: governance/attestations/deprecation_registry.json
 
-## Signed Entry Placeholder
+## Active Deprecations
 
-| item_id | replaced_by | deprecation_state | effective_at | record_digest | signatures |
-|---|---|---|---|---|---|
-| pending-item | pending-replacement | proposed | 1970-01-01T00:00:00Z | sha256:0000000000000000000000000000000000000000000000000000000000000000 | pending |
+| item_id | description | replaced_by | deprecation_state | effective_at |
+|---------|-------------|-------------|-------------------|--------------|
+| `root-governance-impl` | Implementation logic in root `governance/` | `runtime/governance/` canonical layer | retired | 2025-12-01 |
+| `archives/adad_core` | Legacy monolithic core module | Distributed `runtime/` subsystems | retired | 2025-11-01 |
+| `archives/backend` | Legacy backend scaffolding | `app/main.py` + `runtime/` | retired | 2025-11-01 |
+| `archives/dashboard` | Legacy dashboard | `ui/aponi_dashboard.py` | retired | 2025-12-01 |
+| `app/root.py` | Legacy root wiring shim | `app/main.py` canonical entrypoint | retired | 2026-01-01 |
+| `adaad/agents/` | Legacy agent stubs (pre-AI pipeline) | `runtime/autonomy/ai_mutation_proposer.py` | deprecated | 2026-03-06 |
+| `docs/archive/EPIC_*.md` | Per-epic planning docs | `CHANGELOG.md` + `docs/releases/` | archived | 2026-03-06 |
+| `docs/archive/PR_v1.0.0_body.md` | PR body artifact | `docs/releases/1.0.0.md` | archived | 2026-03-06 |
 
-## Signature Envelope Placeholder
+## Notes
 
-```yaml
-entry_id: pending-item
-record_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
-signatures:
-  - signer_id: pending-signer-1
-    signed_at: 1970-01-01T00:00:00Z
-    signature: pending
-  - signer_id: pending-signer-2
-    signed_at: 1970-01-01T00:00:00Z
-    signature: pending
-```
+Items in state `retired` have been moved to `archives/` or deleted.
+Items in state `deprecated` are still present but must not be extended.
+Items in state `archived` are preserved in `docs/archive/` for audit lineage.

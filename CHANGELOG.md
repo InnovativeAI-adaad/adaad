@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Repository Hardening — v2.0.0 (2026-03-06)
+
+**Structural simplification**
+- Moved 9 historical planning docs from root to `docs/archive/` (EPIC_*.md, ADAAD_7_EXECUTION_PLAN.md, ADAAD_DEEP_DIVE_AUDIT.md, MILESTONE_ROADMAP_ADAAD6-9.md, MERGE_READY_REVIEW_COMMENT_BLOCK.md, PR_v1.0.0_body.md)
+- Moved `GOVERNANCE_RISK_SIGNOFF_MEMO.md` from root to `docs/governance/` (canonical governance path)
+- Consolidated ephemeral PR comment files from `comments/` and `pr_comments/` into `docs/archive/pr_comments/`
+- Added `docs/archive/README.md` — audit trail mapping superseded docs to replacements
+
+**Evidence and governance**
+- Added 7 new rows to `docs/comms/claims_evidence_matrix.md` covering v2.0.0 AI mutation claims
+- Closed all remaining open GA closure tracker items (GA-RP.1, GA-SB.1) with evidence links
+- Finalized `governance/CANONICAL_ENGINE_DECLARATION.md` — `engine_id: adaad-evolution-engine-v2`, status: active
+- Updated `governance/DEPRECATION_REGISTRY.md` — replaced placeholder with 8 real entries covering retired and deprecated components
+
+**Documentation**
+- Created `docs/releases/2.0.0.md` — formal v2.0.0 release note with evidence matrix
+- Rewrote `docs/manifest.txt` — complete v2.0.0 structure map (all 15 top-level directories documented)
+- Updated `docs/README.md` — added ARCHITECT_SPEC_v2.0.0.md entry, v2.0.0 release note link, fixed broken EPIC archive link
+- Updated `docs/ARCHITECTURE_SUMMARY.md` — AI Mutation Layer documented, canonical spec referenced
+
+**Code quality**
+- Added SPDX header and docstring to `tests/market/__init__.py` (was empty)
+- All 644 Python files pass AST validation
+- Zero broken imports
+
 ## [2.0.0] — 2026-03-06 · AI Mutation Capability Expansion
 
 ### Principal/Staff Engineer Grade Implementation

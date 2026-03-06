@@ -1,11 +1,23 @@
 # CANONICAL ENGINE DECLARATION
 
 - **record_type**: canonical_engine_declaration
-- **schema_version**: 1.0.0
-- **engine_id**: TBD
-- **status**: draft
-- **effective_at**: 1970-01-01T00:00:00Z
+- **schema_version**: 2.0.0
+- **engine_id**: adaad-evolution-engine-v2
+- **status**: active
+- **effective_at**: 2026-03-06T00:00:00Z
 - **supersedes_record**: none
+
+## Engine Identity
+
+The canonical evolution engine for ADAAD v2.0.0 is the AI-driven mutation pipeline
+comprising `AIMutationProposer`, `EvolutionLoop`, `WeightAdaptor`, `FitnessLandscape`,
+and `PopulationManager`, all governed exclusively by `GovernanceGate`.
+
+## Authority
+
+- **Single approval surface:** `runtime/governance/gate_certifier.py` + `GovernanceGate`
+- **Constitutional spec:** `docs/governance/ARCHITECT_SPEC_v2.0.0.md`
+- **No agent, adapter, or subsystem may approve mutations outside this surface.**
 
 ## Process Metadata
 
@@ -15,15 +27,7 @@
 - **signature_threshold**: 2-of-3
 - **attestation_artifact**: governance/attestations/canonical_engine_declaration.json
 
-## Signed Record Placeholder
+## Pending
 
-```yaml
-record_digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
-signatures:
-  - signer_id: pending-signer-1
-    signed_at: 1970-01-01T00:00:00Z
-    signature: pending
-  - signer_id: pending-signer-2
-    signed_at: 1970-01-01T00:00:00Z
-    signature: pending
-```
+Signed ed25519 attestation (requires 2-of-3 governance key holders). Until signed,
+this declaration is authoritative by consensus and architectural contract.
