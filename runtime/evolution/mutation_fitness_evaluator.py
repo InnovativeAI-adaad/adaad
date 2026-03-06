@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Mapping
 from runtime import ROOT_DIR, fitness
 from runtime.evolution.roi_attribution import ROIAttributionEngine
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
+from runtime.evolution.semantic_diff import enrich_code_diff_with_semantic
 
 _POLICY_VERSION = "mutation_policy_profile.v1"
 _MAX_ROI_HISTORY = 32
@@ -84,6 +85,20 @@ class MutationFitnessEvaluator:
     def evaluate(self, agent_id: str, mutation: Mapping[str, Any], goal_graph: Mapping[str, Any] | None = None) -> Dict[str, Any]:
         attribution = self._attribution_engine.attribute(mutation, goal_graph)
         scored_payload = dict(mutation)
+
+        # PR-PHASE4-02: Semantic enrichment — replace heuristic risk/complexity
+        # with AST-derived scores when python_content is available.
+        _python_content = scored_payload.get("python_content")
+        if _python_content is not None:
+            try:
+                scored_payload["code_diff"] = enrich_code_diff_with_semantic(
+                    scored_payload.get("code_diff") or {},
+                    before_source=None,
+                    after_source=_python_content,
+                )
+                scored_payload["scoring_algorithm_version"] = "semantic_diff_v1.0"
+            except Exception:  # noqa: BLE001 — graceful degradation
+                pass
         scored_payload["goal_graph"] = attribution.to_goal_graph_payload()
         explanation = fitness.explain_score(agent_id, scored_payload)
         base_score = float(explanation.get("score", 0.0) or 0.0)
