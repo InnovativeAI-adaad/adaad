@@ -1,5 +1,48 @@
 # Changelog
 
+## [3.0.0] — 2026-03-06
+
+### Phase 5 — Multi-Repo Federation (SHIPPED)
+
+#### PR-PHASE5-01: HMAC Key Validation (M-05)
+- **New:** `runtime/governance/federation/key_registry.py` enforces minimum-length HMAC key at boot
+- **New:** Boot halts with `FederationKeyError` if key material is absent or below minimum threshold (fail-closed)
+- `tests/governance/federation/test_federation_hmac_key_validation.py` — 100% branch coverage
+
+#### PR-PHASE5-02: Cross-Repo Lineage (`federation_origin`)
+- **New:** `LineageLedgerV2` extended with `federation_origin: FederationOrigin | None` field
+- **New:** Mutations carrying federated origin are traceable to source-repo epoch chain; origin preserved across serialization round-trips
+- `tests/test_lineage_federation_origin.py` — replay-stable verification
+
+#### PR-PHASE5-03: FederationMutationBroker
+- **New:** `runtime/governance/federation/mutation_broker.py` — governed cross-repo mutation propagation
+- **New:** `GovernanceGate.approve_mutation()` required in BOTH source and destination repos before any federated mutation is accepted
+- Fail-closed: any gate failure in either repo rejects the federated proposal unconditionally
+- `tests/test_federation_mutation_broker.py`
+
+#### PR-PHASE5-04: FederatedEvidenceMatrix
+- **New:** `runtime/governance/federation/federated_evidence_matrix.py` — cross-repo determinism verification gate
+- **New:** Release gate output includes `federated_evidence` section; `divergence_count > 0` blocks promotion
+- `tests/test_federated_evidence_matrix.py`
+
+#### PR-PHASE5-05: EvolutionFederationBridge + ProposalTransportAdapter
+- **New:** `runtime/governance/federation/evolution_federation_bridge.py` — lifecycle wiring: broker and evidence matrix initialised and torn down with `EvolutionRuntime`
+- **New:** `runtime/governance/federation/proposal_transport_adapter.py` — flush/receive proposals via `FederationTransport`
+- `tests/test_evolution_federation_bridge.py`, `tests/test_proposal_transport_adapter.py`
+
+#### PR-PHASE5-06: Federated Evidence Bundle + Release Gate
+- **New:** `runtime/evolution/evidence_bundle.py` extended: `federated_evidence` section emitted in release gate output
+- **New:** Release gate fails if `federated_evidence.divergence_count > 0`
+- `tests/test_evidence_bundle_federated.py`
+
+#### PR-PHASE5-07: Federation Determinism CI + HMAC Key Rotation Runbook
+- **New:** `.github/workflows/federation_determinism.yml` — Phase 5 required CI gate enforcing 0-divergence invariant on every PR touching federation runtime, evidence bundle, governance gate, or federation tests
+- **New:** `docs/runbooks/hmac_key_rotation.md` — operational runbook for HMAC key rotation in production federation deployments
+
+### Summary
+Phase 5 completes the multi-repo federation architecture described in the ADAAD roadmap. Every federated mutation now requires dual GovernanceGate approval, carries cross-repo lineage provenance, and is blocked by the FederatedEvidenceMatrix if any determinism divergence is detected. The federation_determinism CI job enforces these invariants on every PR. Phase 6 (Autonomous Roadmap Self-Amendment) is promoted to active.
+
+
 ## [2.3.0] — 2026-03-06
 
 ### Phase 4 — AST-Aware Scoring + Pipeline Intelligence (SHIPPED)

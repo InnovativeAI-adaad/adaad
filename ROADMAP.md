@@ -57,29 +57,42 @@ Replace the heuristic complexity/risk scoring with AST-aware semantic analysis:
 
 ## Phase 5 — Multi-Repo Federation
 
-**Target:** v3.0.0 · Requires: Phase 4 shipped + stable federation key infrastructure
+**Status:** ✅ shipped (v3.0.0)
 
-Extend ADAAD from single-repo mutation to governed cross-repo evolution:
+Extends ADAAD from single-repo mutation to governed cross-repo evolution:
 
-- **Federation broker upgrade** — `FederatedSignalBroker` moves from read-only signal ingestion to governed mutation propagation: accepted mutations in one repo can propose downstream changes in dependent repos.
+- **HMAC Key Validation (M-05)** — `key_registry.py` enforces minimum-length key at boot; fail-closed on absent key material.
 - **Cross-repo lineage** — `LineageLedgerV2` extended with `federation_origin` field; mutations carry their source-repo epoch chain.
-- **Federated evidence matrix** — Release evidence must include cross-repo determinism verification before any federated mutation is accepted.
-- **Constitutional requirement** — A federated mutation requires GovernanceGate approval in BOTH source and destination repos.
+- **FederationMutationBroker** — Governed cross-repo mutation propagation; GovernanceGate approval required in BOTH source and destination repos.
+- **FederatedEvidenceMatrix** — Cross-repo determinism verification gate; `divergence_count == 0` required before promotion.
+- **EvolutionFederationBridge + ProposalTransportAdapter** — Lifecycle wiring for broker and evidence matrix within `EvolutionRuntime`.
+- **Federated evidence bundle** — Release gate output includes `federated_evidence` section; non-zero divergence_count blocks promotion.
+- **Federation Determinism CI** — `.github/workflows/federation_determinism.yml` enforces 0-divergence invariant on every PR touching federation paths.
+- **HMAC key rotation runbook** — `docs/runbooks/hmac_key_rotation.md` operational documentation.
 
 ---
 
 ## Phase 6 — Autonomous Roadmap Self-Amendment
 
-**Target:** v3.1.0 · Pioneering tier
+**Status:** 🟡 active · **Target:** v3.1.0 · Promoted from backlog: 2026-03-06
 
-The mutation engine proposes amendments to this roadmap itself:
+The mutation engine proposes amendments to this roadmap itself. Phase 5 delivery confirms the constitutional and determinism infrastructure required for this capability is now in place.
+
+**Active development targets for v3.1.0:**
 
 - ADAAD runs an evolution epoch against the codebase and roadmap simultaneously.
 - If the Architect agent identifies that Phase N+1 prerequisites are met and Phase N targets were achieved, it proposes a `ROADMAP.md` mutation advancing the milestone.
-- The mutation is governed like any other: GovernanceGate, constitutional compliance, replay proof.
+- The mutation is governed like any other: GovernanceGate, constitutional compliance, replay proof, federated evidence matrix verification.
 - A human governance sign-off is required for any roadmap mutation — the system cannot self-promote without human approval.
+- **Phase 5 prerequisite fulfilled:** FederatedEvidenceMatrix and FederationMutationBroker provide the cross-repo propagation surface needed for roadmap self-amendment to operate safely across a federation.
 
 This closes the loop: ADAAD evolves its own evolution plan, under the same constitutional constraints it applies to every other change.
+
+**Acceptance criteria:**
+- `ROADMAP.md` mutation proposed by ArchitectAgent, governed through full pipeline
+- Replay proof attached to roadmap amendment commit
+- Human sign-off recorded in governance ledger before merge
+- Federation evidence section non-empty for cross-repo roadmap propagation
 
 ---
 
@@ -90,7 +103,8 @@ This closes the loop: ADAAD evolves its own evolution plan, under the same const
 | Phase 3 activation | `prediction_accuracy` | > 0.60 by epoch 20 |
 | Phase 3 activation | Acceptance rate | 0.20–0.60 stable |
 | Phase 4 semantic diff | Scoring determinism | 100% identical on identical AST |
-| Phase 5 federation | Cross-repo divergence | 0 divergences per federated epoch |
+| Phase 5 federation | Cross-repo divergence | 0 divergences per federated epoch ✅ |
+| Phase 6 roadmap self-amendment | ArchitectAgent proposal governed | Human sign-off recorded in ledger |
 | All phases | Evidence matrix | 100% Complete before promotion |
 | All phases | Replay proofs | 0 divergences in CI |
 
