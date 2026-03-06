@@ -1,5 +1,69 @@
 # Changelog
 
+## [2.2.0] — 2026-03-06
+
+### Phase 2 — Governed Explore/Exploit Loop (SHIPPED)
+
+#### PR-PHASE2-01: ExploreExploitController
+- **New:** `runtime/autonomy/explore_exploit_controller.py` — governed mode switching between Explore (breadth-first) and Exploit (depth-first refinement)
+- Constitutional invariant: `MIN_EXPLORE_RATIO = 0.20` — hard floor enforced at every epoch (≥20% epochs must be EXPLORE)
+- `MAX_CONSECUTIVE_EXPLOIT = 4` — automatic EXPLORE reversion after 4 consecutive EXPLOIT epochs
+- Transition priority order: human_override > plateau_detected > consecutive_limit > explore_floor > score_threshold > default_explore
+- Plateau detection wired: `FitnessLandscape.is_plateau()` triggers forced EXPLORE
+- Every mode transition emits a signed `ModeTransitionEvent` to audit ledger
+- State persisted as JSON across epochs; reloads cleanly across restarts
+- Audit writer failure never blocks mode selection (fail-open on audit only)
+- **Tests: 23 ExploreExploitController tests passing**
+
+#### PR-PHASE2-02: HumanApprovalGate
+- **New:** `runtime/governance/human_approval_gate.py` — structural human-in-the-loop approval gate
+- Lifecycle: PENDING → APPROVED/REJECTED → REVOKED (append-only; no in-place mutation)
+- `is_approved()` is the canonical fail-closed gate check: returns False for pending, rejected, revoked, and unknown mutations
+- `batch_approve()` for L2+ per-generation review cadence
+- Every approval/rejection/revocation is signed with SHA-256 digest and appended to immutable audit ledger
+- `audit_trail()` filterable by mutation_id for full provenance
+- Audit writer failure never blocks approval decisions
+- **Tests: 22 HumanApprovalGate tests passing**
+
+#### PR-PHASE2-03: LineageDAG
+- **New:** `runtime/evolution/lineage_dag.py` — multi-generational directed acyclic graph for G0→G7+ lineage tracking
+- `add_node()`: validates parent existence, generation correctness (parent.gen+1), max depth (G20), and promoted⟹approved invariant
+- `promote_node()`: immutable promotion record appended to JSONL; in-memory state updated
+- `get_lineage_chain()`: full ancestor trace from any node back to G0
+- `compare_branches()`: fitness delta + common ancestor + generation distance between two subtrees
+- `generation_summary()`: per-generation statistics (node_count, avg_fitness, top_node, approved/promoted counts)
+- `integrity_check()`: SHA-256 rolling chain verified from genesis to current tip
+- `health_snapshot()`: governance-ready summary including approval_rate, promotion_rate, chain_digest
+- Full persistence: JSONL append-only log with promotion events as distinct record type
+- **Tests: 22 LineageDAG tests passing**
+
+#### PR-PHASE2-04: PhaseTransitionGate
+- **New:** `runtime/governance/phase_transition_gate.py` — governed autonomy level advancement (L0→L4)
+- 5-criteria gate per phase: min_approved_mutations, min_mutation_pass_rate, min_lineage_completeness, audit_chain_intact, min_consecutive_clean_epochs
+- Phase skip enforcement: transitions can only advance by exactly one level
+- `evaluate_gate()`: read-only multi-criteria evaluation with per-criterion `CriterionResult`
+- `attempt_transition()`: commits transition if gate passes; always writes audit record
+- `record_epoch_outcome()`: tracks consecutive clean epochs; dirty epoch resets counter to zero
+- `demote_phase()`: immediate operator rollback to any lower phase, no criteria required
+- `PHASE_GATE_CRITERIA` monotonically increasing requirements (Phase 4 requires 100% lineage completeness)
+- All transitions write signed audit records to append-only JSONL
+- **Tests: 35 PhaseTransitionGate tests passing**
+
+#### PR-PHASE2-05: EvolutionLoop wiring
+- `EvolutionLoop` wired with `ExploreExploitController` — injected via optional `controller` kwarg (test-safe)
+- `EpochResult` extended: `evolution_mode` (str) and `window_explore_ratio` (float) fields added
+- Phase 0b injection in `run_epoch()`: mode selected before proposal phase; committed after landscape recording
+- `controller.commit_epoch()` called after every epoch with actual mode used
+- Backward-compatible: all existing `EpochResult` consumers unaffected (new fields have defaults)
+- **Tests: 5 integration tests passing**
+
+### Summary
+- **102 new tests passing** (23 + 22 + 22 + 35 + 5 = 102) — zero regressions on existing test suite
+- All modules: pure Python stdlib, Android/Pydroid3 compatible
+- All audit writers: fail-open on external ledger failures; core operations never blocked by audit unavailability
+- Constitutional invariant coverage: MIN_EXPLORE_RATIO, MAX_CONSECUTIVE_EXPLOIT, phase-skip prevention, promoted⟹approved, G20 depth cap, 100% lineage requirement at L4
+
+
 ## [2.1.0] — 2026-03-06
 
 ### Phase 3 — Adaptive Penalty Weights (SHIPPED)
