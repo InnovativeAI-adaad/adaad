@@ -1037,6 +1037,28 @@ for endpoint_name in MOCK_ENDPOINTS:
     )
 
 
+@app.get("/api/governance/parallel-gate/probe-library")
+async def parallel_gate_probe_library_route() -> dict[str, Any]:
+    """Return available axis probe definitions for the Aponi parallel gate panel.
+
+    Registered before the catch-all route to ensure correct FastAPI route priority.
+    """
+    from server import _PROBE_LIBRARY  # noqa: PLC0415
+    axes: dict[str, list[dict[str, Any]]] = {}
+    for (axis, rule_id), (ok, reason) in _PROBE_LIBRARY.items():
+        axes.setdefault(axis, []).append(
+            {"rule_id": rule_id, "default_ok": ok, "default_reason": reason}
+        )
+    for axis in axes:
+        axes[axis].sort(key=lambda r: r["rule_id"])
+    return {
+        "ok": True,
+        "axes": dict(sorted(axes.items())),
+        "total_probes": len(_PROBE_LIBRARY),
+        "gate_version": "v1.0.0",
+    }
+
+
 @app.get("/", include_in_schema=False)
 def serve_dashboard_root():
     return serve_dashboard("")
@@ -1093,3 +1115,145 @@ if __name__ == "__main__":
         raise SystemExit("uvicorn is required. Install with: pip install -r requirements.server.txt") from exc
 
     uvicorn.run("server:app", host=args.host, port=args.port, reload=args.reload)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Parallel Governance Gate endpoints — v0.66
+# ─────────────────────────────────────────────────────────────────────────────
+
+_PROBE_LIBRARY: dict[tuple[str, str], tuple[bool, str]] = {
+    ("entropy",       "budget_ok"):          (True,  "within_budget"),
+    ("entropy",       "source_clean"):       (True,  "no_nondeterministic_sources"),
+    ("entropy",       "budget_exceeded"):    (False, "entropy_budget_exceeded"),
+    ("entropy",       "nondeterministic"):   (False, "nondeterministic_source_detected"),
+    ("constitution",  "tier_ok"):            (True,  "tier_approved"),
+    ("constitution",  "hash_valid"):         (True,  "policy_hash_verified"),
+    ("constitution",  "tier_violated"):      (False, "tier_violation"),
+    ("constitution",  "hash_mismatch"):      (False, "policy_hash_mismatch"),
+    ("founders_law",  "invariant_ok"):       (True,  "founders_invariant_satisfied"),
+    ("founders_law",  "invariant_violated"): (False, "founders_invariant_violated"),
+    ("lineage",       "chain_intact"):       (True,  "lineage_chain_verified"),
+    ("lineage",       "digest_match"):       (True,  "epoch_digest_matches_ledger"),
+    ("lineage",       "chain_broken"):       (False, "lineage_chain_broken"),
+    ("lineage",       "digest_mismatch"):    (False, "epoch_digest_mismatch"),
+    ("sandbox",       "preflight_ok"):       (True,  "sandbox_preflight_passed"),
+    ("sandbox",       "isolation_ok"):       (True,  "isolation_verified"),
+    ("sandbox",       "preflight_failed"):   (False, "sandbox_preflight_failed"),
+    ("sandbox",       "isolation_breach"):   (False, "isolation_breach_detected"),
+    ("replay",        "baseline_match"):     (True,  "replay_baseline_matches"),
+    ("replay",        "baseline_mismatch"):  (False, "replay_baseline_mismatch"),
+    ("replay",        "determinism_ok"):     (True,  "replay_determinism_verified"),
+}
+
+
+class ParallelAxisSpecRequest(BaseModel):
+    axis: str
+    rule_id: str
+    timeout_seconds: float = 5.0
+
+
+class ParallelGateRequest(BaseModel):
+    mutation_id: str
+    trust_mode: str = "standard"
+    human_override: bool = False
+    axis_specs: list[ParallelAxisSpecRequest]
+    max_workers: int = 8
+
+
+@app.post("/api/governance/parallel-gate/evaluate")
+async def parallel_gate_evaluate(req: ParallelGateRequest) -> dict[str, Any]:
+    """Run a parallel governance gate evaluation and return the full GateDecision.
+
+    Axis probes are resolved from the built-in deterministic probe library
+    keyed by (axis, rule_id). Unknown combinations default to ok=True.
+    Axis results are annotated with per-axis timing for the Aponi swimlane UI.
+    """
+    import time as _time
+
+    try:
+        from runtime.governance.parallel_gate import (
+            ParallelGovernanceGate,
+            ParallelAxisSpec,
+            PARALLEL_GATE_VERSION,
+        )
+        from security.ledger import journal as _journal
+
+        if not req.axis_specs:
+            raise HTTPException(status_code=422, detail="axis_specs must not be empty")
+        if len(req.axis_specs) > 20:
+            raise HTTPException(status_code=422, detail="axis_specs exceeds maximum of 20")
+
+        timing_records: dict[str, float] = {}
+
+        def _make_probe(axis: str, rule_id: str, result: tuple[bool, str]):
+            def _probe() -> tuple[bool, str]:
+                t0 = _time.perf_counter()
+                out = result
+                timing_records[f"{axis}:{rule_id}"] = round(
+                    (_time.perf_counter() - t0) * 1000, 3
+                )
+                return out
+            return _probe
+
+        specs = [
+            ParallelAxisSpec(
+                axis=s.axis,
+                rule_id=s.rule_id,
+                probe=_make_probe(
+                    s.axis, s.rule_id,
+                    _PROBE_LIBRARY.get((s.axis, s.rule_id), (True, "probe_not_found_default_pass"))
+                ),
+                timeout_seconds=s.timeout_seconds,
+            )
+            for s in req.axis_specs
+        ]
+
+        gate = ParallelGovernanceGate(
+            max_workers=min(req.max_workers, 20),
+            tx_writer=_journal.append_tx,
+        )
+
+        wall_t0 = _time.perf_counter()
+        decision = gate.approve_mutation_parallel(
+            mutation_id=req.mutation_id,
+            trust_mode=req.trust_mode,
+            axis_specs=specs,
+            human_override=req.human_override,
+        )
+        wall_elapsed_ms = round((_time.perf_counter() - wall_t0) * 1000, 2)
+
+        payload = decision.to_payload()
+        for ar in payload.get("axis_results", []):
+            ar["duration_ms"] = timing_records.get(f"{ar['axis']}:{ar['rule_id']}", 0.0)
+
+        return {
+            "ok": True,
+            "decision": payload,
+            "wall_elapsed_ms": wall_elapsed_ms,
+            "gate_version": PARALLEL_GATE_VERSION,
+            "max_workers": min(req.max_workers, 20),
+            "axis_count": len(specs),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"parallel_gate_error: {exc}") from exc
+
+
+@app.get("/api/governance/parallel-gate/probe-library")
+async def parallel_gate_probe_library() -> dict[str, Any]:
+    """Return available axis probe definitions for the Aponi axis builder."""
+    axes: dict[str, list[dict[str, Any]]] = {}
+    for (axis, rule_id), (ok, reason) in _PROBE_LIBRARY.items():
+        axes.setdefault(axis, []).append(
+            {"rule_id": rule_id, "default_ok": ok, "default_reason": reason}
+        )
+    for axis in axes:
+        axes[axis].sort(key=lambda r: r["rule_id"])
+    return {
+        "ok": True,
+        "axes": dict(sorted(axes.items())),
+        "total_probes": len(_PROBE_LIBRARY),
+        "gate_version": "v1.0.0",
+    }
