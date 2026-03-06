@@ -1,5 +1,59 @@
 # Changelog
 
+## [3.1.0-dev] — 2026-03-06 · Phase 6 + Free Android Distribution
+
+### Phase 6 — Autonomous Roadmap Self-Amendment (ACTIVE · target v3.1.0)
+
+The mutation engine can now propose, score, and submit governed amendments to
+ROADMAP.md itself. All proposals are constitutional-gated (authority_level =
+`governor-review`), require ≥2 human governor approvals, and are deterministically
+replayable via `verify_replay()`.
+
+**New modules:**
+
+| Module | Purpose |
+|--------|---------|
+| `runtime/autonomy/roadmap_amendment_engine.py` | `RoadmapAmendmentEngine` — propose, approve, reject, replay-verify roadmap amendments |
+| `runtime/autonomy/proposal_diff_renderer.py` | `render_proposal_diff()` — Markdown diff output for Aponi IDE and PR descriptions |
+| `tests/autonomy/test_roadmap_amendment_engine.py` | 22 acceptance-criteria tests covering scoring, authority invariants, determinism, and terminal states |
+
+**Authority invariants:**
+- `authority_level` is hardcoded to `"governor-review"` and cannot be injected by any agent
+- No change to ROADMAP.md occurs without 2 governor approvals + human-approval gate sign-off
+- Every proposal carries a `lineage_chain_hash` (SHA-256 of prior_roadmap_hash + content_hash)
+- `DeterminismViolation` raised on replay hash divergence — proposal halts, no commit
+
+**Acceptance criteria shipped:**
+- `diff_score ∈ [0.0, 1.0]` enforced on every proposal
+- `GovernanceViolation` on short rationale (< 10 words) or invalid milestone status
+- Double-approval by same governor rejected
+- Terminal status (APPROVED/REJECTED) blocks further transitions
+- JSON round-trip deterministic across 100% of test scenarios
+
+### Free Android Distribution (v3.1.0)
+
+ADAAD is now publicly launchable on Android at **zero cost** via three parallel tracks:
+
+| Track | Channel | Latency |
+|-------|---------|---------|
+| 1 | GitHub Releases + Obtainium | Immediate on `free-v*` tag |
+| 2A | F-Droid Official Repository | ~1–4 week review |
+| 2B | Self-Hosted F-Droid (GitHub Pages) | Minutes |
+| 3 | GitHub Pages PWA | Minutes (CI) |
+
+**New files:**
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/android-free-release.yml` | Free 5-job CI: governance gate → signed APK → GitHub Release → F-Droid metadata → PWA deploy |
+| `android/fdroid/com.innovativeai.adaad.yml` | F-Droid application metadata (categories, build spec, reproducibility config) |
+| `android/obtainium.json` | Obtainium import config for auto-update from GitHub Releases |
+| `DISTRIBUTION.md` | Full free launch playbook with day-0 checklist, cost matrix, and security notes |
+
+**Total launch cost: $0**
+
+---
+
 ## [3.0.0] — 2026-03-06
 
 ### Phase 5 — Multi-Repo Federation (SHIPPED)

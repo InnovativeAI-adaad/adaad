@@ -1,0 +1,109 @@
+# F-Droid Application Metadata
+# com.innovativeai.adaad
+# https://f-droid.org/en/docs/Build_Metadata_Reference/
+# ─────────────────────────────────────────────────────────────────────────────
+# To submit to the official F-Droid repo:
+#   1. Fork https://gitlab.com/fdroid/fdroiddata
+#   2. Copy this file to metadata/com.innovativeai.adaad.yml
+#   3. Open a merge request — F-Droid team reviews within 1–4 weeks
+#
+# To serve your own F-Droid repo (immediate, zero-wait):
+#   fdroidserver init  →  fdroidserver update  →  host the output directory
+#   (see DISTRIBUTION.md — Self-Hosted F-Droid section)
+# ─────────────────────────────────────────────────────────────────────────────
+
+Categories:
+  - Development Tools
+  - Science & Education
+
+License: Apache-2.0
+
+AuthorName: InnovativeAI LLC
+AuthorEmail: governance@innovativeai.dev
+AuthorWebSite: https://innovativeai.dev/adaad
+
+WebSite: https://innovativeai.dev/adaad
+SourceCode: https://github.com/InnovativeAI-adaad/ADAAD
+IssueTracker: https://github.com/InnovativeAI-adaad/ADAAD/issues
+Changelog: https://github.com/InnovativeAI-adaad/ADAAD/blob/main/CHANGELOG.md
+
+# Summary (≤80 chars)
+Summary: Constitutional governance for autonomous code evolution.
+
+# Full description (Markdown supported, no HTML)
+Description: |
+  ADAAD — Autonomous Development & Adaptation Architecture — is an
+  open-source system for governing autonomous AI code mutations from your
+  Android device.
+
+  Every code change proposed by an AI agent is evaluated against a
+  constitutional rule system before it can be executed. Decisions are
+  stored in an append-only, SHA-256 chain-hashed governance ledger that
+  is deterministically replayable and audit-exportable.
+
+  **What it does:**
+
+  * Governance Dashboard — real-time constitutional health, active epochs,
+    pending proposals, and live chain hash integrity display
+  * Constitutional Rule Browser — all 13 rules with tier classification
+    (Blocking / Post-Approval / Advisory) and plain-language explanations
+  * Proposal Review — approve, reject, or escalate mutation proposals with
+    full constitutional evaluation results shown inline
+  * Governance Ledger — append-only, chain-hashed event log with evidence
+    bundle export directly from your phone
+  * Federation Monitor — multi-repo HMAC key health, dual-gate status,
+    and key rotation alerts
+
+  **Security:**
+
+  * Governance signing keys in Android Keystore (biometric-gated)
+  * Ledger never backed up to Google Drive — security by design
+  * All API communication over TLS 1.2+
+  * Fail-closed boot: app refuses to start with invalid governance config
+  * No analytics, no advertising, no tracking
+
+  Requires an active ADAAD workspace (free Community tier available).
+
+  Source: github.com/InnovativeAI-adaad/ADAAD
+
+RepoType: git
+Repo: https://github.com/InnovativeAI-adaad/ADAAD
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Build specification
+# ─────────────────────────────────────────────────────────────────────────────
+Builds:
+  - versionName: '3.1.0'
+    versionCode: 31000
+    commit: free-v3.1.0
+    subdir: android
+    sudo:
+      - apt-get update
+      - apt-get install -y openjdk-17-jdk-headless
+    gradle:
+      - community
+    # F-Droid reproducible build: remove signing config, F-Droid signs with its key
+    # Build command: ./gradlew assembleCommunityRelease
+    prebuild:
+      - sed -i 's/signingConfig.*signingConfigs\.release//' app/build.gradle
+    # Disable network access during F-Droid build (reproducibility requirement)
+    scandelete:
+      - keystore/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Metadata
+# ─────────────────────────────────────────────────────────────────────────────
+AutoUpdateMode: Version free-v%v
+UpdateCheckMode: Tags ^free-v
+
+CurrentVersion: '3.1.0'
+CurrentVersionCode: 31000
+
+# Anti-features (none — no tracking, no ads, no non-free dependencies)
+# AntiFeatures:
+
+# Required features
+RequiresRoot: false
+
+# Minimum Android: 8.0 (API 26)
+# Listed in build.gradle: minSdk 26

@@ -6,10 +6,11 @@
   <a href="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml">
     <img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg"/>
   </a>
-  <img alt="Version" src="https://img.shields.io/badge/version-3.0.0-00d4ff?style=flat-square&labelColor=060d14"/>
+  <img alt="Version" src="https://img.shields.io/badge/version-3.1.0--dev-00d4ff?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11+-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-pydroid3-f59e0b?style=flat-square&labelColor=060d14"/>
+  <img alt="Free APK" src="https://img.shields.io/github/v/release/InnovativeAI-adaad/ADAAD?label=APK&color=3ddc84&style=flat-square&labelColor=060d14"/>
 </p>
 
 <!-- ADAAD_VERSION_INFOBOX:START -->
@@ -189,7 +190,26 @@ Multi-repo federation is active as of v3.0.0. ADAAD now governs cross-repo mutat
 - `federation_origin` field in `LineageLedgerV2` provides full cross-repo lineage traceability
 - HMAC key material validated at boot; absent key → fail-closed
 
-Phase 6 (Autonomous Roadmap Self-Amendment) is now active. Target: v3.1.0.
+**Phase 6 (Autonomous Roadmap Self-Amendment) is now active. Target: v3.1.0.**
+
+`RoadmapAmendmentEngine` — shipped in v3.1.0-dev — enables the mutation pipeline to propose, score, and submit governed amendments to this roadmap. All proposals are constitutional-gated (`authority_level = governor-review`), require ≥2 human governor approvals, and are deterministically replayable.
+
+---
+
+## 📲 Get the Android App — Free
+
+ADAAD is publicly available on Android at zero cost. No Play Store account required.
+
+| Method | Instructions |
+|--------|-------------|
+| **Direct APK** | [Releases page](../../releases) → download `adaad-community-*.apk` → sideload |
+| **Obtainium** (auto-updates) | Add `https://github.com/InnovativeAI-adaad/ADAAD` in [Obtainium](https://github.com/ImranR98/Obtainium) |
+| **F-Droid** (in review) | Submission open — see [DISTRIBUTION.md](DISTRIBUTION.md) for self-hosted repo instructions |
+| **PWA** (web app) | Visit `https://InnovativeAI-adaad.github.io/ADAAD/` in Android Chrome → Add to Home Screen |
+
+See [DISTRIBUTION.md](DISTRIBUTION.md) for the full free launch playbook, day-0 checklist, and cost matrix ($0 total).
+
+
 
 UCB1 bandit agent selection (introduced v2.1.0) remains active alongside federation:
 

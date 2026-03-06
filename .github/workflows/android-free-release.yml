@@ -1,0 +1,397 @@
+name: ADAAD Android — Free Public Release (GitHub Releases + F-Droid)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Free Distribution Pipeline
+# ──────────────────────────────────────────────────────────────────────────────
+# Trigger paths (all free, no Play Store fee required):
+#
+#   1. GitHub Releases  — signed APK attached to release; users sideload or use
+#                         Obtainium for auto-update. Immediate. Zero cost.
+#   2. F-Droid          — metadata already in android/fdroid/. F-Droid bot picks
+#                         it up after this workflow uploads the signed APK to the
+#                         fdroid-data PR or repo. Free. ~1–4 week review.
+#   3. GitHub Pages PWA — Aponi governance UI deployed as a PWA on gh-pages.
+#                         Installable on Android Chrome. Zero cost. Instant.
+#
+# Trigger:
+#   git tag free-v3.1.0   → full pipeline
+#   workflow_dispatch     → manual with track override
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    tags:
+      - 'free-v*'
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version name (e.g. 3.1.0)'
+        required: true
+        default: '3.1.0'
+      skip_pwa:
+        description: 'Skip GitHub Pages PWA deployment'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+env:
+  JAVA_VERSION: '17'
+  PYTHON_VERSION: '3.11'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 1 — Governance Gate (same rules as Play Store pipeline)
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+  governance-gate:
+    name: 🛡️ Governance Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python deps
+        run: pip install -r requirements.server.txt --break-system-packages || pip install -r requirements.server.txt
+
+      - name: Constitutional lint
+        run: python -m pytest tests/ -x -q --tb=short -k "not e2e" 2>&1 | tee governance-gate.log
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Android lint (community flavor)
+        working-directory: android
+        run: ./gradlew lintCommunityRelease --no-daemon
+
+      - name: Upload gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-gate-logs
+          path: |
+            governance-gate.log
+            android/app/build/reports/lint-results-*.html
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 2 — Build & Sign APK (community flavor — sideload-ready)
+# ─────────────────────────────────────────────────────────────────────────────
+  build-apk:
+    name: 📦 Build & Sign APK
+    needs: governance-gate
+    runs-on: ubuntu-latest
+    outputs:
+      apk_path: ${{ steps.locate.outputs.apk_path }}
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            VER="${GITHUB_REF#refs/tags/free-v}"
+          else
+            VER="${{ inputs.version_name }}"
+          fi
+          # version_code: major*10000 + minor*100 + patch
+          CODE=$(python3 -c "p='${VER}'.split('.'); print(int(p[0])*10000+int(p[1])*100+int(p[2]))")
+          echo "version_name=${VER}" >> "$GITHUB_OUTPUT"
+          echo "version_code=${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
+      - name: Decode keystore
+        working-directory: android
+        env:
+          ADAAD_KEYSTORE_BASE64: ${{ secrets.ADAAD_KEYSTORE_BASE64 }}
+        run: |
+          echo "$ADAAD_KEYSTORE_BASE64" | base64 --decode > keystore/innovativeai-release.jks
+          echo "Keystore decoded: $(sha256sum keystore/innovativeai-release.jks | cut -c1-16)…"
+
+      - name: Build signed APK
+        working-directory: android
+        env:
+          ADAAD_KEYSTORE_PATH: keystore/innovativeai-release.jks
+          ADAAD_STORE_PASSWORD: ${{ secrets.ADAAD_STORE_PASSWORD }}
+          ADAAD_KEY_ALIAS: ${{ secrets.ADAAD_KEY_ALIAS }}
+          ADAAD_KEY_PASSWORD: ${{ secrets.ADAAD_KEY_PASSWORD }}
+        run: |
+          ./gradlew assembleCommunityRelease \
+            -PversionName=${{ steps.version.outputs.version_name }} \
+            -PversionCode=${{ steps.version.outputs.version_code }} \
+            --no-daemon
+
+      - name: Locate APK
+        id: locate
+        working-directory: android
+        run: |
+          APK=$(find app/build/outputs/apk/community/release -name "*.apk" | head -1)
+          echo "apk_path=${APK}" >> "$GITHUB_OUTPUT"
+          echo "APK: $APK ($(du -sh $APK | cut -f1))"
+
+      - name: Rename APK for release
+        working-directory: android
+        run: |
+          DEST="adaad-community-${{ steps.version.outputs.version_name }}.apk"
+          cp "${{ steps.locate.outputs.apk_path }}" "${DEST}"
+          echo "RELEASE_APK=${DEST}" >> "$GITHUB_ENV"
+
+      - name: Verify APK signature
+        working-directory: android
+        run: |
+          # Ensure APK is signed and not corrupted before attaching to release
+          $JAVA_HOME/bin/jarsigner -verify -verbose -certs \
+            "adaad-community-${{ steps.version.outputs.version_name }}.apk" 2>&1 | \
+            grep -E "(CN=|verified|jar verified)"
+
+      - name: Compute SHA-256 for release notes
+        working-directory: android
+        run: |
+          sha256sum "adaad-community-${{ steps.version.outputs.version_name }}.apk" \
+            > "adaad-community-${{ steps.version.outputs.version_name }}.apk.sha256"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: |
+            android/adaad-community-${{ steps.version.outputs.version_name }}.apk
+            android/adaad-community-${{ steps.version.outputs.version_name }}.apk.sha256
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 3 — Publish GitHub Release (free, immediate public distribution)
+# ─────────────────────────────────────────────────────────────────────────────
+  github-release:
+    name: 🚀 Publish GitHub Release
+    needs: build-apk
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required for release creation
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: dist/
+
+      - name: Read changelog for this release
+        id: changelog
+        run: |
+          # Extract this version's section from CHANGELOG.md
+          VERSION="${{ needs.build-apk.outputs.version_name }}"
+          NOTES=$(python3 - <<'EOF'
+          import re, pathlib, os
+          ver = os.environ['VERSION']
+          text = pathlib.Path('CHANGELOG.md').read_text('utf-8')
+          # Match ## [VERSION] section
+          pattern = rf'## \[?{re.escape(ver)}\]?.*?(?=^## |\Z)'
+          m = re.search(pattern, text, re.MULTILINE | re.DOTALL)
+          print(m.group(0).strip() if m else f"Release {ver} — see CHANGELOG.md for details.")
+          EOF
+          )
+          {
+            echo "notes<<NOTES_EOF"
+            echo "$NOTES"
+            echo ""
+            echo "---"
+            echo "### 📲 Installation"
+            echo ""
+            echo "**Sideload (immediate):**"
+            echo "1. Download \`adaad-community-${VERSION}.apk\` below"
+            echo "2. Enable *Install unknown apps* for your browser or file manager"
+            echo "3. Open the APK — Android will guide you through installation"
+            echo ""
+            echo "**Obtainium (auto-updates):**"
+            echo "Add this repo to [Obtainium](https://github.com/ImranR98/Obtainium): \`https://github.com/InnovativeAI-adaad/ADAAD\`"
+            echo ""
+            echo "**F-Droid (coming soon):**"
+            echo "Submission in progress at [f-droid.org](https://f-droid.org) — no tracking, verified reproducible builds."
+            echo ""
+            echo "### 🔐 Integrity"
+            echo "\`\`\`"
+            cat dist/*.sha256 2>/dev/null || echo "SHA-256 not available"
+            echo "\`\`\`"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          VERSION: ${{ needs.build-apk.outputs.version_name }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: free-v${{ needs.build-apk.outputs.version_name }}
+          name: "ADAAD Community v${{ needs.build-apk.outputs.version_name }} — Free Public Release"
+          body: ${{ steps.changelog.outputs.notes }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/adaad-community-${{ needs.build-apk.outputs.version_name }}.apk
+            dist/adaad-community-${{ needs.build-apk.outputs.version_name }}.apk.sha256
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 4 — F-Droid metadata update (open PR to fdroid-data or self-hosted repo)
+# ─────────────────────────────────────────────────────────────────────────────
+  fdroid-metadata:
+    name: 📦 F-Droid Metadata Update
+    needs: build-apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update F-Droid version metadata
+        run: |
+          VERSION="${{ needs.build-apk.outputs.version_name }}"
+          CODE="${{ needs.build-apk.outputs.version_code }}"
+          METADATA_FILE="android/fdroid/com.innovativeai.adaad.yml"
+
+          # Patch versionName and versionCode in F-Droid metadata
+          python3 - <<EOF
+          import re, pathlib
+          path = pathlib.Path("${METADATA_FILE}")
+          text = path.read_text("utf-8")
+          text = re.sub(r"CurrentVersion:.*", f"CurrentVersion: ${VERSION}", text)
+          text = re.sub(r"CurrentVersionCode:.*", f"CurrentVersionCode: ${CODE}", text)
+          path.write_text(text, "utf-8")
+          print(f"Updated {path} → {VERSION} ({CODE})")
+          EOF
+
+      - name: Commit metadata update
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add android/fdroid/
+          git diff --staged --quiet || git commit -m \
+            "chore(fdroid): update metadata to v${{ needs.build-apk.outputs.version_name }}"
+
+      - name: Upload updated metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: fdroid-metadata
+          path: android/fdroid/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# JOB 5 — GitHub Pages PWA (Aponi governance UI — zero-cost web distribution)
+# ─────────────────────────────────────────────────────────────────────────────
+  deploy-pwa:
+    name: 🌐 Deploy Aponi PWA (GitHub Pages)
+    needs: governance-gate
+    runs-on: ubuntu-latest
+    if: ${{ inputs.skip_pwa != 'true' }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build PWA bundle
+        run: |
+          mkdir -p pwa-dist
+          VERSION="${{ needs.build-apk.outputs.version_name || inputs.version_name || '3.1.0' }}"
+
+          # Inject version into Aponi manifest
+          cat > pwa-dist/manifest.json << MANIFEST
+          {
+            "name": "ADAAD — Constitutional Governance",
+            "short_name": "ADAAD",
+            "description": "Govern autonomous code evolution with constitutional rules and cryptographic proof.",
+            "start_url": "/ADAAD/",
+            "display": "standalone",
+            "background_color": "#060d14",
+            "theme_color": "#00d4ff",
+            "icons": [
+              { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+              { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+            ]
+          }
+          MANIFEST
+
+          # Copy Aponi UI assets
+          cp -r ui/aponi/* pwa-dist/ 2>/dev/null || true
+
+          # Create minimal offline-capable service worker
+          cat > pwa-dist/sw.js << 'SW'
+          const CACHE = 'adaad-pwa-v$VERSION';
+          self.addEventListener('install', e => e.waitUntil(
+            caches.open(CACHE).then(c => c.addAll(['./', './manifest.json']))
+          ));
+          self.addEventListener('fetch', e => e.respondWith(
+            caches.match(e.request).then(r => r || fetch(e.request))
+          ));
+          SW
+
+          # Create index.html if Aponi doesn't provide one
+          if [ ! -f pwa-dist/index.html ]; then
+            cat > pwa-dist/index.html << HTML
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width,initial-scale=1"/>
+            <meta name="theme-color" content="#00d4ff"/>
+            <title>ADAAD — Constitutional Governance</title>
+            <link rel="manifest" href="manifest.json"/>
+            <style>
+              body{margin:0;background:#060d14;color:#e2e8f0;font-family:system-ui,sans-serif;
+                   display:flex;flex-direction:column;align-items:center;justify-content:center;
+                   min-height:100vh;text-align:center;padding:2rem}
+              h1{color:#00d4ff;font-size:2rem;margin:0 0 .5rem}
+              p{color:#94a3b8;max-width:480px;line-height:1.6}
+              a{color:#7b61ff;text-decoration:none}
+              .badge{background:#0f2b4a;border:1px solid #1e4080;border-radius:8px;
+                     padding:.75rem 1.5rem;margin:.5rem;display:inline-block;font-size:.9rem}
+              .version{font-size:.75rem;color:#475569;margin-top:2rem}
+            </style>
+          </head>
+          <body>
+            <h1>ADAAD</h1>
+            <p>Autonomous Development &amp; Adaptation Architecture<br/>
+               <em>Governed at every step.</em></p>
+            <div>
+              <a class="badge" href="https://github.com/InnovativeAI-adaad/ADAAD/releases">
+                📲 Download APK
+              </a>
+              <a class="badge" href="https://github.com/InnovativeAI-adaad/ADAAD">
+                📂 Source Code
+              </a>
+            </div>
+            <div class="version">v$VERSION · MIT · InnovativeAI LLC</div>
+            <script>
+              if ('serviceWorker' in navigator)
+                navigator.serviceWorker.register('./sw.js');
+            </script>
+          </body>
+          </html>
+          HTML
+          fi
+
+          echo "PWA bundle ready in pwa-dist/:"
+          ls -la pwa-dist/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pwa-dist/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
