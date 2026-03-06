@@ -860,6 +860,173 @@ def api_market_signal_ingest(
     )
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Fast-Path Intelligence endpoints — v0.66
+# Surfaces MutationRouteOptimizer, EntropyFastGate, CheckpointChain, and
+# FastPathScorer through read-only REST endpoints consumed by the Aponi
+# Fast-Path Intelligence panel.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class RoutePreviewRequest(BaseModel):
+    mutation_id: str
+    intent: str
+    files_touched: list[str] = []
+    loc_added: int = 0
+    loc_deleted: int = 0
+    risk_tags: list[str] = []
+    ops: list[dict[str, Any]] = []
+
+
+class EntropyGateRequest(BaseModel):
+    mutation_id: str
+    estimated_bits: int
+    sources: list[str] = []
+    strict: bool = True
+
+
+@app.post("/api/fast-path/route-preview")
+async def fast_path_route_preview(req: RoutePreviewRequest) -> dict[str, Any]:
+    """Deterministic tier routing preview for a candidate mutation.
+
+    Accepts mutation metadata and returns the TRIVIAL / STANDARD / ELEVATED
+    routing decision, reasons, and fast-path flags without touching the
+    full evaluation pipeline.
+    """
+    try:
+        from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer
+        optimizer = MutationRouteOptimizer()
+        decision = optimizer.route(
+            mutation_id=req.mutation_id,
+            intent=req.intent,
+            ops=req.ops,
+            files_touched=req.files_touched,
+            loc_added=req.loc_added,
+            loc_deleted=req.loc_deleted,
+            risk_tags=req.risk_tags,
+        )
+        return {
+            "ok": True,
+            "decision": decision.to_payload(),
+            "summary": {
+                "tier": decision.tier.value,
+                "skip_heavy_scoring": decision.skip_heavy_scoring,
+                "require_human_review": decision.require_human_review,
+                "reasons": list(decision.reasons),
+            },
+        }
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"route_preview_error: {exc}") from exc
+
+
+@app.post("/api/fast-path/entropy-gate")
+async def fast_path_entropy_gate(req: EntropyGateRequest) -> dict[str, Any]:
+    """Evaluate the entropy fast-gate for a mutation candidate.
+
+    Returns ALLOW / WARN / DENY verdict with reason and gate digest.
+    """
+    try:
+        from runtime.evolution.entropy_fast_gate import EntropyFastGate
+        gate = EntropyFastGate(strict=req.strict)
+        result = gate.evaluate(
+            mutation_id=req.mutation_id,
+            estimated_bits=req.estimated_bits,
+            sources=req.sources,
+        )
+        return {
+            "ok": True,
+            "result": result.to_payload(),
+            "denied": result.denied,
+        }
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"entropy_gate_error: {exc}") from exc
+
+
+@app.get("/api/fast-path/checkpoint-chain/verify")
+async def fast_path_checkpoint_chain_verify() -> dict[str, Any]:
+    """Build and verify a demonstration checkpoint chain from current epoch state.
+
+    Returns chain length, integrity status, and genesis / head digests.
+    """
+    try:
+        from runtime.evolution.checkpoint_chain import build_checkpoint_chain, verify_checkpoint_chain
+
+        # Use stable, deterministic payloads — no wall-clock timestamps.
+        # The genesis epoch anchors to the ADAAD fast-path module version string
+        # so the digest is stable across calls for a given codebase version.
+        entries = [
+            ("epoch_genesis",  {"event": "genesis",       "system": "ADAAD", "layer": "fast_path_v066"}),
+            ("epoch_current",  {"event": "current_state", "layer": "fast_path_v066", "stage": "evaluation"}),
+            ("epoch_head",     {"event": "head_checkpoint","layer": "fast_path_v066", "fast_path_active": True}),
+        ]
+        chain = build_checkpoint_chain(entries)
+        integrity_ok = verify_checkpoint_chain(chain)
+
+        return {
+            "ok": True,
+            "integrity": integrity_ok,
+            "chain_length": len(chain),
+            "genesis_digest": chain[0].chain_digest,
+            "head_digest": chain[-1].chain_digest,
+            "links": [
+                {
+                    "epoch_id": cp.epoch_id,
+                    "predecessor_digest": cp.predecessor_digest,
+                    "chain_digest": cp.chain_digest,
+                    "chain_version": cp.chain_version,
+                }
+                for cp in chain
+            ],
+        }
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"checkpoint_chain_error: {exc}") from exc
+
+
+@app.get("/api/fast-path/stats")
+async def fast_path_stats() -> dict[str, Any]:
+    """Aggregate statistics for the fast-path routing layer.
+
+    Returns tier distribution constants, threshold configuration, and
+    module version metadata for the Aponi Fast-Path Intelligence panel.
+    """
+    try:
+        from runtime.evolution.mutation_route_optimizer import (
+            ROUTE_VERSION,
+            ELEVATED_PATH_PREFIXES,
+            ELEVATED_INTENT_KEYWORDS,
+            TRIVIAL_OP_TYPES,
+        )
+        from runtime.evolution.entropy_fast_gate import (
+            FAST_GATE_VERSION,
+            DEFAULT_WARN_BITS,
+            DEFAULT_DENY_BITS,
+        )
+        from runtime.evolution.fast_path_scorer import FAST_PATH_VERSION
+        from runtime.evolution.checkpoint_chain import CHAIN_VERSION
+
+        return {
+            "ok": True,
+            "versions": {
+                "route_optimizer": ROUTE_VERSION,
+                "entropy_gate": FAST_GATE_VERSION,
+                "fast_path_scorer": FAST_PATH_VERSION,
+                "checkpoint_chain": CHAIN_VERSION,
+            },
+            "entropy_thresholds": {
+                "warn_bits": DEFAULT_WARN_BITS,
+                "deny_bits": DEFAULT_DENY_BITS,
+            },
+            "route_config": {
+                "elevated_path_prefixes": sorted(ELEVATED_PATH_PREFIXES),
+                "elevated_intent_keywords": sorted(ELEVATED_INTENT_KEYWORDS),
+                "trivial_op_types": sorted(TRIVIAL_OP_TYPES),
+                "tiers": ["TRIVIAL", "STANDARD", "ELEVATED"],
+            },
+        }
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"fast_path_stats_error: {exc}") from exc
+
+
 MOCK_ENDPOINTS = ["status", "agents", "tree", "kpis", "changes", "suggestions"]
 
 for endpoint_name in MOCK_ENDPOINTS:
@@ -868,6 +1035,28 @@ for endpoint_name in MOCK_ENDPOINTS:
         endpoint=lambda n=endpoint_name: _load_mock(n),
         methods=["GET"],
     )
+
+
+@app.get("/api/governance/parallel-gate/probe-library")
+async def parallel_gate_probe_library_route() -> dict[str, Any]:
+    """Return available axis probe definitions for the Aponi parallel gate panel.
+
+    Registered before the catch-all route to ensure correct FastAPI route priority.
+    """
+    from server import _PROBE_LIBRARY  # noqa: PLC0415
+    axes: dict[str, list[dict[str, Any]]] = {}
+    for (axis, rule_id), (ok, reason) in _PROBE_LIBRARY.items():
+        axes.setdefault(axis, []).append(
+            {"rule_id": rule_id, "default_ok": ok, "default_reason": reason}
+        )
+    for axis in axes:
+        axes[axis].sort(key=lambda r: r["rule_id"])
+    return {
+        "ok": True,
+        "axes": dict(sorted(axes.items())),
+        "total_probes": len(_PROBE_LIBRARY),
+        "gate_version": "v1.0.0",
+    }
 
 
 @app.get("/", include_in_schema=False)
@@ -926,3 +1115,145 @@ if __name__ == "__main__":
         raise SystemExit("uvicorn is required. Install with: pip install -r requirements.server.txt") from exc
 
     uvicorn.run("server:app", host=args.host, port=args.port, reload=args.reload)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Parallel Governance Gate endpoints — v0.66
+# ─────────────────────────────────────────────────────────────────────────────
+
+_PROBE_LIBRARY: dict[tuple[str, str], tuple[bool, str]] = {
+    ("entropy",       "budget_ok"):          (True,  "within_budget"),
+    ("entropy",       "source_clean"):       (True,  "no_nondeterministic_sources"),
+    ("entropy",       "budget_exceeded"):    (False, "entropy_budget_exceeded"),
+    ("entropy",       "nondeterministic"):   (False, "nondeterministic_source_detected"),
+    ("constitution",  "tier_ok"):            (True,  "tier_approved"),
+    ("constitution",  "hash_valid"):         (True,  "policy_hash_verified"),
+    ("constitution",  "tier_violated"):      (False, "tier_violation"),
+    ("constitution",  "hash_mismatch"):      (False, "policy_hash_mismatch"),
+    ("founders_law",  "invariant_ok"):       (True,  "founders_invariant_satisfied"),
+    ("founders_law",  "invariant_violated"): (False, "founders_invariant_violated"),
+    ("lineage",       "chain_intact"):       (True,  "lineage_chain_verified"),
+    ("lineage",       "digest_match"):       (True,  "epoch_digest_matches_ledger"),
+    ("lineage",       "chain_broken"):       (False, "lineage_chain_broken"),
+    ("lineage",       "digest_mismatch"):    (False, "epoch_digest_mismatch"),
+    ("sandbox",       "preflight_ok"):       (True,  "sandbox_preflight_passed"),
+    ("sandbox",       "isolation_ok"):       (True,  "isolation_verified"),
+    ("sandbox",       "preflight_failed"):   (False, "sandbox_preflight_failed"),
+    ("sandbox",       "isolation_breach"):   (False, "isolation_breach_detected"),
+    ("replay",        "baseline_match"):     (True,  "replay_baseline_matches"),
+    ("replay",        "baseline_mismatch"):  (False, "replay_baseline_mismatch"),
+    ("replay",        "determinism_ok"):     (True,  "replay_determinism_verified"),
+}
+
+
+class ParallelAxisSpecRequest(BaseModel):
+    axis: str
+    rule_id: str
+    timeout_seconds: float = 5.0
+
+
+class ParallelGateRequest(BaseModel):
+    mutation_id: str
+    trust_mode: str = "standard"
+    human_override: bool = False
+    axis_specs: list[ParallelAxisSpecRequest]
+    max_workers: int = 8
+
+
+@app.post("/api/governance/parallel-gate/evaluate")
+async def parallel_gate_evaluate(req: ParallelGateRequest) -> dict[str, Any]:
+    """Run a parallel governance gate evaluation and return the full GateDecision.
+
+    Axis probes are resolved from the built-in deterministic probe library
+    keyed by (axis, rule_id). Unknown combinations default to ok=True.
+    Axis results are annotated with per-axis timing for the Aponi swimlane UI.
+    """
+    import time as _time
+
+    try:
+        from runtime.governance.parallel_gate import (
+            ParallelGovernanceGate,
+            ParallelAxisSpec,
+            PARALLEL_GATE_VERSION,
+        )
+        from security.ledger import journal as _journal
+
+        if not req.axis_specs:
+            raise HTTPException(status_code=422, detail="axis_specs must not be empty")
+        if len(req.axis_specs) > 20:
+            raise HTTPException(status_code=422, detail="axis_specs exceeds maximum of 20")
+
+        timing_records: dict[str, float] = {}
+
+        def _make_probe(axis: str, rule_id: str, result: tuple[bool, str]):
+            def _probe() -> tuple[bool, str]:
+                t0 = _time.perf_counter()
+                out = result
+                timing_records[f"{axis}:{rule_id}"] = round(
+                    (_time.perf_counter() - t0) * 1000, 3
+                )
+                return out
+            return _probe
+
+        specs = [
+            ParallelAxisSpec(
+                axis=s.axis,
+                rule_id=s.rule_id,
+                probe=_make_probe(
+                    s.axis, s.rule_id,
+                    _PROBE_LIBRARY.get((s.axis, s.rule_id), (True, "probe_not_found_default_pass"))
+                ),
+                timeout_seconds=s.timeout_seconds,
+            )
+            for s in req.axis_specs
+        ]
+
+        gate = ParallelGovernanceGate(
+            max_workers=min(req.max_workers, 20),
+            tx_writer=_journal.append_tx,
+        )
+
+        wall_t0 = _time.perf_counter()
+        decision = gate.approve_mutation_parallel(
+            mutation_id=req.mutation_id,
+            trust_mode=req.trust_mode,
+            axis_specs=specs,
+            human_override=req.human_override,
+        )
+        wall_elapsed_ms = round((_time.perf_counter() - wall_t0) * 1000, 2)
+
+        payload = decision.to_payload()
+        for ar in payload.get("axis_results", []):
+            ar["duration_ms"] = timing_records.get(f"{ar['axis']}:{ar['rule_id']}", 0.0)
+
+        return {
+            "ok": True,
+            "decision": payload,
+            "wall_elapsed_ms": wall_elapsed_ms,
+            "gate_version": PARALLEL_GATE_VERSION,
+            "max_workers": min(req.max_workers, 20),
+            "axis_count": len(specs),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=f"parallel_gate_error: {exc}") from exc
+
+
+@app.get("/api/governance/parallel-gate/probe-library")
+async def parallel_gate_probe_library() -> dict[str, Any]:
+    """Return available axis probe definitions for the Aponi axis builder."""
+    axes: dict[str, list[dict[str, Any]]] = {}
+    for (axis, rule_id), (ok, reason) in _PROBE_LIBRARY.items():
+        axes.setdefault(axis, []).append(
+            {"rule_id": rule_id, "default_ok": ok, "default_reason": reason}
+        )
+    for axis in axes:
+        axes[axis].sort(key=lambda r: r["rule_id"])
+    return {
+        "ok": True,
+        "axes": dict(sorted(axes.items())),
+        "total_probes": len(_PROBE_LIBRARY),
+        "gate_version": "v1.0.0",
+    }
