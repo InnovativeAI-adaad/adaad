@@ -90,7 +90,9 @@ class ThreatMonitor:
 def _count_recent_failures(events: Iterable[Dict[str, Any]]) -> int:
     count = 0
     for item in events:
-        status = str(item.get("status") or "")
+        # Support both flat dicts and ledger event envelopes (payload-wrapped).
+        payload = item.get("payload") or {}
+        status = str(item.get("status") or payload.get("status") or "")
         if status in {"failed", "rejected", "error"}:
             count += 1
     return count

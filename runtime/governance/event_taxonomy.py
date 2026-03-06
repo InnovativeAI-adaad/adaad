@@ -71,8 +71,12 @@ LEGACY_EVENT_TYPE_FALLBACKS: dict[str, str] = {
     "replay_check_failed": EVENT_TYPE_REPLAY_FAILURE,
     "replay_verification_failed": EVENT_TYPE_REPLAY_FAILURE,
     "replay_divergence_detected": EVENT_TYPE_REPLAY_DIVERGENCE,
+    # LegitimacyEvaluation: mixed-case canonical form must survive normalize_event_type.
+    "legitimacyevaluation": "LegitimacyEvaluation",
 }
 
+
+EVENT_TYPE_LEGITIMACY_EVALUATION = "LegitimacyEvaluation"
 
 CANONICAL_EVENT_TYPES = {
     EVENT_TYPE_AGM_STEP_01,
@@ -97,6 +101,7 @@ CANONICAL_EVENT_TYPES = {
     EVENT_TYPE_REPLAY_FAILURE,
     EVENT_TYPE_REPLAY_DIVERGENCE,
     EVENT_TYPE_OPERATOR_OVERRIDE,
+    EVENT_TYPE_LEGITIMACY_EVALUATION,
 }
 
 

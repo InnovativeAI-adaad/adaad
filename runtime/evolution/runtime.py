@@ -25,8 +25,13 @@ from runtime.governance.federation.coherence_validator import FederationCoherenc
 
 
 class EvolutionRuntime:
-    def __init__(self, *, provider: RuntimeDeterminismProvider | None = None) -> None:
-        self.ledger = LineageLedgerV2()
+    def __init__(
+        self,
+        *,
+        provider: RuntimeDeterminismProvider | None = None,
+        ledger_path: "Path | None" = None,
+    ) -> None:
+        self.ledger = LineageLedgerV2(ledger_path)
         self.governor = EvolutionGovernor(ledger=self.ledger, provider=provider)
         self.epoch_manager = EpochManager(self.governor, self.ledger, provider=self.governor.provider)
         self.replay_mode = ReplayMode.OFF
@@ -41,6 +46,9 @@ class EvolutionRuntime:
         )
         self.metrics_emitter = EvolutionMetricsEmitter(self.ledger)
         self.coherence_validator = FederationCoherenceValidator()
+        self.entropy_forecaster = EntropyBudgetForecaster()
+        from runtime.governance.threat_monitor import ThreatMonitor, default_detectors
+        self.threat_monitor = ThreatMonitor(detectors=default_detectors())
 
         self.current_epoch_id = ""
         self.epoch_metadata: Dict[str, Any] = {}

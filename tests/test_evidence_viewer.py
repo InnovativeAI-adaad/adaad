@@ -209,12 +209,17 @@ class TestEvidenceViewerEndpoint:
 
         from fastapi.testclient import TestClient
 
-        with patch.object(srv, "_authenticate_audit_request", return_value=_make_auth_ctx()):
+        # FastAPI Depends captures the function reference at route registration time.
+        # Use dependency_overrides to replace the resolved dependency, not module-level patch.
+        srv.app.dependency_overrides[srv._authenticate_audit_request] = lambda: _make_auth_ctx()
+        try:
             client = TestClient(srv.app, raise_server_exceptions=False)
             resp = client.get(
                 "/evidence/test-bundle-ev-001",
                 headers={"Authorization": "Bearer test-governance-token"},
             )
+        finally:
+            srv.app.dependency_overrides.pop(srv._authenticate_audit_request, None)
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.text}"
         payload = resp.json()
         assert payload.get("bundle_id") == "test-bundle-ev-001"

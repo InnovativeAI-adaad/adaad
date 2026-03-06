@@ -68,7 +68,7 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
 
 
     def test_before_mutation_cycle_emits_forecast_and_scan_events(self) -> None:
-        runtime = EvolutionRuntime()
+        runtime = EvolutionRuntime(ledger_path=Path(self.tmp.name) / "ledger_forecast.jsonl")
         runtime.boot()
 
         result = runtime.before_mutation_cycle()
@@ -81,7 +81,7 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
         self.assertIn("ThreatScanEvent", event_types)
 
     def test_before_mutation_cycle_blocks_on_entropy_forecast(self) -> None:
-        runtime = EvolutionRuntime()
+        runtime = EvolutionRuntime(ledger_path=Path(self.tmp.name) / "ledger_entropy.jsonl")
         runtime.boot()
         runtime.epoch_cumulative_entropy_bits = 4096
 
@@ -92,7 +92,7 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
         self.assertEqual(result.get("reason"), "entropy_forecast_block")
 
     def test_before_mutation_cycle_escalates_on_threat_scan(self) -> None:
-        runtime = EvolutionRuntime()
+        runtime = EvolutionRuntime(ledger_path=Path(self.tmp.name) / "ledger_threat.jsonl")
         runtime.boot()
         runtime.ledger.append_event("SyntheticMutationOutcome", {"epoch_id": runtime.current_epoch_id, "status": "failed"})
         runtime.ledger.append_event("SyntheticMutationOutcome", {"epoch_id": runtime.current_epoch_id, "status": "failed"})

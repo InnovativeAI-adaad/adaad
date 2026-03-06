@@ -154,9 +154,24 @@ class EvolutionGovernorTest(unittest.TestCase):
         self.assertIn("accepted", payload)
 
     def test_budget_manager_can_reject_before_certificate_activation(self) -> None:
+        # Provide an impact scorer that returns a high-impact score so that
+        # fitness_gain = max(0, 1 - impact_total) is low enough to drive
+        # ROI below the 0.9 threshold and trigger rejection.
+        from runtime.evolution.impact import ImpactScorer, ImpactScore
+        class _HighImpactScorer(ImpactScorer):
+            def score(self, request):  # type: ignore[override]
+                # Moderate impact (total ~0.3) passes authority check (<=0.5) but
+                # drives fitness_gain = 1 - 0.3 = 0.7 → roi = 0.7 < threshold 0.9 → reject
+                return ImpactScore(
+                    semantic_depth=0.3,
+                    structural_risk=0.3,
+                    governance_proximity=0.3,
+                    lineage_divergence=0.3,
+                )
         self.governor = EvolutionGovernor(
             ledger=self.ledger,
             max_impact=0.99,
+            impact_scorer=_HighImpactScorer(),
             mutation_budget_manager=MutationBudgetManager(
                 per_cycle_budget=1_000.0,
                 per_epoch_budget=10_000.0,

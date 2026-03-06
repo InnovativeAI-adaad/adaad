@@ -32,6 +32,12 @@ class _Ledger:
     def append_event(self, _event: str, _payload: dict) -> None:
         return None
 
+    def read_epoch(self, _epoch_id: str) -> list:
+        # Return a legacy-format checkpoint (no checkpoint_hash field) so that
+        # _verify_terminal_checkpoint_continuity takes the legacy epoch path and
+        # allows rotation without strict chain verification.
+        return [{"type": "EpochCheckpointEvent", "payload": {"epoch_id": _epoch_id, "epoch_digest": "sha256:0", "phase": "start"}}]
+
 
 def _module(module_id: str, version: str) -> LawModule:
     return LawModule(

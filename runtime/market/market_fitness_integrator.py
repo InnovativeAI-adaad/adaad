@@ -35,8 +35,10 @@ class MarketEnrichmentRecord:
 class MarketFitnessIntegrator:
     """Enriches a fitness scoring context with live market signal."""
 
-    def __init__(self, *, registry: Any, journal_fn: Any = None,
+    def __init__(self, *, registry: Any = None, feed_registry: Any = None, 
+                 fitness_orchestrator: Any = None, journal_fn: Any = None,
                  fallback_score: float = _FALLBACK_SCORE) -> None:
+        registry = registry or feed_registry or fitness_orchestrator
         self._registry   = registry
         self._journal_fn = journal_fn
         self._fallback   = fallback_score

@@ -249,7 +249,13 @@ def _type_coerce_kwargs(constraint_type: ConstraintType, raw_kwargs: Dict[str, s
                 )
     for key in int_keys.get(constraint_type, []):
         if key in coerced:
-            coerced[key] = int(coerced[key])
+            try:
+                coerced[key] = int(coerced[key])
+            except (ValueError, TypeError):
+                raise SimulationDSLError(
+                    f"Parameter '{key}' must be an integer, got {coerced[key]!r}",
+                    token=str(coerced[key]),
+                )
 
     # Normalize severity to uppercase for require_rule
     if constraint_type == ConstraintType.REQUIRE_RULE and "severity" in coerced:

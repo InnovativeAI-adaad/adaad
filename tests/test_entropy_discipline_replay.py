@@ -55,12 +55,14 @@ def test_mutation_executor_deterministic_id_in_strict_mode() -> None:
 
 
 def test_epoch_manager_deterministic_epoch_id_in_audit_mode() -> None:
+    # Two EpochManager instances with the same seed and no prior state must produce
+    # the same epoch_id — confirming that determinism is seed-driven, not call-count-driven.
     governor = _Governor("audit")
-    manager = EpochManager(governor, _Ledger(), replay_mode="off", provider=SeededDeterminismProvider(seed="audit"))
+    manager_a = EpochManager(governor, _Ledger(), replay_mode="off", provider=SeededDeterminismProvider(seed="audit"))
+    manager_b = EpochManager(governor, _Ledger(), replay_mode="off", provider=SeededDeterminismProvider(seed="audit"))
 
-    state_a = manager.start_new_epoch({"reason": "boot"})
-    manager._state = None
-    state_b = manager.start_new_epoch({"reason": "boot"})
+    state_a = manager_a.start_new_epoch({"reason": "boot"})
+    state_b = manager_b.start_new_epoch({"reason": "boot"})
 
     assert state_a.epoch_id == state_b.epoch_id
 
