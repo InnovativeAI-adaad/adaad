@@ -1,6 +1,82 @@
 # Changelog
 
+## [2.1.0] — 2026-03-06
+
+### Phase 3 — Adaptive Penalty Weights (SHIPPED)
+
+#### PR-PHASE3-01: PenaltyAdaptor
+- **New:** `runtime/autonomy/penalty_adaptor.py` — momentum-descent learner for `risk_penalty` and `complexity_penalty`
+- Activation gate: `MIN_EPOCHS_FOR_PENALTY=5` (pass-through below threshold)
+- Signal derivation: post-merge `actually_risky`/`actually_complex` flags (quality-1); heuristic `risk_score > 0.50` (fallback)
+- EMA smoothing (alpha=0.25), momentum=0.80, learning_rate=0.04
+- All weights bounded `[0.05, 0.70]` — constitutional invariant enforced
+- `WeightAdaptor` wired: penalty state path derived from adaptor path (test-safe)
+- Pre-existing test bug fixed: `acceptance_threshold` default corrected 0.25→0.24
+- **Tests: 17 PenaltyAdaptor + 1 integration = 18 new tests passing**
+
+#### PR-PHASE3-02: Thompson Sampling + Non-Stationarity Detector
+- **New:** `runtime/autonomy/non_stationarity_detector.py` — Page-Hinkley sequential change detection
+- PH constants: threshold=0.20, delta=0.02, MIN_OBSERVATIONS=5, cooldown=3 epochs
+- EMA warm-start: `running_mean` initialised to first observation (prevents false-positive accumulation)
+- `FitnessLandscape` wired: live UCB1 win rates fed into detector after every `record()`
+- Escalation order: plateau→dream, thompson_active→ThompsonBanditSelector, UCB1→BanditSelector, v1 fallback
+- Thompson rng seeded from hash(sorted arm state) — deterministic, no external entropy
+- `_thompson_active` flag persisted in landscape state JSON (survives restarts)
+- **Tests: 15 detector + 8 integration = 23 new tests passing**
+
+### Phase 4 — Semantic Mutation Diff Engine (IN PROGRESS)
+
+#### PR-PHASE4-01: SemanticDiffEngine
+- **New:** `runtime/evolution/semantic_diff.py` — AST-based risk and complexity scoring (332 lines)
+- `ASTMetrics.from_source()`: node_count, max_depth, cyclomatic complexity, import_count, function_count, class_count, max_nesting
+- Risk formula: `(ast_depth_delta × 0.3) + (cyclomatic_delta × 0.4) + (import_surface_delta × 0.3)`
+- Complexity formula: `(node_count_norm × 0.5) + (nesting_depth_norm × 0.5)`
+- Normalization caps: MAX_AST_DEPTH=50, MAX_CYCLOMATIC=30, MAX_IMPORTS=20, MAX_NODES=500, MAX_NESTING=15
+- Graceful fallback on None input or SyntaxError → 0.5/0.5 (no scoring regression)
+- `enrich_code_diff_with_semantic()`: backward-compatible dict enrichment with semantic scores
+- Algorithm version: `semantic_diff_v1.0` (baked in for replay verification)
+- Zero new dependencies — uses Python stdlib `ast` module only
+- **Tests: 22 new tests passing**
+
 ## [Unreleased]
+
+## [2.1.0] — 2026-03-06
+
+### Phase 3 — Adaptive Penalty Weights (SHIPPED)
+
+#### PR-PHASE3-01: PenaltyAdaptor
+- **New:** `runtime/autonomy/penalty_adaptor.py` — momentum-descent learner for `risk_penalty` and `complexity_penalty`
+- Activation gate: `MIN_EPOCHS_FOR_PENALTY=5` (pass-through below threshold)
+- Signal derivation: post-merge `actually_risky`/`actually_complex` flags (quality-1); heuristic `risk_score > 0.50` (fallback)
+- EMA smoothing (alpha=0.25), momentum=0.80, learning_rate=0.04
+- All weights bounded `[0.05, 0.70]` — constitutional invariant enforced
+- `WeightAdaptor` wired: penalty state path derived from adaptor path (test-safe)
+- Pre-existing test bug fixed: `acceptance_threshold` default corrected 0.25→0.24
+- **Tests: 17 PenaltyAdaptor + 1 integration = 18 new tests passing**
+
+#### PR-PHASE3-02: Thompson Sampling + Non-Stationarity Detector
+- **New:** `runtime/autonomy/non_stationarity_detector.py` — Page-Hinkley sequential change detection
+- PH constants: threshold=0.20, delta=0.02, MIN_OBSERVATIONS=5, cooldown=3 epochs
+- EMA warm-start: `running_mean` initialised to first observation (prevents false-positive accumulation)
+- `FitnessLandscape` wired: live UCB1 win rates fed into detector after every `record()`
+- Escalation order: plateau→dream, thompson_active→ThompsonBanditSelector, UCB1→BanditSelector, v1 fallback
+- Thompson rng seeded from hash(sorted arm state) — deterministic, no external entropy
+- `_thompson_active` flag persisted in landscape state JSON (survives restarts)
+- **Tests: 15 detector + 8 integration = 23 new tests passing**
+
+### Phase 4 — Semantic Mutation Diff Engine (IN PROGRESS)
+
+#### PR-PHASE4-01: SemanticDiffEngine
+- **New:** `runtime/evolution/semantic_diff.py` — AST-based risk and complexity scoring (332 lines)
+- `ASTMetrics.from_source()`: node_count, max_depth, cyclomatic complexity, import_count, function_count, class_count, max_nesting
+- Risk formula: `(ast_depth_delta × 0.3) + (cyclomatic_delta × 0.4) + (import_surface_delta × 0.3)`
+- Complexity formula: `(node_count_norm × 0.5) + (nesting_depth_norm × 0.5)`
+- Normalization caps: MAX_AST_DEPTH=50, MAX_CYCLOMATIC=30, MAX_IMPORTS=20, MAX_NODES=500, MAX_NESTING=15
+- Graceful fallback on None input or SyntaxError → 0.5/0.5 (no scoring regression)
+- `enrich_code_diff_with_semantic()`: backward-compatible dict enrichment with semantic scores
+- Algorithm version: `semantic_diff_v1.0` (baked in for replay verification)
+- Zero new dependencies — uses Python stdlib `ast` module only
+- **Tests: 22 new tests passing**
 
 ### Strategic Evolution — Post-v2.0.0 (2026-03-06)
 
@@ -331,7 +407,83 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 - Normalized imports to canonical roots and consolidated metrics into `reports/metrics.jsonl`.
 - Introduced deterministic orchestrator boot order, warm pool startup, and minimal Aponi dashboard endpoints.
 
-## [Unreleased] — ADAAD-10 · v1.4.0
+## [2.1.0] — 2026-03-06
+
+### Phase 3 — Adaptive Penalty Weights (SHIPPED)
+
+#### PR-PHASE3-01: PenaltyAdaptor
+- **New:** `runtime/autonomy/penalty_adaptor.py` — momentum-descent learner for `risk_penalty` and `complexity_penalty`
+- Activation gate: `MIN_EPOCHS_FOR_PENALTY=5` (pass-through below threshold)
+- Signal derivation: post-merge `actually_risky`/`actually_complex` flags (quality-1); heuristic `risk_score > 0.50` (fallback)
+- EMA smoothing (alpha=0.25), momentum=0.80, learning_rate=0.04
+- All weights bounded `[0.05, 0.70]` — constitutional invariant enforced
+- `WeightAdaptor` wired: penalty state path derived from adaptor path (test-safe)
+- Pre-existing test bug fixed: `acceptance_threshold` default corrected 0.25→0.24
+- **Tests: 17 PenaltyAdaptor + 1 integration = 18 new tests passing**
+
+#### PR-PHASE3-02: Thompson Sampling + Non-Stationarity Detector
+- **New:** `runtime/autonomy/non_stationarity_detector.py` — Page-Hinkley sequential change detection
+- PH constants: threshold=0.20, delta=0.02, MIN_OBSERVATIONS=5, cooldown=3 epochs
+- EMA warm-start: `running_mean` initialised to first observation (prevents false-positive accumulation)
+- `FitnessLandscape` wired: live UCB1 win rates fed into detector after every `record()`
+- Escalation order: plateau→dream, thompson_active→ThompsonBanditSelector, UCB1→BanditSelector, v1 fallback
+- Thompson rng seeded from hash(sorted arm state) — deterministic, no external entropy
+- `_thompson_active` flag persisted in landscape state JSON (survives restarts)
+- **Tests: 15 detector + 8 integration = 23 new tests passing**
+
+### Phase 4 — Semantic Mutation Diff Engine (IN PROGRESS)
+
+#### PR-PHASE4-01: SemanticDiffEngine
+- **New:** `runtime/evolution/semantic_diff.py` — AST-based risk and complexity scoring (332 lines)
+- `ASTMetrics.from_source()`: node_count, max_depth, cyclomatic complexity, import_count, function_count, class_count, max_nesting
+- Risk formula: `(ast_depth_delta × 0.3) + (cyclomatic_delta × 0.4) + (import_surface_delta × 0.3)`
+- Complexity formula: `(node_count_norm × 0.5) + (nesting_depth_norm × 0.5)`
+- Normalization caps: MAX_AST_DEPTH=50, MAX_CYCLOMATIC=30, MAX_IMPORTS=20, MAX_NODES=500, MAX_NESTING=15
+- Graceful fallback on None input or SyntaxError → 0.5/0.5 (no scoring regression)
+- `enrich_code_diff_with_semantic()`: backward-compatible dict enrichment with semantic scores
+- Algorithm version: `semantic_diff_v1.0` (baked in for replay verification)
+- Zero new dependencies — uses Python stdlib `ast` module only
+- **Tests: 22 new tests passing**
+
+## [Unreleased]
+
+## [2.1.0] — 2026-03-06
+
+### Phase 3 — Adaptive Penalty Weights (SHIPPED)
+
+#### PR-PHASE3-01: PenaltyAdaptor
+- **New:** `runtime/autonomy/penalty_adaptor.py` — momentum-descent learner for `risk_penalty` and `complexity_penalty`
+- Activation gate: `MIN_EPOCHS_FOR_PENALTY=5` (pass-through below threshold)
+- Signal derivation: post-merge `actually_risky`/`actually_complex` flags (quality-1); heuristic `risk_score > 0.50` (fallback)
+- EMA smoothing (alpha=0.25), momentum=0.80, learning_rate=0.04
+- All weights bounded `[0.05, 0.70]` — constitutional invariant enforced
+- `WeightAdaptor` wired: penalty state path derived from adaptor path (test-safe)
+- Pre-existing test bug fixed: `acceptance_threshold` default corrected 0.25→0.24
+- **Tests: 17 PenaltyAdaptor + 1 integration = 18 new tests passing**
+
+#### PR-PHASE3-02: Thompson Sampling + Non-Stationarity Detector
+- **New:** `runtime/autonomy/non_stationarity_detector.py` — Page-Hinkley sequential change detection
+- PH constants: threshold=0.20, delta=0.02, MIN_OBSERVATIONS=5, cooldown=3 epochs
+- EMA warm-start: `running_mean` initialised to first observation (prevents false-positive accumulation)
+- `FitnessLandscape` wired: live UCB1 win rates fed into detector after every `record()`
+- Escalation order: plateau→dream, thompson_active→ThompsonBanditSelector, UCB1→BanditSelector, v1 fallback
+- Thompson rng seeded from hash(sorted arm state) — deterministic, no external entropy
+- `_thompson_active` flag persisted in landscape state JSON (survives restarts)
+- **Tests: 15 detector + 8 integration = 23 new tests passing**
+
+### Phase 4 — Semantic Mutation Diff Engine (IN PROGRESS)
+
+#### PR-PHASE4-01: SemanticDiffEngine
+- **New:** `runtime/evolution/semantic_diff.py` — AST-based risk and complexity scoring (332 lines)
+- `ASTMetrics.from_source()`: node_count, max_depth, cyclomatic complexity, import_count, function_count, class_count, max_nesting
+- Risk formula: `(ast_depth_delta × 0.3) + (cyclomatic_delta × 0.4) + (import_surface_delta × 0.3)`
+- Complexity formula: `(node_count_norm × 0.5) + (nesting_depth_norm × 0.5)`
+- Normalization caps: MAX_AST_DEPTH=50, MAX_CYCLOMATIC=30, MAX_IMPORTS=20, MAX_NODES=500, MAX_NESTING=15
+- Graceful fallback on None input or SyntaxError → 0.5/0.5 (no scoring regression)
+- `enrich_code_diff_with_semantic()`: backward-compatible dict enrichment with semantic scores
+- Algorithm version: `semantic_diff_v1.0` (baked in for replay verification)
+- Zero new dependencies — uses Python stdlib `ast` module only
+- **Tests: 22 new tests passing** — ADAAD-10 · v1.4.0
 
 ### ADAAD-10 Track A — Live Market Signal Adapters
 

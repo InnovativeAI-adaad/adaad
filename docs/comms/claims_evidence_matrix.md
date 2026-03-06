@@ -39,6 +39,12 @@ This matrix maps major external/public claims to objective, versioned repository
 | `ucb1-bandit-deterministic` | "UCB1 agent selection is deterministic: identical arm state and pull counts produce identical scores and selection, with no entropy sources." | [BanditSelector](../../runtime/autonomy/bandit_selector.py); [Bandit tests](../../tests/test_bandit_selector.py) (test_deterministic_select) | Complete |
 | `epoch-telemetry-append-only` | "EpochTelemetry is append-only: health_indicators() and generate_report() are pure functions producing deterministic output for identical inputs." | [EpochTelemetry](../../runtime/autonomy/epoch_telemetry.py); [Telemetry tests](../../tests/test_epoch_telemetry.py) (test_report_deterministic) | Complete |
 | `mcp-evolution-tools-read-only` | "All 5 evolution-pipeline MCP tools are read-only; none may write to governed surfaces, invoke GovernanceGate, or modify scoring weights." | [Evolution pipeline tools](../../runtime/mcp/evolution_pipeline_tools.py); [MCP server routes](../../runtime/mcp/server.py); [MCP config](../../.github/mcp_config.json) | Complete |
+| `penalty-adaptor-activation-gate` | PenaltyAdaptor no-ops below epoch 5 | `tests/test_penalty_adaptor.py::TestActivationGate` | Complete |
+| `penalty-adaptor-bounds-enforced` | risk_penalty, complexity_penalty stay in [0.05, 0.70] | `tests/test_penalty_adaptor.py::TestBounds` | Complete |
+| `page-hinkley-stable-no-signal` | Stable win rates produce PH statistic < threshold | `tests/test_non_stationarity_detector.py::test_stable_environment_no_signal` | Complete |
+| `thompson-deterministic-seeded-rng` | Identical arm state → identical Thompson agent selection | `tests/test_fitness_landscape.py::test_thompson_flag_persists` | Complete |
+| `semantic-diff-deterministic` | Identical AST inputs → identical risk/complexity scores | `tests/test_semantic_diff.py::TestDiffFromCodeDiff::test_deterministic` | Complete |
+| `semantic-diff-fallback-safe` | None/SyntaxError input → 0.5/0.5 fallback, no exception | `tests/test_semantic_diff.py::TestSemanticDiff::test_none_fallback` | Complete |
 
 ## Completion standard
 

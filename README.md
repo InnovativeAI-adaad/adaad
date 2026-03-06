@@ -148,7 +148,7 @@ print(f"Duration:     {result.duration_seconds:.1f}s")
 
 ## Phase 2 — Live
 
-UCB1 bandit agent selection is active as of v2.0.0. The system now learns which agent persona performs best for each mutation type:
+UCB1 bandit agent selection is active as of v2.1.0. The system now learns which agent persona performs best for each mutation type:
 
 ```
 Phase 1 (< 10 pulls)     →  v1 decision tree (conservative default)
