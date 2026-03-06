@@ -1,8 +1,8 @@
 {
-  "schema_version": "2.3.0",
-  "last_completed_pr": "AI-MUTATION-v2.0-MILESTONE",
-  "next_pr": "PR-PHASE5-01",
-  "active_phase": "v3.0.0 SPEC ISSUED \u00b7 Phase 5 Multi-Repo Federation \u00b7 awaiting human sign-off on PR-PHASE5-01",
+  "schema_version": "3.0.0",
+  "last_completed_pr": "PR-PHASE5-07",
+  "next_pr": "PR-OPT-06",
+  "active_phase": "v3.0.0 SHIPPED \u00b7 Phase 5 Multi-Repo Federation COMPLETE \u00b7 Phase 6 Autonomous Roadmap Self-Amendment ACTIVE",
   "last_invocation": "2026-03-06",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -45,8 +45,16 @@
     "pr12-gate-ok-fix",
     "architect-spec-v2.0.0-issued",
     "v2.0.0-released",
-    "architect-spec-v3.0.0-issued"
+    "architect-spec-v3.0.0-issued",
+    "phase5-hmac-key-validation",
+    "phase5-lineage-federation-origin",
+    "phase5-federation-mutation-broker",
+    "phase5-federated-evidence-matrix",
+    "phase5-evolution-federation-bridge",
+    "phase5-federated-evidence-bundle",
+    "phase5-federation-determinism-ci",
+    "v3.0.0-released"
   ],
   "pending_evidence_rows": [],
-  "last_sync_sha": "2de28a3"
+  "last_sync_sha": "b0a4655"
 }

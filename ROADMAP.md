@@ -4,7 +4,7 @@
 
 ---
 
-## What ships today — v2.3.0
+## What ships today — v3.0.0
 
 The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
 

@@ -8,8 +8,8 @@
 **Environment:** DUSTADAAD · Innovative AI LLC
 **Trigger keyword:** `ADAAD`
 **Agent type:** Autonomous repository build agent — governed, fail-closed, evidence-producing
-**Version:** 1.1.0
-**Last reviewed:** 2026-03-05
+**Version:** 1.2.0
+**Last reviewed:** 2026-03-06
 
 ---
 
@@ -137,7 +137,7 @@ PYTHONPATH=. \
 
 ```
 [ADAAD ORIENT]
-Active phase:            <phase and track>
+Active phase:            Phase 6 · Autonomous Roadmap Self-Amendment (v3.1.0 target)
 Next PR:                 <PR-ID> — <title>
 Milestone:               <milestone>
 Lane:                    <lane>
@@ -230,17 +230,30 @@ Awaiting:             2 human reviewer approvals before merge
 | PR-17 | Replay Inspector UI | standard | PR-16 |
 | PR-18 | Simulation Panel Integration | standard | PR-12 |
 
-### Phase 5 · Multi-Repo Federation (next)
+### Phase 5 · Multi-Repo Federation (complete)
 
-> Active execution order is governed by this Phase 5 table and `docs/governance/ARCHITECT_SPEC_v3.0.0.md` §5. Older phase tables above are retained for historical context only.
+> Phase 5 shipped as v3.0.0 on 2026-03-06. All PRs merged and evidence rows committed.
+
+| PR | Title | Status |
+|---|---|---|
+| PR-PHASE5-01 | HMAC Key Validation (M-05) — fail-closed boot enforcement | ✅ Merged |
+| PR-PHASE5-02 | LineageLedgerV2 `federation_origin` Extension | ✅ Merged |
+| PR-PHASE5-03 | FederationMutationBroker — dual GovernanceGate enforcement | ✅ Merged |
+| PR-PHASE5-04 | FederatedEvidenceMatrix — divergence_count==0 promotion gate | ✅ Merged |
+| PR-PHASE5-05 | EvolutionFederationBridge + ProposalTransportAdapter | ✅ Merged |
+| PR-PHASE5-06 | Federated evidence bundle release gate extension | ✅ Merged |
+| PR-PHASE5-07 | Federation Determinism CI + HMAC key rotation runbook | ✅ Merged |
+
+### Phase 6 · Autonomous Roadmap Self-Amendment (next)
+
+> Active phase as of v3.0.0. Target: v3.1.0. Governed by `ROADMAP.md` Phase 6 section.
 
 | PR | Title | CI tier | Deps |
 |---|---|---|---|
-| PR-PHASE5-01 | Security Invariants + Failure Mode Registry | critical | Human sign-off on v3.0.0 spec ✅ |
-| PR-PHASE5-02 | LineageLedgerV2 federation_origin Extension | critical | PR-PHASE5-01 |
-| PR-PHASE5-03 | FederatedMutationReceiver + GovernanceGate Rule 15/16 | critical | PR-PHASE5-02 |
-| PR-PHASE5-04 | FederatedSignalBroker Upgrade + Replay Proof | critical | PR-PHASE5-03 |
-| PR-PHASE5-05 | FederatedEvidenceMatrix + Full End-to-End CI | critical | PR-PHASE5-04 |
+| PR-PHASE6-01 | ROADMAP.md mutation proposal by ArchitectAgent | critical | Phase 5 complete ✅ |
+| PR-PHASE6-02 | Replay proof attached to roadmap amendment commit | critical | PR-PHASE6-01 |
+| PR-PHASE6-03 | Human sign-off ledger record for roadmap amendment | critical | PR-PHASE6-02 |
+| PR-PHASE6-04 | Federation evidence section for cross-repo roadmap propagation | critical | PR-PHASE6-03 |
 
 ---
 

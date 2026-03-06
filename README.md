@@ -6,7 +6,7 @@
   <a href="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml">
     <img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg"/>
   </a>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.3.0-00d4ff?style=flat-square&labelColor=060d14"/>
+  <img alt="Version" src="https://img.shields.io/badge/version-3.0.0-00d4ff?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11+-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-pydroid3-f59e0b?style=flat-square&labelColor=060d14"/>
@@ -17,22 +17,23 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `2.3.0` |
+| **Current version** | `3.0.0` |
 | **Released** | 2026-03-06 |
-| **Git SHA** | `2de28a3` |
-| **Branch** | `main` |
+| **Git SHA** | `b0a4655` |
+| **Branch** | `chore/doc-sync-v3` |
 
-**New in this release:** Phase 4 — AST-Aware Scoring + Pipeline Intelligence · Phase 2 — Governed Explore/Exploit Loop
+**New in this release:** Phase 5 — Multi-Repo Federation
 
 **New modules in this release:**
 
 | Module |
 |--------|
-| `data/checkpoint_chain.jsonl` |
-| `runtime/autonomy/explore_exploit_controller.py` |
-| `runtime/governance/human_approval_gate.py` |
-| `runtime/evolution/lineage_dag.py` |
-| `runtime/governance/phase_transition_gate.py` |
+| `runtime/governance/federation/key_registry.py` |
+| `tests/governance/federation/test_federation_hmac_key_validation.py` |
+| `tests/test_lineage_federation_origin.py` |
+| `runtime/governance/federation/mutation_broker.py` |
+| `tests/test_federation_mutation_broker.py` |
+| `runtime/governance/federation/federated_evidence_matrix.py` |
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -246,6 +247,7 @@ This is architecturally enforced, not just documented.
 
 | Version | Capability |
 |---|---|
+| **v3.0** | Phase 5 — Multi-Repo Federation |
 | **v2.3** | Phase 4 — AST-Aware Scoring + Pipeline Intelligence · Phase 2 — Governed Explore/Exploit Loop |
 | **v2.2** | Phase 2 — Governed Explore/Exploit Loop |
 | **v2.0** | AI mutation engine · UCB1 bandit · epoch telemetry · MCP pipeline tools |
