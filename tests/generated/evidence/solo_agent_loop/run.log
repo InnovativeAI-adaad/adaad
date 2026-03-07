@@ -1,0 +1,2 @@
+{"event":"solo_agent_loop_started","fixture":"solo_agent_loop","epoch":1}
+{"event":"solo_agent_loop_completed","fixture":"solo_agent_loop","epoch":1,"status":"success"}

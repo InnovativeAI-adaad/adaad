@@ -184,7 +184,7 @@ def _score_amendment(milestones: Sequence[MilestoneEntry], rationale: str) -> fl
       +0.20 — milestone moves from active → shipped (delivery evidence)
       -0.15 — milestone moves to deferred or cancelled (regression signal)
       +0.10 — each word in rationale beyond minimum (capped at +0.20)
-      -0.10 — duplicate phase_id in proposal (structural incoherence)
+      -0.35 — duplicate phase_id in proposal (structural incoherence)
 
     Clamped to [0.0, 1.0].
     """
@@ -199,7 +199,7 @@ def _score_amendment(milestones: Sequence[MilestoneEntry], rationale: str) -> fl
         elif m.status in ("deferred", "cancelled"):
             score -= 0.15
         if m.phase_id in seen_phases:
-            score -= 0.10
+            score -= 0.35
         seen_phases.add(m.phase_id)
 
     word_count = len(rationale.split())
@@ -271,8 +271,8 @@ class RoadmapAmendmentEngine:
 
     def propose(
         self,
-        *,
         proposer_agent: str,
+        *,
         milestones: Sequence[MilestoneEntry],
         rationale: str,
     ) -> RoadmapAmendmentProposal:
@@ -295,7 +295,17 @@ class RoadmapAmendmentEngine:
         prior_hash = hash_roadmap(self.roadmap_path)
         timestamp = self.provider.iso_now()
         ts_slug = self.provider.format_utc("%Y%m%dT%H%M%SZ")
-        proposal_id = f"rmap-amendment-{ts_slug}-{prior_hash[:8]}"
+        proposal_seed = json.dumps(
+            {
+                "proposer_agent": proposer_agent,
+                "prior_roadmap_hash": prior_hash,
+                "amended_milestones": milestone_dicts,
+                "rationale": rationale,
+            },
+            sort_keys=True,
+        )
+        proposal_hash = hashlib.sha256(proposal_seed.encode("utf-8")).hexdigest()
+        proposal_id = f"rmap-amendment-{ts_slug}-{prior_hash[:8]}-{proposal_hash[:8]}"
 
         proposal = RoadmapAmendmentProposal(
             proposal_id=proposal_id,

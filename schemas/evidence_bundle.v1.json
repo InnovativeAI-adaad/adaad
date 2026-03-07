@@ -1,7 +1,468 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://adaad.local/schemas/evidence_bundle.v1.json",
-  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bundle_id": {
+      "type": "string"
+    },
+    "bundle_index": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_digest": {
+            "type": "string"
+          },
+          "bundle_id": {
+            "type": "string"
+          },
+          "certificate": {
+            "type": "object"
+          },
+          "epoch_digest": {
+            "type": "string"
+          },
+          "epoch_id": {
+            "type": "string"
+          },
+          "risk_tier": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "epoch_id",
+          "bundle_id",
+          "bundle_digest",
+          "epoch_digest",
+          "risk_tier",
+          "certificate"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "constitution_version": {
+      "type": "string"
+    },
+    "export_metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "access_scope": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "canonical_ordering": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        },
+        "environment": {
+          "additionalProperties": false,
+          "properties": {
+            "container_hash": {
+              "type": "string"
+            },
+            "digest_algorithm": {
+              "type": "string"
+            },
+            "dispatcher_version": {
+              "type": "string"
+            },
+            "python_version": {
+              "type": "string"
+            },
+            "runtime_build_hash": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "dispatcher_version",
+            "digest_algorithm",
+            "runtime_build_hash",
+            "python_version",
+            "container_hash"
+          ],
+          "type": "object"
+        },
+        "immutable": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string"
+        },
+        "retention_days": {
+          "minimum": 1,
+          "type": "number"
+        },
+        "signer": {
+          "additionalProperties": false,
+          "properties": {
+            "algorithm": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "key_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "signature": {
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "signed_digest": {
+              "pattern": "^sha256:[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key_id",
+            "algorithm",
+            "signed_digest",
+            "signature"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "digest",
+        "canonical_ordering",
+        "immutable",
+        "path",
+        "retention_days",
+        "access_scope",
+        "signer"
+      ],
+      "type": "object"
+    },
+    "export_scope": {
+      "additionalProperties": false,
+      "properties": {
+        "epoch_end": {
+          "type": "string"
+        },
+        "epoch_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "epoch_start": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "epoch_start",
+        "epoch_end",
+        "epoch_ids"
+      ],
+      "type": "object"
+    },
+    "federated_evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "divergence_count": {
+          "type": "number"
+        },
+        "epoch_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "failed_count": {
+          "type": "number"
+        },
+        "invariant_ok": {
+          "type": "boolean"
+        },
+        "passed_count": {
+          "type": "number"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "verification_count": {
+          "type": "number"
+        },
+        "verifications": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "epoch_id": {
+                "type": "string"
+              },
+              "failure_codes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "has_divergence": {
+                "type": "boolean"
+              },
+              "matrix_digest": {
+                "type": "string"
+              },
+              "passed": {
+                "type": "boolean"
+              },
+              "proposal_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "epoch_id",
+              "proposal_id",
+              "passed",
+              "failure_codes",
+              "matrix_digest",
+              "has_divergence"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "epoch_ids",
+        "verification_count",
+        "passed_count",
+        "failed_count",
+        "divergence_count",
+        "invariant_ok",
+        "verifications"
+      ],
+      "type": "object"
+    },
+    "fitness_weights_hash": {
+      "type": "string"
+    },
+    "goal_graph_hash": {
+      "type": "string"
+    },
+    "governor_version": {
+      "type": "string"
+    },
+    "lineage_anchors": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "epoch_id": {
+            "type": "string"
+          },
+          "expected_epoch_digest": {
+            "type": "string"
+          },
+          "incremental_epoch_digest": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "epoch_id",
+          "expected_epoch_digest",
+          "incremental_epoch_digest",
+          "bundle_ids"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "policy_artifact_metadata": {
+      "additionalProperties": false,
+      "properties": {
+        "fingerprint": {
+          "type": "string"
+        },
+        "model": {
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "version"
+          ],
+          "type": "object"
+        },
+        "path": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "thresholds": {
+          "additionalProperties": false,
+          "properties": {
+            "determinism_pass": {
+              "type": "number"
+            },
+            "determinism_warn": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "determinism_pass",
+            "determinism_warn"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "path",
+        "schema_version",
+        "fingerprint",
+        "model",
+        "thresholds"
+      ],
+      "type": "object"
+    },
+    "replay_proofs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "canonical_digest": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "epoch_id": {
+            "type": "string"
+          },
+          "event_count": {
+            "type": "number"
+          },
+          "sandbox_replay": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "epoch_id",
+          "digest",
+          "canonical_digest",
+          "event_count",
+          "sandbox_replay"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "risk_summaries": {
+      "additionalProperties": false,
+      "properties": {
+        "bundle_count": {
+          "type": "number"
+        },
+        "high_risk_bundle_count": {
+          "type": "number"
+        },
+        "replay_proof_count": {
+          "type": "number"
+        },
+        "sandbox_evidence_count": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "bundle_count",
+        "sandbox_evidence_count",
+        "replay_proof_count",
+        "high_risk_bundle_count"
+      ],
+      "type": "object"
+    },
+    "sandbox_evidence": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bundle_id": {
+            "type": "string"
+          },
+          "entry_hash": {
+            "type": "string"
+          },
+          "epoch_id": {
+            "type": "string"
+          },
+          "evidence_hash": {
+            "type": "string"
+          },
+          "manifest_hash": {
+            "type": "string"
+          },
+          "policy_hash": {
+            "type": "string"
+          },
+          "prev_hash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "epoch_id",
+          "bundle_id",
+          "evidence_hash",
+          "manifest_hash",
+          "policy_hash",
+          "entry_hash",
+          "prev_hash"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "sandbox_snapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "namespace_isolation_available": {
+          "type": "boolean"
+        },
+        "seccomp_available": {
+          "type": "boolean"
+        },
+        "syscall_allowlist": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "workspace_prefixes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "seccomp_available",
+        "namespace_isolation_available",
+        "workspace_prefixes",
+        "syscall_allowlist"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "scoring_algorithm_version": {
+      "type": "string"
+    }
+  },
   "required": [
     "schema_version",
     "constitution_version",
@@ -20,388 +481,5 @@
     "export_metadata",
     "sandbox_snapshot"
   ],
-  "additionalProperties": false,
-  "properties": {
-    "schema_version": {
-      "type": "string"
-    },
-    "bundle_id": {
-      "type": "string"
-    },
-    "export_scope": {
-      "type": "object",
-      "required": [
-        "epoch_start",
-        "epoch_end",
-        "epoch_ids"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "epoch_start": {
-          "type": "string"
-        },
-        "epoch_end": {
-          "type": "string"
-        },
-        "epoch_ids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "replay_proofs": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "epoch_id",
-          "digest",
-          "canonical_digest",
-          "event_count",
-          "sandbox_replay"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "epoch_id": {
-            "type": "string"
-          },
-          "digest": {
-            "type": "string"
-          },
-          "canonical_digest": {
-            "type": "string"
-          },
-          "event_count": {
-            "type": "number"
-          },
-          "sandbox_replay": {
-            "type": "array",
-            "items": {
-              "type": "object"
-            }
-          }
-        }
-      }
-    },
-    "sandbox_evidence": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "epoch_id",
-          "bundle_id",
-          "evidence_hash",
-          "manifest_hash",
-          "policy_hash",
-          "entry_hash",
-          "prev_hash"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "epoch_id": {
-            "type": "string"
-          },
-          "bundle_id": {
-            "type": "string"
-          },
-          "evidence_hash": {
-            "type": "string"
-          },
-          "manifest_hash": {
-            "type": "string"
-          },
-          "policy_hash": {
-            "type": "string"
-          },
-          "entry_hash": {
-            "type": "string"
-          },
-          "prev_hash": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "policy_artifact_metadata": {
-      "type": "object",
-      "required": [
-        "path",
-        "schema_version",
-        "fingerprint",
-        "model",
-        "thresholds"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "path": {
-          "type": "string"
-        },
-        "schema_version": {
-          "type": "string"
-        },
-        "fingerprint": {
-          "type": "string"
-        },
-        "model": {
-          "type": "object",
-          "required": [
-            "name",
-            "version"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "version": {
-              "type": "string"
-            }
-          }
-        },
-        "thresholds": {
-          "type": "object",
-          "required": [
-            "determinism_pass",
-            "determinism_warn"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "determinism_pass": {
-              "type": "number"
-            },
-            "determinism_warn": {
-              "type": "number"
-            }
-          }
-        }
-      }
-    },
-    "risk_summaries": {
-      "type": "object",
-      "required": [
-        "bundle_count",
-        "sandbox_evidence_count",
-        "replay_proof_count",
-        "high_risk_bundle_count"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "bundle_count": {
-          "type": "number"
-        },
-        "sandbox_evidence_count": {
-          "type": "number"
-        },
-        "replay_proof_count": {
-          "type": "number"
-        },
-        "high_risk_bundle_count": {
-          "type": "number"
-        }
-      }
-    },
-    "lineage_anchors": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "epoch_id",
-          "expected_epoch_digest",
-          "incremental_epoch_digest",
-          "bundle_ids"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "epoch_id": {
-            "type": "string"
-          },
-          "expected_epoch_digest": {
-            "type": "string"
-          },
-          "incremental_epoch_digest": {
-            "type": "string"
-          },
-          "bundle_ids": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "bundle_index": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": [
-          "epoch_id",
-          "bundle_id",
-          "bundle_digest",
-          "epoch_digest",
-          "risk_tier",
-          "certificate"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "epoch_id": {
-            "type": "string"
-          },
-          "bundle_id": {
-            "type": "string"
-          },
-          "bundle_digest": {
-            "type": "string"
-          },
-          "epoch_digest": {
-            "type": "string"
-          },
-          "risk_tier": {
-            "type": "string"
-          },
-          "certificate": {
-            "type": "object"
-          }
-        }
-      }
-    },
-    "export_metadata": {
-      "type": "object",
-      "required": [
-        "digest",
-        "canonical_ordering",
-        "immutable",
-        "path",
-        "retention_days",
-        "access_scope",
-        "signer"
-      ],
-      "additionalProperties": false,
-      "properties": {
-        "digest": {
-          "type": "string"
-        },
-        "canonical_ordering": {
-          "type": "string"
-        },
-        "immutable": {
-          "type": "boolean"
-        },
-        "path": {
-          "type": "string"
-        },
-        "retention_days": {
-          "type": "number",
-          "minimum": 1
-        },
-        "access_scope": {
-          "type": "string",
-          "minLength": 1
-        },
-        "signer": {
-          "type": "object",
-          "required": [
-            "key_id",
-            "algorithm",
-            "signed_digest",
-            "signature"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "key_id": {
-              "type": "string",
-              "minLength": 1
-            },
-            "algorithm": {
-              "type": "string",
-              "minLength": 1
-            },
-            "signed_digest": {
-              "type": "string",
-              "pattern": "^sha256:[a-f0-9]{64}$"
-            },
-            "signature": {
-              "type": "string",
-              "pattern": "^sha256:[a-f0-9]{64}$"
-            }
-          }
-        },
-        "environment": {
-          "type": "object",
-          "required": [
-            "dispatcher_version",
-            "digest_algorithm",
-            "runtime_build_hash",
-            "python_version",
-            "container_hash"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "dispatcher_version": {
-              "type": "string"
-            },
-            "digest_algorithm": {
-              "type": "string"
-            },
-            "runtime_build_hash": {
-              "type": "string"
-            },
-            "python_version": {
-              "type": "string"
-            },
-            "container_hash": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "sandbox_snapshot": {
-      "type": "object",
-      "properties": {
-        "seccomp_available": {
-          "type": "boolean"
-        },
-        "namespace_isolation_available": {
-          "type": "boolean"
-        },
-        "workspace_prefixes": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "syscall_allowlist": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "seccomp_available",
-        "namespace_isolation_available",
-        "workspace_prefixes",
-        "syscall_allowlist"
-      ],
-      "additionalProperties": false
-    },
-    "scoring_algorithm_version": {
-      "type": "string"
-    },
-    "governor_version": {
-      "type": "string"
-    },
-    "fitness_weights_hash": {
-      "type": "string"
-    },
-    "goal_graph_hash": {
-      "type": "string"
-    },
-    "constitution_version": {
-      "type": "string"
-    }
-  }
+  "type": "object"
 }

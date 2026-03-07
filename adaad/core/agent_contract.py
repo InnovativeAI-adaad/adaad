@@ -43,7 +43,21 @@ def discover_agent_modules(root: Path, scopes: Sequence[Path] = DEFAULT_AGENT_SC
         for path in sorted(base.rglob("*.py")):
             if path.name.startswith("__"):
                 continue
-            modules.append(path.relative_to(root))
+            rel = path.relative_to(root)
+            if path.name == "agent_template.py":
+                modules.append(rel)
+                continue
+            try:
+                tree = _parse(path)
+            except (OSError, SyntaxError):
+                continue
+            has_agent_id = any(
+                isinstance(node, ast.Assign)
+                and any(isinstance(target, ast.Name) and target.id == "AGENT_ID" for target in node.targets)
+                for node in tree.body
+            )
+            if has_agent_id:
+                modules.append(rel)
     return modules
 
 
@@ -203,6 +217,20 @@ def validate_legacy_agent_module(path: Path, root: Path) -> AgentContractResult:
 
     class_nodes = [node for node in tree.body if isinstance(node, ast.ClassDef)]
     if not class_nodes:
+        # Compatibility: legacy bridge modules may be pure re-export shims.
+        for node in tree.body:
+            if not isinstance(node, ast.ImportFrom) or not node.module:
+                continue
+            if not node.module.startswith("adaad.agents."):
+                continue
+            target_rel = Path(*node.module.split(".")).with_suffix(".py")
+            target_abs = (root / target_rel).resolve()
+            if not target_abs.exists():
+                target_rel = Path(*node.module.split(".")) / "__init__.py"
+                target_abs = (root / target_rel).resolve()
+            if target_abs.exists():
+                return validate_legacy_agent_module(target_rel, root)
+
         violations.append(AgentContractViolation("missing_symbol", "Missing agent class"))
         return AgentContractResult(module_path=abs_path.relative_to(root.resolve()), violations=violations)
 
