@@ -3,181 +3,264 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
 
 import pytest
 
-from runtime.autonomy.roadmap_amendment_engine import DeterminismViolation, GovernanceViolation
+from runtime.governance.federation.mutation_broker import FederationMutationBroker, FederationMutationBrokerError
 
 
-class FederationKeyError(RuntimeError):
-    """Raised when federation HMAC key validation fails."""
+def _make_broker(audit_events: list[tuple[str, dict[str, Any]]]) -> FederationMutationBroker:
+    return FederationMutationBroker(
+        local_repo="source-node",
+        governance_gate=object(),
+        lineage_chain_digest_fn=lambda: "sha256:" + "a" * 64,
+        audit_writer=lambda event, payload: audit_events.append((event, payload)),
+    )
 
 
-@dataclass
-class Proposal:
-    proposal_id: str
-    authority_level: str = "governor-review"
-    verify_replay_ok: bool = True
-    lineage_chain: dict[str, str] = field(default_factory=dict)
-
-
-@dataclass
-class Node:
-    node_id: str
-    pending: bool = False
-    divergence_count: int = 0
-    received: list[str] = field(default_factory=list)
-    ledger_events: list[str] = field(default_factory=list)
+def _write_hmac_key(tmp_path: Path) -> str:
+    key_path = tmp_path / "federation_hmac.key"
+    key_path.write_text("k" * 64, encoding="utf-8")
+    return str(key_path)
 
 
 def _propagate(
     *,
-    source: Node,
-    peers: list[Node],
-    proposal: Proposal,
-    hmac_key: str | None,
-    source_approved: bool = True,
-    inject_partial_failure: bool = False,
-) -> None:
-    if not hmac_key:
-        raise FederationKeyError("federation_hmac_required")
-    if source.divergence_count > 0 or any(peer.divergence_count > 0 for peer in peers):
-        raise GovernanceViolation("PHASE6_FEDERATED_AMENDMENT_DIVERGENCE_BLOCKED")
-    if proposal.authority_level != "governor-review":
-        raise GovernanceViolation("PHASE6_FEDERATED_AUTHORITY_VIOLATION")
-    if any(peer.pending for peer in peers):
-        raise GovernanceViolation("PHASE6_FEDERATED_AMENDMENT_STORM_BLOCKED")
-    if not proposal.verify_replay_ok:
-        raise DeterminismViolation("verify_replay mismatch")
-
-    proposal.lineage_chain["federation_origin"] = source.node_id
-    before = [list(peer.received) for peer in peers]
-    for idx, peer in enumerate(peers):
-        if inject_partial_failure and idx == len(peers) - 1:
-            for rollback_peer, history in zip(peers, before):
-                rollback_peer.received = history
-                rollback_peer.ledger_events = [
-                    event for event in rollback_peer.ledger_events if event != "federated_amendment_propagated"
-                ]
-                rollback_peer.ledger_events.append("federated_amendment_rollback")
-            raise GovernanceViolation("federated rollback")
-        peer.received.append(proposal.proposal_id)
-        if source_approved:
-            peer.ledger_events.append("destination_evaluates_fresh")
-        peer.ledger_events.append("federated_amendment_propagated")
-    source.ledger_events.append("federated_amendment_propagated")
+    broker: FederationMutationBroker,
+    destination_nodes: list[dict[str, Any]],
+    hmac_key_path: str,
+    gate_evaluator: Callable[..., dict[str, Any]],
+    mutation_writer: Callable[[dict[str, Any], dict[str, Any], dict[str, Any]], None] | None = None,
+    authority_level: str = "governor-review",
+    replay_lineage_consistent: bool = True,
+    source_gate_decision_payload: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return broker.propagate_amendment(
+        proposal_id="proposal-001",
+        source_node="source-node",
+        destination_nodes=destination_nodes,
+        mutation_payload={"mutation_id": "roadmap-001", "lineage_chain": {}},
+        source_gate_decision_payload=source_gate_decision_payload or {"approved": True, "decision_id": "src-1"},
+        propagation_timestamp="2026-03-06T10:00:00Z",
+        evidence_bundle_hash="sha256:" + "b" * 64,
+        federation_hmac_key_path=hmac_key_path,
+        authority_level=authority_level,
+        replay_lineage_consistent=replay_lineage_consistent,
+        destination_gate_evaluator=gate_evaluator,
+        destination_mutation_writer=mutation_writer,
+    )
 
 
 # T6-04-01
 
-def test_t6_04_01_all_gates_pass_destination_gets_proposed() -> None:
-    source = Node("source")
-    peers = [Node("peer-a"), Node("peer-b")]
-    proposal = Proposal("prop-1")
-    _propagate(source=source, peers=peers, proposal=proposal, hmac_key="k" * 32)
-    assert all("prop-1" in peer.received for peer in peers)
-    assert "federated_amendment_propagated" in source.ledger_events
+def test_t6_04_01_all_gates_pass_destination_gets_proposed(tmp_path: Path) -> None:
+    events: list[tuple[str, dict[str, Any]]] = []
+    broker = _make_broker(events)
+    destinations = [{"node_id": "peer-b"}, {"node_id": "peer-a"}]
+    hmac_key_path = _write_hmac_key(tmp_path)
+
+    payload = _propagate(
+        broker=broker,
+        destination_nodes=destinations,
+        hmac_key_path=hmac_key_path,
+        gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+    )
+
+    assert payload["destination_nodes"] == ["peer-a", "peer-b"]
+    assert all(node.get("applied_mutations") for node in destinations)
+    assert events[-1][0] == "federated_amendment_propagated"
 
 
 # T6-04-02
 
-def test_t6_04_02_source_approval_does_not_bind_destination() -> None:
-    source = Node("source")
-    peer = Node("peer")
-    _propagate(source=source, peers=[peer], proposal=Proposal("prop-2"), hmac_key="k" * 32, source_approved=True)
-    assert "destination_evaluates_fresh" in peer.ledger_events
+def test_t6_04_02_source_approval_does_not_bind_destination(tmp_path: Path) -> None:
+    broker = _make_broker([])
+    with pytest.raises(FederationMutationBrokerError, match="destination_gate_rejected"):
+        _propagate(
+            broker=broker,
+            destination_nodes=[{"node_id": "peer-a"}],
+            hmac_key_path=_write_hmac_key(tmp_path),
+            source_gate_decision_payload={"approved": True, "decision_id": "source-approved"},
+            gate_evaluator=lambda *_args, **_kwargs: {
+                "approved": False,
+                "decision": "destination-must-re-evaluate",
+                "decision_id": "dest-reject-1",
+            },
+        )
 
 
 # T6-04-03
 
-def test_t6_04_03_divergence_blocks_and_keeps_peers_unchanged() -> None:
-    with pytest.raises(GovernanceViolation, match="PHASE6_FEDERATED_AMENDMENT_DIVERGENCE_BLOCKED"):
+def test_t6_04_03_divergence_blocks_and_keeps_peers_unchanged(tmp_path: Path) -> None:
+    broker = _make_broker([])
+    destinations = [{"node_id": "peer-a", "divergence_count": 1}]
+
+    def divergence_gate(destination: dict[str, Any], *_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        if destination.get("divergence_count", 0) > 0:
+            return {
+                "approved": False,
+                "decision": "PHASE6_FEDERATED_AMENDMENT_DIVERGENCE_BLOCKED",
+                "decision_id": "dest-divergence",
+            }
+        return {"approved": True, "decision": "approved", "decision_id": "dest-ok"}
+
+    with pytest.raises(FederationMutationBrokerError, match="PHASE6_FEDERATED_AMENDMENT_DIVERGENCE_BLOCKED"):
         _propagate(
-            source=Node("source", divergence_count=1),
-            peers=[Node("peer")],
-            proposal=Proposal("prop-3"),
-            hmac_key="k" * 32,
+            broker=broker,
+            destination_nodes=destinations,
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=divergence_gate,
         )
+
+    assert destinations[0].get("applied_mutations") is None
 
 
 # T6-04-04
 
-def test_t6_04_04_partial_failure_rolls_back_every_peer() -> None:
-    source = Node("source")
-    peers = [Node("peer-a"), Node("peer-b")]
-    with pytest.raises(GovernanceViolation, match="rollback"):
+def test_t6_04_04_partial_failure_rolls_back_every_peer(tmp_path: Path) -> None:
+    events: list[tuple[str, dict[str, Any]]] = []
+    broker = _make_broker(events)
+    destinations = [{"node_id": "peer-a"}, {"node_id": "peer-b"}]
+
+    def fail_second_write(node: dict[str, Any], mutation_payload: dict[str, Any], gate_payload: dict[str, Any]) -> None:
+        if node["node_id"] == "peer-b":
+            raise RuntimeError("simulated write failure")
+        broker._default_destination_mutation_writer(node, mutation_payload, gate_payload)
+
+    with pytest.raises(FederationMutationBrokerError, match="federated_propagation_rolled_back"):
         _propagate(
-            source=source,
-            peers=peers,
-            proposal=Proposal("prop-4"),
-            hmac_key="k" * 32,
-            inject_partial_failure=True,
+            broker=broker,
+            destination_nodes=destinations,
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+            mutation_writer=fail_second_write,
         )
-    assert peers[0].received == []
-    assert peers[1].received == []
-    assert all("federated_amendment_propagated" not in p.ledger_events for p in peers)
+
+    assert all(node.get("applied_mutations") is None for node in destinations)
+    assert events[-1][0] == "federated_amendment_rollback"
 
 
 # T6-04-05
 
-def test_t6_04_05_federation_origin_is_in_lineage_chain() -> None:
-    source = Node("source")
-    proposal = Proposal("prop-5")
-    _propagate(source=source, peers=[Node("peer")], proposal=proposal, hmac_key="k" * 32)
-    assert proposal.lineage_chain["federation_origin"] == "source"
+def test_t6_04_05_federation_origin_is_in_lineage_chain(tmp_path: Path) -> None:
+    broker = _make_broker([])
+    destination = {"node_id": "peer-a"}
+
+    def writer_with_lineage(node: dict[str, Any], mutation_payload: dict[str, Any], gate_payload: dict[str, Any]) -> None:
+        mutation_payload["lineage_chain"]["federation_origin"] = "source-node"
+        broker._default_destination_mutation_writer(node, mutation_payload, gate_payload)
+
+    _propagate(
+        broker=broker,
+        destination_nodes=[destination],
+        hmac_key_path=_write_hmac_key(tmp_path),
+        gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+        mutation_writer=writer_with_lineage,
+    )
+
+    applied = destination["applied_mutations"][0]["mutation"]
+    assert applied["lineage_chain"]["federation_origin"] == "source-node"
 
 
 # T6-04-06
 
-def test_t6_04_06_missing_hmac_key_raises_federation_key_error() -> None:
-    with pytest.raises(FederationKeyError, match="federation_hmac_required"):
-        _propagate(source=Node("source"), peers=[Node("peer")], proposal=Proposal("prop-6"), hmac_key=None)
+def test_t6_04_06_missing_hmac_key_raises_federation_key_error(tmp_path: Path) -> None:
+    broker = _make_broker([])
+    validation_calls: list[str] = []
+
+    def validate_hook(path: str) -> None:
+        validation_calls.append(path)
+        raise FederationMutationBrokerError("federation_hmac_required")
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(broker, "_validate_federation_hmac_key_path", validate_hook)
+        with pytest.raises(FederationMutationBrokerError, match="federation_hmac_required"):
+            _propagate(
+                broker=broker,
+                destination_nodes=[{"node_id": "peer-a"}],
+                hmac_key_path=str(tmp_path / "missing.key"),
+                gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+            )
+
+    assert validation_calls == [str(tmp_path / "missing.key")]
 
 
 # T6-04-07
 
-def test_t6_04_07_authority_violation_rejected() -> None:
-    with pytest.raises(GovernanceViolation, match="PHASE6_FEDERATED_AUTHORITY_VIOLATION"):
+def test_t6_04_07_authority_violation_rejected(tmp_path: Path) -> None:
+    broker = _make_broker([])
+    with pytest.raises(FederationMutationBrokerError, match="PHASE6_FEDERATED_AUTHORITY_VIOLATION"):
         _propagate(
-            source=Node("source"),
-            peers=[Node("peer")],
-            proposal=Proposal("prop-7", authority_level="agent-review"),
-            hmac_key="k" * 32,
+            broker=broker,
+            destination_nodes=[{"node_id": "peer-a"}],
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+            authority_level="agent-review",
         )
 
 
 # T6-04-08
 
-def test_t6_04_08_replay_hash_mismatch_halts_propagation() -> None:
-    peer = Node("peer")
-    with pytest.raises(DeterminismViolation, match="verify_replay mismatch"):
+def test_t6_04_08_replay_hash_mismatch_halts_propagation(tmp_path: Path) -> None:
+    broker = _make_broker([])
+    destination = {"node_id": "peer-a"}
+    with pytest.raises(FederationMutationBrokerError, match="PHASE6_FEDERATED_REPLAY_LINEAGE_INCONSISTENT"):
         _propagate(
-            source=Node("source"),
-            peers=[peer],
-            proposal=Proposal("prop-8", verify_replay_ok=False),
-            hmac_key="k" * 32,
+            broker=broker,
+            destination_nodes=[destination],
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+            replay_lineage_consistent=False,
         )
-    assert peer.received == []
+
+    assert destination.get("applied_mutations") is None
 
 
 # T6-04-09
 
-def test_t6_04_09_ledger_event_emitted_for_source_and_all_peers() -> None:
-    source = Node("source")
-    peers = [Node("peer-a"), Node("peer-b")]
-    _propagate(source=source, peers=peers, proposal=Proposal("prop-9"), hmac_key="k" * 32)
-    assert "federated_amendment_propagated" in source.ledger_events
-    assert all("federated_amendment_propagated" in p.ledger_events for p in peers)
+def test_t6_04_09_ledger_event_emitted_for_source_and_all_peers(tmp_path: Path) -> None:
+    events: list[tuple[str, dict[str, Any]]] = []
+    broker = _make_broker(events)
+
+    payload = _propagate(
+        broker=broker,
+        destination_nodes=[{"node_id": "peer-a"}, {"node_id": "peer-b"}],
+        hmac_key_path=_write_hmac_key(tmp_path),
+        gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+    )
+
+    assert events[-1][0] == "federated_amendment_propagated"
+    assert events[-1][1] == payload
+    assert set(payload) == {
+        "proposal_id",
+        "source_node",
+        "destination_nodes",
+        "propagation_timestamp",
+        "evidence_bundle_hash",
+    }
 
 
 # T6-04-10
 
-def test_t6_04_10_pending_peer_blocks_storm_invariant() -> None:
-    with pytest.raises(GovernanceViolation, match="PHASE6_FEDERATED_AMENDMENT_STORM_BLOCKED"):
+def test_t6_04_10_pending_peer_blocks_storm_invariant(tmp_path: Path) -> None:
+    broker = _make_broker([])
+
+    def pending_storm_gate(destination: dict[str, Any], *_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        if destination.get("pending", False):
+            return {
+                "approved": False,
+                "decision": "PHASE6_FEDERATED_AMENDMENT_STORM_BLOCKED",
+                "decision_id": "dest-pending",
+            }
+        return {"approved": True, "decision": "approved", "decision_id": "dest-ok"}
+
+    with pytest.raises(FederationMutationBrokerError, match="PHASE6_FEDERATED_AMENDMENT_STORM_BLOCKED"):
         _propagate(
-            source=Node("source"),
-            peers=[Node("peer", pending=True)],
-            proposal=Proposal("prop-10"),
-            hmac_key="k" * 32,
+            broker=broker,
+            destination_nodes=[{"node_id": "peer-a", "pending": True}],
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=pending_storm_gate,
         )
