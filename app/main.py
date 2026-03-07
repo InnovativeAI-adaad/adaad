@@ -334,7 +334,7 @@ class Orchestrator:
         )
 
     def _verify_checkpoint_chain(self) -> None:
-        """Backward-compatible wrapper for tests patching legacy method name."""
+        """Backward-compatible wrapper for tests patching deprecated method name."""
         self._verify_checkpoint_chain_stage()
 
     def _init_cryovant(self) -> None:

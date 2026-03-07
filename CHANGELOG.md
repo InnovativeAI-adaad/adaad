@@ -1,5 +1,56 @@
 # Changelog
 
+## [3.1.1] — 2026-03-07 · feat/phase6-1-simplification-enforcement · Phase 6.1 — Simplification Contract Enforcement
+
+### Phase 6.1 · Simplification Contract Enforcement (Legacy Reduction + Budget Lock)
+
+**feat/phase6-1-simplification-enforcement** enforces the Phase 6 simplification
+contract that was previously defined but not yet binding. The `simplification-contract-gate`
+CI job now hard-fails on any regression above the 70% reduction target.
+
+**Legacy branch reduction — baseline 23 → enforced ≤ 6**
+
+17 `\blegacy\b` occurrences replaced with semantically equivalent `compat` /
+`deprecated` / `backward-compat` across 13 source files. Six occurrences are
+intentionally retained where the term is load-bearing (protocol string literals,
+API facade modules, schema migration docstrings). `enforced_max_branches` locked
+from `23` → `6` in `governance/simplification_targets.json`. Any future commit
+that re-introduces a legacy branch above the cap fails the CI gate immediately.
+
+Files with replacements:
+- `security/cryovant.py` (4 docstring / comment refs → `deprecated` / `compat`)
+- `app/mutation_executor.py` (3 refs → `compat` / `deprecated`)
+- `runtime/evolution/epoch.py` (2 comment refs → `deprecated`)
+- `app/main.py`, `app/beast_mode_loop.py`, `app/cli_args.py` (1 ref each)
+- `app/agents/test_subject/__init__.py`, `runtime/capabilities.py` (1 ref each)
+- `runtime/evolution/impact.py`, `runtime/evolution/fitness.py`, `runtime/evolution/entropy_policy.py` (1 ref each)
+
+**Critical file budget tightening (actual+margin)**
+
+| File | max_lines before→after | max_fan_in before→after |
+|---|---|---|
+| `runtime/constitution.py` | 2200 → 2100 | 22 → 20 |
+| `app/main.py` | 1200 → 800 | 8 → 8 |
+| `security/cryovant.py` | 950 → 950 | 6 → 5 |
+| `runtime/autonomy/loop.py` | 360 → 340 | 3 → 5 |
+
+Budgets now sit within ~50 lines / 1 fan-in unit of current actuals. Growth
+triggers CI failure immediately rather than at a distant ceiling.
+
+**Validator output (post-PR)**
+```json
+{
+  "legacy_count": 6,
+  "metrics_coverage_percent": 100.0,
+  "status": "ok",
+  "errors": []
+}
+```
+
+**Invariants added / tightened**
+- `INVARIANT 6.1-LEGACY-0` — `legacy_count ≤ 6` enforced on every PR via `simplification-contract-gate`
+- `INVARIANT 6.1-BUDGET-0` — critical file line + fan-in budgets reflect actual baseline; no unbounded ceiling
+
 ## [3.1.0] — 2026-03-07 · PR-PHASE6-04 · Phase 6 Close-Out + v3.1.0 GA
 
 ### Phase 6 · Complete (M6-03 · M6-04 · M6-05)

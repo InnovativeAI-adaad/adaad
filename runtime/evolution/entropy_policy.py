@@ -91,7 +91,7 @@ def enforce_entropy_policy(
     declared_bits: int | None = None,
     observed_bits: int = 0,
 ) -> Dict[str, Any]:
-    """Legacy adapter returning verdict dictionaries without raising."""
+    """Deprecated adapter returning verdict dictionaries without raising."""
     try:
         return policy.enforce(
             mutation_bits=mutation_bits,

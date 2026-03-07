@@ -141,7 +141,7 @@ class MutationExecutor:
         return all(k in sig.parameters for k in ("mutation_id", "epoch_id", "replay_seed"))
 
     def _call_run_tests(self, *, mutation_id: str, epoch_id: str, replay_seed: str) -> TestSandboxResult | tuple[bool, str]:
-        """Invoke _run_tests with keyword args when supported, fall back for legacy monkeypatches.
+        """Invoke _run_tests with keyword args when supported, fall back for compat monkeypatches.
 
         Introspects the actual callable signature *before* calling so that
         TypeErrors raised inside _run_tests propagate normally and are not
@@ -149,10 +149,10 @@ class MutationExecutor:
         """
         if self._accepts_replay_kwargs(self._run_tests):
             return self._run_tests(mutation_id=mutation_id, epoch_id=epoch_id, replay_seed=replay_seed)
-        return self._run_tests()  # type: ignore[misc]  # legacy monkeypatch path
+        return self._run_tests()  # type: ignore[misc]  # compat monkeypatch path
 
     def _normalize_test_result(self, result: TestSandboxResult | tuple[bool, str]) -> TestSandboxResult:
-        """Normalize legacy tuple mocks into TestSandboxResult."""
+        """Normalize deprecated tuple mocks into TestSandboxResult."""
         if isinstance(result, tuple):
             ok, output = result
             return TestSandboxResult(

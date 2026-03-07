@@ -6,7 +6,7 @@ from adaad.agents.test_subject import TestSubjectAgent as TestSubjectAgent  # no
 
 
 class _TestSubjectAgentShim(TestSubjectAgent):
-    """Legacy bridge class visible to AST-based agent contract validators.
+    """Backward-compat bridge class visible to AST-based agent contract validators.
 
     Delegates all behaviour to ``adaad.agents.test_subject.TestSubjectAgent``.
     The star-import above is insufficient for static AST analysis; this class

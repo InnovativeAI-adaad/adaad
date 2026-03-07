@@ -227,7 +227,7 @@ class EpochManager:
         ]
         hashed = [checkpoint for checkpoint in checkpoints if str(checkpoint.get("checkpoint_hash") or "")]
         if not hashed:
-            # Legacy epoch: checkpoints exist but lack the checkpoint_hash field
+            # Deprecated epoch: checkpoints exist but lack the checkpoint_hash field
             # (written before v2.3.0 checkpoint hardening). Allow rotation to proceed.
             if checkpoints:
                 return {
@@ -246,7 +246,7 @@ class EpochManager:
         checkpoint_hash = str(terminal.get("checkpoint_hash") or "")
         if checkpoint_hash != expected_hash:
             # Terminal hash is corrupt or was written with a different schema version —
-            # treat all prior checkpoints as legacy and allow rotation.
+            # treat all prior checkpoints as deprecated and allow rotation.
             if len(hashed) > 1:
                 return {
                     "ok": True,

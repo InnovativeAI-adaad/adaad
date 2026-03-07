@@ -312,7 +312,7 @@ class TokenExpiredError(ValueError):
 
 
 def verify_session(token: str) -> bool:
-    """Legacy session verification path.
+    """Deprecated session verification path.
 
     Deprecated: this method fails closed outside explicit dev-mode contexts.
     Callers must migrate to :func:`verify_governance_token`.
@@ -358,7 +358,7 @@ def _assert_dev_token_not_expired(token: str) -> None:
 
 
 def _accept_dev_token(token: str) -> bool:
-    """Accept only the configured legacy development token."""
+    """Accept only the configured deprecated development token."""
 
     dev_token = (os.getenv("CRYOVANT_DEV_TOKEN") or "").strip()
     if not dev_token or token != dev_token:
@@ -421,7 +421,7 @@ def verify_governance_token(
     """Verify production governance token with explicit dev-mode fallback.
 
     Accepted tokens are HMAC-signed ``cryovant-gov-v1`` envelopes with expiry.
-    Legacy ``CRYOVANT_DEV_TOKEN`` override remains available only for explicit
+    Deprecated ``CRYOVANT_DEV_TOKEN`` override remains available only for explicit
     development mode (``ADAAD_ENV=dev`` and ``CRYOVANT_DEV_MODE`` enabled).
     """
 
@@ -504,7 +504,7 @@ def _valid_signature(
     agent_dir: Path | None = None,
     lineage_hash: str | None = None,
 ) -> bool:
-    """Validate certificate signatures with HMAC-first + legacy fallback.
+    """Validate certificate signatures with HMAC-first + compat fallback.
 
     When ``lineage_hash`` is provided, it is treated as authoritative and
     ``agent_dir`` is not re-hashed. Callers passing both must ensure the hash

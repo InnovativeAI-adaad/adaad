@@ -1,25 +1,27 @@
 {
   "schema_version": "simplification_targets.v1",
+  "_phase": "6.1",
+  "_note": "Enforced reduction targets. enforced_max_branches locked to target_max_branches (6). File budgets tightened to actual+margin.",
   "critical_file_budgets": [
     {
       "path": "runtime/constitution.py",
-      "max_lines": 2200,
-      "max_fan_in": 22
+      "max_lines": 2100,
+      "max_fan_in": 20
     },
     {
       "path": "app/main.py",
-      "max_lines": 1200,
+      "max_lines": 800,
       "max_fan_in": 8
     },
     {
       "path": "security/cryovant.py",
       "max_lines": 950,
-      "max_fan_in": 6
+      "max_fan_in": 5
     },
     {
       "path": "runtime/autonomy/loop.py",
-      "max_lines": 360,
-      "max_fan_in": 3
+      "max_lines": 340,
+      "max_fan_in": 5
     }
   ],
   "legacy_path_reduction": {
@@ -32,7 +34,7 @@
     "baseline_branches": 23,
     "target_reduction_percent": 70,
     "target_max_branches": 6,
-    "enforced_max_branches": 23
+    "enforced_max_branches": 6
   },
   "metrics_schema_adoption": {
     "required_coverage_percent": 100,

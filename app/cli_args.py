@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="off",
         help=(
             "Replay mode: off (skip replay), audit (verify and continue), strict (verify and fail-close). "
-            "Legacy aliases: full->audit, true->audit, false->off."
+            "Deprecated aliases: full->audit, true->audit, false->off."
         ),
     )
     parser.add_argument("--replay-epoch", default="", help="Replay a specific epoch id as the verification target.")
