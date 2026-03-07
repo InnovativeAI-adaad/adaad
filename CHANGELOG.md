@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.1.0-dev] — 2026-03-07 · PR-PHASE6-03 · M6-04 Federated Roadmap Propagation Complete
+
+### Phase 6 · M6-04 Completion (post-merge close-out)
+
+**PR-PHASE6-03** is complete: `FederationMutationBroker.propagate_amendment()` now
+ships atomic all-or-nothing propagation, destination-side independent gate checks,
+and ledger emission for `federated_amendment_propagated`.
+
+**Constitutional invariants satisfied:**
+- `INVARIANT PHASE6-FED-0` — source-node approval is provenance-only and never binds destination nodes.
+- `INVARIANT PHASE6-STORM-0` — propagation path remains compatible with per-node pending-amendment limits.
+- `INVARIANT PHASE6-HUMAN-0` — no autonomous merge/sign-off authority introduced.
+
+**Evidence alignment:**
+- `docs/comms/claims_evidence_matrix.md` row `phase6-m604-federated-propagation` marked `Complete` with final implementation/test/evidence links.
+- `docs/governance/ledger_event_contract.md` payload contract for `federated_amendment_propagated` verified against runtime implementation fields.
+
+---
+
 ## [3.1.0-dev] — 2026-03-07 · PR-PHASE6-02 · M6-03 EvolutionLoop × RoadmapAmendmentEngine Wire
 
 ### Phase 6 · M6-03 Implementation
