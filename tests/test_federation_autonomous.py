@@ -210,6 +210,54 @@ class TestFederationConsensusEngine:
         result = eng.request_vote(candidate_id="node-2", candidate_term=3)
         assert result["vote_granted"] is False
 
+    def test_journal_fail_open_emits_status_and_does_not_raise(self, caplog):
+        from runtime.governance.federation.consensus import FederationConsensusEngine, JournalFailureMode
+        caplog.set_level("ERROR")
+
+        def _boom(_event_type, _payload):
+            raise RuntimeError("journal unavailable")
+
+        eng = FederationConsensusEngine(
+            node_id="node-1",
+            peer_ids=["node-2", "node-3"],
+            journal_fn=_boom,
+            journal_failure_mode=JournalFailureMode.FAIL_OPEN,
+        )
+
+        eng.start_election()
+
+        status = eng.last_journal_status
+        assert status is not None
+        assert status.ok is False
+        assert status.event_type == "federation_election_started.v1"
+        assert status.exception_class == "RuntimeError"
+        assert status.exception_message == "journal unavailable"
+        assert status.fail_closed_triggered is False
+        assert "federation_journal_write_failed" in caplog.text
+        assert "exception_class=RuntimeError" in caplog.text
+        assert "exception_message=journal unavailable" in caplog.text
+
+    def test_journal_fail_closed_raises_for_critical_event(self):
+        from runtime.governance.federation.consensus import FederationConsensusEngine, JournalFailureMode
+
+        def _boom(_event_type, _payload):
+            raise ValueError("write failed")
+
+        eng = FederationConsensusEngine(
+            node_id="node-1",
+            peer_ids=["node-2", "node-3"],
+            journal_fn=_boom,
+            journal_failure_mode=JournalFailureMode.FAIL_CLOSED_CRITICAL,
+        )
+
+        with pytest.raises(ValueError, match="write failed"):
+            eng.start_election()
+
+        status = eng.last_journal_status
+        assert status is not None
+        assert status.ok is False
+        assert status.fail_closed_triggered is True
+
 
 class TestFederationNodeSupervisor:
     def _setup(self):

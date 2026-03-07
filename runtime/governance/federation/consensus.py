@@ -9,7 +9,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +22,21 @@ class NodeRole(str, Enum):
     FOLLOWER  = "follower"
     CANDIDATE = "candidate"
     LEADER    = "leader"
+
+
+class JournalFailureMode(str, Enum):
+    FAIL_OPEN = "fail_open"
+    FAIL_CLOSED_CRITICAL = "fail_closed_critical"
+
+
+@dataclass(frozen=True)
+class JournalStatus:
+    event_type: str
+    ok: bool
+    mode: JournalFailureMode
+    exception_class: Optional[str] = None
+    exception_message: Optional[str] = None
+    fail_closed_triggered: bool = False
 
 
 @dataclass(frozen=True)
@@ -69,11 +84,26 @@ class FederationConsensusEngine:
     GovernanceGate retains execution authority; consensus provides ordering only.
     """
 
-    def __init__(self, *, node_id: str, peer_ids: List[str], journal_fn: Any = None) -> None:
+    def __init__(
+        self,
+        *,
+        node_id: str,
+        peer_ids: List[str],
+        journal_fn: Any = None,
+        journal_failure_mode: JournalFailureMode = JournalFailureMode.FAIL_CLOSED_CRITICAL,
+        critical_journal_events: Optional[Set[str]] = None,
+    ) -> None:
         self._state = ConsensusState(node_id=node_id)
         self._peer_ids = list(peer_ids)
         self._votes_received: Dict[str, int] = {}
         self._journal_fn = journal_fn
+        self._journal_failure_mode = JournalFailureMode(journal_failure_mode)
+        self._critical_journal_events = critical_journal_events or {
+            "federation_election_started.v1",
+            "federation_leader_elected.v1",
+            "federation_log_appended.v1",
+        }
+        self._last_journal_status: Optional[JournalStatus] = None
 
     # ------------------------------------------------------------------
     # Election
@@ -195,6 +225,8 @@ class FederationConsensusEngine:
     def log(self) -> List[LogEntry]: return list(self._state.log)
     @property
     def commit_index(self) -> int: return self._state.commit_index
+    @property
+    def last_journal_status(self) -> Optional[JournalStatus]: return self._last_journal_status
 
     def is_election_timeout(self) -> bool:
         return (time.time() - self._state.last_heartbeat) > _ELECTION_TIMEOUT_S
@@ -203,9 +235,52 @@ class FederationConsensusEngine:
     # Internal
     # ------------------------------------------------------------------
 
-    def _journal(self, event_type: str, payload: Dict[str, Any]) -> None:
-        if self._journal_fn:
-            try: self._journal_fn(event_type, payload)
-            except Exception: pass
+    def _journal(self, event_type: str, payload: Dict[str, Any]) -> JournalStatus:
+        if not self._journal_fn:
+            self._last_journal_status = JournalStatus(
+                event_type=event_type,
+                ok=True,
+                mode=self._journal_failure_mode,
+            )
+            return self._last_journal_status
+        try:
+            self._journal_fn(event_type, payload)
+            self._last_journal_status = JournalStatus(
+                event_type=event_type,
+                ok=True,
+                mode=self._journal_failure_mode,
+            )
+            return self._last_journal_status
+        except Exception as exc:
+            fail_closed_triggered = (
+                self._journal_failure_mode == JournalFailureMode.FAIL_CLOSED_CRITICAL
+                and event_type in self._critical_journal_events
+            )
+            self._last_journal_status = JournalStatus(
+                event_type=event_type,
+                ok=False,
+                mode=self._journal_failure_mode,
+                exception_class=exc.__class__.__name__,
+                exception_message=str(exc),
+                fail_closed_triggered=fail_closed_triggered,
+            )
+            log.error(
+                "federation_journal_write_failed event_type=%s exception_class=%s exception_message=%s mode=%s fail_closed=%s",
+                event_type,
+                exc.__class__.__name__,
+                str(exc),
+                self._journal_failure_mode.value,
+                fail_closed_triggered,
+            )
+            if fail_closed_triggered:
+                raise
+            return self._last_journal_status
 
-__all__ = ["FederationConsensusEngine", "ConsensusState", "LogEntry", "NodeRole"]
+__all__ = [
+    "FederationConsensusEngine",
+    "ConsensusState",
+    "LogEntry",
+    "NodeRole",
+    "JournalFailureMode",
+    "JournalStatus",
+]
