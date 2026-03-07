@@ -30,8 +30,11 @@ Integration with Orchestrator (app/main.py):
 from __future__ import annotations
 
 import json
+import logging
+import os
 import re
 import time
+import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -50,6 +53,11 @@ from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, R
 from runtime.evolution.fast_path_scorer import fast_path_score
 from runtime.evolution.entropy_fast_gate import EntropyFastGate, GateVerdict
 from runtime.evolution.checkpoint_chain import checkpoint_chain_digest, ZERO_HASH
+from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
+from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
+from security.ledger import journal
+
+_LOG = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -103,6 +111,8 @@ class EpochResult:
     entropy_warned:         int        = 0
     checkpoint_digest:      str        = ""
     mean_lineage_proximity: float      = 0.0
+    amendment_proposed:     bool       = False
+    amendment_id:           Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +129,8 @@ class EvolutionLoop:
         generations:       int  = 3,
         simulate_outcomes: bool = False,
         controller:        Optional[ExploreExploitController] = None,
+        amendment_engine:  Optional[RoadmapAmendmentEngine] = None,
+        federated_evidence_matrix: Optional[FederatedEvidenceMatrix] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -127,13 +139,18 @@ class EvolutionLoop:
         self._landscape        = FitnessLandscape()
         self._manager          = PopulationManager()
         self._controller       = controller or ExploreExploitController()
+        self._amendment_engine = amendment_engine or RoadmapAmendmentEngine()
+        self._federated_evidence_matrix = federated_evidence_matrix
         self._router           = MutationRouteOptimizer()
         self._entropy_gate     = EntropyFastGate()
         self._chain_predecessor: str = self._load_chain_tip()
+        self._epoch_count      = 0
+        self._health_scores: List[float] = []
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
         epoch_id = context.current_epoch_id
+        self._epoch_count += 1
 
         # Phase 0: Strategy
         _preferred = self._landscape.recommended_agent()
@@ -234,6 +251,11 @@ class EvolutionLoop:
         accepted       = [s for s in all_scores if s.accepted]
         accepted_count = len(accepted)
 
+        health_score = self._record_health_score(
+            accepted_count=accepted_count,
+            total_candidates=total_candidates,
+        )
+
         # Phase 4: Adapt weights
         outcomes        = self._build_outcomes(all_scores)
         updated_weights = self._adaptor.adapt(outcomes)
@@ -285,6 +307,12 @@ class EvolutionLoop:
         self._chain_predecessor = cp.chain_digest
         _append_chain_entry(cp, _CHAIN_PATH)
 
+        amendment_proposed, amendment_id = self._evaluate_m603_amendment_gates(
+            epoch_id=epoch_id,
+            health_score=health_score,
+            checkpoint_digest=cp.chain_digest,
+        )
+
         return EpochResult(
             epoch_id               = epoch_id,
             generation_count       = self._generations,
@@ -302,7 +330,163 @@ class EvolutionLoop:
             entropy_warned         = entropy_warned,
             checkpoint_digest      = cp.chain_digest,
             mean_lineage_proximity = mean_lineage_proximity,
+            amendment_proposed     = amendment_proposed,
+            amendment_id           = amendment_id,
         )
+
+    def _evaluate_m603_amendment_gates(
+        self,
+        *,
+        epoch_id: str,
+        health_score: float,
+        checkpoint_digest: str,
+    ) -> Tuple[bool, Optional[str]]:
+        try:
+            trigger_interval = _read_amendment_trigger_interval()
+            if trigger_interval < 5:
+                journal.append_tx(
+                    tx_type="PHASE6_TRIGGER_INTERVAL_MISCONFIGURED",
+                    payload={
+                        "epoch_id": epoch_id,
+                        "gate_id": "GATE-M603-06",
+                        "amendment_trigger_interval": trigger_interval,
+                    },
+                )
+                raise GovernanceViolation("PHASE6_TRIGGER_INTERVAL_MISCONFIGURED")
+
+            if self._epoch_count % trigger_interval != 0:
+                journal.append_tx(
+                    tx_type="PHASE6_AMENDMENT_NOT_TRIGGERED",
+                    payload={"epoch_id": epoch_id, "gate_id": "GATE-M603-01"},
+                )
+                return False, None
+
+            if health_score < 0.80:
+                journal.append_tx(
+                    tx_type="PHASE6_HEALTH_GATE_FAIL",
+                    payload={
+                        "epoch_id": epoch_id,
+                        "gate_id": "GATE-M603-02",
+                        "health_score": health_score,
+                    },
+                )
+                return False, None
+
+            federation_enabled = os.getenv("ADAAD_FEDERATION_ENABLED", "false").strip().lower() == "true"
+            divergence_count = 0
+            if federation_enabled:
+                matrix = self._federated_evidence_matrix or FederatedEvidenceMatrix(local_repo="local")
+                divergence_count = matrix.divergence_count()
+                if divergence_count != 0:
+                    journal.append_tx(
+                        tx_type="PHASE6_FEDERATION_DIVERGENCE_BLOCKS_AMENDMENT",
+                        payload={
+                            "epoch_id": epoch_id,
+                            "gate_id": "GATE-M603-03",
+                            "divergence_count": divergence_count,
+                        },
+                    )
+                    return False, None
+
+            prediction_accuracy = float(self._adaptor.prediction_accuracy)
+            if prediction_accuracy <= 0.60:
+                journal.append_tx(
+                    tx_type="PHASE6_PREDICTION_ACCURACY_GATE_FAIL",
+                    payload={
+                        "epoch_id": epoch_id,
+                        "gate_id": "GATE-M603-04",
+                        "prediction_accuracy": prediction_accuracy,
+                    },
+                )
+                return False, None
+
+            pending = self._amendment_engine.list_pending()
+            if pending:
+                pending_id = pending[0].proposal_id
+                _LOG.warning(
+                    "PHASE6_AMENDMENT_STORM_BLOCKED epoch_id=%s pending_amendment_id=%s",
+                    epoch_id,
+                    pending_id,
+                )
+                journal.append_tx(
+                    tx_type="PHASE6_AMENDMENT_STORM_BLOCKED",
+                    payload={
+                        "epoch_id": epoch_id,
+                        "gate_id": "GATE-M603-05",
+                        "pending_amendment_id": pending_id,
+                    },
+                )
+                return False, None
+
+            proposal = self._amendment_engine.propose(
+                proposer_agent="ArchitectAgent",
+                milestones=[
+                    MilestoneEntry(
+                        phase_id=6,
+                        title="Autonomous Roadmap Self-Amendment",
+                        status="active",
+                        target_ver="3.1.0",
+                        description="Evolution loop generated amendment proposal based on gate-qualified telemetry.",
+                    )
+                ],
+                rationale=self._build_amendment_rationale(
+                    epoch_id=epoch_id,
+                    health_score=health_score,
+                    prediction_accuracy=prediction_accuracy,
+                ),
+            )
+            journal.append_tx(
+                tx_type="roadmap_amendment_proposed",
+                payload={
+                    "epoch_id": epoch_id,
+                    "proposal_id": proposal.proposal_id,
+                    "lineage_chain_hash": proposal.lineage_chain_hash,
+                    "prior_roadmap_hash": proposal.prior_roadmap_hash,
+                    "checkpoint_digest": checkpoint_digest,
+                    "gate_ids": [
+                        "GATE-M603-01",
+                        "GATE-M603-02",
+                        "GATE-M603-03",
+                        "GATE-M603-04",
+                        "GATE-M603-05",
+                        "GATE-M603-06",
+                    ],
+                },
+            )
+            return True, proposal.proposal_id
+        except GovernanceViolation:
+            raise
+        except Exception:
+            _LOG.warning("PHASE6_AMENDMENT_EVAL_ERROR epoch_id=%s", epoch_id, exc_info=True)
+            journal.append_tx(
+                tx_type="PHASE6_AMENDMENT_EVAL_ERROR",
+                payload={
+                    "epoch_id": epoch_id,
+                    "traceback": traceback.format_exc(),
+                },
+            )
+            return False, None
+
+    def _build_amendment_rationale(
+        self,
+        *,
+        epoch_id: str,
+        health_score: float,
+        prediction_accuracy: float,
+    ) -> str:
+        return (
+            f"Epoch {epoch_id} passed all M6-03 prerequisite gates with health score "
+            f"{health_score:.2f} and prediction accuracy {prediction_accuracy:.2f}. "
+            "Proposing roadmap refinement to keep Phase 6 execution aligned with deterministic "
+            "governance controls and milestone delivery cadence."
+        )
+
+    def _record_health_score(self, *, accepted_count: int, total_candidates: int) -> float:
+        score = 1.0 if total_candidates == 0 else accepted_count / max(total_candidates, 1)
+        self._health_scores.append(score)
+        if len(self._health_scores) > 10:
+            self._health_scores = self._health_scores[-10:]
+        return round(sum(self._health_scores) / len(self._health_scores), 4)
 
     def _build_outcomes(self, scores: List[MutationScore]) -> List[MutationOutcome]:
         if not self._simulate:
@@ -392,3 +576,8 @@ def _compute_mean_lineage_proximity(accepted: List[MutationScore]) -> float:
         return 0.0
     scores = [getattr(ms, "lineage_proximity", 0.0) for ms in accepted]
     return round(sum(scores) / len(scores), 4) if scores else 0.0
+
+
+def _read_amendment_trigger_interval() -> int:
+    raw = os.getenv("ADAAD_AMENDMENT_TRIGGER_INTERVAL", os.getenv("ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL", "10"))
+    return int(raw)
