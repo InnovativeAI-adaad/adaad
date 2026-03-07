@@ -158,3 +158,134 @@ Expected performance impact (typical PR runs):
 - Overall CI time improves most on workflows with multiple dependency-installing jobs (`schema-validation`, `full-test-suite`, `governance-tests`, `confidence-fast`, and conditional critical suites).
 
 This optimization preserves fail-closed behavior: no mandatory gate was changed to `continue-on-error`, and existing gating semantics remain intact.
+
+
+---
+
+## Phase 6 CI Gating — Roadmap Amendment (v3.1.0)
+
+**Authority:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md` §2.7, §3.7
+**Effective:** 2026-03-07
+
+### Required CI jobs for PR-PHASE6-02 (M6-03)
+
+All jobs below must pass before PR-PHASE6-02 may merge. These requirements extend
+the standard `ci.yml` critical tier with Phase 6-specific gates.
+
+| Job | Workflow | Gate type | Blocks |
+|---|---|---|---|
+| `phase6-amendment-gate-determinism` | `ci.yml` (extended) | Determinism | PR-PHASE6-02 merge |
+| `phase6-storm-invariant` | `ci.yml` (extended) | Constitutional | PR-PHASE6-02 merge |
+| `phase6-human-signoff-path` | `ci.yml` (extended) | Constitutional | PR-PHASE6-02 merge |
+| `fl-roadmap-signoff-v1-activation` | `governance_strict_release_gate.yml` | Rule activation | v3.1.0 tag |
+| `rule-applicability-v1.2.0-valid` | `ci.yml` (extended) | Schema | PR-PHASE6-02 merge |
+
+#### `phase6-amendment-gate-determinism`
+
+**Purpose:** Verify that all six M6-03 prerequisite gates produce identical verdicts
+on identical telemetry inputs across two independent evaluation runs.
+
+**Inputs:** Seeded `EpochTelemetry` fixture at epoch boundary; deterministic provider enabled.
+
+**Pass condition:** Gate verdict payloads are byte-identical across both runs.
+
+**Fail condition:** Any divergence → `DETERMINISM_VIOLATION_PHASE6_GATE` · CI blocks.
+
+**Evidence:** Gate verdict digests uploaded as CI artifact for replay attestation.
+
+#### `phase6-storm-invariant`
+
+**Purpose:** Verify `INVARIANT PHASE6-STORM-0` — at most 1 pending amendment at any time.
+
+**Test path:** `tests/autonomy/test_evolution_loop_amendment.py::test_storm_invariant_*`
+
+**Pass condition:** Attempting a second proposal emission while one is PENDING returns
+`PHASE6_AMENDMENT_STORM_BLOCKED`; no second proposal is written to ledger.
+
+**Fail condition:** Second proposal emitted or written → Constitutional fault · CI blocks.
+
+#### `phase6-human-signoff-path`
+
+**Purpose:** Verify `FL-ROADMAP-SIGNOFF-V1` — no auto-approval path exists.
+
+**Test path:** `tests/autonomy/test_evolution_loop_amendment.py::test_no_auto_approval_*`
+
+**Pass condition:** All approval paths without `human_signoff_token` raise `GovernanceViolation`.
+
+**Fail condition:** Any auto-approval succeeds → CI blocks; `FL-ROADMAP-SIGNOFF-V1` violation.
+
+#### `fl-roadmap-signoff-v1-activation`
+
+**Purpose:** Assert `fl_roadmap_signoff_v1` rule is registered and BLOCKING in the
+runtime constitution policy before v3.1.0 release tag.
+
+**Enforcement:** Extended `governance-strict-mode-validation` job in `governance_strict_release_gate.yml`.
+
+**Pass condition:** Rule name `fl_roadmap_signoff_v1` present in policy with `severity=hard`
+and `can_be_overridden=false`.
+
+**Fail condition:** Rule absent or overridable → Release gate blocks tag promotion.
+
+#### `rule-applicability-v1.2.0-valid`
+
+**Purpose:** Verify `governance/rule_applicability.yaml` parses correctly and contains
+`fl_roadmap_signoff_v1` with all required fields after v1.2.0 bump.
+
+**Pass condition:** JSON valid; `version == "1.2.0"`; `fl_roadmap_signoff_v1` rule present;
+`override_policy.can_be_overridden == false`.
+
+**Fail condition:** Any parse error, version mismatch, or missing rule → CI blocks.
+
+---
+
+### Required CI jobs for PR-PHASE6-03 (M6-04)
+
+| Job | Workflow | Gate type |
+|---|---|---|
+| `phase6-federated-amendment-dual-gate` | `federation_determinism.yml` (extended) | Constitutional |
+| `phase6-federated-propagation-all-or-nothing` | `ci.yml` (extended) | Determinism |
+| `phase6-federated-amendment-no-state-inheritance` | `ci.yml` (extended) | Constitutional |
+
+#### `phase6-federated-amendment-dual-gate`
+
+**Purpose:** Verify `INVARIANT PHASE5-GATE-0` (dual-gate) applies to amendment propagation.
+Source approval must NOT bind destination.
+
+**Test path:** `tests/governance/federation/test_federated_amendment.py::test_dual_gate_*`
+
+**Pass condition:** Destination node evaluates proposal as PENDING regardless of source status.
+
+**Fail condition:** Destination inherits source approval → Dual-gate violation · CI blocks.
+
+#### `phase6-federated-propagation-all-or-nothing`
+
+**Purpose:** Verify all-or-nothing propagation rollback — if any peer fails, all peers
+revert to pre-propagation state.
+
+**Pass condition:** Partial-failure scenario leaves all nodes in pre-propagation state;
+ledger records rollback event.
+
+**Fail condition:** Partial propagation persisted → CI blocks; `PARTIAL_PROPAGATION_FAULT`.
+
+#### `phase6-federated-amendment-no-state-inheritance`
+
+**Purpose:** Verify destination receives proposal at `proposed` state regardless of
+source state (`pending_governor_review` or `approved`).
+
+**Pass condition:** `federation_origin` field present; proposal state at destination is `proposed`.
+
+**Fail condition:** Destination proposal state != `proposed` → CI blocks.
+
+---
+
+### v3.1.0 Release Gate Extension
+
+The following check is added to `governance_strict_release_gate.yml` before v3.1.0 tag:
+
+- **`phase6-evidence-matrix-complete`**: All Phase 6 evidence rows in
+  `docs/comms/claims_evidence_matrix.md` must have non-empty `test_ref` and `artifact_path`
+  columns. Any empty cell → release gate blocks.
+
+- **`phase6-roadmap-m6xx-all-shipped`**: M6-01 through M6-05 must all be marked
+  `✅ shipped` in `ROADMAP.md`. Any pending milestone → release gate blocks v3.1.0 tag.
+

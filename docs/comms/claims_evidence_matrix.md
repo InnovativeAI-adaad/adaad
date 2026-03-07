@@ -73,3 +73,20 @@ An entry is considered complete only when:
 1. Status is exactly `Complete`.
 2. Every markdown link in the evidence column resolves to a tracked file path under this repository.
 3. Links are specific enough for reviewer verification (no placeholder text such as `TBD`, `TODO`, or `coming soon`).
+
+## Phase 6 Evidence Rows (v3.1.0)
+
+Evidence rows below are **required** before v3.1.0 may be tagged. The
+`phase6-evidence-matrix-complete` CI check blocks the release gate on any empty
+`test_ref` or `artifact_path` column.
+
+| Claim ID | Claim | Test Reference | Artifact Path | Status |
+|---|---|---|---|---|
+| `phase6-architect-spec-v310` | ArchitectAgent has issued the canonical Phase 6 completion specification covering M6-03, M6-04, M6-05 with deterministic gate definitions, failure modes, and acceptance criteria. | [ARCHITECT_SPEC_v3.1.0.md](../governance/ARCHITECT_SPEC_v3.1.0.md) | `docs/governance/ARCHITECT_SPEC_v3.1.0.md` | Complete |
+| `phase6-fl-roadmap-signoff-registered` | FL-ROADMAP-SIGNOFF-V1 blocking rule registered in Founders Law v2, rule_applicability.yaml v1.2.0, and enforced by GovernanceGate for all roadmap_amendment mutations. | [founders_law_v2.md §FL-ROADMAP-SIGNOFF-V1](../governance/founders_law_v2.md); [rule_applicability.yaml](../../governance/rule_applicability.yaml) | `docs/governance/founders_law_v2.md`, `governance/rule_applicability.yaml` | Complete |
+| `phase6-mutation-type-roadmap-amendment-defined` | roadmap_amendment is a formally defined mutation type with canonical state chain, blocking guards, and ledger event mapping. | [mutation_lifecycle.md §roadmap_amendment](../governance/mutation_lifecycle.md) | `docs/governance/mutation_lifecycle.md` | Complete |
+| `phase6-ci-gates-specified` | CI gating requirements for PR-PHASE6-02 (5 jobs) and PR-PHASE6-03 (3 jobs) are formally specified with pass/fail conditions and evidence upload contracts. | [ci-gating.md §Phase 6](../governance/ci-gating.md) | `docs/governance/ci-gating.md` | Complete |
+| `phase6-test-acceptance-spec-issued` | Test acceptance specification issued: 13 required tests for M6-03, 10 required tests for M6-04, all with stable test IDs for evidence matrix cross-reference. | [PHASE6_TEST_ACCEPTANCE_SPEC.md](../governance/PHASE6_TEST_ACCEPTANCE_SPEC.md) | `docs/governance/PHASE6_TEST_ACCEPTANCE_SPEC.md` | Complete |
+| `phase6-m603-evolution-loop-wire` | M6-03: RoadmapAmendmentEngine wired into EvolutionLoop with 6-gate prerequisite check; EpochResult extended; storm invariant enforced. | `tests/autonomy/test_evolution_loop_amendment.py` (T6-03-01..13) | `runtime/autonomy/loop.py` | ⬜ Pending PR-PHASE6-02 |
+| `phase6-m604-federated-propagation` | M6-04: FederationMutationBroker.propagate_amendment() implemented with all-or-nothing propagation, dual-gate invariant, and INVARIANT PHASE6-FED-0 enforced. | `tests/governance/federation/test_federated_amendment.py` (T6-04-01..10) | `runtime/governance/federation/mutation_broker.py` | ⬜ Pending PR-PHASE6-03 |
+| `phase6-m605-android-distribution` | M6-05: Free Android distribution pipeline complete across 4 tracks; F-Droid MR submitted; governance gate passes before every APK sign. | `android-free-release.yml` CI green; F-Droid MR URL in CHANGELOG | `android/fdroid/com.innovativeai.adaad.yml` | ⬜ Pending PR-PHASE6-04 |
