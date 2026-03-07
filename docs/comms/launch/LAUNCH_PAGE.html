@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADAAD — Governed AI Code Evolution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=Literata:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #05090f;
+    --paper: #f4f0e8;
+    --cyan: #00d4ff;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --green: #22c55e;
+    --violet: #7b61ff;
+    --mid: #8a9bb0;
+    --border: rgba(0,212,255,0.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Literata', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.65;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 4rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -20%;
+    width: 80%;
+    height: 140%;
+    background: radial-gradient(ellipse, rgba(0,212,255,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 860px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(24px);
+    animation: rise 0.9s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
+  }
+
+  .badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    animation: rise 0.7s ease 0.3s forwards;
+  }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.7rem;
+    border-radius: 3px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+
+  .badge-cyan   { color: var(--cyan);   border-color: rgba(0,212,255,0.4);  background: rgba(0,212,255,0.06); }
+  .badge-amber  { color: var(--amber);  border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.06); }
+  .badge-red    { color: var(--red);    border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.06); }
+  .badge-green  { color: var(--green);  border-color: rgba(34,197,94,0.4);  background: rgba(34,197,94,0.06); }
+  .badge-violet { color: var(--violet); border-color: rgba(123,97,255,0.4); background: rgba(123,97,255,0.06); }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3.2rem, 8vw, 6.4rem);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    color: var(--paper);
+    margin-bottom: 0.15em;
+  }
+
+  h1 .accent { color: var(--cyan); }
+
+  .hero-sub {
+    font-family: 'Literata', serif;
+    font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+    color: var(--mid);
+    max-width: 600px;
+    margin: 1.4rem auto 2.8rem;
+    font-style: italic;
+  }
+
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    opacity: 0;
+    animation: rise 0.7s ease 0.55s forwards;
+  }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding: 0.7rem 1.8rem;
+    border-radius: 4px;
+    border: 1px solid;
+    transition: all 0.2s ease;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--cyan);
+    color: var(--ink);
+    border-color: var(--cyan);
+  }
+  .btn-primary:hover { background: #33dcff; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,212,255,0.25); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--paper);
+    border-color: rgba(244,240,232,0.25);
+  }
+  .btn-secondary:hover { border-color: var(--paper); transform: translateY(-2px); }
+
+  /* ── SCROLL INDICATOR ── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0.3;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  .scroll-hint::after {
+    content: '';
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--mid), transparent);
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 0 auto;
+    max-width: 800px;
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    padding: 5rem 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.2rem;
+    color: var(--paper);
+  }
+
+  p { color: #b8c4d0; margin-bottom: 1.2rem; }
+  p strong { color: var(--paper); }
+
+  /* ── PIPELINE STEPS ── */
+  .pipeline {
+    display: grid;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2.5rem 0;
+  }
+
+  .step {
+    background: var(--ink);
+    padding: 1.4rem 1.8rem;
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    gap: 1rem;
+    align-items: start;
+    transition: background 0.2s;
+  }
+  .step:hover { background: rgba(0,212,255,0.04); }
+
+  .step-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--cyan);
+    padding-top: 0.25rem;
+    opacity: 0.7;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--paper);
+    margin-bottom: 0.35rem;
+  }
+
+  .step p { margin: 0; font-size: 0.95rem; }
+
+  /* ── INVARIANT CALLOUT ── */
+  .invariant {
+    border-left: 3px solid var(--amber);
+    padding: 1.2rem 1.6rem;
+    background: rgba(245,158,11,0.05);
+    border-radius: 0 4px 4px 0;
+    margin: 2rem 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #d4aa60;
+  }
+
+  .invariant strong { color: var(--amber); display: block; margin-bottom: 0.4rem; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* ── CAPABILITY GRID ── */
+  .cap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+
+  .cap {
+    background: var(--ink);
+    padding: 1.4rem;
+    transition: background 0.2s;
+  }
+  .cap:hover { background: rgba(123,97,255,0.05); }
+
+  .cap-icon { font-size: 1.4rem; margin-bottom: 0.6rem; display: block; }
+  .cap-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--paper); margin-bottom: 0.4rem; }
+  .cap p { font-size: 0.88rem; margin: 0; }
+
+  /* ── PHASE STATUS ── */
+  .phase-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin: 2rem 0;
+  }
+
+  .phase-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--mid);
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-table td {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid rgba(0,212,255,0.07);
+    color: #b8c4d0;
+    vertical-align: middle;
+  }
+
+  .phase-table tr:last-child td { border-bottom: none; }
+  .phase-table td:first-child { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--paper); }
+
+  .status-shipped { color: var(--green); }
+  .status-active  { color: var(--amber); }
+  .status-proposed { color: var(--cyan); }
+
+  /* ── ANDROID SECTION ── */
+  .install-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+
+  @media (max-width: 560px) { .install-grid { grid-template-columns: 1fr; } }
+
+  .install-card {
+    background: var(--ink);
+    padding: 1.4rem 1.6rem;
+    transition: background 0.2s;
+  }
+  .install-card:hover { background: rgba(34,197,94,0.04); }
+
+  .install-card h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--paper); margin-bottom: 0.8rem; }
+
+  .install-card ol { padding-left: 1.2rem; color: #b8c4d0; font-size: 0.9rem; }
+  .install-card ol li { margin-bottom: 0.3rem; }
+
+  /* ── CODE BLOCK ── */
+  pre {
+    background: rgba(0,212,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.2rem 1.4rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    color: #8ecfdf;
+    margin: 1.5rem 0;
+    line-height: 1.7;
+  }
+
+  code { font-family: 'DM Mono', monospace; font-size: 0.88em; color: var(--cyan); background: rgba(0,212,255,0.08); padding: 0.1em 0.35em; border-radius: 2px; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 3rem 2rem;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--mid);
+    letter-spacing: 0.05em;
+  }
+
+  footer a { color: var(--cyan); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; margin-top: 1rem; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── TICKER ── */
+  .ticker {
+    background: rgba(0,212,255,0.06);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 28s linear infinite;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    color: rgba(0,212,255,0.6);
+  }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ticker">
+  <span class="ticker-inner">
+    ADAAD v3.1.0-dev &nbsp;·&nbsp; PHASE 6 ACTIVE &nbsp;·&nbsp; GOVERNANCE: FAIL-CLOSED &nbsp;·&nbsp; FREE ANDROID APP &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; MIT LICENSE &nbsp;·&nbsp; DETERMINISTIC REPLAY &nbsp;·&nbsp; SHA-256 EVIDENCE LEDGER &nbsp;·&nbsp; 16 CONSTITUTIONAL RULES &nbsp;·&nbsp; HUMANS APPROVE. ALWAYS. &nbsp;·&nbsp; ADAAD v3.1.0-dev &nbsp;·&nbsp; PHASE 6 ACTIVE &nbsp;·&nbsp; GOVERNANCE: FAIL-CLOSED &nbsp;·&nbsp; FREE ANDROID APP &nbsp;·&nbsp; OPEN SOURCE &nbsp;·&nbsp; MIT LICENSE &nbsp;·&nbsp; DETERMINISTIC REPLAY &nbsp;·&nbsp; SHA-256 EVIDENCE LEDGER &nbsp;·&nbsp; 16 CONSTITUTIONAL RULES &nbsp;·&nbsp; HUMANS APPROVE. ALWAYS. &nbsp;·&nbsp;
+  </span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="badge-row">
+      <span class="badge badge-cyan">v3.1.0-dev</span>
+      <span class="badge badge-amber">Phase 6 active</span>
+      <span class="badge badge-violet">Python 3.11+</span>
+      <span class="badge badge-green">Android free</span>
+      <span class="badge badge-red">Governance: fail-closed</span>
+      <span class="badge badge-cyan">MIT License</span>
+    </div>
+
+    <h1>AI that <span class="accent">evolves</span><br/>your codebase.<br/>Constitutionally.</h1>
+
+    <p class="hero-sub">Three AI agents compete to improve your code. A 16-rule constitutional gate decides what ships. Nothing executes without proof. Nothing changes without permission.</p>
+
+    <div class="cta-row">
+      <a href="https://github.com/InnovativeAI-adaad/ADAAD" class="btn btn-primary">View on GitHub →</a>
+      <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/docs/CONSTITUTION.md" class="btn btn-secondary">Read the Constitution</a>
+      <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/INSTALL_ANDROID.md" class="btn btn-secondary">Free Android App</a>
+    </div>
+  </div>
+  <div class="scroll-hint">scroll</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="divider"></div>
+<section class="reveal">
+  <div class="section-label">How it works</div>
+  <h2>Five steps. One approval authority.</h2>
+  <p>Every epoch, the system runs a complete mutation cycle. The only thing that can approve a change is the GovernanceGate — architecturally, not by convention.</p>
+
+  <div class="pipeline">
+    <div class="step">
+      <span class="step-num">01</span>
+      <div>
+        <div class="step-title">Three AI agents propose independently</div>
+        <p>Architect, Dream, and Beast — each powered by Claude — propose code improvements without coordinating. They compete, not collaborate.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">02</span>
+      <div>
+        <div class="step-title">Genetic algorithm tournament</div>
+        <p>Proposals are scored, crossed-over (BLX-alpha), and ranked. UCB1 bandit allocates exploration budget. Semantic AST diff engine scores risk. Best survive.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">03</span>
+      <div>
+        <div class="step-title">Constitutional gate — 16 rules</div>
+        <p>One blocking failure = full halt. AST validity, banned tokens, crypto signature, resource bounds, lineage continuity, entropy budget. No exceptions.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">04</span>
+      <div>
+        <div class="step-title">Permanent evidence ledger</div>
+        <p>Every decision is SHA-256 hash-chained, append-only, and deterministically replayable. Alter any past record → chain breaks → pipeline knows immediately.</p>
+      </div>
+    </div>
+    <div class="step">
+      <span class="step-num">05</span>
+      <div>
+        <div class="step-title">Weights self-calibrate</div>
+        <p>Scoring weights adapt via momentum gradient descent across epochs. The system learns which improvement types actually work — within constitutional bounds.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="invariant">
+    <strong>Authority invariant</strong>
+    <code>GovernanceGate</code> is the only component in the system with mutation approval authority. No agent, config flag, environment variable, or API endpoint bypasses it. This is enforced by architecture, not documentation.
+  </div>
+</section>
+
+<!-- CAPABILITIES -->
+<div class="divider"></div>
+<section class="reveal">
+  <div class="section-label">Capabilities</div>
+  <h2>What ships with ADAAD</h2>
+
+  <div class="cap-grid">
+    <div class="cap">
+      <span class="cap-icon">🔁</span>
+      <div class="cap-title">Deterministic Replay</div>
+      <p>Any governance decision re-runs byte-identical. Divergence halts the pipeline immediately.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">🛡️</span>
+      <div class="cap-title">Constitutional Gating</div>
+      <p>16 rules, three tier severities (Sandbox / Stable / Production). One failure = full halt.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">🧾</span>
+      <div class="cap-title">Append-Only Ledger</div>
+      <p>SHA-256 hash-chained. Tamper-evident. Every governed action permanently recorded.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">🤖</span>
+      <div class="cap-title">AI Mutation Proposals</div>
+      <p>Architect / Dream / Beast personas via Claude API. Three competing philosophies per epoch.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">📈</span>
+      <div class="cap-title">Self-Calibrating Weights</div>
+      <p>Momentum gradient descent. Underperforming strategies decay. Bounded [0.05, 0.70] always.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">🧬</span>
+      <div class="cap-title">Genetic Evolution</div>
+      <p>BLX-alpha crossover, elite preservation, diversity enforcement, UCB1 agent selection.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">🌐</span>
+      <div class="cap-title">Multi-Node Federation</div>
+      <p>Cross-repo mutations with dual-gate enforcement. Source approval never binds destination.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">📝</span>
+      <div class="cap-title">Roadmap Self-Amendment</div>
+      <p>The engine can propose changes to its own roadmap. Humans still approve. Always.</p>
+    </div>
+    <div class="cap">
+      <span class="cap-icon">📲</span>
+      <div class="cap-title">Free Android Dashboard</div>
+      <p>Full pipeline control from your phone. APK, Obtainium, F-Droid, or PWA. $0.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PHASE STATUS -->
+<div class="divider"></div>
+<section class="reveal">
+  <div class="section-label">Current status</div>
+  <h2>Phase 6 — Roadmap Self-Amendment</h2>
+  <p>The mutation engine now proposes amendments to its own development roadmap — governed identically to code mutations, requiring human governor sign-off.</p>
+
+  <table class="phase-table">
+    <thead>
+      <tr>
+        <th>Milestone</th>
+        <th>Status</th>
+        <th>Module</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>M6-01 RoadmapAmendmentEngine</td>
+        <td><span class="status-shipped">✅ shipped</span></td>
+        <td>runtime/autonomy/roadmap_amendment_engine.py</td>
+      </tr>
+      <tr>
+        <td>M6-02 ProposalDiffRenderer</td>
+        <td><span class="status-shipped">✅ shipped</span></td>
+        <td>runtime/autonomy/proposal_diff_renderer.py</td>
+      </tr>
+      <tr>
+        <td>M6-03 EvolutionLoop wire</td>
+        <td><span class="status-proposed">🔵 PR-PHASE6-02</span></td>
+        <td>runtime/autonomy/loop.py</td>
+      </tr>
+      <tr>
+        <td>M6-04 Federated propagation</td>
+        <td><span class="status-proposed">🔵 PR-PHASE6-03</span></td>
+        <td>runtime/governance/federation/mutation_broker.py</td>
+      </tr>
+      <tr>
+        <td>M6-05 Android distribution</td>
+        <td><span class="status-active">🟡 active</span></td>
+        <td>.github/workflows/android-free-release.yml</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="invariant">
+    <strong>Constitutional principle</strong>
+    ADAAD proposes. Humans approve. <code>authority_level = "governor-review"</code> is hardcoded and injection-blocked. No auto-merge path exists — not as a policy, as an architectural invariant.
+  </div>
+</section>
+
+<!-- QUICKSTART -->
+<div class="divider"></div>
+<section class="reveal">
+  <div class="section-label">Quick start</div>
+  <h2>Running in 60 seconds</h2>
+
+  <pre>git clone https://github.com/InnovativeAI-adaad/ADAAD.git
+cd ADAAD
+python onboard.py</pre>
+
+  <p>Requires Python 3.11+ · pip · git. <code>onboard.py</code> handles everything: environment setup, schema validation, governed dry-run. Every step is idempotent.</p>
+
+  <pre>from runtime.evolution.evolution_loop import EvolutionLoop
+import os
+
+loop = EvolutionLoop(api_key=os.environ["ADAAD_CLAUDE_API_KEY"], generations=3)
+result = loop.run_epoch(context)
+
+print(f"Accepted:   {result.accepted_count}")
+print(f"Accuracy:   {result.weight_accuracy:.1%}")
+print(f"Duration:   {result.duration_seconds:.1f}s")</pre>
+</section>
+
+<!-- ANDROID -->
+<div class="divider"></div>
+<section class="reveal">
+  <div class="section-label">Android app</div>
+  <h2>Free dashboard on your phone</h2>
+  <p>No Play Store account. No fee. No subscription. Installs directly from GitHub or your chosen open-source channel.</p>
+
+  <div class="install-grid">
+    <div class="install-card">
+      <h3>⚡ Direct APK — fastest</h3>
+      <ol>
+        <li>Open the <a href="https://github.com/InnovativeAI-adaad/ADAAD/releases/latest" style="color:var(--cyan)">Releases page</a></li>
+        <li>Tap <code>adaad-community-*.apk</code></li>
+        <li>Tap download → Install</li>
+        <li>Allow from this source if prompted</li>
+      </ol>
+    </div>
+    <div class="install-card">
+      <h3>🏆 Obtainium — auto-updates</h3>
+      <ol>
+        <li>Install Obtainium from GitHub</li>
+        <li>Tap + → paste <code>github.com/InnovativeAI-adaad/ADAAD</code></li>
+        <li>Save → Install</li>
+        <li>Updates install automatically</li>
+      </ol>
+    </div>
+    <div class="install-card">
+      <h3>🌐 PWA — no install</h3>
+      <ol>
+        <li>Open Chrome on Android</li>
+        <li>Visit the GitHub Pages URL</li>
+        <li>⋮ → Add to Home screen</li>
+        <li>Works immediately</li>
+      </ol>
+    </div>
+    <div class="install-card">
+      <h3>📦 F-Droid — reproducible</h3>
+      <ol>
+        <li>F-Droid → Settings → Repos → +</li>
+        <li>Paste self-hosted repo URL</li>
+        <li>Refresh → search ADAAD</li>
+        <li>Install from verified build</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- NON-GOALS -->
+<div class="divider"></div>
+<section class="reveal">
+  <div class="section-label">Honesty</div>
+  <h2>What ADAAD is not</h2>
+  <p>ADAAD does <strong>not</strong> replace human engineers. It does not guarantee correct code. It does not operate without oversight. It does not learn without constitutional bounds. It does not run silently — every action is logged.</p>
+  <p>No production deployment happens without explicit human approval. This is not a policy that could be changed by a config flag. It is a structural constraint that the system enforces on itself.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>ADAAD — Governed AI Code Evolution · v3.1.0-dev · MIT License · Free &amp; Open Source</div>
+  <div class="footer-links">
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD">GitHub</a>
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/docs/CONSTITUTION.md">Constitution</a>
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/ROADMAP.md">Roadmap</a>
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/INSTALL_ANDROID.md">Android</a>
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/CONTRIBUTING.md">Contributing</a>
+    <a href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/docs/SECURITY.md">Security</a>
+  </div>
+</footer>
+
+<script>
+  // Intersection observer for reveal animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
