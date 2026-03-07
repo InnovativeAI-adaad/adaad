@@ -34,7 +34,35 @@ PR-PHASE6-02  →  PR-PHASE6-03  →  PR-PHASE6-04  →  v3.1.0 tag
 
 ## [3.1.0-dev] — 2026-03-06 · Phase 6 + Free Android Distribution
 
-### Phase 6 — Autonomous Roadmap Self-Amendment (ACTIVE · target v3.1.0)
+### PR-PHASE6-01 · ArchitectAgent Constitutional Spec v3.1.0 + Phase 6 Governance Foundations
+
+**ArchitectAgent deliverable — no code generated. All outputs are governance specifications,
+machine-interpretable invariants, and audit-ready architectural blueprints.**
+
+**New governance documents:**
+
+| Document | Purpose |
+|----------|---------|
+| `docs/governance/ARCHITECT_SPEC_v3.1.0.md` | Canonical Phase 6 constitutional specification — 18 constitutional rules, Founders Law amendment `FL-ROADMAP-SIGNOFF-V1`, complete subsystem blueprints for M6-02/M6-03/M6-04/M6-05, all Phase 6 failure modes |
+| `docs/governance/ledger_event_contract.md` §8 | Phase 6 roadmap amendment event type registration — 7 new event types with required payload schemas |
+| `docs/ENVIRONMENT_VARIABLES.md` | `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` registered — default `'10'`, min-1 enforced at boot |
+| `docs/governance/SECURITY_INVARIANTS_MATRIX.md` | Phase 6 security invariants appended — 12 new invariants covering authority, storage, human sign-off, anti-manipulation, and federated amendment |
+
+**Constitutional invariants issued (Phase 6 additions to 18-rule set):**
+- Rule 17: `roadmap_mutation_human_signoff_required` — BLOCKING — halts any ROADMAP.md modification without human sign-off
+- Rule 18: `amendment_no_auto_merge` — BLOCKING — no automated merge path for roadmap amendments
+- Founders Law: `FL-ROADMAP-SIGNOFF-V1` — new blocking rule in `DEFAULT_LAW_RULES`
+
+**Phase 6 PR sequence authorised:**
+
+| PR | Milestone | CI Tier | Human Sign-off |
+|----|-----------|---------|----------------|
+| `PR-PHASE6-02` | M6-03 EvolutionLoop wire | critical | **REQUIRED** |
+| `PR-PHASE6-03` | M6-04 Federated propagation | critical | **REQUIRED per node** |
+| `PR-PHASE6-04` | M6-05 Distribution complete | standard | Required (F-Droid MR) |
+| **v3.1.0 tag** | Phase 6 GA | — | **REQUIRED** |
+
+
 
 The mutation engine can now propose, score, and submit governed amendments to
 ROADMAP.md itself. All proposals are constitutional-gated (authority_level =

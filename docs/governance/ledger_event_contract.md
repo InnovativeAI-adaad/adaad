@@ -153,3 +153,30 @@ If out-of-order emission is necessary, `causation_event_id` must preserve explic
 - `schemas/pr_lifecycle_event.v1.json`
 - `schemas/pr_lifecycle_event_stream.v1.json`
 - `runtime/governance/pr_lifecycle_event_contract.py`
+
+---
+
+## 8) Phase 6 — Roadmap Amendment Event Types
+
+Registered by `PR-PHASE6-01` (ArchitectAgent · `ARCHITECT_SPEC_v3.1.0.md`). All events below are
+**non-silent**: if a ledger write fails the triggering function raises `LedgerWriteError` and halts.
+
+| Event Type | Triggered By | Required Payload Fields |
+|---|---|---|
+| `roadmap_amendment_proposed` | `RoadmapAmendmentEngine.propose()` | `proposal_id`, `prior_roadmap_hash` (first 16 hex chars), `lineage_chain_hash` (first 16 hex chars), `milestone_count` (int), `diff_score` (float) |
+| `roadmap_amendment_approved` | `RoadmapAmendmentEngine.approve()` when approval threshold met | `proposal_id`, `approvals` (list of governor IDs), `lineage_chain_hash` (first 16 hex chars) |
+| `roadmap_amendment_rejected` | `RoadmapAmendmentEngine.reject()` | `proposal_id`, `reason` (string) |
+| `roadmap_amendment_determinism_divergence` | `RoadmapAmendmentEngine.verify_replay()` hash mismatch | `proposal_id`, `stored_hash` (first 16 hex chars), `recomputed_hash` (first 16 hex chars) |
+| `roadmap_amendment_human_signoff` | Human operator approval gate | `proposal_id`, `governor_id`, `signoff_timestamp` (ISO-8601 UTC) |
+| `roadmap_amendment_committed` | Post-merge replay verification pass | `proposal_id`, `roadmap_sha256_after` (full SHA-256), `replay_proof_status` (`pass` or `fail`) |
+| `federated_amendment_propagated` | `FederationMutationBroker.propagate_amendment()` | `proposal_id`, `source_node`, `destination_nodes` (list), `propagation_timestamp` (ISO-8601 UTC), `evidence_bundle_hash` |
+
+**Envelope:** All Phase 6 events use the standard envelope defined in § 1 above (schema_version,
+event_id, event_type, correlation_id, etc.). The `event_type` field must match exactly one of the
+values in the table above.
+
+**Hash chain:** Phase 6 events participate in the evidence ledger hash chain identically to all
+other mutation events. `previous_event_digest` must reference the preceding chain entry.
+
+**Authority:** Event registration here is the canonical source. Any agent emitting a Phase 6
+event type not registered in this table violates the `no_silent_failures` constitutional rule.

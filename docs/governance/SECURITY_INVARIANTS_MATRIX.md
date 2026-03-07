@@ -79,3 +79,63 @@ See [FEDERATION_KEY_REGISTRY.md](FEDERATION_KEY_REGISTRY.md) for the key rotatio
 - [DETERMINISM_CONTRACT_SPEC.md](DETERMINISM_CONTRACT_SPEC.md) — replay determinism guarantees
 - [STRICT_REPLAY_INVARIANTS.md](STRICT_REPLAY_INVARIANTS.md) — strict replay enforcement
 - [RED_TEAM_THREAT_MODEL_NEXT_PHASE.md](RED_TEAM_THREAT_MODEL_NEXT_PHASE.md) — threat surface
+
+---
+
+## Phase 6 — Roadmap Self-Amendment Security Invariants
+
+Registered by `PR-PHASE6-01` (ArchitectAgent · `ARCHITECT_SPEC_v3.1.0.md`). Effective v3.1.0.
+
+### Authority Invariants
+
+1. **[Phase6-SEC-01]** `authority_level` on every `RoadmapAmendmentProposal` is hardcoded to
+   `"governor-review"` in `RoadmapAmendmentEngine.propose()`. This field is never injected by
+   the caller. Any proposal record with a different value raises `GovernanceViolation` on load.
+2. **[Phase6-SEC-02]** A governor ID must appear in at most one approval record per proposal.
+   Double-approval raises `GovernanceViolation` — constitutional fault, not a warning.
+3. **[Phase6-SEC-03]** `diff_score` is computed by `_score_amendment()` exclusively. A caller-
+   supplied `diff_score` field that diverges from the recomputed value raises `GovernanceViolation`.
+4. **[Phase6-SEC-04]** `roadmap_amendment` is a reserved `mutation_type` value. No agent may
+   create a mutation payload of this type except via `RoadmapAmendmentEngine.propose()`.
+
+### Storage and Filesystem Invariants
+
+5. **[Phase6-SEC-05]** Proposal files in `runtime/governance/roadmap_proposals/` are governed
+   by the `ADAAD_MUTABLE_FS_ALLOWLIST`. The `proposals_dir` path must be within the allowlist
+   at boot. Any proposal write to a path outside the allowlist raises `RuntimeError`.
+6. **[Phase6-SEC-06]** A proposal file may be overwritten only by `RoadmapAmendmentEngine._persist()`
+   to advance its own status. External writes to proposal files are constitutionally prohibited.
+
+### Human Sign-Off Invariants
+
+7. **[Phase6-SEC-07]** No automated path exists from `ProposalStatus.APPROVED` to a ROADMAP.md
+   commit. The human operator must execute the edit. No CI job, bot, or merge automation bypasses
+   this gate. Violation triggers `FL-ROADMAP-SIGNOFF-V1` blocking rule in Founders Law.
+8. **[Phase6-SEC-08]** `verify_replay()` must be executed and pass on every proposal before it is
+   referenced in a PR merge message or CHANGELOG entry. A failed replay proof blocks merge. Result
+   written to ledger as `roadmap_amendment_committed` with `replay_proof_status = "fail"` halts.
+
+### Anti-Manipulation Invariants
+
+9. **[Phase6-SEC-09]** The M6-03 anti-storm gate (`M6G-04`, `M6G-05`) prevents proposal queue
+   flooding. `EvolutionLoop` checks `list_pending()` before emitting; check result stored in
+   `EpochTelemetry`. A pending proposal count > 0 suppresses emission silently.
+10. **[Phase6-SEC-10]** `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` values < 1 are rejected at
+    boot with `ValueError`. The value is read once at epoch start and immutable for that epoch.
+
+### Federated Amendment Invariants
+
+11. **[Phase6-SEC-11]** Federated roadmap amendment proposals must carry HMAC signatures using
+    the same key registry contract as Phase 5 federation (`governance/federation_trusted_keys.json`).
+    An unsigned or improperly signed federated roadmap proposal is rejected at the receiver.
+12. **[Phase6-SEC-12]** Source node approval of a federated roadmap amendment does NOT bind
+    destination nodes. Each peer's `GovernanceGate` evaluates independently. Each peer's human
+    sign-off gate is non-delegatable.
+
+### Audit Visibility (Phase 6 Extension)
+
+- `roadmap_amendment_proposed` emitted on every `propose()` call regardless of outcome.
+- `roadmap_amendment_determinism_divergence` emitted on every `verify_replay()` failure.
+- `roadmap_amendment_human_signoff` emitted by the human operator gate before ROADMAP.md is written.
+- All Phase 6 events participate in the evidence ledger hash chain — retroactive modification
+  of any event invalidates all subsequent chain entries.

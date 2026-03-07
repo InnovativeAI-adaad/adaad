@@ -1,9 +1,9 @@
 {
   "schema_version": "3.0.0",
-  "last_completed_pr": "PR-PHASE5-07",
-  "next_pr": "PR-PHASE6-01",
+  "last_completed_pr": "PR-PHASE6-01",
+  "next_pr": "PR-PHASE6-02",
   "active_phase": "Phase 6 Autonomous Roadmap Self-Amendment ACTIVE \u00b7 v3.1.0 target \u00b7 Phase 5 Multi-Repo Federation COMPLETE (v3.0.0)",
-  "last_invocation": "2026-03-06",
+  "last_invocation": "2026-03-07",
   "blocked_reason": null,
   "blocked_at_gate": null,
   "blocked_at_tier": null,
@@ -53,8 +53,13 @@
     "phase5-evolution-federation-bridge",
     "phase5-federated-evidence-bundle",
     "phase5-federation-determinism-ci",
-    "v3.0.0-released"
+    "v3.0.0-released",
+    "architect-spec-v3.1.0-issued",
+    "phase6-ledger-event-types-registered",
+    "phase6-env-var-amendment-trigger-documented",
+    "phase6-security-invariants-matrix-updated",
+    "phase6-founders-law-fl-roadmap-signoff-v1-specified"
   ],
   "pending_evidence_rows": [],
-  "last_sync_sha": "b0a4655"
+  "last_sync_sha": "PR-PHASE6-01-pending-merge"
 }
