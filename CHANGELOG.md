@@ -48,6 +48,23 @@ All four distribution tracks wired and documented:
 - `VERSION` — promoted from `3.1.0-dev` → `3.1.0`
 - `docs/releases/3.1.0.md` — Phase 6 GA release evidence
 
+### Phase 6.1 · Simplification Contract Alignment
+
+Phase 6.1 keeps the simplification contract in **tightening mode**. No budget
+relaxation was introduced for this change set.
+
+| Critical file | Policy | Budget |
+|---|---|---|
+| `runtime/constitution.py` | Tightening retained | `max_lines: 2200`, `max_fan_in: 22` |
+| `app/main.py` | Tightening retained | `max_lines: 1200`, `max_fan_in: 8` |
+| `security/cryovant.py` | Tightening retained | `max_lines: 950`, `max_fan_in: 6` |
+| `runtime/autonomy/loop.py` | Tightening retained | `max_lines: 360`, `max_fan_in: 3` |
+
+`INVARIANT 6.1-BUDGET-0`: Budget changes must be explicitly classified as either
+**tightening** or **exception**. Tightening claims are valid only when no budget is
+loosened in the same change set; any required relaxation must be labeled as an
+exception with rationale.
+
 ---
 
 ## [3.1.0-dev] — 2026-03-07 · PR-PHASE6-03 · M6-04 Federated Roadmap Propagation Complete
