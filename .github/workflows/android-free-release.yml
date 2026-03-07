@@ -37,7 +37,7 @@ on:
 
 env:
   JAVA_VERSION: '17'
-  PYTHON_VERSION: '3.11'
+  PYTHON_VERSION: '3.11.9'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # JOB 1 — Governance Gate (same rules as Play Store pipeline)

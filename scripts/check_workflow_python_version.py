@@ -10,6 +10,10 @@ from pathlib import Path
 
 PYTHON_VERSION_PATTERN = re.compile(r"^\s*python-version:\s*['\"]?([^'\"\s#]+)")
 
+# Matches GitHub Actions expression syntax: ${{ ... }}
+# These resolve at runtime and are not treated as literal version strings.
+_EXPRESSION_PATTERN = re.compile(r"^\$\{\{.*\}\}$")
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -33,7 +37,13 @@ def collect_versions(workflows_dir: Path) -> dict[str, list[str]]:
         for line in workflow.read_text(encoding="utf-8").splitlines():
             match = PYTHON_VERSION_PATTERN.match(line)
             if match:
-                versions.append(match.group(1))
+                version = match.group(1)
+                # Skip GitHub Actions expression references (e.g. ${{ env.PYTHON_VERSION }}).
+                # These resolve at runtime; their canonical value is defined elsewhere in the
+                # workflow (env block) and is validated by examining that literal definition.
+                if version.startswith("${{"):
+                    continue
+                versions.append(version)
         if versions:
             found[str(workflow.relative_to(Path.cwd())) if workflow.is_absolute() else str(workflow)] = versions
     return found
