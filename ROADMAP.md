@@ -120,7 +120,9 @@ delta table, governance status, phase transition log.
 
 ---
 
-### M6-03 — EvolutionLoop integration 🔵 proposed
+### M6-03 — EvolutionLoop integration 🔵 proposed · PR-PHASE6-02 assigned
+
+`runtime/autonomy/loop.py` (modification)
 
 Wire `RoadmapAmendmentEngine.propose()` into the Phase 5 epoch orchestrator so
 that after every Nth successful epoch (N configurable, default 10), ArchitectAgent
@@ -140,7 +142,7 @@ evaluates prerequisite gates and proposes a roadmap amendment if warranted.
 
 ---
 
-### M6-04 — Federated Roadmap Propagation 🔵 proposed
+### M6-04 — Federated Roadmap Propagation 🔵 proposed · PR-PHASE6-03 assigned
 
 When a federation node's evolution loop generates a roadmap amendment proposal,
 `FederationMutationBroker` propagates it to all peer nodes for their own governance
