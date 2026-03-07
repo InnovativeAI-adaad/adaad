@@ -21,15 +21,6 @@ from runtime.governance.foundation import (
 )
 
 
-def _normalize_hash_link(value: str) -> str:
-    raw = value.strip()
-    if not raw:
-        return ZERO_HASH
-    if raw.startswith("sha256:"):
-        return raw
-    return f"sha256:{raw}"
-
-
 def _checkpoint_material(payload: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "epoch_id": payload.get("epoch_id"),
@@ -76,14 +67,14 @@ class CheckpointRegistry:
                 latest = candidate
         return latest
 
-    def _latest_checkpoint_event_hash(self, epoch_id: str) -> str:
+    def _latest_checkpoint_event_hash(self) -> str:
         latest = ZERO_HASH
-        for entry in self.ledger.read_epoch(epoch_id):
-            if safe_get(entry, "type", default="") != "CheckpointGovernanceEvent":
+        for entry in self.ledger.read_all():
+            if safe_get(entry, "type", default="") != "checkpoint_created":
                 continue
-            if safe_get(entry, "payload", "event_type", default="") != "checkpoint_created":
-                continue
-            latest = _normalize_hash_link(str(safe_get(entry, "hash", default="") or ""))
+            event_hash = str(safe_get(entry, "hash", default=""))
+            if event_hash:
+                latest = f"sha256:{event_hash}"
         return latest
 
     def create_checkpoint(self, epoch_id: str) -> Dict[str, Any]:
@@ -118,7 +109,6 @@ class CheckpointRegistry:
         checkpoint_hash = sha256_prefixed_digest(checkpoint_material)
         checkpoint_id_material = {"epoch_id": epoch_id, "manifest_hash": checkpoint_hash}
         checkpoint_id = f"chk_{sha256_prefixed_digest(checkpoint_id_material).split(':', 1)[1][:16]}"
-        created_at = self.provider.iso_now()
         event = EpochCheckpointEvent(
             epoch_id=epoch_id,
             checkpoint_id=checkpoint_id,
@@ -133,22 +123,21 @@ class CheckpointRegistry:
             promotion_policy_hash=self.promotion_policy_hash,
             evidence_hash=evidence_hash,
             sandbox_policy_hash=self.sandbox_policy_hash,
-            created_at=created_at,
+            created_at=self.provider.iso_now(),
         )
         payload = event.to_payload()
-        prior_checkpoint_event_hash = self._latest_checkpoint_event_hash(epoch_id)
         self.ledger.append_event("EpochCheckpointEvent", payload)
-        checkpoint_event_payload = {
-            "schema_version": "1.0",
-            "event_type": "checkpoint_created",
-            "checkpoint_id": checkpoint_id,
-            "epoch_id": epoch_id,
-            "checkpoint_hash": checkpoint_hash,
-            "checkpoint_manifest_hash": sha256_prefixed_digest(_checkpoint_material(payload)),
-            "prior_checkpoint_event_hash": prior_checkpoint_event_hash,
-            "emitted_at": created_at,
-        }
-        self.ledger.append_event("CheckpointGovernanceEvent", checkpoint_event_payload)
+        self.ledger.append_event(
+            "checkpoint_created",
+            {
+                "checkpoint_id": checkpoint_id,
+                "epoch_id": epoch_id,
+                "manifest_hash": checkpoint_hash,
+                "previous_checkpoint_hash": self._latest_checkpoint_event_hash(),
+                "snapshot_path": f"checkpoints/{checkpoint_id}",
+                "timestamp": self.provider.iso_now(),
+            },
+        )
         return payload
 
     def list_checkpoints(self) -> Dict[str, Any]:

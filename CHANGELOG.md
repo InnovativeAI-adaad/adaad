@@ -738,7 +738,7 @@ Six-file capability expansion delivering the first functional AI mutation pipeli
 - Test sandbox pre-exec hooks are now invocation-scoped (thread-safe) instead of shared mutable instance state.
 - `verify_session()` now emits a deprecation warning clarifying non-production behavior.
 - Consolidated lineage chain resolution on `runtime.evolution.lineage_v2` and removed the duplicate `security.ledger.lineage_v2` implementation.
-- Hardened replay-mode provider synchronization so `EvolutionRuntime.set_replay_mode()` aligns the epoch manager provider with the governor provider before strict replay checks.
+- PR-3 hardening: checkpoint chain now emits `checkpoint_created`/`checkpoint_chain_verified`/`checkpoint_chain_violated` events, boot enforces chain verification after Cryovant, and epoch-boundary continuity checks fail closed.- Hardened replay-mode provider synchronization so `EvolutionRuntime.set_replay_mode()` aligns the epoch manager provider with the governor provider before strict replay checks.
 - Improved deterministic shared-epoch concurrency behavior in governor validation ordering for strict replay lanes.
 - Mutation executor now preserves backwards compatibility with legacy `_run_tests` monkeypatches that do not accept keyword args.
 - Replay digest recomputation now tolerates historical/tampered chain analysis workflows by recomputing from recorded payloads without requiring hash-chain integrity prevalidation.

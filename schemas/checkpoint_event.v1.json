@@ -1,27 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://adaad.local/schemas/checkpoint_event.v1.json",
-  "title": "Checkpoint Governance Event v1",
+  "title": "Checkpoint Created Event v1",
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema_version",
-    "event_type",
     "checkpoint_id",
     "epoch_id",
-    "checkpoint_hash",
-    "checkpoint_manifest_hash",
-    "prior_checkpoint_event_hash",
-    "emitted_at"
+    "manifest_hash",
+    "previous_checkpoint_hash",
+    "snapshot_path",
+    "timestamp"
   ],
   "properties": {
-    "schema_version": {"type": "string", "const": "1.0"},
-    "event_type": {"type": "string", "const": "checkpoint_created"},
-    "checkpoint_id": {"type": "string", "pattern": "^chk_[a-f0-9]{16}$"},
+    "checkpoint_id": {"type": "string", "minLength": 1},
     "epoch_id": {"type": "string", "minLength": 1},
-    "checkpoint_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "checkpoint_manifest_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "prior_checkpoint_event_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
-    "emitted_at": {"type": "string", "format": "date-time"}
+    "manifest_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "previous_checkpoint_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "snapshot_path": {"type": "string", "minLength": 1},
+    "timestamp": {"type": "string", "format": "date-time"}
   }
 }

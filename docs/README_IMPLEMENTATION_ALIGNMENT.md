@@ -1,17 +1,6 @@
 # ADAAD Implementation ↔ Documentation Alignment
 
-<!-- ARCH_SNAPSHOT_METADATA:START -->
-## Architecture Deep-Dive Snapshot
-
-| Metric | Value |
-| --- | --- |
-| Report version | `3.0.0` |
-| Branch | `work` |
-| Tag | `(none)` |
-| Short SHA | `d168da6` |
-
-All future architecture snapshots MUST include branch, tag (if any), and short SHA.
-<!-- ARCH_SNAPSHOT_METADATA:END -->
+**Authoritative version and posture:** `0.65.x` (latest tagged release: `0.65.0`), **Experimental / pre-1.0**. Governance/replay controls are validated in-tree; mutation autonomy and sovereignty federation remain staged.
 
 This document cross-references `README.md` operational claims with concrete implementation modules and tests.
 
@@ -81,10 +70,6 @@ README mutation lifecycle concepts map to:
 - **Promotion transition + events**: `runtime/evolution/promotion_state_machine.py`, `runtime/evolution/promotion_events.py`, `runtime/evolution/promotion_policy.py`, `runtime/evolution/simulation_runner.py`
 - **Fitness scoring support**: `runtime/evolution/fitness.py`, `runtime/fitness_pipeline.py`, `runtime/evolution/scoring_algorithm.py`, `runtime/evolution/scoring_validator.py`, `runtime/evolution/scoring_ledger.py`
 - **Lineage digest verification**: `runtime/evolution/lineage_v2.py`, `runtime/evolution/replay.py`
-- **Economic mutation credit ledger (append-only, replay-verifiable)**: `runtime/evolution/mutation_credit_ledger.py`
-  - Hash-chained JSONL entries (`prev_hash` + `record_hash`)
-  - Idempotency-key enforcement
-  - `verify_integrity()` + deterministic `replay_balances()`
 - **Null-safe governance accessors for mutable logs/state**: `runtime/governance/foundation/safe_access.py`, consumed in `app/beast_mode_loop.py`, `runtime/evolution/checkpoint_registry.py`, and audit/entropy tools under `tools/`.
 
 ## Validation Coverage
@@ -120,7 +105,7 @@ Run the full suite:
 pytest -q
 ```
 
-Expected status in this repository branch: governance/intelligence/dispatcher targeted suites are passing, while full-suite collection may vary by environment and optional dependency availability. Use targeted validation commands in the audit checklist below for deterministic hardening verification.
+Expected status in this repository branch: all tests passing (with one known collection warning from `runtime/test_sandbox.py`).
 
 - Governance schema versioning policy: `docs/governance/schema_versioning_and_migration.md`
 
@@ -139,23 +124,14 @@ Expected status in this repository branch: governance/intelligence/dispatcher ta
 - Treat `tools/lint_determinism.py` as the canonical migration gate for governance/evolution determinism hardening.
 - Phase 2 migration completion requires a clean determinism lint run with no forbidden nondeterministic filesystem API usage in `runtime/governance/` and `runtime/evolution/`.
 
-
-## PR-08 Implementation Checklist (Evidence bundle provenance)
-
-- [x] `schemas/evidence_bundle.v1.json` requires `scoring_algorithm_version`, `constitution_version`, `governor_version`, `fitness_weights_hash`, and `goal_graph_hash`.
-- [x] `runtime/evolution/evidence_bundle.py` populates all five provenance fields for newly built bundles (with deterministic sentinel hashes where upstream artifacts are unavailable).
-- [x] `_validate_schema_subset` enforcement remains fail-closed for missing required keys on new bundles.
-- [x] Legacy validation path is explicit (`validate_bundle(..., allow_legacy=True)`) and only backfills newly required provenance fields (`scoring_algorithm_version`, `constitution_version`, `governor_version`, `fitness_weights_hash`, `goal_graph_hash`).
-
-## PR Milestone Reconciliation (PR-1 .. PR-6 + PR-3H)
+## PR Milestone Reconciliation (PR-1 .. PR-6)
 
 | Milestone | Status in docs | Reconciled repository posture |
 |---|---|---|
 | PR-1 | Complete | Keep as complete (scoring + deterministic ledger/test claims present and aligned) |
-| PR-2 | Complete | Constitutional rule set is fully enabled and validated (not open); see `runtime/constitution.py` (validator registry + policy loading/enabled-rule gating) and `tests/test_constitution_policy.py` (coverage for lineage/coverage/mutation-rate/resource-bounds behavior). |
+| PR-2 | Complete | Constitutional rule set is fully enabled and validated; see `runtime/constitution.py` (validator registry + policy loading/enabled-rule gating) and `tests/test_constitution_policy.py` (coverage for lineage/coverage/mutation-rate/resource-bounds behavior). |
 | PR-3 | Complete | Checkpoint registry/verifier and entropy policy enforcement are implemented with deterministic coverage in-tree; milestone scope is satisfied for 0.65.x. |
-| PR-3H (hardening extension) | Proposed | New implementation request label because PR-3 is already complete: acceptance requires deterministic checkpoint tamper-escalation evidence, entropy anomaly triage policy thresholds validated under strict replay, and audit-ready hardening tests. |
-| PR-4 | Complete | PR lifecycle contracts, promotion policy/state transitions, and deterministic ledger/event paths are implemented and validated in-tree; Aponi transport/UX integration now anchors on `runtime/integrations/aponi_sync.py` and `ui/aponi_dashboard.py` with a shared runtime port constant source. |
+| PR-4 | Complete | PR lifecycle contracts, promotion policy/state transitions, and deterministic ledger/event paths are implemented and validated in-tree. |
 | PR-5 | Complete baseline | Keep complete for baseline hardening; additional depth remains roadmap |
 | PR-6 | Implemented baseline | Deterministic federation coordination/protocol contracts are implemented in-tree; transport/distributed hardening remains roadmap. |
 
@@ -165,34 +141,13 @@ Expected status in this repository branch: governance/intelligence/dispatcher ta
 | Milestone | Final 0.65.x status | Scope note |
 |---|---|---|
 | PR-1 | Complete | Scoring foundation + deterministic scoring/ledger substrate validated in-tree. |
-| PR-2 | Complete | Constitutional rule engine semantics (enabled gating, tier overrides, deterministic evaluation) validated in-tree; milestone is not open. |
-| PR-3 | Complete | Checkpoint + entropy policy enforcement paths are implemented and tested in-tree. |
-| PR-3H (hardening extension) | Proposed next | Use this as the current implementation request label for post-PR-3 hardening acceptance criteria and governance evidence review gating. |
-| PR-4 | Complete | Lifecycle/promotion contract wiring is implemented with deterministic event/ledger behavior, including shared canonical Aponi port resolution in `runtime/integrations/aponi_sync.py` and `ui/aponi_dashboard.py`. |
+| PR-2 | Complete | Constitutional rule engine semantics (enabled gating, tier overrides, deterministic evaluation) validated in-tree. |
+| PR-3 | Complete | Checkpoint + entropy policy enforcement, checkpoint-created chain events, boot-stage chain verification, and epoch continuity checks are implemented and tested in-tree. |
+| PR-4 | Complete | Lifecycle/promotion contract wiring is implemented with deterministic event/ledger behavior. |
 | PR-5 | Complete baseline | Deterministic sandbox policy/enforcement baseline is validated; deeper hardening remains roadmap. |
 | PR-6 | Implemented baseline | Federation coordination/protocol baseline is implemented in-tree; broader distributed hardening remains roadmap. |
 
-#### PR-04 Implementation Checklist (Aponi integration alignment)
-
-- [x] `runtime/integrations/aponi_sync.py` default API URL composes from runtime canonical constants (`APONI_PORT` / `APONI_URL`) instead of a hardcoded legacy port.
-- [x] `ui/aponi_dashboard.py` standalone `--port` fallback resolves from `runtime.constants.APONI_PORT` while preserving `APONI_PORT` env override behavior.
-- [x] Test coverage asserts both modules derive canonical defaults from the same runtime port source.
-
-
-## ADAAD-7 execution alignment addendum
-
-To close governance gaps before `v1.1-GA`, execution and release controls are now documented in:
-
-- `ADAAD_7_EXECUTION_PLAN.md` (ordered 4-phase operating plan)
-- `docs/governance/ADAAD_7_GA_CLOSURE_TRACKER.md` (control-by-control acceptance tracker)
-- `docs/comms/claims_evidence_matrix.md` (strict-gate evidence mapping including key-rotation closure)
-
-This preserves separation between:
-
-- **Validated implementation guarantees** (code + tests + replay evidence), and
-- **Planned hardening work** (tracked with explicit acceptance criteria and sign-off requirements).
-
-## Next governance audit
+### Next governance audit
 
 - Audit key-rotation enforcement next: verify epoch/key-rotation freshness policy coverage and escalation posture before 1.0 freeze.
 
@@ -204,10 +159,6 @@ For `CHANGELOG.md` and release notes:
 - Put future work and unverified posture claims under **Roadmap**.
 - Do not label planned federation or deep hardening items as production guarantees until explicit validation artifacts/tests are present.
 
-### Roadmap clarification for absent expected modules
-
-- `runtime/evolution/mutation_credit_ledger.py` is implemented in this snapshot; remaining ADAAD-11/14 controls still require merged modules plus validation evidence before promotion to guarantees.
-
 
 - Fail-closed recovery runbook: `docs/governance/fail_closed_recovery_runbook.md`
 
@@ -217,24 +168,3 @@ For `CHANGELOG.md` and release notes:
 - Canonical platform entrypoint is `app/main.py`; legacy adapter paths are documented as adapter-only in app/runtime READMEs.
 - Layer ownership and forbidden cross-layer imports are defined in `docs/ARCHITECTURE_CONTRACT.md`.
 - CI enforces import boundaries via `python tools/lint_import_paths.py` plus `tests/test_lint_import_paths.py` guard tests, including relative-import boundary checks.
-
-
-## February 2026 hardening audit snapshot
-
-- Runtime facade imports were hardened to lazy-load symbols (`runtime/api/__init__.py`, `runtime/api/agents.py`, `runtime/evolution/__init__.py`) to reduce circular import failures during collection and strict replay paths.
-- Constitution policy loading now includes a hermetic fallback parser when external YAML packages are unavailable; canonical JSON policy files remain the authoritative source.
-- Federation signature-contract tests now skip cleanly when `cryptography` is unavailable in hermetic environments.
-- Determinism envelope hashing was hardened by excluding volatile runtime-only detail fields from governance envelope digest material.
-
-Recommended validation set:
-
-```bash
-pytest -q tests/test_constitution_policy.py tests/test_economic_fitness.py tests/evolution/test_evidence_bundle.py tests/test_intelligence_router.py tests/test_intelligence_proposal_adapter.py tests/test_orchestrator_dispatcher.py
-```
-
-
-## Governance surface registry
-
-- Canonical governance digest surfaces are now centralized in `runtime/governance_surface.py` using explicit whitelist + volatile-key exclusion semantics.
-- `ADAAD_DETERMINISTIC_LOCK` disables adaptive runtime tuning paths where configured.
-- Dispatcher supports `ADAAD_DISPATCH_LATENCY_MODE=static|adaptive`; adaptive behavior is environment-derived and auditable via runtime metrics events.
