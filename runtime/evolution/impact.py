@@ -50,7 +50,7 @@ class ImpactScorer:
     _HIGH_KEYWORDS     = {"security", "governance", "constitution"}
     _MEDIUM_KEYWORDS   = {"runtime", "core", "orchestrator", "mutation_engine"}
 
-    # Legacy set kept for backward-compat callers that may reference it.
+    # Deprecated set kept for backward-compat callers that may reference it.
     _HIGH_RISK_KEYWORDS = _CRITICAL_KEYWORDS | _HIGH_KEYWORDS | _MEDIUM_KEYWORDS
 
     _TARGET_TYPE_WEIGHTS = {

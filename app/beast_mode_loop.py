@@ -752,7 +752,7 @@ class BeastModeLoop:
         # Always route through the kernel so governance validation, entropy
         # accounting, and replay-determinism checks are applied uniformly.
         # The kernel delegates to self._legacy internally when agent_id is None
-        # (see EvolutionKernel.run_cycle), so legacy behaviour is preserved for
+        # (see EvolutionKernel.run_cycle), so backward-compat behaviour is preserved for
         # the no-agent-id case without bypassing kernel-level invariants.
         return self._kernel.run_cycle(agent_id=agent_id)
 

@@ -31,7 +31,7 @@ class FitnessScore:
 
 
 class FitnessEvaluator:
-    """Legacy facade backed by :class:`EconomicFitnessEvaluator`."""
+    """Deprecated facade backed by :class:`EconomicFitnessEvaluator`."""
 
     def __init__(self) -> None:
         self._economic_evaluator = EconomicFitnessEvaluator()

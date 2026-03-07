@@ -12,7 +12,7 @@
 # limitations under the License.
 
 """
-Legacy compatibility wrapper for the capability graph registry.
+Backward-compat wrapper for the capability graph registry.
 
 New code should import runtime.capability_graph.
 """
