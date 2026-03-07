@@ -44,6 +44,20 @@ These jobs run only when classifier gates evaluate to `true`:
 - `promotion-suite`
   - Runs when governance/runtime paths changed, policy/constitution impact is flagged, or the PR is `critical` tier.
 
+## Simplification contract gate (required)
+
+A dedicated CI job, `simplification-contract-gate`, runs `python scripts/validate_simplification_targets.py`
+on every CI execution and is fail-closed.
+
+The gate enforces governance-backed simplification KPIs:
+
+- maximum file-size and fan-in budgets for critical files
+- legacy-path reduction target contract + no-regression guardrail
+- 100% unified metrics-schema producer adoption coverage
+- runtime cost bounds and mutation experiment caps
+
+Any drift above contract thresholds blocks CI and must be remediated before merge.
+
 ## Auditability and CI summary
 
 Every run emits a `CI gating summary` in the workflow summary page with:
@@ -53,6 +67,9 @@ Every run emits a `CI gating summary` in the workflow summary page with:
 - each gated job's result and reason it ran or was skipped
 
 This provides audit-ready traceability for CI escalation decisions.
+
+Simplification KPI enforcement is audited as a constitutional-grade control and is included in
+the CI summary table under `simplification-contract-gate`.
 
 
 ## Secret scanning gate (required)
@@ -288,4 +305,3 @@ The following check is added to `governance_strict_release_gate.yml` before v3.1
 
 - **`phase6-roadmap-m6xx-all-shipped`**: M6-01 through M6-05 must all be marked
   `✅ shipped` in `ROADMAP.md`. Any pending milestone → release gate blocks v3.1.0 tag.
-

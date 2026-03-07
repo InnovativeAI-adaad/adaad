@@ -188,6 +188,42 @@ git tag free-v3.1.0 && git push origin free-v3.1.0
 
 ---
 
+## Phase 6.1 — Complexity, Safety, and Efficiency Simplification Increment
+
+**Status:** 🔵 proposed · **Lane:** Governance hardening / complexity reduction
+
+This increment reduces operational complexity while preserving fail-closed
+governance by introducing explicit simplification budgets and CI-enforced
+contract checks.
+
+**Measurable targets:**
+
+1. **Critical file complexity budgets**
+   - Enforce maximum file-size and module fan-in budgets for critical surfaces:
+     `runtime/constitution.py`, `app/main.py`, `security/cryovant.py`, and
+     `runtime/autonomy/loop.py`.
+2. **Legacy-path reduction**
+   - Establish a reduction target of **70% legacy branch removal/gating**
+     (`baseline=23`, `target_max=6`) with fail-closed no-regression enforcement
+     until the target milestone is reached.
+3. **Unified metrics-schema adoption**
+   - Enforce **100% producer coverage** for `EvolutionMetricsEmitter` in the
+     canonical metrics-producing runtime surfaces.
+4. **Runtime cost controls**
+   - Enforce bounded per-epoch resource caps (`memory<=2048MB`, `cpu<=30s`,
+     `wall<=60s`) and mutation experiment caps (`cycle_budget<=50`,
+     `mutation_quota<=25`).
+
+**CI enforcement:**
+
+- `python scripts/validate_simplification_targets.py` is required in CI and
+  fails closed on complexity drift, legacy-path regression, metrics-schema
+  contract drift, or runtime-cost cap regression.
+- Simplification contract and roadmap changes are treated as governance-impact
+  and audited under critical-tier CI semantics.
+
+---
+
 ## Measurement targets
 
 | Milestone | Metric | Target |

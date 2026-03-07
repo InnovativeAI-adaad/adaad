@@ -422,6 +422,15 @@ import sys"),
       - name: Validate release hardening claims against runtime capability checks
         run: python scripts/validate_release_hardening_claims.py
 
+  simplification-contract-gate:
+    runs-on: ubuntu-latest
+    needs: classify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Validate simplification complexity/safety targets
+        run: python scripts/validate_simplification_targets.py
+
 
   semantic-diff-determinism:
     runs-on: ubuntu-latest
@@ -489,6 +498,7 @@ import sys"),
       - promotion-suite
       - redteam-critical-subset
       - release-evidence-readiness
+      - simplification-contract-gate
       - fast-path-innovations
       - semantic-diff-determinism
     if: always()
@@ -518,6 +528,7 @@ import sys"),
             echo "| promotion-suite | ${{ needs.promotion-suite.result }} | ${{ needs.classify.outputs.promotion_reason }} |"
             echo "| redteam-critical-subset | ${{ needs.redteam-critical-subset.result }} | ${{ needs.classify.outputs.redteam_reason }} |"
             echo "| release-evidence-readiness | ${{ needs.release-evidence-readiness.result }} | Always-on matrix link validation. |"
+            echo "| simplification-contract-gate | ${{ needs.simplification-contract-gate.result }} | Always-on simplification KPI contract gate (complexity/fan-in/legacy/metrics/runtime-cost). |"
             echo "| fast-path-innovations | ${{ needs.fast-path-innovations.result }} | Route optimizer / entropy gate / checkpoint chain / parallel gate — conditional on runtime or test changes. |"
             echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | PR-PHASE4-07: SemanticDiffEngine determinism — 10 AST fixture pairs verified identical across two independent runs. |"
             echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | Always-on: 10 AST fixture determinism proofs for SemanticDiffEngine. |"

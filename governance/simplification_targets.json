@@ -1,0 +1,57 @@
+{
+  "schema_version": "simplification_targets.v1",
+  "critical_file_budgets": [
+    {
+      "path": "runtime/constitution.py",
+      "max_lines": 2200,
+      "max_fan_in": 22
+    },
+    {
+      "path": "app/main.py",
+      "max_lines": 1200,
+      "max_fan_in": 8
+    },
+    {
+      "path": "security/cryovant.py",
+      "max_lines": 950,
+      "max_fan_in": 6
+    },
+    {
+      "path": "runtime/autonomy/loop.py",
+      "max_lines": 360,
+      "max_fan_in": 3
+    }
+  ],
+  "legacy_path_reduction": {
+    "search_roots": [
+      "app",
+      "runtime",
+      "security"
+    ],
+    "pattern": "\\blegacy\\b",
+    "baseline_branches": 23,
+    "target_reduction_percent": 70,
+    "target_max_branches": 6,
+    "enforced_max_branches": 23
+  },
+  "metrics_schema_adoption": {
+    "required_coverage_percent": 100,
+    "producers": [
+      "runtime/evolution/runtime.py",
+      "runtime/evolution/governor.py"
+    ],
+    "required_import": "from runtime.evolution.metrics_schema import EvolutionMetricsEmitter",
+    "required_constructor": "EvolutionMetricsEmitter("
+  },
+  "runtime_cost_targets": {
+    "constitution_limits": {
+      "memory_mb_max": 2048,
+      "cpu_seconds_max": 30,
+      "wall_seconds_max": 60
+    },
+    "experiment_caps": {
+      "beast_cycle_budget_max": 50,
+      "beast_mutation_quota_max": 25
+    }
+  }
+}
