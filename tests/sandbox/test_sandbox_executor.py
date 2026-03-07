@@ -182,3 +182,21 @@ def test_container_rollout_fail_closed_without_profiles(monkeypatch):
     executor = HardenedSandboxExecutor(_FakeSandbox(), provider=SeededDeterminismProvider("seed"))
     with pytest.raises(RuntimeError, match="sandbox_policy_unenforceable:container_runtime"):
         executor.run_tests_with_retry(mutation_id="m1", epoch_id="e1", replay_seed="0000000000000001")
+
+
+def test_sandbox_executor_respects_deprecated_resource_memory_alias(monkeypatch):
+    monkeypatch.delenv("ADAAD_RESOURCE_MEMORY_MB", raising=False)
+    monkeypatch.setenv("ADAAD_MAX_MEMORY_MB", "8")
+
+    executor = HardenedSandboxExecutor(_FakeSandbox(), provider=SeededDeterminismProvider("seed"))
+    with pytest.raises(RuntimeError, match="resource_bounds_exceeded:memory"):
+        executor.run_tests_with_retry(mutation_id="m1", epoch_id="e1", replay_seed="0000000000000001")
+
+
+def test_sandbox_executor_prefers_canonical_resource_memory_env(monkeypatch):
+    monkeypatch.setenv("ADAAD_RESOURCE_MEMORY_MB", "32")
+    monkeypatch.setenv("ADAAD_MAX_MEMORY_MB", "8")
+
+    executor = HardenedSandboxExecutor(_FakeSandbox(), provider=SeededDeterminismProvider("seed"))
+    result = executor.run_tests_with_retry(mutation_id="m1", epoch_id="e1", replay_seed="0000000000000001")
+    assert result.ok

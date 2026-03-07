@@ -51,7 +51,39 @@ def test_memory_exceeded(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_success_within_bounds(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ADAAD_RESOURCE_WALL_SECONDS", "5")
+    monkeypatch.setenv("ADAAD_RESOURCE_MEMORY_MB", "256")
+    monkeypatch.setenv("ADAAD_RESOURCE_CPU_SECONDS", "5")
+    assert enforce_resource_bounds(_quick_function) == 42
+
+
+def test_deprecated_aliases_still_work(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ADAAD_MAX_WALL_SECONDS", "5")
     monkeypatch.setenv("ADAAD_MAX_MEMORY_MB", "256")
     monkeypatch.setenv("ADAAD_MAX_CPU_SECONDS", "5")
     assert enforce_resource_bounds(_quick_function) == 42
+
+
+def test_canonical_vars_take_precedence_over_deprecated_aliases(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ADAAD_RESOURCE_WALL_SECONDS", "5")
+    monkeypatch.setenv("ADAAD_RESOURCE_CPU_SECONDS", "5")
+    monkeypatch.setenv("ADAAD_MAX_WALL_SECONDS", "0.01")
+    monkeypatch.setenv("ADAAD_MAX_CPU_SECONDS", "0.01")
+    assert enforce_resource_bounds(_quick_function) == 42
+
+
+def test_deprecated_alias_emits_warning_event(monkeypatch: pytest.MonkeyPatch) -> None:
+    from runtime.governance.validators import resource_bounds
+
+    events: list[dict[str, str]] = []
+
+    def _capture_log(*, event_type: str, payload: dict, level: str = "INFO", element_id=None) -> None:
+        del element_id
+        events.append({"event_type": event_type, "level": level, "canonical": payload["canonical_env"]})
+
+    monkeypatch.setattr(resource_bounds.metrics, "log", _capture_log)
+    monkeypatch.setenv("ADAAD_MAX_WALL_SECONDS", "5")
+    monkeypatch.delenv("ADAAD_RESOURCE_WALL_SECONDS", raising=False)
+
+    assert enforce_resource_bounds(_quick_function) == 42
+    assert any(e["event_type"] == "resource_limit_env_alias_deprecated" for e in events)

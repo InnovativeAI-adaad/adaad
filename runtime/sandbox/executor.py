@@ -11,7 +11,11 @@ from typing import Any, Sequence
 
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider
 from runtime.governance.resource_accounting import coalesce_resource_usage_snapshot
-from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded, ResourceLimitEvent
+from runtime.governance.validators.resource_bounds import (
+    ResourceBoundsExceeded,
+    ResourceLimitEvent,
+    _read_limit_with_deprecated_alias,
+)
 from runtime.sandbox.evidence import SandboxEvidenceLedger, build_sandbox_evidence, sign_bundle
 from runtime.sandbox.fs_rules import enforce_write_path_allowlist
 from runtime.sandbox.isolation import ContainerIsolationBackend, IsolationBackend, ProcessIsolationBackend
@@ -217,7 +221,14 @@ class HardenedSandboxExecutor:
         runtime_telemetry.setdefault("hard_isolation_cgroups", isolation_preparation.mode == "container")
 
         max_wall = float(manifest.timeout_s)
-        max_memory = float(os.getenv("ADAAD_MAX_MEMORY_MB", str(manifest.memory_mb)))
+        max_memory = float(
+            _read_limit_with_deprecated_alias(
+                canonical_env="ADAAD_RESOURCE_MEMORY_MB",
+                deprecated_alias_env="ADAAD_MAX_MEMORY_MB",
+                default=str(manifest.memory_mb),
+                caster=float,
+            )
+        )
         if result.status.value == "timeout" or float(result.duration_s) > max_wall:
             timeout_payload = self._build_end_payload(
                 manifest=manifest,

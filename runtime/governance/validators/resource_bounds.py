@@ -10,6 +10,8 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from runtime import metrics
+
 
 @dataclass(frozen=True)
 class ResourceLimitEvent:
@@ -31,6 +33,33 @@ class _ChildError(RuntimeError):
     pass
 
 
+def _read_limit_with_deprecated_alias(
+    *,
+    canonical_env: str,
+    deprecated_alias_env: str,
+    default: str,
+    caster: Callable[[str], float | int],
+) -> float | int:
+    canonical_raw = os.getenv(canonical_env, "").strip()
+    if canonical_raw:
+        return caster(canonical_raw)
+
+    alias_raw = os.getenv(deprecated_alias_env, "").strip()
+    if alias_raw:
+        metrics.log(
+            event_type="resource_limit_env_alias_deprecated",
+            payload={
+                "canonical_env": canonical_env,
+                "deprecated_alias_env": deprecated_alias_env,
+                "validator": "resource_bounds",
+            },
+            level="WARNING",
+        )
+        return caster(alias_raw)
+
+    return caster(default)
+
+
 def _run_target(queue: mp.Queue, func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any], memory_mb: int) -> None:
     if memory_mb > 0:
         limit_bytes = memory_mb * 1024 * 1024
@@ -49,9 +78,32 @@ def _run_target(queue: mp.Queue, func: Callable[..., Any], args: tuple[Any, ...]
 
 
 def enforce_resource_bounds(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
-    max_wall = float(os.getenv("ADAAD_MAX_WALL_SECONDS", "30"))
-    max_memory = int(float(os.getenv("ADAAD_MAX_MEMORY_MB", "512")))
-    max_cpu = float(os.getenv("ADAAD_MAX_CPU_SECONDS", "30"))
+    max_wall = float(
+        _read_limit_with_deprecated_alias(
+            canonical_env="ADAAD_RESOURCE_WALL_SECONDS",
+            deprecated_alias_env="ADAAD_MAX_WALL_SECONDS",
+            default="30",
+            caster=float,
+        )
+    )
+    max_memory = int(
+        float(
+            _read_limit_with_deprecated_alias(
+                canonical_env="ADAAD_RESOURCE_MEMORY_MB",
+                deprecated_alias_env="ADAAD_MAX_MEMORY_MB",
+                default="512",
+                caster=float,
+            )
+        )
+    )
+    max_cpu = float(
+        _read_limit_with_deprecated_alias(
+            canonical_env="ADAAD_RESOURCE_CPU_SECONDS",
+            deprecated_alias_env="ADAAD_MAX_CPU_SECONDS",
+            default="30",
+            caster=float,
+        )
+    )
 
     queue: mp.Queue = mp.Queue()
     proc = mp.Process(target=_run_target, args=(queue, func, args, kwargs, max_memory))
@@ -81,4 +133,4 @@ def enforce_resource_bounds(func: Callable[..., Any], *args: Any, **kwargs: Any)
     return payload
 
 
-__all__ = ["ResourceBoundsExceeded", "enforce_resource_bounds"]
+__all__ = ["ResourceBoundsExceeded", "enforce_resource_bounds", "_read_limit_with_deprecated_alias"]

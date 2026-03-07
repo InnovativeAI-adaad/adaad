@@ -89,12 +89,12 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_LLM_TIMEOUT_SECONDS` | `unset` | numeric string parsed as int/float | runtime/governance engine | `runtime/intelligence/llm_provider.py` |
 | `ADAAD_LOCAL_PEER_ID` | `'local-node'` | string/JSON per caller contract | runtime/governance engine | `runtime/governance/federation/coherence_validator.py` |
 | `ADAAD_MAX_COMPLEXITY_DELTA` | `'5'` | numeric string parsed as int/float | runtime/governance engine | `runtime/constitution.py` |
-| `ADAAD_MAX_CPU_SECONDS` | `'30'` | numeric string parsed as int/float | runtime/governance engine | `runtime/governance/validators/resource_bounds.py` |
+| `ADAAD_RESOURCE_CPU_SECONDS` | `'30'` | numeric string parsed as int/float; canonical resource limit (deprecated alias: `ADAAD_MAX_CPU_SECONDS`) | runtime/governance engine | `runtime/governance/validators/resource_bounds.py` |
 | `ADAAD_MAX_EPOCH_ENTROPY_BITS` | `'4096'` | numeric string parsed as int/float | runtime/governance engine | `runtime/constitution.py` |
-| `ADAAD_MAX_MEMORY_MB` | `'512', unset` | numeric string parsed as int/float | runtime/governance engine | `runtime/governance/validators/resource_bounds.py` |
+| `ADAAD_RESOURCE_MEMORY_MB` | `'512'` | numeric string parsed as int/float; canonical resource limit (deprecated alias: `ADAAD_MAX_MEMORY_MB`) | runtime/governance engine | `runtime/governance/validators/resource_bounds.py`, `runtime/sandbox/executor.py` |
 | `ADAAD_MAX_MUTATIONS_PER_HOUR` | `'60'` | numeric string parsed as int/float | UI/API helpers | `ui/aponi_dashboard.py` |
 | `ADAAD_MAX_MUTATION_ENTROPY_BITS` | `'128'` | numeric string parsed as int/float | runtime/governance engine | `runtime/constitution.py` |
-| `ADAAD_MAX_WALL_SECONDS` | `'30'` | numeric string parsed as int/float | runtime/governance engine | `runtime/governance/validators/resource_bounds.py` |
+| `ADAAD_RESOURCE_WALL_SECONDS` | `'30'` | numeric string parsed as int/float; canonical resource limit (deprecated alias: `ADAAD_MAX_WALL_SECONDS`) | runtime/governance engine | `runtime/governance/validators/resource_bounds.py` |
 | `ADAAD_MCP_JWT_SECRET` | `''` | numeric string parsed as int/float | runtime/governance engine | `runtime/mcp/server.py` |
 | `ADAAD_MODEL_ID` | `'unknown_model'` | enum string defined by caller | runtime/governance engine | `runtime/evolution/baseline.py` |
 | `ADAAD_MUTATION_EMA_ALPHA` | `'0.3'` | numeric string parsed as int/float | agent/orchestrator packages | `adaad/agents/mutation_engine.py` |
