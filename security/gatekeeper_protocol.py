@@ -55,11 +55,48 @@ def _should_exclude(path: Path) -> bool:
 
 def _tree_manifest(tree_root: Path) -> List[Dict[str, str]]:
     manifest: List[Dict[str, str]] = []
+    repo_root = tree_root.parent.resolve()
+
+    def _is_within_repo(path: Path) -> bool:
+        try:
+            path.relative_to(repo_root)
+            return True
+        except ValueError:
+            return False
+
     for p in sorted(tree_root.rglob("*")):
         if p.is_dir() or _should_exclude(p):
             continue
         rel_path = p.relative_to(tree_root.parent).as_posix()
-        file_hash = hashlib.sha256(p.read_bytes()).hexdigest()
+
+        if p.is_symlink():
+            resolved_target = p.resolve(strict=False)
+            reason_code = "symlink_target_outside_repo"
+            if _is_within_repo(resolved_target):
+                reason_code = "symlink_not_hashed"
+            LOG.warning(
+                "gatekeeper manifest entry skipped",
+                extra={
+                    "reason_code": reason_code,
+                    "path": rel_path,
+                    "resolved_target": resolved_target.as_posix(),
+                },
+            )
+            continue
+
+        resolved_path = p.resolve(strict=False)
+        if not _is_within_repo(resolved_path):
+            LOG.warning(
+                "gatekeeper manifest entry skipped",
+                extra={
+                    "reason_code": "resolved_path_outside_repo",
+                    "path": rel_path,
+                    "resolved_path": resolved_path.as_posix(),
+                },
+            )
+            continue
+
+        file_hash = hashlib.sha256(resolved_path.read_bytes()).hexdigest()
         manifest.append({"path": rel_path, "sha256": file_hash})
     return sorted(manifest, key=lambda item: item["path"])
 

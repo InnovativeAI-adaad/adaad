@@ -72,6 +72,7 @@ This matrix maps major external/public claims to objective, versioned repository
 | `phase61-metrics-schema-coverage-100` | "Unified metrics-schema adoption requires 100% configured producer coverage and blocks CI on drift." | [Simplification validator metrics checks](../../scripts/validate_simplification_targets.py); [Evolution metrics schema](../../runtime/evolution/metrics_schema.py) | Complete |
 | `phase61-runtime-cost-and-experiment-caps` | "Runtime cost bounds and mutation experiment caps are contract-audited and fail closed when exceeded." | [Simplification validator runtime-cap checks](../../scripts/validate_simplification_targets.py); [Constitution resource bounds](../../runtime/governance/constitution.yaml); [Beast mode defaults](../../app/beast_mode_loop.py) | Complete |
 | `phase61-ci-tier-gating-enforced` | "Simplification KPI contract is enforced as required CI gating and included in governance CI summary." | [CI workflow simplification-contract-gate](../../.github/workflows/ci.yml); [CI gating policy](../governance/ci-gating.md) | Complete |
+| `gatekeeper-manifest-symlink-containment` | "Gatekeeper manifest hashing is repository-contained and does not content-hash symlink targets, including out-of-tree links." | [Gatekeeper protocol manifest implementation](../../security/gatekeeper_protocol.py); [gatekeeper manifest regression tests](../../tests/test_gatekeeper_protocol.py) | Complete |
 
 ## Completion standard
 
