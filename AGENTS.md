@@ -253,7 +253,7 @@ Awaiting:             2 human reviewer approvals before merge
 | PR | Title | CI tier | Deps | Status |
 |---|---|---|---|---|
 | PR-PHASE6-01 | Phase 6 governance foundations — RoadmapAmendmentEngine + ProposalDiffRenderer | critical | Phase 5 complete ✅ | ✅ Merged |
-| PR-PHASE6-02 | M6-03: Wire RoadmapAmendmentEngine into EvolutionLoop (6-gate prerequisite check) | critical | PR-PHASE6-01 ✅ | 🔵 proposed |
+| PR-PHASE6-02 | M6-03: Wire RoadmapAmendmentEngine into EvolutionLoop (6-gate prerequisite check) | critical | PR-PHASE6-01 ✅ | ✅ Merged |
 | PR-PHASE6-03 | M6-04: Federated roadmap propagation via FederationMutationBroker | critical | PR-PHASE6-02 | 🔵 proposed |
 | PR-PHASE6-04 | M6-05: Free Android distribution pipeline close (F-Droid MR + track evidence) | standard | android CI ✅ | 🟡 active |
 
