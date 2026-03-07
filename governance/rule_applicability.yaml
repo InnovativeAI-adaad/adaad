@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Rule applicability metadata for constitutional evaluation and PR checklist generation.",
   "rules": [
     {
@@ -470,6 +470,51 @@
         "constitutional_evaluation.payload.verdicts[].details.details.prev_hash",
         "constitutional_evaluation.payload.verdicts[].details.details.threshold"
       ]
+    },
+    {
+      "name": "fl_roadmap_signoff_v1",
+      "description": "Founders Law blocking rule: roadmap_amendment mutations require human governor sign-off. Auto-approval paths are constitutionally prohibited. Enforced by RoadmapAmendmentEngine and GovernanceGate. Severity: BLOCKING all tiers.",
+      "scope": {
+        "mutation_types": [
+          "roadmap_amendment"
+        ],
+        "change_types": [
+          "roadmap_amendment"
+        ]
+      },
+      "triggers": {
+        "requires_targets": false,
+        "min_ops": 1,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ]
+      },
+      "severity": "blocking",
+      "fail_behavior": {
+        "on_fail": "block",
+        "log_level": "ERROR",
+        "failure_mode": "FL_ROADMAP_SIGNOFF_V1_VIOLATION"
+      },
+      "required_evidence": [
+        "human_signoff_token",
+        "governor_id",
+        "signoff_timestamp"
+      ],
+      "required_log_output": [
+        "roadmap_amendment_human_signoff.proposal_id",
+        "roadmap_amendment_human_signoff.governor_id",
+        "roadmap_amendment_human_signoff.signoff_timestamp"
+      ],
+      "override_policy": {
+        "can_be_overridden": false,
+        "override_mechanism": "none",
+        "rationale": "INVARIANT PHASE6-HUMAN-0: human sign-off is non-delegatable. No environment variable, agent, or orchestrator may bypass this rule."
+      },
+      "phase": "Phase 6",
+      "effective_version": "3.1.0",
+      "spec_ref": "docs/governance/ARCHITECT_SPEC_v3.1.0.md#13-human-sign-off-invariant-non-delegatable"
     }
   ],
   "domain_classification": {

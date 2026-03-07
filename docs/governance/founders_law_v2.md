@@ -125,3 +125,74 @@ Epoch transitions can now bind law evolution metadata through `EpochManager.rota
   - `law_evolution_certificate_id` (when provided)
 
 This makes law changes first-class, auditable epoch transition events.
+
+
+---
+
+## Phase 6 Blocking Rule: `FL-ROADMAP-SIGNOFF-V1`
+
+**Effective:** v3.1.0 · **Authority:** `ARCHITECT_SPEC_v3.1.0.md` §1.3 · **Severity:** BLOCKING (all tiers)
+
+### Rule definition
+
+```
+RULE FL-ROADMAP-SIGNOFF-V1:
+  For any mutation of type roadmap_amendment:
+    The transition proposed → approved MUST NOT occur without a recorded
+    human_signoff_token in the proposal's approval payload.
+
+  Automated approval paths (CI jobs, bots, merge automation, EvolutionLoop
+  callbacks, GovernanceGate auto-approve) are constitutionally prohibited for
+  mutations of type roadmap_amendment.
+
+  Violation: GovernanceViolation raised; proposal status set to rejected;
+  ledger event roadmap_amendment_rejected emitted with reason = "FL-ROADMAP-SIGNOFF-V1".
+```
+
+### Scope
+
+- **Applies to:** all trust modes (`dev`, `prod`), all tiers (Tier 0, 1, 2)
+- **Applies to federated nodes:** yes — each node enforces this rule independently
+- **Cannot be overridden by:** `ADAAD_SEVERITY_ESCALATIONS`, environment injection,
+  orchestrator config, or any agent. The severity is unconditionally BLOCKING.
+
+### Module enforcement path
+
+```
+RoadmapAmendmentEngine.approve()
+  └─ checks human_signoff_token presence
+  └─ raises GovernanceViolation if absent (FL-ROADMAP-SIGNOFF-V1)
+  └─ emits roadmap_amendment_rejected ledger event
+
+GovernanceGate (for amendment-type proposals)
+  └─ requires human_signoff_token before accept
+  └─ FL-ROADMAP-SIGNOFF-V1 check is non-bypassable
+```
+
+### Law module registration
+
+This rule is registered as a module entry in the node law manifest:
+
+```yaml
+id: fl-roadmap-signoff-v1
+version: "1.0.0"
+kind: blocking_rule
+scope: [roadmap_amendment]
+applies_to: [all_tiers]
+trust_modes: [dev, prod]
+rule_id: FL-ROADMAP-SIGNOFF-V1
+severity: hard
+supersedes: []
+requires: []
+conflicts: []
+```
+
+Nodes running v3.1.0+ must include this module in their manifest. A manifest missing
+`fl-roadmap-signoff-v1` when `roadmap_amendment` proposals are active is a compatibility
+fault (`INCOMPATIBLE` federation class with any compliant v3.1.0+ peer).
+
+### Relationship to `INVARIANT PHASE6-HUMAN-0`
+
+`FL-ROADMAP-SIGNOFF-V1` is the Founders Law enforcement surface for `INVARIANT PHASE6-HUMAN-0`
+(defined in `ARCHITECT_SPEC_v3.1.0.md §1.3`). The invariant defines the constitutional
+principle; this rule defines the runtime enforcement mechanism.

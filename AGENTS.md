@@ -244,16 +244,27 @@ Awaiting:             2 human reviewer approvals before merge
 | PR-PHASE5-06 | Federated evidence bundle release gate extension | ✅ Merged |
 | PR-PHASE5-07 | Federation Determinism CI + HMAC key rotation runbook | ✅ Merged |
 
-### Phase 6 · Autonomous Roadmap Self-Amendment (next)
+### Phase 6 · Autonomous Roadmap Self-Amendment (active — v3.1.0)
 
-> Active phase as of v3.0.0. Target: v3.1.0. Governed by `ROADMAP.md` Phase 6 section.
+> Active phase as of v3.0.0. Target: v3.1.0.
+> **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md`
+> **Canonical PR sequence:** `docs/governance/ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 addendum)
 
-| PR | Title | CI tier | Deps |
-|---|---|---|---|
-| PR-PHASE6-01 | ROADMAP.md mutation proposal by ArchitectAgent | critical | Phase 5 complete ✅ |
-| PR-PHASE6-02 | Replay proof attached to roadmap amendment commit | critical | PR-PHASE6-01 |
-| PR-PHASE6-03 | Human sign-off ledger record for roadmap amendment | critical | PR-PHASE6-02 |
-| PR-PHASE6-04 | Federation evidence section for cross-repo roadmap propagation | critical | PR-PHASE6-03 |
+| PR | Title | CI tier | Deps | Status |
+|---|---|---|---|---|
+| PR-PHASE6-01 | Phase 6 governance foundations — RoadmapAmendmentEngine + ProposalDiffRenderer | critical | Phase 5 complete ✅ | ✅ Merged |
+| PR-PHASE6-02 | M6-03: Wire RoadmapAmendmentEngine into EvolutionLoop (6-gate prerequisite check) | critical | PR-PHASE6-01 ✅ | 🔵 proposed |
+| PR-PHASE6-03 | M6-04: Federated roadmap propagation via FederationMutationBroker | critical | PR-PHASE6-02 | 🔵 proposed |
+| PR-PHASE6-04 | M6-05: Free Android distribution pipeline close (F-Droid MR + track evidence) | standard | android CI ✅ | 🟡 active |
+
+**Human sign-off required for:** PR-PHASE6-02, PR-PHASE6-03 (per node), v3.1.0 tag.
+
+**Key invariants governing all Phase 6 PRs:**
+- `INVARIANT PHASE6-AUTH-0` — `authority_level` immutable on amendment proposals
+- `INVARIANT PHASE6-STORM-0` — at most 1 pending amendment per node at any time
+- `INVARIANT PHASE6-HUMAN-0` — human governor sign-off is non-delegatable for amendments
+- `INVARIANT PHASE6-FED-0` — source-node approval never binds destination nodes
+- `INVARIANT PHASE6-APK-0` — every APK must pass governance gate before signing
 
 ---
 

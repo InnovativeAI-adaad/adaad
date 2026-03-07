@@ -117,3 +117,71 @@ Only the transitions listed below are legal. Any other transition MUST be reject
 - CI job `import-path-compliance` must be configured as a **required status check** in repository branch protection to guarantee merge blocking when the lint fails.
 - ✅ `tools/lint_import_paths.py` now includes a governance implementation-detection pass that flags non-re-export implementation code added under `governance/` while preserving adapter-layer import allowlisting for compatibility shims.
 
+
+---
+
+## Mutation Type Extension: `roadmap_amendment` (Phase 6)
+
+**Effective:** v3.1.0 · **Authority:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md` §2–3
+
+`roadmap_amendment` is a first-class mutation type governed identically to code mutations
+with the following additional constraints that take precedence over the standard lifecycle
+where noted.
+
+### State chain for `roadmap_amendment`
+
+```
+proposed → pending_governor_review → approved | rejected
+```
+
+This is a parallel state machine to the standard lifecycle. It does NOT use `staged`,
+`certified`, `executing`, `completed`, or `pruned`. These states are not valid for
+`roadmap_amendment` type mutations.
+
+| State | Entry Condition | Exit Transitions |
+|---|---|---|
+| `proposed` | `RoadmapAmendmentEngine.propose()` called; all 6 M6-03 gates passed | → `pending_governor_review` (immediate on creation) |
+| `pending_governor_review` | Proposal ledger entry written | → `approved` (≥2 governor approvals + human sign-off token) OR `rejected` (explicit rejection) |
+| `approved` | Human sign-off token validated; `GovernanceGate` approval recorded | Terminal. No further transitions. |
+| `rejected` | Explicit `RoadmapAmendmentEngine.reject()` call OR `DeterminismViolation` | Terminal. No further transitions. |
+
+### Additional blocking guards (beyond standard lifecycle)
+
+The following guards apply to `roadmap_amendment` type and are evaluated **in addition to**
+the standard Cryovant signature and Founders Law gates:
+
+| Guard | Trigger State | Failure Mode |
+|---|---|---|
+| `authority_level == "governor-review"` | `proposed` | `GovernanceViolation` — proposal rejected at source |
+| `len(rationale.split()) >= 10` | `proposed` | `GovernanceViolation` — rationale too short |
+| `diff_score ∈ [0.0, 1.0]` | `proposed` | `GovernanceViolation` — diff score out of bounds |
+| `approver_id` not already in `approvals` list | `pending_governor_review` | `GovernanceViolation` — duplicate approval rejected |
+| `human_signoff_token` present and valid | `pending_governor_review → approved` | Transition blocked; remains `pending_governor_review` |
+| `verify_replay()` passes | Before any ROADMAP.md write | `DeterminismViolation` — write blocked; `replay_proof_status = "fail"` in ledger |
+
+### Ledger events (canonical — registered in `ledger_event_contract.md` §8)
+
+All transitions emit events to the evidence ledger hash chain. Non-silent: `LedgerWriteError`
+on failure halts the triggering function.
+
+| Transition | Event Type |
+|---|---|
+| `proposed → pending_governor_review` | `roadmap_amendment_proposed` |
+| Governor approval recorded | `roadmap_amendment_human_signoff` |
+| `pending_governor_review → approved` | `roadmap_amendment_approved` |
+| `pending_governor_review → rejected` | `roadmap_amendment_rejected` |
+| `verify_replay()` hash mismatch | `roadmap_amendment_determinism_divergence` |
+| Post-merge replay pass | `roadmap_amendment_committed` |
+
+### `roadmap_amendment` in federated context (M6-04)
+
+When propagated via `FederationMutationBroker.propagate_amendment()`, the destination
+node receives the proposal at `proposed` state and begins a fresh lifecycle evaluation.
+The source node's state (`approved` or `pending_governor_review`) is NOT inherited.
+The `federation_origin` field in the proposal lineage chain records the source node
+identifier for audit traceability.
+
+**Module paths:**
+- State machine: `runtime/autonomy/roadmap_amendment_engine.py`
+- Ledger writes: `runtime/ledger/cryovant_journal.py`
+- Federation intake: `runtime/governance/federation/mutation_broker.py` (`propagate_amendment()`)

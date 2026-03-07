@@ -168,9 +168,13 @@ Operations dashboards should consume `/metrics/review-quality` for aggregate com
 
 ---
 
-**Version**: 0.2.0  
-**Last Updated**: 2026-02-06  
+**Version**: 0.3.0
+**Last Updated**: 2026-03-07
 **Next Review**: After 1000 mutations logged
+
+**Canonical implementation specs:**
+- Phase 5 (Federation): `docs/governance/ARCHITECT_SPEC_v3.0.0.md`
+- Phase 6 (Roadmap Self-Amendment): `docs/governance/ARCHITECT_SPEC_v3.1.0.md`
 
 ---
 
