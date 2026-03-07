@@ -6,41 +6,62 @@
   <a href="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml">
     <img alt="CI" src="https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg"/>
   </a>
+  &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/version-3.1.0--dev-00d4ff?style=flat-square&labelColor=060d14"/>
   <img alt="Phase" src="https://img.shields.io/badge/phase-6%20active-f59e0b?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11+-7b61ff?style=flat-square&labelColor=060d14"/>
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
+  &nbsp;
   <img alt="Governance" src="https://img.shields.io/badge/governance-fail--closed-ef4444?style=flat-square&labelColor=060d14"/>
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
 </p>
 
+<br/>
+
 <p align="center">
-  <strong>Self-improving software. Governed at every step.</strong><br/>
-  ADAAD proposes, tests, scores, and evolves code mutations — with deterministic replay,<br/>
-  constitutional gating, and a full audit trail. Nothing executes without proof.
+  <strong>AI agents that improve your codebase — constitutionally gated at every step.</strong>
+</p>
+<p align="center">
+  ADAAD proposes mutations, scores them with a genetic algorithm, and applies only what passes<br/>
+  deterministic replay verification + a 16-rule constitutional policy engine.<br/>
+  <em>If anything fails, the pipeline halts. No exceptions. No workarounds.</em>
+</p>
+
+<br/>
+
+<p align="center">
+  <a href="#-start-in-60-seconds"><strong>Quick Start</strong></a> ·
+  <a href="#how-the-loop-works"><strong>How It Works</strong></a> ·
+  <a href="#-android-app--free"><strong>Android App</strong></a> ·
+  <a href="#whats-active-v310-dev-phase-6"><strong>Phase 6 Status</strong></a> ·
+  <a href="docs/CONSTITUTION.md"><strong>Constitution</strong></a> ·
+  <a href="ROADMAP.md"><strong>Roadmap</strong></a>
 </p>
 
 ---
 
 ## What ADAAD does
 
-ADAAD is an **autonomous mutation engine**: AI agents continuously propose code improvements, which are scored by a genetic algorithm population, gated by a constitutional policy engine, and applied only when every deterministic check passes. If anything fails — replay divergence, policy rejection, missing evidence — **the pipeline halts completely**.
+Three Claude-powered AI agents continuously propose code improvements. Those proposals compete in a genetic-algorithm population — crossed, mutated, and ranked. The fittest candidates advance to a **constitutional gate**: 16 deterministic rules, evaluated in order. One blocking failure halts everything.
 
 <p align="center">
-  <img src="docs/assets/adaad-flow.svg" width="860" alt="ADAAD mutation pipeline"/>
+  <img src="docs/assets/adaad-flow.svg" width="860" alt="ADAAD mutation pipeline: propose → simulate → replay-verify → policy gate → execute → evidence"/>
 </p>
 
-The pipeline never advances past a failed step. No exceptions. No workarounds.
+After every epoch, scoring weights self-calibrate via momentum gradient descent. Mutation strategies that perform well gain influence. Underperformers decay. The system learns which kinds of improvements are worth making — without ever bypassing governance.
 
 ---
 
-## Three agents. One governed loop.
+## Three agents. One loop.
 
 <p align="center">
-  <img src="docs/assets/adaad-agents.svg" width="680" alt="ADAAD agent personas"/>
+  <img src="docs/assets/adaad-agents.svg" width="680" alt="Architect, Dream, and Beast agent personas"/>
 </p>
 
-Each epoch, all three agents propose mutations. Their proposals compete in a genetic-algorithm population — scored, crossed-over, and ranked. The fittest survive. Scoring weights self-calibrate across epochs via momentum gradient descent.
+Each agent brings a distinct mutation philosophy to every epoch. Their proposals compete head-to-head inside the same governed pipeline — scored, cross-bred, and ranked. The **GovernanceGate** sees all of them equally.
+
+> [!IMPORTANT]
+> `GovernanceGate` is the **only** surface that can approve, sign, or execute a mutation. Market adapters, budget arbitrators, container profilers, and federation consensus all influence fitness scores — but **none of them hold approval authority**. That belongs exclusively to the constitutional evaluation. This is architecturally enforced, not just documented.
 
 ---
 
@@ -54,25 +75,27 @@ python onboard.py
 
 > **Requirements:** Python 3.11+ · pip · git
 
-`onboard.py` handles everything: environment setup, workspace init, schema validation, and a governed dry-run. Every step is idempotent — run it again at any time.
+`onboard.py` handles everything: environment setup, workspace init, schema validation, and a governed dry-run. Every step is idempotent — safe to re-run at any time.
 
 <details>
-<summary>What onboarding does, step by step</summary>
+<summary><strong>What onboarding does, step by step</strong></summary>
+
+<br/>
 
 ```
 onboard.py
   │
-  ├─ 1. Check Python 3.11+
-  ├─ 2. Create .venv + install deps
-  ├─ 3. Set ADAAD_ENV=dev (safe default)
-  ├─ 4. Initialize workspace (nexus_setup.py)
+  ├─ 1. Verify Python 3.11+
+  ├─ 2. Create .venv + install dependencies
+  ├─ 3. Set ADAAD_ENV=dev  (safe default)
+  ├─ 4. Initialize workspace  (nexus_setup.py)
   ├─ 5. Validate governance schemas
   ├─ 6. Run governed dry-run
   │      python -m app.main --dry-run --replay audit
   └─ 7. Print your personalized next steps
 ```
 
-After a successful onboard:
+Successful output:
 
 ```
 ✔ Python 3.12.3
@@ -123,46 +146,85 @@ print(f"Accuracy:    {result.weight_accuracy:.1%}")
 print(f"Duration:    {result.duration_seconds:.1f}s")
 ```
 
+> [!NOTE]
+> Replay mode is always on. Every decision above can be re-run with `--replay audit` to verify byte-identical outputs. Divergence from the original run halts the pipeline and logs the exact delta.
+
 ---
 
 ## Platform capabilities
 
-| | Capability | What it means |
-|---|---|---|
-| 🔁 | **Deterministic replay** | Every decision re-runs byte-identical. Divergence halts the pipeline. |
-| 🛡️ | **Constitutional gating** | 16 governance rules evaluated per mutation. One blocking failure = full halt. |
-| 🧾 | **Ledger-anchored evidence** | Every governed step is signed, hashed, and durably attached. |
-| 🤖 | **AI mutation proposals** | Three Claude-powered agents produce diverse, scored candidates each epoch. |
-| 📈 | **Self-calibrating weights** | Scoring weights adapt via momentum gradient descent across epochs. |
-| 🧬 | **Genetic population evolution** | BLX-alpha crossover, elitism, diversity enforcement per generation. |
-| 🗺️ | **Fitness landscape memory** | Win/loss rates tracked per mutation type. Plateau triggers exploration mode. |
-| 🧪 | **Policy simulation** | Replay historical epochs under hypothetical constraints — zero side-effects. |
-| 🐳 | **Container isolation** | cgroup v2 sandboxes — pool-managed, health-probed, lifecycle-audited. |
-| 🌐 | **Multi-node federation** | Cross-repo mutations with constitutional dual-gate enforcement (v3.0.0). |
-| 📝 | **Roadmap self-amendment** | The engine proposes changes to its own roadmap. Humans approve. (v3.1.0-dev) |
+<table>
+<tr>
+  <td><strong>🔁&nbsp; Deterministic Replay</strong></td>
+  <td>Every decision re-runs byte-identical. Divergence halts the pipeline and is logged in the evidence ledger.</td>
+</tr>
+<tr>
+  <td><strong>🛡️&nbsp; Constitutional Gating</strong></td>
+  <td>16 governance rules evaluated per mutation across three tiers (Sandbox / Stable / Production). One blocking failure = full halt.</td>
+</tr>
+<tr>
+  <td><strong>🧾&nbsp; Append-Only Evidence Ledger</strong></td>
+  <td>Every governed step is SHA-256 hash-chained, signed, and permanently attached. No retroactive modification possible.</td>
+</tr>
+<tr>
+  <td><strong>🤖&nbsp; AI Mutation Proposals</strong></td>
+  <td>Three Claude-powered agents (Architect / Dream / Beast) produce diverse, scored candidates each epoch via the Anthropic API.</td>
+</tr>
+<tr>
+  <td><strong>📈&nbsp; Self-Calibrating Weights</strong></td>
+  <td>Scoring weights adapt via momentum gradient descent across epochs. Underperforming strategies decay automatically.</td>
+</tr>
+<tr>
+  <td><strong>🧬&nbsp; Genetic Population Evolution</strong></td>
+  <td>BLX-alpha crossover, elite preservation, and diversity enforcement per generation. UCB1 bandit selects agent strategy.</td>
+</tr>
+<tr>
+  <td><strong>🗺️&nbsp; Fitness Landscape Memory</strong></td>
+  <td>Win/loss rates tracked per mutation type. Plateau detection triggers exploration mode via Thompson sampling.</td>
+</tr>
+<tr>
+  <td><strong>🧪&nbsp; Policy Simulation</strong></td>
+  <td>Replay historical epochs under hypothetical constraints — zero side-effects, full audit trail.</td>
+</tr>
+<tr>
+  <td><strong>🐳&nbsp; Container Isolation</strong></td>
+  <td>cgroup v2 sandboxes — pool-managed, health-probed, lifecycle-audited. Resource bounds are a blocking constitutional rule.</td>
+</tr>
+<tr>
+  <td><strong>🌐&nbsp; Multi-Node Federation</strong></td>
+  <td>Cross-repo mutations with dual-gate constitutional enforcement. Divergence in any node blocks promotion. (v3.0.0)</td>
+</tr>
+<tr>
+  <td><strong>📝&nbsp; Roadmap Self-Amendment</strong></td>
+  <td>The engine proposes changes to its own roadmap. Humans approve. No auto-merge path exists — by constitutional invariant. (v3.1.0-dev)</td>
+</tr>
+</table>
 
 ---
 
 ## What's active: v3.1.0-dev (Phase 6)
 
-Phase 6 — **Autonomous Roadmap Self-Amendment** — is now active.
+**Phase 6 — Autonomous Roadmap Self-Amendment** is now active. The system can propose, score, and submit governed amendments to its own roadmap — each one evaluated identically to a code mutation.
 
 | Milestone | Status | Module |
-|---|---|---|
+|:---|:---:|:---|
 | M6-01 `RoadmapAmendmentEngine` | ✅ shipped | `runtime/autonomy/roadmap_amendment_engine.py` |
 | M6-02 `ProposalDiffRenderer` | ✅ shipped | `runtime/autonomy/proposal_diff_renderer.py` |
 | M6-03 EvolutionLoop wire | 🔵 PR-PHASE6-02 | `runtime/autonomy/loop.py` |
 | M6-04 Federated propagation | 🔵 PR-PHASE6-03 | `runtime/governance/federation/mutation_broker.py` |
 | M6-05 Android distribution | 🟡 active | `.github/workflows/android-free-release.yml` |
 
-**Constitutional principle:** ADAAD proposes. Humans approve. The roadmap never self-promotes without a human governor sign-off recorded in the governance ledger.
+> [!TIP]
+> **Constitutional principle:** ADAAD proposes. Humans approve. The roadmap never self-promotes without a human governor sign-off recorded in the governance ledger. This cannot be delegated or automated.
 
 <details>
-<summary>Phase history</summary>
+<summary><strong>Full phase history</strong></summary>
 
-| Version | Phase | Capability |
-|---|---|---|
-| **v3.1.0-dev** | 6 | Roadmap Self-Amendment · Free Android Distribution |
+<br/>
+
+| Version | Phase | What shipped |
+|:---|:---:|:---|
+| **v3.1.0-dev** | 6 | Roadmap Self-Amendment · ArchitectAgent Spec v3.1.0 · Free Android Distribution |
 | **v3.0.0** | 5 | Multi-Repo Federation — dual-gate, `FederatedEvidenceMatrix`, HMAC key registry |
 | **v2.3.0** | 4 | AST-aware semantic scoring (`SemanticDiffEngine`) + pipeline fast-path primitives |
 | **v2.2.0** | 4 | `MutationRouteOptimizer`, `EntropyFastGate`, `ParallelGovernanceGate` |
@@ -226,32 +288,24 @@ Phase 6 — **Autonomous Roadmap Self-Amendment** — is now active.
 </tr>
 </table>
 
-📱 **On your phone?** → [**One-tap install page**](https://innovativeai-adaad.github.io/ADAAD/install) has QR codes for every method.
+📱 **On your phone right now?** → [**One-tap install page**](https://innovativeai-adaad.github.io/ADAAD/install) has QR codes for every method.
 
-🔐 **Verify integrity:** `apksigner verify --print-certs adaad-community-*.apk`
+🔐 **Verify APK integrity:** `apksigner verify --print-certs adaad-community-*.apk`
 
-> Android 8.0+ required · Full guide: [INSTALL_ANDROID.md](INSTALL_ANDROID.md) · Launch playbook: [DISTRIBUTION.md](DISTRIBUTION.md)
-
----
-
-## The authority invariant
-
-> **One authority. No exceptions.**
-
-`GovernanceGate` is the **only** surface that can approve, sign, or execute a mutation. Market adapters, budget arbitrators, container profilers, and federation consensus all influence fitness scores and resource allocation — but none of them can approve a mutation. That authority belongs exclusively to the constitutional evaluation inside `GovernanceGate`. This is architecturally enforced, not just documented.
+> Android 8.0+ · Full guide: [INSTALL_ANDROID.md](INSTALL_ANDROID.md) · Launch playbook: [DISTRIBUTION.md](DISTRIBUTION.md)
 
 ---
 
 ## Configuration
 
-| Variable | What it does | Required |
-|---|---|---|
-| `ADAAD_ENV` | Environment mode. Unknown values halt at boot. | Always |
-| `ADAAD_CLAUDE_API_KEY` | Anthropic API key for AI mutation proposals. | For AI mode |
+| Variable | Purpose | Required |
+|:---|:---|:---:|
+| `ADAAD_ENV` | Environment mode. Unknown values halt at boot. | ✅ Always |
+| `ADAAD_CLAUDE_API_KEY` | Anthropic API key for AI mutation proposals. | AI mode |
 | `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY` | HMAC signing key. Required in strict environments. | Production |
 | `ADAAD_AMENDMENT_TRIGGER_INTERVAL` | Epochs between roadmap amendment evaluations. Default: `10`. | Phase 6 |
 | `ADAAD_FEDERATION_HMAC_KEY` | Key material for federated mutation transport. Absent = fail-closed. | Federation |
-| `CRYOVANT_DEV_MODE` | Enables dev-only overrides. Rejected in strict envs. | No |
+| `CRYOVANT_DEV_MODE` | Enables dev-only overrides. Rejected in strict environments. | No |
 
 Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
@@ -259,24 +313,53 @@ Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 
 ## Where to go next
 
-| I want to… | Start here |
-|---|---|
-| Try it in 60 seconds | `python onboard.py` |
-| Install on Android | [INSTALL_ANDROID.md](INSTALL_ANDROID.md) |
-| Understand the architecture | [docs/EVOLUTION_ARCHITECTURE.md](docs/EVOLUTION_ARCHITECTURE.md) |
-| Read the governance constitution | [docs/CONSTITUTION.md](docs/CONSTITUTION.md) |
-| Review the canonical spec | [docs/governance/ARCHITECT_SPEC_v3.1.0.md](docs/governance/ARCHITECT_SPEC_v3.1.0.md) |
-| Contribute code | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Audit a release | [docs/comms/claims_evidence_matrix.md](docs/comms/claims_evidence_matrix.md) |
-| Review the security posture | [docs/SECURITY.md](docs/SECURITY.md) |
-| Deploy to production | [docs/release/release_checklist.md](docs/release/release_checklist.md) |
-| Distribute the Android app | [DISTRIBUTION.md](DISTRIBUTION.md) |
+<table>
+<tr>
+  <td>🚀 <strong>Try it in 60 seconds</strong></td>
+  <td><code>python onboard.py</code></td>
+</tr>
+<tr>
+  <td>📱 <strong>Install on Android</strong></td>
+  <td><a href="INSTALL_ANDROID.md">INSTALL_ANDROID.md</a></td>
+</tr>
+<tr>
+  <td>🏗️ <strong>Understand the architecture</strong></td>
+  <td><a href="docs/EVOLUTION_ARCHITECTURE.md">docs/EVOLUTION_ARCHITECTURE.md</a></td>
+</tr>
+<tr>
+  <td>📜 <strong>Read the governance constitution</strong></td>
+  <td><a href="docs/CONSTITUTION.md">docs/CONSTITUTION.md</a></td>
+</tr>
+<tr>
+  <td>📐 <strong>Review the canonical spec</strong></td>
+  <td><a href="docs/governance/ARCHITECT_SPEC_v3.1.0.md">docs/governance/ARCHITECT_SPEC_v3.1.0.md</a></td>
+</tr>
+<tr>
+  <td>🤝 <strong>Contribute code</strong></td>
+  <td><a href="CONTRIBUTING.md">CONTRIBUTING.md</a></td>
+</tr>
+<tr>
+  <td>🔍 <strong>Audit a release</strong></td>
+  <td><a href="docs/comms/claims_evidence_matrix.md">docs/comms/claims_evidence_matrix.md</a></td>
+</tr>
+<tr>
+  <td>🔒 <strong>Review the security posture</strong></td>
+  <td><a href="docs/SECURITY.md">docs/SECURITY.md</a></td>
+</tr>
+<tr>
+  <td>🚢 <strong>Deploy to production</strong></td>
+  <td><a href="docs/release/release_checklist.md">docs/release/release_checklist.md</a></td>
+</tr>
+</table>
 
 ---
 
 ## Non-goals
 
-ADAAD does not: replace human judgment · guarantee semantic correctness · remove required oversight · operate without an audit trail.
+> [!WARNING]
+> ADAAD does **not** replace human judgment · guarantee semantic correctness · remove required oversight · operate without an audit trail.
+>
+> The pipeline is designed to augment human decision-making, not circumvent it. Every approval gate that requires a human governor cannot be delegated to automation — by design, not by convention.
 
 ---
 
@@ -284,7 +367,7 @@ ADAAD does not: replace human judgment · guarantee semantic correctness · remo
 <!-- Auto-generated by scripts/sync_docs_on_merge.py — do not edit manually -->
 
 | Field | Value |
-|---|---|
+|:---|:---|
 | **Current version** | `3.1.0-dev` |
 | **Released** | 2026-03-07 |
 | **Git SHA** | `9e4e91d` |
