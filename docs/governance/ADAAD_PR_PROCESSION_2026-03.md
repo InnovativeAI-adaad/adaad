@@ -356,3 +356,101 @@ Required before tagging `v2.2.0`:
 ## Changelog Notes
 
 - **2026-03-06 — Phase 5 sequencing normalization:** Adopted the canonical **3-PR merged-scope model** for Phase 5 across governance docs. `PR-PHASE5-04` and `PR-PHASE5-05` scope moved into `PR-PHASE5-03` to remove cross-document divergence and keep a single release-gate PR for v3.0.0.
+
+---
+
+## Phase 6 Completion Addendum — 2026-03-07
+
+> **Authority:** ArchitectAgent · `ARCHITECT_SPEC_v3.1.0.md`
+> **Effective:** 2026-03-07 · Added to this procession document as governing extension.
+
+### Updated Execution Sequence (Phase 6 Completion)
+
+```
+[v3.0.0 tagged — DONE]  →  [M6-01 + M6-02 shipped — DONE]
+    →  PR-PHASE6-02  →  PR-PHASE6-03  →  PR-PHASE6-04  →  v3.1.0 tag
+       (M6-03)           (M6-04)          (M6-05 close)
+```
+
+---
+
+### PR-PHASE6-02 · M6-03 EvolutionLoop × RoadmapAmendmentEngine Wire
+
+| Field | Value |
+|---|---|
+| Branch | `feat/phase6-m603-evolution-loop-wire` |
+| CI Tier | `critical` |
+| Depends on | M6-01 shipped, M6-02 shipped, v3.0.0 tagged |
+| Blocks | PR-PHASE6-03 |
+| Human sign-off | **REQUIRED** |
+
+**Scope:**
+- `runtime/autonomy/loop.py` — insert 6-gate prerequisite check at post-epoch-N checkpoint
+- `runtime/autonomy/roadmap_amendment_engine.py` — `list_pending()` method added (storm guard)
+- `EpochResult` extended: `amendment_proposed: bool`, `amendment_id: Optional[str]`
+- 6 new ledger event types registered in `ledger_event_contract.md`
+- `ADAAD_AMENDMENT_TRIGGER_INTERVAL` added to `docs/ENVIRONMENT_VARIABLES.md`
+- `tests/autonomy/test_evolution_loop_amendment.py` — ≥10 acceptance-criteria tests
+
+**Constitutional gates (all BLOCKING if violated):**
+- `INVARIANT PHASE6-AUTH-0` (authority_level immutability)
+- `INVARIANT PHASE6-STORM-0` (at most 1 pending amendment)
+- `INVARIANT PHASE6-HUMAN-0` (no auto-approval path)
+
+---
+
+### PR-PHASE6-03 · M6-04 Federated Roadmap Propagation
+
+| Field | Value |
+|---|---|
+| Branch | `feat/phase6-m604-federated-amendment` |
+| CI Tier | `critical` |
+| Depends on | PR-PHASE6-02 merged |
+| Blocks | v3.1.0 tag |
+| Human sign-off | **REQUIRED per node** |
+
+**Scope:**
+- `runtime/governance/federation/mutation_broker.py` — `propagate_amendment()` method added
+- `federated_amendment_propagated` ledger event registered
+- `tests/governance/federation/test_federated_amendment.py` — ≥8 tests
+- All-or-nothing propagation rollback logic
+
+**Constitutional gates (all BLOCKING if violated):**
+- `INVARIANT PHASE6-FED-0` (source approval does NOT bind destination)
+- `INVARIANT PHASE5-GATE-0` (dual-gate, inherited from Phase 5)
+- `federation_hmac_required` constitutional rule (BLOCKING, unchanged)
+
+---
+
+### PR-PHASE6-04 · M6-05 Free Android Distribution — Completion Close
+
+| Field | Value |
+|---|---|
+| Branch | `feat/phase6-m605-android-distribution-complete` |
+| CI Tier | `standard` |
+| Depends on | `android-free-release.yml` passing |
+| Blocks | v3.1.0 tag |
+| Human sign-off | Required (F-Droid MR submission) |
+
+**Scope:**
+- F-Droid MR submitted and URL recorded in CHANGELOG
+- Track 1 (GitHub Releases): end-to-end pipeline run documented
+- Track 2B (self-hosted F-Droid): `repo.xml` validation passing
+- Track 3 (PWA): `standalone` display mode verified
+
+**Constitutional gate:** `INVARIANT PHASE6-APK-0` (governance gate before every APK sign)
+
+---
+
+### Phase 6 Procession Summary
+
+| PR | Milestone | CI Tier | Depends On | Human Sign-off |
+|---|---|---|---|---|
+| `PR-PHASE6-02` | M6-03 EvolutionLoop wire | critical | M6-01, M6-02 | **REQUIRED** |
+| `PR-PHASE6-03` | M6-04 Federated propagation | critical | PR-PHASE6-02 | **REQUIRED per node** |
+| `PR-PHASE6-04` | M6-05 Distribution close | standard | android CI | Required (F-Droid) |
+| **v3.1.0 tag** | Phase 6 GA | — | All above | **REQUIRED** |
+
+---
+
+*Addendum authored by ArchitectAgent. Governed by `CONSTITUTION.md`. Effective 2026-03-07.*

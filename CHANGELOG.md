@@ -1,5 +1,37 @@
 # Changelog
 
+## [3.1.0-dev] — 2026-03-07 · ArchitectAgent Phase 6 Completion Specification
+
+### Governance — ArchitectAgent Specification v3.1.0
+
+ArchitectAgent has issued the authoritative constitutional specification for Phase 6
+completion, covering M6-03 (EvolutionLoop × RoadmapAmendmentEngine wire), M6-04
+(Federated Roadmap Propagation), and M6-05 (Android Distribution close).
+
+**New governance artifacts:**
+
+| Artifact | Purpose |
+|---|---|
+| `docs/governance/ARCHITECT_SPEC_v3.1.0.md` | Canonical Phase 6 completion spec — PR gates, invariants, failure modes, acceptance criteria |
+| `docs/governance/ADAAD_PR_PROCESSION_2026-03.md` (addendum) | PR-PHASE6-02, PR-PHASE6-03, PR-PHASE6-04 definitions + v3.1.0 tag gate |
+| `ROADMAP.md` (updated) | M6-03 and M6-04 assigned to PR-PHASE6-02 and PR-PHASE6-03 |
+| `docs/ARCHITECTURE_SUMMARY.md` (updated) | Canonical spec pointer updated to v3.1.0 |
+
+**New constitutional invariants (Phase 6 additions):**
+- `INVARIANT PHASE6-AUTH-0` — `authority_level` immutable on amendment proposals
+- `INVARIANT PHASE6-STORM-0` — at most 1 pending amendment per node
+- `INVARIANT PHASE6-HUMAN-0` — human sign-off non-delegatable for amendments
+- `INVARIANT PHASE6-FED-0` — source approval never binds destination nodes
+- `INVARIANT PHASE6-APK-0` — every APK passes governance gate before signing
+
+**Phase 6 PR sequence now governed:**
+```
+PR-PHASE6-02  →  PR-PHASE6-03  →  PR-PHASE6-04  →  v3.1.0 tag
+  (M6-03)          (M6-04)         (M6-05 close)
+```
+
+---
+
 ## [3.1.0-dev] — 2026-03-06 · Phase 6 + Free Android Distribution
 
 ### Phase 6 — Autonomous Roadmap Self-Amendment (ACTIVE · target v3.1.0)

@@ -16,7 +16,8 @@ A one-page overview of ADAAD's governance-first architecture for autonomous code
 - **Execution Layer (Dream / Beast / Architect):** proposal, scoring, and controlled execution.
 - **Evidence Layer:** lineage, replay attestations, and release evidence bundles.
 - **AI Mutation Layer (v2.0.0):** `AIMutationProposer` (Claude API, 3 personas), `EvolutionLoop` (5-phase orchestrator), `WeightAdaptor` (momentum descent), `FitnessLandscape` (plateau detection), `PopulationManager` (BLX-alpha GA).
-- **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v3.0.0.md`
+- **Canonical spec (Phase 6):** `docs/governance/ARCHITECT_SPEC_v3.1.0.md`
+- **Phase 5 spec (in force):** `docs/governance/ARCHITECT_SPEC_v3.0.0.md`
 - **Historical baseline (superseded):** `docs/governance/ARCHITECT_SPEC_v2.0.0.md`
 
 ## Boundaries
