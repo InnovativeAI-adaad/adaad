@@ -1,5 +1,31 @@
 # Changelog
 
+## [3.1.0-dev] — 2026-03-07 · PR-PHASE6-02 · M6-03 EvolutionLoop × RoadmapAmendmentEngine Wire
+
+### Phase 6 · M6-03 Implementation
+
+**PR-PHASE6-02** ships the M6-03 milestone: `RoadmapAmendmentEngine` is wired
+into `EvolutionLoop` at the post-epoch-N checkpoint behind a 6-gate prerequisite
+check. No amendment proposal is emitted unless all gates pass.
+
+**Files changed:**
+
+| File | Change |
+|---|---|
+| `runtime/evolution/evolution_loop.py` | `_evaluate_m603_amendment_gates()` inserted at epoch checkpoint; `EpochResult` extended with `amendment_proposed: bool` and `amendment_id: Optional[str]` |
+| `runtime/autonomy/roadmap_amendment_engine.py` | `list_pending()` storm-guard method — enforces `INVARIANT PHASE6-STORM-0` (at most 1 pending amendment per node) |
+| `tests/autonomy/test_evolution_loop_amendment.py` | T6-03-01..13 acceptance test suite (13 tests) |
+| `docs/governance/ledger_event_contract.md` | 6 Phase 6 ledger event types registered |
+| `docs/ENVIRONMENT_VARIABLES.md` | `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` documented |
+| `docs/comms/claims_evidence_matrix.md` | `phase6-m603-evolution-loop-wire` evidence row |
+
+**Constitutional invariants enforced:**
+- `INVARIANT PHASE6-AUTH-0` — `authority_level` immutable after construction
+- `INVARIANT PHASE6-STORM-0` — `list_pending()` gate blocks storm condition
+- `INVARIANT PHASE6-HUMAN-0` — no auto-approval path present
+
+**CI jobs added:** `phase6-amendment-gate-determinism` · `phase6-storm-invariant` · `phase6-human-signoff-path`
+
 ## [3.1.0-dev] — 2026-03-07 · ArchitectAgent Phase 6 Completion Specification
 
 ### Governance — ArchitectAgent Specification v3.1.0
@@ -846,4 +872,3 @@ Aponi evolves from a read-only governance observatory into a **governance-first 
 **D6 — Android/Pydroid3 Compatibility:** All heavy operations (simulation, evidence fetch) respect `AndroidMonitor.should_throttle()`; epoch range bounded by platform limit from `/simulation/context`.
 
 **Authority invariant:** Aponi IDE introduces no new execution path. All write operations route through `POST /mutation/propose` → MCP queue → `GovernanceGate` → constitutional evaluation → staging. `authority_level` clamped to `governor-review` by `proposal_validator.py` for all editor-originated submissions.
-
