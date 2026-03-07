@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Security Invariants Matrix
 
-**Last updated:** 2026-03-05 — Phase 0 Track A hardening complete (PR-HARDEN-01, C-02)
+**Last updated:** 2026-03-06 — PR-CI-02 / H-08 closed: SPDX CI enforcement wired and all Python source files verified compliant
 
 This matrix defines mandatory enforcement invariants for governance-critical execution.
 
@@ -70,6 +70,7 @@ See [FEDERATION_KEY_REGISTRY.md](FEDERATION_KEY_REGISTRY.md) for the key rotatio
 
 - All Python source files carry `# SPDX-License-Identifier: Apache-2.0` headers.
 - Enforced by `scripts/check_spdx_headers.py`; run with `--fix` to auto-remediate.
+- **[PR-CI-02 / H-08]** `spdx-header-lint` CI job in `.github/workflows/ci.yml` runs on every push and PR — finding H-08 closed 2026-03-06.
 
 ---
 

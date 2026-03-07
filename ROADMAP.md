@@ -224,6 +224,27 @@ contract checks.
 
 ---
 
+## Phase 0 Track A — Security Hardening (complete)
+
+**Status:** ✅ complete · **Closed:** 2026-03-06
+
+All Phase 0 Track A audit findings resolved. The platform is now hardened to InnovativeAI production standards with fail-closed boot validation, deterministic entropy, SPDX compliance, and unified CI gating.
+
+| PR | Finding | Description | Closed |
+|---|---|---|---|
+| PR-CI-01 | H-01 | Unified Python version pin to `3.11.9` across all CI workflows | ✅ 2026-03-06 |
+| PR-CI-02 | H-08 | SPDX license header enforcement wired always-on in CI | ✅ 2026-03-06 |
+| PR-LINT-01 | H-05 | Determinism lint extended to `adaad/orchestrator/` | ✅ |
+| PR-HARDEN-01 | C-01, H-02 | Boot env validation + signing key assertion (fail-closed) | ✅ |
+| PR-SECURITY-01 | C-03 | Federation key pinning registry | ✅ |
+| PR-PERF-01 | C-04 | Streaming lineage ledger verify path | ✅ |
+| PR-OPS-01 | H-07, M-02 | Snapshot atomicity + sequence ordering | ✅ |
+| PR-DOCS-01 | C-03 | Federation key registry governance doc | ✅ |
+
+**Next gate:**  tag → ADAAD-7 (PR-7-01..PR-7-05).
+
+---
+
 ## Measurement targets
 
 | Milestone | Metric | Target |

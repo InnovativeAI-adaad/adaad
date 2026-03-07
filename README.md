@@ -9,11 +9,12 @@
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/version-3.1.0--dev-00d4ff?style=flat-square&labelColor=060d14"/>
   <img alt="Phase" src="https://img.shields.io/badge/phase-6%20active-f59e0b?style=flat-square&labelColor=060d14"/>
-  <img alt="Python" src="https://img.shields.io/badge/python-3.11+-7b61ff?style=flat-square&labelColor=060d14"/>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
   <img alt="Governance" src="https://img.shields.io/badge/governance-fail--closed-ef4444?style=flat-square&labelColor=060d14"/>
   <img alt="License" src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square&labelColor=060d14"/>
+  <img alt="SPDX" src="https://img.shields.io/badge/SPDX-Apache--2.0%20headers-22c55e?style=flat-square&labelColor=060d14"/>
 </p>
 
 <br/>
@@ -73,7 +74,7 @@ cd ADAAD
 python onboard.py
 ```
 
-> **Requirements:** Python 3.11+ · pip · git
+> **Requirements:** Python 3.11.9 · pip · git
 
 `onboard.py` handles everything: environment setup, workspace init, schema validation, and a governed dry-run. Every step is idempotent — safe to re-run at any time.
 
@@ -85,7 +86,7 @@ python onboard.py
 ```
 onboard.py
   │
-  ├─ 1. Verify Python 3.11+
+  ├─ 1. Verify Python 3.11.9
   ├─ 2. Create .venv + install dependencies
   ├─ 3. Set ADAAD_ENV=dev  (safe default)
   ├─ 4. Initialize workspace  (nexus_setup.py)
@@ -98,7 +99,7 @@ onboard.py
 Successful output:
 
 ```
-✔ Python 3.12.3
+✔ Python 3.11.9
 ✔ Virtual environment ready
 ✔ Dependencies installed
 ✔ ADAAD_ENV=dev
@@ -369,8 +370,8 @@ Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
 | Field | Value |
 |:---|:---|
 | **Current version** | `3.1.0-dev` |
-| **Released** | 2026-03-07 |
-| **Git SHA** | `9e4e91d` |
+| **Released** | 2026-03-06 |
+| **Git SHA** | `16d7acf` |
 | **Branch** | `main` |
 
 **New in this release:** Phase 6 — Autonomous Roadmap Self-Amendment · ArchitectAgent Spec v3.1.0 · Free Android Distribution

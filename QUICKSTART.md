@@ -19,7 +19,7 @@ python onboard.py
 ## What success looks like
 
 ```
-  ✔ Python 3.12.3
+  ✔ Python 3.11.9
   ✔ Virtual environment ready
   ✔ Dependencies installed
   ✔ ADAAD_ENV=dev

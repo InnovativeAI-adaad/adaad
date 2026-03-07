@@ -557,9 +557,12 @@ Six-file capability expansion delivering the first functional AI mutation pipeli
 - **PR-CI-02 — H-08 closure:** SPDX license header enforcement wired always-on as
   `spdx-header-lint` job in `.github/workflows/ci.yml`. `scripts/check_spdx_headers.py`
   confirms all Python source files carry `SPDX-License-Identifier: Apache-2.0`.
-  Fixed missing header in `tests/test_branch_protection_policy_workflow.py`.
-  `docs/GOVERNANCE_ENFORCEMENT.md` required checks table updated. Claims evidence matrix
-  `spdx-header-compliance` row marked Complete.
+  Added missing headers to 8 files: `app/api/__init__.py`, `app/api/nexus/__init__.py`,
+  `app/api/nexus/mutate.py`, `security/canonical.py`, `security/challenge.py`,
+  `security/challenge_store.py`, `security/ledger/append.py`, `tests/autonomy/__init__.py`.
+  `docs/GOVERNANCE_ENFORCEMENT.md` audit freshness updated. `docs/governance/SECURITY_INVARIANTS_MATRIX.md`
+  SPDX invariant section updated with CI enforcement reference. Claims evidence matrix
+  `spdx-header-compliance` row confirmed Complete. H-08 finding closed 2026-03-06.
 
 ### Fixed
 - Mutation fitness simulation now uses a deterministic structural DNA clone with `deepcopy` fallback, bounded LRU stable-hash score caching, agent-scoped cache keys within a shared bounded LRU cache, tuple-marker hash hardening, and a fail-closed simulation budget guard (resolved once at orchestrator boot); simulation fails closed when required DNA lineage is missing.
