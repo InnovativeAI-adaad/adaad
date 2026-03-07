@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
-from security.gatekeeper_protocol import run_gatekeeper
+from security.gatekeeper_protocol import _tree_manifest, run_gatekeeper
 
 
 @contextmanager
@@ -25,6 +25,28 @@ def _in_temp_repo():
 
 
 class GatekeeperProtocolTest(unittest.TestCase):
+    def test_tree_manifest_skips_out_of_tree_symlink_target(self) -> None:
+        with _in_temp_repo() as repo_root:
+            Path("app/alpha.txt").write_text("stable", encoding="utf-8")
+            outside_file = repo_root.parent / "outside-target.txt"
+            outside_file.write_text("outside", encoding="utf-8")
+            Path("app/outside_link.txt").symlink_to(outside_file)
+
+            manifest = _tree_manifest(Path("app"))
+
+            self.assertEqual([item["path"] for item in manifest], ["app/alpha.txt"])
+
+    def test_tree_manifest_is_deterministic_with_symlink_present(self) -> None:
+        with _in_temp_repo():
+            Path("app/beta.txt").write_text("beta", encoding="utf-8")
+            Path("app/alpha.txt").write_text("alpha", encoding="utf-8")
+            Path("app/link.txt").symlink_to("alpha.txt")
+
+            first_manifest = _tree_manifest(Path("app"))
+            second_manifest = _tree_manifest(Path("app"))
+
+            self.assertEqual(first_manifest, second_manifest)
+
     def test_no_drift_persists_manifest_snapshot(self) -> None:
         with _in_temp_repo():
             Path("app/alpha.txt").write_text("stable", encoding="utf-8")
