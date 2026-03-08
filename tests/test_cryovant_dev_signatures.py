@@ -248,11 +248,52 @@ class CryovantDevSignatureTest(unittest.TestCase):
         with mock.patch("security.cryovant._maybe_rotate_keys", return_value=False), mock.patch(
             "security.cryovant.verify_payload_signature", return_value=True
         ), mock.patch("security.cryovant.compute_lineage_hash", side_effect=counting_compute_lineage_hash):
-            ok, errors = cryovant.certify_agents(agents_root)
+            ok, errors = cryovant.certify_agents(agents_root, repair=True)
 
         self.assertTrue(ok)
         self.assertEqual(errors, [])
         self.assertEqual(call_counter["count"], 1)
+
+    def test_certify_agents_validation_mode_reports_missing_lineage_hash_without_writing(self) -> None:
+        agents_root = self.tmp_root / "agents"
+        agent_dir = agents_root / "agent-a"
+        agent_dir.mkdir(parents=True, exist_ok=True)
+        (agent_dir / "meta.json").write_text('{"id":"agent-a"}', encoding="utf-8")
+        (agent_dir / "dna.json").write_text('{"genes":[]}', encoding="utf-8")
+        cert_path = agent_dir / "certificate.json"
+        original_certificate = '{"signature":"sig"}'
+        cert_path.write_text(original_certificate, encoding="utf-8")
+
+        with mock.patch("security.cryovant._maybe_rotate_keys", return_value=False), mock.patch(
+            "security.cryovant.verify_payload_signature", return_value=True
+        ):
+            ok, errors = cryovant.certify_agents(agents_root)
+
+        self.assertFalse(ok)
+        self.assertIn("agent-a:missing_lineage_hash", errors)
+        self.assertEqual(cert_path.read_text(encoding="utf-8"), original_certificate)
+
+    def test_certify_agents_repair_mode_writes_lineage_hash_and_logs_repair_event(self) -> None:
+        agents_root = self.tmp_root / "agents"
+        agent_dir = agents_root / "agent-a"
+        agent_dir.mkdir(parents=True, exist_ok=True)
+        (agent_dir / "meta.json").write_text('{"id":"agent-a"}', encoding="utf-8")
+        (agent_dir / "dna.json").write_text('{"genes":[]}', encoding="utf-8")
+        cert_path = agent_dir / "certificate.json"
+        cert_path.write_text('{"signature":"sig"}', encoding="utf-8")
+        expected_lineage_hash = cryovant.compute_lineage_hash(agent_dir)
+
+        with mock.patch("security.cryovant._maybe_rotate_keys", return_value=False), mock.patch(
+            "security.cryovant.verify_payload_signature", return_value=True
+        ), mock.patch("security.cryovant.metrics.log") as metrics_log:
+            ok, errors = cryovant.certify_agents(agents_root, repair=True)
+
+        self.assertTrue(ok)
+        self.assertEqual(errors, [])
+        repaired_cert = cryovant._read_json(cert_path)
+        self.assertEqual(repaired_cert.get("lineage_hash"), expected_lineage_hash)
+        event_types = [call.kwargs.get("event_type") for call in metrics_log.call_args_list]
+        self.assertIn("cryovant_certificate_repaired", event_types)
 
 
     def test_verify_governance_token_accepts_signed_token(self) -> None:

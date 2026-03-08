@@ -360,7 +360,7 @@ class Orchestrator:
     def _init_cryovant(self) -> None:
         if not cryovant.validate_environment():
             self._fail("cryovant_environment")
-        certified, errors = cryovant.certify_agents(self.agents_root)
+        certified, errors = cryovant.certify_agents(self.agents_root, repair=False)
         if not certified:
             self._fail(f"cryovant_certification:{','.join(errors)}")
 

@@ -798,12 +798,13 @@ def validate_environment() -> bool:
     return True
 
 
-def certify_agents(app_agents_dir: Path) -> Tuple[bool, List[str]]:
+def certify_agents(app_agents_dir: Path, *, repair: bool = False) -> Tuple[bool, List[str]]:
     """
     Validate that each agent contains the required metadata triplet and signed certificate.
     """
     missing: List[str] = []
     signature_failures: List[str] = []
+    validation_findings: List[str] = []
     agents_root = Path(app_agents_dir)
     if not agents_root.exists():
         metrics.log(event_type="cryovant_no_agents_dir", payload={"path": str(app_agents_dir)}, level="ERROR", element_id=ELEMENT_ID)
@@ -835,14 +836,28 @@ def certify_agents(app_agents_dir: Path) -> Tuple[bool, List[str]]:
 
             lineage_hash = certificate.get("lineage_hash")
             if not lineage_hash and _valid_signature(signature, agent_dir=candidate, lineage_hash=computed_lineage_hash):
-                lineage_hash = computed_lineage_hash
-                certificate["lineage_hash"] = lineage_hash
-                cert.write_text(json.dumps(certificate, indent=2), encoding="utf-8")
-                journal.write_entry(agent_id=agent_id, action="certificate_evolved", payload={"lineage_hash": lineage_hash})
+                if repair:
+                    lineage_hash = computed_lineage_hash
+                    certificate["lineage_hash"] = lineage_hash
+                    cert.write_text(json.dumps(certificate, indent=2), encoding="utf-8")
+                    journal.write_entry(agent_id=agent_id, action="certificate_evolved", payload={"lineage_hash": lineage_hash})
+                    journal.write_entry(
+                        agent_id=agent_id,
+                        action="certificate_repaired",
+                        payload={"repair": True, "lineage_hash": lineage_hash},
+                    )
+                    metrics.log(
+                        event_type="cryovant_certificate_repaired",
+                        payload={"agent_id": agent_id, "certificate": str(cert), "lineage_hash": lineage_hash},
+                        level="INFO",
+                        element_id=ELEMENT_ID,
+                    )
+                else:
+                    validation_findings.append(f"{agent_id}:missing_lineage_hash")
             if not _valid_signature(signature, agent_dir=candidate, lineage_hash=computed_lineage_hash):
                 signature_failures.append(agent_id)
-    if missing or signature_failures:
-        errors = missing + [f"{name}:invalid_signature" for name in signature_failures]
+    if missing or signature_failures or validation_findings:
+        errors = missing + [f"{name}:invalid_signature" for name in signature_failures] + validation_findings
         metrics.log(event_type="cryovant_certify_failed", payload={"missing": errors}, level="ERROR", element_id=ELEMENT_ID)
         for agent in signature_failures:
             journal.write_entry(agent_id=agent, action="certify_failed", payload={"reason": "invalid_signature"})
