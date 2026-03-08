@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "governance_health_snapshot.v1",
+  "description": "Epoch-scoped Governance Health Score snapshot — ADAAD Phase 8.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "epoch_id",
+    "health_score",
+    "signal_breakdown",
+    "weight_snapshot_digest",
+    "constitution_version",
+    "scoring_algorithm_version",
+    "degraded"
+  ],
+  "properties": {
+    "schema_version":              { "type": "string", "const": "governance_health_snapshot.v1" },
+    "epoch_id":                    { "type": "string", "minLength": 1 },
+    "health_score":                { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "signal_breakdown": {
+      "type": "object",
+      "required": [
+        "avg_reviewer_reputation",
+        "amendment_gate_pass_rate",
+        "federation_divergence_clean",
+        "epoch_health_score"
+      ],
+      "properties": {
+        "avg_reviewer_reputation":     { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "amendment_gate_pass_rate":    { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "federation_divergence_clean": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "epoch_health_score":          { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+      },
+      "additionalProperties": false
+    },
+    "weight_snapshot_digest":      { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "constitution_version":        { "type": "string" },
+    "scoring_algorithm_version":   { "type": "string" },
+    "degraded":                    { "type": "boolean" }
+  },
+  "additionalProperties": false
+}
