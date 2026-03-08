@@ -14,7 +14,14 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from runtime.evolution.event_signing import DeterministicMockSigner, EventSigner, EventVerifier, SignatureBundle
+from runtime.evolution.event_signing import (
+    DeterministicMockSigner,
+    EventSigner,
+    EventVerifier,
+    SignatureBundle,
+    load_hmac_keyring_from_env,
+    HMACKeyringVerifier,
+)
 from runtime.governance.policy_artifact import GovernancePolicyError, load_governance_policy
 
 GENESIS_PREV_HASH = "sha256:" + ("0" * 64)
@@ -97,6 +104,9 @@ def _infer_test_mode() -> bool:
     return bool(os.getenv("PYTEST_CURRENT_TEST")) or os.getenv("ADAAD_ENV") == "test"
 
 
+def _production_verifier_from_env() -> EventVerifier:
+    return HMACKeyringVerifier(load_hmac_keyring_from_env())
+
 def _default_key_metadata() -> LedgerKeyMetadata:
     try:
         policy = load_governance_policy()
@@ -133,12 +143,13 @@ class MutationLedger:
             self.signer: EventSigner = signer or deterministic
             self.verifier: EventVerifier = verifier or deterministic
         else:
-            if signer is None or verifier is None:
-                raise ValueError("MutationLedger requires production signer and verifier when test_mode is disabled")
-            if isinstance(signer, DeterministicMockSigner) or isinstance(verifier, DeterministicMockSigner):
+            if signer is None:
+                raise ValueError("MutationLedger requires production signer when test_mode is disabled")
+            resolved_verifier = verifier or _production_verifier_from_env()
+            if isinstance(signer, DeterministicMockSigner) or isinstance(resolved_verifier, DeterministicMockSigner):
                 raise ValueError("DeterministicMockSigner is restricted to test_mode only")
             self.signer = signer
-            self.verifier = verifier
+            self.verifier = resolved_verifier
         if key_metadata is not None:
             self.key_metadata = key_metadata
         elif self.test_mode:
@@ -150,7 +161,75 @@ class MutationLedger:
         else:
             self.key_metadata = _default_key_metadata()
 
+    def _validate_existing_chain(self) -> None:
+        rows = self.entries()
+        expected_prev = GENESIS_PREV_HASH
+        for index, row in enumerate(rows, start=1):
+            entry_obj = row.get("entry")
+            if not isinstance(entry_obj, dict):
+                raise ValueError(f"row {index}: entry must be an object")
+            ledger_entry = LedgerEntry(
+                variant_id=str(entry_obj.get("variant_id", "")),
+                seed=int(entry_obj.get("seed")),
+                metrics={str(k): float(v) for k, v in dict(entry_obj.get("metrics", {})).items()},
+                promoted=bool(entry_obj.get("promoted")),
+            )
+            prev_hash = str(row.get("prev_hash", ""))
+            if prev_hash != expected_prev:
+                raise ValueError(f"row {index}: prev_hash mismatch expected {expected_prev} got {prev_hash}")
+
+            payload_hash = str(row.get("canonical_payload_hash", ""))
+            expected_payload_hash = canonical_payload_hash(ledger_entry)
+            if payload_hash != expected_payload_hash:
+                raise ValueError(f"row {index}: canonical_payload_hash mismatch")
+
+            signature_obj = row.get("signature_bundle")
+            if not isinstance(signature_obj, dict):
+                raise ValueError(f"row {index}: signature_bundle must be an object")
+            signature = SignatureBundle(
+                signature=str(signature_obj.get("signature", "")),
+                signing_key_id=str(signature_obj.get("signing_key_id", "")),
+                algorithm=str(signature_obj.get("algorithm", "")),
+            )
+            top_level_key_id = str(row.get("signing_key_id", ""))
+            top_level_algorithm = str(row.get("signature_algorithm", ""))
+            if top_level_key_id and top_level_key_id != signature.signing_key_id:
+                raise ValueError(f"row {index}: signing_key_id metadata mismatch")
+            if top_level_algorithm and top_level_algorithm != signature.algorithm:
+                raise ValueError(f"row {index}: signature_algorithm metadata mismatch")
+
+            key_meta_obj = row.get("key_metadata")
+            if not isinstance(key_meta_obj, dict):
+                raise ValueError(f"row {index}: key_metadata must be an object")
+            key_metadata = LedgerKeyMetadata(
+                active_key_id=str(key_meta_obj.get("active_key_id", "")),
+                trusted_key_ids=tuple(str(x) for x in key_meta_obj.get("trusted_key_ids", [])),
+                allowed_algorithms=tuple(str(x) for x in key_meta_obj.get("allowed_algorithms", [])),
+            )
+
+            if signature.signing_key_id not in set(key_metadata.trusted_key_ids):
+                raise ValueError(f"row {index}: signing key is not trusted by key_metadata")
+            if signature.algorithm not in set(key_metadata.allowed_algorithms):
+                raise ValueError(f"row {index}: signature algorithm is not allowed by key_metadata")
+
+            canonical = canonical_record_payload(
+                entry=ledger_entry,
+                prev_hash=prev_hash,
+                payload_hash=payload_hash,
+                key_metadata=key_metadata,
+            )
+            if not self.verifier.verify(message=canonical, signature=signature):
+                raise ValueError(f"row {index}: signature verification failed")
+
+            expected_hash = record_hash(canonical_payload=canonical, signature_bundle=signature)
+            actual_hash = str(row.get("hash", ""))
+            if actual_hash != expected_hash:
+                raise ValueError(f"row {index}: hash mismatch")
+            expected_prev = actual_hash
+
     def append(self, entry: LedgerEntry) -> str:
+        if not self.test_mode:
+            self._validate_existing_chain()
         prev_hash = self.last_hash()
         payload_hash = canonical_payload_hash(entry)
         canonical = canonical_record_payload(
@@ -169,6 +248,8 @@ class MutationLedger:
                 "signing_key_id": signature_bundle.signing_key_id,
                 "algorithm": signature_bundle.algorithm,
             },
+            "signing_key_id": signature_bundle.signing_key_id,
+            "signature_algorithm": signature_bundle.algorithm,
             "key_metadata": self.key_metadata.to_dict(),
             "hash": record_hash(canonical_payload=canonical, signature_bundle=signature_bundle),
         }

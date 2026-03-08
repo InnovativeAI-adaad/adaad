@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import json
+import os
 from dataclasses import dataclass
 
 
@@ -47,3 +49,34 @@ class DeterministicMockSigner(EventSigner, EventVerifier):
         expected = self.sign(message).signature
         return hmac.compare_digest(expected, signature.signature)
 
+
+class HMACKeyringVerifier(EventVerifier):
+    """EventVerifier implementation backed by a keyring of HMAC secrets."""
+
+    def __init__(self, keyring: dict[str, str]) -> None:
+        self._keyring = {key_id: secret.encode("utf-8") for key_id, secret in keyring.items()}
+
+    def verify(self, *, message: str, signature: SignatureBundle) -> bool:
+        secret = self._keyring.get(signature.signing_key_id)
+        if secret is None or signature.algorithm != "hmac-sha256":
+            return False
+        expected = hmac.new(secret, message.encode("utf-8"), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(signature.signature, f"sig:{expected}")
+
+
+def load_hmac_keyring_from_env(var_name: str = "ADAAD_LEDGER_SIGNING_KEYS") -> dict[str, str]:
+    raw = os.getenv(var_name, "{}")
+    parsed = json.loads(raw)
+    if not isinstance(parsed, dict):
+        raise ValueError(f"{var_name} must be a JSON object of key_id -> secret")
+    return {str(k): str(v) for k, v in parsed.items()}
+
+
+__all__ = [
+    "DeterministicMockSigner",
+    "EventSigner",
+    "EventVerifier",
+    "HMACKeyringVerifier",
+    "SignatureBundle",
+    "load_hmac_keyring_from_env",
+]

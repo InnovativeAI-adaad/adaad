@@ -4,14 +4,11 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import hmac
 import json
 import os
 from pathlib import Path
-from typing import Any
 
-from runtime.evolution.event_signing import EventVerifier, SignatureBundle
+from runtime.evolution.event_signing import HMACKeyringVerifier, SignatureBundle, load_hmac_keyring_from_env
 from runtime.governance.mutation_ledger import (
     GENESIS_PREV_HASH,
     LedgerEntry,
@@ -21,28 +18,6 @@ from runtime.governance.mutation_ledger import (
     record_hash,
 )
 from runtime.governance.policy_artifact import GovernancePolicyError, load_governance_policy
-
-
-class HMACKeyringVerifier(EventVerifier):
-    """Verifier backed by key material loaded from ADAAD_LEDGER_SIGNING_KEYS."""
-
-    def __init__(self, keyring: dict[str, str]) -> None:
-        self._keyring = {key_id: secret.encode("utf-8") for key_id, secret in keyring.items()}
-
-    def verify(self, *, message: str, signature: SignatureBundle) -> bool:
-        secret = self._keyring.get(signature.signing_key_id)
-        if secret is None or signature.algorithm != "hmac-sha256":
-            return False
-        expected = hmac.new(secret, message.encode("utf-8"), hashlib.sha256).hexdigest()
-        return hmac.compare_digest(signature.signature, f"sig:{expected}")
-
-
-def _load_keyring() -> dict[str, str]:
-    raw = os.getenv("ADAAD_LEDGER_SIGNING_KEYS", "{}")
-    parsed = json.loads(raw)
-    if not isinstance(parsed, dict):
-        raise ValueError("ADAAD_LEDGER_SIGNING_KEYS must be a JSON object of key_id -> secret")
-    return {str(k): str(v) for k, v in parsed.items()}
 
 
 def _load_policy_constraints() -> tuple[str, tuple[str, ...], tuple[str, ...]] | None:
@@ -60,7 +35,7 @@ def verify_mutation_ledger(ledger_path: Path) -> None:
     rows = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines() if line.strip()]
     if not rows:
         return
-    verifier = HMACKeyringVerifier(_load_keyring())
+    verifier = HMACKeyringVerifier(load_hmac_keyring_from_env())
     policy_constraints = _load_policy_constraints()
 
     expected_prev = GENESIS_PREV_HASH
@@ -100,6 +75,12 @@ def verify_mutation_ledger(ledger_path: Path) -> None:
             signing_key_id=str(signature_obj.get("signing_key_id", "")),
             algorithm=str(signature_obj.get("algorithm", "")),
         )
+        top_level_key_id = str(row.get("signing_key_id", ""))
+        top_level_algorithm = str(row.get("signature_algorithm", ""))
+        if top_level_key_id and top_level_key_id != signature.signing_key_id:
+            raise ValueError(f"row {index}: signing_key_id metadata mismatch")
+        if top_level_algorithm and top_level_algorithm != signature.algorithm:
+            raise ValueError(f"row {index}: signature_algorithm metadata mismatch")
 
         if signature.signing_key_id not in set(key_metadata.trusted_key_ids):
             raise ValueError(f"row {index}: signing key is not trusted by key_metadata")
