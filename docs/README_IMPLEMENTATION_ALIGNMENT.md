@@ -137,13 +137,14 @@ Expected status in this repository branch: all tests passing (with one known col
 - Treat `tools/lint_determinism.py` as the canonical migration gate for governance/evolution determinism hardening.
 - Phase 2 migration completion requires a clean determinism lint run with no forbidden nondeterministic filesystem API usage in `runtime/governance/` and `runtime/evolution/`.
 
-## PR Milestone Reconciliation (PR-1 .. PR-6)
+## PR Milestone Reconciliation (PR-1 .. PR-6 + PR-3H)
 
 | Milestone | Status in docs | Reconciled repository posture |
 |---|---|---|
 | PR-1 | Complete | Keep as complete (scoring + deterministic ledger/test claims present and aligned) |
 | PR-2 | Complete | Constitutional rule set is fully enabled and validated; see `runtime/constitution.py` (validator registry + policy loading/enabled-rule gating) and `tests/test_constitution_policy.py` (coverage for lineage/coverage/mutation-rate/resource-bounds behavior). |
 | PR-3 | Complete | Checkpoint registry/verifier and entropy policy enforcement are implemented with deterministic coverage in-tree; milestone scope is satisfied for 0.65.x. |
+| PR-3H (hardening extension) | Implemented | Post-PR-3 hardening scope is implemented in-tree: deterministic checkpoint tamper-escalation evidence path, entropy anomaly triage policy thresholds + replay fixtures, and audit-ready hardening acceptance tests for strict replay governance reviews. |
 | PR-4 | Complete | PR lifecycle contracts, promotion policy/state transitions, and deterministic ledger/event paths are implemented and validated in-tree. |
 | PR-5 | Complete baseline | Keep complete for baseline hardening; additional depth remains roadmap |
 | PR-6 | Implemented baseline | Deterministic federation coordination/protocol contracts are implemented in-tree; transport/distributed hardening remains roadmap. |
@@ -156,6 +157,7 @@ Expected status in this repository branch: all tests passing (with one known col
 | PR-1 | Complete | Scoring foundation + deterministic scoring/ledger substrate validated in-tree. |
 | PR-2 | Complete | Constitutional rule engine semantics (enabled gating, tier overrides, deterministic evaluation) validated in-tree. |
 | PR-3 | Complete | Checkpoint + entropy policy enforcement, checkpoint-created chain events, boot-stage chain verification, and epoch continuity checks are implemented and tested in-tree. |
+| PR-3H | Implemented | Deterministic checkpoint tamper-escalation evidence, entropy anomaly triage policy threshold enforcement, and strict replay hard-stop acceptance coverage are implemented and validated in-tree. |
 | PR-4 | Complete | Lifecycle/promotion contract wiring is implemented with deterministic event/ledger behavior. |
 | PR-5 | Complete baseline | Deterministic sandbox policy/enforcement baseline is validated; deeper hardening remains roadmap. |
 | PR-6 | Implemented baseline | Federation coordination/protocol baseline is implemented in-tree; broader distributed hardening remains roadmap. |

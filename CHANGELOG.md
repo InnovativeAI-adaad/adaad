@@ -830,7 +830,7 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 | PR-1 | Implemented | Scoring foundation + deterministic governance/scoring ledger/test coverage landed in this branch |
 | PR-2 | Implemented | Constitutional rule set v0.2.0 enabled with deterministic validators, governance envelope digest, drift detection, and coverage artifact pipeline contracts (not open) |
 | PR-3 | Implemented | Checkpoint registry/verifier and entropy policy enforcement paths landed with deterministic coverage in this branch |
-| PR-3H (hardening extension) | Planned | New post-PR-3 hardening scope: (1) deterministic checkpoint tamper-escalation evidence path, (2) entropy anomaly triage policy thresholds + replay fixtures, and (3) audit-ready hardening acceptance tests for strict replay governance reviews |
+| PR-3H (hardening extension) | Implemented | Post-PR-3 hardening scope is now implemented in-tree: (1) deterministic checkpoint tamper-escalation evidence path, (2) entropy anomaly triage policy thresholds + replay fixtures, and (3) audit-ready hardening acceptance tests for strict replay governance reviews |
 | PR-4 | Implemented | Lifecycle/promotion policy state-machine and ledger/event contract wiring landed with deterministic coverage in this branch |
 | PR-5 | Implemented (baseline) | Deterministic sandbox policy checks and evidence hashing landed |
 | PR-6 | Implemented (baseline) | Deterministic federation coordination/protocol baseline landed; distributed transport hardening remains roadmap |
@@ -845,6 +845,7 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 - CI tiering classifier with conditional strict/evidence/promotion suites and audit-ready gating summary emission per run.
 - Release evidence gate enforcing `docs/comms/claims_evidence_matrix.md` completeness and resolvable evidence links for governance/public-readiness tags.
 - CodeQL workflow enabled for push/PR on `main` with scheduled analysis.
+- PR-3H hardening extension acceptance criteria are validated in-tree: checkpoint tamper-escalation governance events and halt reasons are emitted deterministically, entropy anomaly triage thresholds are policy-enforced with deterministic violation details, and strict-replay checkpoint hard-stop behavior is covered by hardening acceptance tests.
 
 ### Roadmap (not yet validated guarantees)
 
@@ -852,6 +853,7 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 - Portable cryptographic replay proof bundles suitable for external verifier exchange.
 - Federation and cross-instance sovereignty hardening beyond current in-tree coordination/protocol baseline.
 - Key-rotation enforcement escalation and audit closure before 1.0 freeze.
+- Additional hardening depth beyond PR-3H acceptance criteria (for example external verifier interoperability and broader runtime threat-model expansion) remains roadmap.
 - ADAAD-10/11/14 follow-on modules remain roadmap items until merged and file-presence-verified in this branch snapshot; `runtime/evolution/mutation_credit_ledger.py` is now present with append-only replay verification, while deployment authority/reviewer-pressure tracks remain roadmap.
 
 ## 0.65.0 - Initial import of ADAAD He65 tree
