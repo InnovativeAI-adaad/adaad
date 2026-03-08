@@ -43,6 +43,7 @@ These jobs run only when classifier gates evaluate to `true`:
 | `strict-replay` | `pr_tier=critical` or replay/ledger flag from PR template | strict deterministic replay verification |
 | `evidence-suite` | governance/runtime/security path changes or replay/ledger impact flag | evidence/sandbox tests |
 | `promotion-suite` | governance/runtime path changes, policy/constitution flag, or `pr_tier=critical` | governance/promotion selectors |
+| `shadow-governance-gate` | policy-touching paths (`governance/governance_policy*.json`, policy runtime/tests fixtures) or policy/constitution flag | replay-only policy evaluator against historical ledgers |
 | `phase7-reputation-gate` | governance/server/relevant UI path changes (`governance/**`, `server.py`, `ui/**`) | reviewer reputation + ledger + pressure + constitutional-floor + reviewer panel endpoint/UI coverage |
 | `pr3h-acceptance-gate` | PR-3H closure scope (`tests/acceptance/pr3h/**`, `scripts/validate_pr3h_acceptance.py`, checkpoint/entropy replay acceptance surfaces) | checkpoint tamper escalation + entropy triage replay fixtures via machine-readable audit output |
 
@@ -53,6 +54,10 @@ These jobs run only when classifier gates evaluate to `true`:
   - Runs when governance/runtime/security paths changed or replay/ledger impact is flagged.
 - `promotion-suite`
   - Runs when governance/runtime paths changed, policy/constitution impact is flagged, or the PR is `critical` tier.
+- `shadow-governance-gate`
+  - Non-optional for policy-touching PRs (or explicit policy-impact flag).
+  - Runs `scripts/evaluate_shadow_governance.py` in replay-only mode against `tests/fixtures/governance/shadow_replay_ledger.json`.
+  - Fails closed when any threshold breach occurs (`false_allow_rate > 0.05`, `false_block_rate > 0.20`, or `divergence_count > 3`).
 - `phase7-reputation-gate`
   - Runs when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`).
   - Executes the Phase 7 invariant selector set: reviewer reputation scoring, reviewer reputation ledger, review pressure, constitutional-floor coverage, and reviewer panel endpoint/UI coverage.
