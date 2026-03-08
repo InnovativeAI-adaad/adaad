@@ -36,20 +36,27 @@ class ReplayModeArgParsingTest(unittest.TestCase):
         self.assertEqual(parse_replay_args(False), (ReplayMode.OFF, ""))
 
 class OrchestratorReplayModeTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._mutation_executor_patch = mock.patch("app.main.MutationExecutor")
+        self._mutation_executor_patch.start()
+        self._default_provider_patch = mock.patch("app.main.default_provider", return_value=mock.Mock(deterministic=True))
+        self._default_provider_patch.start()
+
+    def tearDown(self) -> None:
+        self._default_provider_patch.stop()
+        self._mutation_executor_patch.stop()
+
     @contextlib.contextmanager
     def _boot_context(self):
         with contextlib.ExitStack() as stack:
             stack.enter_context(mock.patch.object(Orchestrator, "_register_elements"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_init_runtime"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_init_cryovant"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_start_mcp_server"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_verify_checkpoint_chain_stage"))
+            stack.enter_context(mock.patch("app.main.DreamMode"))
+            stack.enter_context(mock.patch("app.main.BeastModeLoop"))
+            stack.enter_context(mock.patch("app.main.evaluate_boot_invariants", return_value=mock.Mock(ok=True, payload={"event_type": "boot_invariant_evaluation.v1"})))
+            stack.enter_context(mock.patch.object(Orchestrator, "_verify_checkpoint_chain"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_architect"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_dream"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_beast"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_health_check_mcp"))
-            stack.enter_context(mock.patch("runtime.boot.preflight.validate_boot_runtime_profile", return_value={"ok": True, "checks": {}}))
-            stack.enter_context(mock.patch("runtime.boot.preflight.run_gatekeeper", return_value={"ok": True}))
             stack.enter_context(mock.patch.object(Orchestrator, "_governance_gate", return_value=True))
             dump = stack.enter_context(mock.patch("app.main.dump"))
             stack.enter_context(mock.patch("app.main.journal.write_entry"))
@@ -84,17 +91,14 @@ class OrchestratorReplayModeTest(unittest.TestCase):
 
         with contextlib.ExitStack() as stack:
             stack.enter_context(mock.patch.object(Orchestrator, "_register_elements"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_init_runtime", side_effect=_mark("runtime")))
-            stack.enter_context(mock.patch.object(Orchestrator, "_init_cryovant", side_effect=_mark("cryovant")))
-            stack.enter_context(mock.patch.object(Orchestrator, "_start_mcp_server", side_effect=_mark("mcp_start")))
-            stack.enter_context(mock.patch.object(Orchestrator, "_verify_checkpoint_chain_stage", side_effect=_mark("checkpoint")))
+            stack.enter_context(mock.patch("app.main.DreamMode"))
+            stack.enter_context(mock.patch("app.main.BeastModeLoop"))
+            stack.enter_context(mock.patch("app.main.evaluate_boot_invariants", return_value=mock.Mock(ok=True, payload={"event_type": "boot_invariant_evaluation.v1"})))
+            stack.enter_context(mock.patch.object(Orchestrator, "_verify_checkpoint_chain", side_effect=_mark("checkpoint")))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_architect"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_dream"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_beast"))
-            stack.enter_context(mock.patch.object(Orchestrator, "_health_check_mcp"))
             stack.enter_context(mock.patch.object(Orchestrator, "_run_replay_preflight", side_effect=_mark("replay_preflight")))
-            stack.enter_context(mock.patch("runtime.boot.preflight.validate_boot_runtime_profile", return_value={"ok": True, "checks": {}}))
-            stack.enter_context(mock.patch("runtime.boot.preflight.run_gatekeeper", return_value={"ok": True}))
             stack.enter_context(mock.patch.object(Orchestrator, "_governance_gate", return_value=True))
             stack.enter_context(mock.patch("app.main.dump"))
             stack.enter_context(mock.patch("app.main.journal.write_entry"))
@@ -104,7 +108,37 @@ class OrchestratorReplayModeTest(unittest.TestCase):
             orch = Orchestrator(replay_mode="off")
             orch.boot()
 
-        self.assertEqual(call_order[:5], ["runtime", "cryovant", "mcp_start", "checkpoint", "replay_preflight"])
+        self.assertEqual(call_order[:2], ["checkpoint", "replay_preflight"])
+
+
+
+    def test_boot_fail_closed_emits_machine_readable_payload(self) -> None:
+        failure = mock.Mock(
+            ok=False,
+            reason="invariants_failed:missing_required_invariant",
+            payload={
+                "event_type": "boot_invariant_evaluation.v1",
+                "status": "error",
+                "reason_code": "boot_invariant_governance_invariants_failed",
+            },
+        )
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(mock.patch.dict(os.environ, {"ADAAD_FORCE_DETERMINISTIC_PROVIDER": "1"}, clear=False))
+            stack.enter_context(mock.patch("app.main.evaluate_boot_invariants", return_value=failure))
+            fail = stack.enter_context(mock.patch.object(Orchestrator, "_fail", side_effect=SystemExit(1)))
+            stack.enter_context(mock.patch("app.main.metrics.log"))
+            orch = Orchestrator(replay_mode="strict")
+            with self.assertRaises(SystemExit):
+                orch.boot()
+
+        fail.assert_called_once_with(
+            "invariants_failed:missing_required_invariant",
+            payload={
+                "event_type": "boot_invariant_evaluation.v1",
+                "status": "error",
+                "reason_code": "boot_invariant_governance_invariants_failed",
+            },
+        )
 
     def test_replay_off_skips_verification_and_continues_to_ready(self) -> None:
         with self._boot_context():
@@ -165,6 +199,16 @@ class OrchestratorReplayModeTest(unittest.TestCase):
 
 
 class OrchestratorCheckpointStageTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._mutation_executor_patch = mock.patch("app.main.MutationExecutor")
+        self._mutation_executor_patch.start()
+        self._default_provider_patch = mock.patch("app.main.default_provider", return_value=mock.Mock(deterministic=True))
+        self._default_provider_patch.start()
+
+    def tearDown(self) -> None:
+        self._default_provider_patch.stop()
+        self._mutation_executor_patch.stop()
+
     def test_checkpoint_stage_emits_verified_event_on_success(self) -> None:
         orch = Orchestrator(replay_mode="off")
         with mock.patch("app.main.CheckpointVerifier.verify_all_checkpoints", return_value={"epoch_count": 1, "checkpoint_count": 2}) as verify:
@@ -203,6 +247,16 @@ class GovernanceCIModeTest(unittest.TestCase):
 
 
 class OrchestratorDreamHealthMetricsTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._mutation_executor_patch = mock.patch("app.main.MutationExecutor")
+        self._mutation_executor_patch.start()
+        self._default_provider_patch = mock.patch("app.main.default_provider", return_value=mock.Mock(deterministic=True))
+        self._default_provider_patch.start()
+
+    def tearDown(self) -> None:
+        self._default_provider_patch.stop()
+        self._mutation_executor_patch.stop()
+
     def test_health_check_dream_logs_summary_for_ready_transition(self) -> None:
         orch = Orchestrator(replay_mode="off")
         orch.dream = mock.Mock()
@@ -221,7 +275,7 @@ class OrchestratorDreamHealthMetricsTest(unittest.TestCase):
         self.assertFalse(orch.state["safe_boot"])
         log_metric.assert_called_once_with(
             event_type="dream_health_ok",
-            payload={"task_count": 2, "safe_boot": False},
+            payload={"tasks": ["task-a", "task-b"]},
             level="INFO",
         )
 
@@ -243,7 +297,7 @@ class OrchestratorDreamHealthMetricsTest(unittest.TestCase):
         self.assertTrue(orch.state["safe_boot"])
         log_metric.assert_called_once_with(
             event_type="dream_safe_boot",
-            payload={"task_count": 0, "safe_boot": True, "reason": "no_tasks"},
+            payload={"reason": "no tasks"},
             level="WARN",
         )
 

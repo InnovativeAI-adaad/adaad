@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 
 from runtime.api.orchestration import StatusEnvelope
 from runtime.boot.artifact_verifier import verify_required_artifacts
@@ -85,3 +86,86 @@ class BootPreflightService:
             evidence_refs=("runtime.boot.artifact_verifier.verify_required_artifacts",),
             payload={"checks": checks},
         )
+
+
+def evaluate_boot_invariants(*, replay_mode: str, agents_root: Path) -> StatusEnvelope:
+    """Canonical boot-invariant entrypoint with stable machine-readable failure payloads."""
+
+    service = BootPreflightService()
+    checks: list[dict[str, str]] = []
+    validators: tuple[tuple[str, str, Callable[[], StatusEnvelope]], ...] = (
+        (
+            "gatekeeper",
+            "boot_invariant_gatekeeper_failed",
+            service.validate_gatekeeper,
+        ),
+        (
+            "runtime_profile",
+            "boot_invariant_runtime_profile_failed",
+            lambda: service.validate_runtime_profile(replay_mode=replay_mode),
+        ),
+        (
+            "governance_invariants",
+            "boot_invariant_governance_invariants_failed",
+            service.validate_invariants,
+        ),
+        (
+            "cryovant",
+            "boot_invariant_cryovant_failed",
+            lambda: service.validate_cryovant(agents_root),
+        ),
+        (
+            "signed_artifacts",
+            "boot_invariant_signed_artifacts_failed",
+            service.validate_signed_artifacts,
+        ),
+    )
+
+    for check_name, reason_code, validator in validators:
+        envelope = validator()
+        if not isinstance(envelope, StatusEnvelope) or envelope.status not in {"ok", "error"}:
+            return StatusEnvelope(
+                status="error",
+                reason="boot_invariant_payload_malformed",
+                evidence_refs=("runtime.boot.preflight.evaluate_boot_invariants",),
+                payload={
+                    "event_type": "boot_invariant_evaluation.v1",
+                    "status": "error",
+                    "reason_code": "boot_invariant_payload_malformed",
+                    "failed_check": check_name,
+                    "replay_mode": replay_mode,
+                    "checks": checks,
+                },
+            )
+
+        if envelope.status != "ok":
+            return StatusEnvelope(
+                status="error",
+                reason=envelope.reason or reason_code,
+                evidence_refs=("runtime.boot.preflight.evaluate_boot_invariants",) + envelope.evidence_refs,
+                payload={
+                    "event_type": "boot_invariant_evaluation.v1",
+                    "status": "error",
+                    "reason_code": reason_code,
+                    "failed_check": check_name,
+                    "failed_reason": envelope.reason,
+                    "replay_mode": replay_mode,
+                    "checks": checks,
+                    "check_payload": envelope.payload,
+                },
+            )
+
+        checks.append({"check": check_name, "status": "ok"})
+
+    return StatusEnvelope(
+        status="ok",
+        reason="ok",
+        evidence_refs=("runtime.boot.preflight.evaluate_boot_invariants",),
+        payload={
+            "event_type": "boot_invariant_evaluation.v1",
+            "status": "ok",
+            "reason_code": "ok",
+            "replay_mode": replay_mode,
+            "checks": checks,
+        },
+    )
