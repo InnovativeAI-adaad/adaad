@@ -49,9 +49,48 @@ class LogEntry:
     committed: bool = False
 
     @staticmethod
+    def _digest_material(*, term: int, index: int, entry_type: str, payload: Dict[str, Any]) -> str:
+        canonical_payload = json.loads(
+            json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        )
+        return json.dumps(
+            {
+                "term": term,
+                "index": index,
+                "entry_type": entry_type,
+                "payload": canonical_payload,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+    @staticmethod
+    def recompute_digest(*, term: int, index: int, entry_type: str, payload: Dict[str, Any]) -> str:
+        material = LogEntry._digest_material(
+            term=term,
+            index=index,
+            entry_type=entry_type,
+            payload=payload,
+        )
+        return "sha256:" + hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def verify_digest(entry: "LogEntry") -> bool:
+        return entry.lineage_digest == LogEntry.recompute_digest(
+            term=entry.term,
+            index=entry.index,
+            entry_type=entry.entry_type,
+            payload=entry.payload,
+        )
+
+    @staticmethod
     def build(term: int, index: int, entry_type: str, payload: Dict[str, Any]) -> "LogEntry":
-        raw = json.dumps({"term": term, "index": index, "type": entry_type, "ts": time.time()}, sort_keys=True)
-        digest = "sha256:" + hashlib.sha256(raw.encode()).hexdigest()
+        digest = LogEntry.recompute_digest(
+            term=term,
+            index=index,
+            entry_type=entry_type,
+            payload=payload,
+        )
         return LogEntry(term=term, index=index, entry_type=entry_type, payload=payload, lineage_digest=digest)
 
 
@@ -182,6 +221,8 @@ class FederationConsensusEngine:
         if index < 0 or index >= len(self._state.log):
             return False
         entry = self._state.log[index]
+        if not LogEntry.verify_digest(entry):
+            return False
         self._state.log[index] = LogEntry(
             term=entry.term, index=entry.index, entry_type=entry.entry_type,
             payload=entry.payload, lineage_digest=entry.lineage_digest, committed=True,

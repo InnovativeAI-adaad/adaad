@@ -258,6 +258,52 @@ class TestFederationConsensusEngine:
         assert status.ok is False
         assert status.fail_closed_triggered is True
 
+    def test_log_entry_build_is_deterministic_for_identical_inputs(self):
+        from runtime.governance.federation.consensus import LogEntry
+
+        payload = {"z": 1, "nested": {"b": 2, "a": [3, 1]}}
+        first = LogEntry.build(term=3, index=7, entry_type="proposal", payload=payload)
+        second = LogEntry.build(term=3, index=7, entry_type="proposal", payload=payload)
+
+        assert first.lineage_digest == second.lineage_digest
+
+    def test_log_entry_digest_changes_when_payload_changes(self):
+        from runtime.governance.federation.consensus import LogEntry
+
+        base = LogEntry.build(term=3, index=7, entry_type="proposal", payload={"value": 1})
+        mutated = LogEntry.build(term=3, index=7, entry_type="proposal", payload={"value": 2})
+
+        assert base.lineage_digest != mutated.lineage_digest
+
+    def test_log_entry_digest_is_stable_across_repeated_runs(self):
+        from runtime.governance.federation.consensus import LogEntry
+
+        payload = {"nested": {"y": [2, 1], "x": "v"}, "flag": True}
+        digests = {
+            LogEntry.build(term=11, index=4, entry_type="policy_change", payload=payload).lineage_digest
+            for _ in range(25)
+        }
+
+        assert len(digests) == 1
+
+    def test_commit_entry_rejects_tampered_digest(self):
+        eng = self._engine(peers=["n2"])
+        eid = eng.start_election()
+        eng.receive_vote(eid, granted=True)
+        entry = eng.append_entry("proposal", {"mutation": "x"})
+        assert entry is not None
+
+        eng._state.log[0] = type(entry)(
+            term=entry.term,
+            index=entry.index,
+            entry_type=entry.entry_type,
+            payload=entry.payload,
+            lineage_digest="sha256:" + "0" * 64,
+            committed=False,
+        )
+
+        assert eng.commit_entry(0) is False
+
 
 class TestFederationNodeSupervisor:
     def _setup(self):
