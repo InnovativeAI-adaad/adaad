@@ -24,13 +24,13 @@ PR-PHASE6-01  →  PR-PHASE6-02  →  PR-PHASE6-03  →  PR-PHASE6-04  →  v3.1
 | `PR-PHASE6-01` | Phase 6 governance foundations | `v3.1.0` | `critical` | Phase 5 complete (`v3.0.0`) | `merged` |
 | `PR-PHASE6-02` | M6-03: Wire RoadmapAmendmentEngine into EvolutionLoop | `v3.1.0` | `critical` | `PR-PHASE6-01` merged | `merged` |
 | `PR-PHASE6-03` | M6-04: Federated roadmap propagation | `v3.1.0` | `critical` | `PR-PHASE6-02` merged | `merged` |
-| `PR-PHASE6-04` | M6-05: Free Android distribution pipeline close | `v3.1.0` | `standard` | `android-free-release.yml` passing | `active` |
+| `PR-PHASE6-04` | M6-05: Free Android distribution pipeline close | `v3.1.0` | `standard` | `android-free-release.yml` passing | `merged` |
 
 ### 1.3 Dependency graph (fail-closed interpretation)
 
-- `PR-PHASE6-04` is the only active unmerged PR in this sequence.
-- No PR may be advanced out-of-order.
-- `v3.1.0` tag is blocked until `PR-PHASE6-04` is merged and required release gates pass.
+- All PRs in the Phase 6 sequence are merged in dependency order.
+- `v3.1.0` release is complete and no Phase 6 PR remains open.
+- Sequence discipline remains fail-closed for future procession updates.
 
 ---
 
@@ -65,20 +65,21 @@ adaad_pr_procession_contract:
     PR-PHASE6-04:
       ci_tier: standard
       depends_on: ["android-free-release.yml:pass"]
-      status: active
+      status: merged
   state_alignment:
-    expected_next_pr: PR-PHASE6-04
-    expected_last_completed_pr: PR-PHASE6-03
+    expected_next_pr: NONE
+    expected_last_completed_pr: PR-PHASE6-04
     blocked_reason_must_be_null: true
 ```
 
 ### 2.1 Preflight alignment rules (recommended validator behavior)
 
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
-1. `next_pr` is not `PR-PHASE6-04`.
-2. `last_completed_pr` is not `PR-PHASE6-03`.
+1. `next_pr` is not `NONE` for the completed Phase 6 milestone state.
+2. `last_completed_pr` is not `PR-PHASE6-04`.
 3. Any `pr_nodes.*.status` diverges from this contract.
 4. `ordered_pr_ids` is not strict topological order.
+5. `blocked_reason` is non-null during the finalized `v3.1.0` release-complete state.
 
 ---
 
@@ -111,3 +112,4 @@ Historical details remain available via git history; this file now contains only
 ## Changelog
 
 - **2026-03-08:** Canonicalized this document to Phase 6 active sequence only; archived superseded Phase 4/5 planning sections; added machine-checkable procession contract for `.adaad_agent_state.json` preflight alignment.
+- **2026-03-08:** Post-merge state-alignment correction: updated `PR-PHASE6-04` to merged, set terminal alignment (`next_pr: NONE`, `last_completed_pr: PR-PHASE6-04`), and revised dependency/preflight language to reflect finalized `v3.1.0` completion.
