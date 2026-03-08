@@ -96,3 +96,69 @@ def test_verify_integrity_detects_tamper(tmp_path: Path) -> None:
 
     with pytest.raises(MutationCreditLedgerError, match="integrity_failure"):
         ledger.replay_balances()
+
+
+def test_idempotency_index_rebuild_when_missing(tmp_path: Path) -> None:
+    ledger_path = tmp_path / "mutation_credit_ledger.jsonl"
+    ledger = MutationCreditLedger(ledger_path)
+    first = MutationCreditEvent(
+        agent_id="agent-alpha",
+        mutation_id="m-1",
+        credits_delta=4,
+        budget_source="EARNED",
+        idempotency_key="evt-idx-1",
+    )
+    second = MutationCreditEvent(
+        agent_id="agent-alpha",
+        mutation_id="m-2",
+        credits_delta=6,
+        budget_source="EARNED",
+        idempotency_key="evt-idx-2",
+    )
+    ledger.append(first)
+    ledger.append(second)
+
+    ledger_path.with_suffix(".jsonl.idempotency.jsonl").unlink()
+    replay = ledger.append(second)
+
+    assert replay["event"]["idempotency_key"] == "evt-idx-2"
+    assert len(tuple(ledger.events())) == 2
+
+
+def test_integrity_detects_sidecar_mismatch_and_recovers(tmp_path: Path) -> None:
+    ledger_path = tmp_path / "mutation_credit_ledger.jsonl"
+    ledger = MutationCreditLedger(ledger_path)
+    ledger.append(
+        MutationCreditEvent(
+            agent_id="agent-alpha",
+            mutation_id="m-1",
+            credits_delta=4,
+            budget_source="EARNED",
+            idempotency_key="evt-1",
+        )
+    )
+    ledger.append(
+        MutationCreditEvent(
+            agent_id="agent-alpha",
+            mutation_id="m-2",
+            credits_delta=5,
+            budget_source="EARNED",
+            idempotency_key="evt-2",
+        )
+    )
+
+    sidecar = ledger_path.with_suffix(".jsonl.tail.json")
+    sidecar.write_text('{"record_hash":"sha256:bad","entries":999}\n', encoding="utf-8")
+
+    third = ledger.append(
+        MutationCreditEvent(
+            agent_id="agent-alpha",
+            mutation_id="m-3",
+            credits_delta=1,
+            budget_source="EARNED",
+            idempotency_key="evt-3",
+        )
+    )
+
+    assert third["prev_hash"].startswith("sha256:")
+    assert ledger.verify_integrity()["ok"] is True
