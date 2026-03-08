@@ -59,10 +59,9 @@ from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_ag
 from runtime.constitution import (
     CONSTITUTION_VERSION,
     determine_tier,
-    deterministic_envelope_scope,
-    evaluate_mutation,
     get_forced_tier,
 )
+from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
 from runtime.fitness_v2 import score_mutation_enhanced
 from runtime.governance.foundation import default_provider
 from runtime.preflight import validate_boot_runtime_profile
@@ -597,8 +596,7 @@ class Orchestrator:
                 "peak_rss_mb": round(platform_snapshot.memory_mb, 4),
             },
         }
-        with deterministic_envelope_scope(envelope_state):
-            constitutional_verdict = evaluate_mutation(selected, tier)
+        constitutional_verdict = evaluate_mutation(selected, tier, envelope_state=envelope_state)
         eval_wall_elapsed = max(0.0, time.monotonic() - eval_wall_start)
         eval_cpu_elapsed = max(0.0, time.process_time() - eval_cpu_start)
         metrics.log(

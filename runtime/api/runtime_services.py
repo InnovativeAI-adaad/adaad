@@ -8,7 +8,6 @@ from runtime.constitution import (
     CONSTITUTION_VERSION,
     determine_tier,
     deterministic_envelope_scope,
-    evaluate_mutation,
     get_forced_tier,
 )
 from runtime.element_registry import dump, register
@@ -30,6 +29,7 @@ from runtime.founders_law import (
     enforce_law,
 )
 from runtime.governance.foundation import default_provider
+from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
 from runtime.manifest.generator import generate_tool_manifest
 from runtime.mcp.server import create_app as create_mcp_app
 from runtime.platform.android_monitor import AndroidMonitor

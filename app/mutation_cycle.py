@@ -8,7 +8,6 @@ from typing import Any
 
 from runtime.api.runtime_services import (
     determine_tier,
-    deterministic_envelope_scope,
     evaluate_mutation,
     get_forced_tier,
     metrics,
@@ -68,8 +67,7 @@ def run_mutation_cycle(orchestrator: Any) -> None:
             "peak_rss_mb": round(platform_snapshot.memory_mb, 4),
         },
     }
-    with deterministic_envelope_scope(envelope_state):
-        constitutional_verdict = evaluate_mutation(selected, tier)
+    constitutional_verdict = evaluate_mutation(selected, tier, envelope_state=envelope_state)
     eval_wall_elapsed = max(0.0, time.monotonic() - eval_wall_start)
     eval_cpu_elapsed = max(0.0, time.process_time() - eval_cpu_start)
     metrics.log(

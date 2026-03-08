@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Any, Dict, Tuple
 
 from runtime.api.agents import MutationRequest
-from runtime.constitution import Tier, evaluate_mutation
+from runtime.constitution import Tier
+from runtime.governance.decision_pipeline import evaluate_mutation_decision
+
+# Backward-compatible alias for tests and existing patch points.
+evaluate_mutation = evaluate_mutation_decision
 
 SCHEMA_PATH = Path("schemas/llm_mutation_proposal.v1.json")
 TIER0_PATH_PREFIXES = ("runtime/", "security/")
