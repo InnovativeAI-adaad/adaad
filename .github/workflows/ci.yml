@@ -31,9 +31,11 @@ jobs:
       run_strict_replay: ${{ steps.classify.outputs.run_strict_replay }}
       run_evidence_suite: ${{ steps.classify.outputs.run_evidence_suite }}
       run_promotion_suite: ${{ steps.classify.outputs.run_promotion_suite }}
+      run_shadow_governance_gate: ${{ steps.classify.outputs.run_shadow_governance_gate }}
       strict_replay_reason: ${{ steps.classify.outputs.strict_replay_reason }}
       evidence_reason: ${{ steps.classify.outputs.evidence_reason }}
       promotion_reason: ${{ steps.classify.outputs.promotion_reason }}
+      shadow_governance_reason: ${{ steps.classify.outputs.shadow_governance_reason }}
       run_redteam_subset: ${{ steps.classify.outputs.run_redteam_subset }}
       redteam_reason: ${{ steps.classify.outputs.redteam_reason }}
     steps:
@@ -82,6 +84,7 @@ jobs:
           GOVERNANCE: ${{ steps.filter.outputs.governance }}
           RUNTIME: ${{ steps.filter.outputs.runtime }}
           SECURITY: ${{ steps.filter.outputs.security }}
+          POLICY_TOUCH: ${{ steps.filter.outputs.policy_touch }}
           OTHER: ${{ steps.filter.outputs.other }}
         run: |
           set -euo pipefail
@@ -120,9 +123,11 @@ jobs:
           run_strict_replay=false
           run_evidence_suite=false
           run_promotion_suite=false
+          run_shadow_governance_gate=false
           strict_replay_reason='Skipped: no replay/runtime/security/governance trigger.'
           evidence_reason='Skipped: no evidence-impact trigger.'
           promotion_reason='Skipped: no promotion-impact trigger.'
+          shadow_governance_reason='Skipped: no policy-impact trigger.'
           run_redteam_subset=false
           redteam_reason='Skipped: PR is not critical tier.'
 
@@ -147,6 +152,11 @@ jobs:
             promotion_reason="Skipped: ${pr_tier}-only change."
           fi
 
+          if [ "$POLICY_TOUCH" = "true" ] || [ "$gov_policy_flag" = "true" ]; then
+            run_shadow_governance_gate=true
+            shadow_governance_reason='Ran: policy-touching paths or policy-impact flag detected.'
+          fi
+
           if [ "$IS_PR" = "true" ] && [ "$pr_tier" = "critical" ]; then
             run_redteam_subset=true
             redteam_reason='Ran: PR critical-path deterministic red-team subset.'
@@ -161,9 +171,11 @@ jobs:
             echo "run_strict_replay=$run_strict_replay"
             echo "run_evidence_suite=$run_evidence_suite"
             echo "run_promotion_suite=$run_promotion_suite"
+            echo "run_shadow_governance_gate=$run_shadow_governance_gate"
             echo "strict_replay_reason=$strict_replay_reason"
             echo "evidence_reason=$evidence_reason"
             echo "promotion_reason=$promotion_reason"
+            echo "shadow_governance_reason=$shadow_governance_reason"
             echo "run_redteam_subset=$run_redteam_subset"
             echo "redteam_reason=$redteam_reason"
           } >> "$GITHUB_OUTPUT"
@@ -323,6 +335,23 @@ jobs:
           install-deps: "true"
       - name: Run promotion/governance tests
         run: PYTHONPATH=. pytest tests/governance/ tests/test_promotion_policy.py tests/test_promotion_state_machine.py -q
+
+  shadow-governance-gate:
+    runs-on: ubuntu-latest
+    needs: classify
+    if: needs.classify.outputs.run_shadow_governance_gate == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Run replay-only shadow governance evaluator
+        run: >-
+          python scripts/evaluate_shadow_governance.py
+          --candidate governance/governance_policy_v1.json
+          --dataset tests/fixtures/governance/shadow_replay_ledger.json
+          --max-false-allow-rate 0.05
+          --max-false-block-rate 0.20
+          --max-divergence-count 3
+          --output artifacts/shadow_governance_report.json
 
   phase6-amendment-gate-determinism:
     runs-on: ubuntu-latest
@@ -604,6 +633,7 @@ import sys"),
       - strict-replay
       - evidence-suite
       - promotion-suite
+      - shadow-governance-gate
       - phase6-amendment-gate-determinism
       - phase6-storm-invariant
       - phase6-human-signoff-path
@@ -640,6 +670,7 @@ import sys"),
             echo "| strict-replay | ${{ needs.strict-replay.result }} | ${{ needs.classify.outputs.strict_replay_reason }} |"
             echo "| evidence-suite | ${{ needs.evidence-suite.result }} | ${{ needs.classify.outputs.evidence_reason }} |"
             echo "| promotion-suite | ${{ needs.promotion-suite.result }} | ${{ needs.classify.outputs.promotion_reason }} |"
+            echo "| shadow-governance-gate | ${{ needs.shadow-governance-gate.result }} | ${{ needs.classify.outputs.shadow_governance_reason }} |"
             echo "| phase6-amendment-gate-determinism | ${{ needs.phase6-amendment-gate-determinism.result }} | Phase 6 M6-03 determinism selector. |"
             echo "| phase6-storm-invariant | ${{ needs.phase6-storm-invariant.result }} | Phase 6 invariant selector: test_storm_invariant_*. |"
             echo "| phase6-human-signoff-path | ${{ needs.phase6-human-signoff-path.result }} | Phase 6 invariant selector: test_no_auto_approval_*. |"
