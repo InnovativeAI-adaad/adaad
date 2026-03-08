@@ -346,7 +346,7 @@ Awaiting:             human review before merge
 | PR-PHASE5-06 | Federated evidence bundle release gate extension | ✅ Merged |
 | PR-PHASE5-07 | Federation Determinism CI + HMAC key rotation runbook | ✅ Merged |
 
-### Phase 6 · Autonomous Roadmap Self-Amendment (active — v3.1.0)
+### Phase 6 · Autonomous Roadmap Self-Amendment (complete — v3.1.0 released)
 
 > **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md`
 > **Canonical PR sequence:** `docs/governance/ADAAD_PR_PROCESSION_2026-03.md`
@@ -356,7 +356,7 @@ Awaiting:             human review before merge
 | PR-PHASE6-01 | Phase 6 governance foundations | critical | Phase 5 ✅ | ✅ Merged |
 | PR-PHASE6-02 | M6-03: Wire RoadmapAmendmentEngine into EvolutionLoop | critical | PR-PHASE6-01 ✅ | ✅ Merged |
 | PR-PHASE6-03 | M6-04: Federated roadmap propagation | critical | PR-PHASE6-02 ✅ | ✅ Merged |
-| PR-PHASE6-04 | M6-05: Free Android distribution pipeline close | standard | android CI ✅ | 🟡 active |
+| PR-PHASE6-04 | M6-05: Free Android distribution pipeline close | standard | android CI ✅ | ✅ Merged |
 
 **Key invariants governing all Phase 6 PRs:**
 - `INVARIANT PHASE6-AUTH-0` — `authority_level` immutable on amendment proposals
