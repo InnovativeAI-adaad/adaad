@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -27,8 +29,23 @@ class CheckResult:
 
 
 def _command_exists(command: str) -> bool:
-    first_token = shlex.split(command)[0]
-    return shutil.which(first_token) is not None
+    tokens = shlex.split(command)
+    path_separators = {os.sep}
+    if os.altsep:
+        path_separators.add(os.altsep)
+
+    while tokens:
+        token = tokens[0]
+        has_path_separator = any(separator in token for separator in path_separators)
+        is_env_assignment = re.match(r"^[A-Za-z_][A-Za-z0-9_]*=.*$", token) is not None
+        if not has_path_separator and is_env_assignment:
+            tokens.pop(0)
+            continue
+        break
+
+    if not tokens:
+        return False
+    return shutil.which(tokens[0]) is not None
 
 
 def _run_check(check: Check, check_only: bool) -> CheckResult:
