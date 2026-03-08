@@ -54,8 +54,8 @@ from runtime.founders_law import (
     RULE_WARM_POOL,
     enforce_law,
 )
-from runtime.invariants import verify_all
 from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
+from runtime.boot.preflight import evaluate_boot_invariants
 from runtime.constitution import (
     CONSTITUTION_VERSION,
     determine_tier,
@@ -64,13 +64,11 @@ from runtime.constitution import (
 from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
 from runtime.fitness_v2 import score_mutation_enhanced
 from runtime.governance.foundation import default_provider
-from runtime.preflight import validate_boot_runtime_profile
 from runtime.timeutils import now_iso
 from runtime.warm_pool import WarmPool
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
 from security import cryovant
-from security.gatekeeper_protocol import run_gatekeeper
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
 from ui.aponi_dashboard import AponiDashboard
@@ -148,8 +146,11 @@ class Orchestrator:
         safe_message = message.replace(home, "~") if home else message
         self.logger.info(f"[ADAAD] {safe_message}")
 
-    def _fail(self, reason: str) -> None:
-        metrics.log(event_type="orchestrator_error", payload={"reason": reason}, level="ERROR")
+    def _fail(self, reason: str, *, payload: Optional[Dict[str, Any]] = None) -> None:
+        event_payload: Dict[str, Any] = {"reason": reason}
+        if payload:
+            event_payload["failure_event"] = payload
+        metrics.log(event_type="orchestrator_error", payload=event_payload, level="ERROR")
         self.state["status"] = "error"
         self.state["reason"] = reason
         try:
@@ -176,20 +177,14 @@ class Orchestrator:
             self._v("Warning: dry-run + strict replay may not reflect production execution semantics.")
         self._v("Starting governance spine initialization")
         metrics.log(event_type="orchestrator_start", payload={}, level="INFO")
-        gate = run_gatekeeper()
-        if not gate.get("ok"):
-            self._fail(f"gatekeeper_failed:{','.join(gate.get('missing', []))}")
-        self._v("Gatekeeper preflight passed")
-        boot_profile = validate_boot_runtime_profile(replay_mode=self.replay_mode.value)
-        if not boot_profile.get("ok"):
-            self._fail(f"boot_runtime_profile_failed:{boot_profile.get('reason', 'unknown')}")
-        self.state["runtime_profile"] = boot_profile.get("checks", {})
+        boot_invariants = evaluate_boot_invariants(replay_mode=self.replay_mode.value, agents_root=self.agents_root)
+        if not boot_invariants.ok:
+            self._fail(boot_invariants.reason, payload=boot_invariants.payload)
+        self._v("Boot invariant preflight passed")
+        self.state["boot_invariants"] = boot_invariants.payload
         bootstrap_tool_registry()
         self._register_elements()
-        self._init_runtime()
-        self._v("Runtime invariants passed")
-        self._init_cryovant()
-        self._v("Cryovant validation passed")
+        self.warm_pool.start()
         self._verify_checkpoint_chain()
         self._v("Checkpoint chain verification passed")
         epoch_state = self.evolution_runtime.boot()
@@ -305,12 +300,11 @@ class Orchestrator:
     def verify_replay_only(self) -> None:
         self._v("Running replay verification-only mode")
         metrics.log(event_type="orchestrator_start", payload={"verify_only": True}, level="INFO")
-        gate = run_gatekeeper()
-        if not gate.get("ok"):
-            self._fail(f"gatekeeper_failed:{','.join(gate.get('missing', []))}")
+        boot_invariants = evaluate_boot_invariants(replay_mode=self.replay_mode.value, agents_root=self.agents_root)
+        if not boot_invariants.ok:
+            self._fail(boot_invariants.reason, payload=boot_invariants.payload)
         self._register_elements()
-        self._init_runtime()
-        self._init_cryovant()
+        self.warm_pool.start()
         self._verify_checkpoint_chain()
         epoch_state = self.evolution_runtime.boot()
         self.state["epoch"] = epoch_state
@@ -329,9 +323,6 @@ class Orchestrator:
 
     def _init_runtime(self) -> None:
         self.warm_pool.start()
-        ok, failures = verify_all()
-        if not ok:
-            self._fail(f"invariants_failed:{','.join(failures)}")
 
     def _verify_checkpoint_chain(self) -> None:
         try:
@@ -357,11 +348,7 @@ class Orchestrator:
             self._fail(f"checkpoint_chain_violated:{exc}")
 
     def _init_cryovant(self) -> None:
-        if not cryovant.validate_environment():
-            self._fail("cryovant_environment")
-        certified, errors = cryovant.certify_agents(self.agents_root, repair=False)
-        if not certified:
-            self._fail(f"cryovant_certification:{','.join(errors)}")
+        return
 
     def _health_check_architect(self) -> None:
         scan = self.architect.scan()
