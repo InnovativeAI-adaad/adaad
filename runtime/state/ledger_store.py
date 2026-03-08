@@ -64,6 +64,83 @@ class ScoringLedgerStore:
                 rows.append(payload)
         return rows
 
+    def _tail_sidecar_path(self) -> Path:
+        return self.path.with_suffix(self.path.suffix + ".tail.json")
+
+    def _write_tail_sidecar(self, *, record_hash: str, entries: int) -> None:
+        sidecar_path = self._tail_sidecar_path()
+        payload = {"record_hash": str(record_hash), "entries": int(entries)}
+        tmp_path = sidecar_path.with_suffix(sidecar_path.suffix + ".tmp")
+        tmp_path.write_text(canonical_json(payload) + "\n", encoding="utf-8")
+        tmp_path.replace(sidecar_path)
+
+    def _read_tail_sidecar(self) -> dict[str, Any] | None:
+        sidecar_path = self._tail_sidecar_path()
+        if not sidecar_path.exists():
+            return None
+        try:
+            payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return None
+        if not isinstance(payload, dict):
+            return None
+        record_hash = payload.get("record_hash")
+        entries = payload.get("entries")
+        if not isinstance(record_hash, str) or not isinstance(entries, int) or entries < 0:
+            return None
+        return {"record_hash": record_hash, "entries": entries}
+
+    def _read_last_record_hash_fast(self) -> str | None:
+        if not self.path.exists() or self.path.stat().st_size == 0:
+            return _ZERO_HASH
+        with self.path.open("rb") as handle:
+            handle.seek(0, 2)
+            position = handle.tell()
+            buffer = b""
+            while position > 0:
+                position -= 1
+                handle.seek(position)
+                byte = handle.read(1)
+                if byte == b"\n":
+                    if buffer:
+                        break
+                    continue
+                buffer = byte + buffer
+        if not buffer:
+            return _ZERO_HASH
+        try:
+            payload = json.loads(buffer.decode("utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return None
+        if not isinstance(payload, dict):
+            return None
+        record_hash = payload.get("record_hash")
+        if not isinstance(record_hash, str):
+            return None
+        return record_hash
+
+    def _rebuild_tail_sidecar(self) -> dict[str, Any]:
+        records = self._iter_json_records()
+        last_hash = _ZERO_HASH
+        for record in records:
+            candidate = record.get("record_hash")
+            if isinstance(candidate, str):
+                last_hash = candidate
+        sidecar = {"record_hash": last_hash, "entries": len(records)}
+        self._write_tail_sidecar(record_hash=last_hash, entries=len(records))
+        return sidecar
+
+    def _resolve_json_tail(self) -> dict[str, Any]:
+        cached = self._read_tail_sidecar()
+        if cached is None:
+            return self._rebuild_tail_sidecar()
+        fast_hash = self._read_last_record_hash_fast()
+        if fast_hash is None:
+            return self._rebuild_tail_sidecar()
+        if cached.get("record_hash") != fast_hash:
+            return self._rebuild_tail_sidecar()
+        return cached
+
     def iter_records(self) -> list[dict[str, Any]]:
         if self.backend == "sqlite":
             with sqlite3.connect(self.sqlite_path) as conn:
@@ -113,7 +190,8 @@ class ScoringLedgerStore:
         if not verifier.verify(message=self.canonical_event_content(envelope), signature=signed):
             raise ValueError("invalid_event_signature")
 
-        prev_hash = self.last_hash()
+        tail = self._resolve_json_tail() if self.backend == "json" else {"record_hash": self.last_hash(), "entries": 0}
+        prev_hash = str(tail["record_hash"])
         record = {
             "event": envelope.as_dict(),
             "prev_hash": prev_hash,
@@ -150,6 +228,7 @@ class ScoringLedgerStore:
 
         with self.path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, sort_keys=True, ensure_ascii=False) + "\n")
+        self._write_tail_sidecar(record_hash=record["record_hash"], entries=int(tail.get("entries", 0)) + 1)
         return record
 
     def verify_chain(self, verifier: EventVerifier | None = None) -> dict[str, Any]:
@@ -201,6 +280,9 @@ class ScoringLedgerStore:
             if record.get("record_hash") != expected_hash:
                 return {"ok": False, "count": index, "error": "record_hash_mismatch", "index": index}
             expected_prev = expected_hash
+
+        if self.backend == "json":
+            self._write_tail_sidecar(record_hash=expected_prev, entries=len(records))
         return {"ok": True, "count": len(records), "tip_hash": expected_prev}
 
     def append(self, scoring_result: dict[str, Any]) -> dict[str, Any]:

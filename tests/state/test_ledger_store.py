@@ -86,3 +86,31 @@ def test_ledger_store_rejects_invalid_signature(tmp_path) -> None:
         assert False, "append should fail for invalid signature"
     except ValueError as exc:
         assert str(exc) == "invalid_event_signature"
+
+
+def test_ledger_store_recovers_when_tail_sidecar_missing(tmp_path) -> None:
+    ledger_path = tmp_path / "scoring.jsonl"
+    ledger = ScoringLedgerStore(path=ledger_path, backend="json")
+    signer = DeterministicMockSigner()
+
+    first = ledger.append_event(_event(event_id="00000000000000000000000000000011"), verifier=signer)
+    sidecar = ledger_path.with_suffix(".jsonl.tail.json")
+    sidecar.unlink()
+
+    second = ledger.append_event(_event(event_id="00000000000000000000000000000012"), verifier=signer)
+    assert second["prev_hash"] == first["record_hash"]
+    assert ledger.verify_chain(verifier=signer)["ok"] is True
+
+
+def test_ledger_store_recovers_after_partial_sidecar_write(tmp_path) -> None:
+    ledger_path = tmp_path / "scoring.jsonl"
+    ledger = ScoringLedgerStore(path=ledger_path, backend="json")
+    signer = DeterministicMockSigner()
+
+    first = ledger.append_event(_event(event_id="00000000000000000000000000000021"), verifier=signer)
+    sidecar = ledger_path.with_suffix(".jsonl.tail.json")
+    sidecar.write_text("{\"record_hash\":", encoding="utf-8")
+
+    second = ledger.append_event(_event(event_id="00000000000000000000000000000022"), verifier=signer)
+    assert second["prev_hash"] == first["record_hash"]
+    assert ledger.verify_chain(verifier=signer)["ok"] is True
