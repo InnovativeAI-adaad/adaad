@@ -26,6 +26,7 @@ from adaad.core.agent_contract import DEFAULT_AGENT_SCOPES, validate_agent_contr
 from adaad.core.tool_contract import DEFAULT_DISCOVERY_SCOPES, validate_tool_contracts
 
 from runtime import ROOT_DIR
+from runtime.constitution import CONSTITUTION_VERSION
 from runtime.governance.foundation import default_provider
 
 
@@ -38,6 +39,26 @@ _RUNTIME_PROFILE_PATH = ROOT_DIR / "governance_runtime_profile.lock.json"
 
 
 _STRICT_GOVERNANCE_MODES = frozenset({"strict", "audit"})
+
+
+def validate_constitution_version_config(*, expected_version: str | None = None) -> Dict[str, Any]:
+    """Validate constitution version pinning against the canonical runtime constant."""
+    expected = (expected_version if expected_version is not None else os.getenv("ADAAD_CONSTITUTION_VERSION", "")).strip()
+    if not expected:
+        expected = CONSTITUTION_VERSION
+    if expected != CONSTITUTION_VERSION:
+        return {
+            "ok": False,
+            "reason": f"constitution_version_mismatch:{CONSTITUTION_VERSION}!={expected}",
+            "expected": expected,
+            "actual": CONSTITUTION_VERSION,
+        }
+    return {
+        "ok": True,
+        "reason": "ok",
+        "expected": expected,
+        "actual": CONSTITUTION_VERSION,
+    }
 
 
 def _legacy_mutation_validation_enabled() -> bool:

@@ -53,5 +53,5 @@ def test_evaluate_boot_invariants_malformed_envelope_fails_closed(monkeypatch) -
         "reason_code": "boot_invariant_payload_malformed",
         "failed_check": "gatekeeper",
         "replay_mode": "audit",
-        "checks": [],
+        "checks": [{"check": "constitution_version", "status": "ok"}],
     }

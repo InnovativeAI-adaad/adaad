@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from runtime import ROOT_DIR
+from runtime.constitution import CONSTITUTION_VERSION
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.replay import ReplayEngine
 from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION
@@ -26,7 +27,7 @@ EVIDENCE_BUNDLE_SCHEMA_VERSION = "1.0"
 DEFAULT_EXPORT_SIGNING_ALGORITHM = "hmac-sha256"
 DEFAULT_RETENTION_DAYS = 365
 DEFAULT_ACCESS_SCOPE = "governance_audit"
-DEFAULT_CONSTITUTION_VERSION = os.getenv("ADAAD_CONSTITUTION_VERSION", "0.2.0").strip() or "0.2.0"
+DEFAULT_CONSTITUTION_VERSION = os.getenv("ADAAD_CONSTITUTION_VERSION", CONSTITUTION_VERSION).strip() or CONSTITUTION_VERSION
 DEFAULT_GOVERNOR_VERSION = os.getenv("ADAAD_GOVERNOR_VERSION", "3.0.0").strip() or "3.0.0"
 
 

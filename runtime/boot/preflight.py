@@ -7,13 +7,29 @@ from typing import Callable
 from runtime.api.orchestration import StatusEnvelope
 from runtime.boot.artifact_verifier import verify_required_artifacts
 from runtime.invariants import verify_all
-from runtime.preflight import validate_boot_runtime_profile
+from runtime.preflight import validate_boot_runtime_profile, validate_constitution_version_config
 from security import cryovant
 from security.gatekeeper_protocol import run_gatekeeper
 
 
 class BootPreflightService:
     """Evaluates boot prerequisites through explicit typed envelopes."""
+
+
+    def validate_constitution_version(self) -> StatusEnvelope:
+        constitution = validate_constitution_version_config()
+        if not constitution.get("ok"):
+            return StatusEnvelope(
+                status="error",
+                reason=constitution.get("reason", "constitution_version_validation_failed"),
+                evidence_refs=("runtime.preflight.validate_constitution_version_config",),
+                payload=constitution,
+            )
+        return StatusEnvelope(
+            status="ok",
+            evidence_refs=("runtime.preflight.validate_constitution_version_config",),
+            payload=constitution,
+        )
 
     def validate_gatekeeper(self) -> StatusEnvelope:
         gate = run_gatekeeper()
@@ -94,6 +110,11 @@ def evaluate_boot_invariants(*, replay_mode: str, agents_root: Path) -> StatusEn
     service = BootPreflightService()
     checks: list[dict[str, str]] = []
     validators: tuple[tuple[str, str, Callable[[], StatusEnvelope]], ...] = (
+        (
+            "constitution_version",
+            "boot_invariant_constitution_version_failed",
+            service.validate_constitution_version,
+        ),
         (
             "gatekeeper",
             "boot_invariant_gatekeeper_failed",

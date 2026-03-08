@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 from pathlib import Path
 
 from runtime.evolution.evidence_bundle import EvidenceBundleBuilder, EvidenceBundleError
 from runtime.evolution.lineage_v2 import LineageLedgerV2
+from runtime.constitution import CONSTITUTION_VERSION
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
 
 
@@ -225,3 +227,25 @@ def test_legacy_bundle_validation_can_be_explicitly_enabled(monkeypatch) -> None
     monkeypatch.setenv("ADAAD_ENABLE_LEGACY_EVIDENCE_BUNDLE", "1")
 
     assert module._legacy_bundle_validation_enabled() is True
+
+
+def test_evidence_bundle_uses_canonical_constitution_version_when_env_unset(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.delenv("ADAAD_CONSTITUTION_VERSION", raising=False)
+    from runtime.evolution import evidence_bundle as module
+
+    importlib.reload(module)
+
+    ledger = LineageLedgerV2(ledger_path=tmp_path / "lineage_v2.jsonl")
+    ledger.append_event("EpochStartEvent", {"epoch_id": "epoch-1", "state": {}})
+
+    builder = module.EvidenceBundleBuilder(
+        ledger=ledger,
+        sandbox_evidence_path=tmp_path / "sandbox_evidence.jsonl",
+        export_dir=tmp_path / "exports",
+        schema_path=Path("schemas/evidence_bundle.v1.json"),
+    )
+    bundle = builder.build_bundle(epoch_start="epoch-1", persist=False)
+
+    assert bundle["constitution_version"] == CONSTITUTION_VERSION
+
+    importlib.reload(module)
