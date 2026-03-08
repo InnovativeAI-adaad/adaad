@@ -265,6 +265,7 @@ class TestHumanApprovalGate(unittest.TestCase):
         return HumanApprovalGate(
             queue_path=Path(tmpdir) / "queue.jsonl",
             audit_path=Path(tmpdir) / "audit.jsonl",
+            index_path=Path(tmpdir) / "approval_index.json",
             **kwargs,
         )
 
@@ -370,6 +371,54 @@ class TestHumanApprovalGate(unittest.TestCase):
         decisions = gate.batch_approve(["mut-001"], epoch_id="e-001", operator_id="op1")
         self.assertIsInstance(decisions[0], ApprovalDecision)
         self.assertEqual(decisions[0].status, ApprovalStatus.APPROVED.value)
+
+    def test_batch_approve_uses_index_without_full_replay_per_item(self):
+        gate = self._make_gate()
+        original_read_audit = gate._read_audit
+        call_count = {"count": 0}
+
+        def counting_read_audit():
+            call_count["count"] += 1
+            return original_read_audit()
+
+        gate._read_audit = counting_read_audit
+        gate.batch_approve(
+            [f"mut-{i:04d}" for i in range(200)],
+            epoch_id="epoch-001",
+            operator_id="dreezy66",
+        )
+        self.assertLessEqual(call_count["count"], 3)
+
+    def test_index_corruption_triggers_rebuild_and_preserves_correctness(self):
+        gate = self._make_gate()
+        aid = gate.request_approval("mut-001", "epoch-001")
+        gate.record_decision(aid, approved=True, operator_id="dreezy66")
+
+        gate._index_path.write_text("{invalid-json", encoding="utf-8")
+        rebuilt_gate = HumanApprovalGate(
+            queue_path=gate._queue_path,
+            audit_path=gate._audit_path,
+            index_path=gate._index_path,
+        )
+        self.assertTrue(rebuilt_gate.is_approved("mut-001"))
+        self.assertTrue(rebuilt_gate.verify_index_consistency())
+
+    def test_index_digest_mismatch_triggers_rebuild(self):
+        gate = self._make_gate()
+        aid = gate.request_approval("mut-009", "epoch-009")
+        gate.record_decision(aid, approved=False, operator_id="dreezy66")
+
+        index_payload = json.loads(gate._index_path.read_text(encoding="utf-8"))
+        index_payload["audit_digest"] = "bad-digest"
+        gate._index_path.write_text(json.dumps(index_payload, sort_keys=True), encoding="utf-8")
+
+        rebuilt_gate = HumanApprovalGate(
+            queue_path=gate._queue_path,
+            audit_path=gate._audit_path,
+            index_path=gate._index_path,
+        )
+        self.assertFalse(rebuilt_gate.is_approved("mut-009"))
+        self.assertTrue(rebuilt_gate.verify_index_consistency())
 
     # --- audit_trail --------------------------------------------------------
 
