@@ -1,9 +1,9 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-PHASE6-04",
-  "next_pr": "NONE",
-  "active_phase": "Phase 6 Autonomous Roadmap Self-Amendment COMPLETE \u00b7 v3.1.0 released",
-  "last_invocation": "2026-03-07",
+  "last_completed_pr": "PR-8-03",
+  "next_pr": "PR-9-01",
+  "active_phase": "Phase 8 COMPLETE \u00b7 v3.3.0 released | Phase 9 Soulbound Context \u00b7 v3.4.0 target",
+  "last_invocation": "2026-03-08",
   "blocked_reason": null,
   "blocked_at_gate": null,
   "blocked_at_tier": null,
@@ -13,7 +13,23 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "CF-2",
+      "severity": "HIGH",
+      "summary": "ExploreExploitController stuck in explore mode 30+ epochs \u2014 must audit before Phase 9 PR-9-02"
+    },
+    {
+      "id": "CF-3",
+      "severity": "HIGH",
+      "summary": "PenaltyAdaptor weights at floor \u2014 quality-1 signal wire verification required before Phase 9"
+    },
+    {
+      "id": "CF-4",
+      "severity": "MEDIUM",
+      "summary": "mutation_engine_state.json stats dict empty \u2014 stats accumulation path silent failure"
+    }
+  ],
   "value_checkpoints_reached": [
     "phase0-track-a-hardening",
     "pr-lint-01-determinism-orchestrator",
@@ -58,8 +74,19 @@
     "phase6-ledger-event-types-registered",
     "phase6-env-var-amendment-trigger-documented",
     "phase6-security-invariants-matrix-updated",
-    "phase6-founders-law-fl-roadmap-signoff-v1-specified"
+    "phase6-founders-law-fl-roadmap-signoff-v1-specified",
+    "phase7-reviewer-reputation-ledger",
+    "phase7-reputation-scoring-engine",
+    "phase7-tier-calibration-system",
+    "phase7-constitution-v0.3.0-reviewer-calibration",
+    "phase7-aponi-reviewer-calibration-endpoint",
+    "v3.2.0-released",
+    "phase8-governance-health-aggregator",
+    "phase8-health-endpoint-green-amber-red",
+    "phase8-constitution-v0.4.0-governance-health-floor",
+    "v3.3.0-released",
+    "phase9-soulbound-context-whitepaper-v2"
   ],
   "pending_evidence_rows": [],
-  "last_sync_sha": "adb3a0c51597"
+  "last_sync_sha": "pending-push"
 }

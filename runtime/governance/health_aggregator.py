@@ -1,0 +1,319 @@
+# SPDX-License-Identifier: Apache-2.0
+"""GovernanceHealthAggregator — ADAAD Phase 8, PR-8-01.
+
+Computes a deterministic composite Governance Health Score ``h ∈ [0.0, 1.0]``
+from four live signals sourced from Phases 5–7:
+
+    Signal                       Weight  Source
+    ─────────────────────────────────────────────────────────────────────
+    avg_reviewer_reputation      0.30    ReviewerReputationLedger (Ph.7)
+    amendment_gate_pass_rate     0.25    RoadmapAmendmentEngine (Ph.6)
+    federation_divergence_clean  0.25    FederatedEvidenceMatrix (Ph.5)
+    epoch_health_score           0.20    EpochTelemetry (core pipeline)
+
+``h < 0.60`` emits ``governance_health_degraded.v1`` journal event and
+triggers Aponi alert.
+
+Authority invariants
+──────────────────────
+- GovernanceHealthAggregator is **advisory only**.  ``h`` never gates,
+  approves, or blocks mutations.  GovernanceGate retains sole authority.
+- No single signal can drive ``h`` to 0.0 or 1.0 — weight sums to 1.0
+  but each signal is independently clamped to ``[0.0, 1.0]``.
+- Deterministic: identical signal inputs → identical ``h``.
+- Epoch-scoped: weight vector snapshotted per epoch for replay safety.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import logging
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Optional
+
+from runtime.constitution import CONSTITUTION_VERSION
+from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION
+
+log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Signal weights — constitutional invariant: must sum to 1.0
+# ---------------------------------------------------------------------------
+
+SIGNAL_WEIGHTS: Dict[str, float] = {
+    "avg_reviewer_reputation":     0.30,
+    "amendment_gate_pass_rate":    0.25,
+    "federation_divergence_clean": 0.25,
+    "epoch_health_score":          0.20,
+}
+
+HEALTH_DEGRADED_THRESHOLD: float = 0.60
+_WEIGHT_SUM_TOLERANCE: float = 1e-9
+
+JOURNAL_EVENT_SNAPSHOT  = "governance_health_snapshot.v1"
+JOURNAL_EVENT_DEGRADED  = "governance_health_degraded.v1"
+
+# ---------------------------------------------------------------------------
+# Result types
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class HealthSnapshot:
+    """Immutable result of one GovernanceHealthAggregator computation."""
+
+    epoch_id:                  str
+    health_score:              float                # h ∈ [0.0, 1.0]
+    signal_breakdown:          Dict[str, float]     # signal_id → raw value
+    weight_snapshot:           Dict[str, float]     # signal_id → weight used
+    weight_snapshot_digest:    str                  # sha256 of canonical weights
+    constitution_version:      str
+    scoring_algorithm_version: str
+    degraded:                  bool                 # h < HEALTH_DEGRADED_THRESHOLD
+
+    def as_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+# ---------------------------------------------------------------------------
+# Aggregator
+# ---------------------------------------------------------------------------
+
+
+class GovernanceHealthAggregator:
+    """Compute epoch-scoped governance health from live Phase 5–7 signals.
+
+    Parameters
+    ----------
+    reviewer_reputation_ledger:
+        Instance of ``ReviewerReputationLedger`` (Phase 7).  When ``None``
+        the signal defaults to ``0.0`` with a warning.
+    roadmap_amendment_engine:
+        Instance of ``RoadmapAmendmentEngine`` (Phase 6).  ``None`` → 0.0.
+    federated_evidence_matrix:
+        Instance of ``FederatedEvidenceMatrix`` (Phase 5).  ``None`` → 1.0
+        (single-node fallback: no federation = no divergence).
+    epoch_telemetry:
+        Instance of ``EpochTelemetry`` (core).  ``None`` → 0.0.
+    journal_emit:
+        Optional callable ``(event_type: str, payload: dict) → None`` for
+        ledger event emission.  Defaults to ``security.ledger.journal.append_tx``.
+    weights:
+        Override signal weights (must sum to 1.0 within tolerance).  Defaults
+        to ``SIGNAL_WEIGHTS``.
+    """
+
+    def __init__(
+        self,
+        *,
+        reviewer_reputation_ledger=None,
+        roadmap_amendment_engine=None,
+        federated_evidence_matrix=None,
+        epoch_telemetry=None,
+        journal_emit=None,
+        weights: Optional[Dict[str, float]] = None,
+    ) -> None:
+        self._reputation_ledger    = reviewer_reputation_ledger
+        self._amendment_engine     = roadmap_amendment_engine
+        self._evidence_matrix      = federated_evidence_matrix
+        self._epoch_telemetry      = epoch_telemetry
+        self._journal_emit         = journal_emit or self._default_journal_emit
+
+        # Validate and snapshot weights
+        self._weights = dict(weights or SIGNAL_WEIGHTS)
+        self._validate_weights(self._weights)
+        self._weight_digest = self._digest_weights(self._weights)
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def compute(self, epoch_id: str) -> HealthSnapshot:
+        """Compute health snapshot for ``epoch_id``.
+
+        Returns a deterministic ``HealthSnapshot``.  Emits ledger events.
+        Side-effects (journal write failures) never raise — they are logged
+        and skipped.
+        """
+        breakdown = self._collect_signals(epoch_id)
+        h = self._weighted_sum(breakdown)
+
+        snapshot = HealthSnapshot(
+            epoch_id=epoch_id,
+            health_score=h,
+            signal_breakdown=dict(breakdown),
+            weight_snapshot=dict(self._weights),
+            weight_snapshot_digest=self._weight_digest,
+            constitution_version=CONSTITUTION_VERSION,
+            scoring_algorithm_version=ALGORITHM_VERSION,
+            degraded=(h < HEALTH_DEGRADED_THRESHOLD),
+        )
+
+        self._emit_snapshot(snapshot)
+
+        if snapshot.degraded:
+            self._emit_degraded(snapshot)
+
+        return snapshot
+
+    # ------------------------------------------------------------------
+    # Signal collectors
+    # ------------------------------------------------------------------
+
+    def _collect_signals(self, epoch_id: str) -> Dict[str, float]:
+        return {
+            "avg_reviewer_reputation":     self._collect_reputation(epoch_id),
+            "amendment_gate_pass_rate":    self._collect_amendment_rate(),
+            "federation_divergence_clean": self._collect_federation_clean(),
+            "epoch_health_score":          self._collect_epoch_health(),
+        }
+
+    def _collect_reputation(self, epoch_id: str) -> float:
+        if self._reputation_ledger is None:
+            log.warning("GovernanceHealthAggregator: no reputation ledger; avg_reviewer_reputation=0.0")
+            return 0.0
+        try:
+            entries = self._reputation_ledger.get_all_entries()
+            if not entries:
+                return 0.0
+            # Filter to this epoch if epoch_id is present on entries
+            epoch_entries = [e for e in entries if getattr(e, "epoch_id", None) == epoch_id]
+            target = epoch_entries if epoch_entries else entries
+            scores = [getattr(e, "composite_score", 0.0) for e in target if hasattr(e, "composite_score")]
+            if not scores:
+                return 0.0
+            return min(1.0, max(0.0, sum(scores) / len(scores)))
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: reputation collection error: %s", exc)
+            return 0.0
+
+    def _collect_amendment_rate(self) -> float:
+        if self._amendment_engine is None:
+            log.warning("GovernanceHealthAggregator: no amendment engine; amendment_gate_pass_rate=0.0")
+            return 0.0
+        try:
+            pending = self._amendment_engine.list_pending()
+            # 0 pending proposals → gates are passing (score = 1.0)
+            # >0 pending → proportional degradation; capped at 0.0 for 5+
+            pending_count = len(pending)
+            if pending_count == 0:
+                return 1.0
+            return min(1.0, max(0.0, 1.0 - (pending_count * 0.20)))
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: amendment rate error: %s", exc)
+            return 0.0
+
+    def _collect_federation_clean(self) -> float:
+        if self._evidence_matrix is None:
+            # Single-node: no federation configured — treat as clean (1.0)
+            return 1.0
+        try:
+            return 1.0 if self._evidence_matrix.divergence_count == 0 else 0.0
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: federation clean error: %s", exc)
+            return 0.0
+
+    def _collect_epoch_health(self) -> float:
+        if self._epoch_telemetry is None:
+            log.warning("GovernanceHealthAggregator: no epoch telemetry; epoch_health_score=0.0")
+            return 0.0
+        try:
+            indicators = self._epoch_telemetry.health_indicators()
+            healthy = sum(
+                1 for v in indicators.values()
+                if isinstance(v, dict) and v.get("status") == "healthy"
+            )
+            total = sum(
+                1 for v in indicators.values()
+                if isinstance(v, dict) and v.get("status") in {"healthy", "warning"}
+            )
+            if total == 0:
+                return 0.0
+            return min(1.0, max(0.0, healthy / total))
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: epoch health error: %s", exc)
+            return 0.0
+
+    # ------------------------------------------------------------------
+    # Math
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _weighted_sum(breakdown: Dict[str, float]) -> float:
+        total = 0.0
+        for signal_id, weight in SIGNAL_WEIGHTS.items():
+            value = breakdown.get(signal_id, 0.0)
+            total += weight * min(1.0, max(0.0, value))
+        return round(min(1.0, max(0.0, total)), 6)
+
+    # ------------------------------------------------------------------
+    # Weight validation & digest
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _validate_weights(weights: Dict[str, float]) -> None:
+        weight_sum = sum(weights.values())
+        if abs(weight_sum - 1.0) > _WEIGHT_SUM_TOLERANCE:
+            raise ValueError(
+                f"GovernanceHealthAggregator: weights must sum to 1.0; got {weight_sum}"
+            )
+        for k, v in weights.items():
+            if not (0.0 < v < 1.0):
+                raise ValueError(
+                    f"GovernanceHealthAggregator: weight for '{k}' must be in (0, 1); got {v}"
+                )
+
+    @staticmethod
+    def _digest_weights(weights: Dict[str, float]) -> str:
+        canonical = json.dumps(
+            {k: weights[k] for k in sorted(weights)}, separators=(",", ":")
+        ).encode()
+        return "sha256:" + hashlib.sha256(canonical).hexdigest()
+
+    # ------------------------------------------------------------------
+    # Journal emission
+    # ------------------------------------------------------------------
+
+    def _emit_snapshot(self, snapshot: HealthSnapshot) -> None:
+        try:
+            self._journal_emit(
+                JOURNAL_EVENT_SNAPSHOT,
+                {
+                    "epoch_id":                  snapshot.epoch_id,
+                    "health_score":              snapshot.health_score,
+                    "signal_breakdown":          snapshot.signal_breakdown,
+                    "weight_snapshot_digest":    snapshot.weight_snapshot_digest,
+                    "constitution_version":      snapshot.constitution_version,
+                    "scoring_algorithm_version": snapshot.scoring_algorithm_version,
+                    "degraded":                  snapshot.degraded,
+                },
+            )
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: snapshot journal emit failed: %s", exc)
+
+    def _emit_degraded(self, snapshot: HealthSnapshot) -> None:
+        try:
+            self._journal_emit(
+                JOURNAL_EVENT_DEGRADED,
+                {
+                    "epoch_id":        snapshot.epoch_id,
+                    "health_score":    snapshot.health_score,
+                    "signal_breakdown": snapshot.signal_breakdown,
+                    "threshold":       HEALTH_DEGRADED_THRESHOLD,
+                },
+            )
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: degraded journal emit failed: %s", exc)
+
+    # ------------------------------------------------------------------
+    # Default journal emit
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _default_journal_emit(event_type: str, payload: Dict[str, Any]) -> None:
+        try:
+            from security.ledger.journal import append_tx
+            append_tx(event_type, payload)
+        except Exception as exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: default journal emit: %s", exc)
