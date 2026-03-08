@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 from typing import Callable, Dict, Iterable, List
@@ -11,6 +12,8 @@ from security.ledger.journal import append_tx
 from security import cryovant
 
 MutationFn = Callable[[Path], None]
+_AUTH_FAILURE_REASON_PREFIX = "architect_governor_auth_failed"
+_LOGGER = logging.getLogger(__name__)
 
 
 def _default_mutation(_: Path) -> None:
@@ -46,7 +49,24 @@ class ArchitectGovernor:
         token = (cryovant_token or "").strip()
         if not token:
             raise PermissionError("cryovant_token required for autonomous refactor.")
-        if not cryovant.verify_governance_token(token):
+        try:
+            token_valid = cryovant.verify_governance_token(token)
+        except cryovant.TokenExpiredError:
+            _LOGGER.warning(
+                "ArchitectGovernor.execute_refactor auth failed",
+                extra={"reason_code": f"{_AUTH_FAILURE_REASON_PREFIX}:token_expired", "error_type": "TokenExpiredError"},
+            )
+            raise PermissionError("Invalid cryovant_token: token_expired.") from None
+        except (cryovant.GovernanceTokenError, cryovant.MissingSigningKeyError) as exc:
+            _LOGGER.warning(
+                "ArchitectGovernor.execute_refactor auth failed",
+                extra={
+                    "reason_code": f"{_AUTH_FAILURE_REASON_PREFIX}:token_verification_error",
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise PermissionError("Invalid cryovant_token: token_verification_error.") from None
+        if not token_valid:
             raise PermissionError("Invalid cryovant_token.")
 
         safe_targets = _validate_targets(targets)
