@@ -251,5 +251,36 @@ def governance_reviewer_calibration(
 
     return {"schema_version": "1.0", "authn": authn, "data": calibration}
 
+# ---------------------------------------------------------------------------
+# Phase 8 — Governance Health Dashboard (PR-8-02)
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/health")
+def governance_health(
+    epoch_id: str | None = Query(default=None),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return current and rolling governance health score.
+
+    Response fields
+    ---------------
+    health_score          float — current epoch h ∈ [0.0, 1.0]
+    status                str   — 'green' | 'amber' | 'red'
+    signal_breakdown      dict  — per-signal raw values
+    weight_snapshot_digest str  — sha256 of canonical weight vector
+    constitution_version  str
+    scoring_algorithm_version str
+    degraded              bool  — h < 0.60
+    constitutional_floor  str   — always 'enforced'
+    """
+    from runtime.api.runtime_services import governance_health_service
+
+    authn = _require_audit_read_scope(authorization)
+    resolved_epoch = epoch_id or "current"
+    result = governance_health_service(epoch_id=resolved_epoch)
+    result["constitutional_floor"] = "enforced"
+    return {"schema_version": "1.0", "authn": authn, "data": result}
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
