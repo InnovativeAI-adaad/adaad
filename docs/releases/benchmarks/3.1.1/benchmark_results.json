@@ -1,0 +1,49 @@
+{
+  "average_score": 1.0,
+  "benchmark_digest": "719eca8c9a48354bc5266126df3444da66c4d68e823cb88d509150c94fbf536c",
+  "benchmark_spec_version": "1.0.0",
+  "category_order": [
+    "governance_correctness",
+    "determinism_fidelity",
+    "adversarial_robustness",
+    "federation_consistency",
+    "operational_mttr"
+  ],
+  "deterministic_seeds": {
+    "adversarial_robustness": 3301,
+    "determinism_fidelity": 2207,
+    "federation_consistency": 4409,
+    "governance_correctness": 1103,
+    "operational_mttr": 5519
+  },
+  "generated_at_utc": "2026-03-08T14:59:05.366965+00:00",
+  "git_sha": "206daed425d6b12c34fcb015f16902af6a85b82c",
+  "release_candidate": "3.1.1",
+  "scores": {
+    "adversarial_robustness": {
+      "passed": 4,
+      "score": 1.0,
+      "total": 4
+    },
+    "determinism_fidelity": {
+      "passed": 4,
+      "score": 1.0,
+      "total": 4
+    },
+    "federation_consistency": {
+      "passed": 3,
+      "score": 1.0,
+      "total": 3
+    },
+    "governance_correctness": {
+      "passed": 5,
+      "score": 1.0,
+      "total": 5
+    },
+    "operational_mttr": {
+      "passed": 3,
+      "score": 1.0,
+      "total": 3
+    }
+  }
+}

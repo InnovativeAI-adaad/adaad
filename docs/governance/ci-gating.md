@@ -46,6 +46,7 @@ These jobs run only when classifier gates evaluate to `true`:
 | `shadow-governance-gate` | policy-touching paths (`governance/governance_policy*.json`, policy runtime/tests fixtures) or policy/constitution flag | replay-only policy evaluator against historical ledgers |
 | `phase7-reputation-gate` | governance/server/relevant UI path changes (`governance/**`, `server.py`, `ui/**`) | reviewer reputation + ledger + pressure + constitutional-floor + reviewer panel endpoint/UI coverage |
 | `pr3h-acceptance-gate` | PR-3H closure scope (`tests/acceptance/pr3h/**`, `scripts/validate_pr3h_acceptance.py`, checkpoint/entropy replay acceptance surfaces) | checkpoint tamper escalation + entropy triage replay fixtures via machine-readable audit output |
+| `benchmark-regression-gate` | always-on CI promotion check | deterministic benchmark generation + category delta non-regression (`scripts/validate_benchmark_deltas.py`) |
 
 - `strict-replay`
   - Runs for `critical` tier or replay/ledger impact flag.
@@ -66,6 +67,19 @@ These jobs run only when classifier gates evaluate to `true`:
   - Required evidence gate for PR-3H closure.
   - Runs `python scripts/validate_pr3h_acceptance.py` and requires a passing machine-readable audit artifact (`artifacts/pr3h_acceptance_audit.json`) from CI.
   - PR-3H is not considered complete until the uploaded artifact reports `"status": "pass"`.
+
+
+## Benchmark regression gate (required)
+
+A dedicated CI job, `benchmark-regression-gate`, enforces deterministic benchmark promotion controls:
+
+1. Generate machine-readable benchmark output and scorecard via
+   `python scripts/run_release_benchmarks.py --release-candidate ci-${GITHUB_SHA}`.
+2. Compare candidate benchmark results against the baseline release benchmark artifact using
+   `python scripts/validate_benchmark_deltas.py --baseline <baseline> --candidate <candidate>`.
+
+Promotion is blocked on any category regression unless a signed waiver JSON is provided and passes
+signature and category-consistency validation. Missing or invalid waiver input fails closed.
 
 ## Simplification contract gate (required)
 

@@ -599,6 +599,20 @@ import sys"),
       - name: Validate simplification complexity/safety targets
         run: python scripts/validate_simplification_targets.py
 
+  benchmark-regression-gate:
+    runs-on: ubuntu-latest
+    needs: classify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Generate deterministic benchmark artifacts
+        run: python scripts/run_release_benchmarks.py --release-candidate ci-${{ github.sha }}
+      - name: Enforce non-regressive benchmark deltas
+        run: >-
+          python scripts/validate_benchmark_deltas.py
+          --baseline docs/releases/benchmarks/3.1.1/benchmark_results.json
+          --candidate docs/releases/benchmarks/ci-${{ github.sha }}/benchmark_results.json
+
 
   semantic-diff-determinism:
     runs-on: ubuntu-latest
@@ -675,6 +689,7 @@ import sys"),
       - adversarial-scenario-harness
       - release-evidence-readiness
       - simplification-contract-gate
+      - benchmark-regression-gate
       - fast-path-innovations
       - semantic-diff-determinism
     if: always()
@@ -713,6 +728,7 @@ import sys"),
             echo "| adversarial-scenario-harness | ${{ needs.adversarial-scenario-harness.result }} | ${{ needs.classify.outputs.adversarial_reason }} |"
             echo "| release-evidence-readiness | ${{ needs.release-evidence-readiness.result }} | Always-on matrix link validation. |"
             echo "| simplification-contract-gate | ${{ needs.simplification-contract-gate.result }} | Always-on simplification KPI contract gate (complexity/fan-in/legacy/metrics/runtime-cost). |"
+            echo "| benchmark-regression-gate | ${{ needs.benchmark-regression-gate.result }} | Deterministic benchmark generation and non-regression promotion gate. |"
             echo "| fast-path-innovations | ${{ needs.fast-path-innovations.result }} | Route optimizer / entropy gate / checkpoint chain / parallel gate — conditional on runtime or test changes. |"
             echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | PR-PHASE4-07: SemanticDiffEngine determinism — 10 AST fixture pairs verified identical across two independent runs. |"
             echo "| semantic-diff-determinism | ${{ needs.semantic-diff-determinism.result }} | Always-on: 10 AST fixture determinism proofs for SemanticDiffEngine. |"

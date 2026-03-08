@@ -1,0 +1,31 @@
+{
+  "governance_correctness": [
+    {"id": "gc-001", "expected": "allow", "actual": "allow"},
+    {"id": "gc-002", "expected": "block", "actual": "block"},
+    {"id": "gc-003", "expected": "allow", "actual": "allow"},
+    {"id": "gc-004", "expected": "block", "actual": "block"},
+    {"id": "gc-005", "expected": "allow", "actual": "allow"}
+  ],
+  "determinism_fidelity": [
+    {"id": "df-001", "run_a": "f1c2", "run_b": "f1c2"},
+    {"id": "df-002", "run_a": "8aa0", "run_b": "8aa0"},
+    {"id": "df-003", "run_a": "b102", "run_b": "b102"},
+    {"id": "df-004", "run_a": "c310", "run_b": "c310"}
+  ],
+  "adversarial_robustness": [
+    {"id": "ar-001", "attack": "prompt_injection", "blocked": true},
+    {"id": "ar-002", "attack": "schema_poison", "blocked": true},
+    {"id": "ar-003", "attack": "replay_tamper", "blocked": true},
+    {"id": "ar-004", "attack": "policy_bypass", "blocked": true}
+  ],
+  "federation_consistency": [
+    {"id": "fc-001", "nodes": ["n1", "n2", "n3"], "consistent": true},
+    {"id": "fc-002", "nodes": ["n1", "n4"], "consistent": true},
+    {"id": "fc-003", "nodes": ["n2", "n5", "n6"], "consistent": true}
+  ],
+  "operational_mttr": [
+    {"id": "om-001", "slo_minutes": 15, "actual_minutes": 12},
+    {"id": "om-002", "slo_minutes": 30, "actual_minutes": 26},
+    {"id": "om-003", "slo_minutes": 20, "actual_minutes": 16}
+  ]
+}

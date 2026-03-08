@@ -140,6 +140,21 @@ jobs:
           PYTHONPATH=. pytest tests/test_constitution_policy.py -k "advisory_validators_do_not_mutate_envelope_state or cross_environment_digest_stability_with_equivalent_envelope_state or severity_escalation_framework_supports_warning_and_blocking" -q
           PYTHONPATH=. pytest tests/test_aponi_dashboard_e2e.py -k "reviewer_panel" -q
 
+  benchmark-delta-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+      - name: Generate release benchmark artifacts
+        run: python scripts/run_release_benchmarks.py --release-candidate release-${{ github.ref_name }}
+      - name: Enforce benchmark non-regression
+        run: >-
+          python scripts/validate_benchmark_deltas.py
+          --baseline docs/releases/benchmarks/3.1.1/benchmark_results.json
+          --candidate docs/releases/benchmarks/release-${{ github.ref_name }}/benchmark_results.json
+
   release-gate:
     runs-on: ubuntu-latest
     if: always()
@@ -150,6 +165,7 @@ jobs:
       - replay-strict-validation
       - constitution-fingerprint-stability
       - reviewer-calibration-validation
+      - benchmark-delta-validation
     steps:
       - name: Enforce strict release gate
         env:
@@ -159,6 +175,7 @@ jobs:
           REPLAY_RESULT: ${{ needs.replay-strict-validation.result }}
           FINGERPRINT_RESULT: ${{ needs.constitution-fingerprint-stability.result }}
           REVIEWER_CALIBRATION_RESULT: ${{ needs.reviewer-calibration-validation.result }}
+          BENCHMARK_DELTA_RESULT: ${{ needs.benchmark-delta-validation.result }}
         run: |
           set -euo pipefail
           echo "determinism-lint => $DETERMINISM_RESULT"
@@ -167,6 +184,7 @@ jobs:
           echo "replay-strict-validation => $REPLAY_RESULT"
           echo "constitution-fingerprint-stability => $FINGERPRINT_RESULT"
           echo "reviewer-calibration-validation => $REVIEWER_CALIBRATION_RESULT"
+          echo "benchmark-delta-validation => $BENCHMARK_DELTA_RESULT"
 
           test "$DETERMINISM_RESULT" = "success"
           test "$ENTROPY_RESULT" = "success"
@@ -174,5 +192,6 @@ jobs:
           test "$REPLAY_RESULT" = "success"
           test "$FINGERPRINT_RESULT" = "success"
           test "$REVIEWER_CALIBRATION_RESULT" = "success"
+          test "$BENCHMARK_DELTA_RESULT" = "success"
 
           echo "All required governance strict release-gate jobs passed."
