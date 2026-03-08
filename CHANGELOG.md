@@ -1,5 +1,144 @@
 # Changelog
 
+## [3.2.0] — 2026-03-08 · Phase 7 — Reviewer Reputation & Adaptive Governance Calibration
+
+All five Phase 7 milestones ship in `v3.2.0`. The system now closes the feedback loop
+between human reviewer decisions and constitutional calibration — empirical reputation
+replaces static reviewer-count heuristics while preserving the inviolable constitutional
+floor that human review is always required.
+
+### PR-7-01 — Reviewer Reputation Ledger
+
+`runtime/governance/reviewer_reputation_ledger.py` (602 lines)
+
+Append-only, SHA-256 hash-chained ledger of all reviewer decisions:
+`DECISION_APPROVE`, `DECISION_REJECT`, `DECISION_TIMEOUT`, `DECISION_OVERRIDE`.
+
+- **Write-once invariant:** entries are immutable once appended; no retroactive modification.
+- **Privacy invariant:** `reviewer_id` stored as HMAC-derived opaque token over signing-key
+  fingerprint — no plaintext PII in the ledger.
+- **In-memory default:** replay-harness-compatible by default; persistence opt-in via
+  `ledger_path` + `flush()` / `load()`.
+- **Hash-chain:** every entry carries `prev_entry_hash` + `entry_hash` for offline
+  chain-integrity verification.
+- **Deterministic / replay-safe:** all state derived from the event stream; no wall-clock
+  or random calls inside core logic.
+
+Tests: `tests/governance/test_reviewer_reputation_ledger.py` — **45 tests** covering
+chain integrity, append invariants, HMAC privacy, flush/load round-trips, and
+decision taxonomy validation.
+
+### PR-7-02 — Reputation Scoring Engine
+
+`runtime/governance/reviewer_reputation.py` (263 lines)
+
+Deterministic, epoch-scoped composite reputation score `r ∈ [0.0, 1.0]` derived from
+ledger history across four dimensions:
+
+| Dimension | Default Weight | Description |
+|---|---|---|
+| `latency` | 0.20 | Response timeliness relative to SLA windows |
+| `override_rate` | 0.30 | Frequency of decisions overridden by higher authority |
+| `long_term_mutation_impact` | 0.30 | Post-merge quality and stability of approved mutations |
+| `governance_alignment` | 0.20 | Consistency with constitutional and policy outcomes |
+
+**Epoch weight snapshot invariant:** weight vector is snapshotted and journaled per epoch
+before any scorer execution. Replay consumes epoch-scoped weight snapshots, never
+current-runtime weights. Mid-epoch weight changes are disallowed.
+
+**Scoring version binding invariant:** `scoring_algorithm_version = "1.0"` is recorded in
+every epoch context and `reviewer_reputation_update` event. Any scoring algorithm change
+requires a version bump; prior epochs are never retroactively reinterpreted.
+
+Exports: `compute_reviewer_reputation()`, `compute_epoch_reputation_batch()`,
+`snapshot_digest()`, `validate_epoch_weights()`.
+
+Tests: `tests/governance/test_reviewer_reputation.py` — **23 tests** covering determinism,
+weight validation, version binding, batch computation, and edge-case score bounds.
+`tests/governance/test_pr_lifecycle_reviewer_outcome.py` — **14 tests** covering
+lifecycle event consumption and outcome integration.
+
+### PR-7-03 — Tier Calibration Engine + Constitutional Floor
+
+`runtime/governance/review_pressure.py` (188 lines)
+
+Translates aggregate reviewer reputation into adjusted reviewer-count recommendations
+per governance tier, subject to hardcoded constitutional floor enforcement.
+
+| Tier | Base | Min | Max |
+|---|---|---|---|
+| `low` | 1 | 1 | 2 |
+| `standard` | 2 | 1 | 3 |
+| `critical` | 3 | 2 | 4 |
+| `governance` | 3 | 3 | 5 |
+
+**Calibration thresholds:** reputation ≥ 0.80 → count reduced by 1; reputation ≤ 0.40 →
+count increased by 1; both bounded by per-tier min/max.
+
+**Constitutional floor invariant:** `CONSTITUTIONAL_FLOOR_MIN_REVIEWERS = 1` is architecturally
+enforced. No tier configuration may set `min_count < 1`; `validate_tier_config()` raises
+`ValueError` on boot if any tier violates the floor. Reputation can never reduce the
+required reviewer count below this boundary.
+
+Exports: `compute_tier_reviewer_count()`, `compute_panel_calibration()`, `validate_tier_config()`.
+
+### PR-7-04 — Constitution v0.3.0: `reviewer_calibration` Advisory Rule
+
+`docs/CONSTITUTION.md` bumped to **v0.3.0** (already in effect). `runtime/governance/constitution.yaml`
+carries the new rule:
+
+```yaml
+- name: reviewer_calibration
+  enabled: true
+  severity: advisory
+  validator: reviewer_calibration
+  reason: "Expose reviewer calibration context as governance telemetry"
+```
+
+Advisory enforcement: captures reviewer reputation posture for telemetry and audit evidence;
+does not block mutations. Environment variable `ADAAD_SEVERITY_ESCALATIONS` allows operators
+to escalate to `blocking` without a code change.
+
+**Invariant:** Tier 0 surfaces always require human review. The `reviewer_calibration` rule
+cannot demote Tier 0 gates — calibration adjusts reviewer count within tier bounds only.
+
+### PR-7-05 — Aponi Reviewer Calibration Endpoint
+
+`GET /governance/reviewer-calibration` — read-only Aponi dashboard endpoint backed by
+`runtime/api/runtime_services.reviewer_calibration_service()`.
+
+**Response schema (v1.0):**
+```json
+{
+  "schema_version": "1.0",
+  "authn": { "scope": "audit:read" },
+  "data": {
+    "cohort_summary": { "high": 2, "standard": 4, "low": 0 },
+    "avg_reputation": 0.82,
+    "tier_pressure": "extended | nominal | elevated",
+    "constitutional_floor": "enforced",
+    "epoch_id": "<requested_epoch>",
+    "constitution_version": "0.3.0",
+    "scoring_algorithm_version": "1.0"
+  }
+}
+```
+
+Requires `epoch_id` query parameter; returns 422 if absent. Auth-gated to `audit:read`
+scope via `_require_audit_read_scope()`. Read-only — the endpoint surfaces telemetry only;
+no reputation scores are modified by this call.
+
+### Authority invariants upheld throughout Phase 7
+
+- `ReviewerReputationLedger` records outcomes — it never approves or blocks mutations.
+- `ReputationScoringEngine` produces scores — it never adjusts reviewer authority or voting rights.
+- `TierCalibrationEngine` adjusts reviewer count only — constitutional floor is architecturally
+  inviolable; no auto-approval path exists.
+- `GovernanceGate` remains the sole mutation approval authority.
+- `CONSTITUTIONAL_FLOOR_MIN_REVIEWERS = 1` cannot be reduced by any reputation signal.
+
+---
+
 ## [3.1.1] — 2026-03-07 · chore/phase6-closeout-docs-v311 · Phase 6.1 GA + Roadmap + Doc Sync
 
 ### Phase 6.1 GA Closeout

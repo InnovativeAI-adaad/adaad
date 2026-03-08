@@ -235,7 +235,7 @@ drift, or runtime-cost cap regression. `enforced_max_branches` locked from 23 �
 
 ## Phase 7 — Reviewer Reputation & Adaptive Governance Calibration
 
-**Status:** 🔵 planned · **Target:** v3.2.0 · **Requires:** Phase 6.1 shipped ✅
+**Status:** ✅ shipped · **Released:** v3.2.0 · **Closed:** 2026-03-08 · **Requires:** Phase 6.1 shipped ✅
 
 Phase 7 closes the feedback loop between human reviewer decisions and constitutional
 calibration — a mechanism absent from all known open-source governance platforms.
