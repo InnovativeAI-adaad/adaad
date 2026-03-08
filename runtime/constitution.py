@@ -130,7 +130,7 @@ from runtime.platform.android_monitor import AndroidMonitor
 from runtime.governance_surface import canonicalize_governance_details
 from security.ledger import journal
 
-CONSTITUTION_VERSION = "0.3.0"
+CONSTITUTION_VERSION = "0.4.0"
 ELEMENT_ID = "Earth"
 POLICY_PATH = Path("runtime/governance/constitution.yaml")
 RULE_APPLICABILITY_PATH = Path("governance/rule_applicability.yaml")
@@ -155,6 +155,7 @@ VALIDATOR_VERSIONS: Dict[str, str] = {
     "_validate_deployment_authority_tier": "1.0.0",
     "_validate_revenue_credit_floor": "1.0.0",
     "_validate_reviewer_calibration": "1.0.0",
+    "_validate_governance_health_floor": "1.0.0",
 }
 _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
 _POLICY_DOCUMENT: Dict[str, Any] = {}
@@ -1534,6 +1535,33 @@ def _validate_reviewer_calibration(_: MutationRequest) -> Dict[str, Any]:
     }
 
 
+def _validate_governance_health_floor(_: MutationRequest) -> Dict[str, Any]:
+    """Surface GovernanceHealthAggregator h < 0.60 as advisory governance telemetry.
+
+    Advisory-only by default.  When ADAAD_SEVERITY_ESCALATIONS promotes this
+    rule to 'blocking', a degraded health score halts new amendment proposals
+    until the floor is restored.  GovernanceGate retains sole mutation approval
+    authority; this validator is informational only at default severity.
+    """
+    envelope_state = get_deterministic_envelope_state()
+    health_score = _normalize_advisory_detail_value(
+        envelope_state.get("governance_health_score")
+    )
+    degraded = False
+    if isinstance(health_score, (int, float)):
+        degraded = float(health_score) < 0.60
+    return {
+        "ok": True,
+        "reason": "governance_health_floor_recorded",
+        "details": {
+            "governance_health_score": health_score,
+            "degraded": degraded,
+            "threshold": 0.60,
+            "present": health_score is not None,
+        },
+    }
+
+
 VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "single_file_scope": _validate_single_file,
     "ast_validity": _validate_ast,
@@ -1549,6 +1577,7 @@ VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "deployment_authority_tier": _validate_deployment_authority_tier,
     "revenue_credit_floor": _validate_revenue_credit_floor,
     "reviewer_calibration": _validate_reviewer_calibration,
+    "governance_health_floor": _validate_governance_health_floor,
 }
 
 
