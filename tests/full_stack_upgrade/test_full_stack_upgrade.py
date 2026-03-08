@@ -61,6 +61,9 @@ def test_ledger_append_only_and_hash(tmp_path: Path) -> None:
     rows = ledger.entries()
     assert len(rows) == 1
     assert rows[0]["hash"] == digest
+    assert rows[0]["prev_hash"].startswith("sha256:")
+    assert rows[0]["canonical_payload_hash"].startswith("sha256:")
+    assert rows[0]["signature_bundle"]["signing_key_id"]
     assert rows[0]["entry"]["variant_id"] == "v1"
 
 
