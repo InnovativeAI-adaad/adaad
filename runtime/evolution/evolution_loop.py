@@ -167,7 +167,11 @@ class EvolutionLoop:
         # Phase 1: Propose
         all_proposals: List[MutationCandidate] = []
         try:
-            proposals_by_agent = propose_from_all_agents(context, self._api_key)
+            proposal_batch = propose_from_all_agents(context, self._api_key)
+            if isinstance(proposal_batch, dict):
+                proposals_by_agent = proposal_batch
+            else:
+                proposals_by_agent = proposal_batch.proposals_by_agent
             for agent_proposals in proposals_by_agent.values():
                 all_proposals.extend(agent_proposals)
         except Exception:

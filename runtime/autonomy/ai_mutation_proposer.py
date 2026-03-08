@@ -26,8 +26,9 @@ import json
 import time
 import urllib.error
 import urllib.request
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from runtime.autonomy.mutation_scaffold import MutationCandidate
 
@@ -41,6 +42,7 @@ MAX_TOKENS     = 2048
 
 VALID_AGENTS     = {"architect", "dream", "beast"}
 VALID_MUT_TYPES  = {"structural", "behavioral", "performance", "coverage", "experimental"}
+CANONICAL_AGENT_ORDER: Tuple[str, ...] = ("architect", "dream", "beast")
 
 PROPOSAL_SCHEMA = """
 Return ONLY a JSON array. No markdown, no preamble. Each element must have:
@@ -83,6 +85,32 @@ AGENT_SYSTEM_PROMPTS: Dict[str, str] = {
         "mutation_type should be 'performance' or 'coverage'.\n\n" + PROPOSAL_SCHEMA
     ),
 }
+
+
+@dataclass(frozen=True)
+class AgentProposalBatch:
+    """Container returned by propose_from_all_agents for EvolutionLoop consumption."""
+
+    proposals_by_agent: Dict[str, List[MutationCandidate]]
+    failures_by_agent: Dict[str, Dict[str, Any]]
+
+
+def _failure_payload(
+    *,
+    agent: str,
+    code: str,
+    timeout_seconds: int,
+    attempts: int,
+    detail: str,
+) -> Dict[str, Any]:
+    """Standardized failure payload for EvolutionLoop telemetry/fallback paths."""
+    return {
+        "agent": agent,
+        "code": code,
+        "timeout_seconds": timeout_seconds,
+        "attempts": attempts,
+        "detail": detail,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -291,17 +319,88 @@ def propose_from_all_agents(
     context: CodebaseContext,
     api_key: str,
     timeout: int = 30,
-) -> Dict[str, List[MutationCandidate]]:
+    *,
+    max_workers: int = 3,
+    max_in_flight: int = 3,
+    retries: int = 1,
+    global_timeout_budget: Optional[float] = None,
+) -> AgentProposalBatch:
     """
     Call all three agents and return proposals keyed by agent name.
 
-    Returns:
-        {"architect": [...], "dream": [...], "beast": [...]}
-
-    Individual agent failures are re-raised — EvolutionLoop handles per-agent
-    retry/fallback logic.
+    Returns deterministic ordering with per-agent isolation and structured
+    failures for EvolutionLoop fallback logic.
     """
-    return {
-        agent: propose_mutations(agent, context, api_key, timeout=timeout)
-        for agent in ("architect", "dream", "beast")
+    proposals_by_agent: Dict[str, List[MutationCandidate]] = {
+        agent: [] for agent in CANONICAL_AGENT_ORDER
     }
+    failures_by_agent: Dict[str, Dict[str, Any]] = {}
+
+    def _propose_with_retry(agent: str) -> Tuple[str, List[MutationCandidate], Optional[Dict[str, Any]]]:
+        attempts = 0
+        while attempts <= retries:
+            attempts += 1
+            try:
+                proposals = propose_mutations(agent, context, api_key, timeout=timeout)
+                return agent, proposals, None
+            except TimeoutError as exc:
+                if attempts > retries:
+                    return agent, [], _failure_payload(
+                        agent=agent,
+                        code="agent_timeout",
+                        timeout_seconds=timeout,
+                        attempts=attempts,
+                        detail=str(exc) or "timeout",
+                    )
+            except Exception as exc:  # noqa: BLE001 - intentionally normalized into payload
+                if attempts > retries:
+                    return agent, [], _failure_payload(
+                        agent=agent,
+                        code="agent_error",
+                        timeout_seconds=timeout,
+                        attempts=attempts,
+                        detail=f"{type(exc).__name__}: {exc}",
+                    )
+        return agent, [], _failure_payload(
+            agent=agent,
+            code="agent_error",
+            timeout_seconds=timeout,
+            attempts=attempts,
+            detail="retry_exhausted",
+        )
+
+    effective_workers = max(1, min(max_workers, max_in_flight, len(CANONICAL_AGENT_ORDER)))
+    budget = global_timeout_budget if global_timeout_budget is not None else float(timeout * len(CANONICAL_AGENT_ORDER))
+    deadline = time.monotonic() + budget
+
+    with ThreadPoolExecutor(max_workers=effective_workers) as executor:
+        future_to_agent: Dict[Future[Tuple[str, List[MutationCandidate], Optional[Dict[str, Any]]]], str] = {
+            executor.submit(_propose_with_retry, agent): agent
+            for agent in CANONICAL_AGENT_ORDER
+        }
+
+        pending = set(future_to_agent.keys())
+        while pending:
+            remaining = max(0.0, deadline - time.monotonic())
+            if remaining == 0.0:
+                break
+            done, pending = wait(pending, timeout=remaining, return_when=FIRST_COMPLETED)
+            for fut in done:
+                agent, proposals, failure = fut.result()
+                proposals_by_agent[agent] = proposals
+                if failure is not None:
+                    failures_by_agent[agent] = failure
+
+        for fut in pending:
+            agent = future_to_agent[fut]
+            fut.cancel()
+            failures_by_agent[agent] = _failure_payload(
+                agent=agent,
+                code="global_timeout",
+                timeout_seconds=timeout,
+                attempts=0,
+                detail="global timeout budget exhausted",
+            )
+
+    ordered = {agent: proposals_by_agent[agent] for agent in CANONICAL_AGENT_ORDER}
+    return AgentProposalBatch(proposals_by_agent=ordered, failures_by_agent=failures_by_agent)
