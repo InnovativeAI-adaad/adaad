@@ -139,6 +139,9 @@ def test_propose_all_agents_returns_all_keys() -> None:
     with patch(
         "runtime.autonomy.ai_mutation_proposer._call_claude",
         return_value=VALID_PROPOSALS_JSON,
+    ), patch(
+        "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+        return_value={},
     ):
         result = propose_from_all_agents(ctx, api_key="test-key")
     assert tuple(result.proposals_by_agent.keys()) == CANONICAL_AGENT_ORDER
@@ -160,6 +163,9 @@ def test_propose_all_agents_deterministic_order_when_completion_is_out_of_order(
     with patch(
         "runtime.autonomy.ai_mutation_proposer.propose_mutations",
         side_effect=_slow_propose,
+    ), patch(
+        "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+        return_value={},
     ):
         result = propose_from_all_agents(ctx, api_key="test-key", timeout=1)
 
@@ -178,6 +184,9 @@ def test_propose_all_agents_failure_isolated_per_agent() -> None:
     with patch(
         "runtime.autonomy.ai_mutation_proposer.propose_mutations",
         side_effect=_partial_failure,
+    ), patch(
+        "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+        return_value={},
     ):
         result = propose_from_all_agents(ctx, api_key="test-key", timeout=2, retries=0)
 
@@ -200,6 +209,9 @@ def test_propose_all_agents_global_timeout_cancels_pending_work() -> None:
     with patch(
         "runtime.autonomy.ai_mutation_proposer.propose_mutations",
         side_effect=_hung_propose,
+    ), patch(
+        "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+        return_value={},
     ):
         result = propose_from_all_agents(
             ctx,
@@ -221,3 +233,35 @@ def test_malformed_json_raises() -> None:
     ):
         with pytest.raises(json.JSONDecodeError):
             propose_mutations("architect", ctx, api_key="test-key")
+
+
+def test_propose_all_agents_applies_operator_registry_metadata() -> None:
+    ctx = _make_context()
+
+    def _single(agent: str, *_args, **_kwargs):
+        return [
+            MutationCandidate(
+                mutation_id=f"{agent}-m-1",
+                expected_gain=0.5,
+                risk_score=0.2,
+                complexity=0.2,
+                coverage_delta=0.1,
+                agent_origin=agent,
+            )
+        ]
+
+    with patch(
+        "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+        side_effect=_single,
+    ), patch(
+        "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+        return_value={},
+    ):
+        result = propose_from_all_agents(ctx, api_key="test-key", retries=0)
+
+    all_candidates = [
+        candidate
+        for proposals in result.proposals_by_agent.values()
+        for candidate in proposals
+    ]
+    assert all(candidate.operator_key != "static" for candidate in all_candidates)

@@ -30,7 +30,7 @@ Senior-grade invariants preserved from v1:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Mapping, Optional
 
 # ---------------------------------------------------------------------------
 # Module-level constants (v1 compat — still used as ScoringWeights defaults)
@@ -141,6 +141,10 @@ class MutationCandidate:
     source_context_hash:   str           = ""
     # v3 semantic diff field — optional Python source for AST-based scoring
     python_content:        Optional[str] = None
+    operator_key:          str           = "static"
+    operator_category:     str           = "baseline"
+    operator_version:      str           = "1.0.0"
+    operator_rank:         int           = 0
 
 
 @dataclass(frozen=True)
@@ -287,6 +291,55 @@ def score_candidate(
         parent_id=candidate.parent_id,
         agent_origin=candidate.agent_origin,
         elitism_applied=elitism_applied,
+    )
+
+
+
+
+def apply_operator_registry(
+    candidates: list[MutationCandidate],
+    *,
+    outcome_history: Mapping[str, "OperatorOutcome"] | None = None,
+    profile: "OperatorSelectionProfile | None" = None,
+) -> list[MutationCandidate]:
+    """Apply deterministic operator transforms before scoring/ranking."""
+    from runtime.evolution.mutation_operator_framework import MutationOperatorRegistry
+
+    registry = MutationOperatorRegistry()
+    result: list[MutationCandidate] = []
+    for candidate in candidates:
+        if not hasattr(candidate, "mutation_id"):
+            result.append(candidate)
+            continue
+        try:
+            result.append(
+                registry.apply_operator(candidate, outcome_history=outcome_history, profile=profile)
+            )
+        except Exception:
+            result.append(candidate)
+    return result
+
+
+def rank_candidates_via_registry(
+    candidates: list[MutationCandidate],
+    acceptance_threshold: float = DEFAULT_ACCEPTANCE_THRESHOLD,
+    weights: Optional[ScoringWeights] = None,
+    population_state: Optional[PopulationState] = None,
+    *,
+    outcome_history: Mapping[str, "OperatorOutcome"] | None = None,
+    profile: "OperatorSelectionProfile | None" = None,
+) -> list[MutationScore]:
+    """Apply operator selection and then rank resulting candidates."""
+    enriched = apply_operator_registry(
+        candidates,
+        outcome_history=outcome_history,
+        profile=profile,
+    )
+    return rank_mutation_candidates(
+        enriched,
+        acceptance_threshold=acceptance_threshold,
+        weights=weights,
+        population_state=population_state,
     )
 
 

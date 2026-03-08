@@ -24,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from pathlib import Path
 import urllib.error
 import urllib.request
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
@@ -31,6 +32,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 from runtime.autonomy.mutation_scaffold import MutationCandidate
+from runtime.evolution.mutation_operator_framework import OperatorOutcome, OperatorSelectionProfile
+from runtime.state.ledger_store import ScoringLedgerStore
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -111,6 +114,33 @@ def _failure_payload(
         "attempts": attempts,
         "detail": detail,
     }
+
+
+def _build_selection_profile(context: "CodebaseContext", agent: str) -> OperatorSelectionProfile:
+    preferred = ""
+    if agent == "architect":
+        preferred = "refactor"
+    elif agent == "beast":
+        preferred = "performance_rewrite"
+    elif agent == "dream":
+        preferred = "ast_transform"
+    return OperatorSelectionProfile(
+        explore_ratio=float(context.explore_ratio),
+        recent_failures_count=len(context.recent_failures),
+        preferred_operator_hint=preferred,
+    )
+
+
+def _load_operator_outcome_history() -> Dict[str, OperatorOutcome]:
+    store = ScoringLedgerStore(path=Path("runtime/state/scoring_ledger.jsonl"), backend="json")
+    summary = store.operator_outcome_history()
+    history: Dict[str, OperatorOutcome] = {}
+    for key, value in summary.items():
+        history[key] = OperatorOutcome(
+            successes=int(value.get("successes", 0)),
+            failures=int(value.get("failures", 0)),
+        )
+    return history
 
 
 # ---------------------------------------------------------------------------
@@ -335,6 +365,7 @@ def propose_from_all_agents(
         agent: [] for agent in CANONICAL_AGENT_ORDER
     }
     failures_by_agent: Dict[str, Dict[str, Any]] = {}
+    outcome_history = _load_operator_outcome_history()
 
     def _propose_with_retry(agent: str) -> Tuple[str, List[MutationCandidate], Optional[Dict[str, Any]]]:
         attempts = 0
@@ -387,6 +418,14 @@ def propose_from_all_agents(
             done, pending = wait(pending, timeout=remaining, return_when=FIRST_COMPLETED)
             for fut in done:
                 agent, proposals, failure = fut.result()
+                if proposals:
+                    from runtime.autonomy.mutation_scaffold import apply_operator_registry
+
+                    proposals = apply_operator_registry(
+                        proposals,
+                        outcome_history=outcome_history,
+                        profile=_build_selection_profile(context, agent),
+                    )
                 proposals_by_agent[agent] = proposals
                 if failure is not None:
                     failures_by_agent[agent] = failure

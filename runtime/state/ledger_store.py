@@ -285,5 +285,27 @@ class ScoringLedgerStore:
             self._write_tail_sidecar(record_hash=expected_prev, entries=len(records))
         return {"ok": True, "count": len(records), "tip_hash": expected_prev}
 
+
+    def operator_outcome_history(self) -> dict[str, dict[str, int]]:
+        """Summarize per-operator outcomes from ledger payloads deterministically."""
+        history: dict[str, dict[str, int]] = {}
+        for record in self.iter_records():
+            event = record.get("event")
+            if not isinstance(event, dict):
+                continue
+            payload = event.get("payload")
+            if not isinstance(payload, dict):
+                continue
+            operator_key = payload.get("operator_key")
+            if not isinstance(operator_key, str) or not operator_key:
+                continue
+            success_flag = payload.get("accepted")
+            bucket = history.setdefault(operator_key, {"successes": 0, "failures": 0})
+            if bool(success_flag):
+                bucket["successes"] += 1
+            else:
+                bucket["failures"] += 1
+        return {key: history[key] for key in sorted(history)}
+
     def append(self, scoring_result: dict[str, Any]) -> dict[str, Any]:
         raise TypeError("append_removed_use_append_event")

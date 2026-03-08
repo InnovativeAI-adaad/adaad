@@ -5,14 +5,14 @@ from runtime.evolution.event_signing import DeterministicMockSigner
 from runtime.state.ledger_store import ScoringLedgerStore
 
 
-def _event(*, event_id: str, signature: str | None = None) -> AGMEventEnvelope:
+def _event(*, event_id: str, signature: str | None = None, payload: dict | None = None) -> AGMEventEnvelope:
     signer = DeterministicMockSigner()
     envelope = AGMEventEnvelope(
         schema_version="1.0",
         event_id=event_id,
         event_type="scoring_event",
         emitted_at="2026-01-01T00:00:00Z",
-        payload={"mutation_id": event_id, "score": 0.9},
+        payload=payload or {"mutation_id": event_id, "score": 0.9},
         signature="",
         signing_key_id="",
         signature_algorithm="",
@@ -114,3 +114,27 @@ def test_ledger_store_recovers_after_partial_sidecar_write(tmp_path) -> None:
     second = ledger.append_event(_event(event_id="00000000000000000000000000000022"), verifier=signer)
     assert second["prev_hash"] == first["record_hash"]
     assert ledger.verify_chain(verifier=signer)["ok"] is True
+
+
+def test_operator_outcome_history_summarizes_success_and_failure(tmp_path) -> None:
+    ledger = ScoringLedgerStore(path=tmp_path / "scoring.jsonl", backend="json")
+    signer = DeterministicMockSigner()
+
+    ledger.append_event(
+        _event(
+            event_id="00000000000000000000000000000031",
+            payload={"mutation_id": "m-1", "operator_key": "refactor", "accepted": True},
+        ),
+        verifier=signer,
+    )
+    ledger.append_event(
+        _event(
+            event_id="00000000000000000000000000000032",
+            payload={"mutation_id": "m-2", "operator_key": "refactor", "accepted": False},
+        ),
+        verifier=signer,
+    )
+
+    summary = ledger.operator_outcome_history()
+
+    assert summary == {"refactor": {"successes": 1, "failures": 1}}
