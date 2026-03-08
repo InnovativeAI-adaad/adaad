@@ -1,0 +1,74 @@
+[
+  {
+    "entry_id": "ledger-001",
+    "features": {
+      "semantic_drift": 0.10,
+      "replay_failure": 0.01,
+      "escalation": 0.05,
+      "determinism_drift": 0.02,
+      "replay_failure_rate": 0.01
+    },
+    "expected_decision": "allow",
+    "historical_decision": "allow"
+  },
+  {
+    "entry_id": "ledger-002",
+    "features": {
+      "semantic_drift": 0.95,
+      "replay_failure": 0.60,
+      "escalation": 0.45,
+      "determinism_drift": 0.40,
+      "replay_failure_rate": 0.30
+    },
+    "expected_decision": "block",
+    "historical_decision": "block"
+  },
+  {
+    "entry_id": "ledger-003",
+    "features": {
+      "semantic_drift": 0.50,
+      "replay_failure": 0.20,
+      "escalation": 0.20,
+      "determinism_drift": 0.20,
+      "replay_failure_rate": 0.05
+    },
+    "expected_decision": "allow",
+    "historical_decision": "allow"
+  },
+  {
+    "entry_id": "ledger-004",
+    "features": {
+      "semantic_drift": 0.85,
+      "replay_failure": 0.30,
+      "escalation": 0.30,
+      "determinism_drift": 0.15,
+      "replay_failure_rate": 0.12
+    },
+    "expected_decision": "block",
+    "historical_decision": "block"
+  },
+  {
+    "entry_id": "ledger-005",
+    "features": {
+      "semantic_drift": 0.30,
+      "replay_failure": 0.04,
+      "escalation": 0.10,
+      "determinism_drift": 0.10,
+      "replay_failure_rate": 0.04
+    },
+    "expected_decision": "allow",
+    "historical_decision": "allow"
+  },
+  {
+    "entry_id": "ledger-006",
+    "features": {
+      "semantic_drift": 0.78,
+      "replay_failure": 0.18,
+      "escalation": 0.22,
+      "determinism_drift": 0.19,
+      "replay_failure_rate": 0.09
+    },
+    "expected_decision": "block",
+    "historical_decision": "block"
+  }
+]
