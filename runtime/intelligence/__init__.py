@@ -16,6 +16,7 @@ from runtime.intelligence.planning import (
     PlanVerificationResult,
     StrategyPlanner,
     as_ledger_metrics,
+    as_transition_metrics,
     initial_execution_state,
 )
 from runtime.intelligence.proposal import Proposal, ProposalModule, ProposalTargetFile
@@ -46,6 +47,7 @@ __all__ = [
     "StrategyInput",
     "StrategyModule",
     "as_ledger_metrics",
+    "as_transition_metrics",
     "initial_execution_state",
     "load_provider_config",
 ]

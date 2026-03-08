@@ -21,6 +21,7 @@ from runtime.intelligence.planning import (
     PlanStep,
     PlanStepVerifier,
     as_ledger_metrics,
+    as_transition_metrics,
     initial_execution_state,
 )
 from runtime.intelligence.router import IntelligenceRouter
@@ -115,7 +116,10 @@ def _deserialize_plan_step(payload: Mapping[str, Any]) -> PlanStep:
         goal_id=str(payload.get("goal_id", "")),
         milestone=str(payload.get("milestone", "")),
         success_predicate=str(payload.get("success_predicate", "")),
+        completion_criteria=tuple(str(item) for item in payload.get("completion_criteria", [str(payload.get("success_predicate", ""))])),
+        dependency_step_ids=tuple(str(item) for item in payload.get("dependency_step_ids", [])),
         required_governance_checks=tuple(str(item) for item in payload.get("required_governance_checks", [])),
+        required_replay_checks=tuple(str(item) for item in payload.get("required_replay_checks", [])),
     )
 
 
@@ -143,6 +147,8 @@ def _deserialize_state(payload: Mapping[str, Any], plan: PlanArtifact) -> PlanEx
         current_step_index=int(raw.get("current_step_index", 0)),
         completed_step_ids=tuple(str(step_id) for step_id in raw.get("completed_step_ids", [])),
         progress_notes=tuple(str(note) for note in raw.get("progress_notes", [])),
+        last_transition_reason=str(raw.get("last_transition_reason", "resumed")),
+        rollback_step_index=int(raw.get("rollback_step_index", 0)),
     )
 
 
@@ -157,7 +163,10 @@ def _to_payload_plan(plan: PlanArtifact) -> dict[str, Any]:
                 "goal_id": step.goal_id,
                 "milestone": step.milestone,
                 "success_predicate": step.success_predicate,
+                "completion_criteria": list(step.completion_criteria),
+                "dependency_step_ids": list(step.dependency_step_ids),
                 "required_governance_checks": list(step.required_governance_checks),
+                "required_replay_checks": list(step.required_replay_checks),
             }
             for step in plan.steps
         ],
@@ -170,6 +179,8 @@ def _to_payload_state(state: PlanExecutionState) -> dict[str, Any]:
         "current_step_index": state.current_step_index,
         "completed_step_ids": list(state.completed_step_ids),
         "progress_notes": list(state.progress_notes),
+        "last_transition_reason": state.last_transition_reason,
+        "rollback_step_index": state.rollback_step_index,
     }
 
 
@@ -299,13 +310,18 @@ def run_agm_cycle(
 
     completion_signals = dict(payload.get("plan_completion_signals") or {})
     governance_checks = dict(payload.get("plan_governance_checks") or {})
+    replay_checks = dict(payload.get("plan_replay_checks") or {})
     verification = None
+    previous_state = plan_state
+    active_step = None
     if plan_artifact.steps and plan_state.current_step_index < len(plan_artifact.steps):
         active_step = plan_artifact.steps[plan_state.current_step_index]
         verification = verifier.verify_step_completion(
             step=active_step,
+            completed_step_ids=plan_state.completed_step_ids,
             completion_signals=completion_signals,
             governance_checks=governance_checks,
+            replay_checks=replay_checks,
         )
         if verification.ok:
             plan_state = PlanExecutionState(
@@ -313,6 +329,20 @@ def run_agm_cycle(
                 current_step_index=plan_state.current_step_index + 1,
                 completed_step_ids=plan_state.completed_step_ids + (active_step.step_id,),
                 progress_notes=plan_state.progress_notes + (f"{cycle_id}:{verification.reason}",),
+                last_transition_reason=verification.reason,
+                rollback_step_index=plan_state.rollback_step_index,
+            )
+        else:
+            rollback_index = verification.rollback_step_index
+            if rollback_index is None:
+                rollback_index = plan_state.rollback_step_index
+            plan_state = PlanExecutionState(
+                plan_id=plan_state.plan_id,
+                current_step_index=plan_state.current_step_index,
+                completed_step_ids=plan_state.completed_step_ids,
+                progress_notes=plan_state.progress_notes + (f"{cycle_id}:{verification.reason}",),
+                last_transition_reason=verification.reason,
+                rollback_step_index=int(rollback_index),
             )
 
     payload["plan_artifact"] = _to_payload_plan(plan_artifact)
@@ -328,6 +358,20 @@ def run_agm_cycle(
                 plan=plan_artifact,
                 state=plan_state,
                 decision=decision,
+                verification=verification,
+            ),
+        )
+    )
+
+    ledger.append(
+        ScoringEvent(
+            mutation_id=f"{cycle_id}:transition",
+            score=float(payload.get("mutation_score", 0.0)),
+            metrics=as_transition_metrics(
+                plan=plan_artifact,
+                step=active_step,
+                previous_state=previous_state,
+                current_state=plan_state,
                 verification=verification,
             ),
         )

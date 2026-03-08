@@ -21,6 +21,8 @@ def test_strategy_planner_converts_backlog_to_ranked_multi_step_plan() -> None:
     assert plan.steps[0].step_id == "step_00_governance_precheck"
     assert plan.steps[1].goal_id == "stabilize_replay"
     assert plan.steps[1].required_governance_checks == ("policy_alignment", "safety_constraints")
+    assert plan.steps[1].dependency_step_ids == ("step_00_governance_precheck",)
+    assert plan.steps[1].required_replay_checks == ("replay_digest_match",)
 
 
 def test_plan_step_verifier_requires_governance_checks_before_step_completion() -> None:
@@ -38,16 +40,46 @@ def test_plan_step_verifier_requires_governance_checks_before_step_completion() 
 
     blocked = verifier.verify_step_completion(
         step=active_step,
+        completed_step_ids=("step_00_governance_precheck",),
         completion_signals={active_step.success_predicate: True},
         governance_checks={"policy_alignment": True, "safety_constraints": False},
+        replay_checks={"replay_digest_match": True},
     )
     assert blocked.ok is False
     assert blocked.reason == "governance_check_failed:safety_constraints"
 
     passed = verifier.verify_step_completion(
         step=active_step,
+        completed_step_ids=("step_00_governance_precheck",),
         completion_signals={active_step.success_predicate: True},
         governance_checks={"policy_alignment": True, "safety_constraints": True},
+        replay_checks={"replay_digest_match": True},
     )
     assert passed.ok is True
     assert passed.completed_step_id == active_step.step_id
+
+
+def test_plan_step_verifier_requires_replay_preconditions_before_step_completion() -> None:
+    planner = StrategyPlanner()
+    verifier = PlanStepVerifier()
+    plan = planner.build_plan(
+        StrategyInput(
+            cycle_id="cycle-replay",
+            mutation_score=0.3,
+            governance_debt_score=0.1,
+            goal_backlog={"secure_merge": 0.8},
+        )
+    )
+    precheck = plan.steps[0]
+
+    blocked = verifier.verify_step_completion(
+        step=precheck,
+        completed_step_ids=(),
+        completion_signals={precheck.success_predicate: True},
+        governance_checks={"policy_alignment": True},
+        replay_checks={"replay_preconditions_ok": False},
+    )
+
+    assert blocked.ok is False
+    assert blocked.reason == "replay_check_failed:replay_preconditions_ok"
+    assert blocked.rollback_step_index == 0
