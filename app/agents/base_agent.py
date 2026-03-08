@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from app.agents.discovery import iter_agent_dirs, resolve_agent_id
-from runtime import metrics
+from runtime.api.app_layer import metrics
 
 REQUIRED_FILES = ("meta.json", "dna.json", "certificate.json")
 

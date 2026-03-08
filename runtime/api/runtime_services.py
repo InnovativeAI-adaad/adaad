@@ -15,6 +15,7 @@ from runtime.governance.reviewer_reputation import (
 
 from runtime import metrics
 from runtime.boot import BootPreflightService
+from runtime.boot.preflight import evaluate_boot_invariants
 from runtime.capability_graph import register_capability
 from runtime.constitution import (
     CONSTITUTION_VERSION,
@@ -42,6 +43,7 @@ from runtime.founders_law import (
 )
 from runtime.governance.foundation import default_provider
 from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
+from runtime.preflight import validate_constitution_version_config
 from runtime.manifest.generator import generate_tool_manifest
 from runtime.mcp.server import create_app as create_mcp_app
 from runtime.platform.android_monitor import AndroidMonitor
@@ -136,6 +138,7 @@ __all__ = [
     "dump",
     "enforce_law",
     "evaluate_mutation",
+    "evaluate_boot_invariants",
     "generate_tool_manifest",
     "get_forced_tier",
     "metrics",
@@ -145,4 +148,5 @@ __all__ = [
     "register_capability",
     "reviewer_calibration_service",
     "score_mutation_enhanced",
+    "validate_constitution_version_config",
 ]

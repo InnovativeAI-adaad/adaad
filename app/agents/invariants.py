@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from app.agents.discovery import iter_agent_dirs, resolve_agent_id
-from runtime import metrics
+from runtime.api.app_layer import metrics
 
 ERROR_RESOURCE_ENVELOPE = "INV_RESOURCE_ENVELOPE_MISSING"
 ERROR_LINEAGE_PARENT = "INV_LINEAGE_PARENT_MISSING"

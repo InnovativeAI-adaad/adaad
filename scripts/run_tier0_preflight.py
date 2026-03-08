@@ -5,6 +5,9 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shlex
+import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -24,8 +27,22 @@ from runtime.tools.execution_contract import (
 @dataclass(frozen=True)
 class Check:
     name: str
-    request: ToolExecutionRequest
+    request: ToolExecutionRequest | None = None
+    command: str = ""
+    skip_if_missing: bool = False
     mandatory: bool = True
+
+    def __post_init__(self) -> None:
+        if self.request is not None:
+            return
+        if not self.command.strip():
+            raise ValueError("check_requires_request_or_command")
+        command_parts = tuple(shlex.split(self.command))
+        object.__setattr__(
+            self,
+            "request",
+            lint_check_request(tool_id=f"tier0-compat-{self.name.replace(' ', '-').lower()}", command=command_parts),
+        )
 
 
 @dataclass(frozen=True)
@@ -47,6 +64,25 @@ def _run_check(check: Check, check_only: bool) -> CheckResult:
     if result.status == "timeout":
         return CheckResult(check.name, "blocked", f"timed out after {check.request.timeout_seconds}s")
     return CheckResult(check.name, "blocked", f"non-zero exit: {result.returncode}")
+
+
+def _command_exists(command: str) -> bool:
+    parts = shlex.split(command)
+    if not parts:
+        return False
+    idx = 0
+    while idx < len(parts) and "=" in parts[idx] and not parts[idx].startswith(("./", "/")):
+        key, _, value = parts[idx].partition("=")
+        if key and value:
+            idx += 1
+            continue
+        break
+    if idx >= len(parts):
+        return False
+    executable = parts[idx]
+    if os.path.sep in executable:
+        return Path(executable).exists()
+    return shutil.which(executable) is not None
 
 
 def _print_summary(results: list[CheckResult]) -> None:

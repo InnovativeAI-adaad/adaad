@@ -25,6 +25,7 @@
       "allowlist_env": "ADAAD_NETWORK_ALLOWLIST",
       "allowlist": [
         "127.0.0.1",
+        "api.github.com",
         "localhost"
       ]
     }

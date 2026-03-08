@@ -8,8 +8,7 @@ import os
 from typing import Any
 
 from app import APP_ROOT
-from runtime.api.runtime_services import metrics
-from runtime.preflight import validate_constitution_version_config
+from runtime.api.runtime_services import metrics, validate_constitution_version_config
 
 BOOT_KNOWN_ENVS: frozenset[str] = frozenset({"dev", "test", "staging", "production", "prod"})
 BOOT_STRICT_ENVS: frozenset[str] = frozenset({"staging", "production", "prod"})

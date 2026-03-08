@@ -26,25 +26,23 @@ from typing import Any, Dict, Optional
 
 from app import APP_ROOT
 from app.architect_agent import ArchitectAgent
-from app.agents.mutation_engine import MutationEngine
-from app.agents.mutation_request import MutationRequest
 from app.beast_mode_loop import BeastModeLoop
 from app.dream_mode import DreamMode
 from app.mutation_executor import MutationExecutor
-from runtime.evolution import EvolutionRuntime
-from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, CheckpointVerifier
-from runtime.evolution.replay_attestation import ReplayProofBuilder
-from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
-from runtime.evolution.lineage_v2 import LineageIntegrityError
-from runtime.recovery.ledger_guardian import AutoRecoveryHook, SnapshotManager
-from runtime.recovery.tier_manager import RecoveryPolicy, RecoveryTierLevel, TierManager
-from runtime.platform.android_monitor import AndroidMonitor
-from runtime.platform.storage_manager import StorageManager
-from runtime import metrics
-from runtime.capability_graph import register_capability
-from runtime.manifest.generator import generate_tool_manifest
-from runtime.element_registry import dump, register
-from runtime.founders_law import (
+from runtime.api import MutationEngine, MutationRequest, agent_path_from_id, iter_agent_dirs, resolve_agent_id
+from runtime.api.mutation_runtime import verify_all
+from runtime.api.runtime_services import (
+    AutoRecoveryHook,
+    AndroidMonitor,
+    CONSTITUTION_VERSION,
+    CheckpointVerificationError,
+    CheckpointVerifier,
+    EvolutionRuntime,
+    LineageIntegrityError,
+    RecoveryPolicy,
+    RecoveryTierLevel,
+    ReplayMode,
+    ReplayProofBuilder,
     RULE_ARCHITECT_SCAN,
     RULE_CONSTITUTION_VERSION,
     RULE_KEY_ROTATION,
@@ -52,20 +50,25 @@ from runtime.founders_law import (
     RULE_MUTATION_ENGINE,
     RULE_PLATFORM_RESOURCES,
     RULE_WARM_POOL,
-    enforce_law,
-)
-from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
-from runtime.boot.preflight import evaluate_boot_invariants
-from runtime.constitution import (
-    CONSTITUTION_VERSION,
+    SnapshotManager,
+    StorageManager,
+    TierManager,
+    WarmPool,
+    default_provider,
     determine_tier,
+    dump,
+    enforce_law,
+    evaluate_boot_invariants,
+    evaluate_mutation,
+    generate_tool_manifest,
     get_forced_tier,
+    metrics,
+    normalize_replay_mode,
+    now_iso,
+    register,
+    register_capability,
+    score_mutation_enhanced,
 )
-from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
-from runtime.fitness_v2 import score_mutation_enhanced
-from runtime.governance.foundation import default_provider
-from runtime.timeutils import now_iso
-from runtime.warm_pool import WarmPool
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
 from security import cryovant

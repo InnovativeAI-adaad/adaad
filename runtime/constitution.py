@@ -44,36 +44,77 @@ else:  # pragma: no cover - optional dependency fallback for hermetic environmen
             if text[:1] in {"{", "["}:
                 return json.loads(text)
 
-            result: dict[str, Any] = {}
-            for line in text.splitlines():
+            def _coerce_scalar(value: str) -> Any:
+                value = value.strip()
+                if value in {"[]", "[ ]"}:
+                    return []
+                if value in {"{}", "{ }"}:
+                    return {}
+                lower = value.lower()
+                if lower in {"true", "false"}:
+                    return lower == "true"
+                if value.startswith(('"', "'")) and value.endswith(('"', "'")) and len(value) >= 2:
+                    return value[1:-1]
+                try:
+                    return json.loads(value)
+                except json.JSONDecodeError:
+                    if any(ch in value for ch in "[]{}"):
+                        raise _YamlCompatError("invalid_yaml_value")
+                    return value
+
+            root: dict[str, Any] = {}
+            active_key: str | None = None
+            for raw_line in text.splitlines():
+                line = raw_line.rstrip()
                 stripped = line.strip()
                 if not stripped or stripped.startswith("#"):
                     continue
+                indent = len(line) - len(line.lstrip(" "))
+
+                if stripped.startswith("- "):
+                    if active_key is None:
+                        raise _YamlCompatError("invalid_yaml_list_parent")
+                    container = root.get(active_key)
+                    if container == {}:
+                        root[active_key] = []
+                        container = root[active_key]
+                    if not isinstance(container, list):
+                        raise _YamlCompatError("invalid_yaml_list_parent")
+                    container.append(_coerce_scalar(stripped[2:]))
+                    continue
+
                 if ":" not in stripped:
                     raise _YamlCompatError("invalid_yaml_line")
+
                 key, value = stripped.split(":", 1)
                 key = key.strip()
                 value = value.strip()
                 if not key:
                     raise _YamlCompatError("invalid_yaml_key")
+
+                if indent == 0:
+                    if not value:
+                        root[key] = {}
+                        active_key = key
+                        continue
+                    if value == "|":
+                        raise _YamlCompatError("unsupported_yaml_block_scalar")
+                    root[key] = _coerce_scalar(value)
+                    active_key = key if isinstance(root[key], (list, dict)) else None
+                    continue
+
+                if active_key is None:
+                    raise _YamlCompatError("invalid_yaml_indent")
+                parent = root.get(active_key)
+                if not isinstance(parent, dict):
+                    raise _YamlCompatError("invalid_yaml_mapping_parent")
                 if not value:
-                    result[key] = ""
-                elif value in {"[]", "[ ]"}:
-                    result[key] = []
-                elif value in {"{}", "{ }"}:
-                    result[key] = {}
-                elif value.lower() in {"true", "false"}:
-                    result[key] = value.lower() == "true"
-                elif value.startswith(('"', "'")) and value.endswith(('"', "'")) and len(value) >= 2:
-                    result[key] = value[1:-1]
-                else:
-                    try:
-                        result[key] = json.loads(value)
-                    except json.JSONDecodeError:
-                        if "[" in value or "]" in value or "{" in value or "}" in value:
-                            raise _YamlCompatError("invalid_yaml_value")
-                        result[key] = value
-            return result
+                    parent[key] = {}
+                    continue
+                if value == "|":
+                    raise _YamlCompatError("unsupported_yaml_block_scalar")
+                parent[key] = _coerce_scalar(value)
+            return root
 
     yaml = _YamlCompat()
 

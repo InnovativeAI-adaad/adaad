@@ -20,9 +20,9 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from app.agents.base_agent import stage_offspring
-from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
-from runtime import metrics
+from adaad.agents.base_agent import stage_offspring
+from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
+from runtime.api.app_layer import metrics, deterministic_context, deterministic_token
 from security import cryovant
 
 ELEMENT_ID = "Fire"
@@ -33,9 +33,18 @@ class DreamMode:
     Drives creative mutation cycles.
     """
 
-    def __init__(self, agents_root: Path, lineage_dir: Path):
+    def __init__(
+        self,
+        agents_root: Path,
+        lineage_dir: Path,
+        *,
+        replay_mode: str | None = None,
+        recovery_tier: str | None = None,
+    ):
         self.agents_root = agents_root
         self.lineage_dir = lineage_dir
+        self.replay_mode = (replay_mode or "off").strip().lower()
+        self.recovery_tier = (recovery_tier or "standard").strip().lower()
 
     @staticmethod
     def _read_json(path: Path) -> Dict[str, object]:
@@ -82,7 +91,13 @@ class DreamMode:
         metrics.log(event_type="dream_discovery", payload={"tasks": tasks}, level="INFO")
         return tasks
 
-    def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, str]:
+    def run_cycle(
+        self,
+        agent_id: Optional[str] = None,
+        *,
+        epoch_id: str | None = None,
+        bundle_id: str | None = None,
+    ) -> Dict[str, str]:
         """
         Run a single dream mutation cycle. Dream only stages candidates; it does not promote.
         """
@@ -110,7 +125,16 @@ class DreamMode:
             return {"status": "blocked", "agent": selected, "reason": "dream_scope_missing"}
 
         metrics.log(event_type="evolution_cycle_decision", payload={"selected_agent": selected}, level="INFO", element_id=ELEMENT_ID)
-        mutation_content = f"{selected}-mutation-{time.time()}"
+        if deterministic_context(replay_mode=self.replay_mode, recovery_tier=self.recovery_tier):
+            token = deterministic_token(
+                epoch_id=str(epoch_id or ""),
+                bundle_id=str(bundle_id or ""),
+                agent_id=selected,
+                label="dream-mutation",
+            )
+            mutation_content = f"{selected}-mutation-{token}"
+        else:
+            mutation_content = f"{selected}-mutation-{time.time()}"
         handoff_contract = {
             "schema_version": "1.0",
             "issued_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

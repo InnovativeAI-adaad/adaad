@@ -22,10 +22,10 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from app.agents.base_agent import promote_offspring
-from app.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
-from runtime import fitness, metrics
-from runtime.capability_graph import get_capabilities, register_capability
+from adaad.agents.base_agent import promote_offspring
+from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
+from runtime.api.app_layer import MutationCandidate, fitness, metrics
+from runtime.api.app_layer import get_capabilities, register_capability
 from security import cryovant
 from security.ledger import journal
 
@@ -280,3 +280,23 @@ class BeastModeLoop:
         )
         metrics.log(event_type="beast_cycle_end", payload={"status": "promoted", "agent": selected}, level="INFO", element_id=ELEMENT_ID)
         return {"status": "promoted", "agent": selected, "score": score, "promoted_path": str(promoted)}
+
+
+class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
+    """Compatibility adapter preserving legacy projection input helpers for tests/tools."""
+
+    def _build_mutation_candidate(self, payload: Dict[str, object]) -> tuple[MutationCandidate | None, list[str]]:
+        required = ("mutation_id", "expected_gain", "risk_score", "complexity", "coverage_delta")
+        missing = [field for field in required if field not in payload]
+        if missing:
+            return None, missing
+        candidate = MutationCandidate(
+            mutation_id=str(payload["mutation_id"]),
+            expected_gain=float(payload["expected_gain"]),
+            risk_score=float(payload["risk_score"]),
+            complexity=float(payload["complexity"]),
+            coverage_delta=float(payload["coverage_delta"]),
+            strategic_horizon=float(payload.get("strategic_horizon", 1.0)),
+            forecast_roi=float(payload.get("forecast_roi", 0.0)),
+        )
+        return candidate, []

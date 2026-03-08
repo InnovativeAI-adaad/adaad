@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from app.agents.mutation_request import MutationRequest
+from runtime.api.agents import MutationRequest
 from runtime.evolution.baseline import BaselineStore
 from runtime.evolution.epoch import EpochManager
 from runtime.evolution.governor import EvolutionGovernor

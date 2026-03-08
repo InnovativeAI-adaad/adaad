@@ -18,12 +18,12 @@ Architect agent responsible for scanning the workspace.
 from pathlib import Path
 from typing import Dict, List
 
-from app.agents.base_agent import validate_agents
-from app.agents.discovery import iter_agent_dirs, resolve_agent_id
-from app.agents.invariants import check_invariants
-from app.agents.mutation_request import MutationRequest
-from runtime import metrics
-from runtime.timeutils import now_iso
+from adaad.agents.base_agent import validate_agents
+from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id
+from adaad.agents.invariants import check_invariants
+from adaad.agents.mutation_request import MutationRequest
+from runtime.api.app_layer import metrics
+from runtime.api.app_layer import now_iso
 
 ELEMENT_ID = "Wood"
 
@@ -50,7 +50,7 @@ class ArchitectAgent:
         """
         Generate actionable mutation proposals using concrete strategies.
         """
-        from app.agents.mutation_strategies import select_strategy
+        from adaad.agents.mutation_strategies import select_strategy
 
         proposals: List[MutationRequest] = []
         for agent_dir in iter_agent_dirs(self.agents_root):
