@@ -5,20 +5,27 @@
 from __future__ import annotations
 
 import argparse
-import os
-import re
-import shlex
-import shutil
-import subprocess
+import sys
 from dataclasses import dataclass
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from runtime.tools.execution_contract import (
+    ToolExecutionRequest,
+    execute_tool_request,
+    lint_check_request,
+    test_check_request,
+)
 
 
 @dataclass(frozen=True)
 class Check:
     name: str
-    command: str
+    request: ToolExecutionRequest
     mandatory: bool = True
-    skip_if_missing: bool = False
 
 
 @dataclass(frozen=True)
@@ -28,39 +35,18 @@ class CheckResult:
     detail: str
 
 
-def _command_exists(command: str) -> bool:
-    tokens = shlex.split(command)
-    path_separators = {os.sep}
-    if os.altsep:
-        path_separators.add(os.altsep)
-
-    while tokens:
-        token = tokens[0]
-        has_path_separator = any(separator in token for separator in path_separators)
-        is_env_assignment = re.match(r"^[A-Za-z_][A-Za-z0-9_]*=.*$", token) is not None
-        if not has_path_separator and is_env_assignment:
-            tokens.pop(0)
-            continue
-        break
-
-    if not tokens:
-        return False
-    return shutil.which(tokens[0]) is not None
-
-
 def _run_check(check: Check, check_only: bool) -> CheckResult:
-    if not _command_exists(check.command):
-        if check.skip_if_missing and not check.mandatory:
-            return CheckResult(check.name, "skipped", f"diagnostic-only missing dependency: {check.command}")
-        return CheckResult(check.name, "blocked", f"required command/script missing: {check.command}")
-
     if check_only:
         return CheckResult(check.name, "skipped", "diagnostic mode (--check-only): command execution skipped")
 
-    completed = subprocess.run(check.command, shell=True, check=False)
-    if completed.returncode == 0:
+    result = execute_tool_request(check.request)
+    if result.status == "passed":
         return CheckResult(check.name, "passed", "ok")
-    return CheckResult(check.name, "blocked", f"non-zero exit: {completed.returncode}")
+    if result.status == "missing_dependency":
+        return CheckResult(check.name, "blocked", f"required command/script missing: {' '.join(check.request.command)}")
+    if result.status == "timeout":
+        return CheckResult(check.name, "blocked", f"timed out after {check.request.timeout_seconds}s")
+    return CheckResult(check.name, "blocked", f"non-zero exit: {result.returncode}")
 
 
 def _print_summary(results: list[CheckResult]) -> None:
@@ -97,19 +83,44 @@ def _print_summary(results: list[CheckResult]) -> None:
 
 def build_checks(include_tests: bool) -> list[Check]:
     checks = [
-        Check("schema validation", "python scripts/validate_governance_schemas.py"),
-        Check("architecture snapshot", "python scripts/validate_architecture_snapshot.py"),
+        Check(
+            "schema validation",
+            lint_check_request(tool_id="tier0-schema-validation", command=(sys.executable, "scripts/validate_governance_schemas.py")),
+        ),
+        Check(
+            "architecture snapshot",
+            lint_check_request(tool_id="tier0-architecture-snapshot", command=(sys.executable, "scripts/validate_architecture_snapshot.py")),
+        ),
         Check(
             "determinism lint",
-            "python tools/lint_determinism.py runtime/ security/ adaad/orchestrator/ app/main.py",
+            lint_check_request(
+                tool_id="tier0-determinism-lint",
+                command=(sys.executable, "tools/lint_determinism.py", "runtime/", "security/", "adaad/orchestrator/", "app/main.py"),
+            ),
         ),
-        Check("import boundary lint", "python tools/lint_import_paths.py"),
+        Check(
+            "import boundary lint",
+            lint_check_request(tool_id="tier0-import-boundary-lint", command=(sys.executable, "tools/lint_import_paths.py")),
+        ),
     ]
     if include_tests:
         checks.append(
             Check(
                 "fast confidence tests",
-                'PYTHONPATH=. pytest tests/determinism/ tests/recovery/test_tier_manager.py -k "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode" -q',
+                test_check_request(
+                    tool_id="tier0-fast-confidence-tests",
+                    command=(
+                        sys.executable,
+                        "-m",
+                        "pytest",
+                        "tests/determinism/",
+                        "tests/recovery/test_tier_manager.py",
+                        "-k",
+                        "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode",
+                        "-q",
+                    ),
+                    environment={"PYTHONPATH": "."},
+                ),
             )
         )
     return checks

@@ -16,7 +16,6 @@ Cross-platform verification for ADAAD He65 rules.
 """
 
 import re
-import subprocess
 import sys
 from os import W_OK, access
 from pathlib import Path
@@ -31,9 +30,19 @@ def run_determinism_lint() -> None:
     lint_script = TARGET / "tools" / "lint_determinism.py"
     if not lint_script.exists():
         sys.exit(f"Determinism lint script missing: {lint_script}")
-    completed = subprocess.run([sys.executable, str(lint_script)], cwd=TARGET, check=False, capture_output=True, text=True)
-    if completed.returncode != 0:
-        output = (completed.stdout + completed.stderr).strip()
+    if str(TARGET) not in sys.path:
+        sys.path.insert(0, str(TARGET))
+    from runtime.tools.execution_contract import execute_tool_request, lint_check_request
+
+    result = execute_tool_request(
+        lint_check_request(
+            tool_id="core-determinism-lint",
+            command=(sys.executable, str(lint_script)),
+            working_directory=str(TARGET),
+        )
+    )
+    if not result.ok:
+        output = (result.stdout + "\n" + result.stderr).strip()
         sys.exit("Determinism AST lint failed:\n" + output)
 
 

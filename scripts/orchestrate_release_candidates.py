@@ -6,10 +6,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from runtime.tools.execution_contract import build_check_request, execute_tool_request, lint_check_request
 
 
 def _parse_args() -> argparse.Namespace:
@@ -43,14 +49,20 @@ def _policy_ok(candidate: dict[str, Any]) -> bool:
     return bool(candidate.get("policy_compliant", False))
 
 
-def _run(command: list[str]) -> dict[str, Any]:
-    proc = subprocess.run(command, capture_output=True, text=True)
+def _run(request):
+    result = execute_tool_request(request)
     return {
-        "command": command,
-        "returncode": proc.returncode,
-        "stdout": proc.stdout,
-        "stderr": proc.stderr,
-        "ok": proc.returncode == 0,
+        "tool_id": request.tool_id,
+        "check_kind": request.check_kind,
+        "command": list(request.command),
+        "returncode": result.returncode,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+        "status": result.status,
+        "duration_ms": result.duration_ms,
+        "failure_reason": result.failure_reason,
+        "artifact_pointers": dict(sorted(request.artifact_pointers.items())),
+        "ok": result.ok,
     }
 
 
@@ -79,9 +91,20 @@ def main() -> int:
 
     selected = compliant[0] if compliant else None
     if selected is not None:
-        build_result = _run(["bash", "scripts/build_release.sh"])
+        build_result = _run(
+            build_check_request(
+                tool_id="release-build",
+                command=("bash", "scripts/build_release.sh"),
+                artifact_pointers={"release_dir": "releases/", "policy_artifact": "artifacts/policy/"},
+            )
+        )
         if build_result["ok"]:
-            evidence_result = _run(["python", "scripts/validate_release_evidence.py", "--require-complete"])
+            evidence_result = _run(
+                lint_check_request(
+                    tool_id="release-evidence-validation",
+                    command=("python", "scripts/validate_release_evidence.py", "--require-complete"),
+                )
+            )
 
     bundle = {
         "bundle_id": bundle_id,

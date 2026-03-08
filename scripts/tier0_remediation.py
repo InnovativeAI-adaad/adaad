@@ -9,62 +9,68 @@ VCS network operations should live in a separate wrapper.
 from __future__ import annotations
 
 import argparse
-import os
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-TIER0_GATES: tuple[tuple[str, list[str]], ...] = (
-    (
-        "schema_validation",
-        [sys.executable, "scripts/validate_governance_schemas.py"],
-    ),
-    (
-        "architecture_snapshot",
-        [sys.executable, "scripts/validate_architecture_snapshot.py"],
-    ),
+from runtime.tools.execution_contract import (
+    ToolExecutionRequest,
+    ToolExecutionResult,
+    dependency_check_request,
+    execute_tool_request,
+    lint_check_request,
+    test_check_request,
+)
+
+
+TIER0_GATES: tuple[tuple[str, ToolExecutionRequest], ...] = (
+    ("schema_validation", lint_check_request(tool_id="tier0-schema-validation", command=(sys.executable, "scripts/validate_governance_schemas.py"), working_directory=str(REPO_ROOT))),
+    ("architecture_snapshot", lint_check_request(tool_id="tier0-architecture-snapshot", command=(sys.executable, "scripts/validate_architecture_snapshot.py"), working_directory=str(REPO_ROOT))),
     (
         "determinism_lint",
-        [
-            sys.executable,
-            "tools/lint_determinism.py",
-            "runtime/",
-            "security/",
-            "adaad/orchestrator/",
-            "app/main.py",
-        ],
+        lint_check_request(
+            tool_id="tier0-determinism-lint",
+            command=(sys.executable, "tools/lint_determinism.py", "runtime/", "security/", "adaad/orchestrator/", "app/main.py"),
+            working_directory=str(REPO_ROOT),
+        ),
     ),
-    (
-        "import_boundary_lint",
-        [sys.executable, "tools/lint_import_paths.py"],
-    ),
+    ("import_boundary_lint", lint_check_request(tool_id="tier0-import-boundary-lint", command=(sys.executable, "tools/lint_import_paths.py"), working_directory=str(REPO_ROOT))),
     (
         "fast_confidence_tests",
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "tests/determinism/",
-            "tests/recovery/test_tier_manager.py",
-            "-k",
-            "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode",
-            "-q",
-        ],
+        test_check_request(
+            tool_id="tier0-fast-confidence-tests",
+            command=(
+                sys.executable,
+                "-m",
+                "pytest",
+                "tests/determinism/",
+                "tests/recovery/test_tier_manager.py",
+                "-k",
+                "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode",
+                "-q",
+            ),
+            environment={"PYTHONPATH": str(REPO_ROOT)},
+            working_directory=str(REPO_ROOT),
+        ),
+    ),
+    (
+        "dependency_baseline",
+        dependency_check_request(
+            tool_id="tier0-dependency-baseline",
+            command=(sys.executable, "scripts/check_dependency_baseline.py"),
+            working_directory=str(REPO_ROOT),
+        ),
     ),
 )
 
 
-def _run_gate(command: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        command,
-        cwd=REPO_ROOT,
-        check=False,
-        text=True,
-        capture_output=True,
-        env={**os.environ, "PYTHONPATH": str(REPO_ROOT)},
-    )
+
+def _run_gate(request: ToolExecutionRequest) -> ToolExecutionResult:
+    return execute_tool_request(request)
 
 
 def _build_commit_message_template(failed_gate_ids: list[str]) -> str:
@@ -122,10 +128,10 @@ def main() -> int:
     args = parser.parse_args()
 
     failed_gate_ids: list[str] = []
-    for gate_id, command in TIER0_GATES:
-        print(f"\n[gate:{gate_id}] {' '.join(command)}")
-        result = _run_gate(command)
-        if result.returncode == 0:
+    for gate_id, request in TIER0_GATES:
+        print(f"\n[gate:{gate_id}] {' '.join(request.command)}")
+        result = _run_gate(request)
+        if result.ok:
             print("status=pass")
         else:
             print("status=fail")

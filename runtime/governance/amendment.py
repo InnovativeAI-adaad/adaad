@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Sequence
 
 from runtime import ROOT_DIR
 from runtime import constitution
@@ -17,6 +17,7 @@ from runtime.governance.amendment_pipeline import AmendmentPipeline
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider, require_replay_safe_provider
 from runtime.governance.review_quality import record_review_quality
+from runtime.tools.execution_contract import ToolExecutionRequest, evaluate_governance_tool_findings, execute_tool_request
 from security.ledger import journal
 
 
@@ -44,12 +45,14 @@ class AmendmentEngine:
         provider: RuntimeDeterminismProvider | None = None,
         *,
         replay_mode: str = "off",
+        simulation_tool_requests: Sequence[ToolExecutionRequest] | None = None,
     ):
         self.proposals_dir = proposals_dir or (ROOT_DIR / "runtime" / "governance" / "proposals")
         self.proposals_dir.mkdir(parents=True, exist_ok=True)
         self.required_approvals = required_approvals
         self.rejection_threshold = rejection_threshold
         self.provider = provider or default_provider()
+        self.simulation_tool_requests = tuple(simulation_tool_requests or ())
         require_replay_safe_provider(self.provider, replay_mode=replay_mode)
 
     def propose_amendment(self, *, proposer: str, new_policy_text: str, rationale: str, old_policy_hash: str) -> AmendmentProposal:
@@ -161,10 +164,16 @@ class AmendmentEngine:
         )
         proposal.status = result.proposal_status
 
-    @staticmethod
-    def _simulation_gate() -> dict[str, Any]:
-        # pre-ADAAD-8 simulation integration is advisory; fail-closed ordering is still enforced.
-        return {"ok": True, "mode": "advisory_pre_adaad_8"}
+    def _simulation_gate(self) -> dict[str, Any]:
+        # pre-ADAAD-8 simulation integration is advisory by default; when tool checks
+        # are configured, failures are machine-classified into block/warn/advisory tiers.
+        if not self.simulation_tool_requests:
+            return {"ok": True, "mode": "advisory_pre_adaad_8", "tool_findings": []}
+
+        results = [execute_tool_request(request) for request in self.simulation_tool_requests]
+        classification = evaluate_governance_tool_findings(results)
+        classification["mode"] = "tool_contract_governance"
+        return classification
 
     def _effectuate_amendment(self, proposal: AmendmentProposal) -> bool:
         if constitution.POLICY_HASH == proposal.new_policy_hash:

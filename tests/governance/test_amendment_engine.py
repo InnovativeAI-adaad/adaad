@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from runtime.constitution import POLICY_HASH
 from runtime.governance.amendment import AmendmentEngine
 from runtime.governance.foundation import SeededDeterminismProvider
+from runtime.tools.execution_contract import ToolExecutionRequest
 
 
 def test_amendment_lifecycle_propose_approve_reject(tmp_path: Path, monkeypatch) -> None:
@@ -166,3 +168,41 @@ def test_effectuation_idempotent_noop(tmp_path: Path, monkeypatch) -> None:
     assert effectuation
     assert effectuation[-1]["payload"]["state"] == "amendment_already_effective"
     assert effectuation[-1]["payload"]["proposal_id"] == proposal.proposal_id
+
+
+def test_simulation_gate_blocks_on_tool_contract_failure(tmp_path: Path, monkeypatch) -> None:
+    from runtime.governance import amendment
+
+    monkeypatch.setattr(amendment.journal, "write_entry", lambda **kwargs: None)
+    monkeypatch.setattr(
+        amendment.journal,
+        "append_tx",
+        lambda tx_type, payload, tx_id=None: {"tx": tx_id or "tx", "type": tx_type, "payload": payload},
+    )
+    monkeypatch.setattr(amendment, "record_review_quality", lambda payload: None)
+
+    policy = Path("runtime/governance/constitution.yaml").read_text(encoding="utf-8")
+    failing_request = ToolExecutionRequest(
+        tool_id="lint-failure",
+        check_kind="lint",
+        command=(sys.executable, "-c", "import sys; sys.exit(1)"),
+    )
+    engine = AmendmentEngine(
+        proposals_dir=tmp_path / "proposals",
+        required_approvals=1,
+        simulation_tool_requests=(failing_request,),
+    )
+    proposal = engine.propose_amendment(
+        proposer="alice",
+        new_policy_text=policy,
+        rationale="tool-contract-gate",
+        old_policy_hash=POLICY_HASH,
+    )
+
+    proposal = engine.approve_amendment(proposal.proposal_id, "bob")
+    assert proposal.status == "pending"
+
+    loaded = engine._load_proposal(proposal.proposal_id)
+    simulation_entries = [entry for entry in loaded.phase_transitions if entry["phase"] == "simulation_gate"]
+    assert simulation_entries
+    assert simulation_entries[-1]["state"] == "failed"
