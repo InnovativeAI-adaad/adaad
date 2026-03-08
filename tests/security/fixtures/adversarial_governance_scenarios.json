@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.0",
+  "source": "docs/governance/RED_TEAM_THREAT_MODEL_NEXT_PHASE.md",
+  "scenarios": [
+    {
+      "scenario_id": "RTN-001",
+      "narrative": "legacy_signature_misuse",
+      "seed": "next-phase-legacy-signature",
+      "expected_verdict": "block",
+      "expected_evidence": [
+        "legacy_signature_rejected",
+        "critical_audit_event",
+        "pointers"
+      ]
+    },
+    {
+      "scenario_id": "RTN-002",
+      "narrative": "dev_token_leakage",
+      "seed": "next-phase-dev-token-leak",
+      "expected_verdict": "block",
+      "expected_evidence": [
+        "dev_token_rejected_in_prod",
+        "pointers"
+      ]
+    },
+    {
+      "scenario_id": "RTN-003",
+      "narrative": "determinism_bypass",
+      "seed": "next-phase-determinism-bypass",
+      "expected_verdict": "block",
+      "expected_evidence": [
+        "runtime_error",
+        "pointers"
+      ]
+    },
+    {
+      "scenario_id": "RTN-004",
+      "narrative": "certification_partial_check_bypass",
+      "seed": "next-phase-certification-bypass",
+      "expected_verdict": "block",
+      "expected_evidence": [
+        "status",
+        "token_ok",
+        "ledger_hashes",
+        "pointers"
+      ]
+    },
+    {
+      "scenario_id": "RTN-005",
+      "narrative": "recovery_churn",
+      "seed": "next-phase-recovery-churn",
+      "expected_verdict": "block",
+      "expected_evidence": [
+        "tier_after_short_gap",
+        "tier_after_window",
+        "transition_count",
+        "pointers"
+      ]
+    }
+  ]
+}

@@ -390,3 +390,77 @@ def test_validator_accepts_relative_links_with_anchors(tmp_path: Path) -> None:
     result = _run_validator(repo, "--require-complete")
 
     assert result.returncode == 0
+
+
+def test_require_adversarial_summary_rejects_missing_artifact(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "scripts").mkdir(parents=True, exist_ok=True)
+    src = Path(__file__).resolve().parents[1] / "scripts" / "validate_release_evidence.py"
+    (repo / "scripts" / "validate_release_evidence.py").write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    _seed_links(repo)
+
+    _write_matrix(
+        repo,
+        """
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
+| --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md) | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+""".strip()
+        + "\n",
+    )
+
+    result = _run_validator(repo, "--require-adversarial-summary")
+
+    assert result.returncode == 1
+    assert "adversarial summary artifact is missing" in result.stdout
+
+
+def test_require_adversarial_summary_accepts_complete_artifact(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "scripts").mkdir(parents=True, exist_ok=True)
+    src = Path(__file__).resolve().parents[1] / "scripts" / "validate_release_evidence.py"
+    (repo / "scripts" / "validate_release_evidence.py").write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    _seed_links(repo)
+
+    _write_matrix(
+        repo,
+        """
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
+| --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md) | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+""".strip()
+        + "\n",
+    )
+
+    summary = repo / "reports" / "security" / "adversarial_scenarios_summary.json"
+    summary.parent.mkdir(parents=True, exist_ok=True)
+    summary.write_text(
+        """
+{
+  "complete": true,
+  "results": [
+    {
+      "scenario_id": "RTN-001",
+      "expected_verdict": "block",
+      "actual_verdict": "block",
+      "evidence_pointers": ["security/cryovant.py::verify_payload_signature"],
+      "passed": true
+    }
+  ]
+}
+""".strip()
+        + "\n",
+        encoding="utf-8",
+    )
+
+    result = _run_validator(repo, "--require-adversarial-summary")
+
+    assert result.returncode == 0
