@@ -1,64 +1,45 @@
 # SPDX-License-Identifier: Apache-2.0
-
 from __future__ import annotations
 
-import json
-import subprocess
-
-import fix_import_boundaries
+from tools import fix_import_boundaries
 
 
-def _cp(returncode: int, stdout: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr="")
+def _issue(rule: str, path: str = "app/main.py", line: int = 1) -> fix_import_boundaries.FixIssue:
+    return fix_import_boundaries.FixIssue(path=path, line=line, column=0, message="m", rule=rule)
 
 
-def test_collect_issues_prefers_json(monkeypatch) -> None:
-    payload = {
-        "passed": False,
-        "issue_count": 1,
-        "issues": [
-            {
-                "path": "app/main.py",
-                "line": 12,
-                "column": 4,
-                "message": "forbidden cross-layer import; see docs/ARCHITECTURE_CONTRACT.md",
-                "rule": "layer_boundary_violation",
-            }
-        ],
-    }
-
-    monkeypatch.setattr(fix_import_boundaries, "_run_lint_json", lambda: _cp(1, json.dumps(payload)))
-
-    issues, mode = fix_import_boundaries._collect_issues()
-
-    assert mode == "json"
-    assert len(issues) == 1
-    assert issues[0].rule == "layer_boundary_violation"
+def test_app_runtime_internal_violation_rewrites_runtime_to_runtime_api() -> None:
+    issue = _issue("app_runtime_internal_violation")
+    new_line, outcome = fix_import_boundaries._handle_app_runtime_internal_violation(issue, "from runtime.core import Engine\n")
+    assert new_line == "from runtime.api.core import Engine\n"
+    assert outcome.status == "fixed"
 
 
-def test_collect_issues_falls_back_to_text_when_json_unavailable(monkeypatch) -> None:
-    text_output = "app/main.py:4:0: import app.agents.* is deprecated; use adaad.agents.* canonical namespace\n"
-
-    monkeypatch.setattr(fix_import_boundaries, "_run_lint_json", lambda: _cp(2, "internal error"))
-    monkeypatch.setattr(fix_import_boundaries, "_run_lint_text", lambda: _cp(1, text_output))
-
-    issues, mode = fix_import_boundaries._collect_issues()
-
-    assert mode == "text"
-    assert len(issues) == 1
-    assert issues[0].rule == "legacy_agent_namespace_violation"
+def test_legacy_agent_namespace_violation_rewrites_namespace() -> None:
+    issue = _issue("legacy_agent_namespace_violation")
+    new_line, outcome = fix_import_boundaries._handle_legacy_agent_namespace_violation(issue, "import app.agents.scheduler as scheduler\n")
+    assert new_line == "import adaad.agents.scheduler as scheduler\n"
+    assert outcome.status == "fixed"
 
 
-def test_resolve_remediation_is_rule_driven() -> None:
-    issue = fix_import_boundaries.ImportIssue(
-        path="runtime/foo.py",
-        line=8,
-        column=0,
-        message="runtime/* must not import app/* (except runtime/api facade modules)",
-        rule="runtime_imports_app_violation",
-    )
+def test_runtime_imports_app_violation_uses_explicit_mapping_only() -> None:
+    issue = _issue("runtime_imports_app_violation", path="runtime/engine.py")
+    new_line, outcome = fix_import_boundaries._handle_runtime_imports_app_violation(issue, "from app.agents.router import Router\n")
+    assert new_line == "from adaad.agents.router import Router\n"
+    assert outcome.status == "fixed"
 
-    handlers = fix_import_boundaries._build_rule_handlers()
-    resolution = fix_import_boundaries._resolve_remediation(issue, handlers)
 
-    assert "runtime.api facade abstraction" in resolution
+
+def test_runtime_imports_app_violation_requires_manual_when_unknown() -> None:
+    issue = _issue("runtime_imports_app_violation", path="runtime/engine.py")
+    new_line, outcome = fix_import_boundaries._handle_runtime_imports_app_violation(issue, "from app.main import create_app\n")
+    assert new_line == "from app.main import create_app\n"
+    assert outcome.status == "manual-required"
+
+
+def test_layer_boundary_violation_requires_explicit_scope_mapping() -> None:
+    issue = _issue("layer_boundary_violation", path="adaad/orchestrator/run.py")
+    new_line, outcome = fix_import_boundaries._handle_layer_boundary_violation(issue, "from app.main import bootstrap\n")
+    assert new_line == "from app.main import bootstrap\n"
+    assert outcome.status == "manual-required"
+    assert "LAYER_BOUNDARY_MANUAL_MAPPINGS" in outcome.detail
