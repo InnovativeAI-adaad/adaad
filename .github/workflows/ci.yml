@@ -38,6 +38,8 @@ jobs:
       shadow_governance_reason: ${{ steps.classify.outputs.shadow_governance_reason }}
       run_redteam_subset: ${{ steps.classify.outputs.run_redteam_subset }}
       redteam_reason: ${{ steps.classify.outputs.redteam_reason }}
+      run_adversarial_scenarios: ${{ steps.classify.outputs.run_adversarial_scenarios }}
+      adversarial_reason: ${{ steps.classify.outputs.adversarial_reason }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -130,6 +132,8 @@ jobs:
           shadow_governance_reason='Skipped: no policy-impact trigger.'
           run_redteam_subset=false
           redteam_reason='Skipped: PR is not critical tier.'
+          run_adversarial_scenarios=false
+          adversarial_reason='Skipped: no governance/runtime/security/red-team threat model path changes.'
 
           if [ "$pr_tier" = "critical" ] || [ "$gov_replay_flag" = "true" ]; then
             run_strict_replay=true
@@ -162,6 +166,11 @@ jobs:
             redteam_reason='Ran: PR critical-path deterministic red-team subset.'
           fi
 
+          if [ "$SECURITY" = "true" ] || [ "$RUNTIME" = "true" ] || [ "$GOVERNANCE" = "true" ] || [ "$TESTS" = "true" ]; then
+            run_adversarial_scenarios=true
+            adversarial_reason='Ran: governance/runtime/security/tests path impact requires deterministic adversarial scenarios.'
+          fi
+
           {
             echo "docs_only=$docs_only"
             echo "tests_only=$tests_only"
@@ -178,6 +187,8 @@ jobs:
             echo "shadow_governance_reason=$shadow_governance_reason"
             echo "run_redteam_subset=$run_redteam_subset"
             echo "redteam_reason=$redteam_reason"
+            echo "run_adversarial_scenarios=$run_adversarial_scenarios"
+            echo "adversarial_reason=$adversarial_reason"
           } >> "$GITHUB_OUTPUT"
 
   schema-validation:
@@ -462,6 +473,26 @@ jobs:
       - name: Run deterministic red-team critical subset
         run: PYTHONPATH=. python tools/run_redteam_harness.py --subset critical --output reports/redteam/critical.json
 
+  adversarial-scenario-harness:
+    runs-on: ubuntu-latest
+    needs: classify
+    if: needs.classify.outputs.run_adversarial_scenarios == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Run deterministic adversarial scenario harness
+        run: PYTHONPATH=. python tools/run_adversarial_scenario_harness.py --manifest tests/security/fixtures/adversarial_governance_scenarios.json --output reports/security/adversarial_scenarios_summary.json
+      - name: Validate adversarial summary completeness
+        run: python scripts/validate_release_evidence.py --require-adversarial-summary --adversarial-summary-path reports/security/adversarial_scenarios_summary.json
+      - name: Upload adversarial summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adversarial-scenarios-summary
+          path: reports/security/adversarial_scenarios_summary.json
+
+
   fast-path-innovations:
     runs-on: ubuntu-latest
     needs: classify
@@ -641,6 +672,7 @@ import sys"),
       - phase6-federated-amendment-no-state-inheritance
       - phase7-reputation-gate
       - redteam-critical-subset
+      - adversarial-scenario-harness
       - release-evidence-readiness
       - simplification-contract-gate
       - fast-path-innovations
@@ -678,6 +710,7 @@ import sys"),
             echo "| phase6-federated-amendment-no-state-inheritance | ${{ needs.phase6-federated-amendment-no-state-inheritance.result }} | Phase 6 destination-state invariance selector. |"
             echo "| phase7-reputation-gate | ${{ needs.phase7-reputation-gate.result }} | Conditional on governance/server/ui paths: reputation, ledger, review pressure, constitutional-floor, and reviewer panel endpoint/UI coverage selectors. |"
             echo "| redteam-critical-subset | ${{ needs.redteam-critical-subset.result }} | ${{ needs.classify.outputs.redteam_reason }} |"
+            echo "| adversarial-scenario-harness | ${{ needs.adversarial-scenario-harness.result }} | ${{ needs.classify.outputs.adversarial_reason }} |"
             echo "| release-evidence-readiness | ${{ needs.release-evidence-readiness.result }} | Always-on matrix link validation. |"
             echo "| simplification-contract-gate | ${{ needs.simplification-contract-gate.result }} | Always-on simplification KPI contract gate (complexity/fan-in/legacy/metrics/runtime-cost). |"
             echo "| fast-path-innovations | ${{ needs.fast-path-innovations.result }} | Route optimizer / entropy gate / checkpoint chain / parallel gate — conditional on runtime or test changes. |"

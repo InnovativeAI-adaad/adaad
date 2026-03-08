@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from pathlib import Path
 from typing import Iterable
@@ -42,6 +43,16 @@ def _parse_args() -> argparse.Namespace:
         "--allow-external-links",
         action="store_true",
         help="Permit http/https evidence links during --require-complete validation.",
+    )
+    parser.add_argument(
+        "--require-adversarial-summary",
+        action="store_true",
+        help="Require and validate deterministic adversarial scenario summary completeness.",
+    )
+    parser.add_argument(
+        "--adversarial-summary-path",
+        default="reports/security/adversarial_scenarios_summary.json",
+        help="Path to operator-facing adversarial scenario summary artifact.",
     )
     return parser.parse_args()
 
@@ -147,6 +158,36 @@ def _iter_release_note_versions(release_dir: Path) -> Iterable[tuple[int, int, i
     return versions
 
 
+def _collect_adversarial_summary_errors(path: Path) -> list[str]:
+    if not path.exists():
+        return [f"adversarial summary artifact is missing: {path.as_posix()}"]
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return [f"adversarial summary artifact is not valid JSON: {path.as_posix()} ({exc})"]
+
+    errors: list[str] = []
+    if payload.get("complete") is not True:
+        errors.append("adversarial summary reports incomplete run (complete must be true)")
+
+    rows = payload.get("results")
+    if not isinstance(rows, list) or not rows:
+        errors.append("adversarial summary results must be a non-empty list")
+        return errors
+
+    for idx, row in enumerate(rows):
+        if not isinstance(row, dict):
+            errors.append(f"adversarial summary row {idx} must be an object")
+            continue
+        for field in ("scenario_id", "expected_verdict", "actual_verdict", "evidence_pointers", "passed"):
+            if field not in row:
+                errors.append(f"adversarial summary row {idx} missing required field: {field}")
+        pointers = row.get("evidence_pointers")
+        if not isinstance(pointers, list) or not pointers:
+            errors.append(f"adversarial summary row {idx} must include non-empty evidence_pointers")
+    return errors
+
+
 def main() -> int:
     args = _parse_args()
 
@@ -201,6 +242,9 @@ def main() -> int:
                         "VERSION exceeds latest release note file: "
                         f"VERSION={version_raw} > docs/releases/{latest_str}.md"
                     )
+
+    if args.require_adversarial_summary:
+        errors.extend(_collect_adversarial_summary_errors(Path(args.adversarial_summary_path)))
 
     missing_claims = REQUIRED_CLAIM_IDS - rows.keys()
     if missing_claims:
