@@ -264,16 +264,19 @@ def test_reviewer_calibration_endpoint_schema(monkeypatch, tmp_path) -> None:
 
     assert resp.status_code == 200
     data = resp.json()
-    assert "data" in data
+    assert list(data.keys()) == ["schema_version", "authn", "data"]
     assert data["data"]["epoch_id"] == "epoch-99"
-    assert "reputation_scores" in data["data"]
-    assert "tier_calibration" in data["data"]
+    assert set(data["data"]["cohort_summary"].keys()) == {"high", "standard", "low"}
+    assert "avg_reputation" in data["data"]
+    assert "tier_pressure" in data["data"]
+    assert data["data"]["constitutional_floor"] == "enforced"
+    assert "constitution_version" in data["data"]
     assert "scoring_algorithm_version" in data["data"]
     assert data["authn"]["scope"] == "audit:read"
 
 
 def test_reviewer_calibration_explicit_reviewer_ids(monkeypatch, tmp_path) -> None:
-    """Explicit reviewer_ids param returns scores for exactly those reviewers."""
+    """Explicit reviewer_ids param is accepted and returns the contract fields."""
     monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
 
     from security.ledger import journal as _journal_module
@@ -289,5 +292,23 @@ def test_reviewer_calibration_explicit_reviewer_ids(monkeypatch, tmp_path) -> No
         )
 
     assert resp.status_code == 200
-    scores = resp.json()["data"]["reputation_scores"]
-    assert set(scores.keys()) == {"alice", "bob", "carol"}
+    payload = resp.json()["data"]
+    assert set(payload.keys()) == {
+        "cohort_summary",
+        "avg_reputation",
+        "tier_pressure",
+        "constitutional_floor",
+        "epoch_id",
+        "constitution_version",
+        "scoring_algorithm_version",
+    }
+
+
+def test_reviewer_calibration_requires_epoch_id(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
+
+    with TestClient(server.app) as client:
+        resp = client.get("/governance/reviewer-calibration", headers=_auth_header())
+
+    assert resp.status_code == 422
+    assert resp.json() == {"detail": "missing_epoch_id"}

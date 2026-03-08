@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/aponi_responses/reviewer_calibration.schema.json",
+  "type": "object",
+  "required": ["schema_version", "authn", "data"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "authn": {
+      "type": "object",
+      "required": ["scheme", "scope", "redaction"],
+      "properties": {
+        "scheme": {"type": "string", "const": "bearer"},
+        "scope": {"type": "string", "const": "audit:read"},
+        "redaction": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "cohort_summary",
+        "avg_reputation",
+        "tier_pressure",
+        "constitutional_floor",
+        "epoch_id",
+        "constitution_version",
+        "scoring_algorithm_version"
+      ],
+      "properties": {
+        "cohort_summary": {
+          "type": "object",
+          "required": ["high", "standard", "low"],
+          "properties": {
+            "high": {"type": "integer", "minimum": 0},
+            "standard": {"type": "integer", "minimum": 0},
+            "low": {"type": "integer", "minimum": 0}
+          },
+          "additionalProperties": false
+        },
+        "avg_reputation": {"type": "number", "minimum": 0, "maximum": 1},
+        "tier_pressure": {"type": "string", "enum": ["extended", "nominal", "elevated"]},
+        "constitutional_floor": {"type": "string", "const": "enforced"},
+        "epoch_id": {"type": "string", "minLength": 1},
+        "constitution_version": {"type": "string"},
+        "scoring_algorithm_version": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

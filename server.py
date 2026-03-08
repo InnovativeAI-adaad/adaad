@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
@@ -94,6 +94,43 @@ def _read_gate_state() -> Dict[str, Any]:
         "protocol": GATE_PROTOCOL,
     }
 
+
+
+
+def _load_audit_tokens() -> dict[str, list[str]]:
+    raw = os.environ.get("ADAAD_AUDIT_TOKENS", "")
+    if not raw:
+        return {}
+    try:
+        decoded = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(decoded, dict):
+        return {}
+    normalized: dict[str, list[str]] = {}
+    for token, scopes in decoded.items():
+        if not isinstance(token, str):
+            continue
+        if isinstance(scopes, list):
+            normalized[token] = [str(scope) for scope in scopes]
+    return normalized
+
+
+def _require_audit_read_scope(authorization: str | None) -> dict[str, str]:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="missing_authentication")
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="missing_authentication")
+
+    token_scopes = _load_audit_tokens().get(token)
+    if token_scopes is None:
+        raise HTTPException(status_code=401, detail="invalid_token")
+    if "audit:read" not in token_scopes:
+        raise HTTPException(status_code=403, detail="insufficient_scope")
+
+    return {"scheme": "bearer", "scope": "audit:read", "redaction": "sensitive"}
 
 def _assert_gate_open() -> Dict[str, Any]:
     gate = _read_gate_state()
@@ -190,6 +227,29 @@ for endpoint_name in MOCK_ENDPOINTS:
         endpoint=lambda n=endpoint_name: _load_mock(n),
         methods=["GET"],
     )
+
+
+
+@app.get("/governance/reviewer-calibration")
+def governance_reviewer_calibration(
+    epoch_id: str | None = Query(default=None),
+    reviewer_ids: str | None = Query(default=None),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    authn = _require_audit_read_scope(authorization)
+    if not epoch_id:
+        raise HTTPException(status_code=422, detail="missing_epoch_id")
+
+    from runtime.api.runtime_services import reviewer_calibration_service
+
+    requested_reviewer_ids = None
+    if reviewer_ids:
+        requested_reviewer_ids = [item.strip() for item in reviewer_ids.split(",") if item.strip()]
+
+    calibration = reviewer_calibration_service(epoch_id=epoch_id, reviewer_ids=requested_reviewer_ids)
+    calibration["constitutional_floor"] = "enforced"
+
+    return {"schema_version": "1.0", "authn": authn, "data": calibration}
 
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
