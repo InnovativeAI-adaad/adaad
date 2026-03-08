@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import json
+
 import pytest
 
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
@@ -142,3 +144,96 @@ def test_verify_checkpoint_chain_emits_violation_with_halt_reason(tmp_path):
     ]
     assert events[-1]["payload"]["event_type"] == "checkpoint_chain_violated"
     assert events[-1]["payload"]["halt_reason_code"] == "prev_checkpoint_mismatch"
+
+
+def test_tamper_detection_emits_checkpoint_escalation_event(tmp_path):
+    ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
+    epoch_id = "epoch-escalate"
+    _seed_epoch(ledger, epoch_id)
+    registry = CheckpointRegistry(ledger)
+    registry.create_checkpoint(epoch_id)
+
+    ledger.append_event(
+        "EpochCheckpointEvent",
+        {
+            "epoch_id": epoch_id,
+            "checkpoint_id": "chk_bad_prev",
+            "checkpoint_hash": "sha256:" + ("1" * 64),
+            "prev_checkpoint_hash": "sha256:" + ("f" * 64),
+            "epoch_digest": "sha256:abc",
+            "baseline_digest": "sha256:abc",
+            "mutation_count": 1,
+            "promotion_event_count": 1,
+            "scoring_event_count": 0,
+            "entropy_policy_hash": "sha256:" + ("0" * 64),
+            "promotion_policy_hash": "sha256:" + ("0" * 64),
+            "evidence_hash": "sha256:" + ("0" * 64),
+            "sandbox_policy_hash": "sha256:" + ("0" * 64),
+        },
+    )
+
+    with pytest.raises(CheckpointVerificationError, match=r"^checkpoint_prev_missing:epoch=epoch-escalate;index=1$"):
+        CheckpointVerifier.verify_all_checkpoints(ledger.ledger_path)
+
+    escalation_events = [entry for entry in ledger.read_all() if entry.get("type") == "CheckpointTamperEscalationEvent"]
+    assert len(escalation_events) == 1
+    payload = escalation_events[0]["payload"]
+    assert payload["event_type"] == "checkpoint_tamper_escalation"
+    assert payload["reason_code"] == "checkpoint_prev_missing"
+    assert payload["checkpoint_locator"] == {
+        "epoch_id": epoch_id,
+        "checkpoint_id": "chk_bad_prev",
+        "checkpoint_index": 1,
+    }
+
+
+def test_checkpoint_escalation_payload_fields_are_deterministic():
+    checkpoint = {
+        "index": 7,
+        "checkpoint_id": "chk_1234abcd",
+        "expected_checkpoint_hash": "sha256:" + ("1" * 64),
+        "checkpoint_hash": "sha256:" + ("2" * 64),
+        "expected_prev_checkpoint_hash": "sha256:" + ("3" * 64),
+        "prev_checkpoint_hash": "sha256:" + ("4" * 64),
+    }
+
+    payload = CheckpointVerifier._tamper_escalation_payload(
+        reason_code="checkpoint_hash_mismatch",
+        epoch_id="epoch-deterministic",
+        checkpoint=checkpoint,
+    )
+
+    assert payload["schema_version"] == "1.0"
+    assert payload["event_type"] == "checkpoint_tamper_escalation"
+    assert payload["reason_code"] == "checkpoint_hash_mismatch"
+    assert payload["deterministic_hashes"]["checkpoint_locator_hash"].startswith("sha256:")
+    assert payload["deterministic_hashes"]["hash_material_hash"].startswith("sha256:")
+    assert payload["deterministic_hashes"]["evidence_payload_hash"].startswith("sha256:")
+
+
+def test_checkpoint_escalation_payload_is_byte_stable_on_replay():
+    checkpoint = {
+        "index": 2,
+        "checkpoint_id": "chk_replay",
+        "expected_checkpoint_hash": "sha256:" + ("a" * 64),
+        "checkpoint_hash": "sha256:" + ("b" * 64),
+        "expected_prev_checkpoint_hash": "sha256:" + ("c" * 64),
+        "prev_checkpoint_hash": "sha256:" + ("d" * 64),
+    }
+
+    payload_first = CheckpointVerifier._tamper_escalation_payload(
+        reason_code="checkpoint_hash_mismatch",
+        epoch_id="epoch-replay",
+        checkpoint=checkpoint,
+    )
+    payload_second = CheckpointVerifier._tamper_escalation_payload(
+        reason_code="checkpoint_hash_mismatch",
+        epoch_id="epoch-replay",
+        checkpoint=checkpoint,
+    )
+
+    payload_first_bytes = json.dumps(payload_first, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    payload_second_bytes = json.dumps(payload_second, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+    assert payload_first == payload_second
+    assert payload_first_bytes == payload_second_bytes

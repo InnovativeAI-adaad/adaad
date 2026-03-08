@@ -67,6 +67,12 @@ class CheckpointVerifier:
             for checkpoint in checkpoints:
                 index = int(checkpoint.get("index", 0))
                 if not checkpoint.get("chain_linked", False):
+                    CheckpointVerifier._emit_tamper_escalation(
+                        ledger=ledger,
+                        reason_code="checkpoint_prev_missing",
+                        epoch_id=epoch_id,
+                        checkpoint=checkpoint,
+                    )
                     raise CheckpointVerificationError(
                         code="checkpoint_prev_missing",
                         detail=f"epoch={epoch_id};index={index}",
@@ -75,11 +81,23 @@ class CheckpointVerifier:
                 expected_hash = str(checkpoint.get("expected_checkpoint_hash") or "")
                 actual_hash = str(checkpoint.get("checkpoint_hash") or "")
                 if not actual_hash:
+                    CheckpointVerifier._emit_tamper_escalation(
+                        ledger=ledger,
+                        reason_code="checkpoint_hash_missing",
+                        epoch_id=epoch_id,
+                        checkpoint=checkpoint,
+                    )
                     raise CheckpointVerificationError(
                         code="checkpoint_hash_missing",
                         detail=f"epoch={epoch_id};index={index}",
                     )
                 if actual_hash != expected_hash:
+                    CheckpointVerifier._emit_tamper_escalation(
+                        ledger=ledger,
+                        reason_code="checkpoint_hash_mismatch",
+                        epoch_id=epoch_id,
+                        checkpoint=checkpoint,
+                    )
                     raise CheckpointVerificationError(
                         code="checkpoint_hash_mismatch",
                         detail=f"epoch={epoch_id};index={index}",
@@ -90,6 +108,68 @@ class CheckpointVerifier:
             "checkpoint_count": int(inventory.get("checkpoint_count", 0)),
             "verified": True,
         }
+
+    @staticmethod
+    def _tamper_escalation_payload(
+        *,
+        reason_code: str,
+        epoch_id: str,
+        checkpoint: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        checkpoint_id = str(checkpoint.get("checkpoint_id") or "")
+        checkpoint_index = int(checkpoint.get("index", 0))
+        expected_checkpoint_hash = str(checkpoint.get("expected_checkpoint_hash") or "")
+        actual_checkpoint_hash = str(checkpoint.get("checkpoint_hash") or "")
+        expected_prev_checkpoint_hash = str(checkpoint.get("expected_prev_checkpoint_hash") or ZERO_HASH)
+        actual_prev_checkpoint_hash = str(checkpoint.get("prev_checkpoint_hash") or ZERO_HASH)
+
+        checkpoint_locator = {
+            "epoch_id": epoch_id,
+            "checkpoint_id": checkpoint_id,
+            "checkpoint_index": checkpoint_index,
+        }
+        hash_material = {
+            "expected_checkpoint_hash": expected_checkpoint_hash,
+            "actual_checkpoint_hash": actual_checkpoint_hash,
+            "expected_prev_checkpoint_hash": expected_prev_checkpoint_hash,
+            "actual_prev_checkpoint_hash": actual_prev_checkpoint_hash,
+        }
+        evidence_material = {
+            "reason_code": reason_code,
+            "checkpoint_locator": checkpoint_locator,
+            "hash_material": hash_material,
+        }
+        return {
+            "schema_version": "1.0",
+            "event_type": "checkpoint_tamper_escalation",
+            "reason_code": reason_code,
+            "checkpoint_locator": checkpoint_locator,
+            "deterministic_hashes": {
+                "checkpoint_locator_hash": sha256_prefixed_digest(checkpoint_locator),
+                "hash_material_hash": sha256_prefixed_digest(hash_material),
+                "evidence_payload_hash": sha256_prefixed_digest(evidence_material),
+            },
+            "expected_checkpoint_hash": expected_checkpoint_hash,
+            "actual_checkpoint_hash": actual_checkpoint_hash,
+            "expected_prev_checkpoint_hash": expected_prev_checkpoint_hash,
+            "actual_prev_checkpoint_hash": actual_prev_checkpoint_hash,
+        }
+
+    @staticmethod
+    def _emit_tamper_escalation(
+        *,
+        ledger: LineageLedgerV2,
+        reason_code: str,
+        epoch_id: str,
+        checkpoint: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        payload = CheckpointVerifier._tamper_escalation_payload(
+            reason_code=reason_code,
+            epoch_id=epoch_id,
+            checkpoint=checkpoint,
+        )
+        ledger.append_event("CheckpointTamperEscalationEvent", payload)
+        return payload
 
     @staticmethod
     def verify_chain(ledger: LineageLedgerV2, *, provider: RuntimeDeterminismProvider | None = None) -> Dict[str, Any]:
