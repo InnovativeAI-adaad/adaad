@@ -415,6 +415,7 @@ def verify_replay_proof_bundle(
     key_validity_windows: Mapping[str, Mapping[str, str]] | None = None,
     revocation_source: Any | None = None,
     trust_policy_version: str | None = None,
+    expected_replay_environment_fingerprint: Mapping[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """Offline replay proof verification without runtime state dependencies."""
 
@@ -455,6 +456,30 @@ def verify_replay_proof_bundle(
                 "actual_trust_policy_version": trust_metadata.get("trust_policy_version"),
             }
 
+
+    observed_replay_environment_fingerprint = dict(bundle.get("replay_environment_fingerprint") or {})
+    observed_replay_environment_fingerprint_hash = str(bundle.get("replay_environment_fingerprint_hash") or "")
+    expected_fingerprint_hash = sha256_prefixed_digest(observed_replay_environment_fingerprint)
+    if observed_replay_environment_fingerprint_hash != expected_fingerprint_hash:
+        return {
+            "ok": False,
+            "error": "replay_environment_fingerprint_hash_mismatch",
+            "expected_replay_environment_fingerprint_hash": expected_fingerprint_hash,
+            "actual_replay_environment_fingerprint_hash": observed_replay_environment_fingerprint_hash,
+        }
+
+    if expected_replay_environment_fingerprint is not None:
+        normalized_expected_replay_environment_fingerprint = json.loads(
+            canonical_json(dict(expected_replay_environment_fingerprint))
+        )
+        if normalized_expected_replay_environment_fingerprint != observed_replay_environment_fingerprint:
+            return {
+                "ok": False,
+                "error": "replay_environment_fingerprint_mismatch",
+                "expected_replay_environment_fingerprint": normalized_expected_replay_environment_fingerprint,
+                "actual_replay_environment_fingerprint": observed_replay_environment_fingerprint,
+            }
+
     unsigned_bundle = {
         "schema_version": bundle.get("schema_version"),
         "epoch_id": bundle.get("epoch_id"),
@@ -469,8 +494,8 @@ def verify_replay_proof_bundle(
         "canonical_digest": bundle.get("canonical_digest"),
         "policy_hashes": bundle.get("policy_hashes", {}),
         "fitness_weight_snapshot_hash": bundle.get("fitness_weight_snapshot_hash"),
-        "replay_environment_fingerprint": bundle.get("replay_environment_fingerprint", {}),
-        "replay_environment_fingerprint_hash": bundle.get("replay_environment_fingerprint_hash"),
+        "replay_environment_fingerprint": observed_replay_environment_fingerprint,
+        "replay_environment_fingerprint_hash": observed_replay_environment_fingerprint_hash,
     }
     if "trust_root_metadata" in bundle:
         unsigned_bundle["trust_root_metadata"] = bundle.get("trust_root_metadata")

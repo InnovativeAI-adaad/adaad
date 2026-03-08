@@ -14,9 +14,12 @@ def _build_valid_replay_inputs():
         provider_ts="2026-02-14T00:00:00Z",
         replay_environment_fingerprint={
             "runtime_version": "3.11.9",
+            "runtime_toolchain_fingerprint": "sha256:" + ("7" * 64),
             "dependency_lock_digest": "sha256:" + ("2" * 64),
+            "env_whitelist_digest": "sha256:" + ("8" * 64),
             "container_profile_digest": "sha256:" + ("3" * 64),
             "filesystem_snapshot_digest": "sha256:" + ("4" * 64),
+            "filesystem_baseline_digest": "sha256:" + ("5" * 64),
             "seed_lineage": {
                 "root_seed": "0000000000000001",
                 "parent_seed": "",
@@ -52,4 +55,37 @@ def test_replay_sandbox_execution_detects_dependency_drift_even_when_output_hash
     replay = replay_sandbox_execution(manifest, tampered_evidence)
     assert replay["passed"] is False
     assert replay["checks"]["dependency_lock_digest_hash"] is False
+    assert replay["checks"]["stdout_hash"] is True
+
+
+def test_replay_sandbox_execution_detects_toolchain_drift_even_when_output_hashes_match():
+    manifest, evidence = _build_valid_replay_inputs()
+    tampered_evidence = dict(evidence)
+    tampered_evidence["replay_environment_fingerprint"] = dict(evidence["replay_environment_fingerprint"])
+    tampered_evidence["replay_environment_fingerprint"]["runtime_toolchain_fingerprint"] = "sha256:" + ("6" * 64)
+    replay = replay_sandbox_execution(manifest, tampered_evidence)
+    assert replay["passed"] is False
+    assert replay["checks"]["runtime_toolchain_fingerprint_hash"] is False
+    assert replay["checks"]["stdout_hash"] is True
+
+
+def test_replay_sandbox_execution_detects_env_whitelist_drift_even_when_output_hashes_match():
+    manifest, evidence = _build_valid_replay_inputs()
+    tampered_evidence = dict(evidence)
+    tampered_evidence["replay_environment_fingerprint"] = dict(evidence["replay_environment_fingerprint"])
+    tampered_evidence["replay_environment_fingerprint"]["env_whitelist_digest"] = "sha256:" + ("5" * 64)
+    replay = replay_sandbox_execution(manifest, tampered_evidence)
+    assert replay["passed"] is False
+    assert replay["checks"]["env_whitelist_digest_hash"] is False
+    assert replay["checks"]["stdout_hash"] is True
+
+
+def test_replay_sandbox_execution_detects_filesystem_baseline_drift_even_when_output_hashes_match():
+    manifest, evidence = _build_valid_replay_inputs()
+    tampered_evidence = dict(evidence)
+    tampered_evidence["replay_environment_fingerprint"] = dict(evidence["replay_environment_fingerprint"])
+    tampered_evidence["replay_environment_fingerprint"]["filesystem_baseline_digest"] = "sha256:" + ("6" * 64)
+    replay = replay_sandbox_execution(manifest, tampered_evidence)
+    assert replay["passed"] is False
+    assert replay["checks"]["filesystem_baseline_digest_hash"] is False
     assert replay["checks"]["stdout_hash"] is True

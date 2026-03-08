@@ -339,3 +339,25 @@ def test_replay_attestation_schema_rejects_algorithm_incompatible_signature(tmp_
 
     errors = validate_replay_proof_schema(bundle)
     assert any("invalid_ed25519_signature" in err for err in errors)
+
+
+def test_replay_attestation_rejects_environment_mismatch_even_when_replay_digest_matches(tmp_path) -> None:
+    epoch_id = "epoch-env-mismatch"
+    ledger = LineageLedgerV2(tmp_path / "lineage_env_mismatch.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(ledger=ledger, proofs_dir=tmp_path / "proofs", key_id="proof-key")
+    bundle = builder.build_bundle(epoch_id)
+
+    expected_environment = dict(bundle["replay_environment_fingerprint"])
+    expected_environment["env_whitelist_digest"] = "sha256:" + ("9" * 64)
+
+    result = verify_replay_proof_bundle(
+        bundle,
+        keyring={"proof-key": "adaad-replay-proof-dev-secret:proof-key"},
+        expected_replay_environment_fingerprint=expected_environment,
+    )
+
+    assert not result["ok"]
+    assert result["error"] == "replay_environment_fingerprint_mismatch"
+

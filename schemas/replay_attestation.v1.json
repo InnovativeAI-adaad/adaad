@@ -267,9 +267,12 @@
       "additionalProperties": false,
       "required": [
         "runtime_version",
+        "runtime_toolchain_fingerprint",
         "dependency_lock_digest",
+        "env_whitelist_digest",
         "container_profile_digest",
         "filesystem_snapshot_digest",
+        "filesystem_baseline_digest",
         "seed_lineage"
       ],
       "properties": {
@@ -277,7 +280,15 @@
           "type": "string",
           "minLength": 1
         },
+        "runtime_toolchain_fingerprint": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
         "dependency_lock_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "env_whitelist_digest": {
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         },
@@ -286,6 +297,10 @@
           "pattern": "^sha256:[a-f0-9]{64}$"
         },
         "filesystem_snapshot_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "filesystem_baseline_digest": {
           "type": "string",
           "pattern": "^sha256:[a-f0-9]{64}$"
         },

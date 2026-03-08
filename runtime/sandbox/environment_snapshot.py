@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 import platform
 from typing import Any, Dict, Mapping
 
@@ -18,6 +19,15 @@ _DEPENDENCY_LOCK_CANDIDATES = (
     "poetry.lock",
     "Pipfile.lock",
     "pyproject.toml",
+)
+
+_ENV_WHITELIST_KEYS = (
+    "ADAAD_ENV",
+    "ADAAD_FORCE_DETERMINISTIC_PROVIDER",
+    "ADAAD_DETERMINISTIC_SEED",
+    "ADAAD_REPLAY_MODE",
+    "CRYOVANT_DEV_MODE",
+    "PYTHONHASHSEED",
 )
 
 
@@ -43,6 +53,22 @@ def _container_profile_digest() -> str:
     return sha256_prefixed_digest(fingerprints)
 
 
+def _runtime_toolchain_fingerprint() -> str:
+    toolchain = {
+        "python_version": platform.python_version(),
+        "implementation": platform.python_implementation(),
+        "python_build": list(platform.python_build()),
+        "python_compiler": platform.python_compiler(),
+        "platform": platform.platform(),
+    }
+    return sha256_prefixed_digest(toolchain)
+
+
+def _env_whitelist_digest() -> str:
+    env_subset = {key: str(os.getenv(key) or "") for key in _ENV_WHITELIST_KEYS}
+    return sha256_prefixed_digest(env_subset)
+
+
 def _collect_filesystem_state(paths: tuple[str, ...]) -> Dict[str, str]:
     state: Dict[str, str] = {}
     for relative in paths:
@@ -57,11 +83,15 @@ def collect_pre_execution_snapshot(manifest: Mapping[str, Any]) -> Dict[str, Any
     parent_seed = str(manifest.get("parent_replay_seed") or "")
     tracked_files = tuple(sorted(set(_DEPENDENCY_LOCK_CANDIDATES)))
     filesystem_state = _collect_filesystem_state(tracked_files)
+    filesystem_baseline_digest = sha256_prefixed_digest(filesystem_state)
     return {
         "runtime_version": platform.python_version(),
+        "runtime_toolchain_fingerprint": _runtime_toolchain_fingerprint(),
         "dependency_lock_digest": _dependency_lock_digest(),
+        "env_whitelist_digest": _env_whitelist_digest(),
         "container_profile_digest": _container_profile_digest(),
-        "filesystem_snapshot_digest": sha256_prefixed_digest(filesystem_state),
+        "filesystem_snapshot_digest": filesystem_baseline_digest,
+        "filesystem_baseline_digest": filesystem_baseline_digest,
         "seed_lineage": {
             "root_seed": parent_seed or replay_seed,
             "parent_seed": parent_seed,

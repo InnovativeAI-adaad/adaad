@@ -143,14 +143,23 @@ def build_sandbox_evidence(
         "replay_environment_fingerprint": deterministic_replay_environment,
         "replay_environment_fingerprint_hash": sha256_prefixed_digest(deterministic_replay_environment),
         "runtime_version_hash": sha256_prefixed_digest(str(deterministic_replay_environment.get("runtime_version") or "")),
+        "runtime_toolchain_fingerprint_hash": sha256_prefixed_digest(
+            str(deterministic_replay_environment.get("runtime_toolchain_fingerprint") or "")
+        ),
         "dependency_lock_digest_hash": sha256_prefixed_digest(
             str(deterministic_replay_environment.get("dependency_lock_digest") or "")
+        ),
+        "env_whitelist_digest_hash": sha256_prefixed_digest(
+            str(deterministic_replay_environment.get("env_whitelist_digest") or "")
         ),
         "container_profile_digest_hash": sha256_prefixed_digest(
             str(deterministic_replay_environment.get("container_profile_digest") or "")
         ),
         "filesystem_snapshot_digest_hash": sha256_prefixed_digest(
             str(deterministic_replay_environment.get("filesystem_snapshot_digest") or "")
+        ),
+        "filesystem_baseline_digest_hash": sha256_prefixed_digest(
+            str(deterministic_replay_environment.get("filesystem_baseline_digest") or "")
         ),
         "seed_lineage_hash": sha256_prefixed_digest(dict(deterministic_replay_environment.get("seed_lineage") or {})),
         "replay_diagnostics": deterministic_replay_diagnostics,

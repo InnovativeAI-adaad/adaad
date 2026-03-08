@@ -55,6 +55,22 @@ Before any version or value comparison, ephemeral runtime fields (for example `t
 
 Validator report contract includes deterministic top-level fields: `mode`, `ok`, `decision`, and `details` (with explicit missing-required field reporting for fail-closed behavior).
 
+
+## Replay provenance fields (required)
+
+Replay proof artifacts and sandbox evidence must include these provenance fields under `replay_environment_fingerprint`, and replay verification treats each as fail-closed:
+
+- `runtime_version`
+- `runtime_toolchain_fingerprint`
+- `dependency_lock_digest`
+- `env_whitelist_digest`
+- `container_profile_digest`
+- `filesystem_snapshot_digest`
+- `filesystem_baseline_digest`
+- `seed_lineage`
+
+Accepted shape is enforced by `schemas/replay_attestation.v1.json`, and verification additionally checks that `replay_environment_fingerprint_hash` matches the canonical hash of the fingerprint object before signature validation proceeds.
+
 ## Divergence detection
 
 Divergence is detected by contract-level hash and schema validation against the recorded baseline, then surfaced as a fail-closed governance outcome.
