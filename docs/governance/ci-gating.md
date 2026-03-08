@@ -44,6 +44,7 @@ These jobs run only when classifier gates evaluate to `true`:
 | `evidence-suite` | governance/runtime/security path changes or replay/ledger impact flag | evidence/sandbox tests |
 | `promotion-suite` | governance/runtime path changes, policy/constitution flag, or `pr_tier=critical` | governance/promotion selectors |
 | `phase7-reputation-gate` | governance/server/relevant UI path changes (`governance/**`, `server.py`, `ui/**`) | reviewer reputation + ledger + pressure + constitutional-floor + reviewer panel endpoint/UI coverage |
+| `pr3h-acceptance-gate` | PR-3H closure scope (`tests/acceptance/pr3h/**`, `scripts/validate_pr3h_acceptance.py`, checkpoint/entropy replay acceptance surfaces) | checkpoint tamper escalation + entropy triage replay fixtures via machine-readable audit output |
 
 - `strict-replay`
   - Runs for `critical` tier or replay/ledger impact flag.
@@ -55,6 +56,11 @@ These jobs run only when classifier gates evaluate to `true`:
 - `phase7-reputation-gate`
   - Runs when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`).
   - Executes the Phase 7 invariant selector set: reviewer reputation scoring, reviewer reputation ledger, review pressure, constitutional-floor coverage, and reviewer panel endpoint/UI coverage.
+
+- `pr3h-acceptance-gate`
+  - Required evidence gate for PR-3H closure.
+  - Runs `python scripts/validate_pr3h_acceptance.py` and requires a passing machine-readable audit artifact (`artifacts/pr3h_acceptance_audit.json`) from CI.
+  - PR-3H is not considered complete until the uploaded artifact reports `"status": "pass"`.
 
 ## Simplification contract gate (required)
 
