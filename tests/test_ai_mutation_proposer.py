@@ -8,10 +8,13 @@ All 8 tests mock _call_claude — no real API calls are made in unit tests.
 from __future__ import annotations
 
 import json
+import threading
+import time
 import pytest
 from unittest.mock import patch, MagicMock
 
 from runtime.autonomy.ai_mutation_proposer import (
+    CANONICAL_AGENT_ORDER,
     CodebaseContext,
     _parse_proposals,
     propose_mutations,
@@ -138,7 +141,76 @@ def test_propose_all_agents_returns_all_keys() -> None:
         return_value=VALID_PROPOSALS_JSON,
     ):
         result = propose_from_all_agents(ctx, api_key="test-key")
-    assert set(result.keys()) == {"architect", "dream", "beast"}
+    assert tuple(result.proposals_by_agent.keys()) == CANONICAL_AGENT_ORDER
+    assert result.failures_by_agent == {}
+
+
+def test_propose_all_agents_deterministic_order_when_completion_is_out_of_order() -> None:
+    ctx = _make_context()
+    delays = {
+        "architect": 0.08,
+        "dream": 0.01,
+        "beast": 0.04,
+    }
+
+    def _slow_propose(agent: str, *_args, **_kwargs):
+        time.sleep(delays[agent])
+        return [MagicMock(spec=MutationCandidate)]
+
+    with patch(
+        "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+        side_effect=_slow_propose,
+    ):
+        result = propose_from_all_agents(ctx, api_key="test-key", timeout=1)
+
+    assert tuple(result.proposals_by_agent.keys()) == CANONICAL_AGENT_ORDER
+    assert all(len(result.proposals_by_agent[agent]) == 1 for agent in CANONICAL_AGENT_ORDER)
+
+
+def test_propose_all_agents_failure_isolated_per_agent() -> None:
+    ctx = _make_context()
+
+    def _partial_failure(agent: str, *_args, **_kwargs):
+        if agent == "dream":
+            raise TimeoutError("dream timed out")
+        return [MagicMock(spec=MutationCandidate)]
+
+    with patch(
+        "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+        side_effect=_partial_failure,
+    ):
+        result = propose_from_all_agents(ctx, api_key="test-key", timeout=2, retries=0)
+
+    assert len(result.proposals_by_agent["architect"]) == 1
+    assert len(result.proposals_by_agent["beast"]) == 1
+    assert result.proposals_by_agent["dream"] == []
+    assert result.failures_by_agent["dream"]["code"] == "agent_timeout"
+
+
+def test_propose_all_agents_global_timeout_cancels_pending_work() -> None:
+    ctx = _make_context()
+    gate = threading.Event()
+
+    def _hung_propose(agent: str, *_args, **_kwargs):
+        if agent == "architect":
+            return [MagicMock(spec=MutationCandidate)]
+        gate.wait(timeout=0.5)
+        return [MagicMock(spec=MutationCandidate)]
+
+    with patch(
+        "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+        side_effect=_hung_propose,
+    ):
+        result = propose_from_all_agents(
+            ctx,
+            api_key="test-key",
+            timeout=1,
+            global_timeout_budget=0.02,
+        )
+
+    assert len(result.proposals_by_agent["architect"]) == 1
+    assert result.failures_by_agent["dream"]["code"] == "global_timeout"
+    assert result.failures_by_agent["beast"]["code"] == "global_timeout"
 
 
 def test_malformed_json_raises() -> None:
