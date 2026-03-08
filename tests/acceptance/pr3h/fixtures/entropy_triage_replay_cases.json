@@ -1,0 +1,28 @@
+[
+  {
+    "case_id": "digest_mismatch_fail_closed",
+    "expected_digest": "sha256:expected-a",
+    "actual_digest": "sha256:actual-a",
+    "replay_score": 0.35,
+    "cause_buckets": {
+      "digest_mismatch": true,
+      "baseline_mismatch": false,
+      "time_input_variance": false,
+      "external_dependency_variance": false
+    },
+    "expected_decision": "fail_closed"
+  },
+  {
+    "case_id": "baseline_mismatch_fail_closed",
+    "expected_digest": "sha256:expected-b",
+    "actual_digest": "sha256:expected-b",
+    "replay_score": 0.62,
+    "cause_buckets": {
+      "digest_mismatch": false,
+      "baseline_mismatch": true,
+      "time_input_variance": false,
+      "external_dependency_variance": false
+    },
+    "expected_decision": "fail_closed"
+  }
+]

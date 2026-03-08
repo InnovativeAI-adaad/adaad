@@ -34,7 +34,7 @@ Runtime is the only authoritative implementation root for governance and replay.
 Deterministic replay-sensitive entry points now consume a shared provider abstraction from `runtime/governance/foundation/determinism.py` for UTC clock access and ID/token generation.
 
 - Epoch checkpoint registry/verifier: `runtime/evolution/checkpoint_registry.py`, `runtime/evolution/checkpoint_verifier.py`.
-- Entropy enforcement primitives: `runtime/evolution/entropy_detector.py`, `runtime/evolution/entropy_policy.py` with declared+observed telemetry accounting and per-epoch durable entropy totals.
+- Entropy enforcement primitives: `runtime/evolution/entropy_detector.py`, `runtime/evolution/entropy_policy.py` with declared+observed telemetry accounting, deterministic anomaly triage thresholds (`normal`/`warning`/`escalate`/`critical`), and per-epoch durable entropy totals.
 - Entropy observability helper: `runtime/evolution/telemetry_audit.py` (`get_epoch_entropy_breakdown`).
 - Lineage replay integrity distinguishes verified replay digests (strict/production) from explicit unverified forensic digest recomputation (tamper analysis).
 - Constitutional lineage continuity validates parent mutation IDs plus ancestor chains and emits deterministic `lineage_violation_detected` events before execution.
