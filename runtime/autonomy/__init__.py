@@ -4,6 +4,13 @@
 from .adaptive_budget import AutonomyBudgetEngine, AutonomyBudgetSnapshot
 from .loop import AGMCycleResult, AGMStep, AGMStepInput, AGMStepOutput, AutonomyLoopResult, run_agm_cycle, run_self_check_loop
 from .mutation_scaffold import MutationCandidate, rank_mutation_candidates
+from .reward_learning import (
+    GuardedPromotionPolicy,
+    LearningProfileRegistry,
+    OfflinePolicyEvaluator,
+    RewardOutcomeIngestor,
+    RewardSchema,
+)
 from .roles import AgentRoleSpec, SandboxPermission, default_role_specs
 from .scoreboard import build_scoreboard_views
 
@@ -16,7 +23,12 @@ __all__ = [
     "AGMStepInput",
     "AGMStepOutput",
     "AutonomyLoopResult",
+    "GuardedPromotionPolicy",
+    "LearningProfileRegistry",
     "MutationCandidate",
+    "OfflinePolicyEvaluator",
+    "RewardOutcomeIngestor",
+    "RewardSchema",
     "SandboxPermission",
     "build_scoreboard_views",
     "default_role_specs",
