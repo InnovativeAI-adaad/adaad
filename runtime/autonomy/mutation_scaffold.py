@@ -29,6 +29,8 @@ Senior-grade invariants preserved from v1:
 
 from __future__ import annotations
 
+import hashlib
+from functools import lru_cache
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional
 
@@ -49,6 +51,38 @@ HARD_FLOOR:   float = 0.0
 HARD_CEILING: float = 1.0
 
 ELITISM_BONUS: float = 0.05  # flat score bonus for elite-parent children
+
+
+@lru_cache(maxsize=4096)
+def _stable_text_digest(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+@lru_cache(maxsize=4096)
+def _semantic_feature_from_digest(python_digest: str, python_content: str) -> tuple[float, float, bool]:
+    if not python_content:
+        return 0.0, 0.0, False
+    try:
+        from runtime.evolution.semantic_diff import SemanticDiffEngine as _SDE
+
+        sdiff = _SDE().diff(before_source="", after_source=python_content)
+        if not sdiff.fallback_used:
+            return sdiff.risk_score, sdiff.complexity_score, True
+    except Exception:  # noqa: BLE001 — graceful degradation to baseline scores
+        pass
+    return 0.0, 0.0, False
+
+
+def _tie_break_signals(candidate: "MutationCandidate") -> tuple[float, float, float]:
+    novelty = 0.0
+    novelty_source = candidate.source_context_hash or candidate.mutation_id
+    if novelty_source:
+        novelty_digest = _stable_text_digest(novelty_source)
+        novelty = int(novelty_digest[-8:], 16) / 0xFFFFFFFF
+
+    lineage_distance = float(max(0, candidate.generation)) + (0.5 if candidate.parent_id else 0.0)
+    regression_risk = (float(candidate.risk_score) * 0.7) + (float(candidate.complexity) * 0.3)
+    return novelty, lineage_distance, regression_risk
 
 
 # ---------------------------------------------------------------------------
@@ -200,15 +234,14 @@ def score_candidate(
     semantic_active = False
 
     if candidate.python_content is not None:
-        try:
-            from runtime.evolution.semantic_diff import SemanticDiffEngine as _SDE
-            sdiff = _SDE().diff(before_source="", after_source=candidate.python_content)
-            if not sdiff.fallback_used:
-                effective_risk_score = sdiff.risk_score
-                effective_complexity = sdiff.complexity_score
-                semantic_active = True
-        except Exception:  # noqa: BLE001 — graceful degradation to v1 scores
-            pass
+        python_digest = _stable_text_digest(candidate.python_content)
+        sem_risk, sem_complexity, semantic_active = _semantic_feature_from_digest(
+            python_digest,
+            candidate.python_content,
+        )
+        if semantic_active:
+            effective_risk_score = sem_risk
+            effective_complexity = sem_complexity
 
     # Weight resolution (v2: prefer ScoringWeights; fallback to v1 dict)
     if weights is not None:
@@ -266,6 +299,8 @@ def score_candidate(
 
     score = base_score
 
+    novelty_signal, lineage_distance, regression_risk = _tie_break_signals(candidate)
+
     breakdown: Dict[str, float] = {
         "expected_gain_contrib":      round(eg_contrib, 4),
         "coverage_delta_contrib":     round(cd_contrib, 4),
@@ -275,6 +310,9 @@ def score_candidate(
         "raw_before_clamp":           round(raw, 4),
         "diversity_pressure":         round(diversity_pressure, 4),
         "adjusted_threshold":         round(adjusted_threshold, 4),
+        "novelty_signal":             round(novelty_signal, 6),
+        "lineage_distance":           round(lineage_distance, 4),
+        "regression_risk":            round(regression_risk, 4),
         "semantic_scoring_active":    1.0 if semantic_active else 0.0,
     }
 
@@ -355,13 +393,36 @@ def rank_mutation_candidates(
     Accepts the same optional v2 kwargs as score_candidate; omitting them
     reproduces v1 behaviour identically.
     """
-    scores = [
-        score_candidate(
-            c,
+    indexed_scores = []
+    for idx, candidate in enumerate(candidates):
+        scored = score_candidate(
+            candidate,
             acceptance_threshold=acceptance_threshold,
             weights=weights,
             population_state=population_state,
         )
-        for c in candidates
+        novelty_signal, lineage_distance, regression_risk = _tie_break_signals(candidate)
+        indexed_scores.append(
+            (
+                idx,
+                scored,
+                novelty_signal,
+                lineage_distance,
+                regression_risk,
+            )
+        )
+
+    return [
+        scored
+        for _, scored, _, _, _ in sorted(
+            indexed_scores,
+            key=lambda item: (
+                -item[1].score,
+                -item[2],
+                -item[3],
+                item[4],
+                item[1].mutation_id,
+                item[0],
+            ),
+        )
     ]
-    return sorted(scores, key=lambda item: (-item.score, item.mutation_id))

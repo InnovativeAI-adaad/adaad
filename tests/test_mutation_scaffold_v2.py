@@ -185,3 +185,67 @@ def test_rank_with_v2_kwargs() -> None:
     # Descending score order
     scores = [r.score for r in results]
     assert scores == sorted(scores, reverse=True)
+
+
+def test_rank_tie_break_uses_secondary_signals_and_is_stable() -> None:
+    from runtime.autonomy import mutation_scaffold as ms
+
+    base = dict(expected_gain=0.8, risk_score=0.2, complexity=0.2, coverage_delta=0.1)
+    a = MutationCandidate(mutation_id="a", generation=0, parent_id=None, source_context_hash="ctx-a", **base)
+    b = MutationCandidate(mutation_id="b", generation=2, parent_id="p", source_context_hash="ctx-b", **base)
+    c = MutationCandidate(mutation_id="c", generation=2, parent_id=None, source_context_hash="ctx-c", **base)
+
+    ranked_once = rank_mutation_candidates([a, b, c])
+    ranked_twice = rank_mutation_candidates([a, b, c])
+
+    ids_once = [r.mutation_id for r in ranked_once]
+    ids_twice = [r.mutation_id for r in ranked_twice]
+    assert ids_once == ids_twice
+
+    expected = [
+        candidate.mutation_id
+        for candidate in sorted(
+            [a, b, c],
+            key=lambda item: (
+                -ms._tie_break_signals(item)[0],
+                -ms._tie_break_signals(item)[1],
+                ms._tie_break_signals(item)[2],
+                item.mutation_id,
+            ),
+        )
+    ]
+    assert ids_once == expected
+
+
+def test_semantic_scoring_cache_avoids_repeated_diff_calls(monkeypatch: pytest.MonkeyPatch) -> None:
+    from runtime.autonomy import mutation_scaffold as ms
+
+    calls = {"count": 0}
+
+    class _FakeResult:
+        fallback_used = False
+        risk_score = 0.11
+        complexity_score = 0.22
+
+    class _FakeSDE:
+        def diff(self, before_source: str, after_source: str):
+            calls["count"] += 1
+            return _FakeResult()
+
+    monkeypatch.setattr("runtime.evolution.semantic_diff.SemanticDiffEngine", _FakeSDE)
+    ms._semantic_feature_from_digest.cache_clear()
+
+    candidate = MutationCandidate(
+        mutation_id="sem-cache",
+        expected_gain=0.5,
+        risk_score=0.6,
+        complexity=0.6,
+        coverage_delta=0.5,
+        python_content="def f():\n    return 1\n",
+    )
+
+    score_candidate(candidate)
+    score_candidate(candidate)
+    score_candidate(candidate)
+
+    assert calls["count"] == 1

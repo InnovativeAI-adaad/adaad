@@ -18,11 +18,26 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
 from runtime.evolution.fitness_orchestrator import FitnessOrchestrator
 
 log = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=8192)
+def _cached_json_digest(payload: str) -> str:
+    from runtime.governance.foundation import sha256_prefixed_digest
+
+    return sha256_prefixed_digest(payload)
+
+
+@lru_cache(maxsize=8192)
+def _cached_canonical_json(material_key: str, payload_items: tuple[tuple[str, Any], ...]) -> str:
+    from runtime.governance.foundation import canonical_json
+
+    return canonical_json({"material_key": material_key, "payload": dict(payload_items)})
 
 
 @dataclass
@@ -231,6 +246,12 @@ class FitnessPipeline:
         self._orchestrator = FitnessOrchestrator()
 
     def evaluate(self, mutation_data: Dict[str, Any]) -> Dict[str, Any]:
+        # Deterministic materialization cache key for repeated mutation payloads.
+        material_key = str(mutation_data.get("mutation_id") or mutation_data.get("epoch_id") or "")
+        payload_items = tuple(sorted((str(k), repr(v)) for k, v in mutation_data.items()))
+        canonical_payload = _cached_canonical_json(material_key, payload_items)
+        payload_hash = _cached_json_digest(canonical_payload)
+
         metrics = [e.evaluate(mutation_data) for e in self.evaluators]
         total_weight = sum(m.weight for m in metrics) or 1.0
         legacy_weighted_score = sum(m.score * m.weight for m in metrics) / total_weight
@@ -258,6 +279,7 @@ class FitnessPipeline:
 
         return {
             "overall_score": orchestrator_result.total_score,
+            "material_hash": payload_hash,
             "metrics": [m.__dict__ for m in metrics],
             "breakdown": breakdown,
             "orchestrator": {
