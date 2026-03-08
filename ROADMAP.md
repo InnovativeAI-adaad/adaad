@@ -125,7 +125,7 @@ delta table, governance status, phase transition log.
 `runtime/evolution/evolution_loop.py` — `_evaluate_m603_amendment_gates()`
 
 `RoadmapAmendmentEngine.propose()` wired into the Phase 5 epoch orchestrator.
-After every Nth epoch (configurable via `ADAAD_AMENDMENT_TRIGGER_INTERVAL`,
+After every Nth epoch (configurable via `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL`,
 default 10), the loop evaluates all six prerequisite gates deterministically.
 
 **Prerequisite gates (all evaluated in order; any failure halts without aborting epoch):**

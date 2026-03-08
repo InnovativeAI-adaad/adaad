@@ -315,7 +315,7 @@ print(f"Duration:    {result.duration_seconds:.1f}s")
 | `ADAAD_ENV` | Environment mode. Unknown values halt at boot. | ✅ Always |
 | `ADAAD_CLAUDE_API_KEY` | Anthropic API key for AI mutation proposals. | AI mode |
 | `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY` | HMAC signing key. Required in strict environments. | Production |
-| `ADAAD_AMENDMENT_TRIGGER_INTERVAL` | Epochs between roadmap amendment evaluations. Default: `10`. | Phase 6 |
+| `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` | Epochs between roadmap amendment evaluations. Default: `10`. | Phase 6 |
 | `ADAAD_FEDERATION_HMAC_KEY` | Key material for federated mutation transport. Absent = fail-closed. | Federation |
 | `CRYOVANT_DEV_MODE` | Enables dev-only overrides. Rejected in strict environments. | No |
 

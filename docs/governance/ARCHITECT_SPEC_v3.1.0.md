@@ -114,7 +114,7 @@ emits a governed roadmap amendment proposal if all gates pass.
 | `divergence_count` | `FederatedEvidenceMatrix.divergence_count` | Yes (if federation enabled) |
 | `prediction_accuracy` | `WeightAdaptor.prediction_accuracy` | Yes |
 | `pending_amendments` | `RoadmapAmendmentEngine.list_pending()` count | Yes |
-| `amendment_trigger_interval` | env `ADAAD_AMENDMENT_TRIGGER_INTERVAL`, default `10` | No |
+| `amendment_trigger_interval` | env `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL`, default `10` | No |
 | `roadmap_content` | Current `ROADMAP.md` SHA-256 hash | Yes |
 | `epoch_id` | Current epoch identifier (seeded RNG anchor) | Yes |
 

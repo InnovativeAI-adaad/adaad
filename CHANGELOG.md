@@ -86,7 +86,7 @@ milestones (M6-01 through M6-05) are shipped and the platform advances to v3.1.0
 
 Six-gate prerequisite check (`_evaluate_m603_amendment_gates`) wired into
 `EvolutionLoop.run_epoch()`. After every Nth epoch (default 10, configurable via
-`ADAAD_AMENDMENT_TRIGGER_INTERVAL`), the loop evaluates all gates deterministically;
+`ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL`), the loop evaluates all gates deterministically;
 any failing gate logs the gate ID and continues the epoch without aborting it.
 `EpochResult` gains `amendment_proposed: bool` and `amendment_id: Optional[str]`.
 

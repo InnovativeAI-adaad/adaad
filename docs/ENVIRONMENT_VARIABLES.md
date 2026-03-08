@@ -2,6 +2,8 @@
 
 This page catalogs `ADAAD_*` environment variables currently read by executable ADAAD code (`*.py`) and operational shell wrappers (`*.sh`) in this repository.
 
+> Compatibility note: older historical docs may reference `ADAAD_AMENDMENT_TRIGGER_INTERVAL`; use `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` for all current configuration and automation.
+
 ## Production-safety highlights
 
 - **`ADAAD_METRICS_INCLUDE_FULL_TASKS`**: keep unset/false in production. Enabling it emits full dream task lists in metrics payloads, which increases telemetry volume and can leak sensitive agent identifiers. Use only for short-lived debugging.
@@ -120,7 +122,7 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_PROVIDER_ID` | `'unknown_provider'` | string/JSON per caller contract | runtime/governance engine | `runtime/evolution/baseline.py` |
 | `ADAAD_RECOVERY_TIER` | `unset` | enum string defined by caller | agent/orchestrator packages | `adaad/orchestrator/dispatcher.py` |
 | `ADAAD_REPLAY_MODE` | `'', 'audit', 'off', 'strict', unset` | enum string defined by caller; `strict` requires deterministic provider/seed | runtime/governance engine + agent/orchestrator packages | `runtime/governance/foundation/determinism.py`, `adaad/orchestrator/dispatcher.py` |
-| `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` | `'10'` | numeric string parsed as int; minimum number of successful epochs between roadmap amendment proposal emissions; value is read once at epoch start and held constant for the epoch duration — cannot be modified mid-epoch; values < 1 are rejected with `ValueError` at boot | runtime/autonomy (Phase 6) | `runtime/autonomy/loop.py` (M6-03 integration) |
+| `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` | `'10'` | numeric string parsed as int; minimum number of successful epochs between roadmap amendment proposal emissions; value is read once at epoch start and held constant for the epoch duration — cannot be modified mid-epoch; values < 1 are rejected with `ValueError` at boot | runtime/evolution (Phase 6) | `runtime/evolution/evolution_loop.py` (M6-03 integration) |
 | `ADAAD_REPLAY_PROOF_ALGO` | `unset` | string/JSON per caller contract | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
 | `ADAAD_REPLAY_PROOF_KEYRING_PATH` | `unset` | secret string; required in secured deployments | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
 | `ADAAD_REPLAY_PROOF_KEY_ID` | `'replay-proof-dev'` | secret string; required in secured deployments | runtime/governance engine | `runtime/evolution/replay_attestation.py` |

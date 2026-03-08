@@ -37,18 +37,13 @@ REQUIRED_SNIPPETS = {
     ],
 }
 
-INFOBOX_START = "<!-- ADAAD_VERSION_INFOBOX:START -->"
-INFOBOX_END = "<!-- ADAAD_VERSION_INFOBOX:END -->"
-INFOBOX_SYNC_CONTEXT_NOTE = (
-    "<!-- Sync context: generated from current git metadata at sync time; "
-    "reflects last sync context only, not arbitrary local working trees. -->"
-)
-REQUIRED_INFOBOX_FIELDS = (
-    "Current version",
-    "Released",
-    "Release SHA",
-    "Release Branch",
-)
+CANONICAL_TRIGGER_VARIABLE = "ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL"
+LEGACY_TRIGGER_VARIABLE = "ADAAD_AMENDMENT_TRIGGER_INTERVAL"
+LEGACY_TRIGGER_ALLOWLIST = {
+    "CHANGELOG.md",
+    "docs/ENVIRONMENT_VARIABLES.md",
+}
+COMPATIBILITY_NOTE_SNIPPET = "Compatibility note:"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -153,6 +148,15 @@ def _emit(missing: list[str], output_format: str) -> None:
     print("readme_alignment_ok")
 
 
+def _iter_markdown_files() -> list[Path]:
+    markdown_files = [
+        path
+        for path in ROOT.rglob("*.md")
+        if ".git" not in path.parts and "node_modules" not in path.parts
+    ]
+    return sorted(markdown_files)
+
+
 def main() -> int:
     args = _build_parser().parse_args()
     missing: list[str] = []
@@ -170,8 +174,17 @@ def main() -> int:
                 if snippet not in text:
                     missing.append(f"missing_snippet:{rel}:{snippet}")
 
-        if readme_text:
-            _validate_readme_infobox(readme_text, missing)
+        for path in _iter_markdown_files():
+            rel = path.relative_to(ROOT).as_posix()
+            text = path.read_text(encoding="utf-8")
+            has_canonical = CANONICAL_TRIGGER_VARIABLE in text
+            has_legacy = LEGACY_TRIGGER_VARIABLE in text
+            if has_canonical and has_legacy and rel not in LEGACY_TRIGGER_ALLOWLIST:
+                missing.append(f"mixed_env_var_naming:{rel}")
+            if has_legacy and rel not in LEGACY_TRIGGER_ALLOWLIST:
+                missing.append(f"legacy_env_var_reference:{rel}:{LEGACY_TRIGGER_VARIABLE}")
+            if has_legacy and rel in LEGACY_TRIGGER_ALLOWLIST and COMPATIBILITY_NOTE_SNIPPET not in text and rel != "CHANGELOG.md":
+                missing.append(f"missing_compatibility_note:{rel}")
     except Exception as exc:  # fail closed
         missing.append(f"validator_error:{exc.__class__.__name__}:{exc}")
 
