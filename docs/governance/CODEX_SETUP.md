@@ -107,3 +107,12 @@ PY
 ```
 
 Then run Tier-0 preflight commands exactly as specified in `AGENTS.md`.
+
+## Tier 0 remediation helper policy
+
+Use `python scripts/tier0_remediation.py` to run Tier 0 gate verification and print deterministic next steps.
+
+- The helper intentionally does **not** run `git checkout -b`, `git push`, or `gh pr create`.
+- VCS network operations belong in a separate wrapper script.
+- Optional local-only commit mode is available via `--local-commit` (no network).
+- The helper always prints a deterministic commit message template for operator use.
