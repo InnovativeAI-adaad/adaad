@@ -337,21 +337,80 @@ All Phase 0 Track A audit findings resolved. The platform is now hardened to Inn
 | PR-OPS-01 | H-07, M-02 | Snapshot atomicity + sequence ordering | ✅ |
 | PR-DOCS-01 | C-03 | Federation key registry governance doc | ✅ |
 
-**Next gate:**  tag → ADAAD-7 (PR-7-01..PR-7-05).
+**Next gate:** Phase 7 ✅ closed (2026-03-08, v3.2.0) → Phase 8 · v3.3.0 target
 
 ---
 
-## Measurement targets
+## Phase 8 — Governance Health Dashboard & Telemetry Unification
 
-| Milestone | Metric | Target |
-|-----------|--------|--------|
-| Phase 3 activation | `prediction_accuracy` | > 0.60 by epoch 20 |
-| Phase 3 activation | Acceptance rate | 0.20–0.60 stable |
-| Phase 4 semantic diff | Scoring determinism | 100% identical on identical AST |
-| Phase 5 federation | Cross-repo divergence | 0 divergences per federated epoch ✅ |
-| Phase 6 roadmap self-amendment | ArchitectAgent proposal governed | Human sign-off recorded in ledger |
-| All phases | Evidence matrix | 100% Complete before promotion |
-| All phases | Replay proofs | 0 divergences in CI |
+**Status:** 🔵 planned · **Target:** v3.3.0 · **Requires:** Phase 7 shipped ✅
+
+Phase 8 unifies the telemetry streams from Phase 7 (reviewer reputation), Phase 6
+(autonomous roadmap amendment gates), and Phase 5 (federated convergence) into a
+single authoritative **Governance Health Score** — a real-time, replay-safe composite
+that operators can act on, not just observe.
+
+### M8-01 — GovernanceHealthAggregator
+
+`runtime/governance/health_aggregator.py`
+
+Deterministic composite health score `h ∈ [0.0, 1.0]` derived from four live signals:
+
+| Signal | Weight | Source |
+|---|---|---|
+| `avg_reviewer_reputation` | 0.30 | `ReviewerReputationLedger` via `reviewer_calibration_service()` |
+| `amendment_gate_pass_rate` | 0.25 | `RoadmapAmendmentEngine.list_pending()` + gate verdicts |
+| `federation_divergence_clean` | 0.25 | `FederatedEvidenceMatrix.divergence_count == 0` |
+| `epoch_health_score` | 0.20 | `EpochTelemetry.health_score(last_10)` |
+
+Scores are epoch-scoped; weight vector snapshotted per epoch (same invariant as Phase 7).
+`h < 0.60` triggers `GOVERNANCE_HEALTH_DEGRADED` journal event and Aponi alert badge.
+
+### M8-02 — HealthScore Evidence Binding
+
+Every `GovernanceHealthAggregator` computation emits a `governance_health_snapshot.v1`
+ledger event carrying: `epoch_id`, `health_score`, `signal_breakdown`, `weight_snapshot_digest`,
+`constitution_version`, `scoring_algorithm_version`. Replay-safe: deterministic on identical
+signal inputs and weight snapshot.
+
+### M8-03 — Aponi Governance Health Panel
+
+`GET /governance/health` — read-only endpoint returning current and rolling health scores.
+Aponi dashboard gains a persistent health indicator: green (h ≥ 0.80), amber (0.60–0.80),
+red (< 0.60). Badge is non-dismissible; degraded state surfaces signal breakdown for triage.
+
+### M8-04 — Constitution v0.4.0: `governance_health_floor` Rule
+
+New advisory rule that surfaces `h < 0.60` as a governance telemetry signal. When
+`ADAAD_SEVERITY_ESCALATIONS` promotes it to `blocking`, a degraded health score halts
+new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bumped
+`0.3.0 → 0.4.0`.
+
+**Acceptance criteria:**
+- `h` is deterministic on identical signal inputs ✅ (CI gate)
+- `GOVERNANCE_HEALTH_DEGRADED` event always emitted when `h < 0.60` ✅
+- No signal input can unilaterally drive `h` to 0.0 or 1.0 (weight bounds enforced) ✅
+- `GovernanceGate` remains sole mutation approval surface; health score is advisory ✅
+- Aponi endpoint returns 200 with `constitutional_floor: enforced` field ✅
+
+**PRs planned:** PR-8-01 (aggregator + evidence binding) → PR-8-02 (Aponi panel) → PR-8-03 (constitution v0.4.0)
+
+---
+
+
+
+| Milestone | Metric | Target | Status |
+|-----------|--------|--------|--------|
+| Phase 3 activation | `prediction_accuracy` | > 0.60 by epoch 20 | ✅ |
+| Phase 3 activation | Acceptance rate | 0.20–0.60 stable | ✅ |
+| Phase 4 semantic diff | Scoring determinism | 100% identical on identical AST | ✅ |
+| Phase 5 federation | Cross-repo divergence | 0 divergences per federated epoch | ✅ |
+| Phase 6 roadmap self-amendment | ArchitectAgent proposal governed | Human sign-off recorded in ledger | ✅ |
+| Phase 7 reviewer reputation | Reputation score determinism | Identical on identical ledger state | ✅ |
+| Phase 7 reviewer reputation | Constitutional floor | `CONSTITUTIONAL_FLOOR_MIN_REVIEWERS = 1` always enforced | ✅ |
+| Phase 8 governance health | `avg_reputation` stability | ±0.05 variance over 10-epoch rolling window | 🔵 |
+| All phases | Evidence matrix | 100% Complete before promotion | ✅ |
+| All phases | Replay proofs | 0 divergences in CI | ✅ |
 
 ---
 
