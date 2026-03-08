@@ -36,6 +36,15 @@ These jobs run for every CI execution:
 
 These jobs run only when classifier gates evaluate to `true`:
 
+### Conditional required-check mapping
+
+| Required check | Trigger condition | Selector scope |
+|---|---|---|
+| `strict-replay` | `pr_tier=critical` or replay/ledger flag from PR template | strict deterministic replay verification |
+| `evidence-suite` | governance/runtime/security path changes or replay/ledger impact flag | evidence/sandbox tests |
+| `promotion-suite` | governance/runtime path changes, policy/constitution flag, or `pr_tier=critical` | governance/promotion selectors |
+| `phase7-reputation-gate` | governance/server/relevant UI path changes (`governance/**`, `server.py`, `ui/**`) | reviewer reputation + ledger + pressure + constitutional-floor + reviewer panel endpoint/UI coverage |
+
 - `strict-replay`
   - Runs for `critical` tier or replay/ledger impact flag.
   - Skips for docs-only and tests-only changes.
@@ -43,6 +52,9 @@ These jobs run only when classifier gates evaluate to `true`:
   - Runs when governance/runtime/security paths changed or replay/ledger impact is flagged.
 - `promotion-suite`
   - Runs when governance/runtime paths changed, policy/constitution impact is flagged, or the PR is `critical` tier.
+- `phase7-reputation-gate`
+  - Runs when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`).
+  - Executes the Phase 7 invariant selector set: reviewer reputation scoring, reviewer reputation ledger, review pressure, constitutional-floor coverage, and reviewer panel endpoint/UI coverage.
 
 ## Simplification contract gate (required)
 
@@ -138,6 +150,8 @@ Required jobs (all blocking):
   - Includes a rule-activation assertion that fails when any constitution rule with baseline `severity=blocking` or a `tier_overrides` blocking severity is disabled in `runtime/governance/constitution.yaml`.
 - `replay-strict-validation`
 - `constitution-fingerprint-stability`
+- `reviewer-calibration-validation`
+  - Runs the Phase 7 reviewer calibration selector set (reputation, ledger, review pressure, constitutional-floor, and reviewer panel endpoint/UI coverage).
 
 The terminal `release-gate` job is fail-closed and requires each upstream job result to be `success`; any failure, cancellation, or skip state blocks release gating.
 

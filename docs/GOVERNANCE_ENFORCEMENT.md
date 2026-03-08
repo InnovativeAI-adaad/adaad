@@ -15,20 +15,35 @@ Required branch protections for `main`:
 - Force pushes are disabled.
 - Linear commit history is required.
 
-Required CI checks:
+Required CI checks (branch protection required-check table):
 
-- `pytest tests/ -q`
-- Determinism lint (`python tools/lint_determinism.py ...`) when the lint file is present.
-- Governance suite (`pytest tests/ -k governance -q`)
-- Secret scanning (`Secret Scan / secret-scan` from `.github/workflows/secret_scan.yml`) as a required branch-protection check.
-- Branch protection validation workflow.
-- SPDX header enforcement (`python scripts/check_spdx_headers.py`) — always-on; enforced via `spdx-header-lint` job in `ci.yml`.
+| Required check | Trigger condition | Enforcement |
+|---|---|---|
+| `full-test-suite` (`PYTHONPATH=. pytest tests/ -q`) | Always-on in `.github/workflows/ci.yml` | Blocks merge on any test failure |
+| `governance-tests` (`PYTHONPATH=. pytest tests/ -k governance -q`) | Always-on in `.github/workflows/ci.yml` | Blocks governance regressions |
+| `determinism-lint` (`python tools/lint_determinism.py ...`) | Always-on in `.github/workflows/ci.yml` | Blocks nondeterministic governance/runtime/security changes |
+| `spdx-header-lint` (`python scripts/check_spdx_headers.py`) | Always-on in `.github/workflows/ci.yml` | Blocks SPDX header drift |
+| `phase7-reputation-gate` | Conditional required check when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`) | Runs Phase 7 selector set: reputation, ledger, review pressure, constitutional-floor, reviewer panel endpoint/UI coverage |
+| `Secret Scan / secret-scan` | Always-on via `.github/workflows/secret_scan.yml` | Required branch-protection secret scanning gate |
+| `Branch Protection Check` | Repository branch-protection validation workflow | Fails closed on branch-protection drift |
 
-- `Branch Protection Check` workflow validates required branch settings via GitHub API.
+`Branch Protection Check` workflow validates required branch settings via GitHub API.
 
 - Branch protection check requires `GITHUB_TOKEN` permission `administration: read` (granted by org admin).
 - Branch protection check enforces `required_pull_request_reviews.required_approving_review_count >= 2`.
-- Governance strict release gate (`.github/workflows/governance_strict_release_gate.yml`) executes determinism lint, entropy discipline checks, governance strict-mode validation, strict replay verification, and constitution fingerprint stability on Python 3.11.9.
+- Governance strict release gate (`.github/workflows/governance_strict_release_gate.yml`) executes determinism lint, entropy discipline checks, governance strict-mode validation, strict replay verification, constitution fingerprint stability, and reviewer calibration validation on Python 3.11.9.
+
+Release required-check table (`governance_strict_release_gate.yml`):
+
+| Required check | Trigger condition | Enforcement |
+|---|---|---|
+| `determinism-lint` | Governance/public-readiness release tag or manual dispatch | Fail-closed release prerequisite |
+| `entropy-discipline-checks` | Governance/public-readiness release tag or manual dispatch | Fail-closed release prerequisite |
+| `governance-strict-mode-validation` | Governance/public-readiness release tag or manual dispatch | Fail-closed release prerequisite |
+| `replay-strict-validation` | Governance/public-readiness release tag or manual dispatch | Fail-closed release prerequisite |
+| `constitution-fingerprint-stability` | Governance/public-readiness release tag or manual dispatch | Fail-closed release prerequisite |
+| `reviewer-calibration-validation` | Governance/public-readiness release tag or manual dispatch | Phase 7 fail-closed reviewer calibration invariant gate |
+| `release-gate` | Always (aggregates all upstream strict release jobs) | Fails closed unless every required release job result is `success` |
 
 
 ## Implementation status alignment (v0.70.0)
