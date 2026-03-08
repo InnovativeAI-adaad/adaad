@@ -1,6 +1,6 @@
 {
   "policy_version": "0.3.0",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "tiers": {
     "PRODUCTION": 0,
     "STABLE": 1,
@@ -149,6 +149,17 @@
       "tier_overrides": {},
       "reason": "Expose reviewer calibration context as governance telemetry",
       "validator": "reviewer_calibration"
+    },
+    {
+      "name": "governance_health_floor",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Surfaces GovernanceHealthAggregator h < 0.60 as a governance telemetry signal. When ADAAD_SEVERITY_ESCALATIONS promotes to blocking, a degraded health score halts new amendment proposals until floor is restored. GovernanceGate retains sole mutation approval authority; health score is advisory input only.",
+      "validator": "governance_health_floor",
+      "signals": ["avg_reviewer_reputation", "amendment_gate_pass_rate", "federation_divergence_clean", "epoch_health_score"],
+      "degraded_threshold": 0.60,
+      "phase": 8
     }
   ],
   "resource_bounds_policy": {

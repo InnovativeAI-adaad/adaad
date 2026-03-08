@@ -1,5 +1,40 @@
 # Changelog
 
+## [3.3.0] — 2026-03-08 · Phase 8 Governance Health Dashboard
+
+### Phase 8 — Governance Health Dashboard & Telemetry Unification (SHIPPED)
+
+#### PR-8-01 — GovernanceHealthAggregator + Evidence Binding
+- **New:** `runtime/governance/health_aggregator.py` — deterministic composite health score h ∈ [0.0, 1.0]
+- Signal weights: avg_reviewer_reputation (0.30), amendment_gate_pass_rate (0.25), federation_divergence_clean (0.25), epoch_health_score (0.20)
+- h < 0.60 emits `governance_health_degraded.v1` journal event and Aponi alert
+- `governance_health_snapshot.v1` ledger event on every computation — replay-safe, epoch-scoped
+- Single-node fallback: absent FederatedEvidenceMatrix → federation_divergence_clean = 1.0
+- Authority invariant: GovernanceGate retains sole mutation approval authority; health score advisory only
+- New schema: `schemas/governance_health_snapshot.v1.json`
+- **Tests: 25 new tests passing (T8-01-01..25)**
+
+#### PR-8-02 — Governance Health Service + GET /governance/health Endpoint
+- **New:** `runtime/governance/health_service.py` — standalone service facade
+- **New endpoint:** `GET /governance/health` — health_score, status (green/amber/red), signal_breakdown, weight_snapshot_digest; auth-gated
+- Status bands: green (h ≥ 0.80), amber (0.60–0.80), red (h < 0.60); constitutional_floor: enforced
+- **Tests: 15 new tests passing (T8-02-01..15)**
+
+#### PR-8-03 — Constitution v0.4.0: governance_health_floor Rule
+- **CONSTITUTION_VERSION: 0.3.0 → 0.4.0**
+- New rule: `governance_health_floor` — advisory, tier 0, enabled; degraded_threshold: 0.60
+- Promotable to blocking via ADAAD_SEVERITY_ESCALATIONS
+- New validator `_validate_governance_health_floor` in VALIDATOR_REGISTRY
+- **Tests: 10 new tests passing (T8-03-01..10)**
+
+### CF-1 Fix — Agent State Realigned
+- `.adaad_agent_state.json`: last_completed_pr: PR-PHASE7-05, next_pr: PR-8-04 (Phase 8 complete), Phase 7 checkpoints recorded
+
+### Phase 9 Soulbound Context Whitepaper
+- Whitepaper v2.0 added to docs — fully aligned with ADAAD runtime architecture
+
+
+
 ## [3.2.0] — 2026-03-08 · Phase 7 — Reviewer Reputation & Adaptive Governance Calibration
 
 All five Phase 7 milestones ship in `v3.2.0`. The system now closes the feedback loop
