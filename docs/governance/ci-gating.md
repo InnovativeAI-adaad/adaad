@@ -330,3 +330,23 @@ The following check is added to `governance_strict_release_gate.yml` before v3.1
 
 - **`phase6-roadmap-m6xx-all-shipped`**: M6-01 through M6-05 must all be marked
   `✅ shipped` in `ROADMAP.md`. Any pending milestone → release gate blocks v3.1.0 tag.
+
+---
+
+### Formal Amendment Model Check Gate
+
+| Job | Workflow | Gate type |
+|---|---|---|
+| `amendment-formal-model-check` | `ci.yml` | Formal property check |
+
+**Purpose:** Run bounded formal workflow checks for amendment state transitions whenever PRs touch
+`runtime/`, `security/`, `governance/`, or amendment-specific logic.
+
+**Command set:**
+
+- `PYTHONPATH=. python tools/formal/amendment_state_model.py`
+- `PYTHONPATH=. pytest tests/formal/test_amendment_state_model.py -q`
+
+**Pass condition:** No invariant violation in bounded model exploration; formal model tests pass.
+
+**Fail condition:** Any property violation or test failure blocks CI.

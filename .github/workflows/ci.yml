@@ -20,7 +20,7 @@ jobs:
       governance: ${{ steps.filter.outputs.governance }}
       runtime: ${{ steps.filter.outputs.runtime }}
       security: ${{ steps.filter.outputs.security }}
-      policy_touch: ${{ steps.filter.outputs.policy_touch }}
+      amendment_logic: ${{ steps.filter.outputs.amendment_logic }}
       phase7_reputation_gate: ${{ steps.filter.outputs.phase7_reputation_gate }}
       other: ${{ steps.filter.outputs.other }}
       docs_only: ${{ steps.classify.outputs.docs_only }}
@@ -58,11 +58,12 @@ jobs:
               - 'nexus_setup.py'
             security:
               - 'security/**'
-            policy_touch:
-              - 'governance/governance_policy*.json'
-              - 'runtime/**/policy*.py'
-              - 'tests/**/*policy*.py'
-              - 'tests/fixtures/governance/shadow_replay_ledger.json'
+            amendment_logic:
+              - 'runtime/**/amendment*.py'
+              - 'runtime/**/*amendment*.py'
+              - 'governance/**/*amendment*'
+              - 'tools/formal/**'
+              - 'tests/**/amendment*'
             phase7_reputation_gate:
               - 'governance/**'
               - 'server.py'
@@ -416,6 +417,18 @@ jobs:
       - name: Run Phase 6 federated amendment no-state-inheritance selector
         run: >-
           PYTHONPATH=. pytest tests/governance/federation/test_federated_amendment.py -k "no_state_inheritance" -q
+
+  amendment-formal-model-check:
+    runs-on: ubuntu-latest
+    needs: classify
+    if: needs.classify.outputs.runtime == 'true' || needs.classify.outputs.security == 'true' || needs.classify.outputs.governance == 'true' || needs.classify.outputs.amendment_logic == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Run amendment formal model checker
+        run: PYTHONPATH=. python tools/formal/amendment_state_model.py
+      - name: Run amendment formal model tests
+        run: PYTHONPATH=. pytest tests/formal/test_amendment_state_model.py -q
 
   phase7-reputation-gate:
     runs-on: ubuntu-latest
