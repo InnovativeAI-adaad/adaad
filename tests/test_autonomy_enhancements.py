@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -402,6 +403,62 @@ class AutonomyEnhancementTest(unittest.TestCase):
 
         self.assertEqual(result.completed_steps[-1], AGMStep.STEP_11)
         self.assertNotIn(12, calls)
+
+
+    def test_run_agm_cycle_resumes_plan_and_persists_ledger_progress(self) -> None:
+        from runtime.autonomy.loop import run_agm_cycle
+
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger_path = Path(tmp) / "scoring.jsonl"
+            first = run_agm_cycle(
+                cycle_id="cycle-plan-1",
+                plan_ledger_path=ledger_path,
+                initial_payload={
+                    "strategy_input": {
+                        "goal_backlog": {"stabilize_replay": 1.0},
+                        "mutation_score": 0.4,
+                        "governance_debt_score": 0.2,
+                    },
+                    "plan_completion_signals": {"governance.preconditions_ok": True},
+                    "plan_governance_checks": {"policy_alignment": True, "safety_constraints": True},
+                },
+            )
+            self.assertEqual(first.plan_state.current_step_index, 1)
+
+            second = run_agm_cycle(
+                cycle_id="cycle-plan-2",
+                plan_ledger_path=ledger_path,
+                initial_payload={
+                    "plan_artifact": {
+                        "plan_id": first.plan_artifact.plan_id,
+                        "cycle_id": first.plan_artifact.cycle_id,
+                        "backlog_snapshot": list(first.plan_artifact.backlog_snapshot),
+                        "steps": [
+                            {
+                                "step_id": step.step_id,
+                                "goal_id": step.goal_id,
+                                "milestone": step.milestone,
+                                "success_predicate": step.success_predicate,
+                                "required_governance_checks": list(step.required_governance_checks),
+                            }
+                            for step in first.plan_artifact.steps
+                        ],
+                    },
+                    "plan_state": {
+                        "plan_id": first.plan_state.plan_id,
+                        "current_step_index": first.plan_state.current_step_index,
+                        "completed_step_ids": list(first.plan_state.completed_step_ids),
+                        "progress_notes": list(first.plan_state.progress_notes),
+                    },
+                    "plan_completion_signals": {"goal.stabilize_replay.completed": True},
+                    "plan_governance_checks": {"policy_alignment": True, "safety_constraints": True},
+                },
+            )
+
+            self.assertEqual(second.plan_state.current_step_index, 2)
+            entries = [json.loads(line) for line in ledger_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+            self.assertEqual(len(entries), 2)
+            self.assertEqual(entries[-1]["event"]["payload"]["metrics"]["kind"], "plan_progress")
 
     def test_run_agm_cycle_step_8_revision_loops_and_recovery(self) -> None:
         from runtime.autonomy.loop import AGMStep, AGMStepOutput, run_agm_cycle

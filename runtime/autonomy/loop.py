@@ -7,13 +7,26 @@ import time
 import warnings
 from dataclasses import dataclass
 from enum import IntEnum
+from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from runtime import metrics
 from runtime.autonomy.adaptive_budget import AutonomyBudgetEngine
+from runtime.evolution.agm_event import ScoringEvent
+from runtime.evolution.scoring_ledger import ScoringLedger
 from runtime.governance.foundation.determinism import RuntimeDeterminismProvider, default_provider
+from runtime.intelligence.planning import (
+    PlanArtifact,
+    PlanExecutionState,
+    PlanStep,
+    PlanStepVerifier,
+    as_ledger_metrics,
+    initial_execution_state,
+)
 from runtime.intelligence.router import IntelligenceRouter
 from runtime.intelligence.strategy import StrategyInput
+
+_PLAN_LEDGER_DEFAULT_PATH = Path("security/ledger/scoring.jsonl")
 
 
 @dataclass(frozen=True)
@@ -75,9 +88,89 @@ class AGMCycleResult:
     preflight_passed: bool
     signature_commit_succeeded: bool
     recovery_executed: bool
+    plan_state: PlanExecutionState | None = None
+    plan_artifact: PlanArtifact | None = None
 
 
 AGMStepHandler = Callable[[AGMStepInput], AGMStepOutput]
+
+
+def _build_strategy_input(payload: Mapping[str, Any], cycle_id: str) -> StrategyInput:
+    context = dict(payload.get("strategy_input") or {})
+    return StrategyInput(
+        cycle_id=str(context.get("cycle_id") or cycle_id),
+        mutation_score=float(context.get("mutation_score", payload.get("mutation_score", 0.0)) or 0.0),
+        governance_debt_score=float(context.get("governance_debt_score", 0.0) or 0.0),
+        horizon_cycles=int(context.get("horizon_cycles", 1) or 1),
+        resource_budget=float(context.get("resource_budget", 1.0) or 1.0),
+        goal_backlog=dict(context.get("goal_backlog") or {}),
+        lineage_health=float(context.get("lineage_health", 1.0) or 1.0),
+        signals=dict(context.get("signals") or {}),
+    )
+
+
+def _deserialize_plan_step(payload: Mapping[str, Any]) -> PlanStep:
+    return PlanStep(
+        step_id=str(payload.get("step_id", "")),
+        goal_id=str(payload.get("goal_id", "")),
+        milestone=str(payload.get("milestone", "")),
+        success_predicate=str(payload.get("success_predicate", "")),
+        required_governance_checks=tuple(str(item) for item in payload.get("required_governance_checks", [])),
+    )
+
+
+def _deserialize_plan(payload: Mapping[str, Any]) -> PlanArtifact | None:
+    raw = payload.get("plan_artifact")
+    if not isinstance(raw, Mapping):
+        return None
+    raw_steps = raw.get("steps")
+    if not isinstance(raw_steps, list):
+        return None
+    return PlanArtifact(
+        plan_id=str(raw.get("plan_id", "")),
+        cycle_id=str(raw.get("cycle_id", payload.get("cycle_id", ""))),
+        backlog_snapshot=tuple((str(goal), float(weight)) for goal, weight in raw.get("backlog_snapshot", [])),
+        steps=tuple(_deserialize_plan_step(step) for step in raw_steps if isinstance(step, Mapping)),
+    )
+
+
+def _deserialize_state(payload: Mapping[str, Any], plan: PlanArtifact) -> PlanExecutionState:
+    raw = payload.get("plan_state")
+    if not isinstance(raw, Mapping):
+        return initial_execution_state(plan)
+    return PlanExecutionState(
+        plan_id=str(raw.get("plan_id", plan.plan_id)),
+        current_step_index=int(raw.get("current_step_index", 0)),
+        completed_step_ids=tuple(str(step_id) for step_id in raw.get("completed_step_ids", [])),
+        progress_notes=tuple(str(note) for note in raw.get("progress_notes", [])),
+    )
+
+
+def _to_payload_plan(plan: PlanArtifact) -> dict[str, Any]:
+    return {
+        "plan_id": plan.plan_id,
+        "cycle_id": plan.cycle_id,
+        "backlog_snapshot": [[goal_id, weight] for goal_id, weight in plan.backlog_snapshot],
+        "steps": [
+            {
+                "step_id": step.step_id,
+                "goal_id": step.goal_id,
+                "milestone": step.milestone,
+                "success_predicate": step.success_predicate,
+                "required_governance_checks": list(step.required_governance_checks),
+            }
+            for step in plan.steps
+        ],
+    }
+
+
+def _to_payload_state(state: PlanExecutionState) -> dict[str, Any]:
+    return {
+        "plan_id": state.plan_id,
+        "current_step_index": state.current_step_index,
+        "completed_step_ids": list(state.completed_step_ids),
+        "progress_notes": list(state.progress_notes),
+    }
 
 
 def run_agm_cycle(
@@ -89,6 +182,7 @@ def run_agm_cycle(
     signature_commit_succeeded: bool = True,
     max_revision_iterations: int = 3,
     recovery_action: Callable[[str, AGMStep, str], None] | None = None,
+    plan_ledger_path: Path | None = None,
 ) -> AGMCycleResult:
     if max_revision_iterations < 1:
         raise ValueError("max_revision_iterations_must_be_positive")
@@ -98,6 +192,17 @@ def run_agm_cycle(
     completed_steps: list[AGMStep] = []
     revision_iteration = 0
     recovery_executed = False
+
+    strategy_input = _build_strategy_input(payload, cycle_id)
+    from runtime.intelligence.planning import StrategyPlanner
+
+    plan_builder = StrategyPlanner()
+    plan_artifact = _deserialize_plan(payload)
+    if plan_artifact is None:
+        plan_artifact = plan_builder.build_plan(strategy_input)
+
+    plan_state = _deserialize_state(payload, plan_artifact)
+    verifier = PlanStepVerifier()
 
     for step in AGMStep:
         handler = handlers.get(step)
@@ -166,6 +271,8 @@ def run_agm_cycle(
                         preflight_passed=preflight_passed,
                         signature_commit_succeeded=signature_commit_succeeded,
                         recovery_executed=recovery_executed,
+                        plan_state=plan_state,
+                        plan_artifact=plan_artifact,
                     )
                 revision_iteration += 1
                 output = handler(
@@ -190,19 +297,57 @@ def run_agm_cycle(
                 recovery_executed = True
             break
 
+    completion_signals = dict(payload.get("plan_completion_signals") or {})
+    governance_checks = dict(payload.get("plan_governance_checks") or {})
+    verification = None
+    if plan_artifact.steps and plan_state.current_step_index < len(plan_artifact.steps):
+        active_step = plan_artifact.steps[plan_state.current_step_index]
+        verification = verifier.verify_step_completion(
+            step=active_step,
+            completion_signals=completion_signals,
+            governance_checks=governance_checks,
+        )
+        if verification.ok:
+            plan_state = PlanExecutionState(
+                plan_id=plan_state.plan_id,
+                current_step_index=plan_state.current_step_index + 1,
+                completed_step_ids=plan_state.completed_step_ids + (active_step.step_id,),
+                progress_notes=plan_state.progress_notes + (f"{cycle_id}:{verification.reason}",),
+            )
+
+    payload["plan_artifact"] = _to_payload_plan(plan_artifact)
+    payload["plan_state"] = _to_payload_state(plan_state)
+
+    decision = str(payload.get("decision", "hold"))
+    ledger = ScoringLedger(path=plan_ledger_path or _PLAN_LEDGER_DEFAULT_PATH)
+    ledger.append(
+        ScoringEvent(
+            mutation_id=f"{cycle_id}:{plan_state.current_step_index}",
+            score=float(payload.get("mutation_score", 0.0)),
+            metrics=as_ledger_metrics(
+                plan=plan_artifact,
+                state=plan_state,
+                decision=decision,
+                verification=verification,
+            ),
+        )
+    )
+
     return AGMCycleResult(
         loop_result=AutonomyLoopResult(
             ok=bool(payload.get("all_actions_ok", True)),
             post_conditions_passed=bool(payload.get("post_conditions_passed", True)),
             total_duration_ms=int(payload.get("total_duration_ms", 0)),
             mutation_score=float(payload.get("mutation_score", 0.0)),
-            decision=str(payload.get("decision", "hold")),
+            decision=decision,
         ),
         completed_steps=tuple(completed_steps),
         revision_iterations=revision_iteration,
         preflight_passed=preflight_passed,
         signature_commit_succeeded=signature_commit_succeeded,
         recovery_executed=recovery_executed,
+        plan_state=plan_state,
+        plan_artifact=plan_artifact,
     )
 
 

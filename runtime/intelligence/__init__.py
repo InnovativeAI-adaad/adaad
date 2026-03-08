@@ -8,6 +8,16 @@ from runtime.intelligence.llm_provider import (
     RetryPolicy,
     load_provider_config,
 )
+from runtime.intelligence.planning import (
+    PlanArtifact,
+    PlanExecutionState,
+    PlanStep,
+    PlanStepVerifier,
+    PlanVerificationResult,
+    StrategyPlanner,
+    as_ledger_metrics,
+    initial_execution_state,
+)
 from runtime.intelligence.proposal import Proposal, ProposalModule, ProposalTargetFile
 from runtime.intelligence.proposal_adapter import ProposalAdapter
 from runtime.intelligence.router import IntelligenceRouter, RoutedIntelligenceDecision
@@ -20,14 +30,22 @@ __all__ = [
     "LLMProviderClient",
     "LLMProviderConfig",
     "LLMProviderResult",
+    "PlanArtifact",
+    "PlanExecutionState",
+    "PlanStep",
+    "PlanStepVerifier",
+    "PlanVerificationResult",
     "Proposal",
     "ProposalModule",
     "ProposalAdapter",
     "ProposalTargetFile",
     "RetryPolicy",
     "RoutedIntelligenceDecision",
+    "StrategyPlanner",
     "StrategyDecision",
     "StrategyInput",
     "StrategyModule",
+    "as_ledger_metrics",
+    "initial_execution_state",
     "load_provider_config",
 ]
