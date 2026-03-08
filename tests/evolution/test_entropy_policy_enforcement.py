@@ -2,7 +2,12 @@
 
 import pytest
 
-from runtime.evolution.entropy_policy import EntropyPolicy, EntropyPolicyViolation
+from runtime.evolution.entropy_policy import (
+    ENTROPY_REASON_TAXONOMY,
+    EntropyAnomalyThresholds,
+    EntropyPolicy,
+    EntropyPolicyViolation,
+)
 
 
 def test_entropy_policy_enforce_passes_at_limit() -> None:
@@ -53,3 +58,37 @@ def test_entropy_policy_enforce_defaults_declared_bits_to_mutation_bits_when_omi
     assert verdict["declared_bits"] == 10
     assert verdict["observed_bits"] == 3
     assert verdict["mutation_bits"] == 13
+
+
+def test_entropy_anomaly_thresholds_classify_deterministically() -> None:
+    thresholds = EntropyAnomalyThresholds(monitor_bits=1, investigate_bits=5, block_bits=9)
+
+    assert thresholds.classify(observed_bits=0) == {"triage_level": "none", "triage_reason": "anomaly_not_detected"}
+    assert thresholds.classify(observed_bits=1) == {
+        "triage_level": "monitor",
+        "triage_reason": "anomaly_observed_bits_monitor_threshold_reached",
+    }
+    assert thresholds.classify(observed_bits=5) == {
+        "triage_level": "investigate",
+        "triage_reason": "anomaly_observed_bits_investigate_threshold_reached",
+    }
+    assert thresholds.classify(observed_bits=9) == {
+        "triage_level": "block",
+        "triage_reason": "anomaly_observed_bits_block_threshold_reached",
+    }
+
+
+def test_entropy_reason_taxonomy_contains_policy_and_triage_reasons() -> None:
+    expected = {
+        "ok",
+        "entropy_policy_disabled",
+        "entropy_budget_exceeded",
+        "epoch_entropy_budget_exceeded",
+        "mutation_and_epoch_entropy_budget_exceeded",
+        "anomaly_not_detected",
+        "anomaly_observed_bits_monitor_threshold_reached",
+        "anomaly_observed_bits_investigate_threshold_reached",
+        "anomaly_observed_bits_block_threshold_reached",
+    }
+
+    assert expected.issubset(ENTROPY_REASON_TAXONOMY)
