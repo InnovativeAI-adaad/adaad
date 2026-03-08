@@ -3,7 +3,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from runtime.governance.gate import GateAxisResult, GovernanceGate
+from runtime.governance.gate import (
+    GOVERNANCE_DECISION_SCHEMA,
+    DeterministicAxisEvaluator,
+    GateAxisResult,
+    GovernanceGate,
+    canonical_evaluator_order,
+    declared_policy_artifact_rule_ids,
+    registered_runtime_check_ids,
+)
 
 
 @dataclass(frozen=True)
@@ -101,3 +109,61 @@ def test_governance_gate_decision_id_is_deterministic_for_same_inputs() -> None:
 
     assert first.to_payload() == second.to_payload()
     assert first.decision_id == second.decision_id
+
+
+def test_governance_gate_emits_declared_runtime_checks_when_axis_not_supplied() -> None:
+    gate = GovernanceGate(
+        law_enforcer=lambda _ctx: _LawDecisionStub(
+            passed=True,
+            decision="pass",
+            reason_codes=["pass"],
+            failed_rules=[],
+        ),
+        tx_writer=lambda _tx_type, _payload: {},
+    )
+
+    decision = gate.approve_mutation(
+        mutation_id="governance-gate-epoch-4",
+        mutation_payload={"mutation_id": "governance-gate-epoch-4"},
+        mutation_context={"rule_outcomes": {"signature_required": {"ok": False, "reason": "invalid_signature"}}},
+    )
+
+    assert decision.axis_results
+    observed = {row.rule_id for row in decision.axis_results}
+    assert observed == registered_runtime_check_ids()
+    signature_row = next(row for row in decision.axis_results if row.rule_id == "signature_required")
+    assert signature_row.ok is False
+    assert signature_row.reason == "invalid_signature"
+
+
+def test_canonical_evaluator_order_is_axis_then_rule_id() -> None:
+    ordered = canonical_evaluator_order(
+        [
+            DeterministicAxisEvaluator(axis="z", rule_id="r3", probe=lambda: (True, "ok")),
+            DeterministicAxisEvaluator(axis="a", rule_id="r2", probe=lambda: (True, "ok")),
+            DeterministicAxisEvaluator(axis="a", rule_id="r1", probe=lambda: (True, "ok")),
+        ]
+    )
+    assert [(row.axis, row.rule_id) for row in ordered] == [("a", "r1"), ("a", "r2"), ("z", "r3")]
+
+
+def test_governance_decision_schema_contains_required_fields() -> None:
+    required = set(GOVERNANCE_DECISION_SCHEMA["required"])
+    assert {
+        "approved",
+        "decision",
+        "mutation_id",
+        "trust_mode",
+        "reason_codes",
+        "failed_rules",
+        "axis_results",
+        "human_override",
+        "decision_id",
+        "gate_mode",
+    } <= required
+
+
+def test_declared_policy_artifacts_map_to_registered_runtime_checks() -> None:
+    declared = declared_policy_artifact_rule_ids()
+    registered = registered_runtime_check_ids()
+    assert declared == registered

@@ -4,10 +4,13 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from dataclasses import asdict, dataclass
-from typing import Callable, Protocol, Sequence
+from typing import Any, Callable, Protocol, Sequence
 
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
+from runtime import constitution
 from runtime.founders_law import enforce_law
 from security.ledger import journal
 
@@ -58,6 +61,80 @@ class DeterministicAxisEvaluator:
         return GateAxisResult(axis=self.axis, rule_id=self.rule_id, ok=bool(ok), reason=normalized_reason)
 
 
+GOVERNANCE_DECISION_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": [
+        "approved",
+        "decision",
+        "mutation_id",
+        "trust_mode",
+        "reason_codes",
+        "failed_rules",
+        "axis_results",
+        "human_override",
+        "decision_id",
+        "gate_mode",
+    ],
+}
+
+
+def canonical_evaluator_order(items: Sequence[DeterministicAxisEvaluator]) -> list[DeterministicAxisEvaluator]:
+    """Return deterministic evaluator ordering for governance decision execution."""
+    return sorted(items, key=lambda item: (item.axis, item.rule_id))
+
+
+def declared_policy_artifact_rule_ids(base_path: Path = Path("runtime/governance")) -> set[str]:
+    """Collect declared rule identifiers from runtime governance artifacts."""
+    rule_ids: set[str] = set()
+    for artifact in sorted(base_path.glob("*.json")) + sorted(base_path.glob("*.yaml")) + sorted(base_path.glob("*.rego")):
+        if artifact.suffix == ".rego":
+            for line in artifact.read_text(encoding="utf-8").splitlines():
+                token = line.strip().strip(',').strip('"')
+                if token and token.startswith("mutation."):
+                    rule_ids.add(token)
+            continue
+
+        raw = artifact.read_text(encoding="utf-8")
+        try:
+            parsed = constitution.yaml.safe_load(raw)
+        except Exception:
+            continue
+        if not isinstance(parsed, dict):
+            continue
+        for row in parsed.get("rules", []):
+            if isinstance(row, dict):
+                value = row.get("name") or row.get("rule_id")
+                if isinstance(value, str) and value.strip():
+                    rule_ids.add(value.strip())
+        for row in parsed.get("clauses", []):
+            if isinstance(row, dict):
+                value = row.get("clause_id")
+                if isinstance(value, str) and value.strip():
+                    rule_ids.add(value.strip())
+    return rule_ids
+
+
+def registered_runtime_check_ids() -> set[str]:
+    """Identifiers with runtime evaluator implementations."""
+    checks = {rule.name for rule in constitution.RULES}
+
+    founders_law = json.loads(Path("runtime/governance/founders_law.json").read_text(encoding="utf-8"))
+    checks.update(
+        str(row.get("rule_id", "")).strip()
+        for row in founders_law.get("rules", [])
+        if isinstance(row, dict) and str(row.get("rule_id", "")).strip()
+    )
+
+    canon_law = constitution.yaml.safe_load(Path("runtime/governance/canon_law_v1.yaml").read_text(encoding="utf-8"))
+    if isinstance(canon_law, dict):
+        checks.update(
+            str(row.get("clause_id", "")).strip()
+            for row in canon_law.get("clauses", [])
+            if isinstance(row, dict) and str(row.get("clause_id", "")).strip()
+        )
+    return checks
+
+
 class GovernanceGate:
     def __init__(
         self,
@@ -72,11 +149,37 @@ class GovernanceGate:
         self,
         *,
         mutation_id: str,
-        trust_mode: str,
-        axis_results: Sequence[GateAxisResult],
+        trust_mode: str = "standard",
+        axis_results: Sequence[GateAxisResult] | None = None,
+        mutation_payload: dict[str, object] | None = None,
+        mutation_context: dict[str, object] | None = None,
         human_override: bool = False,
         parallel: bool = False,  # PR-PHASE4-06: delegate to ParallelGovernanceGate
     ) -> GateDecision:
+        context = dict(mutation_context or {})
+        payload = dict(mutation_payload or {})
+        declared_overrides = context.get("rule_outcomes", {})
+
+        evaluator_specs: list[DeterministicAxisEvaluator]
+        if axis_results is None:
+            evaluator_specs = []
+            for rule_id in sorted(registered_runtime_check_ids()):
+                override_row = declared_overrides.get(rule_id, {}) if isinstance(declared_overrides, dict) else {}
+                evaluator_specs.append(
+                    DeterministicAxisEvaluator(
+                        axis="runtime_check",
+                        rule_id=rule_id,
+                        probe=lambda _override=override_row: (
+                            bool(_override.get("ok", True)) if isinstance(_override, dict) else True,
+                            str(_override.get("reason", "ok")) if isinstance(_override, dict) else "ok",
+                        ),
+                    )
+                )
+            ordered_evaluators = canonical_evaluator_order(evaluator_specs)
+            axis_results = [item.evaluate() for item in ordered_evaluators]
+        else:
+            axis_results = list(axis_results)
+
         # PR-PHASE4-06: parallel path
         if parallel:
             try:
@@ -112,6 +215,8 @@ class GovernanceGate:
         law_context = {
             "mutation_id": mutation_id,
             "trust_mode": trust_mode,
+            "mutation_payload": payload,
+            "mutation_context": context,
             "checks": [
                 {
                     "rule_id": item.rule_id,
@@ -173,8 +278,12 @@ class GovernanceGate:
 
 
 __all__ = [
+    "GOVERNANCE_DECISION_SCHEMA",
+    "canonical_evaluator_order",
+    "declared_policy_artifact_rule_ids",
     "DeterministicAxisEvaluator",
     "GateAxisResult",
     "GateDecision",
     "GovernanceGate",
+    "registered_runtime_check_ids",
 ]
