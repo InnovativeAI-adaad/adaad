@@ -145,7 +145,9 @@ class EvolutionLoop:
         self._entropy_gate     = EntropyFastGate()
         self._chain_predecessor: str = self._load_chain_tip()
         self._epoch_count      = 0
-        self._health_scores: List[float] = []
+        self._health_scores:   List[float] = []
+        # CF-2 fix: track last epoch score for E/E mode selection (see run_epoch)
+        self._last_epoch_health_score: float = 0.0
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -156,11 +158,14 @@ class EvolutionLoop:
         _preferred = self._landscape.recommended_agent()
 
         # Phase 0b: Mode selection
+        # CF-2 fix: use internally tracked score from previous epoch.
+        # Prior implementation called getattr(context, "prior_epoch_score", 0.0)
+        # which always returned 0.0 (CodebaseContext has no such field), causing
+        # the controller to never exceed EXPLOIT_TRIGGER_SCORE and lock in EXPLORE.
         is_plateau        = self._landscape.is_plateau()
-        prior_epoch_score = float(getattr(context, "prior_epoch_score", 0.0) or 0.0)
         evolution_mode    = self._controller.select_mode(
             epoch_id=epoch_id,
-            epoch_score=prior_epoch_score,
+            epoch_score=self._last_epoch_health_score,
             is_plateau=is_plateau,
         )
 
@@ -259,13 +264,24 @@ class EvolutionLoop:
             accepted_count=accepted_count,
             total_candidates=total_candidates,
         )
+        # CF-2 fix: persist this epoch's health score so the NEXT epoch's
+        # select_mode call receives a real signal instead of a stale 0.0.
+        self._last_epoch_health_score = health_score
 
         # Phase 4: Adapt weights
         outcomes        = self._build_outcomes(all_scores)
         updated_weights = self._adaptor.adapt(outcomes)
 
+        # CF-3 fix: always use simulate=True (heuristic mode).
+        # Prior code passed simulate=self._simulate which is False in production.
+        # When simulate=False, build_penalty_outcomes_from_scores sets
+        # actually_risky=None for all outcomes (awaiting post-merge signal that
+        # is never injected). PenaltyAdaptor._compute_risk_rate then returns 0.0
+        # (no valid signals), driving both penalty weights to the constitutional
+        # floor (0.05) after 116 epochs. The heuristic (simulate=True) is the
+        # correct baseline signal until real post-merge injection is wired.
         penalty_outcomes = build_penalty_outcomes_from_scores(
-            all_scores, simulate=self._simulate
+            all_scores, simulate=True
         )
         if hasattr(self._adaptor, "_penalty_adaptor"):
             updated_weights = self._adaptor._penalty_adaptor.adapt(
