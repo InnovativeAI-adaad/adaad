@@ -71,6 +71,7 @@ from runtime.evolution.proposal_engine import ProposalEngine, ProposalRequest
 from runtime.intelligence.proposal import Proposal
 from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
+from runtime.governance.debt_ledger import GovernanceDebtLedger
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
 from security.ledger import journal
 
@@ -196,6 +197,7 @@ class EvolutionLoop:
         bandit_selector: Optional[AgentBanditSelector] = None,
         market_integrator: Optional[MarketFitnessIntegrator] = None,
         proposal_engine: Optional[ProposalEngine] = None,
+        debt_ledger: Optional[GovernanceDebtLedger] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -235,6 +237,11 @@ class EvolutionLoop:
         # resulting Proposal is bridged to a MutationCandidate that enters the same
         # governed pipeline. Noop proposals (empty real_diff) are silently skipped.
         self._proposal_engine: Optional[ProposalEngine] = proposal_engine
+        # Phase 15: GovernanceDebtLedger — accumulate constitutional warning verdicts
+        # per epoch; compound_debt_score fed into ProposalRequest.context (PR-15-01).
+        # Optional; if not injected, governance_debt_score stays 0.0 (Phase 14 behaviour).
+        self._debt_ledger: Optional[GovernanceDebtLedger] = debt_ledger
+        self._last_debt_score: float = 0.0
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
@@ -356,7 +363,7 @@ class EvolutionLoop:
                     "last_health_score":       float(self._last_epoch_health_score),
                     # Standard ProposalEngine StrategyInput fields
                     "mutation_score":          float(self._adaptor.prediction_accuracy),
-                    "governance_debt_score":   0.0,   # Phase 15: wire GovernanceDebtLedger
+                    "governance_debt_score":   float(self._last_debt_score),  # Phase 15-01: live
                     "lineage_health":          1.0,   # Phase 15: wire ledger proximity mean
                 }
                 _engine_req = ProposalRequest(
@@ -563,6 +570,29 @@ class EvolutionLoop:
                 )
             except Exception:  # noqa: BLE001
                 pass
+
+        # Phase 5f: GovernanceDebtLedger accumulation (PR-15-01)
+        # Extract warning-tier verdicts from all_scores and accumulate compound debt.
+        # The resulting compound_debt_score is stored for the next epoch's
+        # ProposalRequest.context (governance_debt_score field).
+        if self._debt_ledger is not None:
+            try:
+                # Collect warning verdicts: scores that were not accepted and carry
+                # a named risk tag (agent_origin + mutation_id as rule proxy).
+                warning_verdicts = [
+                    {"rule": s.agent_origin or "unknown", "epoch_id": epoch_id}
+                    for s in all_scores
+                    if not s.accepted
+                ]
+                debt_snapshot = self._debt_ledger.accumulate_epoch_verdicts(
+                    epoch_id=epoch_id,
+                    epoch_index=self._epoch_count,
+                    warning_verdicts=warning_verdicts,
+                    agent_id="evolution_loop",
+                )
+                self._last_debt_score = float(debt_snapshot.compound_debt_score)
+            except Exception:  # noqa: BLE001
+                pass  # debt ledger failure must never halt the epoch
 
         # Top-5 IDs
         unique_ids: List[str] = []
