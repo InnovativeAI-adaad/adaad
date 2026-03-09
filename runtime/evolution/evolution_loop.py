@@ -132,6 +132,8 @@ class EpochResult:
     live_market_score:      float      = 0.0
     market_confidence:      float      = 0.0
     market_is_synthetic:    bool       = True
+    # Phase 13 / Track 11-B: consecutive synthetic epoch count (PR-13-B-01)
+    consecutive_synthetic_market_epochs: int = 0
 
 
 # ---------------------------------------------------------------------------
@@ -297,12 +299,14 @@ class EvolutionLoop:
         _market_live_score: float = 0.0
         _market_confidence: float = 0.0
         _market_is_synthetic: bool = True
+        _market_consec_synthetic: int = 0
         if self._market_integrator is not None:
             try:
                 _mkt_result = self._market_integrator.integrate(epoch_id=epoch_id)
-                _market_live_score   = _mkt_result.live_market_score
-                _market_confidence   = _mkt_result.confidence
-                _market_is_synthetic = _mkt_result.is_synthetic
+                _market_live_score        = _mkt_result.live_market_score
+                _market_confidence        = _mkt_result.confidence
+                _market_is_synthetic      = _mkt_result.is_synthetic
+                _market_consec_synthetic  = _mkt_result.consecutive_synthetic_epochs
             except Exception:  # noqa: BLE001
                 pass  # synthetic defaults retained
 
@@ -512,6 +516,7 @@ class EvolutionLoop:
             live_market_score      = _market_live_score,
             market_confidence      = _market_confidence,
             market_is_synthetic    = _market_is_synthetic,
+            consecutive_synthetic_market_epochs = _market_consec_synthetic,
         )
 
     def _evaluate_m603_amendment_gates(

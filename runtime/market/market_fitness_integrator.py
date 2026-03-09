@@ -36,13 +36,17 @@ class MarketEnrichmentRecord:
 @dataclass(frozen=True)
 class IntegrationResult:
     """Result returned by MarketFitnessIntegrator.integrate()."""
-    epoch_id:          str
-    live_market_score: float
-    confidence:        float
-    is_synthetic:      bool
-    adapter_id:        str
-    lineage_digest:    str
-    signal_source:     str
+    epoch_id:                    str
+    live_market_score:           float
+    confidence:                  float
+    is_synthetic:                bool
+    adapter_id:                  str
+    lineage_digest:              str
+    signal_source:               str
+    # Phase 13 / Track 11-B: consecutive synthetic epoch counter (PR-13-B-01).
+    # Reflects the running count *including* this epoch.  Reset to 0 on any
+    # non-synthetic reading.  Used by market_signal_integrity_invariant.
+    consecutive_synthetic_epochs: int = 0
 
 
 class MarketFitnessIntegrator:
@@ -56,6 +60,8 @@ class MarketFitnessIntegrator:
         self._journal_fn           = journal_fn
         self._fallback             = fallback_score
         self._last_record: Optional[MarketEnrichmentRecord] = None
+        # Phase 13 / Track 11-B: running synthetic epoch counter (PR-13-B-01)
+        self._consecutive_synthetic: int = 0
 
     # ------------------------------------------------------------------
     # Primary API: integrate() -- used by PR-10-02 tests + EvolutionLoop
@@ -81,6 +87,23 @@ class MarketFitnessIntegrator:
                 lineage_digest="sha256:" + "0" * 64,
                 signal_source="synthetic",
             )
+
+        # Phase 13 / Track 11-B: update consecutive synthetic counter
+        if result.is_synthetic:
+            self._consecutive_synthetic += 1
+        else:
+            self._consecutive_synthetic = 0
+        # Rebuild result with the updated counter (frozen dataclass — new instance)
+        result = IntegrationResult(
+            epoch_id=result.epoch_id,
+            live_market_score=result.live_market_score,
+            confidence=result.confidence,
+            is_synthetic=result.is_synthetic,
+            adapter_id=result.adapter_id,
+            lineage_digest=result.lineage_digest,
+            signal_source=result.signal_source,
+            consecutive_synthetic_epochs=self._consecutive_synthetic,
+        )
 
         if self._fitness_orchestrator is not None:
             try:
@@ -152,6 +175,15 @@ class MarketFitnessIntegrator:
         return enriched
 
     @property
+    def consecutive_synthetic_epochs(self) -> int:
+        """Return the current consecutive-synthetic-epoch count (Phase 13 / Track 11-B)."""
+        return self._consecutive_synthetic
+
+    def reset_synthetic_counter(self) -> None:
+        """Reset the consecutive synthetic counter (e.g. after operator acknowledgement)."""
+        self._consecutive_synthetic = 0
+
+    @property
     def last_enrichment(self) -> Optional[MarketEnrichmentRecord]:
         return self._last_record
 
@@ -192,12 +224,13 @@ class MarketFitnessIntegrator:
             return
         try:
             self._journal_fn(_INTEGRATE_EVENT, {
-                "epoch_id":          result.epoch_id,
-                "live_market_score": result.live_market_score,
-                "confidence":        result.confidence,
-                "is_synthetic":      result.is_synthetic,
-                "lineage_digest":    result.lineage_digest,
-                "signal_source":     result.signal_source,
+                "epoch_id":                       result.epoch_id,
+                "live_market_score":              result.live_market_score,
+                "confidence":                     result.confidence,
+                "is_synthetic":                   result.is_synthetic,
+                "lineage_digest":                 result.lineage_digest,
+                "signal_source":                  result.signal_source,
+                "consecutive_synthetic_epochs":   result.consecutive_synthetic_epochs,
             })
         except Exception as exc:  # noqa: BLE001
             log.warning("MarketFitnessIntegrator: integrate journal -- %s", exc)
