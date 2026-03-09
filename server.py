@@ -143,6 +143,58 @@ def _assert_gate_open() -> Dict[str, Any]:
     return gate
 
 
+_REPORT_VERSION_PATH = ROOT / "governance" / "report_version.json"
+_VERSION_PATH = ROOT / "VERSION"
+
+
+def _load_live_version() -> Dict[str, Any]:
+    """Read VERSION + report_version.json + constitution constant.
+
+    Never raises — returns degraded payload on any read failure so the
+    dashboard always gets a parseable JSON response.
+    """
+    adaad_version = "unknown"
+    try:
+        adaad_version = _VERSION_PATH.read_text(encoding="utf-8").strip()
+    except OSError:
+        pass
+
+    report: Dict[str, Any] = {}
+    try:
+        report = json.loads(_REPORT_VERSION_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    # Import constitution version at call-time to pick up any live reload
+    constitution_version = "unknown"
+    try:
+        from runtime.constitution import CONSTITUTION_VERSION as _CV
+        constitution_version = _CV
+    except Exception:  # pragma: no cover
+        pass
+
+    return {
+        "adaad_version": adaad_version,
+        "constitution_version": constitution_version,
+        "last_sync_sha": report.get("last_sync_sha", "unknown"),
+        "last_sync_date": report.get("last_sync_date", "unknown"),
+        "report_version": report.get("report_version", adaad_version),
+        "protocol": GATE_PROTOCOL,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@app.get("/api/version")
+def api_version() -> Dict[str, Any]:
+    """Live version snapshot — no auth required, no gate check.
+
+    Returns adaad_version, constitution_version, last_sync_sha, last_sync_date.
+    The Aponi UI fetches this on every hardRefresh to display the version
+    banner accurately rather than relying on static protocol strings.
+    """
+    return _load_live_version()
+
+
 @app.get("/api/health")
 def health() -> dict[str, Any]:
     gate = _read_gate_state()

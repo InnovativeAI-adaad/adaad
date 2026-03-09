@@ -317,7 +317,8 @@
         <div class="chip" title="Nexus gate status" id="statusChip">
           <span class="dot" id="statusDot"></span>
           <span id="statusText">pending</span>
-          <span class="badge" id="protoBadge">v—</span>
+          <span class="badge" id="versionBadge" title="ADAAD live version">v—</span>
+          <span class="badge" id="protoBadge" title="Protocol version" style="opacity:0.6">proto—</span>
         </div>
         <button class="btn" id="btnReconnect" title="Refresh now">Refresh</button>
         <button class="btn primary" id="btnRunCycle" title="Reserved for mutation cycle endpoint">Run cycle</button>
@@ -845,6 +846,28 @@
       state.logs.push(`[poll] health`);
       await probeHealth(true);
 
+      // --- Live version fetch (non-fatal, always resolves) ---
+      state.logs.push(`[poll] version`);
+      try{
+        const _vres = await fetch(`${state.baseUrl}/api/version`, { method:"GET" });
+        if(_vres.ok){
+          const _vd = await _vres.json().catch(() => null);
+          if(_vd && typeof _vd === "object"){
+            const _av = String(_vd.adaad_version || "unknown");
+            const _cv = String(_vd.constitution_version || "—");
+            const _sha = String(_vd.last_sync_sha || "");
+            const _vb = $("#versionBadge");
+            if(_vb) _vb.textContent = `v${_av}`;
+            const _sl = $("#subline");
+            if(_sl) _sl.textContent =
+              `ADAAD v${_av}  ·  Constitution v${_cv}${_sha ? "  ·  " + _sha : ""}`;
+            state.lastVersion = _vd;
+          }
+        }
+      }catch(_ve){
+        state.logs.push(`[warn] version: ${_ve && _ve.message ? _ve.message : "unavailable"}`);
+      }
+
       state.logs.push(`[poll] handshake`);
       state.lastHandshake = await getJson("/handshake");
 
@@ -854,15 +877,23 @@
       state.logs.push(`[poll] agents`);
       state.lastAgents = await getJson("/agents");
 
-      const pv = state.lastProtocol?.version || state.lastHealth?.protocol || state.lastHealth?.protocol_version || "—";
-      $("#protoBadge").textContent = `v${pv}`;
+      const pv = state.lastProtocol?.version || state.lastHealth?.protocol
+                 || state.lastHealth?.protocol_version || "—";
+      const _pb = $("#protoBadge");
+      if(_pb) _pb.textContent = `proto${pv}`;
       state.connected = true;
       state.lastEventAt = Date.now();
       renderGate();
       render();
     }catch(e){
       state.connected = false;
-      state.logs.push(`[err] ${String(e && e.message ? e.message : e)}`);
+      // Sanitize: never surface raw internal error codes in the visible log
+      const _raw = (e && e.message) ? e.message : String(e);
+      const _safe = _raw
+        .replace(/invalid_json_response[^)]*\)*/gi, "server_response_error")
+        .replace(/unparsabl[a-z]*/gi, "parse_error")
+        .replace(/json_response_must_be_object/gi, "response_format_error");
+      state.logs.push(`[err] ${_safe}`);
       renderGate();
       render();
     }

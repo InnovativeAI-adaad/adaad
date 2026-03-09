@@ -213,11 +213,13 @@ class LLMProviderClient:
     def _parse_and_validate(self, raw_text: str) -> dict[str, Any]:
         try:
             parsed = json.loads(raw_text)
-        except Exception as exc:  # noqa: BLE001
-            raise ValueError(f"invalid_json_response: {self._safe_error_text(exc)}") from None
+        except Exception:  # noqa: BLE001
+            # Opaque code — never expose raw parser exception text to callers or state dicts
+            raise ValueError("llm_response_not_json") from None
 
         if not isinstance(parsed, dict):
-            raise ValueError("json_response_must_be_object")
+            # Opaque code — response shape mismatch, no internal detail leaked
+            raise ValueError("llm_response_not_object")
         if not self.schema_validator(parsed):
             raise ValueError("json_response_failed_schema_validation")
         return parsed

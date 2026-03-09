@@ -88,6 +88,15 @@ def _get_orchestrator_logger() -> logging.Logger:
     handler.setFormatter(logging.Formatter("%(message)s"))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+    return logger
+
+
+def _read_adaad_version() -> str:
+    """Read VERSION file from project root. Never raises."""
+    try:
+        return (APP_ROOT.parent / "VERSION").read_text(encoding="utf-8").strip()
+    except OSError:
+        return "unknown"
     logger.propagate = False
     return logger
 
@@ -118,7 +127,12 @@ class Orchestrator:
         exit_after_boot: bool = False,
         verbose: bool = False,
     ) -> None:
-        self.state: Dict[str, Any] = {"status": "initializing", "mutation_enabled": False}
+        self.state: Dict[str, Any] = {
+            "status": "initializing",
+            "mutation_enabled": False,
+            "adaad_version": _read_adaad_version(),
+            "constitution_version": CONSTITUTION_VERSION,
+        }
         self.logger = _get_orchestrator_logger()
         self.agents_root = APP_ROOT / "agents"
         self.lineage_dir = self.agents_root / "lineage"

@@ -57,6 +57,41 @@ from ui.features.timeline import evolution_timeline
 
 ELEMENT_ID = "Metal"
 HUMAN_DASHBOARD_TITLE = "Aponi Governance Nerve Center"
+
+# Version-resolution paths (used by /version endpoint and state injection)
+_ADAAD_VERSION_PATH: Path = APP_ROOT.parent / "VERSION"
+_REPORT_VERSION_PATH: Path = APP_ROOT.parent / "governance" / "report_version.json"
+
+
+def _load_live_version() -> Dict[str, Any]:
+    """Return authoritative live version fields. Never raises.
+
+    Reads VERSION file, governance/report_version.json, and the live
+    constitution.CONSTITUTION_VERSION constant.  Returns degraded 'unknown'
+    fields on any read failure so callers always receive parseable data.
+    """
+    adaad_version = "unknown"
+    try:
+        adaad_version = _ADAAD_VERSION_PATH.read_text(encoding="utf-8").strip()
+    except OSError:
+        pass
+
+    report: Dict[str, Any] = {}
+    try:
+        report = json.loads(_REPORT_VERSION_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    return {
+        "adaad_version": adaad_version,
+        "constitution_version": constitution.CONSTITUTION_VERSION,
+        "last_sync_sha": report.get("last_sync_sha", "unknown"),
+        "last_sync_date": report.get("last_sync_date", "unknown"),
+        "report_version": report.get("report_version", adaad_version),
+        "source": "runtime",
+    }
+
+
 SEMANTIC_DRIFT_CLASSES: tuple[str, ...] = (
     "config_drift",
     "governance_drift",
@@ -1062,8 +1097,16 @@ class AponiDashboard:
                     except OSError:
                         self._send_json({"ok": False, "error": "replay_inspector_unavailable"}, status_code=503)
                     return
+                if path.startswith("/version"):
+                    self._send_json(_load_live_version())
+                    return
                 if path.startswith("/state"):
                     state_payload = self._run_background(dict, state_ref)
+                    # Always surface live version fields — never let stale boot state obscure them
+                    _live = _load_live_version()
+                    state_payload["adaad_version"] = _live["adaad_version"]
+                    state_payload["constitution_version"] = _live["constitution_version"]
+                    state_payload["last_sync_sha"] = _live["last_sync_sha"]
                     state_payload["mutation_rate_limit"] = self._run_background(self._mutation_rate_state)
                     state_payload["determinism_panel"] = self._run_background(self._determinism_panel)
                     state_payload["reviewer_panel"] = self._run_background(self._reviewer_reputation_panel)
@@ -2340,6 +2383,7 @@ class AponiDashboard:
           <span class="context-pill" id="homeProject">Project: --</span>
           <span class="context-pill" id="homeAgent">Active agent: --</span>
           <span class="context-pill" id="homeMode">Mode: --</span>
+          <span class="context-pill" id="homeVersion" title="Live ADAAD + Constitution version">ADAAD v— · Constitution v—</span>
         </div>
       </section>
       <section>
@@ -2867,7 +2911,14 @@ async function paint(id, endpoint) {
     el.textContent = JSON.stringify(payload, null, 2);
     return payload;
   } catch (err) {
-    el.textContent = 'Failed to load ' + endpoint + ': ' + err;
+    // Sanitize: never surface raw internal error codes (e.g. invalid_json_response) in the UI
+    const raw = (err && err.message) ? err.message : String(err);
+    const safe = raw
+      .replace(/invalid_json_response[^)]*[))]*/gi, 'server_response_error')
+      .replace(/unparsabl[a-z]*/gi, 'parse_error')
+      .replace(/json_response_must_be_object/gi, 'response_format_error')
+      .replace(/provider_request_failed[^.]*\.?/gi, 'provider_unavailable. ');
+    el.textContent = 'Unavailable: ' + endpoint + ' (' + safe.trim() + ')';
     return null;
   }
 }
@@ -4179,10 +4230,24 @@ function rankRecommendedAction(state, intelligence, risk) {
   };
 }
 
+function _sanitizeBannerText(text) {
+  // Prevent raw internal error codes from reaching visible UI surfaces
+  return String(text || '')
+    .replace(/invalid_json_response[^)]*[))]*/gi, 'service_unavailable')
+    .replace(/unparsabl[a-z]*/gi, 'parse_error')
+    .replace(/json_response_must_be_object/gi, 'response_format_error')
+    .replace(/provider_request_failed[^.]*\.?/gi, 'provider_unavailable. ')
+    .replace(/missing_api_key[^.]*\.?/gi, 'provider_unconfigured. ')
+    .replace(/provider_unavailable[^.]*\.?/gi, 'provider_unavailable. ')
+    .trim();
+}
+
 function renderHome(state, intelligence, risk) {
   const recommendation = rankRecommendedAction(state, intelligence, risk);
-  document.getElementById('homePrimaryHeadline').textContent = recommendation.headline;
-  document.getElementById('homePrimaryReason').textContent = recommendation.reason;
+  document.getElementById('homePrimaryHeadline').textContent =
+    _sanitizeBannerText(recommendation.headline);
+  document.getElementById('homePrimaryReason').textContent =
+    _sanitizeBannerText(recommendation.reason);
   const ctaBtn = document.getElementById('homePrimaryCta');
   ctaBtn.textContent = recommendation.cta;
   ctaBtn.dataset.actionKey = recommendation.key || 'unknown';
@@ -4191,9 +4256,13 @@ function renderHome(state, intelligence, risk) {
   const project = String(state.project || state.system || 'ADAAD').trim() || 'ADAAD';
   const activeAgent = String(state.active_agent || state.agent_id || 'triage_agent').trim() || 'triage_agent';
   const mode = String(intelligence.replay_mode || state.replay_mode || 'audit').trim() || 'audit';
+  const adaadVer = String(state.adaad_version || '—').trim();
+  const constVer = String(state.constitution_version || '—').trim();
   document.getElementById('homeProject').textContent = `Project: ${project}`;
   document.getElementById('homeAgent').textContent = `Active agent: ${activeAgent}`;
   document.getElementById('homeMode').textContent = `Mode: ${mode}`;
+  const homeVer = document.getElementById('homeVersion');
+  if (homeVer) homeVer.textContent = `ADAAD v${adaadVer}  ·  Constitution v${constVer}`;
 
   const quickActions = [
     {
