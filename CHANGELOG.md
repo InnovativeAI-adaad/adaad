@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.4.0-dev] — 2026-03-09 · Phase 9 Soulbound Context (in progress)
+
+### PR-9-01 — SoulboundLedger + ContextFilterChain + SoulboundKey + Event Registration
+- **New:** `runtime/memory/soulbound_ledger.py` — tamper-evident, HMAC-signed, append-only context ledger
+  - Merkle-chain structure: `chain_hash = SHA256(prev_chain_hash + context_digest)` per entry
+  - `VALID_CONTEXT_TYPES`: mutation_proposal, fitness_signal, governance_advisory, craft_pattern, replay_injection
+  - `append()` → `AppendResult`; `verify_chain()` → `(bool, List[str])`; `rotate_key()`
+  - Fail-closed: missing `ADAAD_SOULBOUND_KEY` raises `SoulboundKeyError`, emits `soulbound_key_absent.v1`
+- **Existing:** `runtime/memory/context_filter_chain.py` — 4 built-in constitutional filters
+  - epoch_id_required · payload_size_limit (64 KB) · no_private_key_leak · context_type_allowlist
+  - First rejection halts chain; custom filters registerable via `register(fn)`
+- **Existing:** `runtime/memory/soulbound_key.py` — HMAC-ENV keying (ADAAD_SOULBOUND_KEY, ≥32 bytes)
+- **Updated:** `runtime/governance/event_taxonomy.py` — 7 Phase 9 event types registered:
+  - `context_ledger_entry_accepted.v1`, `context_ledger_entry_rejected.v1`
+  - `context_ledger_tamper_detected.v1`, `soulbound_key_rotation.v1`
+  - `craft_pattern_extracted.v1`, `context_replay_injected.v1`, `soulbound_key_absent.v1`
+- **Tests:** `tests/memory/test_soulbound_pr901.py` — 25 tests (T9-01-01..25), all passing
+  - SoulboundKey (5), SoulboundLedger (12), ContextFilterChain (8)
+
+### Critical Findings Resolved (CF-2, CF-3, CF-4)
+- **CF-2:** ExploreExploitController 30-epoch explore lock — `_last_epoch_health_score` tracking added
+- **CF-3:** PenaltyAdaptor floor-stuck weights — `simulate=True` baseline enforced in production
+- **CF-4:** MutationEngine stats empty after file loss — cursor reset on missing metrics file
+- **Tests:** `tests/test_cf_fixes.py` — 15 regression tests (T-CF2..CF4), all passing
+
 ## [3.3.0] — 2026-03-08 · Phase 8 Governance Health Dashboard
 
 ### Phase 8 — Governance Health Dashboard & Telemetry Unification (SHIPPED)
