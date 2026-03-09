@@ -2,18 +2,16 @@
 """
 CritiqueModule: governed five-dimension mutation review.
 
-Senior-grade rewrite addressing the single most dangerous governance bypass
-in the v1.0.0 codebase: the auto-pass guard that approved every proposal
-with estimated_impact >= 0.0 (which is always true for valid proposals).
+Phase 16: Per-strategy dimension floor overrides. Each of the six STRATEGY_TAXONOMY
+strategies can raise (never lower) dimension floors to match its risk profile.
+Overrides are additive upper-only adjustments to the baseline DIMENSION_FLOORS.
 
-Changes in this revision:
-- Auto-pass guard deleted entirely. Approval now requires composite >= 0.60
-  AND all five dimension floors to pass.
-- Five independent scoring dimensions with individual floor thresholds.
-- Risk dimension is inverted in composite: high raw risk score -> low contribution.
-- Fail-closed on any single floor breach regardless of composite.
-- Deterministic review digest for lineage/audit traceability.
-- All dimension scores and verdicts surfaced in CritiqueResult for observability.
+Original invariants preserved:
+- Auto-pass guard remains deleted.
+- Approval requires composite >= APPROVAL_THRESHOLD AND all dimension floors pass.
+- Risk dimension is inverted in composite.
+- Fail-closed on any single floor breach.
+- review_digest covers strategy_id for determinism tracing.
 """
 
 from __future__ import annotations
@@ -22,9 +20,10 @@ import hashlib
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional
 
 from runtime.intelligence.proposal import Proposal
+from runtime.intelligence.strategy import STRATEGY_TAXONOMY
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ CRITIQUE_DIMENSIONS = (
 
 APPROVAL_THRESHOLD: float = 0.60
 
-# Floor thresholds per dimension.
+# Baseline floor thresholds per dimension.
 # For "risk", floor applies to the *inverted* value (1 - raw_risk).
 DIMENSION_FLOORS: Dict[str, float] = {
     "risk":          0.30,
@@ -58,6 +57,50 @@ DIMENSION_WEIGHTS: Dict[str, float] = {
     "governance":    0.15,
     "observability": 0.10,
 }
+
+# Phase 16: Per-strategy floor OVERRIDES.
+# Values MUST be >= baseline DIMENSION_FLOORS — floors may only be raised.
+# Missing dimensions fall back to the baseline floor.
+STRATEGY_FLOOR_OVERRIDES: Dict[str, Dict[str, float]] = {
+    "adaptive_self_mutate": {
+        # Standard aggressiveness — no overrides needed beyond baseline.
+    },
+    "conservative_hold": {
+        "risk":          0.55,  # Tighter risk floor: low-risk only
+        "governance":    0.65,  # Stronger governance requirement
+    },
+    "structural_refactor": {
+        "feasibility":   0.50,  # Refactors must be concretely feasible
+        "observability": 0.35,  # Must include traceability evidence
+    },
+    "test_coverage_expansion": {
+        "observability": 0.40,  # Tests must surface observable evidence
+        "governance":    0.60,  # Coverage PRs need strong governance
+    },
+    "performance_optimization": {
+        "risk":          0.45,  # Perf changes carry higher risk floor
+        "feasibility":   0.45,  # Must demonstrate concrete path
+    },
+    "safety_hardening": {
+        "risk":          0.65,  # Hardening must pass strict risk floor
+        "governance":    0.70,  # Highest governance requirement of all strategies
+        "observability": 0.45,  # Evidence of hardening must be observable
+    },
+}
+
+
+def _effective_floors(strategy_id: Optional[str]) -> Dict[str, float]:
+    """Return dimension floors for the given strategy_id.
+
+    Floors are the maximum of baseline and any override — never lowered.
+    Unknown or None strategy_id returns baseline floors unchanged.
+    """
+    overrides = STRATEGY_FLOOR_OVERRIDES.get(strategy_id or "", {}) if strategy_id else {}
+    return {
+        dim: max(DIMENSION_FLOORS[dim], overrides.get(dim, 0.0))
+        for dim in DIMENSION_FLOORS
+    }
+
 
 _GOVERNANCE_FIELDS = ("proposal_id", "title", "summary", "evidence")
 _OBSERVABILITY_KEYS = ("traces", "metrics", "logs", "test_ids", "replay_digest")
@@ -87,28 +130,45 @@ class CritiqueModule:
     """
     Five-dimension deterministic critique gate for mutation proposals.
 
+    Phase 16: accepts optional strategy_id to apply per-strategy floor overrides.
+    Floors may only be raised — never lowered below baseline DIMENSION_FLOORS.
+
     Approval requires:
       1. Composite weighted score >= APPROVAL_THRESHOLD (0.60)
-      2. Every dimension's effective score >= its configured floor (fail-closed)
-
-    The prior auto-pass guard (estimated_impact >= 0.0 -> approved) is removed.
-    estimated_impact >= 0.0 is unconditionally true for any valid Proposal and
-    rendered the entire critique pipeline a governance no-op.
+      2. Every dimension's effective score >= its strategy-adjusted floor (fail-closed)
     """
 
-    def review(self, proposal: Proposal) -> CritiqueResult:
+    def review(
+        self,
+        proposal: Proposal,
+        *,
+        strategy_id: Optional[str] = None,
+    ) -> CritiqueResult:
+        """Review a mutation proposal.
+
+        Args:
+            proposal: The mutation proposal to evaluate.
+            strategy_id: Optional STRATEGY_TAXONOMY member. When provided, applies
+                         per-strategy dimension floor overrides. Unknown strategy_ids
+                         are silently ignored (defensive; floors fall back to baseline).
+        """
+        # Validate strategy_id if provided — defensive only, no exception on unknown
+        effective_strategy = strategy_id if strategy_id in STRATEGY_TAXONOMY else None
+        floors = _effective_floors(effective_strategy)
+
         dims = self._score_all_dimensions(proposal)
         composite = self._composite(dims)
-        risk_flags = self._check_dimension_floors(dims)
-        verdicts = self._verdicts(dims)
+        risk_flags = self._check_dimension_floors(dims, floors)
+        verdicts = self._verdicts(dims, floors)
 
         approved = (composite >= APPROVAL_THRESHOLD) and (len(risk_flags) == 0)
         notes = self._build_notes(composite, risk_flags, approved)
-        digest = self._review_digest(proposal, dims, composite)
+        digest = self._review_digest(proposal, dims, composite, effective_strategy)
 
         log.info(
-            "critique.review proposal=%s composite=%.3f approved=%s flags=%s",
+            "critique.review proposal=%s strategy=%s composite=%.3f approved=%s flags=%s",
             proposal.proposal_id,
+            effective_strategy or "baseline",
             composite,
             approved,
             risk_flags,
@@ -120,15 +180,19 @@ class CritiqueModule:
             weighted_aggregate=round(composite, 4),
             risk_score=round(dims["risk"], 4),
             notes=notes,
-            metadata={"proposal_id": proposal.proposal_id, "algorithm_version": "v2.0.0"},
+            metadata={
+                "proposal_id": proposal.proposal_id,
+                "algorithm_version": "v2.0.0",
+                "strategy_id": effective_strategy or "baseline",
+                "critique_taxonomy_version": "16.0",
+            },
             dimension_verdicts=verdicts,
             risk_flags=risk_flags,
             review_digest=digest,
             algorithm_version="v2.0.0",
         )
 
-    # -- Dimension scorers ----------------------------------------------------
-    # Each returns [0.0, 1.0]. "risk" is 0=safe, 1=max risk (inverted in composite).
+    # -- Dimension scorers (unchanged from v2.0.0) ----------------------------
 
     def _score_risk(self, proposal: Proposal) -> float:
         impact = float(getattr(proposal, "estimated_impact", 0.0) or 0.0)
@@ -194,24 +258,30 @@ class CritiqueModule:
             total += weight * contribution
         return min(1.0, max(0.0, total))
 
-    def _check_dimension_floors(self, dims: Dict[str, float]) -> List[str]:
+    def _check_dimension_floors(
+        self, dims: Dict[str, float], floors: Dict[str, float]
+    ) -> List[str]:
         flags: List[str] = []
-        for dim, floor in DIMENSION_FLOORS.items():
+        for dim, floor in floors.items():
             raw = dims.get(dim, 0.0)
             effective = (1.0 - raw) if dim == "risk" else raw
             if effective < floor:
                 flags.append(f"{dim}_below_floor:effective={effective:.3f}<floor={floor}")
         return flags
 
-    def _verdicts(self, dims: Dict[str, float]) -> Dict[str, str]:
+    def _verdicts(
+        self, dims: Dict[str, float], floors: Dict[str, float]
+    ) -> Dict[str, str]:
         out: Dict[str, str] = {}
-        for dim, floor in DIMENSION_FLOORS.items():
+        for dim, floor in floors.items():
             raw = dims.get(dim, 0.0)
             effective = (1.0 - raw) if dim == "risk" else raw
             out[dim] = "pass" if effective >= floor else "fail"
         return out
 
-    def _build_notes(self, composite: float, risk_flags: List[str], approved: bool) -> str:
+    def _build_notes(
+        self, composite: float, risk_flags: List[str], approved: bool
+    ) -> str:
         if approved:
             return f"approved: composite={composite:.3f} >= threshold={APPROVAL_THRESHOLD}"
         if risk_flags:
@@ -219,13 +289,18 @@ class CritiqueModule:
         return f"rejected: composite={composite:.3f} < threshold={APPROVAL_THRESHOLD}"
 
     def _review_digest(
-        self, proposal: Proposal, dims: Dict[str, float], composite: float
+        self,
+        proposal: Proposal,
+        dims: Dict[str, float],
+        composite: float,
+        strategy_id: Optional[str],
     ) -> str:
         payload = json.dumps(
             {
                 "proposal_id": proposal.proposal_id,
                 "dims": {k: round(v, 6) for k, v in sorted(dims.items())},
                 "composite": round(composite, 6),
+                "strategy_id": strategy_id or "baseline",
                 "algorithm_version": "v2.0.0",
             },
             sort_keys=True,
