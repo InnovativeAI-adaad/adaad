@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-9-02",
-  "next_pr": "PR-9-03",
-  "active_phase": "Phase 9 Soulbound Context \u00b7 PR-9-02 COMPLETE \u00b7 PR-9-03 next (ContextReplayInterface + AIMutationProposer injection + Constitution v0.5.0)",
+  "last_completed_pr": "PR-9-03",
+  "next_pr": "PR-10-01 (Phase 10 \u2014 to be planned)",
+  "active_phase": "Phase 9 COMPLETE \u00b7 v3.4.0 released | Phase 10 planning",
   "last_invocation": "2026-03-09",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -81,7 +81,10 @@
     "pr9-02-craft-pattern-extractor-with-signal-quality-flag",
     "pr9-02-evolution-loop-phase-5c-wiring",
     "pr9-02-velocity-read-from-penalty-adaptor",
-    "pr9-02-exception-isolation-guard"
+    "pr9-02-exception-isolation-guard",
+    "pr9-03-context-replay-interface",
+    "pr9-03-constitution-v0.5.0-soulbound-privacy-invariant",
+    "phase9-complete-v3.4.0-released"
   ],
   "pending_evidence_rows": [],
   "last_sync_sha": "pending-push"
