@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Router that ties strategy, proposal, and critique modules together."""
+"""Router that ties strategy, proposal, and critique modules together.
+
+Phase 17: strategy_id is now passed from StrategyDecision into CritiqueModule.review()
+so that Phase 16 per-strategy dimension floor overrides are applied correctly.
+"""
 
 from __future__ import annotations
 
@@ -22,7 +26,12 @@ class RoutedIntelligenceDecision:
 
 
 class IntelligenceRouter:
-    """Stable orchestrator for AGM step composition."""
+    """Stable orchestrator for AGM step composition.
+
+    Phase 17: Routes strategy_id from StrategyDecision into CritiqueModule.review()
+    so that per-strategy dimension floor overrides (Phase 16) are applied.
+    Signature unchanged — backward compatible.
+    """
 
     def __init__(
         self,
@@ -42,11 +51,18 @@ class IntelligenceRouter:
             strategy_id=strategy.strategy_id,
             rationale=strategy.rationale,
         )
-        critique = self._critique.review(proposal)
+        # Phase 17: pass strategy_id so per-strategy floor overrides are applied.
+        critique = self._critique.review(proposal, strategy_id=strategy.strategy_id)
         self._validate_critique(critique)
         return RoutedIntelligenceDecision(strategy=strategy, proposal=proposal, critique=critique)
 
     def _validate_critique(self, critique: CritiqueResult) -> None:
-        missing_dimensions = [dimension for dimension in CRITIQUE_DIMENSIONS if dimension not in critique.per_dimension_scores]
+        missing_dimensions = [
+            dimension
+            for dimension in CRITIQUE_DIMENSIONS
+            if dimension not in critique.per_dimension_scores
+        ]
         if missing_dimensions:
-            raise ValueError(f"critique missing required dimensions: {', '.join(missing_dimensions)}")
+            raise ValueError(
+                f"critique missing required dimensions: {', '.join(missing_dimensions)}"
+            )

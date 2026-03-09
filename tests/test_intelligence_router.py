@@ -36,7 +36,7 @@ class NegativeImpactProposalModule:
 
 
 class IncompleteDimensionCritiqueModule(CritiqueModule):
-    def review(self, proposal: Proposal) -> CritiqueResult:
+    def review(self, proposal: Proposal, *, strategy_id=None) -> CritiqueResult:
         return CritiqueResult(
             approved=True,
             per_dimension_scores={"risk": 0.0},
