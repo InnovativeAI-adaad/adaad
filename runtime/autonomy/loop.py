@@ -501,3 +501,148 @@ def run_self_check_loop(
         intelligence_outcome=routed_intelligence.outcome,
         intelligence_composite=routed_intelligence.critique.weighted_aggregate,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 19 — AutonomyLoop: stateful wrapper with persistent IntelligenceRouter
+# ---------------------------------------------------------------------------
+
+class AutonomyLoop:
+    """Stateful autonomy loop that holds a persistent IntelligenceRouter.
+
+    Phase 19: Resolves the ephemeral-router gap — `IntelligenceRouter()` was
+    previously instantiated fresh on every `run_self_check_loop()` call, making
+    Phase 18's `CritiqueSignalBuffer` accumulation permanently ineffective.
+
+    This class holds one `IntelligenceRouter` instance across all `run()` calls,
+    so breach-rate penalties accumulate within an epoch as intended. Call
+    `reset_epoch()` explicitly at epoch boundaries to clear the buffer.
+
+    The existing `run_self_check_loop()` function remains unchanged for backward
+    compatibility — it continues to instantiate a fresh router per call.
+    """
+
+    def __init__(
+        self,
+        *,
+        budget_engine: "AutonomyBudgetEngine | None" = None,
+        router: "IntelligenceRouter | None" = None,
+    ) -> None:
+        from runtime.intelligence.router import IntelligenceRouter as _Router
+        self._budget_engine = budget_engine
+        self._router: IntelligenceRouter = router if router is not None else _Router()
+
+    def run(
+        self,
+        *,
+        cycle_id: str,
+        actions: "list[AgentAction]",
+        post_condition_checks: "dict[str, Callable[[], bool]]",
+        mutation_score: float,
+        mutate_threshold: float | None = None,
+        governance_debt_score: float = 0.0,
+        fitness_trend_delta: float = 0.0,
+        epoch_pass_rate: float = 1.0,
+        lineage_health: float | None = None,
+        replay_mode: str = "off",
+        recovery_tier: str | None = None,
+        provider: "RuntimeDeterminismProvider | None" = None,
+        duration_ms: int | None = None,
+        elapsed_duration_ms: int | None = None,
+    ) -> AutonomyLoopResult:
+        """Run one autonomy loop cycle using the persistent IntelligenceRouter.
+
+        Equivalent to `run_self_check_loop()` except the router (and its
+        CritiqueSignalBuffer) persists across calls, enabling Phase 18 feedback.
+        """
+        import time as _time
+        import warnings as _warnings
+        from runtime.intelligence.strategy import StrategyInput
+
+        effective_provider = (
+            provider
+            or (self._budget_engine.provider if self._budget_engine is not None else None)
+            or default_provider()
+        )
+
+        mode = replay_mode.strip().lower()
+        tier = (recovery_tier or "").strip().lower()
+        strict_or_audit = mode in {"strict", "audit"} or tier == "audit"
+        duration_override_ms = duration_ms if duration_ms is not None else elapsed_duration_ms
+
+        started_ts: float | None = None
+        if duration_override_ms is None:
+            if strict_or_audit:
+                if not getattr(effective_provider, "deterministic", False):
+                    raise RuntimeError("deterministic_timestamp_required")
+                started_ts = effective_provider.now_utc().timestamp()
+            else:
+                started_ts = _time.time()
+
+        budget_snapshot = None
+        active_threshold = 0.7 if mutate_threshold is None else float(mutate_threshold)
+        if self._budget_engine is not None:
+            budget_snapshot = self._budget_engine.record_snapshot(
+                cycle_id=cycle_id,
+                governance_debt_score=governance_debt_score or 0.0,
+                fitness_trend_delta=fitness_trend_delta or 0.0,
+                epoch_pass_rate=epoch_pass_rate or 1.0,
+            )
+            active_threshold = budget_snapshot.threshold
+
+        # Phase 19: use persistent router so CritiqueSignalBuffer accumulates.
+        routed_intelligence = self._router.route(
+            StrategyInput(
+                cycle_id=cycle_id,
+                mutation_score=mutation_score,
+                governance_debt_score=governance_debt_score,
+                lineage_health=lineage_health if lineage_health is not None else 1.0,
+                signals={"epoch_pass_rate": epoch_pass_rate},
+            )
+        )
+
+        all_actions_ok = all(a.ok for a in actions) if actions else True
+        post_conditions_passed = (
+            all(fn() for fn in post_condition_checks.values())
+            if post_condition_checks
+            else True
+        )
+
+        if not all_actions_ok or not post_conditions_passed:
+            decision = "escalate"
+        elif mutation_score >= active_threshold:
+            decision = "self_mutate"
+        else:
+            decision = "hold"
+
+        if duration_override_ms is not None:
+            total_duration_ms = int(duration_override_ms)
+        elif strict_or_audit:
+            finished_ts = effective_provider.now_utc().timestamp()
+            total_duration_ms = int((finished_ts - (started_ts or finished_ts)) * 1000)
+        else:
+            total_duration_ms = int((_time.time() - (started_ts or _time.time())) * 1000)
+
+        return AutonomyLoopResult(
+            ok=all_actions_ok,
+            post_conditions_passed=post_conditions_passed,
+            total_duration_ms=total_duration_ms,
+            mutation_score=mutation_score,
+            decision=decision,
+            intelligence_strategy_id=routed_intelligence.strategy.strategy_id,
+            intelligence_outcome=routed_intelligence.outcome,
+            intelligence_composite=routed_intelligence.critique.weighted_aggregate,
+        )
+
+    def reset_epoch(self) -> None:
+        """Clear the CritiqueSignalBuffer at epoch boundary.
+
+        Call this explicitly when a new epoch begins to prevent breach-rate
+        penalties from prior epochs carrying over into the next.
+        """
+        self._router.reset_epoch()
+
+    @property
+    def router(self) -> "IntelligenceRouter":
+        """Expose the persistent router for inspection and testing."""
+        return self._router
