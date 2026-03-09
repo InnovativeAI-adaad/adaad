@@ -1,3 +1,29 @@
+## [3.5.0] -- 2026-03-09
+
+### Phase 10 -- Reward Learning Pipeline (Complete)
+
+**PR-10-01** RewardSignalBridge + EvolutionLoop Phase 5d wiring
+- `runtime/memory/reward_signal_bridge.py` -- bridges MutationScore -> reward_learning pipeline
+- `runtime/memory/reward_signal_bridge.py` -- persists fitness_signal to SoulboundLedger
+- EvolutionLoop Phase 5d: ingest() after Phase 5c, isolated exception guard
+- `OBSERVATION_RING_BUFFER_SIZE = 20` ring buffer for PolicyPromotionController
+
+**PR-10-02** PolicyPromotionController + MarketFitnessIntegrator
+- `runtime/memory/policy_promotion_controller.py` -- guarded weight promotion gate
+  - Rolling baseline EMA (BASELINE_WINDOW_SIZE=5) from recent reward signals
+  - GuardedPromotionPolicy regression thresholds; rollback to last authorized profile
+  - Cold-start always promotes (< threshold epochs)
+- EvolutionLoop Phase 4b: promotion gate between Phase 4 and Phase 5
+- `runtime/market/market_fitness_integrator.py` -- added integrate() method
+  - IntegrationResult dataclass: live_market_score, confidence, is_synthetic, lineage_digest
+  - FeedRegistry.composite_reading() path; synthetic fallback when registry/reading absent
+  - score clamped to [0.0, 1.0]; journal event market_fitness_integrated.v1
+
+**Fixes**
+- `runtime/autonomy/reward_learning.py` -- OBSERVATION_RING_BUFFER_SIZE exported in __all__
+
+**Test suite:** 680/680
+
 ## [3.4.0] — 2026-03-09
 
 ### Phase 9 — Soulbound Context (Complete)

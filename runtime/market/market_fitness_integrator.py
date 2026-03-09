@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""MarketFitnessIntegrator — ADAAD-10 PR-10-02.
+"""MarketFitnessIntegrator -- ADAAD-10 PR-10-02.
 
 Bridges the FeedRegistry composite score into FitnessOrchestrator's
 simulated_market_score component, replacing the static synthetic constant
@@ -19,8 +19,9 @@ from typing import Any, Dict, Optional
 
 log = logging.getLogger(__name__)
 
-_EVENT_TYPE    = "market_fitness_signal_enriched.v1"
-_FALLBACK_SCORE = 0.50
+_EVENT_TYPE      = "market_fitness_signal_enriched.v1"
+_INTEGRATE_EVENT = "market_fitness_integrated.v1"
+_FALLBACK_SCORE  = 0.50
 
 
 @dataclass(frozen=True)
@@ -32,17 +33,111 @@ class MarketEnrichmentRecord:
     adapter_count:   int
 
 
+@dataclass(frozen=True)
+class IntegrationResult:
+    """Result returned by MarketFitnessIntegrator.integrate()."""
+    epoch_id:          str
+    live_market_score: float
+    confidence:        float
+    is_synthetic:      bool
+    adapter_id:        str
+    lineage_digest:    str
+    signal_source:     str
+
+
 class MarketFitnessIntegrator:
     """Enriches a fitness scoring context with live market signal."""
 
-    def __init__(self, *, registry: Any = None, feed_registry: Any = None, 
+    def __init__(self, *, registry: Any = None, feed_registry: Any = None,
                  fitness_orchestrator: Any = None, journal_fn: Any = None,
                  fallback_score: float = _FALLBACK_SCORE) -> None:
-        registry = registry or feed_registry or fitness_orchestrator
-        self._registry   = registry
-        self._journal_fn = journal_fn
-        self._fallback   = fallback_score
+        self._feed_registry        = feed_registry or registry
+        self._fitness_orchestrator = fitness_orchestrator
+        self._journal_fn           = journal_fn
+        self._fallback             = fallback_score
         self._last_record: Optional[MarketEnrichmentRecord] = None
+
+    # ------------------------------------------------------------------
+    # Primary API: integrate() -- used by PR-10-02 tests + EvolutionLoop
+    # ------------------------------------------------------------------
+
+    def integrate(self, *, epoch_id: str) -> IntegrationResult:
+        """Bridge composite registry reading into FitnessOrchestrator.
+
+        Reads composite_reading() from feed_registry, computes
+        confidence-weighted score, injects it into the orchestrator,
+        and emits journal event. Never raises.
+        """
+        try:
+            result = self._do_integrate(epoch_id)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("MarketFitnessIntegrator.integrate: fallback -- %s", exc)
+            result = IntegrationResult(
+                epoch_id=epoch_id,
+                live_market_score=self._fallback,
+                confidence=0.0,
+                is_synthetic=True,
+                adapter_id="synthetic_fallback",
+                lineage_digest="sha256:" + "0" * 64,
+                signal_source="synthetic",
+            )
+
+        if self._fitness_orchestrator is not None:
+            try:
+                self._fitness_orchestrator.inject_live_signal({
+                    "epoch_id":          result.epoch_id,
+                    "live_market_score": result.live_market_score,
+                    "lineage_digest":    result.lineage_digest,
+                    "confidence":        result.confidence,
+                    "is_synthetic":      result.is_synthetic,
+                })
+            except Exception as exc:  # noqa: BLE001
+                log.warning("MarketFitnessIntegrator: orchestrator inject -- %s", exc)
+
+        self._emit_integrate_journal(result)
+        return result
+
+    def _do_integrate(self, epoch_id: str) -> IntegrationResult:
+        registry = self._feed_registry
+        if registry is None:
+            return self._synthetic(epoch_id)
+
+        reading = registry.composite_reading()
+        if reading is None:
+            return self._synthetic(epoch_id)
+
+        raw_score  = float(reading.to_fitness_contribution())
+        clamped    = max(0.0, min(1.0, raw_score))
+        confidence = float(getattr(reading, "confidence", 1.0))
+        is_stale   = bool(getattr(reading, "stale", False))
+        adapter_id = str(getattr(reading, "adapter_id", "unknown"))
+        lineage    = str(getattr(reading, "lineage_digest", "sha256:" + "0" * 64))
+        source     = "cached" if is_stale else "live"
+
+        return IntegrationResult(
+            epoch_id=epoch_id,
+            live_market_score=clamped,
+            confidence=confidence,
+            is_synthetic=False,
+            adapter_id=adapter_id,
+            lineage_digest=lineage,
+            signal_source=source,
+        )
+
+    def _synthetic(self, epoch_id: str) -> IntegrationResult:
+        return IntegrationResult(
+            epoch_id=epoch_id,
+            live_market_score=self._fallback,
+            confidence=0.0,
+            is_synthetic=True,
+            adapter_id="synthetic_fallback",
+            lineage_digest="sha256:" + "0" * 64,
+            signal_source="synthetic",
+        )
+
+    # ------------------------------------------------------------------
+    # Legacy API: enrich() -- context dict mutation pattern
+    # ------------------------------------------------------------------
 
     def enrich(self, context: Dict[str, Any]) -> Dict[str, Any]:
         score, digest, source, n = self._fetch_signal()
@@ -62,28 +157,25 @@ class MarketFitnessIntegrator:
 
     def _fetch_signal(self):
         try:
-            readings  = self._registry.fetch_all()
+            registry  = self._feed_registry
+            readings  = registry.fetch_all()
             n         = len(readings)
             live      = [r for r in readings if r.confidence > 0.0]
             if not live:
                 return self._fallback, "sha256:" + "0" * 64, "synthetic", n
             total_conf = sum(r.confidence for r in live)
-            score  = sum(r.value * r.confidence for r in live) / total_conf
-            score  = round(max(0.0, min(1.0, score)), 6)
-            best   = max(live, key=lambda r: r.confidence)
-            source = "cached" if best.stale else "live"
+            score      = sum(r.value * r.confidence for r in live) / total_conf
+            score      = round(max(0.0, min(1.0, score)), 6)
+            best       = max(live, key=lambda r: r.confidence)
+            source     = "cached" if best.stale else "live"
             return score, best.lineage_digest, source, n
         except Exception as exc:
-            log.warning("MarketFitnessIntegrator: fallback — %s", exc)
+            log.warning("MarketFitnessIntegrator: enrich fallback -- %s", exc)
             return self._fallback, "sha256:" + "0" * 64, "synthetic", 0
 
     def _emit_journal(self, record: MarketEnrichmentRecord, epoch_id: str) -> None:
         if self._journal_fn is None:
-            try:
-                from security.ledger.journal import log as _jlog
-                self._journal_fn = _jlog
-            except Exception:
-                return
+            return
         try:
             self._journal_fn(tx_type=_EVENT_TYPE, payload={
                 "event_type": _EVENT_TYPE, "epoch_id": epoch_id,
@@ -93,6 +185,22 @@ class MarketFitnessIntegrator:
                 "adapter_count": record.adapter_count,
             })
         except Exception as exc:
-            log.warning("MarketFitnessIntegrator: journal — %s", exc)
+            log.warning("MarketFitnessIntegrator: journal -- %s", exc)
 
-__all__ = ["MarketFitnessIntegrator", "MarketEnrichmentRecord"]
+    def _emit_integrate_journal(self, result: IntegrationResult) -> None:
+        if self._journal_fn is None:
+            return
+        try:
+            self._journal_fn(_INTEGRATE_EVENT, {
+                "epoch_id":          result.epoch_id,
+                "live_market_score": result.live_market_score,
+                "confidence":        result.confidence,
+                "is_synthetic":      result.is_synthetic,
+                "lineage_digest":    result.lineage_digest,
+                "signal_source":     result.signal_source,
+            })
+        except Exception as exc:  # noqa: BLE001
+            log.warning("MarketFitnessIntegrator: integrate journal -- %s", exc)
+
+
+__all__ = ["MarketFitnessIntegrator", "MarketEnrichmentRecord", "IntegrationResult"]

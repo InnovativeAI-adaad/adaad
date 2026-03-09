@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-9-03",
-  "next_pr": "PR-10-01 (Phase 10 \u2014 to be planned)",
-  "active_phase": "Phase 9 COMPLETE \u00b7 v3.4.0 released | Phase 10 planning",
+  "last_completed_pr": "PR-10-02-market-fix",
+  "next_pr": "PR-10-03 (Phase 10 complete release / next phase planning)",
+  "active_phase": "Phase 10 COMPLETE \u00b7 v3.5.0 \u00b7 680/680 tests",
   "last_invocation": "2026-03-09",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -84,7 +84,13 @@
     "pr9-02-exception-isolation-guard",
     "pr9-03-context-replay-interface",
     "pr9-03-constitution-v0.5.0-soulbound-privacy-invariant",
-    "phase9-complete-v3.4.0-released"
+    "phase9-complete-v3.4.0-released",
+    "pr10-01-reward-signal-bridge",
+    "pr10-02-policy-promotion-controller",
+    "pr10-02-fix-observation-ring-buffer-export",
+    "pr10-02-market-fitness-integrator-integrate-method",
+    "pr10-02-fitness-orchestrator-live-signal-injection",
+    "phase10-complete-v3.5.0"
   ],
   "pending_evidence_rows": [],
   "last_sync_sha": "pending-push"
