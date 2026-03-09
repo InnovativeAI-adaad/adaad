@@ -317,12 +317,17 @@ class LearningProfileRegistry:
         self._path.write_text(json.dumps(self._state, indent=2, sort_keys=True))
 
 
+# Ring buffer size used by RewardSignalBridge — exported here for cross-module
+# imports (PR-10-02 PolicyPromotionController tests reference this constant).
+OBSERVATION_RING_BUFFER_SIZE: int = 20
+
 __all__ = [
     "GuardedPromotionPolicy",
     "LearningObservation",
     "LearningProfileRegistry",
     "ModelProfileVersion",
     "MutationDecisionAudit",
+    "OBSERVATION_RING_BUFFER_SIZE",
     "OfflinePolicyEvaluator",
     "PromotionDecision",
     "PromotionEvaluation",
