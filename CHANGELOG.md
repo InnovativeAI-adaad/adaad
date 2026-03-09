@@ -1,3 +1,41 @@
+## [4.3.0] — 2026-03-09
+
+### Phase 18 — CritiqueSignal Feedback Loop (Complete)
+
+Phase 18 closes the learn-from-critique loop: per-strategy critique breach rates
+now feed back into StrategyModule payoff scoring, penalising strategies that
+consistently produce floor-breaching proposals.
+
+**PR-18-PLAN** `docs/PHASE_18_UPGRADE_PLAN.md` — gap analysis, design, PR sequence
+
+**PR-18-01** `CritiqueSignalBuffer` + `StrategyModule` breach penalty integration
+- `runtime/intelligence/critique_signal.py` (new):
+  * `CritiqueSignalBuffer` — epoch-scoped append-only accumulator of per-strategy
+    critique outcomes (approved, risk_flags). `breach_rate()`, `breach_penalty()`,
+    `snapshot()`, `reset_epoch()`. Deterministic.
+  * `_BREACH_PENALTY_WEIGHT = 0.20` — max payoff reduction per strategy; clamped
+    so payoff ≥ 0.0.
+- `runtime/intelligence/strategy.py`:
+  * `StrategyModule.select(context, *, signal_buffer=None)` — optional kwarg;
+    absent → identical Phase 17 behaviour (backward compatible).
+  * Penalty applied after trigger qualification, before sort: payoff reduced by
+    `breach_rate × 0.20` per candidate; never negative.
+  * `parameters["breach_penalties"]` reports applied penalties per candidate.
+- 15 new tests (`tests/test_critique_signal_phase18.py`)
+
+**PR-18-02** `IntelligenceRouter` buffer wire across `route()` calls
+- `runtime/intelligence/router.py`:
+  * Owns `CritiqueSignalBuffer` instance (injectable for testing).
+  * `route()` passes `signal_buffer` to `StrategyModule.select()` then calls
+    `buffer.record(strategy_id, approved, risk_flags)` after each critique.
+  * `reset_epoch()` — explicit epoch boundary reset; not automatic.
+  * `signal_buffer` property for inspection and testing.
+- 10 new tests (`tests/test_router_signal_wire_phase18.py`)
+
+**Totals:** 25 new tests (Phase 18) · 2,674+ passing
+
+---
+
 ## [4.2.0] — 2026-03-09
 
 ### Phase 17 — IntelligenceRouter Closure (Complete)
