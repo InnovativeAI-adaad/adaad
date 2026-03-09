@@ -16,19 +16,13 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `3.5.0` |
+| **Current version** | `3.6.0` |
+| **Constitution** | `v0.6.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `a6b5e16` |
+| **Release SHA** | `4f51089` |
 | **Release Branch** | `main` |
 
-**New in this release:** Reward Learning Pipeline (Phase 10) — RewardSignalBridge, PolicyPromotionController, MarketFitnessIntegrator.integrate(), OBSERVATION_RING_BUFFER_SIZE export. Full EvolutionLoop 10-phase sequence now active.
-
-**New modules in this release:**
-
-| Module |
-|--------|
-| `runtime/memory/reward_signal_bridge.py` |
-| `runtime/memory/policy_promotion_controller.py` |
+**New in this release:** Phase 11-A complete — AgentBanditSelector (UCB1+Thompson), FitnessLandscape bandit override, EvolutionLoop Phase 0d/5e, Constitution v0.6.0 bandit_arm_integrity_invariant.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 

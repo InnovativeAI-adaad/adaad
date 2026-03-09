@@ -1,6 +1,6 @@
 {
-  "policy_version": "0.4.0",
-  "version": "0.5.0",
+  "policy_version": "0.5.0",
+  "version": "0.6.0",
   "tiers": {
     "PRODUCTION": 0,
     "STABLE": 1,
@@ -179,6 +179,24 @@
         "soulbound_key_configured"
       ],
       "phase": 9
+    },
+    {
+      "name": "bandit_arm_integrity_invariant",
+      "enabled": true,
+      "severity": "blocking",
+      "tier_overrides": {
+        "SANDBOX": "warning"
+      },
+      "reason": "Phase 11-A (Constitution v0.6.0): AgentBanditSelector arm statistics must remain non-negative (reward_mass >= 0, loss_mass >= 0, pull_count >= 0). No single agent may be recommended for more than MAX_CONSECUTIVE_BANDIT_EPOCHS consecutive epochs without at least one competing agent being recommended in that window. Prevents bandit lock-in from suppressing agent diversity and ensures the reward-learning loop cannot starve undersampled agents indefinitely. GovernanceGate retains sole mutation approval authority; this rule audits bandit state integrity.",
+      "validator": "bandit_arm_integrity_invariant",
+      "invariants": [
+        "arm_stats_non_negative",
+        "consecutive_epoch_cap_respected",
+        "agent_diversity_maintained"
+      ],
+      "phase": 11,
+      "max_consecutive_epochs": 10,
+      "env_override": "ADAAD_BANDIT_MAX_CONSECUTIVE_EPOCHS"
     }
   ],
   "resource_bounds_policy": {
