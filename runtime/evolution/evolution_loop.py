@@ -66,6 +66,8 @@ from runtime.memory.context_replay_interface import ContextReplayInterface
 from runtime.memory.reward_signal_bridge import RewardSignalBridge
 # Phase 11-A: AgentBanditSelector — reward-profile-informed agent selection (PR-11-A-02)
 from runtime.autonomy.agent_bandit_selector import AgentBanditSelector
+# Phase 12 / Track 11-D: MarketFitnessIntegrator — live market fields on EpochResult (PR-12-D-01)
+from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
 from security.ledger import journal
@@ -126,6 +128,10 @@ class EpochResult:
     mean_lineage_proximity: float      = 0.0
     amendment_proposed:     bool       = False
     amendment_id:           Optional[str] = None
+    # Phase 12 / Track 11-D: live market signal fields (PR-12-D-01)
+    live_market_score:      float      = 0.0
+    market_confidence:      float      = 0.0
+    market_is_synthetic:    bool       = True
 
 
 # ---------------------------------------------------------------------------
@@ -147,6 +153,7 @@ class EvolutionLoop:
         craft_pattern_extractor: Optional[CraftPatternExtractor] = None,
         replay_interface: Optional[ContextReplayInterface] = None,
         bandit_selector: Optional[AgentBanditSelector] = None,
+        market_integrator: Optional[MarketFitnessIntegrator] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -176,6 +183,10 @@ class EvolutionLoop:
         # Wired lazily; if not injected, Phase 0d is skipped and Phase 0 falls back
         # to FitnessLandscape win-rate heuristic (backwards-compatible).
         self._bandit_selector: Optional[AgentBanditSelector] = bandit_selector
+        # Phase 12 / Track 11-D: MarketFitnessIntegrator — live market signal
+        # propagation into EpochResult. Optional; if not injected, market fields
+        # default to synthetic fallback values (backwards-compatible).
+        self._market_integrator: Optional[MarketFitnessIntegrator] = market_integrator
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
@@ -268,6 +279,21 @@ class EvolutionLoop:
         # Phase 2: Seed population
         self._manager.set_weights(self._adaptor.current_weights)
         self._manager.seed(clean_proposals)
+
+        # Phase 2m (Track 11-D): Live market signal integration — captures
+        # IntegrationResult for EpochResult field population. Exception-isolated;
+        # defaults to synthetic fallback values when integrator not injected.
+        _market_live_score: float = 0.0
+        _market_confidence: float = 0.0
+        _market_is_synthetic: bool = True
+        if self._market_integrator is not None:
+            try:
+                _mkt_result = self._market_integrator.integrate(epoch_id=epoch_id)
+                _market_live_score   = _mkt_result.live_market_score
+                _market_confidence   = _mkt_result.confidence
+                _market_is_synthetic = _mkt_result.is_synthetic
+            except Exception:  # noqa: BLE001
+                pass  # synthetic defaults retained
 
         # Phase 2.5: Route Gate (PR-PHASE4-03)
         trivial_fast_pathed:   int       = 0
@@ -472,6 +498,9 @@ class EvolutionLoop:
             mean_lineage_proximity = mean_lineage_proximity,
             amendment_proposed     = amendment_proposed,
             amendment_id           = amendment_id,
+            live_market_score      = _market_live_score,
+            market_confidence      = _market_confidence,
+            market_is_synthetic    = _market_is_synthetic,
         )
 
     def _evaluate_m603_amendment_gates(
