@@ -1,3 +1,50 @@
+## [4.0.0] — 2026-03-09
+
+### Phase 15 — Governance Debt + Lineage Health Wiring (Complete)
+### v4.0.0 Milestone: Autonomous Governance Intelligence Loop Complete
+
+Phase 15 closes the last two hardcoded-constant gaps in `ProposalRequest.context`
+introduced in Phase 14. With both `governance_debt_score` and `lineage_health`
+live-wired, the full governance intelligence loop is closed end-to-end.
+
+**PR-15-PLAN** Phase 15 upgrade plan
+- `docs/PHASE_15_UPGRADE_PLAN.md`: GovernanceDebt + LineageHealth wiring plan,
+  v4.0.0 milestone definition
+
+**PR-15-01** GovernanceDebtLedger → EvolutionLoop wiring
+- `runtime/evolution/evolution_loop.py`:
+  * Import + optional injection of `GovernanceDebtLedger`
+  * `_last_debt_score: float = 0.0` persisted across epochs
+  * Phase 5f: exception-isolated debt accumulation after Phase 5e;
+    warning_verdicts from rejected all_scores; compound_debt_score stored
+  * Phase 1e context: `governance_debt_score = float(self._last_debt_score)`
+- 12 new tests (`tests/evolution/test_governance_debt_ledger_wiring.py`)
+
+**PR-15-02** lineage_health from mean_lineage_proximity
+- `runtime/evolution/evolution_loop.py`:
+  * `_last_lineage_proximity: float = 1.0` persisted across epochs
+  * After Phase 5 proximity computation: clamped [0.0, 1.0], stored when
+    accepted_count > 0; previous value preserved on sparse epochs
+  * Phase 1e context: `lineage_health = float(self._last_lineage_proximity)`
+  * Both Phase 14 TODOs now resolved; no hardcoded constants remain
+- 11 new tests (`tests/evolution/test_lineage_health_wiring.py`)
+
+**v4.0.0 governance intelligence loop — fully closed:**
+
+```
+EpochResult → GovernanceDebtLedger → compound_debt_score
+EpochResult → mean_lineage_proximity → lineage_health
+MarketFitnessIntegrator → consecutive_synthetic → market signal quality
+AgentBanditSelector → recommendation → bandit strategy
+ExploreExploitController → mode + explore_ratio → diversity signal
+WeightAdaptor → prediction_accuracy → mutation_score
+All signals → ProposalRequest.context → StrategyModule.select()
+           → StrategyDecision → ProposalAdapter LLM prompt
+           → Proposal → MutationCandidate → governed evolution pipeline
+```
+
+**Totals:** 23 new tests (Phase 15) · 2,587+ passing
+
 ## [3.9.0] — 2026-03-09
 
 ### Phase 14 — ProposalEngine Activation (Complete)
