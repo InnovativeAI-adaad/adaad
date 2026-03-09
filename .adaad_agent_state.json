@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-9-01",
-  "next_pr": "PR-9-02",
-  "active_phase": "Phase 9 Soulbound Context \u00b7 PR-9-01 COMPLETE \u00b7 PR-9-02 next (CraftPatternExtractor)",
+  "last_completed_pr": "PR-9-02",
+  "next_pr": "PR-9-03",
+  "active_phase": "Phase 9 Soulbound Context \u00b7 PR-9-02 COMPLETE \u00b7 PR-9-03 next (ContextReplayInterface + AIMutationProposer injection + Constitution v0.5.0)",
   "last_invocation": "2026-03-09",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -77,7 +77,11 @@
     "pr9-01-soulbound-key-hmac-env-fail-closed",
     "pr9-01-soulbound-ledger-tamper-evident-chain",
     "pr9-01-context-filter-chain-4-builtin-filters",
-    "pr9-01-soulbound-context-event-schema"
+    "pr9-01-soulbound-context-event-schema",
+    "pr9-02-craft-pattern-extractor-with-signal-quality-flag",
+    "pr9-02-evolution-loop-phase-5c-wiring",
+    "pr9-02-velocity-read-from-penalty-adaptor",
+    "pr9-02-exception-isolation-guard"
   ],
   "pending_evidence_rows": [],
   "last_sync_sha": "pending-push"
