@@ -1,3 +1,29 @@
+## [4.5.0] — 2026-03-09
+
+### Phase 20 — Public API Consolidation (Complete)
+
+Phase 20 declares the Phase 16–19 intelligence and autonomy work as stable
+public API by exporting all new symbols from their package `__init__` files,
+adds import-contract tests, and removes the stale `strategy.py.bak` file.
+
+**PR-20-PLAN** `docs/PHASE_20_UPGRADE_PLAN.md` — gap analysis, export table
+
+**PR-20-01** `runtime/intelligence/__init__.py` — Phase 16/17/18 exports
+- New exports: `STRATEGY_TAXONOMY`, `CritiqueSignalBuffer`,
+  `RoutedDecisionTelemetry`, `InMemoryTelemetrySink`,
+  `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION`
+- All added to `__all__`
+- 10 contract tests (`tests/test_intelligence_public_api_phase20.py`)
+
+**PR-20-02** `runtime/autonomy/__init__.py` — `AutonomyLoop` export + cleanup
+- `AutonomyLoop` added to import and `__all__`
+- `runtime/intelligence/strategy.py.bak` deleted
+- 8 contract tests (`tests/test_autonomy_public_api_phase20.py`)
+
+**Totals:** 18 new tests (Phase 20) · 2,714+ passing
+
+---
+
 ## [4.4.0] — 2026-03-09
 
 ### Phase 19 — AutonomyLoop Intelligence Integration (Complete)

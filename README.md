@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-19%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-20%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `4.4.0` |
+| **Current version** | `4.5.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `4b6264b` |
+| **Release SHA** | `59b2761` |
 | **Release Branch** | `main` |
 
-**New in this release:** v4.4.0 — AutonomyLoop Intelligence Integration complete. `AutonomyLoop` class added with a persistent `IntelligenceRouter` that accumulates `CritiqueSignalBuffer` state across `run()` calls, fixing the critical gap where Phase 18 feedback never accumulated. `lineage_health` now wired into `StrategyInput`. `AutonomyLoopResult` carries `intelligence_strategy_id`, `intelligence_outcome`, and `intelligence_composite`. 2,696+ tests passing.
+**New in this release:** v4.5.0 — Public API Consolidation. `AutonomyLoop`, `STRATEGY_TAXONOMY`, `CritiqueSignalBuffer`, `RoutedDecisionTelemetry`, `InMemoryTelemetrySink`, and `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION` all declared in package `__init__` exports. 18 import-contract tests added. `strategy.py.bak` deleted. 2,714+ tests passing.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -265,7 +265,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 > 🔄 **This section reflects live repository state.** Version, phase, and milestone status are always current.
 
-**Phase 19 — AutonomyLoop Intelligence Integration** is complete at `v4.4.0`. The intelligence feedback loop is now fully operational end-to-end through the autonomy layer.
+**Phase 20 — Public API Consolidation** is complete at `v4.5.0`. All Phase 16–19 symbols are declared in package exports and covered by import-contract tests.
 
 | Component | Status | Version |
 |:---|:---:|:---:|
@@ -278,17 +278,20 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 | Live signal context (market, bandit, explore ratio) into ProposalRequest | ✅ shipped | `v3.9.0` |
 | GovernanceDebtLedger → compound_debt_score → ProposalRequest.context | ✅ shipped | `v4.0.0` |
 | mean_lineage_proximity → lineage_health → ProposalRequest.context | ✅ shipped | `v4.0.0` |
-| StrategyModule — 6-strategy taxonomy (Phase 16) | ✅ shipped | `v4.1.0` |
+| StrategyModule — 6-strategy taxonomy `STRATEGY_TAXONOMY` (Phase 16) | ✅ shipped | `v4.1.0` |
 | ProposalAdapter — strategy-aware LLM prompt routing (Phase 16) | ✅ shipped | `v4.1.0` |
 | CritiqueModule — per-strategy dimension floor overrides (Phase 16) | ✅ shipped | `v4.1.0` |
 | IntelligenceRouter → strategy_id wire into CritiqueModule (Phase 17) | ✅ shipped | `v4.2.0` |
-| RoutedDecisionTelemetry — `routed_intelligence_decision.v1` (Phase 17) | ✅ shipped | `v4.2.0` |
-| CritiqueSignalBuffer — per-strategy breach rate accumulator (Phase 18) | ✅ shipped | `v4.3.0` |
+| `RoutedDecisionTelemetry` — `routed_intelligence_decision.v1` (Phase 17) | ✅ shipped | `v4.2.0` |
+| `CritiqueSignalBuffer` — per-strategy breach rate accumulator (Phase 18) | ✅ shipped | `v4.3.0` |
 | StrategyModule breach penalty from CritiqueSignalBuffer (Phase 18) | ✅ shipped | `v4.3.0` |
 | IntelligenceRouter buffer wire + `reset_epoch()` (Phase 18) | ✅ shipped | `v4.3.0` |
 | AutonomyLoopResult intelligence fields (strategy_id, outcome, composite) | ✅ shipped | `v4.4.0` |
 | lineage_health wired into StrategyInput from autonomy loop (Phase 19) | ✅ shipped | `v4.4.0` |
-| AutonomyLoop class — persistent router, accumulating buffer (Phase 19) | ✅ shipped | `v4.4.0` |
+| `AutonomyLoop` class — persistent router, accumulating buffer (Phase 19) | ✅ shipped | `v4.4.0` |
+| `AutonomyLoop` exported from `runtime.autonomy` (Phase 20) | ✅ shipped | `v4.5.0` |
+| Phase 16–18 symbols in `runtime.intelligence.__all__` (Phase 20) | ✅ shipped | `v4.5.0` |
+| Import-contract test suites — intelligence + autonomy (Phase 20) | ✅ shipped | `v4.5.0` |
 
 | Component | Status | Module |
 |:---|:---:|:---|
