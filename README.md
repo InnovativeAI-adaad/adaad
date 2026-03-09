@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-15%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-18%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `4.0.0` |
+| **Current version** | `4.3.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `c814aa7` |
+| **Release SHA** | `ae1b90b` |
 | **Release Branch** | `main` |
 
-**New in this release:** v4.0.0 — autonomous governance intelligence loop complete. `GovernanceDebtLedger` compound_debt_score + `mean_lineage_proximity` lineage_health both live-wired into `ProposalRequest.context`. No hardcoded constants remain. Every mutation proposal now adapts to the full six-signal governance intelligence stack.
+**New in this release:** v4.3.0 — CritiqueSignal Feedback Loop complete. `CritiqueSignalBuffer` accumulates per-strategy critique breach rates across `route()` calls and feeds them back into `StrategyModule.select()` as payoff penalties. Strategies that consistently breach dimension floors now rank lower in future selection — closing the learn-from-critique loop. 2,674+ tests passing.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -218,6 +218,18 @@ print(f"Duration:    {result.duration_seconds:.1f}s")
   <td>Win/loss rates tracked per mutation type. Plateau detection triggers exploration mode via Thompson sampling.</td>
 </tr>
 <tr>
+  <td><strong>🧠&nbsp; 6-Strategy Intelligence Layer</strong></td>
+  <td>StrategyModule selects from 6 context-driven strategies (safety_hardening → conservative_hold) with deterministic payoff ranking, per-strategy LLM prompts, and dimension floor overrides.</td>
+</tr>
+<tr>
+  <td><strong>🔄&nbsp; Learn-from-Critique Loop</strong></td>
+  <td>CritiqueSignalBuffer tracks per-strategy floor breach rates across epochs. Strategies with high breach rates receive payoff penalties in future selection — the system learns which strategies produce governable proposals.</td>
+</tr>
+<tr>
+  <td><strong>📡&nbsp; Routed Decision Telemetry</strong></td>
+  <td>Every IntelligenceRouter decision emits a <code>routed_intelligence_decision.v1</code> append-only ledger event carrying strategy, outcome, dimension verdicts, and a SHA-256 payload digest.</td>
+</tr>
+<tr>
   <td><strong>🧪&nbsp; Policy Simulation</strong></td>
   <td>Replay historical epochs under hypothetical constraints — zero side-effects, full audit trail.</td>
 </tr>
@@ -253,7 +265,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 > 🔄 **This section reflects live repository state.** Version, phase, and milestone status are always current.
 
-**Phase 15 — Governance Intelligence Loop** is complete at `v4.0.0`. The autonomous governance loop is now fully closed end-to-end.
+**Phase 18 — CritiqueSignal Feedback Loop** is complete at `v4.3.0`. The learn-from-critique loop is now closed: critique breach rates feed back into strategy selection as payoff penalties.
 
 | Component | Status | Version |
 |:---|:---:|:---:|
@@ -266,6 +278,14 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 | Live signal context (market, bandit, explore ratio) into ProposalRequest | ✅ shipped | `v3.9.0` |
 | GovernanceDebtLedger → compound_debt_score → ProposalRequest.context | ✅ shipped | `v4.0.0` |
 | mean_lineage_proximity → lineage_health → ProposalRequest.context | ✅ shipped | `v4.0.0` |
+| StrategyModule — 6-strategy taxonomy (Phase 16) | ✅ shipped | `v4.1.0` |
+| ProposalAdapter — strategy-aware LLM prompt routing (Phase 16) | ✅ shipped | `v4.1.0` |
+| CritiqueModule — per-strategy dimension floor overrides (Phase 16) | ✅ shipped | `v4.1.0` |
+| IntelligenceRouter → strategy_id wire into CritiqueModule (Phase 17) | ✅ shipped | `v4.2.0` |
+| RoutedDecisionTelemetry — `routed_intelligence_decision.v1` (Phase 17) | ✅ shipped | `v4.2.0` |
+| CritiqueSignalBuffer — per-strategy breach rate accumulator (Phase 18) | ✅ shipped | `v4.3.0` |
+| StrategyModule breach penalty from CritiqueSignalBuffer (Phase 18) | ✅ shipped | `v4.3.0` |
+| IntelligenceRouter buffer wire + `reset_epoch()` (Phase 18) | ✅ shipped | `v4.3.0` |
 
 | Component | Status | Module |
 |:---|:---:|:---|
