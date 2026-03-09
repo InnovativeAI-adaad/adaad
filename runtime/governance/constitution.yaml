@@ -1,6 +1,6 @@
 {
-  "policy_version": "0.3.0",
-  "version": "0.4.0",
+  "policy_version": "0.4.0",
+  "version": "0.5.0",
   "tiers": {
     "PRODUCTION": 0,
     "STABLE": 1,
@@ -157,9 +157,28 @@
       "tier_overrides": {},
       "reason": "Surfaces GovernanceHealthAggregator h < 0.60 as a governance telemetry signal. When ADAAD_SEVERITY_ESCALATIONS promotes to blocking, a degraded health score halts new amendment proposals until floor is restored. GovernanceGate retains sole mutation approval authority; health score is advisory input only.",
       "validator": "governance_health_floor",
-      "signals": ["avg_reviewer_reputation", "amendment_gate_pass_rate", "federation_divergence_clean", "epoch_health_score"],
-      "degraded_threshold": 0.60,
+      "signals": [
+        "avg_reviewer_reputation",
+        "amendment_gate_pass_rate",
+        "federation_divergence_clean",
+        "epoch_health_score"
+      ],
+      "degraded_threshold": 0.6,
       "phase": 8
+    },
+    {
+      "name": "soulbound_privacy_invariant",
+      "enabled": true,
+      "severity": "blocking",
+      "tier_overrides": {},
+      "reason": "Phase 9 (Constitution v0.5.0): ContextReplayInterface must propagate ONLY context_digest and aggregate statistics from the SoulboundLedger into the AIMutationProposer proposal layer. Raw ledger payload content must never reach proposal agents. When blocking, any mutation proposal cycle that bypasses context_digest propagation is halted. GovernanceGate retains sole mutation approval authority; this rule enforces the soulbound privacy channel.",
+      "validator": "soulbound_privacy_invariant",
+      "invariants": [
+        "replay_uses_digest_only",
+        "raw_payload_propagation_blocked",
+        "soulbound_key_configured"
+      ],
+      "phase": 9
     }
   ],
   "resource_bounds_policy": {

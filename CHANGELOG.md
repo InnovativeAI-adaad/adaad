@@ -1,3 +1,31 @@
+## [3.4.0] — 2026-03-09
+
+### Phase 9 — Soulbound Context (Complete)
+
+**PR-9-01** SoulboundKey + SoulboundLedger + ContextFilterChain + Schema
+- `runtime/memory/soulbound_key.py` — HMAC-ENV keying (ADAAD_SOULBOUND_KEY), fail-closed
+- `runtime/memory/soulbound_ledger.py` — tamper-evident Merkle-chain context history
+- `runtime/memory/context_filter_chain.py` — 4 constitutional pre-screen filters
+- `schemas/soulbound_context_event.v1.json` — JSON Schema 2020-12 for 7 event types
+
+**PR-9-02** CraftPatternExtractor + EvolutionLoop Phase 5c wiring
+- `runtime/memory/craft_pattern_extractor.py` — per-agent reasoning pattern extraction
+- EvolutionLoop Phase 5c: CraftPatternExtractor wired after E/E commit
+- Signal quality flag (CF-3 mitigation): low_velocity epochs flagged
+
+**PR-9-03** ContextReplayInterface + Constitution v0.5.0
+- `runtime/memory/context_replay_interface.py` — ledger-sourced context digest injection
+- Constitution 0.4.0 → 0.5.0: `soulbound_privacy_invariant` BLOCKING rule
+- Explore ratio adjustment from dominant craft pattern (experimental +10%, structural -10%)
+- Low-velocity entry exclusion (CF-3 guard in replay window)
+
+**Critical findings resolved** (CF-2, CF-3, CF-4)
+- CF-2: ExploreExploitController explore lock fixed (prior_epoch_score → _last_epoch_health_score)
+- CF-3: PenaltyAdaptor floor fixed (simulate=True baseline; signal_quality_flag in patterns)
+- CF-4: MutationEngine stats starvation fixed (cursor reset on missing metrics file)
+
+**Test suite:** 574/574 (governance + memory + CF fixes)
+
 # Changelog
 
 ## [3.4.0-dev] — 2026-03-09 · Phase 9 Soulbound Context (in progress)
