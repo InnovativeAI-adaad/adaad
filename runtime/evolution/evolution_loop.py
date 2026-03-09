@@ -14,6 +14,7 @@ Binds all capability modules into a single run_epoch() call:
   Phase 5:   Record        — FitnessLandscape persists win/loss per mutation type
   Phase 5b:  E/E commit    — ExploreExploitController epoch commit
   Phase 5c:  Craft Pattern — CraftPatternExtractor writes reasoning pattern to SoulboundLedger
+  Phase 5d:  Reward Signal — RewardSignalBridge ingests all scores → RewardLearning pipeline
   Phase 6:   Checkpoint    — PR-PHASE4-05: anchor EpochResult to CheckpointChain
   Return:    EpochResult dataclass consumed by Orchestrator
 
@@ -57,6 +58,8 @@ from runtime.evolution.checkpoint_chain import checkpoint_chain_digest, ZERO_HAS
 # Phase 9: Soulbound Context — CraftPatternExtractor wiring (PR-9-02)
 from runtime.memory.craft_pattern_extractor import CraftPatternExtractor
 from runtime.memory.soulbound_ledger import SoulboundLedger, DEFAULT_LEDGER_PATH
+# Phase 10: Reward Learning Pipeline — RewardSignalBridge wiring (PR-10-01)
+from runtime.memory.reward_signal_bridge import RewardSignalBridge
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
 from security.ledger import journal
@@ -157,6 +160,9 @@ class EvolutionLoop:
         # must be set for the ledger to function. If the extractor is not
         # injected, pattern extraction is skipped silently (no crash).
         self._craft_extractor: Optional[CraftPatternExtractor] = craft_pattern_extractor
+        # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
+        # signal ingestion is skipped silently (backwards-compatible).
+        self._reward_bridge: Optional[RewardSignalBridge] = None
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -325,6 +331,20 @@ class EvolutionLoop:
                 )
             except Exception:  # noqa: BLE001
                 # Pattern extraction failure must never block the epoch
+                pass
+
+        # Phase 5d: RewardSignalBridge — reward learning pipeline ingestion (PR-10-01)
+        # Converts all MutationScores (accepted + rejected) into reward observations,
+        # aggregates a PromotionEvaluation, and writes a fitness_signal to SoulboundLedger.
+        # Populates self._reward_bridge.recent_evaluations for PR-10-02 PolicyPromotionController.
+        if self._reward_bridge is not None:
+            try:
+                self._reward_bridge.ingest(
+                    epoch_id=epoch_id,
+                    all_scores=all_scores,
+                )
+            except Exception:  # noqa: BLE001
+                # Reward signal failure must never block the epoch
                 pass
         mean_lineage_proximity = _compute_mean_lineage_proximity(accepted)
 
