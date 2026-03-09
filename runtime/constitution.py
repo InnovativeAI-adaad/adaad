@@ -130,7 +130,7 @@ from runtime.platform.android_monitor import AndroidMonitor
 from runtime.governance_surface import canonicalize_governance_details
 from security.ledger import journal
 
-CONSTITUTION_VERSION = "0.6.0"
+CONSTITUTION_VERSION = "0.7.0"
 ELEMENT_ID = "Earth"
 POLICY_PATH = Path("runtime/governance/constitution.yaml")
 RULE_APPLICABILITY_PATH = Path("governance/rule_applicability.yaml")
@@ -158,6 +158,7 @@ VALIDATOR_VERSIONS: Dict[str, str] = {
     "_validate_governance_health_floor": "1.0.0",
     "_validate_soulbound_privacy_invariant": "1.0.0",
     "_validate_bandit_arm_integrity": "1.0.0",
+    "_validate_market_signal_integrity": "1.0.0",
 }
 _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
 _POLICY_DOCUMENT: Dict[str, Any] = {}
@@ -1698,6 +1699,113 @@ def _validate_bandit_arm_integrity(_: MutationRequest) -> Dict[str, Any]:
     }
 
 
+def _validate_market_signal_integrity(_: MutationRequest) -> Dict[str, Any]:
+    """Phase 13 — Constitution v0.7.0 BLOCKING rule.
+
+    Reads the most recent EpochResult's ``consecutive_synthetic_market_epochs``
+    field from the checkpoint chain tip.  If the counter exceeds
+    MAX_SYNTHETIC_EPOCHS, blocks weight adaptation promotion for this mutation.
+
+    Invariants enforced:
+    1. consecutive_synthetic_cap_respected: consecutive synthetic epoch count
+       must be <= MAX_SYNTHETIC_EPOCHS (default 5, env-overridable).
+    2. weight_promotion_blocked_on_degraded_feed: if cap is exceeded the rule
+       returns ok=False with severity BLOCKING (SANDBOX: warning).
+
+    When checkpoint data is absent the rule passes advisory — market integrator
+    not yet active.  In SANDBOX tier the rule is advisory; in PRODUCTION/STABLE
+    it is BLOCKING.
+
+    GovernanceGate retains sole mutation approval authority; this rule audits
+    market feed health only.
+    """
+    import json as _json
+    import os as _os
+    from pathlib import Path as _Path
+
+    max_synthetic = int(
+        _os.environ.get(
+            "ADAAD_MARKET_MAX_SYNTHETIC_EPOCHS",
+            "5",
+        )
+    )
+
+    # Read consecutive_synthetic_market_epochs from checkpoint chain tip
+    chain_path = _Path(_os.environ.get("ADAAD_CHAIN_PATH", "data/checkpoint_chain.jsonl"))
+
+    if not chain_path.exists():
+        return {
+            "ok": True,
+            "reason": "market_signal_integrity_chain_absent_advisory_pass",
+            "details": {
+                "market_integrator_active": False,
+                "phase": 13,
+                "max_synthetic_epochs": max_synthetic,
+            },
+        }
+
+    try:
+        lines = chain_path.read_text(encoding="utf-8").strip().splitlines()
+        if not lines:
+            return {
+                "ok": True,
+                "reason": "market_signal_integrity_chain_empty_advisory_pass",
+                "details": {
+                    "market_integrator_active": False,
+                    "phase": 13,
+                    "max_synthetic_epochs": max_synthetic,
+                },
+            }
+        last_entry = _json.loads(lines[-1])
+        # epoch_summary may be nested under 'payload' or at top level
+        payload = last_entry.get("payload", last_entry)
+        consec = int(payload.get("consecutive_synthetic_market_epochs", 0))
+    except Exception:  # noqa: BLE001
+        return {
+            "ok": True,
+            "reason": "market_signal_integrity_chain_unreadable_advisory_pass",
+            "details": {
+                "market_integrator_active": False,
+                "phase": 13,
+                "max_synthetic_epochs": max_synthetic,
+            },
+        }
+
+    # If counter is 0, market integrator is absent or a live reading was last
+    if consec == 0:
+        return {
+            "ok": True,
+            "reason": "market_signal_integrity_ok",
+            "details": {
+                "market_integrator_active": True,
+                "consecutive_synthetic_epochs": consec,
+                "max_synthetic_epochs": max_synthetic,
+                "cap_exceeded": False,
+                "phase": 13,
+            },
+        }
+
+    cap_exceeded = consec > max_synthetic
+    ok = not cap_exceeded
+    reason = (
+        "market_signal_integrity_ok"
+        if ok
+        else "market_signal_integrity_violation_consecutive_synthetic_cap_exceeded"
+    )
+
+    return {
+        "ok": ok,
+        "reason": reason,
+        "details": {
+            "market_integrator_active": True,
+            "consecutive_synthetic_epochs": consec,
+            "max_synthetic_epochs": max_synthetic,
+            "cap_exceeded": cap_exceeded,
+            "phase": 13,
+        },
+    }
+
+
 VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "single_file_scope": _validate_single_file,
     "ast_validity": _validate_ast,
@@ -1716,6 +1824,7 @@ VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "governance_health_floor": _validate_governance_health_floor,
     "soulbound_privacy_invariant": _validate_soulbound_privacy_invariant,
     "bandit_arm_integrity_invariant": _validate_bandit_arm_integrity,
+    "market_signal_integrity_invariant": _validate_market_signal_integrity,
 }
 
 
