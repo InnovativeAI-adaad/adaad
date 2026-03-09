@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Adapter that bridges Proposal contracts to concrete LLM provider calls."""
+"""Adapter that bridges Proposal contracts to concrete LLM provider calls.
+
+Phase 16: Strategy-aware prompt routing. Each of the six STRATEGY_TAXONOMY
+strategies now receives a tailored system prompt that focuses the LLM on the
+correct mutation target. strategy_id is validated against STRATEGY_TAXONOMY
+before any prompt construction — injection of unknown IDs raises ValueError.
+"""
 
 from __future__ import annotations
 
@@ -9,21 +15,96 @@ from typing import Any, Mapping
 
 from runtime.intelligence.llm_provider import LLMProviderClient
 from runtime.intelligence.proposal import ProposalModule, ProposalTargetFile
-from runtime.intelligence.strategy import StrategyDecision, StrategyInput
+from runtime.intelligence.strategy import STRATEGY_TAXONOMY, StrategyDecision, StrategyInput
+
+# ---------------------------------------------------------------------------
+# Per-strategy system prompt templates — Phase 16
+# ---------------------------------------------------------------------------
+
+_STRATEGY_SYSTEM_PROMPTS: dict[str, str] = {
+    "adaptive_self_mutate": (
+        "You are an AGM proposal engine targeting immediate mutation gain. "
+        "Propose concrete code changes that increase mutation score and acceptance rate. "
+        "Return strict JSON with fields: title, summary, estimated_impact, real_diff, "
+        "target_files, projected_impact, metadata."
+    ),
+    "conservative_hold": (
+        "You are an AGM proposal engine in conservative mode. "
+        "Propose minimal, low-risk changes that preserve lineage health and governance stability. "
+        "Avoid large diffs. Prefer documentation, configuration, or test-only changes. "
+        "Return strict JSON with fields: title, summary, estimated_impact, real_diff, "
+        "target_files, projected_impact, metadata."
+    ),
+    "structural_refactor": (
+        "You are an AGM proposal engine targeting structural refactoring. "
+        "Lineage health is degraded — propose changes that reduce coupling, eliminate "
+        "technical debt, and restore clean architectural boundaries. "
+        "Return strict JSON with fields: title, summary, estimated_impact, real_diff, "
+        "target_files, projected_impact, metadata."
+    ),
+    "test_coverage_expansion": (
+        "You are an AGM proposal engine targeting test coverage expansion. "
+        "Governance debt is elevated — propose new tests, fixture improvements, or "
+        "coverage-gap closures that reduce governance debt accumulation. "
+        "Return strict JSON with fields: title, summary, estimated_impact, real_diff, "
+        "target_files, projected_impact, metadata."
+    ),
+    "performance_optimization": (
+        "You are an AGM proposal engine targeting performance optimisation. "
+        "Market fitness pressure is active — propose changes that reduce latency, "
+        "memory footprint, or compute cost without sacrificing governance invariants. "
+        "Return strict JSON with fields: title, summary, estimated_impact, real_diff, "
+        "target_files, projected_impact, metadata."
+    ),
+    "safety_hardening": (
+        "You are an AGM proposal engine in safety hardening mode. "
+        "Governance debt is critical — propose changes that close security surface, "
+        "harden validation, tighten invariant enforcement, and reduce risk exposure. "
+        "Do NOT propose changes that weaken any existing constitutional rule. "
+        "Return strict JSON with fields: title, summary, estimated_impact, real_diff, "
+        "target_files, projected_impact, metadata."
+    ),
+}
+
+# Fallback for any taxonomy member missing from the dict (defensive).
+_DEFAULT_SYSTEM_PROMPT = (
+    "You are an AGM proposal engine. Return strict JSON with fields: "
+    "title, summary, estimated_impact, real_diff, target_files, projected_impact, metadata."
+)
+
+
+def _system_prompt_for_strategy(strategy_id: str) -> str:
+    """Return the strategy-specific system prompt.
+
+    Validates strategy_id against STRATEGY_TAXONOMY before lookup.
+    Raises ValueError on unknown strategy_id.
+    """
+    if strategy_id not in STRATEGY_TAXONOMY:
+        raise ValueError(
+            f"strategy_id '{strategy_id}' not in STRATEGY_TAXONOMY — "
+            f"prompt injection blocked. Valid IDs: {sorted(STRATEGY_TAXONOMY)}"
+        )
+    return _STRATEGY_SYSTEM_PROMPTS.get(strategy_id, _DEFAULT_SYSTEM_PROMPT)
+
+
+# ---------------------------------------------------------------------------
+# ProposalAdapter
+# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class ProposalAdapter:
-    """LLM-backed proposal adapter with replay/evidence-friendly payload capture."""
+    """LLM-backed proposal adapter with replay/evidence-friendly payload capture.
+
+    Phase 16: system prompt is now routed per strategy_id from STRATEGY_TAXONOMY.
+    Unknown strategy_ids are blocked before any LLM call — fail-closed on injection.
+    """
 
     provider_client: LLMProviderClient
     proposal_module: ProposalModule
 
     def build_from_strategy(self, *, context: StrategyInput, strategy: StrategyDecision):
-        system_prompt = (
-            "You are an AGM proposal engine. Return strict JSON with fields: "
-            "title, summary, estimated_impact, real_diff, target_files, projected_impact, metadata."
-        )
+        system_prompt = _system_prompt_for_strategy(strategy.strategy_id)
         user_prompt = (
             f"cycle_id={context.cycle_id}\n"
             f"strategy_id={strategy.strategy_id}\n"
@@ -47,6 +128,7 @@ class ProposalAdapter:
             evidence={
                 "llm_provider_result": provider_result.to_dict(),
                 "llm_raw_payload": payload,
+                "strategy_prompt_version": "16.0",
             },
             metadata={
                 "cycle_id": context.cycle_id,
@@ -78,16 +160,12 @@ class ProposalAdapter:
         for item in value:
             if not isinstance(item, Mapping):
                 continue
-            path = item.get("path")
-            if not isinstance(path, str) or not path.strip():
-                continue
-            parsed.append(
-                ProposalTargetFile(
-                    path=path,
-                    language=item.get("language") if isinstance(item.get("language"), str) else None,
-                    exists=item.get("exists") if isinstance(item.get("exists"), bool) else None,
-                    content=item.get("content") if isinstance(item.get("content"), str) else None,
-                    metadata=dict(item.get("metadata")) if isinstance(item.get("metadata"), Mapping) else {},
+            path = item.get("path", "")
+            if isinstance(path, str) and path.strip():
+                parsed.append(
+                    ProposalTargetFile(
+                        path=path,
+                        change_type=str(item.get("change_type", "modify")),
+                    )
                 )
-            )
         return tuple(parsed)
