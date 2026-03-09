@@ -1,3 +1,41 @@
+## [4.4.0] — 2026-03-09
+
+### Phase 19 — AutonomyLoop Intelligence Integration (Complete)
+
+Phase 19 fixes three structural gaps that prevented the Phase 18 CritiqueSignal
+feedback loop from functioning in production.
+
+**PR-19-PLAN** `docs/PHASE_19_UPGRADE_PLAN.md` — gap analysis, design, PR sequence
+
+**PR-19-01** `AutonomyLoopResult` intelligence fields + `lineage_health` wire
+- `runtime/autonomy/loop.py`:
+  * `AutonomyLoopResult` — three new optional fields (default `None`):
+    `intelligence_strategy_id: str | None`, `intelligence_outcome: str | None`,
+    `intelligence_composite: float | None`
+  * `run_self_check_loop()` — new `lineage_health: float | None = None` kwarg
+    (backward compatible; `None` → 1.0); passed into `StrategyInput` so
+    `structural_refactor` (lineage < 0.50) and `conservative_hold` (lineage >= 0.80)
+    triggers are no longer permanently blind
+  * `AutonomyLoopResult` now carries strategy_id, outcome, and composite score
+    from the `RoutedIntelligenceDecision`
+- 12 new tests (`tests/test_autonomy_loop_intelligence_phase19.py`)
+
+**PR-19-02** `AutonomyLoop` class — persistent `IntelligenceRouter` across `run()` calls
+- `runtime/autonomy/loop.py`:
+  * `class AutonomyLoop` — stateful wrapper holding one `IntelligenceRouter`
+    instance across all `run()` calls
+  * Resolves the critical gap: `IntelligenceRouter()` was previously instantiated
+    fresh per `run_self_check_loop()` call — `CritiqueSignalBuffer` never accumulated
+  * `reset_epoch()` — explicit epoch-boundary buffer clear
+  * `router` property for inspection and testing
+  * Accepts optional injected `router` for testing
+  * `run_self_check_loop()` unchanged — backward compatible for existing callers
+- 10 new tests (`tests/test_autonomy_loop_persistent_router_phase19.py`)
+
+**Totals:** 22 new tests (Phase 19) · 2,696+ passing
+
+---
+
 ## [4.3.0] — 2026-03-09
 
 ### Phase 18 — CritiqueSignal Feedback Loop (Complete)
