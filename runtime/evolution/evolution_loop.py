@@ -66,7 +66,9 @@ from runtime.memory.context_replay_interface import ContextReplayInterface
 from runtime.memory.reward_signal_bridge import RewardSignalBridge
 # Phase 11-A: AgentBanditSelector — reward-profile-informed agent selection (PR-11-A-02)
 from runtime.autonomy.agent_bandit_selector import AgentBanditSelector
-# Phase 12 / Track 11-D: MarketFitnessIntegrator — live market fields on EpochResult (PR-12-D-01)
+# Phase 14: ProposalEngine activation — strategy-driven LLM proposal path (PR-14-01)
+from runtime.evolution.proposal_engine import ProposalEngine, ProposalRequest
+from runtime.intelligence.proposal import Proposal
 from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
@@ -90,6 +92,43 @@ _NONDETERMINISTIC_PATTERNS: List[Tuple[str, str]] = [
     (r"\brequests\.",  "network"),
     (r"\bsocket\.",    "network"),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Phase 14: _proposal_to_candidate bridge (PR-14-01)
+# ---------------------------------------------------------------------------
+
+def _proposal_to_candidate(
+    proposal: "Proposal",
+    *,
+    epoch_id: str,
+) -> Optional[MutationCandidate]:
+    """Convert a ProposalEngine Proposal to a MutationCandidate for EvolutionLoop.
+
+    Returns None for noop proposals (empty real_diff) — these are silently
+    skipped. The bridge preserves all governance invariants: the returned
+    MutationCandidate enters the same PopulationManager / GovernanceGate
+    pipeline as any agent-originated candidate.
+
+    Phase 14 / PR-14-01: initial implementation.
+    Phase 14 / PR-14-02: live signal context population into ProposalRequest.
+    """
+    if not getattr(proposal, "real_diff", ""):
+        return None  # noop proposals have no diff — skip silently
+
+    projected = dict(getattr(proposal, "projected_impact", {}) or {})
+    return MutationCandidate(
+        mutation_id       = proposal.proposal_id,
+        expected_gain     = float(getattr(proposal, "estimated_impact", 0.0)),
+        risk_score        = float(projected.get("risk", 0.5)),
+        complexity        = float(projected.get("complexity", 0.5)),
+        coverage_delta    = float(projected.get("coverage_delta", 0.0)),
+        agent_origin      = "proposal_engine",
+        epoch_id          = epoch_id,
+        python_content    = proposal.real_diff,
+        operator_category = "llm_strategy",
+        operator_version  = "14.0.0",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -156,6 +195,7 @@ class EvolutionLoop:
         replay_interface: Optional[ContextReplayInterface] = None,
         bandit_selector: Optional[AgentBanditSelector] = None,
         market_integrator: Optional[MarketFitnessIntegrator] = None,
+        proposal_engine: Optional[ProposalEngine] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -189,6 +229,12 @@ class EvolutionLoop:
         # propagation into EpochResult. Optional; if not injected, market fields
         # default to synthetic fallback values (backwards-compatible).
         self._market_integrator: Optional[MarketFitnessIntegrator] = market_integrator
+        # Phase 14: ProposalEngine — strategy-driven LLM proposal path. Optional;
+        # if not injected, Phase 1e is skipped silently (backwards-compatible).
+        # When injected, generate() runs alongside propose_from_all_agents and the
+        # resulting Proposal is bridged to a MutationCandidate that enters the same
+        # governed pipeline. Noop proposals (empty real_diff) are silently skipped.
+        self._proposal_engine: Optional[ProposalEngine] = proposal_engine
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
@@ -266,6 +312,24 @@ class EvolutionLoop:
                 all_proposals.extend(agent_proposals)
         except Exception:
             pass
+
+        # Phase 1e: ProposalEngine — strategy-driven LLM proposal (PR-14-01)
+        # Runs alongside Phase 1; outputs bridged to MutationCandidate via
+        # _proposal_to_candidate(). Noop proposals (empty real_diff) are silently
+        # skipped. Full exception isolation: any failure is a no-op.
+        if self._proposal_engine is not None:
+            try:
+                _engine_req = ProposalRequest(
+                    cycle_id=epoch_id,
+                    strategy_id="auto",
+                    context={},   # Phase 14-02: live signals populated here
+                )
+                _engine_proposal = self._proposal_engine.generate(_engine_req)
+                _engine_candidate = _proposal_to_candidate(_engine_proposal, epoch_id=epoch_id)
+                if _engine_candidate is not None:
+                    all_proposals.append(_engine_candidate)
+            except Exception:  # noqa: BLE001
+                pass  # engine failure must never halt the epoch
 
         total_candidates = len(all_proposals)
 
