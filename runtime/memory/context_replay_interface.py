@@ -235,6 +235,63 @@ class ContextReplayInterface:
         self._emit_injected(injection)
         return injection
 
+    def verify_replay_digest(self, *, digest: str, epoch_id: str) -> bool:
+        """Verify *digest* against the current ledger chain hash (Track 11-C).
+
+        Compares the ``context_digest`` captured during a previous
+        ``build_injection()`` call against the ledger's current chain tip
+        hash.  If they differ, the ledger has been written to (or tampered
+        with) since the digest was computed, and the caller should skip
+        replay injection.
+
+        On any error (e.g. ledger unavailable) the method returns ``False``
+        and emits a ``context_digest_mismatch.v1`` journal event so the
+        anomaly is visible in the audit trail without crashing the caller.
+
+        Args:
+            digest:    The ``context_digest`` string from a previous
+                       ``ReplayInjection`` (empty string → always returns False).
+            epoch_id:  Epoch identifier propagated into the journal event.
+
+        Returns:
+            ``True``  — digest matches current chain tip; replay is safe.
+            ``False`` — mismatch, error, or empty digest; caller should skip.
+        """
+        if not digest:
+            self._emit(
+                "context_digest_mismatch.v1",
+                {"epoch_id": epoch_id, "reason": "empty_digest", "match": False},
+            )
+            return False
+
+        try:
+            current_hash = self._ledger.current_chain_hash()
+            match = (digest == current_hash)
+        except Exception as exc:  # noqa: BLE001
+            self._emit(
+                "context_digest_mismatch.v1",
+                {
+                    "epoch_id": epoch_id,
+                    "reason":   f"ledger_read_error:{exc}",
+                    "match":    False,
+                },
+            )
+            return False
+
+        if not match:
+            self._emit(
+                "context_digest_mismatch.v1",
+                {
+                    "epoch_id":     epoch_id,
+                    "stored_digest": digest,
+                    "current_hash":  current_hash,
+                    "reason":        "chain_advanced_since_digest",
+                    "match":         False,
+                },
+            )
+
+        return match
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -296,4 +353,5 @@ __all__ = [
     "EXPLOIT_RATIO_FLOOR",
     "ReplayInjection",
     "ContextReplayInterface",
+    "verify_replay_digest",
 ]

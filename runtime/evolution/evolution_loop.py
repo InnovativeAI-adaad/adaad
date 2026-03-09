@@ -227,17 +227,28 @@ class EvolutionLoop:
         # CodebaseContext before the proposal agents are called in Phase 1.
         # Exception-isolated: replay failure never blocks proposal.
         # Constitutional invariant: GovernanceGate approval authority is unaffected.
+        #
+        # Phase 12 / Track 11-C: verify_replay_digest() called before applying
+        # injection — if chain has advanced since the digest was computed, the
+        # injection is skipped and a context_digest_mismatch.v1 event is emitted.
         if self._replay_interface is not None:
             try:
                 replay_injection = self._replay_interface.build_injection(epoch_id=epoch_id)
                 if not replay_injection.skipped and replay_injection.signal_quality_ok:
-                    context.explore_ratio = replay_injection.adjusted_explore_ratio
-                    context.soulbound_annotation = (
-                        f"context_digest={replay_injection.context_digest} "
-                        f"dominant_pattern={replay_injection.dominant_pattern} "
-                        f"mean_elite_score={replay_injection.mean_elite_score:.4f} "
-                        f"valid_entries={replay_injection.valid_entry_count}"
+                    # Track 11-C: verify chain integrity before applying context
+                    digest_ok = self._replay_interface.verify_replay_digest(
+                        digest=replay_injection.context_digest,
+                        epoch_id=epoch_id,
                     )
+                    if digest_ok:
+                        context.explore_ratio = replay_injection.adjusted_explore_ratio
+                        context.soulbound_annotation = (
+                            f"context_digest={replay_injection.context_digest} "
+                            f"dominant_pattern={replay_injection.dominant_pattern} "
+                            f"mean_elite_score={replay_injection.mean_elite_score:.4f} "
+                            f"valid_entries={replay_injection.valid_entry_count}"
+                        )
+                    # else: injection skipped silently; mismatch event already emitted
             except Exception:  # noqa: BLE001
                 pass
 

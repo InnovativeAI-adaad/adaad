@@ -366,6 +366,15 @@ class SoulboundLedger:
         """Return the current chain tip hash."""
         return self._last_chain_hash
 
+    def current_chain_hash(self) -> str:
+        """Return the current chain tip hash (Phase 12 / Track 11-C alias).
+
+        Equivalent to ``last_chain_hash()``.  Introduced to give
+        ``ContextReplayInterface.verify_replay_digest()`` a semantically
+        unambiguous read point that does not imply 'past' state.
+        """
+        return self._last_chain_hash
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
