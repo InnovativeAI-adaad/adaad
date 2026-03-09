@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-18%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-19%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `4.3.0` |
+| **Current version** | `4.4.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `ae1b90b` |
+| **Release SHA** | `4b6264b` |
 | **Release Branch** | `main` |
 
-**New in this release:** v4.3.0 — CritiqueSignal Feedback Loop complete. `CritiqueSignalBuffer` accumulates per-strategy critique breach rates across `route()` calls and feeds them back into `StrategyModule.select()` as payoff penalties. Strategies that consistently breach dimension floors now rank lower in future selection — closing the learn-from-critique loop. 2,674+ tests passing.
+**New in this release:** v4.4.0 — AutonomyLoop Intelligence Integration complete. `AutonomyLoop` class added with a persistent `IntelligenceRouter` that accumulates `CritiqueSignalBuffer` state across `run()` calls, fixing the critical gap where Phase 18 feedback never accumulated. `lineage_health` now wired into `StrategyInput`. `AutonomyLoopResult` carries `intelligence_strategy_id`, `intelligence_outcome`, and `intelligence_composite`. 2,696+ tests passing.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -265,7 +265,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 > 🔄 **This section reflects live repository state.** Version, phase, and milestone status are always current.
 
-**Phase 18 — CritiqueSignal Feedback Loop** is complete at `v4.3.0`. The learn-from-critique loop is now closed: critique breach rates feed back into strategy selection as payoff penalties.
+**Phase 19 — AutonomyLoop Intelligence Integration** is complete at `v4.4.0`. The intelligence feedback loop is now fully operational end-to-end through the autonomy layer.
 
 | Component | Status | Version |
 |:---|:---:|:---:|
@@ -286,6 +286,9 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 | CritiqueSignalBuffer — per-strategy breach rate accumulator (Phase 18) | ✅ shipped | `v4.3.0` |
 | StrategyModule breach penalty from CritiqueSignalBuffer (Phase 18) | ✅ shipped | `v4.3.0` |
 | IntelligenceRouter buffer wire + `reset_epoch()` (Phase 18) | ✅ shipped | `v4.3.0` |
+| AutonomyLoopResult intelligence fields (strategy_id, outcome, composite) | ✅ shipped | `v4.4.0` |
+| lineage_health wired into StrategyInput from autonomy loop (Phase 19) | ✅ shipped | `v4.4.0` |
+| AutonomyLoop class — persistent router, accumulating buffer (Phase 19) | ✅ shipped | `v4.4.0` |
 
 | Component | Status | Module |
 |:---|:---:|:---|

@@ -1,8 +1,8 @@
 {
     "schema_version": "1.1.0",
-    "last_completed_pr": "PR-18-REL",
-    "next_pr": "PR-19-PLAN (Phase 19 \u2014 TBD)",
-    "active_phase": "Phase 18 COMPLETE \u00b7 v4.3.0 \u00b7 2674+ tests",
+    "last_completed_pr": "PR-19-REL",
+    "next_pr": "PR-20-PLAN (Phase 20 \u2014 TBD)",
+    "active_phase": "Phase 19 COMPLETE \u00b7 v4.4.0 \u00b7 2696+ tests",
     "last_invocation": "2026-03-09",
     "blocked_reason": null,
     "blocked_at_gate": null,
@@ -96,7 +96,9 @@
         "phase17-intelligence-router-closure",
         "v4.2.0-released",
         "phase18-critique-signal-feedback-loop",
-        "v4.3.0-released"
+        "v4.3.0-released",
+        "phase19-autonomy-loop-intelligence-integration",
+        "v4.4.0-released"
     ],
     "pending_evidence_rows": [],
     "last_sync_sha": "pending-push"
