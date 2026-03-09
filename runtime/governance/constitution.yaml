@@ -1,6 +1,6 @@
 {
-  "policy_version": "0.5.0",
-  "version": "0.6.0",
+  "policy_version": "0.7.0",
+  "version": "0.7.0",
   "tiers": {
     "PRODUCTION": 0,
     "STABLE": 1,
@@ -197,6 +197,23 @@
       "phase": 11,
       "max_consecutive_epochs": 10,
       "env_override": "ADAAD_BANDIT_MAX_CONSECUTIVE_EPOCHS"
+    },
+    {
+      "name": "market_signal_integrity_invariant",
+      "enabled": true,
+      "severity": "blocking",
+      "tier_overrides": {
+        "SANDBOX": "warning"
+      },
+      "reason": "Phase 13 (Constitution v0.7.0): When MarketFitnessIntegrator.integrate() returns is_synthetic=True for more than MAX_SYNTHETIC_EPOCHS consecutive epochs, block weight adaptation promotion. A degraded or absent market feed silently corrupts fitness scoring across indefinite epochs without this guard. MAX_SYNTHETIC_EPOCHS defaults to 5 and is operator-configurable via ADAAD_MARKET_MAX_SYNTHETIC_EPOCHS. Reset path: operator calls reset_synthetic_counter() or provides a live feed reading. GovernanceGate retains sole mutation approval authority; this rule audits market signal health only.",
+      "validator": "market_signal_integrity_invariant",
+      "invariants": [
+        "consecutive_synthetic_cap_respected",
+        "weight_promotion_blocked_on_degraded_feed"
+      ],
+      "phase": 13,
+      "max_synthetic_epochs": 5,
+      "env_override": "ADAAD_MARKET_MAX_SYNTHETIC_EPOCHS"
     }
   ],
   "resource_bounds_policy": {

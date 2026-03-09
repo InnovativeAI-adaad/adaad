@@ -1,3 +1,30 @@
+## [3.8.0] — 2026-03-09
+
+### Phase 13 — Market Signal Integrity Invariant (Track 11-B, Complete)
+
+**PR-13-B-01** consecutive_synthetic_epochs counter on IntegrationResult
+- `IntegrationResult`: `consecutive_synthetic_epochs: int = 0` field — running count of
+  consecutive synthetic integrate() calls, reset to 0 on any live reading
+- `MarketFitnessIntegrator`: `_consecutive_synthetic` counter; increments on synthetic,
+  resets on live; stamped onto every `IntegrationResult`
+- `consecutive_synthetic_epochs` property + `reset_synthetic_counter()` operator hook
+- Journal event `market_fitness_integrated.v1` now includes counter in payload
+- `EpochResult`: `consecutive_synthetic_market_epochs: int = 0` field populated from Phase 2m
+- 13 new tests (`tests/market/test_consecutive_synthetic_epochs.py`)
+
+**PR-13-B-02** Constitution v0.7.0 — `market_signal_integrity_invariant` BLOCKING rule
+- New rule `market_signal_integrity_invariant` added to `runtime/governance/constitution.yaml`
+  (severity: BLOCKING; SANDBOX tier_override: warning; max_synthetic_epochs: 5;
+  env-override: `ADAAD_MARKET_MAX_SYNTHETIC_EPOCHS`)
+- `runtime/constitution.py`: `_validate_market_signal_integrity()` validator reads
+  `consecutive_synthetic_market_epochs` from checkpoint chain tip; blocks promotion when
+  cap exceeded; advisory pass when chain absent / unreadable
+- `CONSTITUTION_VERSION`: `0.6.0` → `0.7.0`
+- `VALIDATOR_REGISTRY`: `market_signal_integrity_invariant` entry added
+- 22 new tests (`tests/governance/test_constitution_market_signal_integrity.py`)
+
+**Totals:** 35 new tests · 2,545+ passing
+
 ## [3.7.0] — 2026-03-09
 
 ### Phase 12 — EpochResult Market Fields + Cross-Epoch Digest Verification (Complete)
