@@ -1,3 +1,53 @@
+## [4.1.0] — 2026-03-09
+
+### Phase 16 — Mutation Strategy Taxonomy Expansion (Complete)
+
+Phase 16 expands the `StrategyModule` from a binary 2-strategy decision (introduced in
+Phase 14) to a **six-strategy context-driven taxonomy**, routes each strategy through a
+dedicated `ProposalAdapter` LLM system prompt, and applies per-strategy dimension floor
+overrides in `CritiqueModule`. Floors may only be raised — never lowered below baseline.
+
+**PR-16-PLAN** Phase 16 upgrade plan
+- `docs/PHASE_16_UPGRADE_PLAN.md`: Strategy taxonomy 2→6 design, PR sequence, risk register
+
+**PR-16-01** StrategyModule: 2 → 6 strategies + `STRATEGY_TAXONOMY` registry
+- `runtime/intelligence/strategy.py`:
+  * `STRATEGY_TAXONOMY: frozenset[str]` — canonical 6-strategy registry
+  * `_STRATEGY_PRIORITY` — priority ordering: safety_hardening > structural_refactor >
+    test_coverage_expansion > performance_optimization > adaptive_self_mutate > conservative_hold
+  * `StrategyDecision.__post_init__` validates strategy_id against STRATEGY_TAXONOMY; raises
+    ValueError on unknown IDs — injection blocked
+  * `StrategyModule.select()` expanded: 6 trigger evaluations with payoff-primary / priority-
+    secondary sort; confidence floor guaranteed ≥ 0.55; fallback only when no trigger qualifies
+  * `parameters["strategy_taxonomy_version"] = "16.0"` on every StrategyDecision
+- 18 new tests (`tests/test_strategy_taxonomy_phase16.py`)
+- Updated 2 fixtures in `tests/test_intelligence_strategy.py` (debt/lineage params adjusted
+  to isolate legacy strategy triggers from Phase 16 higher-priority strategies)
+
+**PR-16-02** ProposalAdapter: strategy-aware prompt routing
+- `runtime/intelligence/proposal_adapter.py`:
+  * `_STRATEGY_SYSTEM_PROMPTS` — 6 dedicated system prompts, one per taxonomy strategy
+  * `_system_prompt_for_strategy()` — validates strategy_id against STRATEGY_TAXONOMY before
+    lookup; raises ValueError on unknown IDs — LLM prompt injection blocked
+  * `build_from_strategy()` now routes system prompt via `_system_prompt_for_strategy()`
+  * Evidence field `strategy_prompt_version: "16.0"` on every ProposalAdapter build
+- 12 new tests (`tests/test_proposal_adapter_phase16.py`)
+
+**PR-16-03** CritiqueModule: per-strategy dimension floor overrides
+- `runtime/intelligence/critique.py`:
+  * `STRATEGY_FLOOR_OVERRIDES` — per-strategy dict of dimension floor raises (additive only)
+  * `_effective_floors(strategy_id)` — returns max(baseline, override) per dimension;
+    unknown/None strategy_id returns baseline unchanged
+  * `CritiqueModule.review()` accepts optional `strategy_id` kwarg; applies effective floors
+  * `review_digest` now includes `strategy_id` for determinism tracing
+  * `metadata["critique_taxonomy_version"] = "16.0"` on every CritiqueResult
+  * Backward-compatible: `review(proposal)` with no strategy_id uses baseline floors
+- 10 new tests (`tests/test_critique_phase16.py`)
+
+**Totals:** 40 new tests (Phase 16) · 2,627+ passing
+
+---
+
 ## [4.0.0] — 2026-03-09
 
 ### Phase 15 — Governance Debt + Lineage Health Wiring (Complete)
