@@ -242,6 +242,10 @@ class EvolutionLoop:
         # Optional; if not injected, governance_debt_score stays 0.0 (Phase 14 behaviour).
         self._debt_ledger: Optional[GovernanceDebtLedger] = debt_ledger
         self._last_debt_score: float = 0.0
+        # Phase 15 / PR-15-02: mean_lineage_proximity persisted for next epoch
+        # ProposalRequest.context lineage_health field. Initialises to 1.0
+        # (healthy / diverse) until first accepted mutation batch is processed.
+        self._last_lineage_proximity: float = 1.0
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
@@ -364,7 +368,7 @@ class EvolutionLoop:
                     # Standard ProposalEngine StrategyInput fields
                     "mutation_score":          float(self._adaptor.prediction_accuracy),
                     "governance_debt_score":   float(self._last_debt_score),  # Phase 15-01: live
-                    "lineage_health":          1.0,   # Phase 15: wire ledger proximity mean
+                    "lineage_health":          float(self._last_lineage_proximity),  # Phase 15-02: live
                 }
                 _engine_req = ProposalRequest(
                     cycle_id=epoch_id,
@@ -545,6 +549,12 @@ class EvolutionLoop:
                 # Reward signal failure must never block the epoch
                 pass
         mean_lineage_proximity = _compute_mean_lineage_proximity(accepted)
+        # Phase 15 / PR-15-02: persist lineage proximity for next epoch's
+        # ProposalRequest.context lineage_health field.
+        # Clamp to [0.0, 1.0]; default 1.0 when no accepted mutations this epoch.
+        if accepted_count > 0:
+            self._last_lineage_proximity = max(0.0, min(1.0, mean_lineage_proximity))
+        # else: keep previous value — no new information this epoch
 
         # Phase 5e: AgentBanditSelector update (PR-11-A-02)
         # Update the bandit arm for the agent that recommended the proposals this epoch.
