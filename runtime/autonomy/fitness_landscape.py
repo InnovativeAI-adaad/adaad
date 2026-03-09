@@ -26,6 +26,11 @@ from typing import Dict, Optional
 
 from runtime.autonomy.bandit_selector import BanditSelector, ThompsonBanditSelector, MIN_PULLS_FOR_BANDIT, AGENTS
 from runtime.autonomy.non_stationarity_detector import NonStationarityDetector
+# Phase 11-A: AgentBanditSelector override (PR-11-A-02)
+from runtime.autonomy.agent_bandit_selector import (
+    BanditAgentRecommendation,
+    BANDIT_CONFIDENCE_FLOOR,
+)
 
 DEFAULT_LANDSCAPE_PATH = Path("data/fitness_landscape_state.json")
 
@@ -135,9 +140,16 @@ class FitnessLandscape:
         best = max(self._records.values(), key=lambda r: r.win_rate)
         return best.mutation_type if best.attempts > 0 else None
 
-    def recommended_agent(self) -> str:
+    def recommended_agent(
+        self,
+        bandit_rec: "Optional[BanditAgentRecommendation]" = None,
+    ) -> str:
         """
         Return the recommended agent persona for the next epoch.
+
+        Phase 11-A extension (Phase 0d override):
+          0. If bandit_rec is provided and is_active=True and confidence >= BANDIT_CONFIDENCE_FLOOR:
+             AgentBanditSelector (float reward) overrides all lower tiers.
 
         Phase 2 (UCB1 active when total_pulls >= MIN_PULLS_FOR_BANDIT):
           1. Plateau check always takes precedence — return 'dream' for max exploration.
@@ -148,6 +160,15 @@ class FitnessLandscape:
           score(agent) = win_rate(agent) + sqrt(2) × sqrt(ln(total_pulls) / pulls(agent))
           Unpulled arms score +inf (guaranteed exploration).
         """
+        # Phase 11-A: reward-profile bandit override (PR-11-A-02)
+        if (
+            bandit_rec is not None
+            and bandit_rec.is_active
+            and bandit_rec.confidence >= BANDIT_CONFIDENCE_FLOOR
+            and bandit_rec.agent in AGENTS
+        ):
+            return bandit_rec.agent
+
         if self.is_plateau():
             return "dream"
 
