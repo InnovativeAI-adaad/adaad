@@ -13,6 +13,7 @@ Binds all capability modules into a single run_epoch() call:
   Phase 4:   Adapt         — WeightAdaptor updates scoring weights
   Phase 5:   Record        — FitnessLandscape persists win/loss per mutation type
   Phase 5b:  E/E commit    — ExploreExploitController epoch commit
+  Phase 5c:  Craft Pattern — CraftPatternExtractor writes reasoning pattern to SoulboundLedger
   Phase 6:   Checkpoint    — PR-PHASE4-05: anchor EpochResult to CheckpointChain
   Return:    EpochResult dataclass consumed by Orchestrator
 
@@ -53,6 +54,9 @@ from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, R
 from runtime.evolution.fast_path_scorer import fast_path_score
 from runtime.evolution.entropy_fast_gate import EntropyFastGate, GateVerdict
 from runtime.evolution.checkpoint_chain import checkpoint_chain_digest, ZERO_HASH
+# Phase 9: Soulbound Context — CraftPatternExtractor wiring (PR-9-02)
+from runtime.memory.craft_pattern_extractor import CraftPatternExtractor
+from runtime.memory.soulbound_ledger import SoulboundLedger, DEFAULT_LEDGER_PATH
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
 from security.ledger import journal
@@ -131,6 +135,7 @@ class EvolutionLoop:
         controller:        Optional[ExploreExploitController] = None,
         amendment_engine:  Optional[RoadmapAmendmentEngine] = None,
         federated_evidence_matrix: Optional[FederatedEvidenceMatrix] = None,
+        craft_pattern_extractor: Optional[CraftPatternExtractor] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -148,6 +153,10 @@ class EvolutionLoop:
         self._health_scores:   List[float] = []
         # CF-2 fix: track last epoch score for E/E mode selection (see run_epoch)
         self._last_epoch_health_score: float = 0.0
+        # Phase 9: CraftPatternExtractor — wired lazily; ADAAD_SOULBOUND_KEY
+        # must be set for the ledger to function. If the extractor is not
+        # injected, pattern extraction is skipped silently (no crash).
+        self._craft_extractor: Optional[CraftPatternExtractor] = craft_pattern_extractor
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -296,7 +305,27 @@ class EvolutionLoop:
         # Phase 5b: E/E commit
         self._controller.commit_epoch(epoch_id=epoch_id, mode=evolution_mode)
 
-        # PR-PHASE4-07 scaffold
+        # Phase 5c: CraftPatternExtractor — tamper-evident reasoning pattern (PR-9-02)
+        # Extracts per-agent scoring patterns from accepted batch and writes to
+        # SoulboundLedger as a craft_pattern entry.  Skipped if:
+        #   - _craft_extractor is not wired (ADAAD_SOULBOUND_KEY not set)
+        #   - accepted_count < MIN_ACCEPTED_MUTATIONS_PER_EPOCH (sparse data)
+        # Signal quality flag is set when PenaltyAdaptor velocity is near-zero (CF-3).
+        if self._craft_extractor is not None:
+            try:
+                _vel_risk       = getattr(self._adaptor, "_penalty_adaptor", None)
+                _vel_complexity = getattr(self._adaptor, "_penalty_adaptor", None)
+                vel_risk        = float(getattr(_vel_risk,        "_velocity_risk",        0.0))
+                vel_complexity  = float(getattr(_vel_complexity,  "_velocity_complexity",  0.0))
+                self._craft_extractor.extract(
+                    epoch_id=epoch_id,
+                    accepted_scores=accepted,
+                    weight_velocity_risk=vel_risk,
+                    weight_velocity_complexity=vel_complexity,
+                )
+            except Exception:  # noqa: BLE001
+                # Pattern extraction failure must never block the epoch
+                pass
         mean_lineage_proximity = _compute_mean_lineage_proximity(accepted)
 
         # Top-5 IDs
