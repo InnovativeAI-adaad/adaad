@@ -84,7 +84,8 @@ def test_policy_drift_declared_rules_match_runtime_registry() -> None:
 
     # Drift contract: every runtime-registered rule must be declared in applicability
     # or be explicitly exempted while rollout catches up.
-    explicit_exemptions = {"deployment_authority_tier", "revenue_credit_floor", "reviewer_calibration"}
+    explicit_exemptions = {"deployment_authority_tier", "revenue_credit_floor", "reviewer_calibration",
+                           "governance_health_floor"}  # Phase 8: advisory telemetry rule, rollout in progress
     missing_in_applicability = runtime_rules - set(declared["rule_applicability"])
     assert missing_in_applicability <= explicit_exemptions
 

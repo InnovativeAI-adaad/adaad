@@ -52,6 +52,11 @@ class MutationEngine:
 
     def _update_state_from_metrics(self, state: Dict[str, Any]) -> Dict[str, Any]:
         if not self.metrics_path.exists():
+            # CF-4 fix: metrics file absent (deleted or never created).
+            # Reset cursor to 0 so stats accumulate correctly when the file
+            # is recreated. Prior code returned early without resetting cursor,
+            # leaving cursor=917 with stats={} permanently — a silent failure.
+            state["cursor"] = 0
             return state
         cursor = int(state.get("cursor", 0) or 0)
         try:

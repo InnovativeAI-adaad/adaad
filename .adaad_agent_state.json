@@ -1,8 +1,8 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-8-03",
+  "last_completed_pr": "PR-CF-FIXES",
   "next_pr": "PR-9-01",
-  "active_phase": "Phase 8 COMPLETE \u00b7 v3.3.0 released | Phase 9 Soulbound Context \u00b7 v3.4.0 target",
+  "active_phase": "Phase 9 UNBLOCKED \u00b7 Soulbound Context \u00b7 v3.4.0 target",
   "last_invocation": "2026-03-08",
   "blocked_reason": null,
   "blocked_at_gate": null,
@@ -13,23 +13,7 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "open_findings": [
-    {
-      "id": "CF-2",
-      "severity": "HIGH",
-      "summary": "ExploreExploitController stuck in explore mode 30+ epochs \u2014 must audit before Phase 9 PR-9-02"
-    },
-    {
-      "id": "CF-3",
-      "severity": "HIGH",
-      "summary": "PenaltyAdaptor weights at floor \u2014 quality-1 signal wire verification required before Phase 9"
-    },
-    {
-      "id": "CF-4",
-      "severity": "MEDIUM",
-      "summary": "mutation_engine_state.json stats dict empty \u2014 stats accumulation path silent failure"
-    }
-  ],
+  "open_findings": [],
   "value_checkpoints_reached": [
     "phase0-track-a-hardening",
     "pr-lint-01-determinism-orchestrator",
@@ -85,7 +69,11 @@
     "phase8-health-endpoint-green-amber-red",
     "phase8-constitution-v0.4.0-governance-health-floor",
     "v3.3.0-released",
-    "phase9-soulbound-context-whitepaper-v2"
+    "phase9-soulbound-context-whitepaper-v2",
+    "cf2-explore-exploit-epoch-score-fix",
+    "cf3-penalty-adaptor-simulate-true-baseline",
+    "cf4-mutation-engine-cursor-reset-on-missing-file",
+    "phase9-prerequisites-satisfied"
   ],
   "pending_evidence_rows": [],
   "last_sync_sha": "pending-push"
