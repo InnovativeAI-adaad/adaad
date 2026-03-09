@@ -1,3 +1,42 @@
+## [4.2.0] — 2026-03-09
+
+### Phase 17 — IntelligenceRouter Closure (Complete)
+
+Phase 17 closes two wiring gaps left open after Phase 16's strategy taxonomy expansion.
+
+**PR-17-PLAN** Phase 17 upgrade plan
+- `docs/PHASE_17_UPGRADE_PLAN.md`: Gap analysis, PR sequence, risk register
+
+**PR-17-01** Router → strategy_id wire into CritiqueModule.review()
+- `runtime/intelligence/router.py`:
+  * `self._critique.review(proposal, strategy_id=strategy.strategy_id)` — Phase 16
+    per-strategy dimension floor overrides are now active in every route() call
+  * Previously `review(proposal)` was called without strategy_id — floors defaulted
+    to baseline regardless of which strategy was selected (dead code gap)
+- `tests/test_intelligence_router.py`: `IncompleteDimensionCritiqueModule.review()`
+  fixture updated to accept `strategy_id` kwarg
+- 10 new tests (`tests/test_router_strategy_wire_phase17.py`)
+
+**PR-17-02** RoutedDecisionTelemetry — `routed_intelligence_decision.v1`
+- `runtime/intelligence/routed_decision_telemetry.py`:
+  * `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION = "routed_intelligence_decision.v1"`
+  * `build_routed_decision_payload()` — deterministic payload: cycle_id, strategy_id,
+    outcome, composite_score, dimension_verdicts, review_digest, confidence, risk_flags,
+    payload_digest (SHA-256 of key fields)
+  * `InMemoryTelemetrySink` — append-only in-memory sink for testing and single-process use
+  * `RoutedDecisionTelemetry` — accepts any callable sink; defaults to InMemoryTelemetrySink;
+    emission failure caught and logged, never propagated to router
+- `runtime/intelligence/router.py`: `RoutedDecisionTelemetry` injected; `route()` calls
+  `self._telemetry.emit_routed_decision(decision)` after every successful route
+- `runtime/governance/event_taxonomy.py`:
+  * `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION` constant registered
+  * Added to `CANONICAL_EVENT_TYPES` and `__all__`
+- 12 new tests (`tests/test_routed_decision_telemetry_phase17.py`)
+
+**Totals:** 22 new tests (Phase 17) · 2,649+ passing
+
+---
+
 ## [4.1.0] — 2026-03-09
 
 ### Phase 16 — Mutation Strategy Taxonomy Expansion (Complete)
