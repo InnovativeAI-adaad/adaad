@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-11%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-13%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -24,7 +24,7 @@
 
 <p align="center">
   ADAAD proposes code mutations, scores them with a genetic algorithm, and applies only what passes<br/>
-  deterministic replay verification + a 16-rule constitutional policy engine.<br/>
+  deterministic replay verification + a 18-rule constitutional policy engine.<br/>
   <em>If anything fails, the pipeline halts. No exceptions. No workarounds.</em>
 </p>
 
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `3.6.0` |
+| **Current version** | `3.8.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `4f51089` |
+| **Release SHA** | `3277580` |
 | **Release Branch** | `main` |
 
-**New in this release:** Phase 11-A — AgentBanditSelector (UCB1 + Thompson) closes the reward-learning loop. FitnessLandscape bandit override, EvolutionLoop Phase 0d/5e wiring, Constitution v0.6.0 bandit_arm_integrity_invariant.
+**New in this release:** Phase 13 complete — Market Signal Integrity Invariant (Track 11-B). Constitution v0.7.0 adds `market_signal_integrity_invariant` BLOCKING rule; `MarketFitnessIntegrator` now tracks `consecutive_synthetic_epochs` and stamps every `IntegrationResult`; `EpochResult` gains `consecutive_synthetic_market_epochs`; validator reads chain tip and blocks weight promotion when synthetic cap exceeded.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -253,15 +253,24 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 > 🔄 **This section reflects live repository state.** Version, phase, and milestone status are always current.
 
-**Phase 10 — Reward Learning Pipeline** is complete at `v3.5.0`. The full 10-phase EvolutionLoop is active.
+**Phase 13 — Market Signal Integrity Invariant** is complete at `v3.8.0`. Phases 11–13 all shipped in the current release cycle.
+
+| Component | Status | Version |
+|:---|:---:|:---:|
+| AgentBanditSelector — UCB1 + Thompson (Phase 11-A) | ✅ shipped | `v3.6.0` |
+| EpochResult live market signal fields — Track 11-D | ✅ shipped | `v3.7.0` |
+| Cross-epoch ledger digest verification — Track 11-C | ✅ shipped | `v3.7.0` |
+| consecutive_synthetic_epochs counter on IntegrationResult | ✅ shipped | `v3.8.0` |
+| Constitution v0.7.0 market_signal_integrity_invariant | ✅ shipped | `v3.8.0` |
 
 | Component | Status | Module |
 |:---|:---:|:---|
 | RewardSignalBridge (Phase 5d) | ✅ shipped | `runtime/memory/reward_signal_bridge.py` |
 | PolicyPromotionController (Phase 4b) | ✅ shipped | `runtime/memory/policy_promotion_controller.py` |
-| MarketFitnessIntegrator.integrate() | ✅ shipped | `runtime/market/market_fitness_integrator.py` |
+| MarketFitnessIntegrator.integrate() + consecutive counter | ✅ shipped | `runtime/market/market_fitness_integrator.py` |
 | SoulboundLedger + CraftPatternExtractor (Phase 9) | ✅ shipped | `runtime/memory/` |
-| CF-2, CF-3, CF-4 critical findings | ✅ resolved | `v3.4.0` |
+| ContextReplayInterface.verify_replay_digest() (Phase 12-C) | ✅ shipped | `runtime/memory/context_replay_interface.py` |
+| EpochResult market fields (live_market_score, market_confidence, market_is_synthetic, consecutive_synthetic_market_epochs) | ✅ shipped | `runtime/evolution/evolution_loop.py` |
 
 **Phase 6 — Autonomous Roadmap Self-Amendment** is complete at `v3.1.0`. All milestones shipped and governed.
 
@@ -283,7 +292,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 ADAAD enforces the following invariants on every epoch. These are CI-verified and cannot be bypassed:
 
-- **Constitution v0.5.0** is active — `governance_health_floor` and `soulbound_privacy_invariant` are BLOCKING rules.
+- **Constitution v0.7.0** is active — `governance_health_floor`, `soulbound_privacy_invariant`, `bandit_arm_integrity_invariant`, and `market_signal_integrity_invariant` are all BLOCKING rules.
 - **`ADAAD_DETERMINISTIC_LOCK`** — set to `1|true|yes|on` to enforce strict determinism mode. Replay must produce byte-identical outputs.
 - **`ADAAD_DISPATCH_LATENCY_BUDGET_MS`** — default `50.0` ms. Dispatch latency above this budget triggers a governance audit event.
 - Fail-closed: missing `ADAAD_SOULBOUND_KEY` halts the pipeline immediately with `soulbound_key_absent.v1` journaled.
@@ -301,7 +310,7 @@ ADAAD's governance isn't configuration — it's architecture. The hierarchy is s
 Constitution  →  Architecture Contract  →  ArchitectAgent Spec  →  PR Procession
 ```
 
-- **[Constitution](docs/CONSTITUTION.md)** — 14 hard rules. Cannot be overridden by any agent, operator, or PR.
+- **[Constitution](docs/CONSTITUTION.md)** — 18 hard rules. Cannot be overridden by any agent, operator, or PR.
 - **[Architecture Contract](docs/ARCHITECTURE_CONTRACT.md)** — Interface and boundary invariants across all modules.
 - **[ArchitectAgent Spec v3.1.0](docs/governance/ARCHITECT_SPEC_v3.1.0.md)** — Canonical spec for the Phase 6 governance baseline; Phase 6.1 active hardening lane.
 - **[PR Procession Plan](docs/governance/ADAAD_PR_PROCESSION_2026-03.md)** — Controlling source for PR order, CI tier, and closure state.
