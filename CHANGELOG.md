@@ -1,3 +1,34 @@
+## [3.9.0] — 2026-03-09
+
+### Phase 14 — ProposalEngine Activation (Complete)
+
+**PR-14-PLAN** Phase 14 upgrade plan document
+- `docs/PHASE_14_UPGRADE_PLAN.md`: full build plan for ProposalEngine activation,
+  the single highest-leverage commercial gap in ADAAD
+- `governance/rule_applicability.yaml`: bandit_arm_integrity_invariant and
+  market_signal_integrity_invariant entries added (fixes policy drift CI gate)
+
+**PR-14-01** ProposalEngine → EvolutionLoop Phase 1e wiring
+- `runtime/evolution/evolution_loop.py`:
+  * `_proposal_to_candidate()`: new bridge function — Proposal → MutationCandidate.
+    Maps proposal_id→mutation_id, estimated_impact→expected_gain, projected_impact
+    fields, agent_origin='proposal_engine', operator_category='llm_strategy',
+    operator_version='14.0.0'. Returns None for noop proposals (empty real_diff).
+  * `EvolutionLoop.__init__()`: `proposal_engine: Optional[ProposalEngine] = None`
+  * Phase 1e block: exception-isolated; builds ProposalRequest; calls generate();
+    bridges to MutationCandidate; appends to all_proposals if non-None
+- 19 new tests (`tests/evolution/test_proposal_engine_evolution_wiring.py`)
+
+**PR-14-02** Live signal population into ProposalRequest.context
+- Phase 1e context builder: market signals (consecutive_synthetic), bandit
+  recommendation (agent, confidence, exploration_bonus), explore_ratio,
+  evolution_mode, epoch_id/count, last_health_score, mutation_score
+  (WeightAdaptor.prediction_accuracy), governance_debt_score / lineage_health
+  (Phase 15 TODOs)
+- 14 new tests (`tests/evolution/test_proposal_engine_context_signals.py`)
+
+**Totals:** 33 new tests (Phase 14) · 2,564+ passing
+
 ## [3.8.0] — 2026-03-09
 
 ### Phase 13 — Market Signal Integrity Invariant (Track 11-B, Complete)

@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-13%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-14%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `3.8.0` |
+| **Current version** | `3.9.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `3277580` |
+| **Release SHA** | `9e93391` |
 | **Release Branch** | `main` |
 
-**New in this release:** Phase 13 complete — Market Signal Integrity Invariant (Track 11-B). Constitution v0.7.0 adds `market_signal_integrity_invariant` BLOCKING rule; `MarketFitnessIntegrator` now tracks `consecutive_synthetic_epochs` and stamps every `IntegrationResult`; `EpochResult` gains `consecutive_synthetic_market_epochs`; validator reads chain tip and blocks weight promotion when synthetic cap exceeded.
+**New in this release:** Phase 14 complete — ProposalEngine activation. `_proposal_to_candidate()` bridge wires `ProposalEngine.generate()` into `EvolutionLoop` Phase 1e. Live signals (market, bandit, explore ratio, health score, weight accuracy) populate `ProposalRequest.context` each epoch. ADAAD now adapts its mutation strategy per-epoch based on governance intelligence accumulated in Phases 9–13.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -253,7 +253,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 > 🔄 **This section reflects live repository state.** Version, phase, and milestone status are always current.
 
-**Phase 13 — Market Signal Integrity Invariant** is complete at `v3.8.0`. Phases 11–13 all shipped in the current release cycle.
+**Phase 14 — ProposalEngine Activation** is complete at `v3.9.0`. Phases 11–14 all shipped in the current release cycle.
 
 | Component | Status | Version |
 |:---|:---:|:---:|
@@ -262,6 +262,8 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 | Cross-epoch ledger digest verification — Track 11-C | ✅ shipped | `v3.7.0` |
 | consecutive_synthetic_epochs counter on IntegrationResult | ✅ shipped | `v3.8.0` |
 | Constitution v0.7.0 market_signal_integrity_invariant | ✅ shipped | `v3.8.0` |
+| ProposalEngine Phase 1e wiring in EvolutionLoop | ✅ shipped | `v3.9.0` |
+| Live signal context (market, bandit, explore ratio) into ProposalRequest | ✅ shipped | `v3.9.0` |
 
 | Component | Status | Module |
 |:---|:---:|:---|
