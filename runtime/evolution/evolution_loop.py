@@ -313,16 +313,56 @@ class EvolutionLoop:
         except Exception:
             pass
 
-        # Phase 1e: ProposalEngine — strategy-driven LLM proposal (PR-14-01)
+        # Phase 1e: ProposalEngine — strategy-driven LLM proposal (PR-14-01/02)
         # Runs alongside Phase 1; outputs bridged to MutationCandidate via
         # _proposal_to_candidate(). Noop proposals (empty real_diff) are silently
         # skipped. Full exception isolation: any failure is a no-op.
         if self._proposal_engine is not None:
             try:
+                # Phase 14-02: live signal context — populated from epoch state
+                # available at Phase 1e time (bandit, explore/exploit mode,
+                # previous-epoch market signals, weight adaptor accuracy).
+                _mkt_integrator = self._market_integrator
+                _engine_context = {
+                    # Market signal quality (from previous epoch via integrator state)
+                    "market_score":            (
+                        _mkt_integrator.consecutive_synthetic_epochs
+                        if _mkt_integrator is not None else 0
+                    ),
+                    "market_is_synthetic":     (
+                        _mkt_integrator.consecutive_synthetic_epochs > 0
+                        if _mkt_integrator is not None else True
+                    ),
+                    "consecutive_synthetic":   (
+                        _mkt_integrator.consecutive_synthetic_epochs
+                        if _mkt_integrator is not None else 0
+                    ),
+                    # Bandit strategy recommendation (current epoch Phase 0)
+                    "bandit_agent":            (
+                        _bandit_rec.agent if _bandit_rec is not None else None
+                    ),
+                    "bandit_confidence":       (
+                        _bandit_rec.confidence if _bandit_rec is not None else 0.0
+                    ),
+                    "exploration_bonus":       (
+                        _bandit_rec.exploration_bonus if _bandit_rec is not None else 0.0
+                    ),
+                    # Explore/exploit state (current epoch Phase 0b)
+                    "explore_ratio":           float(getattr(context, "explore_ratio", 1.0)),
+                    "evolution_mode":          str(evolution_mode),
+                    # Governance & weight state
+                    "epoch_id":                epoch_id,
+                    "epoch_count":             self._epoch_count,
+                    "last_health_score":       float(self._last_epoch_health_score),
+                    # Standard ProposalEngine StrategyInput fields
+                    "mutation_score":          float(self._adaptor.prediction_accuracy),
+                    "governance_debt_score":   0.0,   # Phase 15: wire GovernanceDebtLedger
+                    "lineage_health":          1.0,   # Phase 15: wire ledger proximity mean
+                }
                 _engine_req = ProposalRequest(
                     cycle_id=epoch_id,
                     strategy_id="auto",
-                    context={},   # Phase 14-02: live signals populated here
+                    context=_engine_context,
                 )
                 _engine_proposal = self._proposal_engine.generate(_engine_req)
                 _engine_candidate = _proposal_to_candidate(_engine_proposal, epoch_id=epoch_id)
