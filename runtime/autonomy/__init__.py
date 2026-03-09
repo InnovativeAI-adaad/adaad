@@ -2,7 +2,7 @@
 """Autonomy enhancement modules for role contracts, loops, and scoring."""
 
 from .adaptive_budget import AutonomyBudgetEngine, AutonomyBudgetSnapshot
-from .loop import AGMCycleResult, AGMStep, AGMStepInput, AGMStepOutput, AutonomyLoopResult, run_agm_cycle, run_self_check_loop
+from .loop import AGMCycleResult, AGMStep, AGMStepInput, AGMStepOutput, AutonomyLoop, AutonomyLoopResult, run_agm_cycle, run_self_check_loop
 from .mutation_scaffold import MutationCandidate, rank_mutation_candidates
 from .reward_learning import (
     GuardedPromotionPolicy,
@@ -22,6 +22,8 @@ __all__ = [
     "AGMStep",
     "AGMStepInput",
     "AGMStepOutput",
+    # Phase 19 — stateful loop with persistent IntelligenceRouter
+    "AutonomyLoop",
     "AutonomyLoopResult",
     "GuardedPromotionPolicy",
     "LearningProfileRegistry",
