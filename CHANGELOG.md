@@ -1,3 +1,29 @@
+## [3.7.0] — 2026-03-09
+
+### Phase 12 — EpochResult Market Fields + Cross-Epoch Digest Verification (Complete)
+
+**PR-12-D-01** EpochResult live market signal fields (Track 11-D)
+- `EpochResult` gains three observable market fields: `live_market_score` (float, default 0.0),
+  `market_confidence` (float, default 0.0), `market_is_synthetic` (bool, default True)
+- `EvolutionLoop.__init__()` accepts `market_integrator: Optional[MarketFitnessIntegrator]`
+- Phase 2m in `run_epoch()` calls `integrate(epoch_id=...)` and populates the three fields;
+  exception-isolated — epoch completes with synthetic defaults on any integrator failure
+- 14 new tests (`tests/evolution/test_epoch_result_market_fields.py`)
+
+**PR-12-C-01** Cross-epoch ledger digest verification (Track 11-C)
+- `SoulboundLedger.current_chain_hash()` — semantically explicit alias for `last_chain_hash()`;
+  exposes current Merkle chain tip to replay verification callers
+- `ContextReplayInterface.verify_replay_digest(digest, epoch_id) -> bool` — compares
+  `context_digest` from a previous `ReplayInjection` against current ledger chain tip;
+  emits `context_digest_mismatch.v1` journal event on mismatch, empty digest, or read error;
+  fully exception-isolated, never raises
+- `EvolutionLoop` Phase 0c: `verify_replay_digest()` called before applying `ReplayInjection`;
+  injection skipped silently when verification fails; mismatch event emitted
+- 17 new tests (`tests/memory/test_context_replay_digest_verify.py`)
+
+**Totals:** 31 new tests · 2,497+ passing
+
+
 ## [3.6.0] — 2026-03-09
 
 ### Phase 11-A — Bandit-Informed Agent Selection (Complete)
