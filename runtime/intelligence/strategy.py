@@ -15,7 +15,10 @@ raise ValueError at selection time.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
+
+if TYPE_CHECKING:  # pragma: no cover
+    from runtime.intelligence.critique_signal import CritiqueSignalBuffer
 
 # ---------------------------------------------------------------------------
 # Public taxonomy registry — Phase 16
@@ -117,7 +120,7 @@ class StrategyModule:
     _CONSERVATIVE_LINEAGE_THRESHOLD: float = 0.80
     _CONSERVATIVE_HORIZON_THRESHOLD: int = 9
 
-    def select(self, context: StrategyInput) -> StrategyDecision:  # noqa: C901
+    def select(self, context: StrategyInput, *, signal_buffer: "CritiqueSignalBuffer | None" = None) -> StrategyDecision:  # noqa: C901
         n_debt = self._normalize(context.governance_debt_score)
         n_lineage = self._normalize(context.lineage_health)
         n_mutation = self._normalize(context.mutation_score)
@@ -219,6 +222,17 @@ class StrategyModule:
                 ),
             ]
 
+        # Phase 18: apply per-strategy breach penalties before sort.
+        # penalty = breach_rate × 0.20; clamped so payoff ≥ 0.0.
+        breach_penalties: dict[str, float] = {}
+        if signal_buffer is not None:
+            penalised: list[tuple[str, float, str]] = []
+            for sid, payoff, rationale in candidates:
+                penalty = signal_buffer.breach_penalty(sid)
+                breach_penalties[sid] = penalty
+                penalised.append((sid, max(0.0, payoff - penalty), rationale))
+            candidates = penalised
+
         # Sort: payoff desc primary; priority asc secondary; lexicographic tertiary
         sorted_candidates = sorted(
             candidates,
@@ -244,6 +258,7 @@ class StrategyModule:
             parameters={
                 "horizon_cycles": int(max(context.horizon_cycles, 1)),
                 "strategy_taxonomy_version": "16.0",
+                "breach_penalties": breach_penalties,
                 "normalized": {
                     "mutation": n_mutation,
                     "governance_debt": n_debt,
