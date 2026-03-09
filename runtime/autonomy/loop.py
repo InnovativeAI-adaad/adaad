@@ -45,6 +45,10 @@ class AutonomyLoopResult:
     total_duration_ms: int
     mutation_score: float
     decision: str
+    # Phase 19: intelligence layer output fields — all optional, default None
+    intelligence_strategy_id: str | None = None
+    intelligence_outcome: str | None = None
+    intelligence_composite: float | None = None
 
 
 class AGMStep(IntEnum):
@@ -406,6 +410,7 @@ def run_self_check_loop(
     governance_debt_score: float = 0.0,
     fitness_trend_delta: float = 0.0,
     epoch_pass_rate: float = 1.0,
+    lineage_health: float | None = None,  # Phase 19: structural_refactor / conservative_hold triggers
     replay_mode: str = "off",
     recovery_tier: str | None = None,
     provider: RuntimeDeterminismProvider | None = None,
@@ -449,6 +454,7 @@ def run_self_check_loop(
             cycle_id=cycle_id,
             mutation_score=mutation_score,
             governance_debt_score=governance_debt_score,
+            lineage_health=lineage_health if lineage_health is not None else 1.0,
             signals={"epoch_pass_rate": epoch_pass_rate},
         )
     )
@@ -491,4 +497,7 @@ def run_self_check_loop(
         total_duration_ms=total_duration_ms,
         mutation_score=mutation_score,
         decision=decision,
+        intelligence_strategy_id=routed_intelligence.strategy.strategy_id,
+        intelligence_outcome=routed_intelligence.outcome,
+        intelligence_composite=routed_intelligence.critique.weighted_aggregate,
     )
