@@ -172,6 +172,31 @@ def step_schemas() -> None:
         _ok("Governance schemas valid")
 
 
+def step_soulbound_key() -> None:
+    """Check ADAAD_SOULBOUND_KEY is set; warn with generation hint if not."""
+    key = os.environ.get("ADAAD_SOULBOUND_KEY", "")
+    if key:
+        # Validate: hex-decodable and ≥ 32 bytes (64 hex chars)
+        try:
+            key_bytes = bytes.fromhex(key)
+            if len(key_bytes) < 32:
+                _warn("ADAAD_SOULBOUND_KEY is set but too short (< 32 bytes / 64 hex chars).")
+                _warn("Ledger writes will be fail-closed until a valid key is supplied.")
+            else:
+                _ok(f"ADAAD_SOULBOUND_KEY set ({len(key_bytes) * 8}-bit key)")
+        except ValueError:
+            _warn("ADAAD_SOULBOUND_KEY is set but is not valid hex — ledger will be fail-closed.")
+        return
+
+    _warn("ADAAD_SOULBOUND_KEY is not set.")
+    _info("Phase 9+ soulbound ledger writes will be fail-closed without it.")
+    _info("Generate a dev key:")
+    print(f"    {DIM}python -c \"import secrets; print(secrets.token_hex(32))\"{R}")
+    print(f"    {DIM}export ADAAD_SOULBOUND_KEY=<your-key>{R}")
+    _info("Add to shell profile to persist across sessions.")
+    _info("Production: source from a secret manager — never commit this value.")
+
+
 def step_dryrun() -> None:
     _info("Running governed dry-run…")
     result = _run_quiet(
@@ -198,8 +223,9 @@ def main() -> None:
         ("Dependencies",      step_install_deps),
         ("Environment",       step_env),
         ("Workspace",         step_workspace),
-        ("Governance schemas",step_schemas),
-        ("Governed dry-run",  step_dryrun),
+        ("Governance schemas", step_schemas),
+        ("Soulbound key",      step_soulbound_key),
+        ("Governed dry-run",   step_dryrun),
     ]
 
     for label, fn in steps:

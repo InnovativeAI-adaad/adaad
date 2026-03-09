@@ -98,10 +98,36 @@ python server.py --host 0.0.0.0 --port 8000
 |---|---|---|
 | `ADAAD_ENV` | `dev` · `test` · `staging` · `production` | Always |
 | `ADAAD_CLAUDE_API_KEY` | Anthropic key for AI mutation proposals | AI mode |
+| `ADAAD_SOULBOUND_KEY` | 64-hex-char HMAC key for the Soulbound Context Ledger (Phase 9+) | Phase 9+ |
 | `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY` | HMAC key for session tokens | Strict envs |
 | `CRYOVANT_DEV_MODE` | Dev-only overrides (rejected in strict envs) | Never in prod |
 
 Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
+
+---
+
+## Soulbound memory (Phase 9+)
+
+ADAAD v3.4.0+ requires a `ADAAD_SOULBOUND_KEY` to activate the tamper-evident context ledger
+(`runtime/memory/soulbound_ledger.py`). Without it the ledger is fail-closed — the system
+raises `SoulboundKeyError` and halts any epoch that requires ledger writes.
+
+**Generate a dev key:**
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+# e.g. → a3f8c1...  (64 hex chars = 256-bit key)
+
+export ADAAD_SOULBOUND_KEY=<your-generated-key>
+```
+
+**Production:** source from a secret manager — never check this value into version control.
+
+Key rotation is performed by rotating the env var value; the ledger emits a
+`soulbound_key_rotation.v1` journal event on every rotation. No ledger re-signing is required.
+
+> Runs that do not reach Phase 5c (CraftPatternExtractor) or Phase 5d (RewardSignalBridge)
+> do not require `ADAAD_SOULBOUND_KEY`. Dry-runs and replay-audit mode skip ledger writes.
 
 ---
 

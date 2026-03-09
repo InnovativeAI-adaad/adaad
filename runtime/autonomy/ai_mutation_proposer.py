@@ -157,11 +157,16 @@ class CodebaseContext:
     recent_failures: list of failing test names from last CI run
     current_epoch_id: epoch identifier string
     explore_ratio: 0.0 = pure exploit, 1.0 = pure explore
+    soulbound_annotation: optional replay context digest injected by
+        ContextReplayInterface (Phase 9). When set, appended as a
+        supplemental annotation block in the proposal user message.
+        Content is a serialised dict; digest is SHA-256 of the ledger window.
     """
-    file_summaries:    Dict[str, str]
-    recent_failures:   List[str]
-    current_epoch_id:  str
-    explore_ratio:     float = 0.5
+    file_summaries:       Dict[str, str]
+    recent_failures:      List[str]
+    current_epoch_id:     str
+    explore_ratio:        float = 0.5
+    soulbound_annotation: Optional[str] = None
 
     def context_hash(self) -> str:
         """Stable 8-hex-char hash of the codebase state for lineage tracing."""
@@ -190,6 +195,11 @@ class CodebaseContext:
             lines.append("Recent test failures:")
             for f in self.recent_failures[:10]:
                 lines.append(f"  - {f}")
+        if self.soulbound_annotation:
+            lines.append("")
+            lines.append("--- Soulbound context (advisory — do not repeat verbatim) ---")
+            lines.append(self.soulbound_annotation)
+            lines.append("--- end soulbound context ---")
         return "\n".join(lines)
 
 

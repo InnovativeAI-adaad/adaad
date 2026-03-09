@@ -139,6 +139,7 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_SANDBOX_TIMEOUT_SECONDS` | `'30', unset` | numeric string parsed as int/float | runtime/governance engine | `runtime/sandbox/executor.py` |
 | `ADAAD_SEVERITY_ESCALATIONS` | `''` | string/JSON per caller contract | runtime/governance engine | `runtime/constitution.py` |
 | `ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY` | `''` | boolean-like: `1|true|yes|on` enables | application orchestration (app) | `app/simulation_utils.py` |
+| `ADAAD_SOULBOUND_KEY` | `unset` | hex-encoded string; **required** when Soulbound Context Ledger is active (Phase 9+). Minimum 32 bytes / 64 hex chars. Absent or malformed value raises `SoulboundKeyError` (fail-closed). Must be sourced from a secret manager in all non-dev deployments. Generate a dev key: `python -c "import secrets; print(secrets.token_hex(32))"` | runtime/memory (Phase 9) | `runtime/memory/soulbound_key.py` |
 | `ADAAD_SOVEREIGN_MODE` | `''` | enum string defined by caller | runtime/governance engine | `runtime/evolution/governor.py` |
 | `ADAAD_STAGED_CONTENT_MAX_LEN` | `'10000'` | numeric string parsed as int/float | application orchestration (app) | `app/beast_mode_loop.py` |
 | `ADAAD_TEST_SANDBOX_PREEXEC_DISABLED` | `unset` | boolean-like: `1|true|yes|on` enables | runtime/governance engine | `runtime/test_sandbox.py` |

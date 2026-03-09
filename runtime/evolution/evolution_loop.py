@@ -5,6 +5,7 @@ EvolutionLoop — top-level epoch orchestration for ADAAD.
 Binds all capability modules into a single run_epoch() call:
   Phase 0:   Strategy      — FitnessLandscape determines preferred agent
   Phase 0b:  Mode          — ExploreExploitController selects epoch mode
+  Phase 0c:  Replay        — ContextReplayInterface injects context_digest + explore_ratio (deferred PR-9-03)
   Phase 1:   Propose       — AI agents generate MutationCandidate proposals
   Phase 1.5: EntropyGate   — PR-PHASE4-04: quarantine nondeterministic proposals
   Phase 2:   Seed          — PopulationManager deduplicates and caps population
@@ -58,6 +59,8 @@ from runtime.evolution.checkpoint_chain import checkpoint_chain_digest, ZERO_HAS
 # Phase 9: Soulbound Context — CraftPatternExtractor wiring (PR-9-02)
 from runtime.memory.craft_pattern_extractor import CraftPatternExtractor
 from runtime.memory.soulbound_ledger import SoulboundLedger, DEFAULT_LEDGER_PATH
+# Phase 9: ContextReplayInterface — proposal annotation wiring (deferred PR-9-03)
+from runtime.memory.context_replay_interface import ContextReplayInterface
 # Phase 10: Reward Learning Pipeline — RewardSignalBridge wiring (PR-10-01)
 from runtime.memory.reward_signal_bridge import RewardSignalBridge
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
@@ -139,6 +142,7 @@ class EvolutionLoop:
         amendment_engine:  Optional[RoadmapAmendmentEngine] = None,
         federated_evidence_matrix: Optional[FederatedEvidenceMatrix] = None,
         craft_pattern_extractor: Optional[CraftPatternExtractor] = None,
+        replay_interface: Optional[ContextReplayInterface] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -160,6 +164,10 @@ class EvolutionLoop:
         # must be set for the ledger to function. If the extractor is not
         # injected, pattern extraction is skipped silently (no crash).
         self._craft_extractor: Optional[CraftPatternExtractor] = craft_pattern_extractor
+        # Phase 9: ContextReplayInterface — injects context_digest + explore_ratio
+        # into CodebaseContext before Phase 1 (proposal). Optional; skipped silently
+        # if not injected (ADAAD_SOULBOUND_KEY absent or no ledger entries yet).
+        self._replay_interface: Optional[ContextReplayInterface] = replay_interface
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
@@ -183,6 +191,26 @@ class EvolutionLoop:
             epoch_score=self._last_epoch_health_score,
             is_plateau=is_plateau,
         )
+
+        # Phase 0c: Soulbound context replay injection (deferred PR-9-03)
+        # Reads craft_pattern entries from the SoulboundLedger (written by Phase 5c)
+        # and injects a context_digest annotation + adjusted explore_ratio into
+        # CodebaseContext before the proposal agents are called in Phase 1.
+        # Exception-isolated: replay failure never blocks proposal.
+        # Constitutional invariant: GovernanceGate approval authority is unaffected.
+        if self._replay_interface is not None:
+            try:
+                replay_injection = self._replay_interface.build_injection(epoch_id=epoch_id)
+                if not replay_injection.skipped and replay_injection.signal_quality_ok:
+                    context.explore_ratio = replay_injection.adjusted_explore_ratio
+                    context.soulbound_annotation = (
+                        f"context_digest={replay_injection.context_digest} "
+                        f"dominant_pattern={replay_injection.dominant_pattern} "
+                        f"mean_elite_score={replay_injection.mean_elite_score:.4f} "
+                        f"valid_entries={replay_injection.valid_entry_count}"
+                    )
+            except Exception:  # noqa: BLE001
+                pass
 
         # Phase 1: Propose
         all_proposals: List[MutationCandidate] = []
