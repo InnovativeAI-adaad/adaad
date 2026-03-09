@@ -1,8 +1,8 @@
 {
     "schema_version": "1.1.0",
-    "last_completed_pr": "PR-16-REL",
-    "next_pr": "PR-17-PLAN (Phase 17 \u2014 next phase TBD)",
-    "active_phase": "Phase 16 COMPLETE \u00b7 v4.1.0 \u00b7 2627+ tests",
+    "last_completed_pr": "PR-17-REL",
+    "next_pr": "PR-18-PLAN (Phase 18 \u2014 TBD)",
+    "active_phase": "Phase 17 COMPLETE \u00b7 v4.2.0 \u00b7 2649+ tests",
     "last_invocation": "2026-03-09",
     "blocked_reason": null,
     "blocked_at_gate": null,
@@ -92,7 +92,9 @@
         "pr10-02-fitness-orchestrator-live-signal-injection",
         "phase10-complete-v3.5.0",
         "phase16-strategy-taxonomy-expansion",
-        "v4.1.0-released"
+        "v4.1.0-released",
+        "phase17-intelligence-router-closure",
+        "v4.2.0-released"
     ],
     "pending_evidence_rows": [],
     "last_sync_sha": "pending-push"
