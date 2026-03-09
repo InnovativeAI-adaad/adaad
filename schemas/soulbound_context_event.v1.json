@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.innovativeai.io/schemas/soulbound_context_event.v1.json",
+  "title": "SoulboundContextEvent",
+  "description": "Schema for all soulbound context ledger journal events (Phase 9).",
+  "type": "object",
+  "required": ["event_type", "schema_version", "epoch_id"],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "context_ledger_entry_accepted.v1",
+        "context_ledger_entry_rejected.v1",
+        "context_ledger_tamper_detected.v1",
+        "soulbound_key_rotation.v1",
+        "soulbound_key_absent.v1",
+        "craft_pattern_extracted.v1",
+        "context_replay_injected.v1"
+      ]
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "epoch_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "UUID of the ledger entry. Required for accepted/tamper events."
+    },
+    "context_type": {
+      "type": "string",
+      "enum": [
+        "mutation_proposal",
+        "fitness_signal",
+        "governance_advisory",
+        "craft_pattern",
+        "replay_injection"
+      ]
+    },
+    "context_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hex digest of the canonical JSON context payload."
+    },
+    "chain_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Chain link hash linking this entry to the previous."
+    },
+    "reason": {
+      "type": "string",
+      "description": "Rejection or tamper reason string."
+    },
+    "key_source": {
+      "type": "string",
+      "enum": ["env", "caller_provided"],
+      "description": "Source of the HMAC signing key (for rotation events)."
+    },
+    "error": {
+      "type": "string",
+      "description": "Error message (for key_absent events)."
+    }
+  },
+  "additionalProperties": true,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "event_type": { "const": "context_ledger_entry_accepted.v1" }
+        }
+      },
+      "then": {
+        "required": ["entry_id", "context_type", "context_digest", "chain_hash"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": { "const": "context_ledger_entry_rejected.v1" }
+        }
+      },
+      "then": {
+        "required": ["context_type", "reason"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "event_type": { "const": "context_ledger_tamper_detected.v1" }
+        }
+      },
+      "then": {
+        "required": ["entry_id", "reason"]
+      }
+    }
+  ]
+}

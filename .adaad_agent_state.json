@@ -1,9 +1,9 @@
 {
   "schema_version": "1.1.0",
-  "last_completed_pr": "PR-CF-FIXES",
-  "next_pr": "PR-9-01",
-  "active_phase": "Phase 9 UNBLOCKED \u00b7 Soulbound Context \u00b7 v3.4.0 target",
-  "last_invocation": "2026-03-08",
+  "last_completed_pr": "PR-9-01",
+  "next_pr": "PR-9-02",
+  "active_phase": "Phase 9 Soulbound Context \u00b7 PR-9-01 COMPLETE \u00b7 PR-9-02 next (CraftPatternExtractor)",
+  "last_invocation": "2026-03-09",
   "blocked_reason": null,
   "blocked_at_gate": null,
   "blocked_at_tier": null,
@@ -73,7 +73,11 @@
     "cf2-explore-exploit-epoch-score-fix",
     "cf3-penalty-adaptor-simulate-true-baseline",
     "cf4-mutation-engine-cursor-reset-on-missing-file",
-    "phase9-prerequisites-satisfied"
+    "phase9-prerequisites-satisfied",
+    "pr9-01-soulbound-key-hmac-env-fail-closed",
+    "pr9-01-soulbound-ledger-tamper-evident-chain",
+    "pr9-01-context-filter-chain-4-builtin-filters",
+    "pr9-01-soulbound-context-event-schema"
   ],
   "pending_evidence_rows": [],
   "last_sync_sha": "pending-push"
