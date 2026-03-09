@@ -16,6 +16,7 @@ Binds all capability modules into a single run_epoch() call:
   Phase 5b:  E/E commit    — ExploreExploitController epoch commit
   Phase 5c:  Craft Pattern — CraftPatternExtractor writes reasoning pattern to SoulboundLedger
   Phase 5d:  Reward Signal — RewardSignalBridge ingests all scores → RewardLearning pipeline
+  Phase 5e:  Bandit Update — AgentBanditSelector.update() with epoch reward signal         [PR-11-A-02]
   Phase 6:   Checkpoint    — PR-PHASE4-05: anchor EpochResult to CheckpointChain
   Return:    EpochResult dataclass consumed by Orchestrator
 
@@ -63,6 +64,8 @@ from runtime.memory.soulbound_ledger import SoulboundLedger, DEFAULT_LEDGER_PATH
 from runtime.memory.context_replay_interface import ContextReplayInterface
 # Phase 10: Reward Learning Pipeline — RewardSignalBridge wiring (PR-10-01)
 from runtime.memory.reward_signal_bridge import RewardSignalBridge
+# Phase 11-A: AgentBanditSelector — reward-profile-informed agent selection (PR-11-A-02)
+from runtime.autonomy.agent_bandit_selector import AgentBanditSelector
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
 from security.ledger import journal
@@ -143,6 +146,7 @@ class EvolutionLoop:
         federated_evidence_matrix: Optional[FederatedEvidenceMatrix] = None,
         craft_pattern_extractor: Optional[CraftPatternExtractor] = None,
         replay_interface: Optional[ContextReplayInterface] = None,
+        bandit_selector: Optional[AgentBanditSelector] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -168,6 +172,10 @@ class EvolutionLoop:
         # into CodebaseContext before Phase 1 (proposal). Optional; skipped silently
         # if not injected (ADAAD_SOULBOUND_KEY absent or no ledger entries yet).
         self._replay_interface: Optional[ContextReplayInterface] = replay_interface
+        # Phase 11-A: AgentBanditSelector — reward-profile-informed agent selection
+        # Wired lazily; if not injected, Phase 0d is skipped and Phase 0 falls back
+        # to FitnessLandscape win-rate heuristic (backwards-compatible).
+        self._bandit_selector: Optional[AgentBanditSelector] = bandit_selector
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
@@ -177,8 +185,18 @@ class EvolutionLoop:
         epoch_id = context.current_epoch_id
         self._epoch_count += 1
 
-        # Phase 0: Strategy
-        _preferred = self._landscape.recommended_agent()
+        # Phase 0: Strategy — bandit-aware agent recommendation (Phase 11-A)
+        # AgentBanditSelector.recommend() is called first so the bandit_rec can
+        # override FitnessLandscape.recommended_agent() when it is active and
+        # confident. Exception-isolated: bandit failure falls back to landscape.
+        _bandit_rec = None
+        if self._bandit_selector is not None:
+            try:
+                _bandit_rec = self._bandit_selector.recommend(epoch_id=epoch_id)
+            except Exception:  # noqa: BLE001
+                pass
+
+        _preferred = self._landscape.recommended_agent(bandit_rec=_bandit_rec)
 
         # Phase 0b: Mode selection
         # CF-2 fix: use internally tracked score from previous epoch.
@@ -375,6 +393,31 @@ class EvolutionLoop:
                 # Reward signal failure must never block the epoch
                 pass
         mean_lineage_proximity = _compute_mean_lineage_proximity(accepted)
+
+        # Phase 5e: AgentBanditSelector update (PR-11-A-02)
+        # Update the bandit arm for the agent that recommended the proposals this epoch.
+        # Reward signal: avg_reward from RewardSignalBridge if available, else
+        # acceptance rate as a proxy (accepted_count / total_candidates).
+        if self._bandit_selector is not None and _preferred is not None:
+            try:
+                if (
+                    self._reward_bridge is not None
+                    and self._reward_bridge.recent_evaluations
+                ):
+                    latest_eval = self._reward_bridge.recent_evaluations[-1]
+                    reward_signal = float(getattr(latest_eval, "avg_reward", 0.0))
+                else:
+                    reward_signal = (
+                        accepted_count / total_candidates
+                        if total_candidates > 0 else 0.0
+                    )
+                self._bandit_selector.update(
+                    agent=_preferred,
+                    reward=reward_signal,
+                    epoch_id=epoch_id,
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
         # Top-5 IDs
         unique_ids: List[str] = []
