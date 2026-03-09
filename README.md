@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-10%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-11%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `3.5.0` |
+| **Current version** | `3.6.0` |
 | **Released** | 2026-03-09 |
-| **Release SHA** | `a6b5e16` |
+| **Release SHA** | `4f51089` |
 | **Release Branch** | `main` |
 
-**New in this release:** Phase 10 — Reward Learning Pipeline complete. RewardSignalBridge, PolicyPromotionController, MarketFitnessIntegrator.integrate(). Full 10-phase EvolutionLoop active.
+**New in this release:** Phase 11-A — AgentBanditSelector (UCB1 + Thompson) closes the reward-learning loop. FitnessLandscape bandit override, EvolutionLoop Phase 0d/5e wiring, Constitution v0.6.0 bandit_arm_integrity_invariant.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 

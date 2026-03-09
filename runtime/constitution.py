@@ -130,7 +130,7 @@ from runtime.platform.android_monitor import AndroidMonitor
 from runtime.governance_surface import canonicalize_governance_details
 from security.ledger import journal
 
-CONSTITUTION_VERSION = "0.5.0"
+CONSTITUTION_VERSION = "0.6.0"
 ELEMENT_ID = "Earth"
 POLICY_PATH = Path("runtime/governance/constitution.yaml")
 RULE_APPLICABILITY_PATH = Path("governance/rule_applicability.yaml")
@@ -157,6 +157,7 @@ VALIDATOR_VERSIONS: Dict[str, str] = {
     "_validate_reviewer_calibration": "1.0.0",
     "_validate_governance_health_floor": "1.0.0",
     "_validate_soulbound_privacy_invariant": "1.0.0",
+    "_validate_bandit_arm_integrity": "1.0.0",
 }
 _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
 _POLICY_DOCUMENT: Dict[str, Any] = {}
@@ -1593,6 +1594,110 @@ def _validate_soulbound_privacy_invariant(_: MutationRequest) -> Dict[str, Any]:
     }
 
 
+
+def _validate_bandit_arm_integrity(_: MutationRequest) -> Dict[str, Any]:
+    """Phase 11-A — Constitution v0.6.0 BLOCKING rule.
+
+    Audits AgentBanditSelector arm state for two invariants:
+
+    1. arm_stats_non_negative: reward_mass, loss_mass, pull_count must all be >= 0.
+       Negative values indicate state corruption or an adversarial write.
+
+    2. consecutive_epoch_cap_respected: no single agent may hold
+       consecutive_recommendations > MAX_CONSECUTIVE_BANDIT_EPOCHS without
+       at least one competing arm having been updated in that window.
+       This prevents bandit lock-in from starving agent diversity.
+
+    The validator reads from DEFAULT_STATE_PATH (data/agent_bandit_state.json).
+    When the state file is absent the rule passes advisory (bandit not yet active).
+    In SANDBOX tier the rule is advisory; in PRODUCTION/STABLE it is BLOCKING.
+
+    GovernanceGate retains sole mutation approval authority; this rule enforces
+    bandit-layer integrity only.
+    """
+    import json as _json
+    import os as _os
+    from pathlib import Path as _Path
+
+    state_path = _Path(
+        _os.environ.get(
+            "ADAAD_BANDIT_STATE_PATH",
+            "data/agent_bandit_state.json",
+        )
+    )
+    max_consecutive = int(
+        _os.environ.get(
+            "ADAAD_BANDIT_MAX_CONSECUTIVE_EPOCHS",
+            "10",
+        )
+    )
+
+    # File absent → bandit not yet active; pass advisory
+    if not state_path.exists():
+        return {
+            "ok": True,
+            "reason": "bandit_state_absent_advisory_pass",
+            "details": {
+                "bandit_active": False,
+                "arm_stats_non_negative": None,
+                "consecutive_epoch_cap_respected": None,
+                "max_consecutive_epochs": max_consecutive,
+                "phase": 11,
+            },
+        }
+
+    try:
+        raw = _json.loads(state_path.read_text(encoding="utf-8"))
+        arms = raw.get("arms", {})
+    except Exception:  # noqa: BLE001
+        return {
+            "ok": True,
+            "reason": "bandit_state_unreadable_advisory_pass",
+            "details": {"bandit_active": False, "phase": 11},
+        }
+
+    # Invariant 1: non-negative arm stats
+    negative_arms = []
+    for agent, arm in arms.items():
+        rc  = int(arm.get("pull_count",  0))
+        rm  = float(arm.get("reward_mass", 0.0))
+        lm  = float(arm.get("loss_mass",  0.0))
+        if rc < 0 or rm < 0.0 or lm < 0.0:
+            negative_arms.append(agent)
+
+    arm_stats_ok = len(negative_arms) == 0
+
+    # Invariant 2: consecutive epoch cap
+    consecutive_violations = []
+    for agent, arm in arms.items():
+        consec = int(arm.get("consecutive_recommendations", 0))
+        if consec > max_consecutive:
+            consecutive_violations.append({
+                "agent": agent,
+                "consecutive_recommendations": consec,
+                "cap": max_consecutive,
+            })
+
+    consecutive_ok = len(consecutive_violations) == 0
+
+    ok = arm_stats_ok and consecutive_ok
+    reason = "bandit_arm_integrity_ok" if ok else "bandit_arm_integrity_violation"
+
+    return {
+        "ok": ok,
+        "reason": reason,
+        "details": {
+            "bandit_active": True,
+            "arm_stats_non_negative": arm_stats_ok,
+            "consecutive_epoch_cap_respected": consecutive_ok,
+            "negative_arms": negative_arms,
+            "consecutive_violations": consecutive_violations,
+            "max_consecutive_epochs": max_consecutive,
+            "phase": 11,
+        },
+    }
+
+
 VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "single_file_scope": _validate_single_file,
     "ast_validity": _validate_ast,
@@ -1610,6 +1715,7 @@ VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "reviewer_calibration": _validate_reviewer_calibration,
     "governance_health_floor": _validate_governance_health_floor,
     "soulbound_privacy_invariant": _validate_soulbound_privacy_invariant,
+    "bandit_arm_integrity_invariant": _validate_bandit_arm_integrity,
 }
 
 

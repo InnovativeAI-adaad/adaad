@@ -212,9 +212,10 @@ class TestContextReplayInterface:
 class TestConstitutionV050:
 
     def test_T9_03_11_constitution_version_is_0_5_0(self):
-        """CONSTITUTION_VERSION must be '0.5.0'."""
+        """CONSTITUTION_VERSION must be >= '0.5.0' (soulbound_privacy_invariant introduced)."""
         from runtime.constitution import CONSTITUTION_VERSION
-        assert CONSTITUTION_VERSION == "0.5.0"
+        from packaging.version import Version
+        assert Version(CONSTITUTION_VERSION) >= Version("0.5.0")
 
     def test_T9_03_12_soulbound_privacy_invariant_in_validator_registry(self):
         """soulbound_privacy_invariant must be registered in VALIDATOR_REGISTRY."""
@@ -238,7 +239,8 @@ class TestConstitutionV050:
         assert "soulbound_privacy_invariant" in rule_names
 
     def test_T9_03_15_constitution_yaml_version_is_0_5_0(self):
-        """constitution.yaml version field must be '0.5.0'."""
+        """constitution.yaml version field must be >= '0.5.0' (soulbound_privacy_invariant introduced)."""
+        from packaging.version import Version
         yaml_path = Path("runtime/governance/constitution.yaml")
         doc = json.loads(yaml_path.read_text())
-        assert doc["version"] == "0.5.0"
+        assert Version(doc["version"]) >= Version("0.5.0")

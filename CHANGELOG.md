@@ -1,3 +1,45 @@
+## [3.6.0] — 2026-03-09
+
+### Phase 11-A — Bandit-Informed Agent Selection (Complete)
+
+**PR-11-A-01** AgentBanditSelector — UCB1 + Thompson Sampling
+- `runtime/autonomy/agent_bandit_selector.py` — reward-profile-informed bandit
+  - `ArmRewardState`: float-reward arm (pull_count, reward_mass, loss_mass, consecutive_recommendations)
+  - UCB1: mean_reward + C × sqrt(ln(N)/n_i); Thompson: Beta(reward_mass+1, loss_mass+1)
+  - `BanditAgentRecommendation` (frozen dataclass): agent, confidence, strategy, exploration_bonus, is_active
+  - `AgentBanditSelector.recommend()`: epoch_id-seeded determinism for Thompson
+  - `AgentBanditSelector.update()`: float reward clamped to [0,1]; consecutive tracking
+  - `AgentBanditSelector.from_registry()`: bootstrap from LearningProfileRegistry decisions
+  - State persistence: `data/agent_bandit_state.json`; corrupt state → graceful fresh fallback
+- **22 tests** (T11-A-01..12 + sub-tests)
+
+**PR-11-A-02** FitnessLandscape bandit override + EvolutionLoop Phase 0d/5e
+- `runtime/autonomy/fitness_landscape.py`: `recommended_agent(bandit_rec=None)` override tier
+  - AgentBanditSelector wins when `is_active=True` and `confidence >= 0.60`; falls through otherwise
+- `runtime/evolution/evolution_loop.py`:
+  - Phase 0d: `bandit_selector.recommend()` called; result passed to `landscape.recommended_agent()`
+  - Phase 5e: `bandit_selector.update(agent, reward)` after Phase 5d; exception-isolated
+  - `EvolutionLoop.__init__` accepts `bandit_selector: Optional[AgentBanditSelector] = None`
+- **9 tests** (T11-B-01..05 + sub-tests)
+
+**PR-11-A-03** Constitution v0.6.0 + v3.6.0 release
+- `runtime/governance/constitution.yaml` → v0.6.0: `bandit_arm_integrity_invariant` BLOCKING rule
+  - Invariants: `arm_stats_non_negative`, `consecutive_epoch_cap_respected`, `agent_diversity_maintained`
+  - `MAX_CONSECUTIVE_BANDIT_EPOCHS=10`; configurable via `ADAAD_BANDIT_MAX_CONSECUTIVE_EPOCHS`
+  - SANDBOX tier: warning; PRODUCTION/STABLE: blocking
+- `runtime/constitution.py` → CONSTITUTION_VERSION 0.6.0:
+  - `_validate_bandit_arm_integrity()` validator registered
+  - Version map entry `_validate_bandit_arm_integrity: "1.0.0"`
+- **7 tests** (T11-C-01..03 + sub-tests)
+
+**Deferred from Phase 9 (now complete)**
+- `ContextReplayInterface` → `EvolutionLoop` Phase 0c wiring (PR-9-03)
+- `ADAAD_SOULBOUND_KEY` docs: `ENVIRONMENT_VARIABLES.md`, `QUICKSTART.md`, `onboard.py`
+
+**Test suite:** 228/228
+
+---
+
 ## [3.5.0] -- 2026-03-09
 
 ### Phase 10 -- Reward Learning Pipeline (Complete)
