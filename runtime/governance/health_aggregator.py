@@ -42,16 +42,17 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SIGNAL_WEIGHTS: Dict[str, float] = {
-    "avg_reviewer_reputation":          0.19,  # Phase 7   (-0.01 rebalance for Ph.33)
-    "amendment_gate_pass_rate":         0.17,  # Phase 6   (-0.01 rebalance for Ph.33)
-    "federation_divergence_clean":      0.17,  # Phase 5   (-0.01 rebalance for Ph.33)
-    "epoch_health_score":               0.12,  # core      (-0.01 rebalance for Ph.33)
-    "routing_health_score":             0.10,  # Phase 23  (-0.01 rebalance for Ph.33)
-    "admission_rate_score":             0.09,  # Phase 26  (-0.01 rebalance for Ph.33)
-    "governance_debt_health_score":     0.09,  # Phase 32  (-0.01 rebalance for Ph.33)
-    "certifier_rejection_rate_score":   0.07,  # Phase 33  (new — CertifierScanLedger)
+    "avg_reviewer_reputation":          0.18,  # Phase 7   (-0.01 rebalance for Ph.35)
+    "amendment_gate_pass_rate":         0.16,  # Phase 6   (-0.01 rebalance for Ph.35)
+    "federation_divergence_clean":      0.16,  # Phase 5   (-0.01 rebalance for Ph.35)
+    "epoch_health_score":               0.12,  # core      (unchanged)
+    "routing_health_score":             0.10,  # Phase 23  (unchanged)
+    "admission_rate_score":             0.09,  # Phase 26  (unchanged)
+    "governance_debt_health_score":     0.08,  # Phase 32  (-0.01 rebalance for Ph.35)
+    "certifier_rejection_rate_score":   0.06,  # Phase 33  (-0.01 rebalance for Ph.35)
+    "gate_approval_rate_score":         0.05,  # Phase 35  (new — GateDecisionLedger)
 }
-# Weight sum invariant: 0.19+0.17+0.17+0.12+0.10+0.09+0.09+0.07 = 1.00 ✅
+# Weight sum invariant: 0.18+0.16+0.16+0.12+0.10+0.09+0.08+0.06+0.05 = 1.00 ✅
 
 HEALTH_DEGRADED_THRESHOLD: float = 0.60
 _WEIGHT_SUM_TOLERANCE: float = 1e-9
@@ -84,6 +85,8 @@ class HealthSnapshot:
     debt_report:               Optional[Dict[str, Any]] = None
     # Phase 33: certifier rejection rate detail (None when no reader wired)
     certifier_report:          Optional[Dict[str, Any]] = None
+    # Phase 35: gate decision approval rate detail (None when no reader wired)
+    gate_decision_report:      Optional[Dict[str, Any]] = None
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -130,6 +133,7 @@ class GovernanceHealthAggregator:
         admission_tracker=None,       # Phase 26
         debt_ledger=None,             # Phase 32
         certifier_scan_reader=None,   # Phase 33
+        gate_decision_reader=None,    # Phase 35
     ) -> None:
         self._reputation_ledger    = reviewer_reputation_ledger
         self._amendment_engine     = roadmap_amendment_engine
@@ -140,6 +144,7 @@ class GovernanceHealthAggregator:
         self._admission_tracker    = admission_tracker          # Phase 26
         self._debt_ledger          = debt_ledger                # Phase 32
         self._certifier_reader     = certifier_scan_reader      # Phase 33
+        self._gate_decision_reader = gate_decision_reader       # Phase 35
 
         # Validate and snapshot weights
         self._weights = dict(weights or SIGNAL_WEIGHTS)
@@ -223,6 +228,21 @@ class GovernanceHealthAggregator:
             except Exception:
                 pass
 
+        # Phase 35: capture gate decision approval rate detail for snapshot
+        _gate_decision_report_dict: Optional[Dict[str, Any]] = None
+        if self._gate_decision_reader is not None:
+            try:
+                approval_rate = self._gate_decision_reader.approval_rate()
+                override_count = self._gate_decision_reader.human_override_count()
+                _gate_decision_report_dict = {
+                    "approval_rate":         approval_rate,
+                    "rejection_rate":        round(1.0 - approval_rate, 6),
+                    "human_override_count":  override_count,
+                    "available":             True,
+                }
+            except Exception:
+                pass
+
         snapshot = HealthSnapshot(
             epoch_id=epoch_id,
             health_score=h,
@@ -236,6 +256,7 @@ class GovernanceHealthAggregator:
             admission_rate_report=_admission_report_dict,
             debt_report=_debt_report_dict,
             certifier_report=_certifier_report_dict,
+            gate_decision_report=_gate_decision_report_dict,
         )
 
         self._emit_snapshot(snapshot)
@@ -255,10 +276,11 @@ class GovernanceHealthAggregator:
             "amendment_gate_pass_rate":         self._collect_amendment_rate(),
             "federation_divergence_clean":      self._collect_federation_clean(),
             "epoch_health_score":               self._collect_epoch_health(),
-            "routing_health_score":             self._collect_routing_health(),             # Phase 23
-            "admission_rate_score":             self._collect_admission_rate(),             # Phase 26
-            "governance_debt_health_score":     self._collect_debt_health(),               # Phase 32
-            "certifier_rejection_rate_score":   self._collect_certifier_health(),          # Phase 33
+            "routing_health_score":             self._collect_routing_health(),           # Phase 23
+            "admission_rate_score":             self._collect_admission_rate(),           # Phase 26
+            "governance_debt_health_score":     self._collect_debt_health(),             # Phase 32
+            "certifier_rejection_rate_score":   self._collect_certifier_health(),        # Phase 33
+            "gate_approval_rate_score":         self._collect_gate_approval_health(),    # Phase 35
         }
 
     def _collect_reputation(self, epoch_id: str) -> float:
@@ -419,6 +441,33 @@ class GovernanceHealthAggregator:
         except Exception as exc:
             log.warning(
                 "GovernanceHealthAggregator: certifier health collection failed: %s; defaulting to 1.0",
+                exc,
+            )
+            return 1.0
+
+    def _collect_gate_approval_health(self) -> float:
+        """Phase 35: Collect gate decision approval rate from GateDecisionReader.
+
+        Score = ``approval_rate`` (fraction of GateDecision outcomes approved):
+
+            gate_health = approval_rate
+
+        - ``approval_rate == 1.0`` → ``1.0`` (all mutations approved, pristine)
+        - ``approval_rate == 0.0`` → ``0.0`` (all mutations denied, fully degraded)
+
+        Default is ``1.0`` (fail-safe) when:
+        - No reader is wired (gate decision ledger not yet active)
+        - Empty decision history (no decisions recorded → no evidence of denial)
+        - Any exception during collection
+        """
+        if self._gate_decision_reader is None:
+            return 1.0
+        try:
+            approval_rate = self._gate_decision_reader.approval_rate()
+            return round(min(1.0, max(0.0, float(approval_rate))), 6)
+        except Exception as exc:
+            log.warning(
+                "GovernanceHealthAggregator: gate approval health collection failed: %s; defaulting to 1.0",
                 exc,
             )
             return 1.0

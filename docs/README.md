@@ -1,8 +1,8 @@
 # ADAAD Documentation Hub
 
-![Version: 5.9.0](https://img.shields.io/badge/Version-5.9.0-2ea043)
-![Phase: 34 Complete](https://img.shields.io/badge/Phase-34%20Complete-6366f1)
-![Tests: 779+ Passing](https://img.shields.io/badge/Tests-779%2B%20Passing-22c55e)
+![Version: 6.0.0](https://img.shields.io/badge/Version-6.0.0-2ea043)
+![Phase: 35 Complete](https://img.shields.io/badge/Phase-35%20Complete-6366f1)
+![Tests: 810+ Passing](https://img.shields.io/badge/Tests-810%2B%20Passing-22c55e)
 ![Governance: Fail-Closed](https://img.shields.io/badge/Governance-Fail--Closed-dc2626)
 ![Constitution: v0.7.0](https://img.shields.io/badge/Constitution-v0.7.0-0ea5e9)
 ![Replay: Deterministic](https://img.shields.io/badge/Replay-Deterministic-8b5cf6)
@@ -16,13 +16,13 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `5.9.0` |
+| **Current version** | `6.0.0` |
 | **Constitution** | `v0.7.0` |
 | **Released** | 2026-03-10 |
 | **Release SHA** | `main` |
 | **Release Branch** | `main` |
 
-**New in this release:** v5.9.0 — Phase 34 complete. `GET /governance/certifier-scans` endpoint live (bearer-auth, read-only). Returns certifier scan audit records, `rejection_rate`, `certification_rate`, `mutation_blocked_count`, `escalation_breakdown`. 12 new endpoint tests. 779 total tests.
+**New in this release:** v6.0.0 — Phase 35 complete. `GateDecisionLedger` (SHA-256 hash-chained JSONL for `GovernanceGate.approve_mutation()` outcomes) + `gate_approval_rate_score` as 9th governance health signal (weight 0.05). 43 new tests, 810 total. All 9 `SIGNAL_WEIGHTS` sum to 1.00.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -81,8 +81,8 @@
 
 | Attribute | Value |
 |---|---|
-| **Version** | 5.9.0 |
-| **Active phase** | Phase 34 — Certifier Scans REST Endpoint (complete) |
+| **Version** | 6.0.0 |
+| **Active phase** | Phase 35 — Gate Decision Ledger & Approval Rate Health Signal (complete) |
 | **Constitution** | v0.7.0 (`soulbound_privacy_invariant`, `bandit_arm_integrity_invariant`, `market_signal_integrity_invariant` BLOCKING rules active) |
 | **EvolutionLoop phases** | 10 active phases (0a → 6, including 4b, 5b, 5c, 5d) |
 | **Memory modules** | 7 active in `runtime/memory/` |
@@ -139,12 +139,12 @@ reasoning pattern extraction, and reward-informed weight governance.
 
 | Constant | Value | Location |
 |---|---|---|
-| `OBSERVATION_RING_BUFFER_SIZE` | `20` | `runtime/autonomy/reward_learning.py` |
-| `BASELINE_WINDOW_SIZE` | `5` | `policy_promotion_controller.py` |
-| `REPLAY_WINDOW_SIZE` | `5` | `context_replay_interface.py` |
+| `OBSERVATION_RING_BUFFER_SIZE` | `6.0.0` | `runtime/autonomy/reward_learning.py` |
+| `BASELINE_WINDOW_SIZE` | `6.0.0` | `policy_promotion_controller.py` |
+| `REPLAY_WINDOW_SIZE` | `6.0.0` | `context_replay_interface.py` |
 | `MAX_PAYLOAD_BYTES` | `64,000` | `context_filter_chain.py` |
-| `MIN_ACCEPTED_MUTATIONS_PER_EPOCH` | `2` | `craft_pattern_extractor.py` |
-| `EXPLORE_RATIO_BOOST` | `0.10` | `context_replay_interface.py` |
+| `MIN_ACCEPTED_MUTATIONS_PER_EPOCH` | `6.0.0` | `craft_pattern_extractor.py` |
+| `EXPLORE_RATIO_BOOST` | `6.0.0` | `context_replay_interface.py` |
 | `GENESIS_CHAIN_HASH` | `SHA256(b"ADAAD:soulbound:genesis")` | `soulbound_ledger.py` |
 | `DEFAULT_LEDGER_PATH` | `data/soulbound_ledger.json` | `soulbound_ledger.py` |
 | `DEFAULT_PROFILE_PATH` | `data/autonomy_learning_profiles.json` | `reward_learning.py` |
@@ -172,7 +172,7 @@ The following invariants are enforced at all times and are verified by the CI go
 | Variable | Default | Effect |
 |---|---|---|
 | `ADAAD_DETERMINISTIC_LOCK` | `''` | `1\|true\|yes\|on` enables strict determinism mode |
-| `ADAAD_DISPATCH_LATENCY_BUDGET_MS` | `50.0` | Maximum dispatch latency budget in milliseconds |
+| `ADAAD_DISPATCH_LATENCY_BUDGET_MS` | `6.0.0` | Maximum dispatch latency budget in milliseconds |
 | `ADAAD_SOULBOUND_KEY` | required | HMAC-ENV key ≥32 bytes; absence is fail-closed |
 | `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` | — | Epoch interval for roadmap amendment checks |
 
@@ -323,4 +323,4 @@ ADAAD visual assets in `docs/assets/` are available for repository documentation
 
 ---
 
-*Last reviewed: 2026-03-09 · Version: 4.0.0 · Phase 15 complete · Auto-versioned via `governance/report_version.json`*
+*Last reviewed: 2026-03-09 · Version: 6.0.0 · Phase 15 complete · Auto-versioned via `governance/report_version.json`*

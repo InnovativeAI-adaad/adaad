@@ -44,8 +44,8 @@ Signal integration tests (T33-S-*)
   T33-S-14  Full rejection reduces composite h below no-certifier baseline
   T33-S-15  GovernanceHealthAggregator accepts certifier_scan_reader kwarg
   T33-S-16  Backward compat: old callers without certifier_scan_reader unchanged
-  T33-S-17  Weight rebalance: avg_reviewer_reputation is 0.19 (was 0.20)
-  T33-S-18  Weight rebalance: governance_debt_health_score is 0.09 (was 0.10)
+  T33-S-17  Weight rebalance: avg_reviewer_reputation is 0.18 (was 0.19)
+  T33-S-18  Weight rebalance: governance_debt_health_score is 0.08 (was 0.09)
 """
 
 from __future__ import annotations
@@ -391,7 +391,7 @@ class TestCertifierHealthSignal:
         assert 0.0 <= hs.health_score <= 1.0
 
     def test_t33_s_17_reviewer_reputation_weight(self):
-        assert SIGNAL_WEIGHTS["avg_reviewer_reputation"] == pytest.approx(0.19)
+        assert SIGNAL_WEIGHTS["avg_reviewer_reputation"] == pytest.approx(0.18)
 
     def test_t33_s_18_debt_health_weight(self):
-        assert SIGNAL_WEIGHTS["governance_debt_health_score"] == pytest.approx(0.09)
+        assert SIGNAL_WEIGHTS["governance_debt_health_score"] == pytest.approx(0.08)

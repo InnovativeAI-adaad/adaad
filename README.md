@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `5.9.0` |
+| **Current version** | `6.0.0` |
 | **Released** | 2026-03-10 |
 | **Release SHA** | `main` |
 | **Release Branch** | `main` |
 
-**New in this release:** v5.9.0 — Phase 34 complete. `GET /governance/certifier-scans` endpoint live (bearer-auth `audit:read`, read-only). Returns certifier scan audit records, `rejection_rate`, `certification_rate`, `mutation_blocked_count`, `escalation_breakdown`. 12 new endpoint tests. 779+ tests passing.
+**New in this release:** v6.0.0 — Phase 35 complete. `GateDecisionLedger` (SHA-256 hash-chained JSONL for `GovernanceGate.approve_mutation()` outcomes) + `gate_approval_rate_score` as 9th governance health signal (weight 0.05). 43 new tests. All 9 `SIGNAL_WEIGHTS` sum to 1.00. 810+ tests passing.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -304,7 +304,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 **Phase 6 — Autonomous Roadmap Self-Amendment** is complete at `v3.1.0`. All milestones shipped and governed.
 
-> **Current active phase: Phase 34 — Certifier Scans REST Endpoint (v5.9.0)**  
+> **Current active phase: Phase 35 — Gate Decision Ledger & Approval Rate Health Signal (v6.0.0)
 > `GET /governance/certifier-scans` endpoint live. 779+ tests passing. See [`CHANGELOG.md`](CHANGELOG.md) for full history.
 
 | Milestone | Status | Module |

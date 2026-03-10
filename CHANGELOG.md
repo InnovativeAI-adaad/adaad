@@ -1,3 +1,31 @@
+## [6.0.0] — 2026-03-10
+
+### Phase 35 — Gate Decision Ledger & Approval Rate Health Signal (Complete)
+
+Phase 35 closes the `GovernanceGate` observability gap: every
+`approve_mutation()` outcome is now persisted in a SHA-256 hash-chained
+append-only JSONL audit ledger (`GateDecisionLedger`), and the gate approval
+rate becomes the **9th governance health signal** (`gate_approval_rate_score`,
+weight 0.05). All 9 signals sum to 1.00.
+
+#### Added
+- **`GateDecisionLedger`** (`runtime/governance/gate_decision_ledger.py`): append-only SHA-256 hash-chained JSONL ledger for `GateDecision.to_payload()` dicts; `emit()` fail-safe; inactive by default.
+- **`GateDecisionReader`**: `approval_rate()`, `rejection_rate()`, `history(denied_only=...)`, `decision_breakdown()`, `failed_rules_frequency()`, `human_override_count()`, `trust_mode_breakdown()`, `verify_chain()`.
+- **`GateDecisionChainError`**: raised on chain integrity violation; carries `sequence` and `detail`.
+- **`gate_approval_rate_score`** (9th signal, weight 0.05): score = `approval_rate`. Fail-safe 1.0.
+- **`HealthSnapshot.gate_decision_report`**: `approval_rate`, `rejection_rate`, `human_override_count`, `available`.
+- **`tests/governance/test_gate_decision_ledger.py`**: 43 tests (T35-L01..L13, R01..R11, S01..S19): **100%**.
+
+#### Changed
+- **`SIGNAL_WEIGHTS`** rebalanced (9 signals, sum = 1.00): rep 0.19→0.18, amendment 0.17→0.16, fed 0.17→0.16, debt 0.09→0.08, certifier 0.07→0.06, gate new 0.05.
+- 7 updated numeric-assertion tests across `test_governance_health_aggregator.py`, `test_debt_health_signal.py`, `test_certifier_scan_ledger.py`.
+
+#### Test counts
+- **43 new tests** — T35-L/R/S: **✅ 100%**
+- **Total test suite**: 810 tests
+
+---
+
 ## [5.9.0] — 2026-03-10
 
 ### Phase 34 — Certifier Scans REST Endpoint (Complete)

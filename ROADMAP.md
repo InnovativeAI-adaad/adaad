@@ -420,6 +420,51 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 35 — Gate Decision Ledger & Approval Rate Health Signal
+
+**Status:** ✅ shipped · **Released:** v6.0.0 · **Closed:** 2026-03-10 · **Requires:** Phase 34 shipped ✅
+
+Phase 35 closes the `GovernanceGate.approve_mutation()` observability gap:
+outcomes are persisted in `GateDecisionLedger` (SHA-256 hash-chained JSONL),
+and the gate approval rate becomes the 9th governance health signal
+(`gate_approval_rate_score`, weight 0.05). All 9 signals sum to 1.00.
+
+### Signal normalisation
+
+    gate_health = approval_rate
+
+- `approval_rate == 1.0` → `1.0` (all mutations approved, pristine)
+- `approval_rate == 0.0` → `0.0` (all mutations denied, fully degraded)
+- No reader / empty history / exception → `1.0` (fail-safe)
+
+### Weight table (post-Phase 35)
+
+| Signal | Weight | Source |
+|--------|--------|--------|
+| `avg_reviewer_reputation` | 0.18 | `ReviewerReputationLedger` (Ph.7) |
+| `amendment_gate_pass_rate` | 0.16 | `RoadmapAmendmentEngine` (Ph.6) |
+| `federation_divergence_clean` | 0.16 | `FederatedEvidenceMatrix` (Ph.5) |
+| `epoch_health_score` | 0.12 | `EpochTelemetry` (core) |
+| `routing_health_score` | 0.10 | `StrategyAnalyticsEngine` (Ph.22) |
+| `admission_rate_score` | 0.09 | `AdmissionRateTracker` (Ph.26) |
+| `governance_debt_health_score` | 0.08 | `GovernanceDebtLedger` (Ph.32) |
+| `certifier_rejection_rate_score` | 0.06 | `CertifierScanReader` (Ph.33) |
+| `gate_approval_rate_score` | 0.05 | `GateDecisionReader` (Ph.35) |
+
+### Acceptance criteria
+
+- `GateDecisionLedger.emit()` persists decision into hash-chained JSONL: **✅**
+- Chain verifies after multiple emits; resumes correctly on reopen: **✅**
+- `GateDecisionReader.approval_rate()` correct: **✅**
+- `gate_approval_rate_score` in `signal_breakdown`: **✅**
+- Fail-safe `1.0` on no reader / empty history / exception: **✅**
+- `HealthSnapshot.gate_decision_report` populated with required fields: **✅**
+- Weight sum == 1.00 after rebalance (CI-enforced): **✅**
+- Backward compat: callers without `gate_decision_reader` unaffected: **✅**
+- **43 tests** — `test_gate_decision_ledger.py` (T35-L01..L13, R01..R11, S01..S19): **✅ 100%**
+
+---
+
 ## Phase 34 — Certifier Scans REST Endpoint
 
 **Status:** ✅ shipped · **Released:** v5.9.0 · **Closed:** 2026-03-10 · **Requires:** Phase 33 shipped ✅
