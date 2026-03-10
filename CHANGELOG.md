@@ -1,4 +1,46 @@
+## [5.0.0] — 2026-03-10
+
+### Phase 25 — Mutation Admission Control (Complete)
+
+Phase 25 closes the governance health feedback loop by introducing
+`MutationAdmissionController`: a deterministic, advisory pre-epoch filter
+that translates the composite health score into per-mutation admission
+decisions. When governance health degrades, high-risk mutations are
+deferred before they enter the evolution pipeline — without delegating
+any authority away from GovernanceGate.
+
+#### Added
+
+- **`MutationAdmissionController`** (`runtime/governance/mutation_admission.py`):
+  `evaluate(health_score, mutation_risk_score) → AdmissionDecision`; four
+  admission bands (green/amber/red/halt); `advisory_only: True` structural
+  invariant; `decision_digest` deterministic SHA-256; fail-safe input clamping.
+- **`AdmissionDecision`** frozen dataclass: `health_score`, `mutation_risk_score`,
+  `admission_band`, `risk_threshold`, `admitted`, `admits_all`, `epoch_paused`,
+  `deferral_reason`, `advisory_only`, `decision_digest`, `controller_version`.
+- **Band/threshold mapping** (constitutional):
+  - GREEN  (h ≥ 0.80): risk_threshold=1.01 — all mutations admitted.
+  - AMBER  (0.60 ≤ h < 0.80): risk_threshold=0.60 — high-risk deferred.
+  - RED    (0.40 ≤ h < 0.60): risk_threshold=0.35 — only low-risk admitted.
+  - HALT   (h < 0.40): advisory epoch-pause issued; no mutations admitted.
+- **`GET /governance/admission-status`**: bearer-auth-gated (`audit:read`),
+  read-only; accepts optional `risk_score` query param (default 0.50);
+  returns full `AdmissionDecision` for current governance health score.
+- **44 new tests**: `tests/governance/test_mutation_admission.py` (32),
+  `tests/test_admission_status_endpoint.py` (12).
+
+#### Invariants preserved
+
+- `GovernanceGate` retains sole mutation-approval authority.
+- `MutationAdmissionController` never imports or calls `GovernanceGate`.
+- `advisory_only` is structurally `True` — no code path may set it `False`.
+- `epoch_paused` is advisory — operator and GovernanceGate decide response.
+- Determinism: identical inputs → identical `AdmissionDecision` → identical digest.
+
+---
+
 ## [4.9.0] — 2026-03-09
+
 
 ### Phase 24 — Health-Driven Review Pressure Adaptation (Complete)
 

@@ -729,5 +729,71 @@ def governance_review_pressure(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase 25 — Mutation Admission Control
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/admission-status")
+def governance_admission_status(
+    risk_score: float = 0.50,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return advisory AdmissionDecision for a mutation with the given risk_score.
+
+    Evaluates whether a mutation candidate with ``risk_score`` would be admitted
+    to the evolution pipeline given the current governance health score.
+
+    Query parameters
+    ----------------
+    risk_score : float, default 0.50
+        Mutation risk score ∈ [0.0, 1.0].  Clamped if out of range.
+
+    Response fields (data)
+    ----------------------
+    health_score          float — current governance composite h ∈ [0.0, 1.0]
+    mutation_risk_score   float — clamped input risk_score
+    admission_band        "green" | "amber" | "red" | "halt"
+    risk_threshold        float — exclusive upper bound for admission in current band
+    admitted              bool — True when mutation would be admitted
+    admits_all            bool — True only in green band
+    epoch_paused          bool — advisory epoch-pause flag (h < 0.40)
+    deferral_reason       str | null — reason when not admitted
+    advisory_only         true (structural invariant)
+    decision_digest       sha256-prefixed deterministic digest
+    controller_version    "25.0"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.mutation_admission import MutationAdmissionController
+    from runtime.api.runtime_services import governance_health_service
+
+    try:
+        health_data = governance_health_service(epoch_id="current")
+        h = float(health_data.get("health_score", 1.0))
+    except Exception:
+        h = 1.0  # conservative default
+
+    controller = MutationAdmissionController()
+    decision = controller.evaluate(health_score=h, mutation_risk_score=risk_score)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "health_score":        decision.health_score,
+            "mutation_risk_score": decision.mutation_risk_score,
+            "admission_band":      decision.admission_band,
+            "risk_threshold":      decision.risk_threshold,
+            "admitted":            decision.admitted,
+            "admits_all":          decision.admits_all,
+            "epoch_paused":        decision.epoch_paused,
+            "deferral_reason":     decision.deferral_reason,
+            "advisory_only":       decision.advisory_only,
+            "decision_digest":     decision.decision_digest,
+            "controller_version":  decision.controller_version,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

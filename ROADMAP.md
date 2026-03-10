@@ -409,8 +409,48 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 | Phase 7 reviewer reputation | Reputation score determinism | Identical on identical ledger state | ✅ |
 | Phase 7 reviewer reputation | Constitutional floor | `CONSTITUTIONAL_FLOOR_MIN_REVIEWERS = 1` always enforced | ✅ |
 | Phase 8 governance health | `avg_reputation` stability | ±0.05 variance over 10-epoch rolling window | 🔵 |
+| Phase 25 admission control | `advisory_only` invariant | `advisory_only == True` on every AdmissionDecision | ✅ |
+| Phase 25 admission control | Admission determinism | Identical inputs → identical digest | ✅ |
 | All phases | Evidence matrix | 100% Complete before promotion | ✅ |
 | All phases | Replay proofs | 0 divergences in CI | ✅ |
+
+---
+
+## Phase 25 — Mutation Admission Control
+
+**Status:** ✅ shipped · **Released:** v5.0.0 · **Closed:** 2026-03-10 · **Requires:** Phase 24 shipped ✅
+
+Phase 25 closes the health→action feedback loop: `MutationAdmissionController`
+translates the composite governance health score into a per-mutation advisory
+admission decision, deferring high-risk candidates when health degrades and
+issuing an epoch-pause advisory at catastrophic health levels.
+
+### Constitutional invariants
+
+- `advisory_only: True` — GovernanceGate retains sole mutation-approval authority.
+- `MutationAdmissionController` never imports or calls `GovernanceGate`.
+- `epoch_paused` advisory is informational only; operator and GovernanceGate decide.
+- Deterministic: identical `(health_score, mutation_risk_score)` → identical digest.
+- Fail-safe: out-of-range inputs clamped, never raised.
+
+### Admission band mapping (constitutional)
+
+| Band  | health_score        | risk_threshold | admits_all | epoch_paused |
+|-------|---------------------|----------------|------------|--------------|
+| GREEN | h ≥ 0.80            | 1.01 (all)     | True       | False        |
+| AMBER | 0.60 ≤ h < 0.80     | 0.60           | False      | False        |
+| RED   | 0.40 ≤ h < 0.60     | 0.35           | False      | False        |
+| HALT  | h < 0.40            | 0.00 (none)    | False      | True (advisory) |
+
+### Acceptance criteria
+
+- GREEN band: all mutations admitted regardless of risk_score: **✅**
+- AMBER band: `risk_score ≥ 0.60` mutations deferred: **✅**
+- RED band: only `risk_score < 0.35` mutations admitted: **✅**
+- HALT band: no mutations admitted; `epoch_paused = True` advisory: **✅**
+- `advisory_only` structurally `True` on every path: **✅**
+- `GET /governance/admission-status` returns full `AdmissionDecision`: **✅**
+- **44 tests**: `test_mutation_admission.py` (32) + `test_admission_status_endpoint.py` (12): **✅**
 
 ---
 
