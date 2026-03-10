@@ -345,7 +345,8 @@ def test_t32_20_backward_compat_no_debt_ledger():
 # ---------------------------------------------------------------------------
 
 def test_t32_21_reviewer_reputation_weight_rebalanced():
-    assert SIGNAL_WEIGHTS["avg_reviewer_reputation"] == pytest.approx(0.20)
+    # Phase 33 further rebalanced rep from 0.20 → 0.19
+    assert SIGNAL_WEIGHTS["avg_reviewer_reputation"] == pytest.approx(0.19)
 
 
 # ---------------------------------------------------------------------------
@@ -353,4 +354,5 @@ def test_t32_21_reviewer_reputation_weight_rebalanced():
 # ---------------------------------------------------------------------------
 
 def test_t32_22_amendment_gate_weight_rebalanced():
-    assert SIGNAL_WEIGHTS["amendment_gate_pass_rate"] == pytest.approx(0.18)
+    # Phase 33 further rebalanced amendment from 0.18 → 0.17
+    assert SIGNAL_WEIGHTS["amendment_gate_pass_rate"] == pytest.approx(0.17)

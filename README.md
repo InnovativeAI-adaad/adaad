@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `4.5.0` |
-| **Released** | 2026-03-09 |
-| **Release SHA** | `59b2761` |
+| **Current version** | `5.8.0` |
+| **Released** | 2026-03-10 |
+| **Release SHA** | `main` |
 | **Release Branch** | `main` |
 
-**New in this release:** v4.5.0 — Public API Consolidation. `AutonomyLoop`, `STRATEGY_TAXONOMY`, `CritiqueSignalBuffer`, `RoutedDecisionTelemetry`, `InMemoryTelemetrySink`, and `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION` all declared in package `__init__` exports. 18 import-contract tests added. `strategy.py.bak` deleted. 2,714+ tests passing.
+**New in this release:** v5.8.0 — Phase 33 complete. `CertifierScanLedger` (SHA-256 hash-chained JSONL ledger for `GateCertifier` scan results) + `certifier_rejection_rate_score` as 8th governance health signal (weight 0.07). 38 new tests. All 8 `SIGNAL_WEIGHTS` sum to 1.00. 767+ tests passing.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -303,6 +303,9 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 | EpochResult market fields (live_market_score, market_confidence, market_is_synthetic, consecutive_synthetic_market_epochs) | ✅ shipped | `runtime/evolution/evolution_loop.py` |
 
 **Phase 6 — Autonomous Roadmap Self-Amendment** is complete at `v3.1.0`. All milestones shipped and governed.
+
+> **Current active phase: Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal (v5.8.0)**  
+> `CertifierScanLedger` + `certifier_rejection_rate_score` (8th health signal). 767+ tests passing. See [`CHANGELOG.md`](CHANGELOG.md) for full history.
 
 | Milestone | Status | Module |
 |:---|:---:|:---|

@@ -1,3 +1,69 @@
+## [5.8.0] — 2026-03-10
+
+### Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal (Complete)
+
+Phase 33 closes the GateCertifier (Phase 31) observability gap: scan results are
+now persisted in a SHA-256 hash-chained append-only JSONL audit ledger
+(`CertifierScanLedger`), and the certifier rejection rate becomes the 8th
+governance health signal, contributing 7% of the composite health score `h`.
+
+#### Added
+
+- **`CertifierScanLedger`** (`runtime/governance/certifier_scan_ledger.py`):
+  append-only SHA-256 hash-chained JSONL ledger for `GateCertifier.certify()`
+  result dicts; `emit()` fail-safe; `chain_verify_on_open` guard; inactive by
+  default (`path=None` → no file); parent directory auto-created; resumes
+  sequence on reopen.
+- **`CertifierScanReader`**: read-only analytics — `history()` with limit /
+  `rejected_only`; `rejection_rate()`; `certification_rate()`; `mutation_blocked_count()`;
+  `fail_closed_count()`; `escalation_breakdown()`; `verify_chain()`.
+- **`CertifierScanChainError`**: raised on any hash-chain integrity violation;
+  carries `sequence` and `detail` fields.
+- **`certifier_rejection_rate_score`** (8th signal): `GovernanceHealthAggregator`
+  now accepts `certifier_scan_reader=CertifierScanReader` kwarg. Score computed
+  as `1.0 - rejection_rate`. Fail-safe: returns `1.0` on missing reader, empty
+  history, or any exception.
+- **`HealthSnapshot.certifier_report`**: Optional dict — `rejection_rate`,
+  `certification_rate`, `mutation_blocked_count`, `available`.
+- **`tests/governance/test_certifier_scan_ledger.py`**: 38 acceptance-criteria tests
+  — 100% pass rate. Covers ledger (L01..L12), reader (R01..R08), signal (S01..S18).
+
+#### Changed
+
+- **`SIGNAL_WEIGHTS`** rebalanced to accommodate 8th signal (sum = 1.00):
+
+  | Signal | Old (Ph.32) | New (Ph.33) |
+  |--------|-------------|-------------|
+  | `avg_reviewer_reputation` | 0.20 | **0.19** |
+  | `amendment_gate_pass_rate` | 0.18 | **0.17** |
+  | `federation_divergence_clean` | 0.18 | **0.17** |
+  | `epoch_health_score` | 0.13 | **0.12** |
+  | `routing_health_score` | 0.11 | **0.10** |
+  | `admission_rate_score` | 0.10 | **0.09** |
+  | `governance_debt_health_score` | 0.10 | **0.09** |
+  | `certifier_rejection_rate_score` | — | **0.07** (new) |
+
+- Updated numeric-assertion tests in `test_governance_health_aggregator.py`
+  and `test_debt_health_signal.py` to reflect new weight baseline.
+
+#### Invariants preserved
+
+- Weight sum invariant: `sum(SIGNAL_WEIGHTS.values()) == 1.00` (CI-enforced).
+- `GovernanceGate` retains sole mutation-approval authority.
+- `certifier_rejection_rate_score` is advisory input to `h`.
+- Append-only: no record is ever overwritten or deleted.
+- Emit failure isolation: I/O errors never propagate to callers.
+- Deterministic replay: same scan sequence → same chain hashes.
+- Backward compatible: callers without `certifier_scan_reader` unchanged.
+
+#### Test counts
+
+- **38 new tests**: `tests/governance/test_certifier_scan_ledger.py` (T33-L/R/S): **✅ 100%**
+- **5 updated tests**: weight baseline updates in `test_governance_health_aggregator.py` and `test_debt_health_signal.py`
+- **Total test suite**: 767 tests
+
+---
+
 ## [5.7.0] — 2026-03-10
 
 ### Phase 32 — Governance Debt Health Signal Integration (Complete)

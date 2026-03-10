@@ -420,6 +420,51 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal
+
+**Status:** ✅ shipped · **Released:** v5.8.0 · **Closed:** 2026-03-10 · **Requires:** Phase 32 shipped ✅
+
+Phase 33 closes the GateCertifier observability gap: scan results are persisted
+in `CertifierScanLedger` (SHA-256 hash-chained append-only JSONL), and the certifier
+rejection rate becomes the 8th governance health signal (`certifier_rejection_rate_score`,
+weight 0.07). All 8 signals sum to 1.00.
+
+### Signal normalisation
+
+    certifier_health = 1.0 - rejection_rate
+
+- `rejection_rate == 0.0` → `1.0` (all scans certified, pristine)
+- `rejection_rate == 1.0` → `0.0` (all scans rejected, fully degraded)
+- No reader / empty history / exception → `1.0` (fail-safe)
+
+### Weight table (post-Phase 33)
+
+| Signal | Weight | Source |
+|--------|--------|--------|
+| `avg_reviewer_reputation` | 0.19 | `ReviewerReputationLedger` (Ph.7) |
+| `amendment_gate_pass_rate` | 0.17 | `RoadmapAmendmentEngine` (Ph.6) |
+| `federation_divergence_clean` | 0.17 | `FederatedEvidenceMatrix` (Ph.5) |
+| `epoch_health_score` | 0.12 | `EpochTelemetry` (core) |
+| `routing_health_score` | 0.10 | `StrategyAnalyticsEngine` (Ph.22) |
+| `admission_rate_score` | 0.09 | `AdmissionRateTracker` (Ph.26) |
+| `governance_debt_health_score` | 0.09 | `GovernanceDebtLedger` (Ph.32) |
+| `certifier_rejection_rate_score` | 0.07 | `CertifierScanReader` (Ph.33) |
+
+### Acceptance criteria
+
+- `CertifierScanLedger.emit()` persists scan into hash-chained JSONL: **✅**
+- Chain verifies after multiple emits: **✅**
+- Chain resumes correctly on reopen: **✅**
+- `CertifierScanReader.rejection_rate()` correct: **✅**
+- `certifier_rejection_rate_score` in `signal_breakdown`: **✅**
+- Fail-safe `1.0` on no reader / empty history / exception: **✅**
+- `HealthSnapshot.certifier_report` populated with 4 required fields: **✅**
+- Weight sum == 1.00 after rebalance (CI-enforced): **✅**
+- Backward compat: callers without `certifier_scan_reader` unaffected: **✅**
+- **38 tests** — `test_certifier_scan_ledger.py` (T33-L01..L12, R01..R08, S01..S18): **✅ 100%**
+
+---
+
 ## Phase 32 — Governance Debt Health Signal Integration
 
 **Status:** ✅ shipped · **Released:** v5.7.0 · **Closed:** 2026-03-10 · **Requires:** Phase 31 shipped ✅
