@@ -1,3 +1,41 @@
+## [5.5.0] — 2026-03-10
+
+### Phase 30 — Threat Scan Ledger & Endpoint (Complete)
+
+Phase 30 closes the ThreatMonitor observability gap: scan results now flow
+into a SHA-256 hash-chained append-only JSONL ledger (ThreatScanLedger),
+surfaced via a read-only authenticated REST endpoint. Mirrors the
+AdmissionAuditLedger pattern from Phase 27.
+
+#### Added
+
+- **`ThreatScanLedger`** (`runtime/governance/threat_scan_ledger.py`):
+  append-only SHA-256 hash-chained JSONL ledger for ThreatMonitor scan dicts;
+  emit() fail-safe (never raises); chain_verify_on_open guard; inactive by
+  default (path=None → no file); parent directory auto-created; resumes
+  sequence on reopen.
+- **`ThreatScanReader`**: read-only analytics — history() with limit,
+  recommendation_filter, triggered_only; recommendation_breakdown();
+  triggered_rate(); escalation_rate(); avg_risk_score(); risk_level_breakdown();
+  verify_chain().
+- **`ThreatScanChainError`**: raised on any hash-chain integrity violation;
+  carries sequence and detail fields.
+- **`GET /governance/threat-scans`**: bearer-auth-gated (audit:read), read-only;
+  accepts limit, recommendation, triggered_only query params; returns records,
+  triggered_rate, escalation_rate, avg_risk_score, recommendation_breakdown,
+  risk_level_breakdown, ledger_version.
+- **36 new unit tests**: `tests/governance/test_threat_scan_ledger.py` (T30-01..09).
+- **10 new endpoint tests**: `tests/test_threat_scan_endpoint.py` (T30-EP-01..10).
+
+#### Invariants preserved
+
+- GovernanceGate retains sole mutation-approval authority.
+- Append-only: no record is ever overwritten or deleted.
+- Deterministic replay: same scan sequence → same chain hashes.
+- Emit failure isolation: I/O errors never surface to callers.
+
+---
+
 ## [5.4.0] — 2026-03-10
 
 ### Phase 29 — Enforcement Verdict Audit Binding (Complete)
