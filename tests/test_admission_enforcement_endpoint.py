@@ -89,3 +89,40 @@ class TestAdmissionEnforcementEndpoint:
     def test_T28_EP_10_requires_auth(self, client):
         resp = client.get("/governance/admission-enforcement")
         assert resp.status_code in (401, 403)
+
+
+# ---------------------------------------------------------------------------
+# T29-EP — Phase 29: /governance/admission-audit enforcement fields
+# ---------------------------------------------------------------------------
+
+class TestAdmissionAuditPhase29Fields:
+    """Verify Phase 29 enforcement fields appear in admission-audit response."""
+
+    def test_T29_EP_01_audit_response_has_blocked_count(self, client):
+        resp = client.get("/governance/admission-audit", headers=_AUTH)
+        assert "blocked_count" in resp.json()["data"]
+
+    def test_T29_EP_02_audit_response_has_enforcement_rate(self, client):
+        resp = client.get("/governance/admission-audit", headers=_AUTH)
+        assert "enforcement_rate" in resp.json()["data"]
+
+    def test_T29_EP_03_audit_response_has_escalation_breakdown(self, client):
+        resp = client.get("/governance/admission-audit", headers=_AUTH)
+        assert "escalation_breakdown" in resp.json()["data"]
+
+    def test_T29_EP_04_blocked_count_is_int(self, client):
+        resp = client.get("/governance/admission-audit", headers=_AUTH)
+        assert isinstance(resp.json()["data"]["blocked_count"], int)
+
+    def test_T29_EP_05_ledger_version_is_29(self, client):
+        resp = client.get("/governance/admission-audit", headers=_AUTH)
+        assert resp.json()["data"]["ledger_version"] == "29.0"
+
+    def test_T29_EP_06_blocked_only_param_accepted(self, client):
+        resp = client.get(
+            "/governance/admission-audit",
+            params={"blocked_only": True},
+            headers=_AUTH,
+        )
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["data"]["records"], list)

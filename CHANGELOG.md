@@ -1,3 +1,43 @@
+## [5.4.0] — 2026-03-10
+
+### Phase 29 — Enforcement Verdict Audit Binding (Complete)
+
+Phase 29 closes the enforcement audit loop: AdmissionAuditLedger.emit() now
+accepts an optional EnforcerVerdict (Phase 28) and persists its fields
+(escalation_mode, blocked, block_reason, verdict_digest, enforcer_version)
+into the SHA-256 hash-chained JSONL record, covered by record_hash.
+AdmissionAuditReader gains three enforcement analytics methods.
+
+#### Changed
+
+- **`AdmissionAuditLedger.emit(decision, *, verdict=None)`**: extended to
+  accept optional EnforcerVerdict; when provided, enforcement fields written
+  into chained record payload and covered by record_hash; backward-compatible
+  (existing callers without verdict get enforcement_present=False / null fields).
+- **`_build_record()`**: accepts verdict kwarg; enforcement fields always
+  present in output (None when verdict=None).
+- **`ADMISSION_LEDGER_VERSION`**: bumped `"27.0" → "29.0"`.
+- **`GET /governance/admission-audit`**: response data extended with
+  blocked_count, enforcement_rate, escalation_breakdown, blocked_only param.
+
+#### Added
+
+- **`AdmissionAuditReader.blocked_count()`**: count of blocked==True records.
+- **`AdmissionAuditReader.enforcement_rate()`**: fraction of records with enforcement data.
+- **`AdmissionAuditReader.escalation_mode_breakdown()`**: mode → count dict.
+- **`AdmissionAuditReader.history_with_enforcement()`**: filtered history for enforcement records.
+- **30 new unit tests**: `tests/governance/test_enforcement_verdict_audit.py` (T29-01..08).
+- **6 new endpoint tests**: `tests/test_admission_enforcement_endpoint.py` (T29-EP-01..06).
+
+#### Invariants preserved
+
+- Chain hash determinism: same decision+verdict sequence → same chain hashes.
+- GovernanceGate retains sole mutation-approval authority.
+- advisory_only structurally True on every AdmissionDecision.
+- Emit failure isolation: I/O errors never propagate to callers.
+
+---
+
 ## [5.3.0] — 2026-03-10
 
 ### Phase 28 — Admission Band Enforcement Binding (Complete)

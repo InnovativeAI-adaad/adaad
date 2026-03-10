@@ -420,6 +420,35 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 29 — Enforcement Verdict Audit Binding
+
+**Status:** ✅ shipped · **Released:** v5.4.0 · **Closed:** 2026-03-10 · **Requires:** Phase 28 shipped ✅
+
+Phase 29 closes the enforcement audit loop by extending AdmissionAuditLedger
+to persist EnforcerVerdict fields alongside AdmissionDecision in the hash-chained
+JSONL ledger. Enforcement escalation state is now cryptographically anchored and
+replay-verifiable, matching the audit-depth of the admission-control arc.
+
+### Constitutional invariants
+
+- Chain hash determinism preserved: enforcement fields are part of the chained payload covered by record_hash.
+- Backward-compatible: existing callers without verdict get enforcement_present=False / null fields.
+- GovernanceGate authority boundary unchanged.
+- Emit failure isolation: I/O errors never propagate to callers.
+
+### Acceptance criteria
+
+- emit(decision, verdict=verdict) persists all 5 enforcement fields into record: **✅**
+- emit(decision) (no verdict) sets enforcement_present=False and fields to None: **✅**
+- Chain verifies after mixed verdict/no-verdict emits: **✅**
+- record_hash differs between verdict-carrying and plain records: **✅**
+- blocked_count() / enforcement_rate() / escalation_mode_breakdown() correct: **✅**
+- GET /governance/admission-audit returns blocked_count, enforcement_rate, escalation_breakdown: **✅**
+- ledger_version bumped to 29.0: **✅**
+- **36 tests**: unit (30) + endpoint (6): **✅**
+
+---
+
 ## Phase 28 — Admission Band Enforcement Binding
 
 **Status:** ✅ shipped · **Released:** v5.3.0 · **Closed:** 2026-03-10 · **Requires:** Phase 27 shipped ✅
