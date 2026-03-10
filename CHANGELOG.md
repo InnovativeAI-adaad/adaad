@@ -1,3 +1,36 @@
+## [5.3.0] — 2026-03-10
+
+### Phase 28 — Admission Band Enforcement Binding (Complete)
+
+Phase 28 wires the advisory AdmissionDecision (Phase 25) into a new
+enforcement layer — AdmissionBandEnforcer — that resolves escalation mode
+from ADAAD_SEVERITY_ESCALATIONS and can escalate HALT-band outcomes to
+blocking when operators explicitly opt in. Advisory mode (default) is
+unchanged; GovernanceGate retains sole actual mutation-approval authority.
+
+#### Added
+
+- **`AdmissionBandEnforcer`** (`runtime/governance/admission_band_enforcer.py`):
+  resolves escalation mode from env var; evaluates MutationAdmissionController
+  result; `blocked=True` only when mode=blocking AND band=halt (emergency stop
+  only); deterministic verdict_digest over (decision_digest, blocked, block_reason);
+  fail-safe: None/invalid health_score defaults to GREEN (1.0).
+- **`EnforcerVerdict`**: frozen dataclass carrying AdmissionDecision,
+  escalation_mode, blocked, block_reason, verdict_digest, enforcer_version.
+- **`GET /governance/admission-enforcement`**: bearer-auth-gated (`audit:read`),
+  read-only; accepts risk_score query param; returns full EnforcerVerdict payload.
+- **29 new unit tests**: `tests/governance/test_admission_band_enforcer.py`.
+- **10 new endpoint tests**: `tests/test_admission_enforcement_endpoint.py`.
+
+#### Invariants preserved
+
+- `advisory_only: True` is structurally preserved on the underlying AdmissionDecision.
+- GovernanceGate retains sole mutation-approval authority; enforcer never imports it.
+- Deterministic: identical inputs → identical verdict_digest.
+- Fail-safe: any exception defaults to GREEN-band advisory (never silently stalls pipeline).
+
+---
+
 ## [5.2.0] — 2026-03-10
 
 ### Phase 27 — Admission Audit Ledger (Complete)
