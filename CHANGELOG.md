@@ -1,3 +1,37 @@
+## [6.2.0] — 2026-03-10
+
+### Phase 37 — Reviewer Reputation Ledger REST Endpoint (Complete)
+
+Phase 37 surfaces `ReviewerReputationLedger` (Phase 7) via a read-only authenticated
+REST endpoint, closing the last major audit ledger without a REST observability
+surface. Completes the ledger→endpoint pattern across all ADAAD audit subsystems.
+
+#### Added
+- **`GET /governance/reviewer-reputation-ledger`** (`server.py`): bearer-auth-gated
+  (`audit:read`), read-only. Query params: `limit` (default 20),
+  `epoch_id` (optional, filters by governance epoch). Returns `entries`,
+  `total_in_window`, `total_entries`, `decision_breakdown`, `chain_integrity_valid`,
+  `ledger_digest`, `ledger_format_version`.
+- **12 new endpoint tests**: `tests/test_reviewer_reputation_ledger_endpoint.py`
+  (T37-EP-01..12) — 100% pass rate. Covers 200 OK, schema_version, all
+  required data keys, entries type, ledger_format_version, 401 missing auth,
+  403 wrong scope, total_in_window/total_entries non-negative int types,
+  window ≤ total invariant, chain_integrity_valid bool, decision_breakdown dict.
+
+#### Invariants preserved
+- `GET /governance/reviewer-reputation-ledger` is read-only — no side effects.
+- Advisory only: endpoint reads ledger history; never approves or blocks mutations.
+- `GovernanceGate` retains sole mutation-approval authority.
+- `total_in_window <= total_entries` structural invariant enforced (tested).
+- Chain integrity verified on every request via `verify_chain_integrity()`.
+- `GovernanceGate` isolation: endpoint imports `ReviewerReputationLedger` only.
+
+#### Test counts
+- **12 new tests**: `tests/test_reviewer_reputation_ledger_endpoint.py` (T37-EP-01..12): **✅ 100%**
+- **Total test suite**: 834 tests
+
+---
+
 ## [6.1.0] — 2026-03-10
 
 ### Phase 36 — Gate Decisions REST Endpoint (Complete)

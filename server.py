@@ -1407,6 +1407,93 @@ def governance_gate_decisions(
 
 
 # ---------------------------------------------------------------------------
+# Phase 37 — Reviewer Reputation Ledger REST Endpoint
+# ---------------------------------------------------------------------------
+
+_DEFAULT_REPUTATION_LEDGER_PATH = "security/ledger/reviewer_reputation_audit.jsonl"
+
+
+@app.get("/governance/reviewer-reputation-ledger")
+def governance_reviewer_reputation_ledger(
+    limit: int = 20,
+    epoch_id: str | None = None,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return recent reviewer reputation ledger entries. Read-only.
+
+    Query parameters
+    ----------------
+    limit : int, default 20
+        Maximum number of entries to return (most recent first).
+    epoch_id : str | None, default None
+        When supplied, filter entries to the specified governance epoch.
+
+    Response fields (data)
+    ----------------------
+    entries                 list  — ledger entries (most recent first)
+    total_in_window         int   — number of entries returned
+    total_entries           int   — total entries in the ledger
+    decision_breakdown      dict  — decision type → count
+    chain_integrity_valid   bool  — True when hash chain passes verification
+    ledger_digest           str   — sha256-prefixed digest over full chain
+    ledger_format_version   str   — "1.0"
+
+    Authority invariant
+    -------------------
+    This endpoint is read-only and advisory.  It never approves or blocks
+    mutations.  GovernanceGate retains sole mutation-approval authority.
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.reviewer_reputation_ledger import (
+        LEDGER_FORMAT_VERSION,
+        ReviewerReputationLedger,
+    )
+    from pathlib import Path
+
+    ledger = ReviewerReputationLedger.load(
+        Path(_DEFAULT_REPUTATION_LEDGER_PATH),
+        verify_integrity=True,
+    )
+
+    all_entries = ledger.entries()
+
+    # Filter by epoch_id if requested
+    if epoch_id is not None:
+        filtered = [e for e in all_entries if e.epoch_id == epoch_id]
+    else:
+        filtered = all_entries
+
+    # Most recent first, then apply limit
+    windowed = list(reversed(filtered))[:limit]
+
+    # Decision breakdown over all entries (not just window)
+    breakdown: dict[str, int] = {}
+    for e in all_entries:
+        breakdown[e.decision] = breakdown.get(e.decision, 0) + 1
+
+    # Chain integrity
+    try:
+        chain_ok = ledger.verify_chain_integrity()
+    except Exception:
+        chain_ok = False
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "entries":               [e.to_dict() for e in windowed],
+            "total_in_window":       len(windowed),
+            "total_entries":         len(all_entries),
+            "decision_breakdown":    breakdown,
+            "chain_integrity_valid": chain_ok,
+            "ledger_digest":         ledger.ledger_digest(),
+            "ledger_format_version": LEDGER_FORMAT_VERSION,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
 # Phase 35 — Parallel Governance Gate API
 # ---------------------------------------------------------------------------
 
