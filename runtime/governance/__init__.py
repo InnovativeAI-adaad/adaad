@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from runtime.governance.threat_monitor import ThreatMonitor, default_detectors
+# Phase 24 — health-driven review pressure adaptor
+from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor, PressureAdjustment
 from runtime.governance.foundation import (
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
@@ -34,4 +36,7 @@ __all__ = [
     "utc_timestamp_label",
     "ThreatMonitor",
     "default_detectors",
+    # Phase 24
+    "HealthPressureAdaptor",
+    "PressureAdjustment",
 ]
