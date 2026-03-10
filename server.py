@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
+from contextlib import asynccontextmanager
+
 from fastapi import Body, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -36,16 +38,18 @@ class SPAStaticFiles(StaticFiles):
 
         return FileResponse(str(self._index_path))
 
-app = FastAPI(title="InnovativeAI-adaad Unified Server")
-app.include_router(mutate_router)
-
-
-@app.on_event("startup")
-def _startup_checks() -> None:
+@asynccontextmanager
+async def _lifespan(application: FastAPI):  # noqa: ARG001
+    """Lifespan: validate APONI assets at startup; clean up on shutdown."""
     if not APONI_DIR.exists():
         raise RuntimeError("ui/aponi not found. Import APONI into ui/aponi first.")
     if not INDEX.exists():
         raise RuntimeError("ui/aponi/index.html not found. Verify APONI import.")
+    yield
+
+
+app = FastAPI(title="InnovativeAI-adaad Unified Server", lifespan=_lifespan)
+app.include_router(mutate_router)
 
 
 def _load_mock(name: str) -> Any:

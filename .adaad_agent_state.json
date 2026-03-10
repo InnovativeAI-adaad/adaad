@@ -1,8 +1,8 @@
 {
     "schema_version": "1.5.0",
-    "last_completed_pr": "PR-39-REL",
+    "last_completed_pr": "PR-TERMUX-FIX",
     "next_pr": "PR-40-PLAN (Phase 40 \u2014 TBD)",
-    "active_phase": "Phase 39 COMPLETE \u00b7 v6.4.0 \u00b7 determinism contract closed",
+    "active_phase": "Termux fix COMPLETE \u00b7 v6.5.0",
     "last_invocation": "2026-03-10",
     "blocked_reason": null,
     "blocked_at_gate": null,
