@@ -990,5 +990,57 @@ def governance_admission_audit(
     }
 
 
+
+
+# ---------------------------------------------------------------------------
+# Phase 28 — Admission Band Enforcement
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/admission-enforcement")
+def governance_admission_enforcement(
+    risk_score: float = 0.50,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return AdmissionBandEnforcer verdict for a mutation with the given risk_score.
+
+    Extends Phase 25 admission-status with escalation-mode resolution:
+    when ADAAD_SEVERITY_ESCALATIONS contains
+    {"admission_band_enforcement": "blocking"}, HALT-band verdicts set
+    blocked=True, surfacing an emergency-stop signal to callers.
+
+    Query parameters
+    ----------------
+    risk_score : float, default 0.50
+        Mutation risk score [0.0, 1.0]. Clamped if out of range.
+
+    Response fields (data)
+    ----------------------
+    escalation_mode   "advisory" | "blocking"
+    blocked           bool — True only when mode=blocking AND band=halt
+    block_reason      str — human-readable reason when blocked; empty otherwise
+    verdict_digest    sha256 hex — deterministic over (decision_digest, blocked, block_reason)
+    enforcer_version  "28.0"
+    decision          full AdmissionDecision payload (same as /admission-status)
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.admission_band_enforcer import AdmissionBandEnforcer
+    from runtime.api.runtime_services import governance_health_service
+
+    try:
+        health_data = governance_health_service(epoch_id="current")
+        h = float(health_data.get("health_score", 1.0))
+    except Exception:
+        h = 1.0
+
+    enforcer = AdmissionBandEnforcer(health_score=h)
+    verdict = enforcer.evaluate(risk_score)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": verdict.as_dict(),
+    }
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

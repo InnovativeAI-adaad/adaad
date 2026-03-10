@@ -420,6 +420,36 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 28 — Admission Band Enforcement Binding
+
+**Status:** ✅ shipped · **Released:** v5.3.0 · **Closed:** 2026-03-10 · **Requires:** Phase 27 shipped ✅
+
+Phase 28 wires the advisory AdmissionDecision into an enforcement layer that
+can be escalated from advisory to blocking via ADAAD_SEVERITY_ESCALATIONS,
+enabling operators to activate an emergency-stop on HALT-band mutation proposals
+without granting GovernanceGate bypass authority.
+
+### Constitutional invariants
+
+- `advisory_only: True` is structurally preserved on AdmissionDecision; enforcer only sets its own `blocked` flag.
+- AdmissionBandEnforcer never imports or calls GovernanceGate.
+- `blocked=True` only when `escalation_mode == "blocking"` AND `admission_band == "halt"`.
+- Fail-safe: invalid or absent health_score defaults to GREEN (1.0) — never silently stalls pipeline.
+- Deterministic: identical (health_score, risk_score, escalation_config) → identical verdict_digest.
+
+### Acceptance criteria
+
+- Advisory mode (default): `blocked` always `False` regardless of band: **✅**
+- Blocking mode, green/amber/red bands: `blocked` always `False`: **✅**
+- Blocking mode, halt band: `blocked == True` with non-empty block_reason: **✅**
+- ADAAD_SEVERITY_ESCALATIONS parsing: advisory/blocking/invalid/missing all handled: **✅**
+- Verdict digest determinism: identical inputs → identical sha256: **✅**
+- `GET /governance/admission-enforcement` returns 200 with full payload: **✅**
+- Authority boundary: no GovernanceGate import in enforcer module: **✅**
+- **39 tests**: unit (29) + endpoint (10): **✅**
+
+---
+
 ## Phase 27 — Admission Audit Ledger
 
 **Status:** ✅ shipped · **Released:** v5.2.0 · **Closed:** 2026-03-10 · **Requires:** Phase 25 shipped ✅
