@@ -420,6 +420,32 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 30 — Threat Scan Ledger & Endpoint
+
+**Status:** ✅ shipped · **Released:** v5.5.0 · **Closed:** 2026-03-10 · **Requires:** Phase 29 shipped ✅
+
+Phase 30 closes the ThreatMonitor observability gap by adding a hash-chained
+audit ledger for scan results and a read-only API endpoint for operator triage.
+
+### Constitutional invariants
+
+- Append-only: no record is overwritten or deleted.
+- Deterministic replay: same scan sequence → same chain hashes.
+- GovernanceGate authority unchanged.
+- Emit failure isolation: I/O errors never propagate.
+
+### Acceptance criteria
+
+- ThreatScanLedger.emit(scan) persists scan into hash-chained JSONL: **✅**
+- Chain verifies after multiple emits: **✅**
+- Chain resumes correctly on reopen: **✅**
+- Real ThreatMonitor scan output accepted: **✅**
+- triggered_rate() / escalation_rate() / avg_risk_score() correct: **✅**
+- GET /governance/threat-scans returns 200 with full payload: **✅**
+- **46 tests**: unit (36) + endpoint (10): **✅**
+
+---
+
 ## Phase 29 — Enforcement Verdict Audit Binding
 
 **Status:** ✅ shipped · **Released:** v5.4.0 · **Closed:** 2026-03-10 · **Requires:** Phase 28 shipped ✅

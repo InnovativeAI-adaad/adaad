@@ -1059,5 +1059,70 @@ def governance_admission_enforcement(
         "data": verdict.as_dict(),
     }
 
+
+
+# ---------------------------------------------------------------------------
+# Phase 30 — Threat Scan Ledger
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/threat-scans")
+def governance_threat_scans(
+    limit: int = 20,
+    recommendation: str | None = None,
+    triggered_only: bool = False,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return recent ThreatMonitor scan records from the audit ledger. Read-only.
+
+    Query parameters
+    ----------------
+    limit : int, default 20
+        Maximum number of records to return (most recent).
+    recommendation : str, optional
+        Filter by recommendation: "continue" | "escalate" | "halt".
+    triggered_only : bool, default False
+        When True, only return scans where at least one detector triggered.
+
+    Response fields (data)
+    ----------------------
+    records                 list  — threat scan records (chronological)
+    total_in_window         int   — number of records returned
+    triggered_rate          float — fraction of scans with triggered_count >= 1
+    escalation_rate         float — fraction of scans with recommendation != 'continue'
+    avg_risk_score          float — mean risk_score across all records
+    recommendation_breakdown dict  — recommendation → count
+    risk_level_breakdown     dict  — risk_level → count
+    ledger_version           str   — "30.0"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.threat_scan_ledger import (
+        THREAT_SCAN_LEDGER_VERSION,
+        DEFAULT_THREAT_SCAN_LEDGER_PATH,
+        ThreatScanReader,
+    )
+
+    reader = ThreatScanReader(DEFAULT_THREAT_SCAN_LEDGER_PATH)
+    records = reader.history(
+        limit=limit,
+        recommendation_filter=recommendation,
+        triggered_only=triggered_only,
+    )
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "records":                  records,
+            "total_in_window":          len(records),
+            "triggered_rate":           reader.triggered_rate(),
+            "escalation_rate":          reader.escalation_rate(),
+            "avg_risk_score":           reader.avg_risk_score(),
+            "recommendation_breakdown": reader.recommendation_breakdown(),
+            "risk_level_breakdown":     reader.risk_level_breakdown(),
+            "ledger_version":           THREAT_SCAN_LEDGER_VERSION,
+        },
+    }
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
