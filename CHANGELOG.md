@@ -1,3 +1,39 @@
+## [4.9.0] — 2026-03-09
+
+### Phase 24 — Health-Driven Review Pressure Adaptation (Complete)
+
+Phase 24 acts on the unified governance health signal: when `h` degrades,
+`HealthPressureAdaptor` surfaces an advisory recommendation to raise reviewer
+counts proportionally. All output is advisory — GovernanceGate and human
+sign-off retain all actual authority.
+
+#### Added
+
+- **`HealthPressureAdaptor`** (`runtime/governance/health_pressure_adaptor.py`):
+  `compute(health_score) → PressureAdjustment`; three pressure bands (none/elevated/
+  critical); `advisory_only: True` structural invariant; `adjustment_digest`
+  deterministic SHA-256; `low` tier never adjusted; proposed `min_count` capped
+  at `max_count`, floored at `CONSTITUTIONAL_FLOOR_MIN_REVIEWERS`.
+- **`PressureAdjustment`** frozen dataclass: `health_score`, `health_band`,
+  `pressure_tier`, `proposed_tier_config`, `baseline_tier_config`, `adjusted_tiers`,
+  `advisory_only`, `adjustment_digest`, `adaptor_version`.
+- **`GET /governance/review-pressure`**: bearer-auth-gated (`audit:read`), read-only;
+  returns full `PressureAdjustment` for current governance health score.
+- **`review_pressure` field** in `GET /governance/health` response: additive,
+  non-breaking; carries `pressure_tier`, `health_band`, `adjusted_tiers`,
+  `advisory_only`, `adjustment_digest`.
+- **48 new tests**: `test_health_pressure_adaptor.py` (32),
+  `test_review_pressure_endpoint.py` (10), `test_governance_health_pressure_field.py` (6).
+
+#### Invariants preserved
+
+- `GovernanceGate` retains sole mutation-approval authority.
+- `advisory_only: True` is a structural invariant — no runtime path sets it `False`.
+- `HealthPressureAdaptor` has no access to `GovernanceGate`.
+- No new constitutional rules introduced.
+
+---
+
 ## [4.8.0] — 2026-03-09
 
 ### Phase 23 — Routing Health Signal Integration (Complete)
