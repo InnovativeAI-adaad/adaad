@@ -5,6 +5,10 @@ from runtime.governance.foundation import sha256_prefixed_digest
 
 
 REPLAY_ANOMALY_FIXTURES = [
+    # triage_level is now set by EntropyAnomalyTriageThresholds.classify() (Phase 34),
+    # which uses utilisation ratios ("ok"/"warning"/"escalate"/"critical") and overrides
+    # the old EntropyAnomalyThresholds bit-threshold values ("none"/"monitor"/"investigate"/"block").
+    # triage_reason retains the old bit-threshold taxonomy from anomaly_thresholds.classify().
     {
         "fixture_id": "none",
         "mutation_bits": 8,
@@ -12,7 +16,7 @@ REPLAY_ANOMALY_FIXTURES = [
         "observed_bits": 0,
         "epoch_bits": 8,
         "expected_passed": True,
-        "expected_triage_level": "none",
+        "expected_triage_level": "ok",         # ratio 0.50 < warning_ratio 0.70
         "expected_triage_reason": "anomaly_not_detected",
         "expected_reason": "ok",
     },
@@ -23,7 +27,7 @@ REPLAY_ANOMALY_FIXTURES = [
         "observed_bits": 1,
         "epoch_bits": 9,
         "expected_passed": True,
-        "expected_triage_level": "monitor",
+        "expected_triage_level": "ok",         # ratio 0.5625 < warning_ratio 0.70
         "expected_triage_reason": "anomaly_observed_bits_monitor_threshold_reached",
         "expected_reason": "ok",
     },
@@ -34,7 +38,7 @@ REPLAY_ANOMALY_FIXTURES = [
         "observed_bits": 8,
         "epoch_bits": 16,
         "expected_passed": True,
-        "expected_triage_level": "investigate",
+        "expected_triage_level": "critical",   # ratio 1.00 >= critical_ratio 1.00
         "expected_triage_reason": "anomaly_observed_bits_investigate_threshold_reached",
         "expected_reason": "ok",
     },
@@ -45,7 +49,7 @@ REPLAY_ANOMALY_FIXTURES = [
         "observed_bits": 24,
         "epoch_bits": 32,
         "expected_passed": False,
-        "expected_triage_level": "block",
+        "expected_triage_level": "critical",   # ratio 2.00 >= critical_ratio 1.00
         "expected_triage_reason": "anomaly_observed_bits_block_threshold_reached",
         "expected_reason": "entropy_ceiling_exceeded",
         "expected_violation_reason": "entropy_budget_exceeded",

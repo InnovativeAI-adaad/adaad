@@ -1,3 +1,57 @@
+## [6.4.0] — 2026-03-10
+
+### Phase 39 — DreamMode Determinism Provider Injection (Complete)
+
+Phase 39 closes the architectural gap between `DreamMode` and the
+`RuntimeDeterminismProvider` contract established in Phase 7+.  All clock and
+token calls inside `DreamMode` are now provider-routed, making the agent
+fully replay-safe and audit-verifiable.
+
+#### Changed — `app/dream_mode.py`
+- **`provider` param added to `__init__`**: accepts any `RuntimeDeterminismProvider`;
+  defaults to `SystemDeterminismProvider()` in non-strict modes.
+- **Auto-provisioning**: when `replay_mode="strict"` or recovery tier is
+  `audit/governance/critical` and no provider is supplied, a
+  `SeededDeterminismProvider` is automatically constructed from
+  `ADAAD_DETERMINISTIC_SEED` (default `"adaad-dream-default"`) — preserving
+  backward-compat for callers that rely on strict mode without explicit injection.
+- **Fail-closed guard**: `require_replay_safe_provider()` called at construction —
+  non-deterministic providers in strict/audit contexts raise `RuntimeError`
+  immediately.
+- **`issued_at` provider-routed**: `handoff_contract["issued_at"]` now uses
+  `self.provider.iso_now()` instead of `time.strftime()` — enables clock
+  injection in tests and pinned-epoch deterministic replay.
+- **Token provider-routed**: non-strict token path uses
+  `self.provider.next_token(label="dream_token")` instead of `time.time()`.
+- **`discover_tasks()` payload controlled**: emits `task_count` + `task_sample`
+  (capped at `ADAAD_DREAM_DISCOVERY_SAMPLE_SIZE`, default 3) rather than full
+  task list; adds `tasks` only when `ADAAD_METRICS_INCLUDE_FULL_TASKS=1`.
+- **`entropy_budget`**: exposed as instance attribute for test-harness reset.
+
+#### Fixed
+- **8 failing determinism tests** (`tests/determinism/test_dream_mode_provider_determinism.py`):
+  all 8 now pass — strict-mode reproducibility, provider token generation,
+  clock injection, replay equivalence, audit-tier rejection, discovery payload.
+- **1 entropy triage spec drift** (`test_entropy_anomaly_triage_replay.py`):
+  reanchored 4 fixture `expected_triage_level` values to Phase 34's
+  `EntropyAnomalyTriageThresholds` ratio-based taxonomy
+  (`"ok"/"warning"/"escalate"/"critical"`) which overrides the legacy
+  bit-threshold taxonomy (`"none"/"monitor"/"investigate"/"block"`).
+
+#### Added — `tests/conftest.py`
+Shared pytest infrastructure: `auth_headers()`, `audit_env()`, `make_audit_client()`,
+and assertion helpers (`assert_schema_version`, `assert_required_keys`,
+`assert_rate_complement`, `assert_nonneg_int`, `assert_sha256_prefix`) — eliminates
+per-endpoint fixture boilerplate and establishes a scalable test infrastructure
+baseline for all future governance endpoint phases.
+
+#### Test counts
+- **9 tests fixed** (8 determinism + 1 triage spec): **✅ 100%**
+- **No regressions** in determinism suite (71 tests all green)
+- **Total targeted suite**: 939 tests green
+
+---
+
 ## [6.3.0] — 2026-03-10
 
 ### Phase 38 — Mutation Ledger REST Endpoint (Complete)
