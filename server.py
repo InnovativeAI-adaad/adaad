@@ -341,6 +341,8 @@ def governance_health(
 # Module-level reference to the active telemetry sink for the autonomy loop.
 # Set during app lifespan or test setup via _set_telemetry_sink_for_server().
 _telemetry_sink_ref: "Any | None" = None
+# Phase 25: module-level pressure audit ledger (None = inactive)
+_pressure_audit_ledger: "Any | None" = None
 
 
 def _set_telemetry_sink_for_server(sink: "Any | None") -> None:
@@ -712,6 +714,30 @@ def governance_review_pressure(
     adaptor = HealthPressureAdaptor()
     adj = adaptor.compute(h)
 
+    # Phase 25: emit to PressureAuditLedger if configured
+    import os
+    ledger_active = False
+    ledger_sequence = None
+    global _pressure_audit_ledger
+
+    pressure_ledger_path = os.environ.get("ADAAD_PRESSURE_LEDGER_PATH", "").strip()
+    if pressure_ledger_path:
+        try:
+            from runtime.governance.pressure_audit_ledger import PressureAuditLedger
+            from pathlib import Path as _Path
+            if _pressure_audit_ledger is None:
+                _pressure_audit_ledger = PressureAuditLedger(
+                    _Path(pressure_ledger_path), chain_verify_on_open=False
+                )
+            _pressure_audit_ledger.emit(adj)
+            ledger_active = True
+            ledger_sequence = _pressure_audit_ledger.sequence - 1
+        except Exception as _exc:
+            import logging as _log
+            _log.getLogger(__name__).warning(
+                "PressureAuditLedger emit failed (dropped): %s", _exc
+            )
+
     return {
         "schema_version": "1.0",
         "authn": authn,
@@ -725,6 +751,79 @@ def governance_review_pressure(
             "advisory_only": adj.advisory_only,
             "adjustment_digest": adj.adjustment_digest,
             "adaptor_version": adj.adaptor_version,
+            "ledger_active": ledger_active,
+            "ledger_sequence": ledger_sequence,
+        },
+    }
+
+
+
+# ---------------------------------------------------------------------------
+# Phase 25 — Pressure History Endpoint (PR-25-02)
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/pressure-history")
+def governance_pressure_history(
+    pressure_tier: str | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return paginated PressureAdjustment ledger history. Read-only.
+
+    Query params
+    ------------
+    pressure_tier  — filter by tier ("none", "elevated", "critical")
+    limit          — max records (1–500, default 100)
+    offset         — pagination offset (default 0)
+
+    Response fields (data)
+    ----------------------
+    records         list of ledger records (newest-first)
+    total_queried   int — records returned
+    tier_frequency  dict — {tier: count} across all ledger entries
+    ledger_active   bool
+    ledger_path     str | null
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    import os
+    from pathlib import Path as _Path
+
+    pressure_ledger_path = os.environ.get("ADAAD_PRESSURE_LEDGER_PATH", "").strip()
+
+    if not pressure_ledger_path or not _Path(pressure_ledger_path).exists():
+        return {
+            "schema_version": "1.0",
+            "authn": authn,
+            "data": {
+                "records": [],
+                "total_queried": 0,
+                "tier_frequency": {},
+                "ledger_active": False,
+                "ledger_path": pressure_ledger_path or None,
+            },
+        }
+
+    from runtime.governance.pressure_audit_ledger import PressureAuditReader
+
+    reader = PressureAuditReader(_Path(pressure_ledger_path))
+    records = reader.history(
+        pressure_tier=pressure_tier,
+        limit=limit,
+        offset=offset,
+    )
+    freq = reader.tier_frequency()
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "records": records,
+            "total_queried": len(records),
+            "tier_frequency": freq,
+            "ledger_active": True,
+            "ledger_path": pressure_ledger_path,
         },
     }
 
