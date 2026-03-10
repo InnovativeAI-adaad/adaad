@@ -1,8 +1,8 @@
 {
     "schema_version": "1.5.0",
-    "last_completed_pr": "PR-37-REL",
-    "next_pr": "PR-38-PLAN (Phase 38 \u2014 TBD)",
-    "active_phase": "Phase 37 COMPLETE \u00b7 v6.2.0 \u00b7 834 tests",
+    "last_completed_pr": "PR-38-REL",
+    "next_pr": "PR-39-PLAN (Phase 39 \u2014 TBD)",
+    "active_phase": "Phase 38 COMPLETE \u00b7 v6.3.0 \u00b7 846 tests",
     "last_invocation": "2026-03-10",
     "blocked_reason": null,
     "blocked_at_gate": null,
