@@ -1,3 +1,38 @@
+## [4.6.0] — 2026-03-09
+
+### Phase 21 — Telemetry Ledger & Governed Observability (Complete)
+
+Phase 21 converts intelligence routing telemetry from ephemeral in-memory state to
+a durable, sha256-chained, queryable audit ledger — completing the evidence infrastructure
+for the intelligence surface.
+
+#### Added
+
+- **`FileTelemetrySink`** (`runtime/intelligence/file_telemetry_sink.py`): append-only
+  JSONL sink with sha256 hash chaining; `verify_chain()` is O(n) memory and fail-closed
+  on any hash, `prev_hash`, or sequence-gap mismatch; `GENESIS_PREV_HASH` matches
+  `mutation_ledger.py` sentinel; emit failures are caught and never propagate to callers.
+- **`TelemetryLedgerReader`** (`runtime/intelligence/file_telemetry_sink.py`): read-only
+  query interface — `query()` with `strategy_id`, `outcome`, `limit`, `offset`;
+  `win_rate_by_strategy()`; `strategy_summary()`; `verify_chain()`.
+- **`schemas/telemetry_decision_record.v1.json`**: schema for chained telemetry records.
+- **`AutonomyLoop.telemetry_ledger_path`** kwarg: `FileTelemetrySink` activates when
+  path is configured; `InMemoryTelemetrySink` remains the unchanged default;
+  `ADAAD_TELEMETRY_LEDGER_PATH` env var respected; explicit kwarg takes precedence.
+- **`GET /telemetry/decisions`** endpoint (`server.py`): bearer-auth-gated (`audit:read`),
+  read-only; `strategy_id` / `outcome` filters; `limit` (1–500) / `offset` pagination;
+  `sink_type` reflects active sink; `_set_telemetry_sink_for_server()` for test injection.
+- **61 new tests**: `test_file_telemetry_sink.py` (38), `test_autonomy_telemetry_sink.py`
+  (16), `test_telemetry_endpoint.py` (7).
+
+#### Invariants preserved
+
+- `GovernanceGate` retains sole mutation-approval authority; telemetry is observability only.
+- `InMemoryTelemetrySink` and all existing `AutonomyLoop` callers are unmodified.
+- No new constitutional rules introduced.
+
+---
+
 ## [4.5.0] — 2026-03-09
 
 ### Phase 20 — Public API Consolidation (Complete)
