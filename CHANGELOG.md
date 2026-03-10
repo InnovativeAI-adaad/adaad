@@ -1,4 +1,38 @@
+## [4.10.0] — 2026-03-09
+
+### Phase 25 — Pressure Adjustment Audit Ledger (Complete)
+
+Phase 25 persists every `PressureAdjustment` into a hash-chained audit ledger,
+completing the governance advisory arc: emit → persist → verify → query.
+
+#### Added
+
+- **`PressureAuditLedger`** (`runtime/governance/pressure_audit_ledger.py`):
+  append-only JSONL; SHA-256 hash chain with `GENESIS_PREV_HASH = "sha256:" + "0"*64`;
+  `emit(adjustment)` isolates all failures; `chain_verify_on_open=True` default;
+  `PressureAuditChainError(sequence, detail)` on any violation.
+- **`PressureAuditReader`**: `history()` (newest-first, filter, limit/offset, ≤500);
+  `tier_frequency()`; `tier_frequency_series(window)`; `verify_chain()`.
+- **Deterministic replay**: `timestamp_iso` excluded from `record_hash` — same
+  adjustment sequence → identical chain hashes (test-verified).
+- **`GET /governance/review-pressure` extended**: emits to `PressureAuditLedger`
+  when `ADAAD_PRESSURE_LEDGER_PATH` env set; adds `ledger_active` and `ledger_sequence`
+  fields; emit failure never propagates; inactive by default.
+- **`GET /governance/pressure-history`**: bearer-auth-gated, read-only; `pressure_tier`
+  filter; `limit` 1–500; `422` on limit>500; `ledger_active: false` when no env/file.
+- **50 new tests**: `test_pressure_audit_ledger.py` (32), `test_pressure_history_endpoint.py`
+  (12), `test_review_pressure_ledger_wiring.py` (6).
+
+#### Invariants preserved
+
+- `GovernanceGate` and `HealthPressureAdaptor` unmodified.
+- Ledger is append-only; no record is ever overwritten or deleted.
+- `advisory_only: True` structural invariant unchanged.
+
+---
+
 ## [4.9.0] — 2026-03-09
+
 
 ### Phase 24 — Health-Driven Review Pressure Adaptation (Complete)
 
