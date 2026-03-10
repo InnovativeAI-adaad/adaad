@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict
 
 from runtime.governance.foundation import sha256_prefixed_digest
@@ -46,6 +46,63 @@ class EntropyAnomalyThresholds:
         return {"triage_level": "none", "triage_reason": "anomaly_not_detected"}
 
 
+@dataclass(frozen=True)
+class EntropyAnomalyTriageThresholds:
+    """Ratio-based triage thresholds for entropy budget utilisation (Phase 34).
+
+    Classifies the highest utilisation ratio (max of mutation and epoch ratios)
+    into one of four deterministic triage levels:
+
+    - ``"ok"``       — below warning threshold
+    - ``"warning"``  — at or above ``warning_ratio`` but below ``escalate_ratio``
+    - ``"escalate"`` — at or above ``escalate_ratio`` but below ``critical_ratio``
+    - ``"critical"`` — at or above ``critical_ratio``
+    - ``"disabled"`` — policy disabled (returned when ``policy_enabled=False``)
+
+    Parameters
+    ----------
+    warning_ratio:
+        Utilisation ratio (0.0–1.0) above which triage is ``"warning"``.
+    escalate_ratio:
+        Utilisation ratio above which triage is ``"escalate"``.
+    critical_ratio:
+        Utilisation ratio above which triage is ``"critical"``.
+    """
+
+    warning_ratio:  float = 0.70
+    escalate_ratio: float = 0.90
+    critical_ratio: float = 1.00
+
+    def classify(
+        self,
+        *,
+        mutation_ratio: float,
+        epoch_ratio: float,
+        policy_enabled: bool = True,
+    ) -> str:
+        """Return the triage level string for the given utilisation ratios.
+
+        Parameters
+        ----------
+        mutation_ratio:
+            Fraction of the per-mutation ceiling consumed.
+        epoch_ratio:
+            Fraction of the per-epoch ceiling consumed.
+        policy_enabled:
+            When ``False``, returns ``"disabled"`` unconditionally.
+        """
+        if not policy_enabled:
+            return "disabled"
+        highest = max(float(mutation_ratio), float(epoch_ratio))
+        if highest >= float(self.critical_ratio):
+            return "critical"
+        if highest >= float(self.escalate_ratio):
+            return "escalate"
+        if highest >= float(self.warning_ratio):
+            return "warning"
+        return "ok"
+
+
 ENTROPY_REASON_TAXONOMY = {
     "ok",
     "entropy_policy_disabled",
@@ -64,7 +121,8 @@ class EntropyPolicy:
     policy_id: str
     per_mutation_ceiling_bits: int
     per_epoch_ceiling_bits: int
-    anomaly_thresholds: EntropyAnomalyThresholds = EntropyAnomalyThresholds()
+    anomaly_thresholds: EntropyAnomalyThresholds = field(default_factory=EntropyAnomalyThresholds)
+    anomaly_triage: EntropyAnomalyTriageThresholds = field(default_factory=EntropyAnomalyTriageThresholds)
 
     @property
     def policy_hash(self) -> str:
@@ -124,12 +182,8 @@ class EntropyPolicy:
             return {
                 "passed": True,
                 "reason": "entropy_policy_disabled",
-                "triage_level": self.anomaly_triage.classify(
-                    mutation_ratio=0.0,
-                    epoch_ratio=0.0,
-                    policy_enabled=False,
-                ),
                 **detail,
+                "triage_level": "disabled",  # overrides anomaly_thresholds triage in detail
             }
 
         mutation_ratio = mutation_total_bits / float(self.per_mutation_ceiling_bits)
@@ -184,6 +238,7 @@ def enforce_entropy_policy(
 __all__ = [
     "ENTROPY_REASON_TAXONOMY",
     "EntropyAnomalyThresholds",
+    "EntropyAnomalyTriageThresholds",
     "EntropyPolicy",
     "EntropyPolicyViolation",
     "enforce_entropy_policy",
