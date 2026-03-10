@@ -334,5 +334,100 @@ def governance_health(
     return {"schema_version": "1.0", "authn": authn, "data": result}
 
 
+# ---------------------------------------------------------------------------
+# Phase 21 — Telemetry Ledger Read Endpoint (PR-21-02)
+# ---------------------------------------------------------------------------
+
+# Module-level reference to the active telemetry sink for the autonomy loop.
+# Set during app lifespan or test setup via _set_telemetry_sink_for_server().
+_telemetry_sink_ref: "Any | None" = None
+
+
+def _set_telemetry_sink_for_server(sink: "Any | None") -> None:
+    """Set the active telemetry sink reference for GET /telemetry/decisions.
+    Called by app lifespan (when FileTelemetrySink is active) or by tests.
+    """
+    global _telemetry_sink_ref
+    _telemetry_sink_ref = sink
+
+
+@app.get("/telemetry/decisions")
+def telemetry_decisions(
+    strategy_id: str | None = Query(default=None),
+    outcome: str | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return paginated routing decision telemetry. Read-only.
+
+    Query params
+    ------------
+    strategy_id  — filter by strategy id (optional)
+    outcome      — filter by outcome string (optional)
+    limit        — max records returned (1–500, default 100)
+    offset       — pagination offset (default 0)
+
+    Response fields
+    ---------------
+    decisions       list  — payload dicts, newest-first
+    total_queried   int   — number of records matching filters
+    ledger_path     str | null
+    sink_type       "file" | "memory"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    sink = _telemetry_sink_ref
+
+    if sink is None:
+        # Fallback: check for global AutonomyLoop default sink via import
+        try:
+            from runtime.intelligence.routed_decision_telemetry import InMemoryTelemetrySink
+            sink = InMemoryTelemetrySink()  # empty, but structurally valid
+        except Exception:
+            sink = None
+
+    sink_type = "memory"
+    ledger_path_str = None
+
+    if sink is not None:
+        from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
+        if isinstance(sink, FileTelemetrySink):
+            sink_type = "file"
+            ledger_path_str = str(sink._path)
+            reader = TelemetryLedgerReader(sink._path)
+            decisions = reader.query(
+                strategy_id=strategy_id,
+                outcome=outcome,
+                limit=limit,
+                offset=offset,
+            )
+            total_queried = len(decisions)
+        else:
+            # InMemoryTelemetrySink or compatible
+            all_entries = list(getattr(sink, "entries", lambda: [])())
+            if strategy_id is not None:
+                all_entries = [e for e in all_entries if e.get("strategy_id") == strategy_id]
+            if outcome is not None:
+                all_entries = [e for e in all_entries if e.get("outcome") == outcome]
+            all_entries.reverse()  # newest-first
+            total_queried = len(all_entries)
+            decisions = all_entries[offset: offset + limit]
+    else:
+        decisions = []
+        total_queried = 0
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "decisions": decisions,
+            "total_queried": total_queried,
+            "ledger_path": ledger_path_str,
+            "sink_type": sink_type,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

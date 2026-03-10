@@ -520,6 +520,13 @@ class AutonomyLoop:
 
     The existing `run_self_check_loop()` function remains unchanged for backward
     compatibility — it continues to instantiate a fresh router per call.
+
+    Phase 21: Adds `telemetry_ledger_path` kwarg for persistent chain-verified
+    telemetry. When `None` (default), uses `InMemoryTelemetrySink` — behaviour
+    is identical to v4.5.0. When a path is provided, uses `FileTelemetrySink`
+    so routing decisions survive process restarts and are chain-verifiable.
+    The environment variable `ADAAD_TELEMETRY_LEDGER_PATH` is also checked at
+    construction; an explicit kwarg takes precedence over the env var.
     """
 
     def __init__(
@@ -527,10 +534,32 @@ class AutonomyLoop:
         *,
         budget_engine: "AutonomyBudgetEngine | None" = None,
         router: "IntelligenceRouter | None" = None,
+        telemetry_ledger_path: "Path | str | None" = None,
     ) -> None:
+        import os as _os
         from runtime.intelligence.router import IntelligenceRouter as _Router
+        from runtime.intelligence.routed_decision_telemetry import RoutedDecisionTelemetry as _RDT
+
         self._budget_engine = budget_engine
-        self._router: IntelligenceRouter = router if router is not None else _Router()
+
+        # Phase 21: resolve telemetry sink
+        _ledger_path: "Path | None" = None
+        if telemetry_ledger_path is not None:
+            _ledger_path = Path(telemetry_ledger_path)
+        else:
+            _env_path = _os.environ.get("ADAAD_TELEMETRY_LEDGER_PATH", "").strip()
+            if _env_path:
+                _ledger_path = Path(_env_path)
+
+        if _ledger_path is not None:
+            from runtime.intelligence.file_telemetry_sink import FileTelemetrySink as _FTS
+            self._file_sink: "_FTS | None" = _FTS(_ledger_path)
+            _telemetry = _RDT(sink=self._file_sink.emit)
+        else:
+            self._file_sink = None
+            _telemetry = _RDT()  # InMemoryTelemetrySink default
+
+        self._router: IntelligenceRouter = router if router is not None else _Router(telemetry=_telemetry)
 
     def run(
         self,
@@ -646,3 +675,13 @@ class AutonomyLoop:
     def router(self) -> "IntelligenceRouter":
         """Expose the persistent router for inspection and testing."""
         return self._router
+
+    @property
+    def file_sink(self):
+        """Return the active FileTelemetrySink, or None when using InMemoryTelemetrySink."""
+        return self._file_sink
+
+    @property
+    def telemetry_ledger_path(self) -> "Path | None":
+        """Return the configured ledger path, or None if in-memory sink is active."""
+        return self._file_sink._path if self._file_sink is not None else None
