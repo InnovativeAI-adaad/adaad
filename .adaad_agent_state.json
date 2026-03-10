@@ -1,8 +1,8 @@
 {
     "schema_version": "1.3.0",
-    "last_completed_pr": "PR-22-REL",
-    "next_pr": "PR-23-PLAN (Phase 23 — TBD)",
-    "active_phase": "Phase 22 COMPLETE · v4.7.0 · 2822+ tests",
+    "last_completed_pr": "PR-23-REL",
+    "next_pr": "PR-24-PLAN (Phase 24 — TBD)",
+    "active_phase": "Phase 23 COMPLETE · v4.8.0 · 2867+ tests",
     "last_invocation": "2026-03-09",
     "blocked_reason": null,
     "blocked_at_gate": null,
@@ -108,8 +108,13 @@
         "v4.6.0-released",
         "phase22-strategy-analytics-engine",
         "phase22-routing-health-report",
-        "phase22-aponi-analytics-endpoints",
-        "v4.7.0-released"
+        "phase22-analytics-endpoints",
+        "v4.7.0-released",
+        "phase23-routing-health-signal-aggregator",
+        "phase23-signal-weights-rebalanced-5-signals",
+        "phase23-governance-routing-health-endpoint",
+        "phase23-governance-health-routing-field",
+        "v4.8.0-released"
     ],
     "pending_evidence_rows": [],
     "last_sync_sha": "pending-push"
