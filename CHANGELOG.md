@@ -1,3 +1,38 @@
+## [4.7.0] — 2026-03-09
+
+### Phase 22 — Strategy Analytics & Routing Health (Complete)
+
+Phase 22 builds higher-order analytics over the Phase 21 telemetry ledger, adding
+structured health classification for the intelligence routing surface.
+
+#### Added
+
+- **`StrategyAnalyticsEngine`** (`runtime/intelligence/strategy_analytics.py`): read-only
+  analytics engine consuming `TelemetryLedgerReader`; rolling-window win rates, drift
+  detection (`abs(window_win_rate - all_time_win_rate)`), staleness flags, dominant
+  strategy detection, health score formula, and green/amber/red classification with 6
+  named threshold constants.
+- **`RoutingHealthReport`** (frozen dataclass): structured health report with deterministic
+  `report_digest` (sha256 of canonical fields); all 6 `STRATEGY_TAXONOMY` members always
+  present in `strategy_stats`, sorted by `strategy_id`.
+- **`StrategyWindowStats`** (frozen dataclass): per-strategy rolling-window statistics.
+- **`StrategyAnalyticsError`**: raised on invalid `window_size` (< 10 or > 10,000).
+- **`schemas/routing_health_report.v1.json`**: JSON Schema enforcement for report structure.
+- **`GET /telemetry/analytics`** (`server.py`): bearer-auth-gated (`audit:read`); `window_size`
+  param (10–10000); full `RoutingHealthReport` as structured JSON; file or memory sink.
+- **`GET /telemetry/strategy/{strategy_id}`** (`server.py`): per-strategy `StrategyWindowStats`;
+  404 on unknown `strategy_id`.
+- **47 new tests**: `test_strategy_analytics.py` (33), `test_analytics_endpoints.py` (14).
+
+#### Invariants preserved
+
+- `StrategyAnalyticsEngine` is read-only — never writes to the telemetry ledger.
+- `GovernanceGate` retains sole mutation-approval authority; analytics are advisory only.
+- No new constitutional rules introduced.
+- All Phase 21 and Phase 22 telemetry surfaces are append-only or read-only.
+
+---
+
 ## [4.6.0] — 2026-03-09
 
 ### Phase 21 — Telemetry Ledger & Governed Observability (Complete)

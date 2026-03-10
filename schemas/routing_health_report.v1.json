@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RoutingHealthReport",
+  "description": "Phase 22: Structured routing health classification from StrategyAnalyticsEngine",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "status",
+    "health_score",
+    "strategy_stats",
+    "dominant_strategy",
+    "dominant_share",
+    "stale_strategy_ids",
+    "drift_max",
+    "window_size",
+    "total_decisions",
+    "window_decisions",
+    "ledger_chain_valid",
+    "report_digest"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["green", "amber", "red"]
+    },
+    "health_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "strategy_stats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["strategy_id", "window_size", "total", "approved", "win_rate", "window_win_rate", "drift", "stale", "last_seen_sequence"],
+        "properties": {
+          "strategy_id": {"type": "string"},
+          "window_size": {"type": "integer", "minimum": 10},
+          "total": {"type": "integer", "minimum": 0},
+          "approved": {"type": "integer", "minimum": 0},
+          "win_rate": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+          "window_win_rate": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+          "drift": {"type": "number", "minimum": 0.0},
+          "stale": {"type": "boolean"},
+          "last_seen_sequence": {"type": "integer", "minimum": -1}
+        }
+      }
+    },
+    "dominant_strategy": {
+      "type": ["string", "null"]
+    },
+    "dominant_share": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "stale_strategy_ids": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "drift_max": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "window_size": {
+      "type": "integer",
+      "minimum": 10,
+      "maximum": 10000
+    },
+    "total_decisions": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "window_decisions": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ledger_chain_valid": {
+      "type": "boolean"
+    },
+    "report_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  },
+  "additionalProperties": false
+}

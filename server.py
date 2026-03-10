@@ -429,5 +429,153 @@ def telemetry_decisions(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase 22 — Strategy Analytics Endpoints (PR-22-02)
+# ---------------------------------------------------------------------------
+
+@app.get("/telemetry/analytics")
+def telemetry_analytics(
+    window_size: int = Query(default=100, ge=10, le=10000),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return RoutingHealthReport — rolling win-rate analytics. Read-only.
+
+    Query params
+    ------------
+    window_size  — rolling window size (10–10000, default 100)
+
+    Response fields (data)
+    ----------------------
+    status              "green" | "amber" | "red"
+    health_score        float 0–1
+    strategy_stats      list of StrategyWindowStats dicts
+    dominant_strategy   str | null
+    dominant_share      float
+    stale_strategy_ids  list[str]
+    drift_max           float
+    window_size         int
+    total_decisions     int
+    window_decisions    int
+    ledger_chain_valid  bool
+    report_digest       sha256 prefixed string
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
+    from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
+    from runtime.intelligence.routed_decision_telemetry import InMemoryTelemetrySink
+
+    sink = _telemetry_sink_ref
+
+    # Build an analytics-compatible reader from whatever sink is active
+    if isinstance(sink, FileTelemetrySink):
+        reader = TelemetryLedgerReader(sink._path)
+    else:
+        # Wrap InMemoryTelemetrySink (or None) in an adapter for StrategyAnalyticsEngine
+        class _MemoryAdapter:
+            def __init__(self, s):
+                self._sink = s
+            def _all_payloads(self):
+                if self._sink is None:
+                    return []
+                entries = getattr(self._sink, "entries", lambda: [])()
+                return list(entries)
+            def verify_chain(self):
+                return True  # in-memory is always structurally valid
+        reader = _MemoryAdapter(sink)
+
+    engine = StrategyAnalyticsEngine(reader, window_size=window_size)
+    report = engine.generate_report()
+
+    def _stat_to_dict(s):
+        return {
+            "strategy_id": s.strategy_id,
+            "window_size": s.window_size,
+            "total": s.total,
+            "approved": s.approved,
+            "win_rate": s.win_rate,
+            "window_win_rate": s.window_win_rate,
+            "drift": s.drift,
+            "stale": s.stale,
+            "last_seen_sequence": s.last_seen_sequence,
+        }
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "status": report.status,
+            "health_score": report.health_score,
+            "strategy_stats": [_stat_to_dict(s) for s in report.strategy_stats],
+            "dominant_strategy": report.dominant_strategy,
+            "dominant_share": report.dominant_share,
+            "stale_strategy_ids": list(report.stale_strategy_ids),
+            "drift_max": report.drift_max,
+            "window_size": report.window_size,
+            "total_decisions": report.total_decisions,
+            "window_decisions": report.window_decisions,
+            "ledger_chain_valid": report.ledger_chain_valid,
+            "report_digest": report.report_digest,
+        },
+    }
+
+
+@app.get("/telemetry/strategy/{strategy_id}")
+def telemetry_strategy_detail(
+    strategy_id: str,
+    window_size: int = Query(default=100, ge=10, le=10000),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return per-strategy StrategyWindowStats. Read-only.
+
+    Path param: strategy_id — must be in STRATEGY_TAXONOMY.
+    Returns 404 if strategy_id is unknown.
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.intelligence.strategy import STRATEGY_TAXONOMY
+    if strategy_id not in STRATEGY_TAXONOMY:
+        raise HTTPException(status_code=404, detail=f"unknown_strategy_id:{strategy_id}")
+
+    from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
+    from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
+
+    sink = _telemetry_sink_ref
+
+    if isinstance(sink, FileTelemetrySink):
+        reader = TelemetryLedgerReader(sink._path)
+    else:
+        class _MemAdapter:
+            def __init__(self, s):
+                self._sink = s
+            def _all_payloads(self):
+                if self._sink is None:
+                    return []
+                return list(getattr(self._sink, "entries", lambda: [])())
+            def verify_chain(self):
+                return True
+        reader = _MemAdapter(sink)
+
+    engine = StrategyAnalyticsEngine(reader, window_size=window_size)
+    report = engine.generate_report()
+    stat = next(s for s in report.strategy_stats if s.strategy_id == strategy_id)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "strategy_id": stat.strategy_id,
+            "window_size": stat.window_size,
+            "total": stat.total,
+            "approved": stat.approved,
+            "win_rate": stat.win_rate,
+            "window_win_rate": stat.window_win_rate,
+            "drift": stat.drift,
+            "stale": stat.stale,
+            "last_seen_sequence": stat.last_seen_sequence,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
