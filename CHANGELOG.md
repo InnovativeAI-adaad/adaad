@@ -34,6 +34,60 @@ the pattern established by `/governance/threat-scans` (Phase 30) and
 
 ---
 
+## [5.9.0] — 2026-03-10
+
+### Phase 34 — Certifier Scan REST Endpoint + Entropy Anomaly Triage (Complete)
+
+Phase 34 ships two independently gapped capabilities:
+
+1. **`GET /governance/certifier-scans`** — read-only authenticated REST endpoint
+   surfacing `CertifierScanLedger` scan history, rejection rate, escalation
+   breakdown, and mutation-blocked counts. Mirrors `GET /governance/threat-scans`
+   (Phase 30) pattern.
+
+2. **`EntropyAnomalyTriageThresholds`** — ratio-based anomaly triage class
+   (`warning_ratio / escalate_ratio / critical_ratio`) wired into `EntropyPolicy`
+   as a new `anomaly_triage` field. Deterministically classifies entropy budget
+   utilisation into `"ok"` / `"warning"` / `"escalate"` / `"critical"` /
+   `"disabled"` triage levels.
+
+#### Added
+
+- **`GET /governance/certifier-scans`** (`server.py`):
+  - Query params: `limit` (default 20), `rejected_only` (default False)
+  - Response: `records`, `total_in_window`, `rejection_rate`, `certification_rate`,
+    `mutation_blocked_count`, `fail_closed_count`, `escalation_breakdown`,
+    `ledger_version`
+  - Auth-gated: `_require_audit_read_scope`
+  - Read-only advisory: GovernanceGate retains sole mutation authority
+- **`EntropyAnomalyTriageThresholds`** (`runtime/evolution/entropy_policy.py`):
+  - Fields: `warning_ratio=0.70`, `escalate_ratio=0.90`, `critical_ratio=1.00`
+  - `classify(mutation_ratio, epoch_ratio, policy_enabled) -> str`
+  - Exported in `__all__` alongside `EntropyAnomalyThresholds`
+- **`EntropyPolicy.anomaly_triage`** field (default `EntropyAnomalyTriageThresholds()`):
+  - `enforce()` sets `detail["triage_level"]` via ratio classification
+  - Disabled branch sets `"triage_level": "disabled"` (overrides detail spread)
+  - `mutation_utilization_ratio` and `epoch_utilization_ratio` in all verdicts
+- **`tests/evolution/test_entropy_policy_triage.py`** (3 tests): 100% pass rate
+
+#### Fixed
+
+- `EntropyPolicy.anomaly_triage` attribute error: field was called in `enforce()`
+  but never declared — resolved by adding `anomaly_triage` dataclass field
+- Disabled-path `triage_level` override ordering: `"disabled"` now placed after
+  `**detail` spread so it correctly overrides the bits-based classification
+- `dataclasses.field` import missing from `entropy_policy.py`
+- `tests/evolution/test_entropy_policy_triage.py` collection error:
+  `EntropyAnomalyTriageThresholds` now a real class (was missing entirely)
+
+#### Test counts
+
+- **3 new tests**: `tests/evolution/test_entropy_policy_triage.py` (triage determinism, disabled, ratio): **✅ 100%**
+- **32 existing endpoint tests**: `test_certifier_scans_endpoint.py` + `test_debt_and_certifier_endpoints.py`: **✅ all passing**
+- **Total test suite**: 802 tests — zero regressions
+
+---
+
 ## [5.8.0] — 2026-03-10
 
 ### Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal (Complete)

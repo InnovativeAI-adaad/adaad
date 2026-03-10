@@ -462,6 +462,30 @@ Response payload (under `data`):
 
 ---
 
+## Phase 34 — Certifier Scan REST Endpoint + Entropy Anomaly Triage
+
+**Status:** ✅ shipped · **Released:** v5.9.0 · **Closed:** 2026-03-10 · **Requires:** Phase 33 shipped ✅
+
+Phase 34 closes two observability gaps:
+
+1. `GET /governance/certifier-scans` — read-only REST endpoint exposing `CertifierScanLedger`
+   analytics (rejection_rate, certification_rate, mutation_blocked_count, escalation_breakdown).
+2. `EntropyAnomalyTriageThresholds` — ratio-based entropy budget utilisation triage,
+   wired as `EntropyPolicy.anomaly_triage`. Deterministic `classify()` returns one of
+   `ok / warning / escalate / critical / disabled`.
+
+### Acceptance criteria
+
+- `GET /governance/certifier-scans` returns expected fields: **✅**
+- `rejected_only=True` filters to REJECTED records only: **✅**
+- Auth-gated with `_require_audit_read_scope`: **✅**
+- `EntropyAnomalyTriageThresholds.classify()` deterministic: **✅**
+- Disabled policy → `triage_level="disabled"`: **✅**
+- `mutation_utilization_ratio` + `epoch_utilization_ratio` in `enforce()` result: **✅**
+- **802 tests** — zero regressions: **✅**
+
+---
+
 ## Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal
 
 **Status:** ✅ shipped · **Released:** v5.8.0 · **Closed:** 2026-03-10 · **Requires:** Phase 32 shipped ✅

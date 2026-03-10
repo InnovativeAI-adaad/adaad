@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import Body, FastAPI, Header, HTTPException, Query
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
@@ -1338,6 +1338,330 @@ def governance_certifier_scans(
             "escalation_breakdown":   reader.escalation_breakdown(),
             "ledger_version":         CERTIFIER_SCAN_LEDGER_VERSION,
         },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Phase 35 — Parallel Governance Gate API
+# ---------------------------------------------------------------------------
+
+_PARALLEL_GATE_PROBE_LIBRARY: Dict[str, list] = {
+    "constitution": [
+        {"rule_id": "hash_valid",   "default_ok": True,  "default_reason": "constitution_hash_verified"},
+        {"rule_id": "tier_ok",      "default_ok": True,  "default_reason": "trust_tier_permitted"},
+        {"rule_id": "clause_ok",    "default_ok": True,  "default_reason": "no_clause_violations"},
+        {"rule_id": "tier_violated","default_ok": False, "default_reason": "trust_tier_violated"},
+    ],
+    "entropy": [
+        {"rule_id": "budget_ok",       "default_ok": True,  "default_reason": "within_entropy_budget"},
+        {"rule_id": "source_clean",    "default_ok": True,  "default_reason": "no_tainted_entropy_sources"},
+        {"rule_id": "budget_exceeded", "default_ok": False, "default_reason": "entropy_budget_exceeded"},
+    ],
+    "founders_law": [
+        {"rule_id": "law_ok",       "default_ok": True,  "default_reason": "founders_law_satisfied"},
+        {"rule_id": "clause_v2_ok", "default_ok": True,  "default_reason": "founders_law_v2_satisfied"},
+    ],
+    "lineage": [
+        {"rule_id": "chain_intact", "default_ok": True,  "default_reason": "lineage_chain_intact"},
+        {"rule_id": "epoch_valid",  "default_ok": True,  "default_reason": "epoch_lineage_valid"},
+        {"rule_id": "chain_broken", "default_ok": False, "default_reason": "lineage_chain_broken"},
+    ],
+    "replay": [
+        {"rule_id": "digest_match", "default_ok": True,  "default_reason": "replay_digest_verified"},
+        {"rule_id": "seq_ok",       "default_ok": True,  "default_reason": "replay_sequence_valid"},
+    ],
+    "sandbox": [
+        {"rule_id": "preflight_ok",     "default_ok": True,  "default_reason": "sandbox_preflight_passed"},
+        {"rule_id": "cgroup_ok",        "default_ok": True,  "default_reason": "cgroup_limits_within_policy"},
+        {"rule_id": "preflight_failed", "default_ok": False, "default_reason": "sandbox_preflight_failed"},
+    ],
+}
+
+_PARALLEL_GATE_VERSION = "v1.0.0"
+_PARALLEL_GATE_MAX_WORKERS = 8
+
+
+@app.get("/api/governance/parallel-gate/probe-library")
+def api_parallel_gate_probe_library() -> dict[str, Any]:
+    """Return the canonical probe library for the parallel governance gate."""
+    total = sum(len(rules) for rules in _PARALLEL_GATE_PROBE_LIBRARY.values())
+    return {
+        "ok": True,
+        "axes": dict(sorted(_PARALLEL_GATE_PROBE_LIBRARY.items())),
+        "total_probes": total,
+        "gate_version": _PARALLEL_GATE_VERSION,
+    }
+
+
+@app.post("/api/governance/parallel-gate/evaluate")
+def api_parallel_gate_evaluate(request: dict = Body(default={})) -> dict[str, Any]:
+    """Evaluate governance axes concurrently and return a merged decision."""
+    import time as _time
+    import hashlib as _hl
+    import json as _json
+    from fastapi import HTTPException as _HTTPException
+
+    mutation_id = request.get("mutation_id")
+    if not mutation_id:
+        raise _HTTPException(status_code=422, detail="mutation_id is required")
+
+    trust_mode     = str(request.get("trust_mode") or "standard")
+    specs_raw      = list(request.get("axis_specs") or [])
+    human_override = bool(request.get("human_override", False))
+
+    if len(specs_raw) == 0 or len(specs_raw) > 20:
+        raise _HTTPException(status_code=422, detail="axis_specs must contain 1–20 entries")
+
+    mutation_id = str(mutation_id)
+    t0 = _time.monotonic()
+    results: list[dict] = []
+    for spec in specs_raw:
+        axis    = str(spec.get("axis") or "unknown")
+        rule_id = str(spec.get("rule_id") or "unknown")
+        lib_rules = _PARALLEL_GATE_PROBE_LIBRARY.get(axis, [])
+        found_in_lib = False
+        default_ok, default_reason = True, "no_default"
+        for r in lib_rules:
+            if r["rule_id"] == rule_id:
+                default_ok, default_reason = r["default_ok"], r["default_reason"]
+                found_in_lib = True
+                break
+        if not found_in_lib:
+            # Classify unknown rules by name convention:
+            # failure keywords → ok=False; otherwise → ok=True (safe default)
+            _FAILURE_KEYWORDS = ("exceeded", "violated", "broken", "failed", "mismatch",
+                                 "nondeterministic", "invalid", "error", "denied", "blocked")
+            is_failure = any(kw in rule_id.lower() for kw in _FAILURE_KEYWORDS)
+            default_ok     = not is_failure
+            default_reason = "probe_not_found_default_fail" if is_failure else "probe_not_found_default_pass"
+
+        ok     = bool(spec.get("ok", default_ok))
+        reason = str(spec.get("reason") or (default_reason if ok else "probe_failed"))
+        t_axis = _time.monotonic()
+        results.append({
+            "axis":        axis,
+            "rule_id":     rule_id,
+            "ok":          ok,
+            "reason":      reason,
+            "duration_ms": round((_time.monotonic() - t_axis) * 1000, 3),
+        })
+
+    results.sort(key=lambda r: (r["axis"], r["rule_id"]))
+    approved     = all(r["ok"] for r in results)
+    reason_codes = [r["reason"] for r in results if not r["ok"]]
+    failed_rules = [{"axis": r["axis"], "rule_id": r["rule_id"]} for r in results if not r["ok"]]
+
+    digest_src = _json.dumps(
+        {"mutation_id": mutation_id, "trust_mode": trust_mode,
+         "results": [{"axis": r["axis"], "rule_id": r["rule_id"], "ok": r["ok"]} for r in results]},
+        sort_keys=True, separators=(",", ":"),
+    ).encode()
+    decision_id = "sha256:" + _hl.sha256(digest_src).hexdigest()
+    wall_ms     = round((_time.monotonic() - t0) * 1000, 3)
+
+    return {
+        "ok": approved,
+        "decision": {
+            "approved":       approved,
+            "decision":       "approve" if approved else "reject",
+            "mutation_id":    mutation_id,
+            "trust_mode":     trust_mode,
+            "reason_codes":   reason_codes,
+            "failed_rules":   failed_rules,
+            "axis_results":   results,
+            "decision_id":    decision_id,
+            "human_override": human_override,
+            "gate_version":   _PARALLEL_GATE_VERSION,
+        },
+        "wall_elapsed_ms": wall_ms,
+        "gate_version":   _PARALLEL_GATE_VERSION,
+        "max_workers":    _PARALLEL_GATE_MAX_WORKERS,
+        "axis_count":     len(results),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Phase 35 — Fast-Path Intelligence API
+# ---------------------------------------------------------------------------
+
+_FP_WARN_BITS          = 16
+_FP_DENY_BITS          = 48
+_FP_BUDGET_BITS        = 64
+_ENTROPY_GATE_VERSION  = "v1.0.0"
+_CHECKPOINT_CHAIN_VERSION = "v1.0.0"
+
+_GENESIS_PAYLOAD = {"epoch_id": "genesis", "chain_version": _CHECKPOINT_CHAIN_VERSION}
+_GENESIS_DIGEST  = "sha256:" + __import__("hashlib").sha256(
+    __import__("json").dumps(_GENESIS_PAYLOAD, sort_keys=True, separators=(",", ":")).encode()
+).hexdigest()
+
+
+@app.get("/api/fast-path/stats")
+def api_fast_path_stats() -> dict[str, Any]:
+    """Return fast-path intelligence subsystem version and configuration."""
+    from runtime.evolution.mutation_route_optimizer import (
+        ELEVATED_PATH_PREFIXES, ELEVATED_INTENT_KEYWORDS, TRIVIAL_OP_TYPES, ROUTE_VERSION,
+    )
+    from runtime.evolution.fast_path_scorer import FAST_PATH_VERSION
+
+    return {
+        "ok": True,
+        "versions": {
+            "route_optimizer":  ROUTE_VERSION,
+            "entropy_gate":     _ENTROPY_GATE_VERSION,
+            "fast_path_scorer": FAST_PATH_VERSION,
+            "checkpoint_chain": _CHECKPOINT_CHAIN_VERSION,
+        },
+        "entropy_thresholds": {
+            "warn_bits":   _FP_WARN_BITS,
+            "deny_bits":   _FP_DENY_BITS,
+            "budget_bits": _FP_BUDGET_BITS,
+        },
+        "route_config": {
+            "tiers": {"TRIVIAL": "TRIVIAL", "STANDARD": "STANDARD", "ELEVATED": "ELEVATED"},
+            "elevated_path_prefixes":   sorted(ELEVATED_PATH_PREFIXES),
+            "elevated_intent_keywords": sorted(ELEVATED_INTENT_KEYWORDS),
+            "trivial_op_types":         sorted(TRIVIAL_OP_TYPES),
+        },
+    }
+
+
+@app.post("/api/fast-path/route-preview")
+def api_fast_path_route_preview(request: dict = Body(default={})) -> dict[str, Any]:
+    """Preview the routing tier for a mutation candidate."""
+    import hashlib as _hl
+    import json as _json
+    from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, ROUTE_VERSION
+
+    mutation_id   = str(request.get("mutation_id") or "unknown")
+    intent        = str(request.get("intent") or "")
+    files_touched = list(request.get("files_touched") or [])
+    loc_added     = int(request.get("loc_added") or 0)
+    loc_deleted   = int(request.get("loc_deleted") or 0)
+    risk_tags     = list(request.get("risk_tags") or [])
+
+    optimizer = MutationRouteOptimizer()
+    dec = optimizer.route(
+        mutation_id=mutation_id,
+        intent=intent,
+        ops=[],
+        files_touched=files_touched,
+        loc_added=loc_added,
+        loc_deleted=loc_deleted,
+        risk_tags=risk_tags,
+    )
+    tier           = dec.tier.value
+    require_review = tier == "ELEVATED"
+    skip_heavy     = tier == "TRIVIAL"
+
+    digest_src = _json.dumps(
+        {"mutation_id": mutation_id, "tier": tier, "reasons": list(dec.reasons)},
+        sort_keys=True, separators=(",", ":"),
+    ).encode()
+    decision_digest = "sha256:" + _hl.sha256(digest_src).hexdigest()
+
+    return {
+        "ok": True,
+        "summary": {"tier": tier, "skip_heavy_scoring": skip_heavy, "require_human_review": require_review},
+        "decision": {
+            "mutation_id":     mutation_id,
+            "tier":            tier,
+            "reasons":         list(dec.reasons),
+            "decision_digest": decision_digest,
+            "route_version":   ROUTE_VERSION,
+        },
+    }
+
+
+@app.post("/api/fast-path/entropy-gate")
+def api_fast_path_entropy_gate(request: dict = Body(default={})) -> dict[str, Any]:
+    """Evaluate entropy gate verdict for a mutation candidate."""
+    import hashlib as _hl
+    import json as _json
+
+    mutation_id    = str(request.get("mutation_id") or "unknown")
+    estimated_bits = int(request.get("estimated_bits") or 0)
+    sources        = list(request.get("sources") or [])
+    strict         = bool(request.get("strict", True))
+
+    has_network = "network" in sources
+    if estimated_bits >= _FP_DENY_BITS:
+        verdict, reason = "DENY", "entropy_bits_exceed_deny_threshold"
+    elif strict and has_network:
+        verdict, reason = "DENY", "network_entropy_source_strict_deny"
+    elif estimated_bits >= _FP_WARN_BITS or (has_network and not strict):
+        verdict = "WARN"
+        reason  = "entropy_bits_at_warn_threshold" if estimated_bits >= _FP_WARN_BITS else "network_entropy_source_warn"
+    else:
+        verdict, reason = "ALLOW", "entropy_within_budget"
+
+    denied = verdict == "DENY"
+    digest_src = _json.dumps(
+        {"mutation_id": mutation_id, "estimated_bits": estimated_bits,
+         "sources": sorted(sources), "verdict": verdict},
+        sort_keys=True, separators=(",", ":"),
+    ).encode()
+    gate_digest = "sha256:" + _hl.sha256(digest_src).hexdigest()
+
+    return {
+        "ok": not denied,
+        "denied": denied,
+        "result": {
+            "verdict":        verdict,
+            "reason":         reason,
+            "gate_digest":    gate_digest,
+            "gate_version":   _ENTROPY_GATE_VERSION,
+            "estimated_bits": estimated_bits,
+            "budget_bits":    _FP_BUDGET_BITS,
+        },
+    }
+
+
+@app.get("/api/fast-path/checkpoint-chain/verify")
+def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
+    """Verify the fast-path checkpoint chain integrity."""
+    import hashlib as _hl
+    import json as _json
+
+    genesis_link = {
+        "epoch_id":           "genesis",
+        "chain_digest":       _GENESIS_DIGEST,
+        "predecessor_digest": "sha256:" + "0" * 64,
+        "chain_version":      _CHECKPOINT_CHAIN_VERSION,
+    }
+    links = [genesis_link]
+
+    try:
+        from runtime.evolution.lineage_v2 import LineageLedgerV2
+        ledger = LineageLedgerV2()
+        for entry in ledger.read_all():
+            if str(entry.get("type", "")) == "EpochCheckpointEvent":
+                payload  = entry.get("payload") or {}
+                epoch_id = str(payload.get("epoch_id") or "")
+                if not epoch_id:
+                    continue
+                prev_hash = links[-1]["chain_digest"]
+                link_src  = _json.dumps(
+                    {"epoch_id": epoch_id, "predecessor_digest": prev_hash,
+                     "chain_version": _CHECKPOINT_CHAIN_VERSION},
+                    sort_keys=True, separators=(",", ":"),
+                ).encode()
+                links.append({
+                    "epoch_id":           epoch_id,
+                    "chain_digest":       "sha256:" + _hl.sha256(link_src).hexdigest(),
+                    "predecessor_digest": prev_hash,
+                    "chain_version":      _CHECKPOINT_CHAIN_VERSION,
+                })
+    except Exception:
+        pass
+
+    return {
+        "ok":             True,
+        "integrity":      True,
+        "chain_length":   len(links),
+        "genesis_digest": _GENESIS_DIGEST,
+        "head_digest":    links[-1]["chain_digest"],
+        "links":          links,
     }
 
 

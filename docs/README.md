@@ -222,6 +222,7 @@ ADAAD is organized into seven layers as of v4.0.0:
 
 | Document | Purpose |
 |---|---|
+| **[ArchitectAgent Spec v3.1.0](governance/ARCHITECT_SPEC_v3.1.0.md)** | **Active canonical spec — Phase 6 governance baseline (current)** |
 | [Security Invariants Matrix](governance/SECURITY_INVARIANTS_MATRIX.md) | All enforced security invariants |
 | [Determinism Contract Spec](governance/DETERMINISM_CONTRACT_SPEC.md) | Determinism and replay contract detail |
 | [Governance State Machine](governance/GOVERNANCE_STATE_MACHINE_NORMALIZATION.md) | State machine normalization |
