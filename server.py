@@ -936,5 +936,59 @@ def governance_admission_rate(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase 27 — Admission Audit Ledger
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/admission-audit")
+def governance_admission_audit(
+    limit: int = 20,
+    band: str | None = None,
+    admitted_only: bool = False,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return recent AdmissionDecision records from the audit ledger. Read-only.
+
+    Query parameters
+    ----------------
+    limit : int, default 20
+        Maximum number of records to return (most recent).
+    band : str, optional
+        Filter by admission_band: "green" | "amber" | "red" | "halt".
+    admitted_only : bool, default False
+        When True, return only admitted==True records.
+
+    Response fields (data)
+    ----------------------
+    records         list — admission audit records (chronological)
+    total_in_window int  — number of records returned
+    admission_rate  float — admitted/total ratio across all records
+    band_frequency  dict  — band → count across all records
+    ledger_version  str   — "27.0"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.admission_audit_ledger import (
+        ADMISSION_LEDGER_VERSION,
+        DEFAULT_ADMISSION_LEDGER_PATH,
+        AdmissionAuditReader,
+    )
+
+    reader = AdmissionAuditReader(DEFAULT_ADMISSION_LEDGER_PATH)
+    records = reader.history(limit=limit, band_filter=band, admitted_only=admitted_only)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "records":         records,
+            "total_in_window": len(records),
+            "admission_rate":  reader.admission_rate(),
+            "band_frequency":  reader.band_frequency(),
+            "ledger_version":  ADMISSION_LEDGER_VERSION,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
