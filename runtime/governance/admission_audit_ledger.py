@@ -38,7 +38,7 @@ from typing import Any
 log = logging.getLogger(__name__)
 
 ADMISSION_LEDGER_GENESIS_PREV_HASH: str = "sha256:" + "0" * 64
-ADMISSION_LEDGER_VERSION: str = "27.0"
+ADMISSION_LEDGER_VERSION: str = "29.0"  # extended: enforcement verdict fields added Phase 29
 
 # Default path (relative to repo root) — only used when activated
 DEFAULT_ADMISSION_LEDGER_PATH: str = "security/ledger/admission_audit.jsonl"
@@ -78,12 +78,16 @@ def _build_record(
     prev_hash: str,
     decision: Any,  # AdmissionDecision
     timestamp_iso: str,
+    verdict: Any = None,  # Optional[EnforcerVerdict] — Phase 29
 ) -> dict[str, Any]:
     """Build a JSONL record from an AdmissionDecision; compute record_hash.
 
     ``timestamp_iso`` is stored as metadata but excluded from ``record_hash``
     so the hash chain is deterministic: same decision sequence → same hashes,
     regardless of wall-clock time.
+
+    Phase 29: when ``verdict`` (an EnforcerVerdict) is provided, enforcement
+    fields are included in the chained payload and covered by record_hash.
     """
     chained: dict[str, Any] = {
         "ledger_version":      ADMISSION_LEDGER_VERSION,
@@ -98,6 +102,13 @@ def _build_record(
         "epoch_paused":        bool(decision.epoch_paused),
         "decision_digest":     decision.decision_digest,
         "controller_version":  decision.controller_version,
+        # Phase 29 enforcement fields — present when verdict is provided
+        "enforcement_present":   verdict is not None,
+        "escalation_mode":       verdict.escalation_mode if verdict is not None else None,
+        "blocked":               bool(verdict.blocked) if verdict is not None else None,
+        "block_reason":          verdict.block_reason if verdict is not None else None,
+        "verdict_digest":        verdict.verdict_digest if verdict is not None else None,
+        "enforcer_version":      verdict.enforcer_version if verdict is not None else None,
     }
     record_hash = _sha256_prefixed(_canonical_bytes(chained))
     body = dict(chained)
@@ -224,8 +235,12 @@ class AdmissionAuditLedger:
     # Public API
     # ------------------------------------------------------------------
 
-    def emit(self, decision: Any) -> None:  # AdmissionDecision
-        """Append one ``AdmissionDecision`` to the ledger.
+    def emit(self, decision: Any, *, verdict: Any = None) -> None:  # AdmissionDecision[, EnforcerVerdict]
+        """Append one ``AdmissionDecision`` (and optionally an ``EnforcerVerdict``) to the ledger.
+
+        Phase 29: when ``verdict`` is supplied, enforcement fields
+        (escalation_mode, blocked, block_reason, verdict_digest, enforcer_version)
+        are included in the chained JSONL record and covered by record_hash.
 
         Fail-safe: any I/O or serialisation error is logged and swallowed.
         The caller is never interrupted by ledger failures.
@@ -240,6 +255,7 @@ class AdmissionAuditLedger:
                 prev_hash=self._prev_hash,
                 decision=decision,
                 timestamp_iso=ts,
+                verdict=verdict,
             )
             line = json.dumps(record, sort_keys=True, separators=(",", ":")) + "\n"
             with self._path.open("a", encoding="utf-8") as fh:
@@ -343,3 +359,57 @@ class AdmissionAuditReader:
             return False
         _verify_existing_chain(self._path)
         return True
+
+    # ------------------------------------------------------------------
+    # Phase 29 — Enforcement analytics
+    # ------------------------------------------------------------------
+
+    def blocked_count(self) -> int:
+        """Return count of records where ``blocked == True``."""
+        return sum(1 for r in self._all_records() if r.get("blocked") is True)
+
+    def enforcement_rate(self) -> float:
+        """Return fraction of records that carried enforcement verdict data.
+
+        Returns 0.0 when history is empty.
+        """
+        records = self._all_records()
+        if not records:
+            return 0.0
+        with_enforcement = sum(1 for r in records if r.get("enforcement_present") is True)
+        return with_enforcement / len(records)
+
+    def escalation_mode_breakdown(self) -> dict[str, int]:
+        """Return count of records per escalation_mode value.
+
+        Records without enforcement data (``enforcement_present=False``) are
+        counted under the key ``"none"``.
+        """
+        breakdown: dict[str, int] = {}
+        for rec in self._all_records():
+            mode = rec.get("escalation_mode") if rec.get("enforcement_present") else "none"
+            key = mode if mode is not None else "none"
+            breakdown[key] = breakdown.get(key, 0) + 1
+        return breakdown
+
+    def history_with_enforcement(
+        self,
+        *,
+        limit: int | None = None,
+        blocked_only: bool = False,
+    ) -> list[dict[str, Any]]:
+        """Return records that contain enforcement verdict fields.
+
+        Parameters
+        ----------
+        limit:
+            Maximum number of records to return (most recent).
+        blocked_only:
+            If ``True``, only records where ``blocked == True`` are returned.
+        """
+        records = [r for r in self._all_records() if r.get("enforcement_present") is True]
+        if blocked_only:
+            records = [r for r in records if r.get("blocked") is True]
+        if limit is not None:
+            records = records[-limit:]
+        return records

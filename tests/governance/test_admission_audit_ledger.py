@@ -385,4 +385,4 @@ def test_ledger_version_stored(tmp_path):                       # T27-36
     ledger = AdmissionAuditLedger(p)
     ledger.emit(_decision())
     rec = json.loads(p.read_text().strip())
-    assert rec["ledger_version"] == ADMISSION_LEDGER_VERSION == "27.0"
+    assert rec["ledger_version"] == ADMISSION_LEDGER_VERSION == "29.0"  # bumped Phase 29

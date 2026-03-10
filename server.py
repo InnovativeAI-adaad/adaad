@@ -945,9 +945,14 @@ def governance_admission_audit(
     limit: int = 20,
     band: str | None = None,
     admitted_only: bool = False,
+    blocked_only: bool = False,
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
     """Return recent AdmissionDecision records from the audit ledger. Read-only.
+
+    Phase 29 extension: enforcement verdict fields (escalation_mode, blocked,
+    block_reason, verdict_digest) are included in each record that was emitted
+    via AdmissionAuditLedger.emit(decision, verdict=...).
 
     Query parameters
     ----------------
@@ -957,14 +962,19 @@ def governance_admission_audit(
         Filter by admission_band: "green" | "amber" | "red" | "halt".
     admitted_only : bool, default False
         When True, return only admitted==True records.
+    blocked_only : bool, default False
+        When True, return only records where blocked==True (enforcement arc).
 
     Response fields (data)
     ----------------------
-    records         list — admission audit records (chronological)
-    total_in_window int  — number of records returned
-    admission_rate  float — admitted/total ratio across all records
-    band_frequency  dict  — band → count across all records
-    ledger_version  str   — "27.0"
+    records              list — admission audit records (chronological)
+    total_in_window      int  — number of records returned
+    admission_rate       float — admitted/total ratio across all records
+    band_frequency       dict  — band → count across all records
+    blocked_count        int  — count of blocked==True records (Phase 29)
+    enforcement_rate     float — fraction of records with enforcement data (Phase 29)
+    escalation_breakdown dict  — escalation_mode → count (Phase 29)
+    ledger_version       str   — "29.0"
     """
     authn = _require_audit_read_scope(authorization)
 
@@ -975,17 +985,24 @@ def governance_admission_audit(
     )
 
     reader = AdmissionAuditReader(DEFAULT_ADMISSION_LEDGER_PATH)
-    records = reader.history(limit=limit, band_filter=band, admitted_only=admitted_only)
+
+    if blocked_only:
+        records = reader.history_with_enforcement(limit=limit, blocked_only=True)
+    else:
+        records = reader.history(limit=limit, band_filter=band, admitted_only=admitted_only)
 
     return {
         "schema_version": "1.0",
         "authn": authn,
         "data": {
-            "records":         records,
-            "total_in_window": len(records),
-            "admission_rate":  reader.admission_rate(),
-            "band_frequency":  reader.band_frequency(),
-            "ledger_version":  ADMISSION_LEDGER_VERSION,
+            "records":              records,
+            "total_in_window":      len(records),
+            "admission_rate":       reader.admission_rate(),
+            "band_frequency":       reader.band_frequency(),
+            "blocked_count":        reader.blocked_count(),
+            "enforcement_rate":     reader.enforcement_rate(),
+            "escalation_breakdown": reader.escalation_mode_breakdown(),
+            "ledger_version":       ADMISSION_LEDGER_VERSION,
         },
     }
 
