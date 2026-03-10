@@ -1342,6 +1342,71 @@ def governance_certifier_scans(
 
 
 # ---------------------------------------------------------------------------
+# Phase 36 — Gate Decisions REST Endpoint
+# ---------------------------------------------------------------------------
+
+
+@app.get("/governance/gate-decisions")
+def governance_gate_decisions(
+    limit: int = 20,
+    denied_only: bool = False,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return recent GovernanceGate decision records from the audit ledger. Read-only.
+
+    Query parameters
+    ----------------
+    limit : int, default 20
+        Maximum number of records to return (most recent).
+    denied_only : bool, default False
+        When True, only return DENIED decision records.
+
+    Response fields (data)
+    ----------------------
+    records                 list  — gate decision records (chronological)
+    total_in_window         int   — number of records returned
+    approval_rate           float — fraction of all decisions that were approved
+    rejection_rate          float — fraction of all decisions that were denied
+    human_override_count    int   — decisions where human override was applied
+    decision_breakdown      dict  — decision outcome → count
+    failed_rules_frequency  dict  — rule_id → count of failures
+    trust_mode_breakdown    dict  — trust_mode → count
+    ledger_version          str   — "35.0"
+
+    Authority invariant
+    -------------------
+    This endpoint is read-only and advisory.  It never approves or blocks
+    mutations.  GovernanceGate retains sole mutation-approval authority.
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.gate_decision_ledger import (
+        GATE_DECISION_LEDGER_VERSION,
+        DEFAULT_GATE_DECISION_LEDGER_PATH,
+        GateDecisionReader,
+    )
+
+    reader = GateDecisionReader(DEFAULT_GATE_DECISION_LEDGER_PATH)
+    records = reader.history(limit=limit, denied_only=denied_only)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "records":                records,
+            "total_in_window":        len(records),
+            "approval_rate":          reader.approval_rate(),
+            "rejection_rate":         reader.rejection_rate(),
+            "human_override_count":   reader.human_override_count(),
+            "decision_breakdown":     reader.decision_breakdown(),
+            "failed_rules_frequency": reader.failed_rules_frequency(),
+            "trust_mode_breakdown":   reader.trust_mode_breakdown(),
+            "ledger_version":         GATE_DECISION_LEDGER_VERSION,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
 # Phase 35 — Parallel Governance Gate API
 # ---------------------------------------------------------------------------
 

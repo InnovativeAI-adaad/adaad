@@ -1,3 +1,39 @@
+## [6.1.0] — 2026-03-10
+
+### Phase 36 — Gate Decisions REST Endpoint (Complete)
+
+Phase 36 surfaces `GateDecisionLedger` (Phase 35) via a read-only authenticated
+REST endpoint, completing the gate-decision observability surface and matching
+the pattern established by `/governance/certifier-scans` (Phase 34),
+`/governance/threat-scans` (Phase 30), and `/governance/debt` (Phase 31).
+
+#### Added
+- **`GET /governance/gate-decisions`** (`server.py`): bearer-auth-gated
+  (`audit:read`), read-only. Query params: `limit` (default 20),
+  `denied_only` (default False). Returns `records`, `total_in_window`,
+  `approval_rate`, `rejection_rate`, `human_override_count`,
+  `decision_breakdown`, `failed_rules_frequency`, `trust_mode_breakdown`,
+  `ledger_version`.
+- **12 new endpoint tests**: `tests/test_gate_decisions_endpoint.py`
+  (T36-EP-01..12) — 100% pass rate. Covers 200 OK, schema_version, all
+  required data keys, records type, ledger_version, limit/denied_only params,
+  401 missing auth, 403 wrong scope, approval_rate float range,
+  rejection_rate float range, complement invariant, human_override_count,
+  decision_breakdown type.
+
+#### Invariants preserved
+- `GET /governance/gate-decisions` is read-only — no side effects.
+- Advisory only: endpoint reads decision history; never approves or blocks mutations.
+- `GovernanceGate` retains sole mutation-approval authority.
+- `approval_rate + rejection_rate == 1.0` (complement invariant, tested).
+- `GovernanceGate` isolation: endpoint imports only `GateDecisionReader`; never imports `GovernanceGate` directly.
+
+#### Test counts
+- **12 new tests**: `tests/test_gate_decisions_endpoint.py` (T36-EP-01..12): **✅ 100%**
+- **Total test suite**: 822 tests
+
+---
+
 ## [6.0.0] — 2026-03-10
 
 ### Phase 35 — Gate Decision Ledger & Approval Rate Health Signal (Complete)
