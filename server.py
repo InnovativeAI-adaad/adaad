@@ -577,5 +577,103 @@ def telemetry_strategy_detail(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase 23 — Routing Health Endpoint (PR-23-02)
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/routing-health")
+def governance_routing_health(
+    window_size: int = Query(default=100, ge=10, le=10000),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return RoutingHealthReport as a governed response. Read-only.
+
+    Query params
+    ------------
+    window_size  — rolling window size (10–10000, default 100)
+
+    Response fields (data)
+    ----------------------
+    status              "green" | "amber" | "red"
+    health_score        float 0–1
+    strategy_stats      list of StrategyWindowStats dicts
+    dominant_strategy   str | null
+    dominant_share      float
+    stale_strategy_ids  list[str]
+    drift_max           float
+    window_size         int
+    total_decisions     int
+    window_decisions    int
+    ledger_chain_valid  bool
+    report_digest       sha256 prefixed string
+    available           bool
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
+    from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
+
+    sink = _telemetry_sink_ref
+
+    if isinstance(sink, FileTelemetrySink):
+        reader = TelemetryLedgerReader(sink._path)
+        engine = StrategyAnalyticsEngine(reader, window_size=window_size)
+        report = engine.generate_report()
+
+        def _stat(s):
+            return {
+                "strategy_id": s.strategy_id,
+                "window_size": s.window_size,
+                "total": s.total,
+                "approved": s.approved,
+                "win_rate": s.win_rate,
+                "window_win_rate": s.window_win_rate,
+                "drift": s.drift,
+                "stale": s.stale,
+                "last_seen_sequence": s.last_seen_sequence,
+            }
+
+        return {
+            "schema_version": "1.0",
+            "authn": authn,
+            "data": {
+                "status": report.status,
+                "health_score": report.health_score,
+                "strategy_stats": [_stat(s) for s in report.strategy_stats],
+                "dominant_strategy": report.dominant_strategy,
+                "dominant_share": report.dominant_share,
+                "stale_strategy_ids": list(report.stale_strategy_ids),
+                "drift_max": report.drift_max,
+                "window_size": report.window_size,
+                "total_decisions": report.total_decisions,
+                "window_decisions": report.window_decisions,
+                "ledger_chain_valid": report.ledger_chain_valid,
+                "report_digest": report.report_digest,
+                "available": True,
+            },
+        }
+
+    # No file sink active — degraded-mode response
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "status": "green",
+            "health_score": 1.0,
+            "strategy_stats": [],
+            "dominant_strategy": None,
+            "dominant_share": 0.0,
+            "stale_strategy_ids": [],
+            "drift_max": 0.0,
+            "window_size": window_size,
+            "total_decisions": 0,
+            "window_decisions": 0,
+            "ledger_chain_valid": True,
+            "report_digest": None,
+            "available": False,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

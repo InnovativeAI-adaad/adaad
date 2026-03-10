@@ -1,3 +1,37 @@
+## [4.8.0] — 2026-03-09
+
+### Phase 23 — Routing Health Signal Integration (Complete)
+
+Phase 23 wires `RoutingHealthReport.health_score` as the fifth governance signal,
+unifying the routing observability surface (Phase 22) with the composite governance
+health score (Phase 8).
+
+#### Added
+
+- **`routing_health_score` signal** in `GovernanceHealthAggregator`: weight `0.15`;
+  sourced from `StrategyAnalyticsEngine.generate_report().health_score`; defaults
+  to `1.0` when no engine is wired; clamped `[0.0, 1.0]`; fail-safe on exception.
+- **Signal weight rebalance**: four original signals rebalanced; total weight sum
+  remains exactly `1.0` (test-enforced).
+- **`HealthSnapshot.routing_health_report`**: serialized `RoutingHealthReport` dict
+  when engine active; `None` otherwise.
+- **`GET /governance/routing-health`**: bearer-auth-gated (`audit:read`) read-only
+  endpoint; returns full `RoutingHealthReport`; `available: false` degraded mode
+  when no file sink active; `window_size` 10–10000.
+- **`routing_health` field** in `GET /governance/health` response: additive, non-breaking;
+  carries `available`, `status`, `health_score`, `dominant_strategy`, `report_digest`,
+  `analytics_version`. Existing fields and `schema_version` unchanged.
+- **45 new tests**: `test_routing_health_signal.py` (26), `test_routing_health_endpoint.py`
+  (12), `test_governance_health_routing_field.py` (7).
+
+#### Invariants preserved
+
+- `GovernanceGate` retains sole mutation-approval authority.
+- `StrategyAnalyticsEngine`, `TelemetryLedgerReader`, `FileTelemetrySink` unmodified.
+- No new constitutional rules introduced.
+
+---
+
 ## [4.7.0] — 2026-03-09
 
 ### Phase 22 — Strategy Analytics & Routing Health (Complete)

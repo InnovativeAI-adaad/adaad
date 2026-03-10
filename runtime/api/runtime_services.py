@@ -195,11 +195,24 @@ def governance_health_service(*, epoch_id: str) -> dict[str, Any]:
     except Exception:
         pass
 
+    # Phase 23: wire routing analytics engine (best-effort, from active telemetry sink)
+    routing_analytics_engine = None
+    try:
+        from server import _telemetry_sink_ref
+        from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
+        from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
+        if isinstance(_telemetry_sink_ref, FileTelemetrySink):
+            reader = TelemetryLedgerReader(_telemetry_sink_ref._path)
+            routing_analytics_engine = StrategyAnalyticsEngine(reader)
+    except Exception:
+        pass
+
     agg = GovernanceHealthAggregator(
         reviewer_reputation_ledger=reviewer_reputation_ledger,
         roadmap_amendment_engine=amendment_engine,
         federated_evidence_matrix=evidence_matrix,
         epoch_telemetry=epoch_telemetry,
+        routing_analytics_engine=routing_analytics_engine,
     )
 
     snapshot = agg.compute(epoch_id)
@@ -212,6 +225,20 @@ def governance_health_service(*, epoch_id: str) -> dict[str, Any]:
     else:
         status = "red"
 
+    # Phase 23: routing_health summary field
+    routing_health_summary: dict[str, Any] = {"available": False, "status": "green",
+                                               "health_score": 1.0, "dominant_strategy": None,
+                                               "report_digest": None, "analytics_version": "22.0"}
+    if snapshot.routing_health_report is not None:
+        routing_health_summary = {
+            "available": snapshot.routing_health_report.get("available", True),
+            "status": snapshot.routing_health_report.get("status", "green"),
+            "health_score": snapshot.routing_health_report.get("health_score", 1.0),
+            "dominant_strategy": snapshot.routing_health_report.get("dominant_strategy"),
+            "report_digest": snapshot.routing_health_report.get("report_digest"),
+            "analytics_version": "22.0",
+        }
+
     return {
         "epoch_id":                  snapshot.epoch_id,
         "health_score":              snapshot.health_score,
@@ -221,4 +248,5 @@ def governance_health_service(*, epoch_id: str) -> dict[str, Any]:
         "constitution_version":      snapshot.constitution_version,
         "scoring_algorithm_version": snapshot.scoring_algorithm_version,
         "degraded":                  snapshot.degraded,
+        "routing_health":            routing_health_summary,  # Phase 23
     }

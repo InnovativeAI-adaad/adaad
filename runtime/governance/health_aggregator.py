@@ -42,10 +42,11 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SIGNAL_WEIGHTS: Dict[str, float] = {
-    "avg_reviewer_reputation":     0.30,
-    "amendment_gate_pass_rate":    0.25,
-    "federation_divergence_clean": 0.25,
-    "epoch_health_score":          0.20,
+    "avg_reviewer_reputation":     0.25,
+    "amendment_gate_pass_rate":    0.22,
+    "federation_divergence_clean": 0.22,
+    "epoch_health_score":          0.16,
+    "routing_health_score":        0.15,
 }
 
 HEALTH_DEGRADED_THRESHOLD: float = 0.60
@@ -71,6 +72,8 @@ class HealthSnapshot:
     constitution_version:      str
     scoring_algorithm_version: str
     degraded:                  bool                 # h < HEALTH_DEGRADED_THRESHOLD
+    # Phase 23: routing health signal detail (None when no engine wired)
+    routing_health_report:     Optional[Dict[str, Any]] = None
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -113,12 +116,14 @@ class GovernanceHealthAggregator:
         epoch_telemetry=None,
         journal_emit=None,
         weights: Optional[Dict[str, float]] = None,
+        routing_analytics_engine=None,
     ) -> None:
         self._reputation_ledger    = reviewer_reputation_ledger
         self._amendment_engine     = roadmap_amendment_engine
         self._evidence_matrix      = federated_evidence_matrix
         self._epoch_telemetry      = epoch_telemetry
         self._journal_emit         = journal_emit or self._default_journal_emit
+        self._routing_engine       = routing_analytics_engine  # Phase 23
 
         # Validate and snapshot weights
         self._weights = dict(weights or SIGNAL_WEIGHTS)
@@ -139,6 +144,21 @@ class GovernanceHealthAggregator:
         breakdown = self._collect_signals(epoch_id)
         h = self._weighted_sum(breakdown)
 
+        # Phase 23: capture routing health report detail for snapshot
+        _routing_report_dict: Optional[Dict[str, Any]] = None
+        if self._routing_engine is not None:
+            try:
+                _rhr = self._routing_engine.generate_report()
+                _routing_report_dict = {
+                    "status": _rhr.status,
+                    "health_score": _rhr.health_score,
+                    "dominant_strategy": _rhr.dominant_strategy,
+                    "report_digest": _rhr.report_digest,
+                    "available": True,
+                }
+            except Exception:
+                pass
+
         snapshot = HealthSnapshot(
             epoch_id=epoch_id,
             health_score=h,
@@ -148,6 +168,7 @@ class GovernanceHealthAggregator:
             constitution_version=CONSTITUTION_VERSION,
             scoring_algorithm_version=ALGORITHM_VERSION,
             degraded=(h < HEALTH_DEGRADED_THRESHOLD),
+            routing_health_report=_routing_report_dict,
         )
 
         self._emit_snapshot(snapshot)
@@ -167,6 +188,7 @@ class GovernanceHealthAggregator:
             "amendment_gate_pass_rate":    self._collect_amendment_rate(),
             "federation_divergence_clean": self._collect_federation_clean(),
             "epoch_health_score":          self._collect_epoch_health(),
+            "routing_health_score":        self._collect_routing_health(),  # Phase 23
         }
 
     def _collect_reputation(self, epoch_id: str) -> float:
@@ -234,6 +256,24 @@ class GovernanceHealthAggregator:
         except Exception as exc:  # pragma: no cover
             log.warning("GovernanceHealthAggregator: epoch health error: %s", exc)
             return 0.0
+
+    def _collect_routing_health(self) -> float:
+        """Phase 23: Collect routing health signal from StrategyAnalyticsEngine.
+
+        Default is 1.0 (full contribution) when no engine is wired — same
+        convention as federation_divergence_clean for single-node deployments.
+        """
+        if self._routing_engine is None:
+            return 1.0
+        try:
+            report = self._routing_engine.generate_report()
+            return float(max(0.0, min(1.0, report.health_score)))
+        except Exception as exc:
+            log.warning(
+                "GovernanceHealthAggregator: routing health collection failed: %s; defaulting to 1.0",
+                exc,
+            )
+            return 1.0
 
     # ------------------------------------------------------------------
     # Math
