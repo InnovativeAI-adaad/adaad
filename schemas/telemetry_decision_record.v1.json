@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "telemetry_decision_record.v1.json",
+  "title": "TelemetryDecisionRecord",
+  "description": "Schema for a single record in the FileTelemetrySink JSONL ledger. Phase 21.",
+  "type": "object",
+  "required": ["sequence", "prev_hash", "record_hash", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monotonically increasing zero-indexed record sequence number."
+    },
+    "prev_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the previous record, or GENESIS_PREV_HASH for sequence 0."
+    },
+    "record_hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hash of {sequence, prev_hash, payload} serialized with sort_keys=True."
+    },
+    "payload": {
+      "type": "object",
+      "description": "The routed_intelligence_decision.v1 payload emitted by RoutedDecisionTelemetry.",
+      "required": ["event_type", "cycle_id", "strategy_id", "outcome"],
+      "properties": {
+        "event_type": {
+          "type": "string",
+          "const": "routed_intelligence_decision.v1"
+        },
+        "cycle_id": {
+          "type": "string"
+        },
+        "strategy_id": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "composite_score": {
+          "type": "number"
+        },
+        "review_digest": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}
