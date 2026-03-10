@@ -1,4 +1,43 @@
+## [5.2.0] — 2026-03-10
+
+### Phase 27 — Admission Audit Ledger (Complete)
+
+Phase 27 makes every `AdmissionDecision` evidence-bound: `AdmissionAuditLedger`
+persists each advisory outcome to a SHA-256 hash-chained append-only JSONL
+ledger, and `AdmissionAuditReader` provides a read-only analytics surface over
+the ledger. The pattern mirrors `PressureAuditLedger` (Phase 25), bringing
+the admission control surface to full audit parity.
+
+#### Added
+
+- **`AdmissionAuditLedger`** (`runtime/governance/admission_audit_ledger.py`):
+  append-only SHA-256 hash-chained JSONL ledger for `AdmissionDecision`;
+  `emit(decision)` fail-safe (never raises); `chain_verify_on_open` guard;
+  inactive by default (no file written when `path=None`); parent directory
+  auto-created; resumes sequence on reopen.
+- **`AdmissionAuditReader`**: read-only analytics — `history()` with `limit`,
+  `band_filter`, `admitted_only`; `band_frequency()`; `admission_rate()`;
+  `verify_chain()`.
+- **`AdmissionAuditChainError`**: raised on any hash-chain integrity violation;
+  carries `sequence` and `detail` fields.
+- **`GET /governance/admission-audit`**: bearer-auth-gated (`audit:read`),
+  read-only; accepts `limit`, `band`, `admitted_only` query params; returns
+  records, admission rate, and band frequency.
+- **36 new tests**: `tests/governance/test_admission_audit_ledger.py` (36).
+
+#### Invariants preserved
+
+- `GovernanceGate` retains sole mutation-approval authority.
+- `AdmissionAuditLedger` never imports or calls `GovernanceGate`.
+- Append-only: no record is ever overwritten or deleted.
+- Deterministic replay: same `AdmissionDecision` sequence → same chain hashes.
+- Timestamp excluded from `record_hash` — chain is wall-clock independent.
+- `emit()` failure isolation: I/O errors logged and swallowed; caller unaffected.
+
+---
+
 ## [5.1.0] — 2026-03-10
+
 
 ### Phase 26 — Admission Rate Signal Integration (Complete)
 

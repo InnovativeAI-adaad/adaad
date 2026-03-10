@@ -413,8 +413,42 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 | Phase 25 admission control | Admission determinism | Identical inputs → identical digest | ✅ |
 | Phase 26 admission rate | Signal weight sum | `sum(SIGNAL_WEIGHTS) == 1.0` | ✅ |
 | Phase 26 admission rate | Tracker fail-safe | Empty history → `admission_rate_score == 1.0` | ✅ |
+| Phase 27 admission audit | Append-only invariant | No record overwritten or deleted | ✅ |
+| Phase 27 admission audit | Chain determinism | Identical decision sequence → identical chain hashes | ✅ |
 | All phases | Evidence matrix | 100% Complete before promotion | ✅ |
 | All phases | Replay proofs | 0 divergences in CI | ✅ |
+
+---
+
+## Phase 27 — Admission Audit Ledger
+
+**Status:** ✅ shipped · **Released:** v5.2.0 · **Closed:** 2026-03-10 · **Requires:** Phase 25 shipped ✅
+
+Phase 27 makes every `AdmissionDecision` evidence-bound via a SHA-256
+hash-chained append-only JSONL ledger, bringing admission control to full
+audit parity with the pressure adjustment surface (Phase 25 remote).
+
+### Constitutional invariants
+
+- `AdmissionAuditLedger` never imports or calls `GovernanceGate`.
+- Append-only: no record is ever overwritten or deleted.
+- Fail-closed chain verification: any hash mismatch → `AdmissionAuditChainError`.
+- `emit()` failure isolation: I/O errors logged and swallowed; caller unaffected.
+- Timestamp excluded from `record_hash` — chain is wall-clock independent.
+- Deterministic replay: identical decision sequence → identical chain hashes.
+
+### Acceptance criteria
+
+- `emit()` creates file and appends hash-chained JSONL records: **✅**
+- `chain_verify_on_open=True` raises on tampered records: **✅**
+- Inactive ledger (`path=None`) emits no file and never raises: **✅**
+- `AdmissionAuditReader.admission_rate()` defaults to `1.0` on empty: **✅**
+- `GET /governance/admission-audit` returns records with band/rate summary: **✅**
+- **36 tests**: `test_admission_audit_ledger.py` (36): **✅**
+
+---
+
+
 
 ---
 
