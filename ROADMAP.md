@@ -411,8 +411,55 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 | Phase 8 governance health | `avg_reputation` stability | ±0.05 variance over 10-epoch rolling window | 🔵 |
 | Phase 25 admission control | `advisory_only` invariant | `advisory_only == True` on every AdmissionDecision | ✅ |
 | Phase 25 admission control | Admission determinism | Identical inputs → identical digest | ✅ |
+| Phase 26 admission rate | Signal weight sum | `sum(SIGNAL_WEIGHTS) == 1.0` | ✅ |
+| Phase 26 admission rate | Tracker fail-safe | Empty history → `admission_rate_score == 1.0` | ✅ |
 | All phases | Evidence matrix | 100% Complete before promotion | ✅ |
 | All phases | Replay proofs | 0 divergences in CI | ✅ |
+
+---
+
+## Phase 26 — Admission Rate Signal Integration
+
+**Status:** ✅ shipped · **Released:** v5.1.0 · **Closed:** 2026-03-10 · **Requires:** Phase 25 shipped ✅
+
+Phase 26 closes the Phase 25 feedback loop: the rolling admission rate from
+`AdmissionRateTracker` becomes the sixth governance health signal, creating
+a self-reinforcing governance feedback cycle — sustained health pressure
+→ mutations deferred → admission rate drops → composite health score
+degrades further — entirely within the advisory surface, with GovernanceGate
+authority inviolate throughout.
+
+### Constitutional invariants
+
+- `AdmissionRateTracker` never imports or calls `GovernanceGate`.
+- `admission_rate_score` is advisory input to `h`, which is itself advisory.
+- Weight sum invariant: `sum(SIGNAL_WEIGHTS.values()) == 1.0` (CI-enforced).
+- Fail-safe: empty history returns `1.0`; exceptions default to `1.0`.
+- Deterministic: identical decision sequence → identical digest.
+
+### Signal weight table (post-Phase 26)
+
+| Signal | Weight | Source |
+|--------|--------|--------|
+| `avg_reviewer_reputation` | 0.22 | `ReviewerReputationLedger` (Ph.7) |
+| `amendment_gate_pass_rate` | 0.20 | `RoadmapAmendmentEngine` (Ph.6) |
+| `federation_divergence_clean` | 0.20 | `FederatedEvidenceMatrix` (Ph.5) |
+| `epoch_health_score` | 0.15 | `EpochTelemetry` (core) |
+| `routing_health_score` | 0.13 | `StrategyAnalyticsEngine` (Ph.22) |
+| `admission_rate_score` | 0.10 | `AdmissionRateTracker` (Ph.26) |
+
+### Acceptance criteria
+
+- `admission_rate_score` wired into `GovernanceHealthAggregator`: **✅**
+- Empty history → `admission_rate_score == 1.0` fail-safe: **✅**
+- `HealthSnapshot.admission_rate_report` populated when tracker wired: **✅**
+- Weight sum invariant preserved after rebalance: **✅**
+- `GET /governance/admission-rate` returns full `AdmissionRateReport`: **✅**
+- **34 tests**: `test_admission_tracker.py` (26) + `test_admission_rate_endpoint.py` (8): **✅**
+
+---
+
+
 
 ---
 

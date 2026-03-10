@@ -42,11 +42,12 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SIGNAL_WEIGHTS: Dict[str, float] = {
-    "avg_reviewer_reputation":     0.25,
-    "amendment_gate_pass_rate":    0.22,
-    "federation_divergence_clean": 0.22,
-    "epoch_health_score":          0.16,
-    "routing_health_score":        0.15,
+    "avg_reviewer_reputation":     0.22,
+    "amendment_gate_pass_rate":    0.20,
+    "federation_divergence_clean": 0.20,
+    "epoch_health_score":          0.15,
+    "routing_health_score":        0.13,
+    "admission_rate_score":        0.10,   # Phase 26
 }
 
 HEALTH_DEGRADED_THRESHOLD: float = 0.60
@@ -74,6 +75,8 @@ class HealthSnapshot:
     degraded:                  bool                 # h < HEALTH_DEGRADED_THRESHOLD
     # Phase 23: routing health signal detail (None when no engine wired)
     routing_health_report:     Optional[Dict[str, Any]] = None
+    # Phase 26: admission rate signal detail (None when no tracker wired)
+    admission_rate_report:     Optional[Dict[str, Any]] = None
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -117,6 +120,7 @@ class GovernanceHealthAggregator:
         journal_emit=None,
         weights: Optional[Dict[str, float]] = None,
         routing_analytics_engine=None,
+        admission_tracker=None,       # Phase 26
     ) -> None:
         self._reputation_ledger    = reviewer_reputation_ledger
         self._amendment_engine     = roadmap_amendment_engine
@@ -124,6 +128,7 @@ class GovernanceHealthAggregator:
         self._epoch_telemetry      = epoch_telemetry
         self._journal_emit         = journal_emit or self._default_journal_emit
         self._routing_engine       = routing_analytics_engine  # Phase 23
+        self._admission_tracker    = admission_tracker          # Phase 26
 
         # Validate and snapshot weights
         self._weights = dict(weights or SIGNAL_WEIGHTS)
@@ -159,6 +164,22 @@ class GovernanceHealthAggregator:
             except Exception:
                 pass
 
+        # Phase 26: capture admission rate report detail for snapshot
+        _admission_report_dict: Optional[Dict[str, Any]] = None
+        if self._admission_tracker is not None:
+            try:
+                _arr = self._admission_tracker.generate_report()
+                _admission_report_dict = {
+                    "admission_rate_score": _arr.admission_rate_score,
+                    "admitted_count":       _arr.admitted_count,
+                    "total_count":          _arr.total_count,
+                    "epochs_in_window":     _arr.epochs_in_window,
+                    "report_digest":        _arr.report_digest,
+                    "available":            True,
+                }
+            except Exception:
+                pass
+
         snapshot = HealthSnapshot(
             epoch_id=epoch_id,
             health_score=h,
@@ -169,6 +190,7 @@ class GovernanceHealthAggregator:
             scoring_algorithm_version=ALGORITHM_VERSION,
             degraded=(h < HEALTH_DEGRADED_THRESHOLD),
             routing_health_report=_routing_report_dict,
+            admission_rate_report=_admission_report_dict,
         )
 
         self._emit_snapshot(snapshot)
@@ -188,7 +210,8 @@ class GovernanceHealthAggregator:
             "amendment_gate_pass_rate":    self._collect_amendment_rate(),
             "federation_divergence_clean": self._collect_federation_clean(),
             "epoch_health_score":          self._collect_epoch_health(),
-            "routing_health_score":        self._collect_routing_health(),  # Phase 23
+            "routing_health_score":        self._collect_routing_health(),   # Phase 23
+            "admission_rate_score":        self._collect_admission_rate(),   # Phase 26
         }
 
     def _collect_reputation(self, epoch_id: str) -> float:
@@ -274,6 +297,24 @@ class GovernanceHealthAggregator:
                 exc,
             )
             return 1.0
+
+    def _collect_admission_rate(self) -> float:
+        """Phase 26: Collect admission rate signal from AdmissionRateTracker.
+
+        Default is 1.0 (full contribution) when no tracker is wired — no
+        penalisation for deployments that have not yet wired admission tracking.
+        """
+        if self._admission_tracker is None:
+            return 1.0
+        try:
+            return float(max(0.0, min(1.0, self._admission_tracker.admission_rate_score())))
+        except Exception as exc:
+            log.warning(
+                "GovernanceHealthAggregator: admission rate collection failed: %s; defaulting to 1.0",
+                exc,
+            )
+            return 1.0
+
 
     # ------------------------------------------------------------------
     # Math
