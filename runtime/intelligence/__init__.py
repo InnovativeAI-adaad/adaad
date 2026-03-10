@@ -33,6 +33,14 @@ from runtime.intelligence.routed_decision_telemetry import (
 from runtime.intelligence.strategy import StrategyDecision, StrategyInput, StrategyModule
 # Phase 16 — 6-strategy taxonomy registry
 from runtime.intelligence.strategy import STRATEGY_TAXONOMY
+# Phase 21 — persistent chain-verified telemetry sink
+from runtime.intelligence.file_telemetry_sink import (
+    FileTelemetrySink,
+    TelemetryLedgerReader,
+    TelemetryChainError,
+    GENESIS_PREV_HASH,
+    TELEMETRY_LEDGER_VERSION,
+)
 
 __all__ = [
     "CritiqueModule",
@@ -69,4 +77,10 @@ __all__ = [
     "as_transition_metrics",
     "initial_execution_state",
     "load_provider_config",
+    # Phase 21
+    "FileTelemetrySink",
+    "TelemetryLedgerReader",
+    "TelemetryChainError",
+    "GENESIS_PREV_HASH",
+    "TELEMETRY_LEDGER_VERSION",
 ]
