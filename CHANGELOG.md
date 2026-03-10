@@ -47,40 +47,36 @@ self-reinforcing governance feedback loop with no authority delegation.
 
 ### Phase 25 — Mutation Admission Control (Complete)
 
-Phase 25 closes the governance health feedback loop by introducing
-`MutationAdmissionController`: a deterministic, advisory pre-epoch filter
-that translates the composite health score into per-mutation admission
-decisions. When governance health degrades, high-risk mutations are
-deferred before they enter the evolution pipeline — without delegating
-any authority away from GovernanceGate.
+## [4.10.0] — 2026-03-09
+
+### Phase 25 — Pressure Adjustment Audit Ledger (Complete)
+
+Phase 25 persists every `PressureAdjustment` into a hash-chained audit ledger,
+completing the governance advisory arc: emit → persist → verify → query.
 
 #### Added
 
-- **`MutationAdmissionController`** (`runtime/governance/mutation_admission.py`):
-  `evaluate(health_score, mutation_risk_score) → AdmissionDecision`; four
-  admission bands (green/amber/red/halt); `advisory_only: True` structural
-  invariant; `decision_digest` deterministic SHA-256; fail-safe input clamping.
-- **`AdmissionDecision`** frozen dataclass: `health_score`, `mutation_risk_score`,
-  `admission_band`, `risk_threshold`, `admitted`, `admits_all`, `epoch_paused`,
-  `deferral_reason`, `advisory_only`, `decision_digest`, `controller_version`.
-- **Band/threshold mapping** (constitutional):
-  - GREEN  (h ≥ 0.80): risk_threshold=1.01 — all mutations admitted.
-  - AMBER  (0.60 ≤ h < 0.80): risk_threshold=0.60 — high-risk deferred.
-  - RED    (0.40 ≤ h < 0.60): risk_threshold=0.35 — only low-risk admitted.
-  - HALT   (h < 0.40): advisory epoch-pause issued; no mutations admitted.
-- **`GET /governance/admission-status`**: bearer-auth-gated (`audit:read`),
-  read-only; accepts optional `risk_score` query param (default 0.50);
-  returns full `AdmissionDecision` for current governance health score.
-- **44 new tests**: `tests/governance/test_mutation_admission.py` (32),
-  `tests/test_admission_status_endpoint.py` (12).
+- **`PressureAuditLedger`** (`runtime/governance/pressure_audit_ledger.py`):
+  append-only JSONL; SHA-256 hash chain with `GENESIS_PREV_HASH = "sha256:" + "0"*64`;
+  `emit(adjustment)` isolates all failures; `chain_verify_on_open=True` default;
+  `PressureAuditChainError(sequence, detail)` on any violation.
+- **`PressureAuditReader`**: `history()` (newest-first, filter, limit/offset, ≤500);
+  `tier_frequency()`; `tier_frequency_series(window)`; `verify_chain()`.
+- **Deterministic replay**: `timestamp_iso` excluded from `record_hash` — same
+  adjustment sequence → identical chain hashes (test-verified).
+- **`GET /governance/review-pressure` extended**: emits to `PressureAuditLedger`
+  when `ADAAD_PRESSURE_LEDGER_PATH` env set; adds `ledger_active` and `ledger_sequence`
+  fields; emit failure never propagates; inactive by default.
+- **`GET /governance/pressure-history`**: bearer-auth-gated, read-only; `pressure_tier`
+  filter; `limit` 1–500; `422` on limit>500; `ledger_active: false` when no env/file.
+- **50 new tests**: `test_pressure_audit_ledger.py` (32), `test_pressure_history_endpoint.py`
+  (12), `test_review_pressure_ledger_wiring.py` (6).
 
 #### Invariants preserved
 
-- `GovernanceGate` retains sole mutation-approval authority.
-- `MutationAdmissionController` never imports or calls `GovernanceGate`.
-- `advisory_only` is structurally `True` — no code path may set it `False`.
-- `epoch_paused` is advisory — operator and GovernanceGate decide response.
-- Determinism: identical inputs → identical `AdmissionDecision` → identical digest.
+- `GovernanceGate` and `HealthPressureAdaptor` unmodified.
+- Ledger is append-only; no record is ever overwritten or deleted.
+- `advisory_only: True` structural invariant unchanged.
 
 ---
 
