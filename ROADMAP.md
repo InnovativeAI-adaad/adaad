@@ -420,6 +420,48 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 34 — Certifier Scans REST Endpoint
+
+**Status:** ✅ shipped · **Released:** v5.9.0 · **Closed:** 2026-03-10 · **Requires:** Phase 33 shipped ✅
+
+Phase 34 surfaces the `CertifierScanLedger` via a read-only authenticated REST
+endpoint, completing the certifier audit surface and closing the Phase 33
+observability gap. Mirrors `/governance/threat-scans` (Phase 30) pattern.
+
+### Endpoint
+
+```
+GET /governance/certifier-scans
+Authorization: Bearer <token with audit:read scope>
+```
+
+Query params: `limit` (int, default 20), `rejected_only` (bool, default false).
+
+Response payload (under `data`):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `records` | list | Certifier scan records (chronological) |
+| `total_in_window` | int | Count of returned records |
+| `rejection_rate` | float | Fraction of all scans REJECTED |
+| `certification_rate` | float | Fraction of all scans CERTIFIED |
+| `mutation_blocked_count` | int | Scans with mutation_blocked=True |
+| `fail_closed_count` | int | Scans with fail_closed=True |
+| `escalation_breakdown` | dict | escalation_level → count |
+| `ledger_version` | str | `"33.0"` |
+
+### Acceptance criteria
+
+- `GET /governance/certifier-scans` returns 200 with full payload: **✅**
+- Missing auth → 401: **✅**
+- Insufficient scope → 403: **✅**
+- `certification_rate + rejection_rate == 1.0`: **✅**
+- `limit` and `rejected_only` params accepted: **✅**
+- Read-only: no side effects on GovernanceGate authority: **✅**
+- **12 tests** — `test_certifier_scans_endpoint.py` (T34-EP-01..12): **✅ 100%**
+
+---
+
 ## Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal
 
 **Status:** ✅ shipped · **Released:** v5.8.0 · **Closed:** 2026-03-10 · **Requires:** Phase 32 shipped ✅
