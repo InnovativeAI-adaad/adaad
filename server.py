@@ -1494,6 +1494,82 @@ def governance_reviewer_reputation_ledger(
 
 
 # ---------------------------------------------------------------------------
+# Phase 38 — Mutation Ledger REST Endpoint
+# ---------------------------------------------------------------------------
+
+_DEFAULT_MUTATION_LEDGER_PATH = "security/ledger/mutation_audit.jsonl"
+
+
+@app.get("/governance/mutation-ledger")
+def governance_mutation_ledger(
+    limit: int = 20,
+    promoted_only: bool = False,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return recent MutationLedger entries from the hash-chained audit ledger. Read-only.
+
+    Query parameters
+    ----------------
+    limit : int, default 20
+        Maximum number of entries to return (most recent first).
+    promoted_only : bool, default False
+        When True, only return entries where promoted=True.
+
+    Response fields (data)
+    ----------------------
+    entries                 list  — mutation ledger records (most recent first)
+    total_in_window         int   — number of entries returned
+    total_entries           int   — total entries in the ledger
+    promoted_count          int   — count of entries where promoted=True
+    last_hash               str   — sha256-prefixed hash of the last record
+    ledger_version          str   — "1.0"
+
+    Authority invariant
+    -------------------
+    This endpoint is read-only and advisory.  It never approves or blocks
+    mutations.  GovernanceGate retains sole mutation-approval authority.
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.mutation_ledger import (
+        GENESIS_PREV_HASH as _MUTATION_GENESIS_HASH,
+        MutationLedger,
+    )
+    from pathlib import Path
+
+    ledger = MutationLedger(
+        Path(_DEFAULT_MUTATION_LEDGER_PATH),
+        test_mode=True,
+    )
+
+    all_entries = ledger.entries()
+    promoted_count = sum(
+        1 for e in all_entries
+        if e.get("entry", {}).get("promoted") is True
+    )
+
+    if promoted_only:
+        filtered = [e for e in all_entries if e.get("entry", {}).get("promoted") is True]
+    else:
+        filtered = all_entries
+
+    windowed = list(reversed(filtered))[:limit]
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "entries":         windowed,
+            "total_in_window": len(windowed),
+            "total_entries":   len(all_entries),
+            "promoted_count":  promoted_count,
+            "last_hash":       ledger.last_hash(),
+            "ledger_version":  "1.0",
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
 # Phase 35 — Parallel Governance Gate API
 # ---------------------------------------------------------------------------
 

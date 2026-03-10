@@ -1,3 +1,36 @@
+## [6.3.0] — 2026-03-10
+
+### Phase 38 — Mutation Ledger REST Endpoint (Complete)
+
+Phase 38 surfaces `MutationLedger` via a read-only authenticated REST endpoint,
+completing REST observability coverage across all ADAAD hash-chained audit ledgers.
+
+#### Added
+- **`GET /governance/mutation-ledger`** (`server.py`): bearer-auth-gated
+  (`audit:read`), read-only. Query params: `limit` (default 20),
+  `promoted_only` (default False). Returns `entries`, `total_in_window`,
+  `total_entries`, `promoted_count`, `last_hash`, `ledger_version`.
+- **12 new endpoint tests**: `tests/test_mutation_ledger_endpoint.py`
+  (T38-EP-01..12) — 100% pass rate. Covers 200 OK, schema_version, all
+  required data keys, entries type, ledger_version, 401 missing auth,
+  403 wrong scope, total_in_window/total_entries non-negative int types,
+  window ≤ total invariant, promoted_count non-negative int,
+  last_hash sha256: prefix invariant.
+
+#### Invariants preserved
+- `GET /governance/mutation-ledger` is read-only — no side effects.
+- Advisory only: endpoint reads ledger history; never approves or blocks mutations.
+- `GovernanceGate` retains sole mutation-approval authority.
+- `total_in_window <= total_entries` structural invariant enforced (tested).
+- `last_hash` always carries `sha256:` prefix (genesis or chain tail), tested.
+- `GovernanceGate` isolation: endpoint imports `MutationLedger` only.
+
+#### Test counts
+- **12 new tests**: `tests/test_mutation_ledger_endpoint.py` (T38-EP-01..12): **✅ 100%**
+- **Total test suite**: 846 tests
+
+---
+
 ## [6.2.0] — 2026-03-10
 
 ### Phase 37 — Reviewer Reputation Ledger REST Endpoint (Complete)
