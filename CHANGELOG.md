@@ -1,3 +1,64 @@
+## [5.7.0] — 2026-03-10
+
+### Phase 32 — Governance Debt Health Signal Integration (Complete)
+
+Phase 32 closes the integration gap between Phase 31 (`GovernanceDebtLedger`)
+and the `GovernanceHealthAggregator`: `compound_debt_score` is now the 7th
+governance health signal, normalized to `[0.0, 1.0]` and contributing 10% of
+the composite health score `h`. The signal is fail-safe (defaults to `1.0`
+when no ledger is wired or no snapshot exists) and deterministically replayable.
+Weight sum invariant preserved: all 7 signals sum to `1.00`.
+
+#### Added
+
+- **`governance_debt_health_score`** (7th signal): `GovernanceHealthAggregator`
+  now accepts `debt_ledger=GovernanceDebtLedger` kwarg. Score computed as
+  `max(0.0, 1.0 - compound_debt_score / breach_threshold)` — 1.0 = pristine,
+  0.0 = fully breached. Fail-safe: returns `1.0` on missing ledger, no snapshot,
+  `breach_threshold ≤ 0`, or any exception.
+- **`HealthSnapshot.debt_report`**: Optional dict field populated when ledger is
+  wired and a snapshot exists. Fields: `compound_debt_score`, `breach_threshold`,
+  `threshold_breached`, `warning_count`, `snapshot_hash`, `available`.
+- **`tests/governance/test_debt_health_signal.py`**: 23 acceptance-criteria tests
+  — 100% pass rate. Covers fail-safe paths, normalization at 0/0.5/1.0 boundary,
+  over-breach clamping, misconfiguration guard, determinism, backward compatibility,
+  weight sum invariant, and weight rebalance values.
+
+#### Changed
+
+- **`SIGNAL_WEIGHTS`** rebalanced to accommodate 7th signal (sum = 1.00):
+
+  | Signal | Old weight | New weight |
+  |--------|-----------|-----------|
+  | `avg_reviewer_reputation` | 0.22 | **0.20** |
+  | `amendment_gate_pass_rate` | 0.20 | **0.18** |
+  | `federation_divergence_clean` | 0.20 | **0.18** |
+  | `epoch_health_score` | 0.15 | **0.13** |
+  | `routing_health_score` | 0.13 | **0.11** |
+  | `admission_rate_score` | 0.10 | 0.10 |
+  | `governance_debt_health_score` | — | **0.10** (new) |
+
+- **3 existing tests** in `test_governance_health_aggregator.py` updated to reflect
+  new weight baseline values (numeric assertions only; test intent unchanged).
+
+#### Invariants preserved
+
+- Weight sum invariant: `sum(SIGNAL_WEIGHTS.values()) == 1.00` (CI-enforced).
+- `GovernanceGate` retains sole mutation-approval authority.
+- `governance_debt_health_score` is advisory input to `h`; `h` is itself advisory.
+- Deterministic replay: identical `(compound_debt_score, breach_threshold)` →
+  identical `governance_debt_health_score`.
+- Fail-safe: absent ledger, missing snapshot, or any exception → `1.0` (never stalls).
+- Backward compatibility: callers without `debt_ledger` continue to work unchanged.
+
+#### Test counts
+
+- **23 new tests**: `tests/governance/test_debt_health_signal.py` (T32-01..22): **✅ 100%**
+- **3 updated tests**: `test_governance_health_aggregator.py` (T8-01-07, T8-01-09, T8-01-21)
+- **Total test suite**: 775 tests
+
+---
+
 ## [5.6.0] — 2026-03-10
 
 ### Phase 31 — Governance Debt & Gate Certifier Endpoints (Complete)

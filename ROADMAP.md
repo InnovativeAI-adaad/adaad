@@ -420,6 +420,49 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 32 — Governance Debt Health Signal Integration
+
+**Status:** ✅ shipped · **Released:** v5.7.0 · **Closed:** 2026-03-10 · **Requires:** Phase 31 shipped ✅
+
+Phase 32 closes the integration gap between the `GovernanceDebtLedger` (Phase 31)
+and the `GovernanceHealthAggregator`. `compound_debt_score` is now wired as the
+7th governance health signal, normalized to `[0.0, 1.0]` with weight `0.10`.
+All other signals rebalanced proportionally; weight sum invariant preserved at `1.00`.
+
+### Signal normalisation
+
+    debt_health = max(0.0, 1.0 − compound_debt_score / breach_threshold)
+
+- `compound_debt_score == 0` → `1.0` (pristine)
+- `compound_debt_score >= breach_threshold` → `0.0` (fully breached)
+- No ledger / no snapshot / `breach_threshold ≤ 0` → `1.0` (fail-safe)
+
+### Weight table (post-Phase 32)
+
+| Signal | Weight | Source |
+|--------|--------|--------|
+| `avg_reviewer_reputation` | 0.20 | `ReviewerReputationLedger` (Ph.7) |
+| `amendment_gate_pass_rate` | 0.18 | `RoadmapAmendmentEngine` (Ph.6) |
+| `federation_divergence_clean` | 0.18 | `FederatedEvidenceMatrix` (Ph.5) |
+| `epoch_health_score` | 0.13 | `EpochTelemetry` (core) |
+| `routing_health_score` | 0.11 | `StrategyAnalyticsEngine` (Ph.22) |
+| `admission_rate_score` | 0.10 | `AdmissionRateTracker` (Ph.26) |
+| `governance_debt_health_score` | 0.10 | `GovernanceDebtLedger` (Ph.31) |
+
+### Acceptance criteria
+
+- `governance_debt_health_score` in `HealthSnapshot.signal_breakdown`: **✅**
+- Fail-safe `1.0` on no ledger, no snapshot, `breach_threshold ≤ 0`, exception: **✅**
+- `HealthSnapshot.debt_report` populated with 6 required fields: **✅**
+- Weight sum == 1.00 after rebalance (CI-enforced): **✅**
+- All weights individually in `(0.0, 1.0)`: **✅**
+- Determinism: identical inputs → identical score: **✅**
+- Backward compat: callers without `debt_ledger` unaffected: **✅**
+- Breach drives `h` below no-debt baseline: **✅**
+- **23 tests** — `test_debt_health_signal.py` (T32-01..22): **✅ 100%**
+
+---
+
 ## Phase 31 — Governance Debt & Gate Certifier Endpoints
 
 **Status:** ✅ shipped · **Released:** v5.6.0 · **Closed:** 2026-03-10 · **Requires:** Phase 30 shipped ✅
