@@ -259,6 +259,14 @@ ADAAD ships a free Android companion app for monitoring governed runs, reviewing
 
 Download the latest APK from [GitHub Releases](../../releases/latest).
 
+**Running ADAAD on Android via Termux (developer mode):**
+See [`TERMUX_SETUP.md`](TERMUX_SETUP.md) for the complete guide — install the Python server directly on your device, no desktop required.
+
+| Install method | Guide |
+|---|---|
+| APK / Obtainium / PWA / F-Droid | [`INSTALL_ANDROID.md`](INSTALL_ANDROID.md) |
+| Termux (Python server on-device) | [`TERMUX_SETUP.md`](TERMUX_SETUP.md) |
+
 ---
 
 ## What's Active Now

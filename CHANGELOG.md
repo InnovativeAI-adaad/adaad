@@ -1,3 +1,43 @@
+## [6.5.0] — 2026-03-10
+
+### fix(termux): Android Termux compatibility fixes (Complete)
+
+Resolves three issues observed in the Termux session log.
+
+#### Fixed
+
+**1 — `@app.on_event("startup")` deprecation warning (`server.py`)**
+- Replaced `@app.on_event("startup")` with a `@asynccontextmanager` `_lifespan`
+  function passed to `FastAPI(lifespan=_lifespan)`.
+- Eliminates the `DeprecationWarning` printed on every `server.py` start.
+- Zero test regressions — all 60 governance endpoint tests pass.
+
+**2 — `metadata-generation-failed` for PyNaCl on Termux (`onboard.py`)**
+- Added `_is_termux()` detector (checks `$PREFIX` and `/data/data/com.termux`).
+- When Termux is detected, `pip install` automatically receives
+  `--only-binary :all: --prefer-binary` — skips source builds that require
+  a C compiler for `PyNaCl`/`cffi`.
+- Prints explicit recovery instructions when native deps fail:
+  `pkg install libsodium python-cryptography -y`.
+
+**3 — `pip install adaad` fails (not on PyPI)**
+- `INSTALL_ANDROID.md`: added dedicated **Termux** section with copy-paste
+  install sequence, native dep table, and soulbound key setup.
+- `INSTALL_ANDROID.md`: added 5 new Termux-specific troubleshooting rows.
+- `TERMUX_SETUP.md`: new standalone Termux reference guide — quick start,
+  step-by-step install, environment setup, epoch execution, update flow,
+  full troubleshooting table, and architecture note.
+- `README.md`: added Termux install method row to Android section.
+
+#### Files changed
+- `server.py` — `asynccontextmanager` lifespan replaces `@app.on_event`
+- `onboard.py` — `_is_termux()` + `--only-binary` + Termux recovery messages
+- `INSTALL_ANDROID.md` — Termux section + troubleshooting rows + version bump
+- `TERMUX_SETUP.md` — new file (complete Termux guide)
+- `README.md` — Termux install method table in Android section
+
+---
+
 ## [6.4.0] — 2026-03-10
 
 ### Phase 39 — DreamMode Determinism Provider Injection (Complete)

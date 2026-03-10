@@ -105,17 +105,39 @@ def _venv_python() -> str:
     return sys.executable
 
 
+def _is_termux() -> bool:
+    """Detect Termux environment (Android/AArch64 without wheel build support)."""
+    return (
+        "com.termux" in os.environ.get("PREFIX", "")
+        or os.path.isdir("/data/data/com.termux")
+    )
+
+
 def step_install_deps() -> None:
     req = ROOT / "requirements.server.txt"
     if not req.exists():
         _warn("requirements.server.txt not found — skipping install")
         return
     _info("Installing dependencies (this may take a moment)…")
+
+    # Termux: many packages (PyNaCl, cffi) require native libs installed
+    # via `pkg install` — use --only-binary to avoid failing source builds.
+    pip_flags = ["--quiet"]
+    if _is_termux():
+        pip_flags += ["--only-binary", ":all:", "--prefer-binary"]
+        _info("Termux detected — using --only-binary to skip source builds")
+        _info("If install fails, run:  pkg install libsodium python-cryptography")
+
     result = _run_quiet(
-        [_venv_python(), "-m", "pip", "install", "-r", str(req), "--quiet"],
+        [_venv_python(), "-m", "pip", "install", "-r", str(req)] + pip_flags,
     )
     if result.returncode != 0:
-        _warn("Dependency install had warnings. Continuing.")
+        if _is_termux():
+            _warn("Some packages need native Termux libs. Run:")
+            _warn("  pkg install libsodium python-cryptography python-nacl")
+            _warn("Then re-run:  python3 onboard.py")
+        else:
+            _warn("Dependency install had warnings. Continuing.")
         _warn(result.stderr[-400:] if result.stderr else "")
     else:
         _ok("Dependencies installed")

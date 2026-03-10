@@ -1,5 +1,5 @@
 # Installing ADAAD on Android
-**InnovativeAI LLC · v3.1.0-dev · Free · No Play Store required**
+**InnovativeAI LLC · v6.4.0 · Free · No Play Store required**
 
 > **Minimum:** Android 8.0 (API 26) · ~50 MB storage · Internet for workspace sync
 
@@ -127,6 +127,53 @@ as `adaad-community-*.apk.sha256`.
 
 ---
 
+## 🔧 Developer / Termux (run ADAAD Python server on-device)
+
+Termux lets you run the full ADAAD Python server on Android without a computer.
+
+### Prerequisites
+
+```bash
+pkg update && pkg upgrade -y
+pkg install python git libsodium openssl -y
+```
+
+### Clone and run
+
+```bash
+git clone https://github.com/InnovativeAI-adaad/ADAAD.git
+cd ADAAD
+python3 onboard.py
+```
+
+`onboard.py` detects Termux automatically and uses `--only-binary :all:` to
+skip packages that require a C compiler.  If any native dependency fails:
+
+```bash
+# Install Termux-packaged equivalents
+pkg install python-cryptography -y
+# Then retry
+python3 onboard.py
+```
+
+### Run the governance dashboard
+
+```bash
+# Generate a dev soulbound key (required for ledger writes)
+export ADAAD_SOULBOUND_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+export ADAAD_ENV=dev
+
+python3 server.py
+# Dashboard available at http://localhost:8000
+```
+
+To persist the key across sessions, add the `export` line to `~/.bashrc`.
+
+> **Note:** `pip install adaad` is not available — ADAAD is not on PyPI.
+> Install from source via `git clone` as shown above.
+
+---
+
 ## Troubleshooting
 
 | Problem | Solution |
@@ -137,6 +184,10 @@ as `adaad-community-*.apk.sha256`.
 | *Can't find APK in Obtainium* | Confirm you pasted the full URL: `https://github.com/InnovativeAI-adaad/ADAAD` |
 | *F-Droid repo not updating* | F-Droid → Repositories → tap the ADAAD repo → Refresh |
 | *PWA "Add to Home screen" not shown* | Must use Chrome (not Firefox or Samsung Browser) — visit the page, wait 30s |
+| *`pip install adaad` fails* | ADAAD is not on PyPI — use `git clone https://github.com/InnovativeAI-adaad/ADAAD.git` |
+| *`metadata-generation-failed` in Termux* | Run `pkg install libsodium python-cryptography -y` then `python3 onboard.py` |
+| *`on_event` deprecation warning* | Fixed in v6.4.0+ — update via `git pull` |
+| *Server exits immediately in Termux* | Ensure `ui/aponi` exists; run `python3 server.py` from the ADAAD directory |
 
 File a bug: `https://github.com/InnovativeAI-adaad/ADAAD/issues` — label: `android`
 
