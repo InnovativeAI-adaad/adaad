@@ -1278,5 +1278,68 @@ def governance_certify(
         "data": result,
     }
 
+
+# ---------------------------------------------------------------------------
+# Phase 34 — Certifier Scan Audit Ledger Endpoint
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/certifier-scans")
+def governance_certifier_scans(
+    limit: int = 20,
+    rejected_only: bool = False,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return recent GateCertifier scan records from the audit ledger. Read-only.
+
+    Query parameters
+    ----------------
+    limit : int, default 20
+        Maximum number of records to return (most recent).
+    rejected_only : bool, default False
+        When True, only return REJECTED scan records.
+
+    Response fields (data)
+    ----------------------
+    records                 list  — certifier scan records (chronological)
+    total_in_window         int   — number of records returned
+    rejection_rate          float — fraction of all scans that were REJECTED
+    certification_rate      float — fraction of all scans that were CERTIFIED
+    mutation_blocked_count  int   — scans where mutation_blocked=True
+    fail_closed_count       int   — scans where fail_closed=True
+    escalation_breakdown    dict  — escalation_level → count
+    ledger_version          str   — \"33.0\"
+
+    Authority invariant
+    -------------------
+    This endpoint is read-only and advisory.  It never approves or blocks
+    mutations.  GovernanceGate retains sole mutation-approval authority.
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.certifier_scan_ledger import (
+        CERTIFIER_SCAN_LEDGER_VERSION,
+        DEFAULT_CERTIFIER_SCAN_LEDGER_PATH,
+        CertifierScanReader,
+    )
+
+    reader = CertifierScanReader(DEFAULT_CERTIFIER_SCAN_LEDGER_PATH)
+    records = reader.history(limit=limit, rejected_only=rejected_only)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "records":                records,
+            "total_in_window":        len(records),
+            "rejection_rate":         reader.rejection_rate(),
+            "certification_rate":     reader.certification_rate(),
+            "mutation_blocked_count": reader.mutation_blocked_count(),
+            "fail_closed_count":      reader.fail_closed_count(),
+            "escalation_breakdown":   reader.escalation_breakdown(),
+            "ledger_version":         CERTIFIER_SCAN_LEDGER_VERSION,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

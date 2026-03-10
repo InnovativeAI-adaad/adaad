@@ -1,3 +1,39 @@
+## [5.9.0] — 2026-03-10
+
+### Phase 34 — Certifier Scans REST Endpoint (Complete)
+
+Phase 34 surfaces `CertifierScanLedger` (Phase 33) via a read-only authenticated
+REST endpoint, completing the certifier audit observability surface and matching
+the pattern established by `/governance/threat-scans` (Phase 30) and
+`/governance/admission-audit` (Phase 27).
+
+#### Added
+
+- **`GET /governance/certifier-scans`** (`server.py`): bearer-auth-gated
+  (`audit:read`), read-only. Query params: `limit` (default 20),
+  `rejected_only` (default False). Returns `records`, `total_in_window`,
+  `rejection_rate`, `certification_rate`, `mutation_blocked_count`,
+  `fail_closed_count`, `escalation_breakdown`, `ledger_version`.
+- **12 new endpoint tests**: `tests/test_certifier_scans_endpoint.py`
+  (T34-EP-01..12) — 100% pass rate. Covers 200 OK, schema_version, all
+  required data keys, records type, ledger_version, limit/rejected_only
+  params, 401 missing auth, 403 wrong scope, rate float range, complement
+  invariant, escalation_breakdown type.
+
+#### Invariants preserved
+
+- `GET /governance/certifier-scans` is read-only — no side effects.
+- Advisory only: endpoint reads scan history; never approves or blocks mutations.
+- `GovernanceGate` retains sole mutation-approval authority.
+- `certification_rate + rejection_rate == 1.0` (mathematical invariant, tested).
+
+#### Test counts
+
+- **12 new tests**: `tests/test_certifier_scans_endpoint.py` (T34-EP-01..12): **✅ 100%**
+- **Total test suite**: 779 tests
+
+---
+
 ## [5.8.0] — 2026-03-10
 
 ### Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal (Complete)

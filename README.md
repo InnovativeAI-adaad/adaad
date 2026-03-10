@@ -8,7 +8,7 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-20%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-34%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9-7b61ff?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
   &nbsp;
@@ -47,12 +47,12 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `5.8.0` |
+| **Current version** | `5.9.0` |
 | **Released** | 2026-03-10 |
 | **Release SHA** | `main` |
 | **Release Branch** | `main` |
 
-**New in this release:** v5.8.0 — Phase 33 complete. `CertifierScanLedger` (SHA-256 hash-chained JSONL ledger for `GateCertifier` scan results) + `certifier_rejection_rate_score` as 8th governance health signal (weight 0.07). 38 new tests. All 8 `SIGNAL_WEIGHTS` sum to 1.00. 767+ tests passing.
+**New in this release:** v5.9.0 — Phase 34 complete. `GET /governance/certifier-scans` endpoint live (bearer-auth `audit:read`, read-only). Returns certifier scan audit records, `rejection_rate`, `certification_rate`, `mutation_blocked_count`, `escalation_breakdown`. 12 new endpoint tests. 779+ tests passing.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -304,8 +304,8 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 **Phase 6 — Autonomous Roadmap Self-Amendment** is complete at `v3.1.0`. All milestones shipped and governed.
 
-> **Current active phase: Phase 33 — Certifier Scan Ledger & Rejection Rate Health Signal (v5.8.0)**  
-> `CertifierScanLedger` + `certifier_rejection_rate_score` (8th health signal). 767+ tests passing. See [`CHANGELOG.md`](CHANGELOG.md) for full history.
+> **Current active phase: Phase 34 — Certifier Scans REST Endpoint (v5.9.0)**  
+> `GET /governance/certifier-scans` endpoint live. 779+ tests passing. See [`CHANGELOG.md`](CHANGELOG.md) for full history.
 
 | Milestone | Status | Module |
 |:---|:---:|:---|
