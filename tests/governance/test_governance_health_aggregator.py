@@ -124,8 +124,7 @@ def test_T8_01_06_all_signals_full_gives_h_1():
 
 
 def test_T8_01_07_all_signals_zero_gives_h_0():
-    # Phase 32 rebalance: routing(1.0*0.11) + admission(1.0*0.10) + debt(1.0*0.10) = 0.31
-    # (all controllable signals zero; three fail-safe signals contribute)
+    # Phase 33 rebalance: routing(1.0*0.10)+admission(1.0*0.09)+debt(1.0*0.09)+certifier(1.0*0.07) = 0.35
     agg, _ = _agg(
         reviewer_reputation_ledger=_make_reputation_ledger([0.0]),
         roadmap_amendment_engine=_make_amendment_engine(5),
@@ -133,7 +132,7 @@ def test_T8_01_07_all_signals_zero_gives_h_0():
         epoch_telemetry=_make_epoch_telemetry(healthy=0, warning=4),
     )
     snap = agg.compute("epoch-1")
-    assert snap.health_score == pytest.approx(0.31)
+    assert snap.health_score == pytest.approx(0.35)
     assert snap.degraded
 
 
@@ -142,13 +141,13 @@ def test_T8_01_08_weights_sum_to_1():
 
 
 def test_T8_01_09_single_signal_cannot_drive_h_to_1_alone():
-    # Phase 32 rebalance (7 signals):
-    # rep=1.0*0.20 + fed(single-node)=1.0*0.18 + routing(fail-safe)=1.0*0.11
-    # + admission(fail-safe)=1.0*0.10 + debt(fail-safe)=1.0*0.10
-    # amendment=None→0.0*0.18 + epoch=None→0.0*0.13 => h = 0.69
+    # Phase 33 rebalance (8 signals):
+    # rep=1.0*0.19 + fed(single-node)=1.0*0.17 + routing(fail-safe)=1.0*0.10
+    # + admission(fail-safe)=1.0*0.09 + debt(fail-safe)=1.0*0.09 + certifier(fail-safe)=1.0*0.07
+    # amendment=None→0.0*0.17 + epoch=None→0.0*0.12 => h = 0.71
     agg, _ = _agg(reviewer_reputation_ledger=_make_reputation_ledger([1.0]))
     snap = agg.compute("epoch-1")
-    assert snap.health_score == pytest.approx(0.69)
+    assert snap.health_score == pytest.approx(0.71)
     assert snap.health_score < 1.0
 
 
@@ -274,10 +273,9 @@ def test_T8_01_20_snapshot_constitution_version_matches_runtime():
 def test_T8_01_21_all_none_dependencies_returns_h_near_zero():
     agg, _ = _agg()
     snap = agg.compute("epoch-none")
-    # Phase 32 rebalance: fed(single-node)=1.0*0.18 + routing(fail-safe)=1.0*0.11
-    # + admission(fail-safe)=1.0*0.10 + debt(fail-safe)=1.0*0.10 = 0.49
+    # Phase 33 rebalance: fed(1.0*0.17)+routing(1.0*0.10)+admission(1.0*0.09)+debt(1.0*0.09)+certifier(1.0*0.07) = 0.52
     # rep=None->0.0, amendment=None->0.0, epoch=None->0.0
-    assert snap.health_score == pytest.approx(0.49)
+    assert snap.health_score == pytest.approx(0.52)
 
 
 def test_T8_01_22_single_node_federation_defaults_to_clean():

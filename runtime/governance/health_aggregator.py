@@ -42,15 +42,16 @@ log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SIGNAL_WEIGHTS: Dict[str, float] = {
-    "avg_reviewer_reputation":       0.20,  # Phase 7   (-0.02 rebalance for Ph.32)
-    "amendment_gate_pass_rate":      0.18,  # Phase 6   (-0.02 rebalance for Ph.32)
-    "federation_divergence_clean":   0.18,  # Phase 5   (-0.02 rebalance for Ph.32)
-    "epoch_health_score":            0.13,  # core      (-0.02 rebalance for Ph.32)
-    "routing_health_score":          0.11,  # Phase 23  (-0.02 rebalance for Ph.32)
-    "admission_rate_score":          0.10,  # Phase 26  (unchanged)
-    "governance_debt_health_score":  0.10,  # Phase 32  (new — GovernanceDebtLedger)
+    "avg_reviewer_reputation":          0.19,  # Phase 7   (-0.01 rebalance for Ph.33)
+    "amendment_gate_pass_rate":         0.17,  # Phase 6   (-0.01 rebalance for Ph.33)
+    "federation_divergence_clean":      0.17,  # Phase 5   (-0.01 rebalance for Ph.33)
+    "epoch_health_score":               0.12,  # core      (-0.01 rebalance for Ph.33)
+    "routing_health_score":             0.10,  # Phase 23  (-0.01 rebalance for Ph.33)
+    "admission_rate_score":             0.09,  # Phase 26  (-0.01 rebalance for Ph.33)
+    "governance_debt_health_score":     0.09,  # Phase 32  (-0.01 rebalance for Ph.33)
+    "certifier_rejection_rate_score":   0.07,  # Phase 33  (new — CertifierScanLedger)
 }
-# Weight sum invariant: 0.20+0.18+0.18+0.13+0.11+0.10+0.10 = 1.00 ✅
+# Weight sum invariant: 0.19+0.17+0.17+0.12+0.10+0.09+0.09+0.07 = 1.00 ✅
 
 HEALTH_DEGRADED_THRESHOLD: float = 0.60
 _WEIGHT_SUM_TOLERANCE: float = 1e-9
@@ -81,6 +82,8 @@ class HealthSnapshot:
     admission_rate_report:     Optional[Dict[str, Any]] = None
     # Phase 32: governance debt signal detail (None when no ledger wired)
     debt_report:               Optional[Dict[str, Any]] = None
+    # Phase 33: certifier rejection rate detail (None when no reader wired)
+    certifier_report:          Optional[Dict[str, Any]] = None
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -126,6 +129,7 @@ class GovernanceHealthAggregator:
         routing_analytics_engine=None,
         admission_tracker=None,       # Phase 26
         debt_ledger=None,             # Phase 32
+        certifier_scan_reader=None,   # Phase 33
     ) -> None:
         self._reputation_ledger    = reviewer_reputation_ledger
         self._amendment_engine     = roadmap_amendment_engine
@@ -135,6 +139,7 @@ class GovernanceHealthAggregator:
         self._routing_engine       = routing_analytics_engine  # Phase 23
         self._admission_tracker    = admission_tracker          # Phase 26
         self._debt_ledger          = debt_ledger                # Phase 32
+        self._certifier_reader     = certifier_scan_reader      # Phase 33
 
         # Validate and snapshot weights
         self._weights = dict(weights or SIGNAL_WEIGHTS)
@@ -203,6 +208,21 @@ class GovernanceHealthAggregator:
             except Exception:
                 pass
 
+        # Phase 33: capture certifier rejection rate detail for snapshot
+        _certifier_report_dict: Optional[Dict[str, Any]] = None
+        if self._certifier_reader is not None:
+            try:
+                rejection_rate = self._certifier_reader.rejection_rate()
+                mutation_blocked = self._certifier_reader.mutation_blocked_count()
+                _certifier_report_dict = {
+                    "rejection_rate":      rejection_rate,
+                    "certification_rate":  round(1.0 - rejection_rate, 6),
+                    "mutation_blocked_count": mutation_blocked,
+                    "available":           True,
+                }
+            except Exception:
+                pass
+
         snapshot = HealthSnapshot(
             epoch_id=epoch_id,
             health_score=h,
@@ -215,6 +235,7 @@ class GovernanceHealthAggregator:
             routing_health_report=_routing_report_dict,
             admission_rate_report=_admission_report_dict,
             debt_report=_debt_report_dict,
+            certifier_report=_certifier_report_dict,
         )
 
         self._emit_snapshot(snapshot)
@@ -230,13 +251,14 @@ class GovernanceHealthAggregator:
 
     def _collect_signals(self, epoch_id: str) -> Dict[str, float]:
         return {
-            "avg_reviewer_reputation":      self._collect_reputation(epoch_id),
-            "amendment_gate_pass_rate":     self._collect_amendment_rate(),
-            "federation_divergence_clean":  self._collect_federation_clean(),
-            "epoch_health_score":           self._collect_epoch_health(),
-            "routing_health_score":         self._collect_routing_health(),    # Phase 23
-            "admission_rate_score":         self._collect_admission_rate(),    # Phase 26
-            "governance_debt_health_score": self._collect_debt_health(),       # Phase 32
+            "avg_reviewer_reputation":          self._collect_reputation(epoch_id),
+            "amendment_gate_pass_rate":         self._collect_amendment_rate(),
+            "federation_divergence_clean":      self._collect_federation_clean(),
+            "epoch_health_score":               self._collect_epoch_health(),
+            "routing_health_score":             self._collect_routing_health(),             # Phase 23
+            "admission_rate_score":             self._collect_admission_rate(),             # Phase 26
+            "governance_debt_health_score":     self._collect_debt_health(),               # Phase 32
+            "certifier_rejection_rate_score":   self._collect_certifier_health(),          # Phase 33
         }
 
     def _collect_reputation(self, epoch_id: str) -> float:
@@ -370,6 +392,33 @@ class GovernanceHealthAggregator:
         except Exception as exc:
             log.warning(
                 "GovernanceHealthAggregator: debt health collection failed: %s; defaulting to 1.0",
+                exc,
+            )
+            return 1.0
+
+    def _collect_certifier_health(self) -> float:
+        """Phase 33: Collect certifier rejection rate from CertifierScanReader.
+
+        Normalises the rejection rate into a ``[0.0, 1.0]`` health value:
+
+            certifier_health = 1.0 - rejection_rate
+
+        - ``rejection_rate == 0.0`` → ``1.0`` (all scans certified, pristine)
+        - ``rejection_rate == 1.0`` → ``0.0`` (all scans rejected, fully degraded)
+
+        Default is ``1.0`` (fail-safe) when:
+        - No reader is wired (certifier scanning not yet active)
+        - Empty scan history (no scans recorded → no evidence of rejection)
+        - Any exception during collection
+        """
+        if self._certifier_reader is None:
+            return 1.0
+        try:
+            rejection_rate = self._certifier_reader.rejection_rate()
+            return round(min(1.0, max(0.0, 1.0 - float(rejection_rate))), 6)
+        except Exception as exc:
+            log.warning(
+                "GovernanceHealthAggregator: certifier health collection failed: %s; defaulting to 1.0",
                 exc,
             )
             return 1.0
