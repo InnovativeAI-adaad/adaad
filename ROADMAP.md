@@ -420,6 +420,26 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 
 ---
 
+## Phase 31 — Governance Debt & Gate Certifier Endpoints
+
+**Status:** ✅ shipped · **Released:** v5.6.0 · **Closed:** 2026-03-10 · **Requires:** Phase 30 shipped ✅
+
+Phase 31 closes the last two API surface gaps: GovernanceDebtLedger and
+GateCertifier had no REST endpoints. Operators can now inspect live debt
+snapshots and run security certification scans via authenticated endpoints.
+
+### Acceptance criteria
+
+- GET /governance/debt returns 200 with full snapshot payload: **✅**
+- Debt schema_version, snapshot_hash, threshold_breached all present: **✅**
+- Zero-state fallback when no live epoch data: **✅**
+- POST /governance/certify returns CERTIFIED | REJECTED with checks breakdown: **✅**
+- Absolute paths and path traversal rejected with 422: **✅**
+- GovernanceGate authority boundary preserved (both endpoints advisory/read-only): **✅**
+- **41 tests**: unit (21) + endpoint (20): **✅**
+
+---
+
 ## Phase 30 — Threat Scan Ledger & Endpoint
 
 **Status:** ✅ shipped · **Released:** v5.5.0 · **Closed:** 2026-03-10 · **Requires:** Phase 29 shipped ✅

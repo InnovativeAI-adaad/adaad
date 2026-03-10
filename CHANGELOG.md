@@ -1,3 +1,34 @@
+## [5.6.0] — 2026-03-10
+
+### Phase 31 — Governance Debt & Gate Certifier Endpoints (Complete)
+
+Phase 31 closes the two remaining API gaps in the governance runtime surface:
+GET /governance/debt exposes the live GovernanceDebtLedger snapshot with decay,
+breach detection, and hash-chaining; POST /governance/certify runs the
+GateCertifier security scanner against any repo-relative Python file.
+
+#### Added
+
+- **`GET /governance/debt`**: bearer-auth-gated (audit:read), read-only; returns
+  live GovernanceDebtLedger snapshot including compound_debt_score, breach_threshold,
+  threshold_breached, warning_count, warning_rules, snapshot_hash; falls back to
+  zero-state snapshot when no live epoch data is available.
+- **`POST /governance/certify`**: bearer-auth-gated (audit:read); accepts
+  file_path (repo-relative) + optional metadata; runs GateCertifier AST security
+  scan; returns CERTIFIED | REJECTED status, escalation level, mutation_blocked,
+  fail_closed, per-check breakdown; rejects absolute paths and path traversal (422).
+- **21 new unit tests**: `tests/governance/test_governance_debt_service.py` (T31-01..06).
+- **20 new endpoint tests**: `tests/test_debt_and_certifier_endpoints.py` (T31-EP-01..20).
+
+#### Invariants preserved
+
+- GET /governance/debt is read-only — no side effects on GovernanceGate authority.
+- POST /governance/certify is advisory-only — result is informational; GovernanceGate
+  retains sole mutation-approval authority.
+- Path traversal protection on certify endpoint (relative paths only, within repo root).
+
+---
+
 ## [5.5.0] — 2026-03-10
 
 ### Phase 30 — Threat Scan Ledger & Endpoint (Complete)
