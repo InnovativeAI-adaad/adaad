@@ -1,4 +1,49 @@
+## [5.1.0] — 2026-03-10
+
+### Phase 26 — Admission Rate Signal Integration (Complete)
+
+Phase 26 closes the Phase 25 feedback loop: `AdmissionRateTracker` records
+per-epoch admission outcomes and produces a rolling `admission_rate_score`
+signal, now wired into `GovernanceHealthAggregator` as the sixth and final
+governance signal. When sustained health pressure causes many mutations to be
+deferred, the admission rate degrades the composite health score — a
+self-reinforcing governance feedback loop with no authority delegation.
+
+#### Added
+
+- **`AdmissionRateTracker`** (`runtime/governance/admission_tracker.py`):
+  `record_decision(epoch_id, admitted)` + `generate_report() → AdmissionRateReport`;
+  configurable rolling window (default 10 epochs); fail-safe empty-history
+  default of `1.0`; deterministic `report_digest` SHA-256; eviction of
+  out-of-window epoch entries on every insert.
+- **`AdmissionRateReport`** frozen dataclass: `admission_rate_score`,
+  `admitted_count`, `total_count`, `epochs_in_window`, `max_epochs`,
+  `report_digest`, `tracker_version`.
+- **`admission_rate_score` signal** in `GovernanceHealthAggregator` (weight
+  `0.10`); sourced from `AdmissionRateTracker.admission_rate_score()`; defaults
+  to `1.0` when no tracker is wired; clamped `[0.0, 1.0]`; fail-safe on
+  exception.
+- **Signal weight rebalance**: five original signals rebalanced to accommodate
+  the sixth; total weight sum invariant `== 1.0` preserved.
+- **`admission_rate_report` field** in `HealthSnapshot`: additive, non-breaking;
+  carries `admission_rate_score`, `admitted_count`, `total_count`,
+  `epochs_in_window`, `report_digest`.
+- **`GET /governance/admission-rate`**: bearer-auth-gated (`audit:read`),
+  read-only; returns full `AdmissionRateReport` from a default tracker.
+- **34 new tests**: `test_admission_tracker.py` (26), `test_admission_rate_endpoint.py` (8).
+
+#### Invariants preserved
+
+- `GovernanceGate` retains sole mutation-approval authority.
+- `AdmissionRateTracker` never imports or calls `GovernanceGate`.
+- `admission_rate_score` is advisory — it informs `h`, which is itself advisory.
+- Determinism: identical decision sequence → identical score → identical digest.
+- Weight sum invariant: `sum(SIGNAL_WEIGHTS.values()) == 1.0` (CI-enforced).
+
+---
+
 ## [5.0.0] — 2026-03-10
+
 
 ### Phase 25 — Mutation Admission Control (Complete)
 

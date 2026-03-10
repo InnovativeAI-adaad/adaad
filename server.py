@@ -795,5 +795,47 @@ def governance_admission_status(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase 26 — Admission Rate Signal
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/admission-rate")
+def governance_admission_rate(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return AdmissionRateReport from the global AdmissionRateTracker. Read-only.
+
+    Response fields (data)
+    ----------------------
+    admission_rate_score   float — rolling admission rate ∈ [0.0, 1.0]
+    admitted_count         int   — admitted decisions in window
+    total_count            int   — total decisions in window
+    epochs_in_window       int   — distinct epochs contributing to window
+    max_epochs             int   — configured rolling-window size
+    report_digest          str   — sha256-prefixed deterministic digest
+    tracker_version        str   — "26.0"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.admission_tracker import AdmissionRateTracker
+
+    tracker = AdmissionRateTracker()
+    report = tracker.generate_report()
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "admission_rate_score": report.admission_rate_score,
+            "admitted_count":       report.admitted_count,
+            "total_count":          report.total_count,
+            "epochs_in_window":     report.epochs_in_window,
+            "max_epochs":           report.max_epochs,
+            "report_digest":        report.report_digest,
+            "tracker_version":      report.tracker_version,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
