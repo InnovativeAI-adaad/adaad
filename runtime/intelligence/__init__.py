@@ -41,6 +41,13 @@ from runtime.intelligence.file_telemetry_sink import (
     GENESIS_PREV_HASH,
     TELEMETRY_LEDGER_VERSION,
 )
+# Phase 22 — strategy analytics and routing health
+from runtime.intelligence.strategy_analytics import (
+    StrategyAnalyticsEngine,
+    RoutingHealthReport,
+    StrategyWindowStats,
+    StrategyAnalyticsError,
+)
 
 __all__ = [
     "CritiqueModule",
@@ -83,4 +90,9 @@ __all__ = [
     "TelemetryChainError",
     "GENESIS_PREV_HASH",
     "TELEMETRY_LEDGER_VERSION",
+    # Phase 22
+    "StrategyAnalyticsEngine",
+    "RoutingHealthReport",
+    "StrategyWindowStats",
+    "StrategyAnalyticsError",
 ]
