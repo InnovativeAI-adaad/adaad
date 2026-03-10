@@ -1124,5 +1124,159 @@ def governance_threat_scans(
         },
     }
 
+
+
+# ---------------------------------------------------------------------------
+# Phase 31 — Governance Debt Snapshot
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/debt")
+def governance_debt(
+    epoch_id: str = "current",
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return the current GovernanceDebtLedger snapshot. Read-only.
+
+    Reads the last persisted debt snapshot from the evolution loop's ledger
+    (if available) and returns a safe-default snapshot when no epoch data exists.
+
+    Query parameters
+    ----------------
+    epoch_id : str, default "current"
+        Epoch identifier for display; used only when constructing a live snapshot.
+
+    Response fields (data)
+    ----------------------
+    epoch_id                str   — epoch identifier
+    compound_debt_score     float — accumulated weighted warning debt (decayed)
+    breach_threshold        float — threshold at which debt triggers alert (default 3.0)
+    threshold_breached      bool  — True when compound_debt_score >= breach_threshold
+    warning_count           int   — number of warning verdicts in last accumulation
+    warning_weighted_sum    float — sum of weighted warnings in last epoch
+    decayed_prior_debt      float — prior compound debt after decay applied
+    applied_decay_epochs    int   — number of epochs since last accumulation
+    warning_rules           list  — sorted list of rule names that triggered warnings
+    snapshot_hash           str   — sha256 deterministic hash of this snapshot
+    debt_ledger_schema      str   — "1.0"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.debt_ledger import (
+        DEBT_LEDGER_SCHEMA_VERSION,
+        DEFAULT_WARNING_WEIGHTS,
+        GovernanceDebtLedger,
+    )
+
+    # Best-effort: try to get live snapshot from evolution loop state
+    snapshot = None
+    try:
+        from runtime.evolution.evolution_loop import get_current_debt_snapshot  # type: ignore
+        snapshot = get_current_debt_snapshot()
+    except Exception:
+        pass
+
+    if snapshot is None:
+        # Return a safe zero-state snapshot
+        ledger = GovernanceDebtLedger()
+        snapshot = ledger.accumulate_epoch_verdicts(
+            epoch_id=epoch_id,
+            epoch_index=0,
+            warning_verdicts=[],
+            agent_id="governance_debt_endpoint",
+        )
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "epoch_id":             snapshot.epoch_id,
+            "epoch_index":          snapshot.epoch_index,
+            "compound_debt_score":  snapshot.compound_debt_score,
+            "breach_threshold":     snapshot.breach_threshold,
+            "threshold_breached":   snapshot.threshold_breached,
+            "warning_count":        snapshot.warning_count,
+            "warning_weighted_sum": snapshot.warning_weighted_sum,
+            "decayed_prior_debt":   snapshot.decayed_prior_debt,
+            "applied_decay_epochs": snapshot.applied_decay_epochs,
+            "warning_rules":        snapshot.warning_rules,
+            "warning_weights":      snapshot.warning_weights,
+            "snapshot_hash":        snapshot.snapshot_hash,
+            "debt_ledger_schema":   DEBT_LEDGER_SCHEMA_VERSION,
+        },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Phase 31 — Gate Certifier Endpoint
+# ---------------------------------------------------------------------------
+
+@app.post("/governance/certify")
+def governance_certify(
+    request: dict[str, Any],
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Run GateCertifier security scan on a named runtime file. Read-only governance check.
+
+    Request body (JSON)
+    -------------------
+    file_path : str  (required)
+        Relative path to the Python file to certify (e.g. "runtime/governance/gate.py").
+        Must be within the repo root. Absolute paths and path traversal are rejected.
+    metadata : dict  (optional)
+        Arbitrary key-value pairs to attach to the certification result.
+        Sensitive key "cryovant_token" is stripped from the response.
+
+    Response fields (data)
+    ----------------------
+    status          "CERTIFIED" | "REJECTED"
+    passed          bool
+    file            str   — canonicalised relative file path
+    escalation      str   — "advisory" | "warning" | "critical"
+    mutation_blocked bool  — True when canon law marks this violation as mutation-blocking
+    fail_closed     bool  — True when canon law triggers fail-closed policy
+    checks          dict  — per-check booleans (imports, token, ast, auth)
+    hash            str   — sha256 of file content (when accessible)
+    generated_at    str   — ISO timestamp
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from dataclasses import dataclass as _dc
+    from pathlib import Path
+    from runtime.governance.gate_certifier import GateCertifier
+
+    file_path_raw = str(request.get("file_path") or "").strip()
+    if not file_path_raw:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="file_path is required")
+
+    # Safety: reject absolute paths and traversal attempts
+    if file_path_raw.startswith("/") or ".." in file_path_raw:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="file_path must be a relative path within the repo")
+
+    repo_root = Path(__file__).parent
+    target = (repo_root / file_path_raw).resolve()
+
+    # Ensure the resolved path stays within the repo root
+    try:
+        target.relative_to(repo_root.resolve())
+    except ValueError:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail="file_path escapes repo root")
+
+    metadata = dict(request.get("metadata") or {})
+    certifier = GateCertifier()
+    result = certifier.certify(target, metadata)
+
+    # Never expose cryovant_token in response metadata
+    if isinstance(result.get("metadata"), dict):
+        result["metadata"].pop("cryovant_token", None)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": result,
+    }
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
