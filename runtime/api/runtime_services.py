@@ -239,6 +239,19 @@ def governance_health_service(*, epoch_id: str) -> dict[str, Any]:
             "analytics_version": "22.0",
         }
 
+    # Phase 24: compute advisory review pressure from health snapshot
+    from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
+    pressure_adaptor = HealthPressureAdaptor()
+    pressure_adj = pressure_adaptor.compute(snapshot.health_score)
+
+    review_pressure_summary = {
+        "pressure_tier": pressure_adj.pressure_tier,
+        "health_band": pressure_adj.health_band,
+        "adjusted_tiers": list(pressure_adj.adjusted_tiers),
+        "advisory_only": pressure_adj.advisory_only,
+        "adjustment_digest": pressure_adj.adjustment_digest,
+    }
+
     return {
         "epoch_id":                  snapshot.epoch_id,
         "health_score":              snapshot.health_score,
@@ -249,4 +262,5 @@ def governance_health_service(*, epoch_id: str) -> dict[str, Any]:
         "scoring_algorithm_version": snapshot.scoring_algorithm_version,
         "degraded":                  snapshot.degraded,
         "routing_health":            routing_health_summary,  # Phase 23
+        "review_pressure":           review_pressure_summary,  # Phase 24
     }

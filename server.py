@@ -675,5 +675,59 @@ def governance_routing_health(
     }
 
 
+# ---------------------------------------------------------------------------
+# Phase 24 — Review Pressure Endpoint (PR-24-02)
+# ---------------------------------------------------------------------------
+
+@app.get("/governance/review-pressure")
+def governance_review_pressure(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return advisory PressureAdjustment based on current governance health. Read-only.
+
+    Response fields (data)
+    ----------------------
+    health_score          float — current governance composite h ∈ [0.0, 1.0]
+    health_band           "green" | "amber" | "red"
+    pressure_tier         "none" | "elevated" | "critical"
+    proposed_tier_config  dict — tier → {base_count, min_count, max_count}
+    baseline_tier_config  dict — DEFAULT_TIER_CONFIG snapshot
+    adjusted_tiers        list[str] — tiers with raised min_count
+    advisory_only         true (structural invariant)
+    adjustment_digest     sha256-prefixed digest
+    adaptor_version       "24.0"
+    """
+    authn = _require_audit_read_scope(authorization)
+
+    from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
+    from runtime.api.runtime_services import governance_health_service
+
+    # Derive health score from current epoch health (best-effort)
+    try:
+        health_data = governance_health_service(epoch_id="current")
+        h = float(health_data.get("health_score", 1.0))
+    except Exception:
+        h = 1.0  # conservative default
+
+    adaptor = HealthPressureAdaptor()
+    adj = adaptor.compute(h)
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "health_score": adj.health_score,
+            "health_band": adj.health_band,
+            "pressure_tier": adj.pressure_tier,
+            "proposed_tier_config": adj.proposed_tier_config,
+            "baseline_tier_config": adj.baseline_tier_config,
+            "adjusted_tiers": list(adj.adjusted_tiers),
+            "advisory_only": adj.advisory_only,
+            "adjustment_digest": adj.adjustment_digest,
+            "adaptor_version": adj.adaptor_version,
+        },
+    }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
