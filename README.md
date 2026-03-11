@@ -48,13 +48,13 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `6.5.0` |
-| **Phase** | 39 complete (DreamMode determinism · Termux fixes) |
-| **Released** | 2026-03-10 |
+| **Current version** | `6.8.0` |
+| **Phase** | 42 complete (Critical Defect Sweep) |
+| **Released** | 2026-03-11 |
 | **Tests passing** | 846 |
 | **Constitution** | v0.3.0 — 18 rules |
 
-**New in v6.5.0:** Termux Android support hardened — `onboard.py` auto-detects Termux and uses binary-only pip install; `PyNaCl` metadata-generation failure resolved; `@app.on_event` deprecation eliminated (FastAPI lifespan migration); `TERMUX_SETUP.md` added. Phase 39: `DreamMode` provider injection closes the last determinism contract gap.
+**New in v6.8.0:** Phase 42 delivered a critical defect sweep, resolving eight root causes across sandbox, metrics, main-loop compatibility, checkpoint lineage, and determinism helper surfaces. This reduced pre-existing failures by 38 and restored broad test stability.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -318,7 +318,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 ## What's active now
 
-> Current version: **v6.5.0** · Phase 39 complete · 846 tests passing
+> Current version: **v6.8.0** · Phase 42 complete · see CHANGELOG for validation totals
 
 ### Recently shipped (Phases 35–39)
 

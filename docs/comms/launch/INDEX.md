@@ -59,7 +59,7 @@ Day 7+: Newsletter pitches sent
 
 ## Key Facts to Keep Accurate
 
-- Version: `3.1.0-dev`
+- Version: `6.8.0`
 - Phase: 6 (Autonomous Roadmap Self-Amendment)
 - License: MIT
 - Python: 3.11+
