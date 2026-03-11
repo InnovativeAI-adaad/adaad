@@ -491,10 +491,10 @@ class Orchestrator:
             content = doc_path.read_text(encoding="utf-8")
         except Exception:
             return ""
-        match = re.search(r"Framework v([0-9]+\\.[0-9]+\\.[0-9]+)", content)
+        match = re.search(r"Framework v([0-9]+\.[0-9]+\.[0-9]+)", content)
         if match:
             return match.group(1)
-        match = re.search(r"Version\\s*[:]\\s*([0-9]+\\.[0-9]+\\.[0-9]+)", content)
+        match = re.search(r"Version\s*[:]\s*([0-9]+\.[0-9]+\.[0-9]+)", content)
         if match:
             return match.group(1)
         return ""
