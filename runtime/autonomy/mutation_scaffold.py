@@ -418,11 +418,11 @@ def rank_mutation_candidates(
             indexed_scores,
             key=lambda item: (
                 -item[1].score,
-                -item[2],
-                -item[3],
-                item[4],
-                item[1].mutation_id,
-                item[0],
+                item[1].mutation_id,  # stable primary tiebreaker (alphabetical)
+                -item[2],             # novelty signal (secondary)
+                -item[3],             # lineage distance
+                item[4],              # regression risk
+                item[0],              # insertion order
             ),
         )
     ]

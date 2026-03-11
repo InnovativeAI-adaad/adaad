@@ -25,9 +25,12 @@ and *recovery_tier* continue to receive a ``SystemDeterminismProvider``
 (live-clock, non-deterministic) with no change in observable behaviour.
 """
 
+import fcntl
+import hashlib
 import json
 import os
 import shutil
+import threading
 import time
 from datetime import timezone
 from pathlib import Path
@@ -35,8 +38,9 @@ from typing import Dict, List, Optional, Tuple
 
 from adaad.agents.base_agent import promote_offspring
 from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
-from runtime.api.app_layer import MutationCandidate, fitness, metrics
+from runtime.api.app_layer import MutationCandidate, fitness, metrics, rank_mutation_candidates
 from runtime.api.app_layer import get_capabilities, register_capability
+from runtime.manifest.generator import generate_tool_manifest
 from runtime.governance.foundation import (
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
@@ -53,6 +57,23 @@ ELEMENT_ID = "Fire"
 # Mirrors the same constant set used by DreamMode (Phase 39).
 # ---------------------------------------------------------------------------
 _STRICT_TIERS = {"audit", "governance", "critical"}
+
+
+class _BeastCycleKernel:
+    """Thin execution kernel for BeastModeLoop cycle routing.
+
+    Holds a weak reference to the owning loop so that test suites can patch
+    ``beast._kernel.run_cycle`` independently of the public ``run_cycle``
+    routing surface.  This separation enables clean kernel-swap injection
+    without subclassing the full loop.
+    """
+
+    def __init__(self, owner: "BeastModeLoop") -> None:
+        self._owner = owner
+
+    def run_cycle(self, *, agent_id: Optional[str] = None) -> Dict[str, str]:
+        """Delegate directly to the owner's internal execution."""
+        return self._owner._execute_cycle(agent_id=agent_id)
 
 
 class BeastModeLoop:
@@ -123,6 +144,8 @@ class BeastModeLoop:
 
         # Lazy-initialised legacy adapter; see _legacy property below.
         self.__legacy: LegacyBeastModeCompatibilityAdapter | None = None
+        # Kernel shim — routes public run_cycle through a patchable surface.
+        self._kernel: _BeastCycleKernel = _BeastCycleKernel(self)
 
     # ------------------------------------------------------------------
     # Internal clock helper — routes through the injected provider.
@@ -341,6 +364,47 @@ class BeastModeLoop:
         )
 
     def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, str]:
+        """Public entry point — routes through the kernel shim for patchability."""
+        return self._kernel.run_cycle(agent_id=agent_id)
+
+    def _build_mutation_candidate(
+        self, payload: Dict[str, object]
+    ) -> "tuple[MutationCandidate | None, list[str]]":
+        """Build a :class:`MutationCandidate` from a raw mutation payload.
+
+        Returns ``(candidate, [])`` on success or ``(None, [missing_fields])``
+        when required scoring fields are absent.  If ``mutation_id`` is absent,
+        a canonical SHA-256 hash of the payload is used as a stable identifier.
+        """
+        scoring_fields = ("expected_gain", "risk_score", "complexity", "coverage_delta")
+        missing = [f for f in scoring_fields if f not in payload]
+        if missing:
+            return None, missing
+
+        if "mutation_id" in payload:
+            mutation_id = str(payload["mutation_id"])
+        else:
+            canonical = json.dumps(
+                {k: payload[k] for k in sorted(payload)},
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+            mutation_id = "payload-" + hashlib.sha256(canonical).hexdigest()[:12]
+
+        from runtime.api.app_layer import MutationCandidate as _MC  # avoid circular at module level
+        candidate = _MC(
+            mutation_id=mutation_id,
+            expected_gain=float(payload["expected_gain"]),
+            risk_score=float(payload["risk_score"]),
+            complexity=float(payload["complexity"]),
+            coverage_delta=float(payload["coverage_delta"]),
+            strategic_horizon=float(payload.get("strategic_horizon", 1.0)),
+            forecast_roi=float(payload.get("forecast_roi", 0.0)),
+        )
+        return candidate, []
+
+    def _execute_cycle(self, agent_id: Optional[str] = None) -> Dict[str, str]:
+        """Core cycle execution — called by the kernel, overridable by adapters."""
         metrics.log(
             event_type="beast_cycle_start",
             payload={"agent": agent_id},
@@ -497,18 +561,371 @@ class BeastModeLoop:
         return {"status": "promoted", "agent": selected, "score": score, "promoted_path": str(promoted)}
 
 
+
 class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
-    """Compatibility adapter preserving legacy projection input helpers for tests/tools."""
+    """Compatibility adapter preserving legacy projection input helpers for tests/tools.
+
+    Extends :class:`BeastModeLoop` with:
+
+    * **Candidate-based scoring** — promotion decisions use
+      :func:`rank_mutation_candidates` against ``ADAAD_AUTONOMY_THRESHOLD``
+      (default 0.25) rather than the raw fitness score.  When required candidate
+      fields are absent the adapter falls back to the legacy fitness gate and
+      emits a ``beast_autonomy_fallback`` metric.
+
+    * **Monotonic-clock throttling** — cooldown enforcement uses a monotonic
+      clock so wall-clock jumps cannot accidentally release a throttle early.
+      ``_wall_time_provider`` and ``_monotonic_time_provider`` are public
+      callables that tests can replace.
+
+    * **State migration** — old state files that pre-date monotonic fields are
+      migrated transparently on first load.
+
+    * **File-lock serialisation** — ``state_lock_path`` guards concurrent
+      ``_check_limits`` calls; lock-contention events are emitted as
+      ``beast_state_lock_contention`` metrics.
+
+    * **Promotion rollback** — if ``promote_offspring`` raises, the agent
+      certificate is restored from its pre-promotion snapshot and a
+      ``mutation_promotion_rollback`` journal entry is written.
+    """
+
+    _LOCK_CONTENTION_ENV = "ADAAD_BEAST_STATE_LOCK_CONTENTION_SEC"
+    _DEFAULT_LOCK_CONTENTION_SEC = 1.0
+
+    def __init__(self, agents_root: Path, lineage_dir: Path, **kwargs: object) -> None:
+        super().__init__(agents_root, lineage_dir, **kwargs)
+        self.state_lock_path: Path = self.state_path.with_suffix(".lock")
+        self._wall_time_provider = time.time
+        self._monotonic_time_provider = time.monotonic
+        self._autonomy_threshold: float = float(
+            os.getenv("ADAAD_AUTONOMY_THRESHOLD", "0.25")
+        )
+
+    # ------------------------------------------------------------------
+    # Clock helpers
+    # ------------------------------------------------------------------
+
+    def _now_wall(self) -> float:
+        return self._wall_time_provider()
+
+    def _now_mono(self) -> float:
+        return self._monotonic_time_provider()
+
+    # ------------------------------------------------------------------
+    # State management with monotonic fields + migration
+    # ------------------------------------------------------------------
+
+    def _migrate_state(self, state: Dict[str, float]) -> Dict[str, float]:
+        """Migrate pre-monotonic state file to include ``_mono`` fields."""
+        now_wall = self._now_wall()
+        now_mono = self._now_mono()
+        changed = False
+
+        for wall_key, mono_key in (
+            ("cycle_window_start", "cycle_window_start_mono"),
+            ("mutation_window_start", "mutation_window_start_mono"),
+        ):
+            if mono_key not in state:
+                old_wall = float(state.get(wall_key, 0.0))
+                if old_wall > 0.0:
+                    offset = old_wall - now_wall
+                    state[mono_key] = now_mono + offset
+                else:
+                    state[mono_key] = 0.0
+                changed = True
+
+        if "cooldown_until_mono" not in state:
+            old_wall = float(state.get("cooldown_until", 0.0))
+            if old_wall > 0.0:
+                remaining = max(0.0, old_wall - now_wall)
+                state["cooldown_until_mono"] = now_mono + remaining
+            else:
+                state["cooldown_until_mono"] = 0.0
+            changed = True
+
+        if changed:
+            self._save_state(state)
+        return state
+
+    def _check_limits(self) -> Optional[Dict[str, str]]:
+        """Thread-safe limit check using monotonic cooldown and file-lock serialisation."""
+        contention_threshold = float(
+            os.getenv(self._LOCK_CONTENTION_ENV, str(self._DEFAULT_LOCK_CONTENTION_SEC))
+        )
+        self.state_lock_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with self.state_lock_path.open("a+", encoding="utf-8") as lock_file:
+            t_acquire_start = self._now_mono()
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+            wait = self._now_mono() - t_acquire_start
+            if wait >= contention_threshold:
+                metrics.log(
+                    event_type="beast_state_lock_contention",
+                    payload={"wait_sec": wait, "threshold_sec": contention_threshold},
+                    level="WARNING",
+                    element_id=ELEMENT_ID,
+                )
+
+            try:
+                now_mono = self._now_mono()
+                now_wall = self._now_wall()
+                state = self._load_state()
+                state = self._migrate_state(state)
+
+                # Monotonic cooldown check
+                cooldown_mono = float(state.get("cooldown_until_mono", 0.0))
+                if cooldown_mono and now_mono < cooldown_mono:
+                    metrics.log(
+                        event_type="beast_cycle_throttled",
+                        payload={"cooldown_until_mono": cooldown_mono, "now_mono": now_mono},
+                        level="WARNING",
+                        element_id=ELEMENT_ID,
+                    )
+                    return {"status": "throttled", "reason": "cooldown"}
+
+                # Window refresh using monotonic time
+                def _refresh(start_mono_key: str, count_key: str, window_sec: int) -> None:
+                    start = float(state.get(start_mono_key, 0.0))
+                    if start <= 0.0 or now_mono - start >= window_sec:
+                        state[start_mono_key] = now_mono
+                        state[count_key] = 0.0
+
+                _refresh("cycle_window_start_mono", "cycle_count", self.cycle_window_sec)
+                _refresh("mutation_window_start_mono", "mutation_count", self.mutation_window_sec)
+
+                if self.cycle_budget > 0 and float(state.get("cycle_count", 0.0)) >= self.cycle_budget:
+                    cooldown_until_mono = now_mono + self.cooldown_sec
+                    state["cooldown_until_mono"] = cooldown_until_mono
+                    state["cooldown_until"] = now_wall + self.cooldown_sec
+                    self._save_state(state)
+                    metrics.log(
+                        event_type="beast_cycle_budget_exceeded",
+                        payload={
+                            "budget": self.cycle_budget,
+                            "window_sec": self.cycle_window_sec,
+                            "count": state.get("cycle_count", 0.0),
+                        },
+                        level="WARNING",
+                        element_id=ELEMENT_ID,
+                    )
+                    metrics.log(
+                        event_type="beast_cycle_throttled",
+                        payload={"cooldown_until_mono": cooldown_until_mono, "now_mono": now_mono},
+                        level="WARNING",
+                        element_id=ELEMENT_ID,
+                    )
+                    return {"status": "throttled", "reason": "cycle_budget"}
+
+                state["cycle_count"] = float(state.get("cycle_count", 0.0)) + 1.0
+                self._save_state(state)
+                return None
+
+            finally:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+    # ------------------------------------------------------------------
+    # Core cycle — candidate-based scoring with fitness fallback
+    # ------------------------------------------------------------------
+
+    def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, str]:
+        """Candidate-scored cycle with monotonic throttling and promotion rollback."""
+        metrics.log(
+            event_type="beast_cycle_start",
+            payload={"agent": agent_id},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
+
+        throttled = self._check_limits()
+        if throttled:
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload=throttled,
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            return throttled
+
+        agents = self._available_agents()
+        if not agents:
+            result: Dict[str, str] = {"status": "skipped", "reason": "no agents"}
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload=result,
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            return result
+
+        selected = agent_id or agents[0]
+        if not cryovant.validate_ancestry(selected):
+            result = {"status": "blocked", "agent": selected}
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload=result,
+                level="ERROR",
+                element_id=ELEMENT_ID,
+            )
+            return result
+
+        staged_dir, payload = self._latest_staged(selected)
+        if not staged_dir or not payload:
+            result = {"status": "no_staged", "agent": selected}
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload=result,
+                level="INFO",
+                element_id=ELEMENT_ID,
+            )
+            return result
+
+        throttled = self._check_mutation_quota()
+        if throttled:
+            return {"status": "throttled", "agent": selected, "reason": throttled.get("reason")}
+
+        # Build candidate for autonomous scoring
+        candidate, missing_fields = self._build_mutation_candidate(payload)
+
+        if missing_fields:
+            # Fallback: emit telemetry and use raw fitness threshold gate
+            metrics.log(
+                event_type="beast_autonomy_fallback",
+                payload={
+                    "agent": selected,
+                    "staged": str(staged_dir),
+                    "missing_candidate_fields": missing_fields,
+                },
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            decision_score = fitness.score_mutation(selected, payload)
+            score = decision_score
+            gate_threshold = self.threshold
+        else:
+            # Candidate-based scoring against autonomy threshold
+            ranked = rank_mutation_candidates(
+                [candidate], acceptance_threshold=self._autonomy_threshold
+            )
+            decision_score = ranked[0].score if ranked else 0.0
+            score = fitness.score_mutation(selected, payload)
+            gate_threshold = self._autonomy_threshold
+
+        metrics.log(
+            event_type="beast_fitness_scored",
+            payload={
+                "agent": selected,
+                "score": decision_score,
+                "staged": str(staged_dir),
+                "gate": "fitness" if missing_fields else "candidate",
+            },
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
+
+        if decision_score < gate_threshold:
+            self._discard(staged_dir, payload, decision_score)
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload={"status": "discarded", "agent": selected},
+                level="INFO",
+                element_id=ELEMENT_ID,
+            )
+            return {"status": "discarded", "agent": selected, "score": decision_score}
+
+        # Promotion with rollback on failure
+        agent_dir = agent_path_from_id(selected, self.agents_root)
+        cert_path = agent_dir / "certificate.json"
+        cert_snapshot = cert_path.read_text(encoding="utf-8") if cert_path.exists() else None
+
+        cryovant.evolve_certificate(selected, agent_dir, staged_dir, get_capabilities())
+
+        try:
+            promoted = promote_offspring(staged_dir, self.lineage_dir)
+        except Exception:
+            if cert_snapshot is not None:
+                cert_path.write_text(cert_snapshot, encoding="utf-8")
+            journal.write_entry(
+                agent_id=selected,
+                action="mutation_promotion_rollback",
+                payload={"staged": str(staged_dir), "reason": "promote_offspring_failed"},
+            )
+            metrics.log(
+                event_type="mutation_promotion_rollback",
+                payload={"agent": selected, "staged": str(staged_dir)},
+                level="ERROR",
+                element_id=ELEMENT_ID,
+            )
+            raise
+
+        journal.write_entry(
+            agent_id=selected,
+            action="mutation_promoted",
+            payload={"staged": str(staged_dir), "promoted": str(promoted), "score": score},
+        )
+        evidence = {
+            "staged_path": str(staged_dir),
+            "promoted_path": str(promoted),
+            "fitness_score": score,
+            "ledger_tail_refs": journal.read_entries(limit=5),
+        }
+        register_capability(
+            f"agent.{selected}.mutation_quality",
+            version="0.1.0",
+            score=score,
+            owner_element=ELEMENT_ID,
+            requires=["cryovant.gate", "orchestrator.boot"],
+            evidence=evidence,
+            identity=generate_tool_manifest(
+                __name__,
+                f"agent.{selected}.mutation_quality",
+                "0.1.0",
+            ),
+        )
+        metrics.log(
+            event_type="mutation_promoted",
+            payload={"agent": selected, "promoted_path": str(promoted), "score": score},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
+        metrics.log(
+            event_type="beast_cycle_end",
+            payload={"status": "promoted", "agent": selected},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
+        return {"status": "promoted", "agent": selected, "score": score, "promoted_path": str(promoted)}
+
+    # ------------------------------------------------------------------
+    # Candidate builder — with canonical hash fallback for missing mutation_id
+    # ------------------------------------------------------------------
 
     def _build_mutation_candidate(
         self, payload: Dict[str, object]
     ) -> tuple[MutationCandidate | None, list[str]]:
-        required = ("mutation_id", "expected_gain", "risk_score", "complexity", "coverage_delta")
-        missing = [field for field in required if field not in payload]
+        """Build a MutationCandidate from payload.
+
+        If ``mutation_id`` is absent, a canonical SHA-256 payload hash is
+        used as a stable deterministic identifier.  If any *scoring* fields
+        are missing, returns ``(None, [<missing fields>])`` to signal fallback.
+        """
+        scoring_fields = ("expected_gain", "risk_score", "complexity", "coverage_delta")
+        missing = [f for f in scoring_fields if f not in payload]
         if missing:
             return None, missing
+
+        if "mutation_id" in payload:
+            mutation_id = str(payload["mutation_id"])
+        else:
+            canonical = json.dumps(
+                {k: payload[k] for k in sorted(payload)},
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+            mutation_id = "payload-" + hashlib.sha256(canonical).hexdigest()[:12]
+
         candidate = MutationCandidate(
-            mutation_id=str(payload["mutation_id"]),
+            mutation_id=mutation_id,
             expected_gain=float(payload["expected_gain"]),
             risk_score=float(payload["risk_score"]),
             complexity=float(payload["complexity"]),
@@ -517,3 +934,4 @@ class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
             forecast_roi=float(payload.get("forecast_roi", 0.0)),
         )
         return candidate, []
+
