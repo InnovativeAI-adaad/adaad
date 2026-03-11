@@ -2,7 +2,7 @@
 """GovernanceHealthAggregator — ADAAD Phase 8, PR-8-01.
 
 Computes a deterministic composite Governance Health Score ``h ∈ [0.0, 1.0]``
-from four live signals sourced from Phases 5–7:
+using four live signals sourced from Phases 5–7:
 
     Signal                       Weight  Source
     ─────────────────────────────────────────────────────────────────────

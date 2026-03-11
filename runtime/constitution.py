@@ -1851,7 +1851,7 @@ def _load_policy_document(path: Path) -> tuple[Mapping[str, Any], str]:
 def _validate_policy_schema(policy: Mapping[str, Any], expected_version: str) -> None:
     version = policy.get("version")
     if version != expected_version:
-        raise ValueError(f"constitution_version_mismatch:{version}!={expected_version}")
+        raise ValueError(f"constitution_policy_invalid_schema:version_mismatch:{version}!={expected_version}")
 
     tiers = policy.get("tiers")
     if not isinstance(tiers, dict) or not tiers:

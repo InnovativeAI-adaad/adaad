@@ -9,6 +9,7 @@ from typing import Any, Dict
 from contextlib import asynccontextmanager
 
 from fastapi import Body, FastAPI, Header, HTTPException, Query, Request
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -1974,6 +1975,150 @@ def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
         "links":          links,
     }
 
+
+
+
+# ── Simulation Endpoints (ADAAD-8 / PR-12) ─────────────────────────────────
+# POST /simulation/run      — evaluate DSL against epoch data, no ledger writes
+# GET  /simulation/results/{run_id} — retrieve simulation-only result envelope
+#
+# Constitutional invariants:
+#   - Both routes require audit:read bearer token (fail-closed on missing/invalid)
+#   - simulation=true MUST be present in every response payload
+#   - Zero ledger writes — read-only simulation lane
+#   - Invalid DSL returns HTTP 422 (deterministic schema validation)
+# ────────────────────────────────────────────────────────────────────────────
+
+import hashlib as _hashlib
+import time as _time
+import uuid as _uuid
+
+_SIMULATION_STORE: "dict[str, Any]" = {}
+
+
+def _parse_simulation_dsl(dsl_text: str) -> list[dict[str, Any]]:
+    """Parse a simulation DSL string into a list of constraint dicts.
+
+    Supported constraints (one per line):
+      max_risk_score(threshold=<float>)
+      max_mutations_per_epoch(count=<int>)
+
+    Raises HTTPException(422) on unknown or malformed constraints.
+    """
+    import re as _re
+    constraints: list[dict[str, Any]] = []
+    for raw_line in dsl_text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        m = _re.match(r"^(\w+)\((.*)\)$", line)
+        if not m:
+            raise HTTPException(status_code=422, detail=f"simulation_dsl_syntax_error:{line!r}")
+        fn_name, raw_args = m.group(1), m.group(2)
+        if fn_name not in ("max_risk_score", "max_mutations_per_epoch"):
+            raise HTTPException(status_code=422, detail=f"simulation_dsl_unknown_constraint:{fn_name}")
+        kv: dict[str, Any] = {}
+        for part in raw_args.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if "=" not in part:
+                raise HTTPException(status_code=422, detail=f"simulation_dsl_bad_arg:{part!r}")
+            k, _, v = part.partition("=")
+            kv[k.strip()] = v.strip()
+        constraints.append({"fn": fn_name, "args": kv})
+    return constraints
+
+
+def _evaluate_simulation(
+    dsl_text: str,
+    epoch_ids: list[str],
+    epoch_data_map: "dict[str, Any] | None",
+) -> dict[str, Any]:
+    """Run simulation evaluation — deterministic, no side-effects."""
+    constraints = _parse_simulation_dsl(dsl_text)
+    epochs_evaluated: list[str] = []
+    violations: list[str] = []
+
+    for epoch_id in epoch_ids:
+        epoch = (epoch_data_map or {}).get(epoch_id, {})
+        mutations = epoch.get("mutations", [])
+
+        for constraint in constraints:
+            fn = constraint["fn"]
+            args = constraint["args"]
+            if fn == "max_risk_score":
+                threshold = float(args.get("threshold", 1.0))
+                for mut in mutations:
+                    risk = float(mut.get("risk_score", 0.0))
+                    if risk > threshold:
+                        violations.append(
+                            f"{epoch_id}:{fn}:risk_score={risk}>threshold={threshold}"
+                        )
+            elif fn == "max_mutations_per_epoch":
+                count = int(args.get("count", 999))
+                actual = len(mutations)
+                if actual > count:
+                    violations.append(
+                        f"{epoch_id}:{fn}:count={actual}>max={count}"
+                    )
+
+        epochs_evaluated.append(epoch_id)
+
+    return {
+        "simulation": True,
+        "epoch_count": len(epochs_evaluated),
+        "epochs_evaluated": epochs_evaluated,
+        "constraint_count": len(constraints),
+        "violations": violations,
+        "passed": len(violations) == 0,
+    }
+
+
+class _SimulationRunRequest(BaseModel):
+    dsl_text: str = ""
+    epoch_ids: list[str] = []
+    epoch_data_map: "dict[str, Any] | None" = None
+
+
+@app.post("/simulation/run")
+async def simulation_run(
+    body: _SimulationRunRequest,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """POST /simulation/run — simulate governance evaluation, no ledger writes."""
+    _require_audit_read_scope(authorization)
+    run_id = str(_uuid.uuid4())
+    result = _evaluate_simulation(body.dsl_text, body.epoch_ids, body.epoch_data_map)
+    envelope: dict[str, Any] = {
+        "simulation": True,
+        "run_id": run_id,
+        "ts": _time.time(),
+        "simulation_only_notice": "This is a simulation run. No ledger entries were written.",
+        "result": result,
+    }
+    _SIMULATION_STORE[run_id] = envelope
+    return {"ok": True, "simulation": True, "data": envelope}
+
+
+@app.get("/simulation/results/{run_id}")
+async def simulation_results(
+    run_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """GET /simulation/results/{run_id} — retrieve simulation result by run ID."""
+    _require_audit_read_scope(authorization)
+    envelope = _SIMULATION_STORE.get(run_id)
+    if envelope is None:
+        # Return a deterministic not-found envelope (still simulation=True)
+        envelope = {
+            "simulation": True,
+            "run_id": run_id,
+            "ts": _time.time(),
+            "simulation_only_notice": "Simulation result not found or expired.",
+            "result": None,
+        }
+    return {"ok": True, "simulation": True, "data": envelope}
 
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

@@ -3,7 +3,7 @@
 """AST-guided import boundary fixer.
 
 In ``--mode auto`` this tool will only apply a fix when it can safely move an
-import into a single consuming function/method. Otherwise it records a manual
+move into a single consuming function/method. Otherwise it records a manual
 suggestion and leaves source unchanged.
 """
 
