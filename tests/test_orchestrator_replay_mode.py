@@ -7,9 +7,27 @@ import os
 import unittest
 from unittest import mock
 
-from app.main import Orchestrator, _apply_governance_ci_mode_defaults, _governance_ci_mode_enabled, main
+from app.main import (
+    Orchestrator,
+    _apply_governance_ci_mode_defaults,
+    _governance_ci_mode_enabled,
+    _read_adaad_version,
+    main,
+)
 from runtime.evolution.checkpoint_verifier import CheckpointVerificationError
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode, parse_replay_args
+
+
+class ADAADVersionReadTest(unittest.TestCase):
+    def test_returns_unknown_when_version_read_fails_decode(self) -> None:
+        with mock.patch("pathlib.Path.read_text", side_effect=UnicodeDecodeError("utf-8", b"\x80", 0, 1, "invalid start byte")):
+            self.assertEqual(_read_adaad_version(), "unknown")
+
+    def test_returns_unknown_when_read_text_result_cannot_be_stripped(self) -> None:
+        with mock.patch("pathlib.Path.read_text", return_value=None):
+            self.assertEqual(_read_adaad_version(), "unknown")
+
+
 
 
 class ReplayModeNormalizationTest(unittest.TestCase):
