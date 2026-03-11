@@ -120,6 +120,37 @@ def test_same_seed_produces_identical_crossover_children() -> None:
     assert child_one.coverage_delta == child_two.coverage_delta
 
 
+
+
+def test_default_construction_is_deterministic_for_same_inputs() -> None:
+    candidates = [
+        _candidate("base-a", gain=0.95, risk=0.05, complexity=0.1, coverage=0.6),
+        _candidate("base-b", gain=0.75, risk=0.15, complexity=0.2, coverage=0.5),
+        _candidate("base-c", gain=0.55, risk=0.25, complexity=0.3, coverage=0.4),
+        _candidate("base-d", gain=0.35, risk=0.35, complexity=0.4, coverage=0.3),
+    ]
+
+    manager_one = PopulationManager()
+    manager_one.set_weights(ScoringWeights())
+    manager_one.seed(candidates)
+
+    manager_two = PopulationManager()
+    manager_two.set_weights(ScoringWeights())
+    manager_two.seed(candidates)
+
+    scores_one = manager_one.evolve_generation()
+    scores_two = manager_two.evolve_generation()
+
+    assert [s.mutation_id for s in scores_one] == [s.mutation_id for s in scores_two]
+    assert [c.mutation_id for c in manager_one.population] == [c.mutation_id for c in manager_two.population]
+    assert [
+        (c.expected_gain, c.risk_score, c.complexity, c.coverage_delta)
+        for c in manager_one.population
+    ] == [
+        (c.expected_gain, c.risk_score, c.complexity, c.coverage_delta)
+        for c in manager_two.population
+    ]
+
 def test_seeded_rng_and_set_seed_match_repeated_runs(manager) -> None:
     candidates = [
         _candidate("base-a", gain=0.95, risk=0.05, complexity=0.1, coverage=0.6),
@@ -149,3 +180,15 @@ def test_seeded_rng_and_set_seed_match_repeated_runs(manager) -> None:
         (c.expected_gain, c.risk_score, c.complexity, c.coverage_delta)
         for c in manager_two.population
     ]
+
+
+def test_caller_owned_rng_is_used_without_replacement() -> None:
+    rng = random.Random(77)
+    manager = PopulationManager(rng)
+
+    expected_first = random.Random(77).random()
+    assert manager._rng.random() == expected_first
+
+    manager.set_seed(100)
+    expected_after_set_seed = random.Random(100).random()
+    assert manager._rng.random() == expected_after_set_seed
