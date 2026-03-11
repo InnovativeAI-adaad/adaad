@@ -92,10 +92,14 @@ def _get_orchestrator_logger() -> logging.Logger:
 
 
 def _read_adaad_version() -> str:
-    """Read VERSION file from project root. Never raises."""
+    """Read VERSION file from project root.
+
+    Returns ``"unknown"`` for any read/decode/parsing failure to preserve
+    deterministic boot behavior.
+    """
     try:
         return (APP_ROOT.parent / "VERSION").read_text(encoding="utf-8").strip()
-    except OSError:
+    except Exception:
         return "unknown"
 
 
