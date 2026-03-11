@@ -12,7 +12,7 @@ This document cross-references `README.md` operational claims with concrete impl
 | Report version | `3.6.0` |
 | Branch | `work` |
 | Tag | `(none)` |
-| Short SHA | `2c6b54c` |
+| Short SHA | `578df2a` |
 
 All future architecture snapshots MUST include branch, tag (if any), and short SHA.
 <!-- ARCH_SNAPSHOT_METADATA:END -->

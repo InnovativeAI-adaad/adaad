@@ -386,7 +386,11 @@ class TestContextFilterChainCompat:
     def test_private_key_pattern_reason_contains_private_key(self):
         from runtime.memory.context_filter_chain import ContextFilterChain
         chain = ContextFilterChain()
-        payload = {"epoch_id": "epoch-042", "context_hash": "abc123", "secret_key": "sk-abc123def456ghi789jkl000mno111"}
+        payload = {
+            "epoch_id": "epoch-042",
+            "context_hash": "abc123",
+            "secret_key": "sk-abc123def456ghi789jkl000mno111",
+        }
         result = chain.evaluate(payload=payload, context_type="mutation_proposal")
         assert result.accepted is False
         assert "private_key" in (result.rejection_reason or "")
