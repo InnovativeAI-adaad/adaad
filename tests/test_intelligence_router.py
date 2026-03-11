@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.critique import CRITIQUE_DIMENSIONS, CritiqueModule, CritiqueResult
 from runtime.intelligence.proposal import Proposal

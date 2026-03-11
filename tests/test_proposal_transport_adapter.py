@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from typing import Any, Dict, List
 from unittest.mock import MagicMock, call
 

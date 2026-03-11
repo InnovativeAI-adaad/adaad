@@ -2,6 +2,7 @@
 """Phase 17 — IntelligenceRouter strategy_id wire tests (10 tests, T17-01-01..10)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.critique import CritiqueModule, CritiqueResult, CRITIQUE_DIMENSIONS
 from runtime.intelligence.proposal import Proposal

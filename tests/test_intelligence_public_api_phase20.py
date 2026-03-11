@@ -6,6 +6,7 @@ They import exclusively via `from runtime.intelligence import X` — the public 
 """
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 # ---------------------------------------------------------------------------
 # T20-01-01  STRATEGY_TAXONOMY importable from runtime.intelligence

@@ -4,6 +4,7 @@ import hashlib
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from adaad.agents.mutation_request import MutationRequest
 from runtime import constitution

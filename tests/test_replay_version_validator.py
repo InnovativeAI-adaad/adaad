@@ -7,6 +7,7 @@ import json
 from unittest import mock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.replay import ReplayEngine, ReplayVersionValidator
 

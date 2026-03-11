@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.mutation_lifecycle import (
     LifecycleTransitionError,

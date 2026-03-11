@@ -37,6 +37,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.health_aggregator import (
     SIGNAL_WEIGHTS,

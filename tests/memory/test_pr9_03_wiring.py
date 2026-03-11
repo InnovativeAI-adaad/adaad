@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.ai_mutation_proposer import CodebaseContext
 from runtime.memory.context_replay_interface import ContextReplayInterface, ReplayInjection

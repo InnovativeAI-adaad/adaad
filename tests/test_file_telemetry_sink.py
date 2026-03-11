@@ -18,6 +18,7 @@ import hashlib
 import json
 import os
 import pytest
+pytestmark = pytest.mark.regression_standard
 from pathlib import Path
 
 from runtime.intelligence.file_telemetry_sink import (

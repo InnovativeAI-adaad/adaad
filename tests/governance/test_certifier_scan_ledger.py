@@ -56,6 +56,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.certifier_scan_ledger import (
     CERTIFIER_SCAN_LEDGER_GENESIS_PREV_HASH,

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.checkpoint_chain import (
     CHAIN_VERSION,

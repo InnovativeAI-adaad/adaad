@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 

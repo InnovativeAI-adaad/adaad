@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pytest
+pytestmark = pytest.mark.regression_standard
 from runtime.market.feed_registry import FeedRegistry, MarketSignalReading, SIGNAL_DEMAND, SIGNAL_RESOURCE, SIGNAL_VOLATILITY
 from runtime.market.adapters.live_adapters import VolatilityIndexAdapter, ResourcePriceAdapter, DemandSignalAdapter
 

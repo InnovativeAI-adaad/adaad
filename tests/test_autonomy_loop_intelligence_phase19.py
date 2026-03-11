@@ -3,6 +3,7 @@
 (12 tests, T19-01-01..12)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.loop import AutonomyLoopResult, run_self_check_loop
 from runtime.intelligence.strategy import STRATEGY_TAXONOMY

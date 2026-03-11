@@ -16,6 +16,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.memory.context_replay_interface import ContextReplayInterface
 from runtime.memory.soulbound_ledger import SoulboundLedger

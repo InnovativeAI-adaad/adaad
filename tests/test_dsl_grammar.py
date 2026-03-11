@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.simulation.dsl_grammar import (
     DSL_GRAMMAR_VERSION,

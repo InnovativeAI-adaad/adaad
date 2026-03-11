@@ -14,6 +14,7 @@ Coverage:
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch, call

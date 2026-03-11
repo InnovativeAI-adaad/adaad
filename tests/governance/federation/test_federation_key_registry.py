@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.federation.key_registry import get_trusted_public_key, load_trusted_key_registry
 from runtime.governance.federation.transport import FederationTransportContractError

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.planning import PlanStepVerifier, StrategyPlanner
 from runtime.intelligence.strategy import StrategyInput

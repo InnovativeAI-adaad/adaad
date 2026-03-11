@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import pytest
+pytestmark = pytest.mark.regression_standard
 from unittest.mock import patch
 
 from runtime.autonomy.ai_mutation_proposer import CodebaseContext

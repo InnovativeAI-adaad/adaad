@@ -15,6 +15,7 @@ Coverage:
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.mutation_scaffold import MutationCandidate, MutationScore, score_candidate
 from runtime.evolution.scoring_algorithm import (

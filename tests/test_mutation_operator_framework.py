@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.mutation_scaffold import MutationCandidate, rank_candidates_via_registry
 from runtime.evolution.mutation_operator_framework import (

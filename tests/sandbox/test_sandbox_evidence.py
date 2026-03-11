@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.regression_standard
 # SPDX-License-Identifier: Apache-2.0
 
 from runtime.sandbox.evidence import SandboxEvidenceLedger, build_sandbox_evidence

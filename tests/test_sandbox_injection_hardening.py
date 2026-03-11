@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from runtime.sandbox.preflight import _validate_command_token, analyze_execution_plan
 from runtime.sandbox.manifest import SandboxManifest
 from runtime.sandbox.policy import SandboxPolicy

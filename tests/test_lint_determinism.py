@@ -5,6 +5,7 @@ from pathlib import Path
 import ast
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from tools import lint_determinism
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 
 def test_T8_03_01_constitution_version_is_0_4_0():

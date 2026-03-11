@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.evolution.event_signing import EventSigner, HMACKeyringVerifier, SignatureBundle
 from runtime.governance.mutation_ledger import LedgerEntry, MutationLedger

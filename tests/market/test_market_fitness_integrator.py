@@ -2,6 +2,7 @@
 """Tests for MarketFitnessIntegrator — ADAAD-10 PR-10-02."""
 from __future__ import annotations
 import pytest
+pytestmark = pytest.mark.regression_standard
 from runtime.market.feed_registry import FeedRegistry
 from runtime.market.adapters.live_adapters import DemandSignalAdapter, VolatilityIndexAdapter
 from runtime.market.market_fitness_integrator import MarketFitnessIntegrator

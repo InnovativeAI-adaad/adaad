@@ -20,6 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.simulation.dsl_grammar import (
     ConstraintExpression,

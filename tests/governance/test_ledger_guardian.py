@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 from runtime.recovery.ledger_guardian import AutoRecoveryHook, SnapshotManager

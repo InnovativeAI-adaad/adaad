@@ -12,6 +12,8 @@ Verifies:
 """
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional

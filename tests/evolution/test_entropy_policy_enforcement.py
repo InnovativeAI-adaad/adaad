@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.entropy_policy import (
     ENTROPY_REASON_TAXONOMY,

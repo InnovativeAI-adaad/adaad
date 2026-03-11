@@ -2,6 +2,7 @@
 from __future__ import annotations
 import ast
 import pytest
+pytestmark = pytest.mark.regression_standard
 from runtime.evolution.semantic_diff import (
     SemanticDiffEngine, ASTMetrics, enrich_code_diff_with_semantic,
     ALGORITHM_VERSION, _max_ast_depth, _cyclomatic_complexity, _clamp01,
