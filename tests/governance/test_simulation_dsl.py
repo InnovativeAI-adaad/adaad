@@ -69,11 +69,20 @@ class TestParseConstraintAllTypes:
         assert expr.kwargs["tier"] == "PRODUCTION"
         assert "reason" in expr.kwargs
 
+    def test_freeze_tier_without_reason(self):
+        expr = parse_constraint("freeze_tier(tier=STAGING)")
+        assert expr.constraint_type == ConstraintType.FREEZE_TIER
+        assert expr.kwargs["tier"] == "STAGING"
+
     def test_require_rule(self):
         expr = parse_constraint("require_rule(rule_id=lineage_continuity, severity=BLOCKING)")
         assert expr.constraint_type == ConstraintType.REQUIRE_RULE
         assert expr.kwargs["rule_id"] == "lineage_continuity"
         assert expr.kwargs["severity"] == "BLOCKING"
+
+    def test_require_rule_default_severity(self):
+        expr = parse_constraint("require_rule(rule_id=lineage_continuity)")
+        assert expr.constraint_type == ConstraintType.REQUIRE_RULE
 
     def test_min_test_coverage(self):
         expr = parse_constraint("min_test_coverage(threshold=0.80)")
@@ -132,9 +141,18 @@ class TestParseConstraintErrors:
         with pytest.raises(SimulationDSLError):
             parse_constraint("max_risk_score(threshold=not_a_number)")
 
+    def test_non_numeric_count_raises(self):
+        with pytest.raises(SimulationDSLError):
+            parse_constraint("require_approvals(tier=PRODUCTION, count=abc)")
+
     def test_invalid_severity_raises(self):
         with pytest.raises(SimulationDSLError):
             parse_constraint("require_rule(rule_id=foo, severity=FATAL)")
+
+    def test_error_carries_token(self):
+        with pytest.raises(SimulationDSLError) as exc_info:
+            parse_constraint("bad_constraint(x=1)")
+        assert exc_info.value.token
 
 
 # ---------------------------------------------------------------------------
@@ -176,6 +194,40 @@ class TestParsePolicyBlock:
     def test_grammar_version_in_each_expression(self):
         exprs = parse_policy_block("max_risk_score(threshold=0.5)")
         assert exprs[0].grammar_version == DSL_GRAMMAR_VERSION
+
+    def test_blank_lines_skipped(self):
+        exprs = parse_policy_block("\n\n\nmax_risk_score(threshold=0.5)\n\n")
+        assert len(exprs) == 1
+
+    def test_all_ten_constraint_types_parse(self):
+        block = """
+        require_approvals(tier=PRODUCTION, count=3)
+        max_risk_score(threshold=0.4)
+        max_mutations_per_epoch(count=10)
+        max_complexity_delta(delta=0.15)
+        freeze_tier(tier=PRODUCTION, reason=audit)
+        require_rule(rule_id=lineage_continuity, severity=BLOCKING)
+        min_test_coverage(threshold=0.80)
+        max_entropy_per_epoch(ceiling=0.30)
+        escalate_reviewers_on_risk(threshold=0.6, count=2)
+        require_lineage_depth(min=3)
+        """
+        exprs = parse_policy_block(block)
+        assert len(exprs) == 10
+        types = [e.constraint_type for e in exprs]
+        for ct in ConstraintType:
+            assert ct in types
+
+
+class TestGrammarVersion:
+    def test_grammar_version_in_expression(self):
+        expr = parse_constraint("max_risk_score(threshold=0.5)")
+        assert expr.grammar_version == DSL_GRAMMAR_VERSION
+
+    def test_raw_expression_preserved(self):
+        raw = "max_risk_score(threshold=0.5)"
+        expr = parse_constraint(raw)
+        assert raw in expr.raw_expression
 
 
 # ---------------------------------------------------------------------------
