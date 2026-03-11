@@ -1,3 +1,25 @@
+## [6.9.1] — 2026-03-11
+
+### Phase 43 Hardening — Thread-Safety + AST Import Validation
+
+Two post-audit advisories resolved:
+
+#### Advisory 1 — `_SIMULATION_STORE` thread-safety (`server.py`)
+- Added `import threading as _threading` and `_SIMULATION_STORE_LOCK: threading.Lock`
+- All reads and writes to `_SIMULATION_STORE` wrapped with `with _SIMULATION_STORE_LOCK:`
+- Added inline documentation: under multi-worker uvicorn deployments each process holds an independent store; for cross-worker lookup, replace with a shared persistence layer (Redis, sqlite)
+
+#### Advisory 2 — AST-based import validation (`tests/test_import_roots.py`)
+- Replaced regex scanning with `ast.parse()` + `ast.walk()` over `Import` / `ImportFrom` nodes
+- Eliminated the entire class of false positives from docstrings, comments, and string literals containing `from ` / `import `
+- Import nodes inside `Try` blocks are now skipped (optional best-effort dependencies guarded by `except` clauses)
+- Added `APPROVED_OPTIONAL_EXTERNALS` set: explicitly acknowledged optional third-party packages (`jsonschema`) used under `try/except` guards in `tools/interactive_onboarding.py` and `runtime/governance/simulation/profile_exporter.py`
+- Removed unused `import re` (no longer needed)
+- Failure output now sorted for deterministic CI diffs
+
+#### Tests
+- All 49 previously targeted tests: **49/49 passed**
+
 ## [6.9.0] — 2026-03-11
 
 ### Phase 43 — Governance Inviolability + Simulation Endpoints + Import-Root Enforcement
