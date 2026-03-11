@@ -1,3 +1,34 @@
+## [6.6.0] — 2026-03-10 · Phase 40 — BeastModeLoop Determinism Provider Injection
+
+### What shipped
+
+**Phase 40 — BeastModeLoop `RuntimeDeterminismProvider` injection**
+
+`app/beast_mode_loop.py` — `BeastModeLoop.__init__()` now accepts three new
+keyword-only parameters: `provider` (`RuntimeDeterminismProvider`),
+`replay_mode` (`"off"` | `"strict"`), and `recovery_tier` (governance tier string).
+
+All `time.time()` calls inside `_check_limits()` and `_check_mutation_quota()` are
+replaced with `self._now()` which delegates to `provider.now_utc()`.  This makes
+every throttle timestamp and cooldown calculation fully replay-safe and
+audit-verifiable.
+
+**Constitutional invariants:**
+
+- `require_replay_safe_provider()` called at construction — strict replay and
+  governance-critical tiers (`audit`, `governance`, `critical`) reject
+  `SystemDeterminismProvider` fail-closed before any cycle executes.
+- Auto-provisioning: strict/audit tiers with no explicit provider receive a
+  `SeededDeterminismProvider` seeded from `ADAAD_DETERMINISTIC_SEED`.
+- Backward-compatibility: callers that omit all three kwargs receive
+  `SystemDeterminismProvider` with identical observable behaviour.
+- `LegacyBeastModeCompatibilityAdapter` inherits injection via `super().__init__()`.
+
+**Tests: `tests/determinism/test_beast_mode_provider_determinism.py`**
+14 tests (T40-B01 .. T40-B12 with parametrize) — **14/14 green (100%)**
+
+---
+
 ## [6.5.2] — 2026-03-11
 
 ### fix(server): nexus_health gate_ok field missing — UI always locked

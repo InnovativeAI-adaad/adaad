@@ -13,12 +13,23 @@
 
 """
 Beast mode evaluates mutations and promotes approved staged candidates.
+
+Phase 40: RuntimeDeterminismProvider injection — all clock calls are now
+routed through the injected provider, making BeastModeLoop fully replay-safe
+and audit-verifiable.  Strict replay and governance-critical tiers reject
+non-deterministic providers at construction time via
+``require_replay_safe_provider()``.
+
+Backward-compatibility: existing callers that omit *provider*, *replay_mode*,
+and *recovery_tier* continue to receive a ``SystemDeterminismProvider``
+(live-clock, non-deterministic) with no change in observable behaviour.
 """
 
 import json
 import os
 import shutil
 import time
+from datetime import timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -26,18 +37,80 @@ from adaad.agents.base_agent import promote_offspring
 from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.app_layer import MutationCandidate, fitness, metrics
 from runtime.api.app_layer import get_capabilities, register_capability
+from runtime.governance.foundation import (
+    RuntimeDeterminismProvider,
+    SeededDeterminismProvider,
+    SystemDeterminismProvider,
+)
+from runtime.governance.foundation.determinism import require_replay_safe_provider
 from security import cryovant
 from security.ledger import journal
 
 ELEMENT_ID = "Fire"
 
+# ---------------------------------------------------------------------------
+# Governance / audit tiers that mandate a deterministic provider.
+# Mirrors the same constant set used by DreamMode (Phase 39).
+# ---------------------------------------------------------------------------
+_STRICT_TIERS = {"audit", "governance", "critical"}
+
 
 class BeastModeLoop:
     """
     Executes evaluation cycles against mutated offspring.
+
+    Parameters
+    ----------
+    agents_root
+        Root directory containing per-agent subdirectories.
+    lineage_dir
+        Directory used by the lineage ledger.
+    replay_mode
+        One of ``"off"``, ``"strict"``.  ``"strict"`` requires a deterministic
+        provider and produces bit-identical window timestamps across replays.
+    recovery_tier
+        Governance recovery tier string.  ``"audit"``, ``"governance"``, and
+        ``"critical"`` require a deterministic provider.
+    provider
+        :class:`~runtime.governance.foundation.RuntimeDeterminismProvider`
+        instance.  Defaults to :class:`SystemDeterminismProvider`.
+        Strict replay and audit tiers reject non-deterministic providers at
+        construction time.
     """
 
-    def __init__(self, agents_root: Path, lineage_dir: Path):
+    def __init__(
+        self,
+        agents_root: Path,
+        lineage_dir: Path,
+        *,
+        replay_mode: str = "off",
+        recovery_tier: str | None = None,
+        provider: RuntimeDeterminismProvider | None = None,
+    ) -> None:
+        # --- Phase 40: provider injection -----------------------------------
+        self._provider: RuntimeDeterminismProvider = (
+            provider
+            if provider is not None
+            else (
+                SeededDeterminismProvider(
+                    seed=os.getenv("ADAAD_DETERMINISTIC_SEED", "adaad")
+                )
+                if (replay_mode or "off").strip().lower() == "strict"
+                or (recovery_tier or "").strip().lower() in _STRICT_TIERS
+                else SystemDeterminismProvider()
+            )
+        )
+        self._replay_mode = (replay_mode or "off").strip().lower()
+        self._recovery_tier = (recovery_tier or "").strip().lower()
+
+        # Fail-closed guard — raises RuntimeError for invalid combinations.
+        require_replay_safe_provider(
+            self._provider,
+            replay_mode=self._replay_mode,
+            recovery_tier=self._recovery_tier if self._recovery_tier else None,
+        )
+        # --------------------------------------------------------------------
+
         self.agents_root = agents_root
         self.lineage_dir = lineage_dir
         self.threshold = float(os.getenv("ADAAD_FITNESS_THRESHOLD", "0.70"))
@@ -47,6 +120,22 @@ class BeastModeLoop:
         self.mutation_window_sec = int(os.getenv("ADAAD_BEAST_MUTATION_WINDOW_SEC", "3600"))
         self.cooldown_sec = int(os.getenv("ADAAD_BEAST_COOLDOWN_SEC", "300"))
         self.state_path = self.agents_root.parent / "data" / "beast_mode_state.json"
+
+    # ------------------------------------------------------------------
+    # Internal clock helper — routes through the injected provider.
+    # ------------------------------------------------------------------
+
+    def _now(self) -> float:
+        """Return current POSIX timestamp via the injected provider.
+
+        Uses ``provider.now_utc()`` so that strict/audit replay produces
+        bit-identical timestamps from a ``SeededDeterminismProvider``.
+        """
+        return self._provider.now_utc().replace(tzinfo=timezone.utc).timestamp()
+
+    # ------------------------------------------------------------------
+    # State persistence helpers (unchanged logic, clock via _now())
+    # ------------------------------------------------------------------
 
     def _load_state(self) -> Dict[str, float]:
         if not self.state_path.exists():
@@ -72,20 +161,34 @@ class BeastModeLoop:
         self.state_path.parent.mkdir(parents=True, exist_ok=True)
         self.state_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
 
-    def _refresh_window(self, start_key: str, count_key: str, window_sec: int, now: float, state: Dict[str, float]) -> None:
+    def _refresh_window(
+        self,
+        start_key: str,
+        count_key: str,
+        window_sec: int,
+        now: float,
+        state: Dict[str, float],
+    ) -> None:
         window_start = float(state.get(start_key, 0.0))
         if window_start <= 0.0 or now - window_start >= window_sec:
             state[start_key] = now
             state[count_key] = 0.0
 
-    def _throttle(self, reason: str, payload: Dict[str, float], state: Dict[str, float]) -> Dict[str, str]:
+    def _throttle(
+        self, reason: str, payload: Dict[str, float], state: Dict[str, float]
+    ) -> Dict[str, str]:
         state["cooldown_until"] = payload["cooldown_until"]
         self._save_state(state)
-        metrics.log(event_type="beast_cycle_throttled", payload=payload, level="WARNING", element_id=ELEMENT_ID)
+        metrics.log(
+            event_type="beast_cycle_throttled",
+            payload=payload,
+            level="WARNING",
+            element_id=ELEMENT_ID,
+        )
         return {"status": "throttled", "reason": reason}
 
     def _check_limits(self) -> Optional[Dict[str, str]]:
-        now = time.time()
+        now = self._now()  # Phase 40: provider-backed clock
         state = self._load_state()
         cooldown_until = float(state.get("cooldown_until", 0.0))
         if cooldown_until and now < cooldown_until:
@@ -93,19 +196,30 @@ class BeastModeLoop:
             return self._throttle("cooldown", payload, state)
 
         self._refresh_window("cycle_window_start", "cycle_count", self.cycle_window_sec, now, state)
-        self._refresh_window("mutation_window_start", "mutation_count", self.mutation_window_sec, now, state)
+        self._refresh_window(
+            "mutation_window_start", "mutation_count", self.mutation_window_sec, now, state
+        )
 
         if self.cycle_budget > 0 and float(state.get("cycle_count", 0.0)) >= self.cycle_budget:
             cooldown_until = now + self.cooldown_sec
             metrics.log(
                 event_type="beast_cycle_budget_exceeded",
-                payload={"budget": self.cycle_budget, "window_sec": self.cycle_window_sec, "count": state.get("cycle_count", 0.0)},
+                payload={
+                    "budget": self.cycle_budget,
+                    "window_sec": self.cycle_window_sec,
+                    "count": state.get("cycle_count", 0.0),
+                },
                 level="WARNING",
                 element_id=ELEMENT_ID,
             )
             return self._throttle(
                 "cycle_budget",
-                {"cooldown_until": cooldown_until, "now": now, "limit": self.cycle_budget, "count": state.get("cycle_count", 0.0)},
+                {
+                    "cooldown_until": cooldown_until,
+                    "now": now,
+                    "limit": self.cycle_budget,
+                    "count": state.get("cycle_count", 0.0),
+                },
                 state,
             )
 
@@ -114,21 +228,32 @@ class BeastModeLoop:
         return None
 
     def _check_mutation_quota(self) -> Optional[Dict[str, str]]:
-        now = time.time()
+        now = self._now()  # Phase 40: provider-backed clock
         state = self._load_state()
-        self._refresh_window("mutation_window_start", "mutation_count", self.mutation_window_sec, now, state)
+        self._refresh_window(
+            "mutation_window_start", "mutation_count", self.mutation_window_sec, now, state
+        )
 
         if self.mutation_quota > 0 and float(state.get("mutation_count", 0.0)) >= self.mutation_quota:
             cooldown_until = now + self.cooldown_sec
             metrics.log(
                 event_type="beast_mutation_quota_exceeded",
-                payload={"quota": self.mutation_quota, "window_sec": self.mutation_window_sec, "count": state.get("mutation_count", 0.0)},
+                payload={
+                    "quota": self.mutation_quota,
+                    "window_sec": self.mutation_window_sec,
+                    "count": state.get("mutation_count", 0.0),
+                },
                 level="WARNING",
                 element_id=ELEMENT_ID,
             )
             return self._throttle(
                 "mutation_quota",
-                {"cooldown_until": cooldown_until, "now": now, "limit": self.mutation_quota, "count": state.get("mutation_count", 0.0)},
+                {
+                    "cooldown_until": cooldown_until,
+                    "now": now,
+                    "limit": self.mutation_quota,
+                    "count": state.get("mutation_count", 0.0),
+                },
                 state,
             )
 
@@ -142,7 +267,9 @@ class BeastModeLoop:
             agents.append(resolve_agent_id(agent_dir, self.agents_root))
         return agents
 
-    def _latest_staged(self, agent_id: str) -> Tuple[Optional[Path], Optional[Dict[str, object]]]:
+    def _latest_staged(
+        self, agent_id: str
+    ) -> Tuple[Optional[Path], Optional[Dict[str, object]]]:
         staging_root = self.lineage_dir / "_staging"
         if not staging_root.exists():
             return None, None
@@ -161,7 +288,9 @@ class BeastModeLoop:
         return None, None
 
     @staticmethod
-    def _validate_handoff_contract(contract: object) -> Tuple[bool, str, Optional[bool]]:
+    def _validate_handoff_contract(
+        contract: object,
+    ) -> Tuple[bool, str, Optional[bool]]:
         if not isinstance(contract, dict):
             return False, "handoff_contract_missing", None
         required = {"schema_version", "issued_at", "issuer", "dream_scope", "constraints"}
@@ -176,58 +305,106 @@ class BeastModeLoop:
             return False, "handoff_contract_sandboxed_invalid", None
         return True, "ok", sandboxed
 
-    def _discard(self, staged_dir: Path, payload: Dict[str, object], score: float) -> None:
+    def _discard(
+        self, staged_dir: Path, payload: Dict[str, object], score: float
+    ) -> None:
         shutil.rmtree(staged_dir, ignore_errors=True)
         metrics.log(
             event_type="mutation_discarded",
-            payload={"staged": str(staged_dir), "score": score, "parent": payload.get("parent")},
+            payload={
+                "staged": str(staged_dir),
+                "score": score,
+                "parent": payload.get("parent"),
+            },
             level="WARNING",
             element_id=ELEMENT_ID,
         )
 
     def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, str]:
-        metrics.log(event_type="beast_cycle_start", payload={"agent": agent_id}, level="INFO", element_id=ELEMENT_ID)
+        metrics.log(
+            event_type="beast_cycle_start",
+            payload={"agent": agent_id},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
         throttled = self._check_limits()
         if throttled:
-            metrics.log(event_type="beast_cycle_end", payload=throttled, level="WARNING", element_id=ELEMENT_ID)
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload=throttled,
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
             return throttled
         agents = self._available_agents()
         if not agents:
-            metrics.log(event_type="beast_cycle_end", payload={"status": "skipped"}, level="WARNING", element_id=ELEMENT_ID)
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload={"status": "skipped"},
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
             return {"status": "skipped", "reason": "no agents"}
 
         selected = agent_id or agents[0]
-        metrics.log(event_type="beast_cycle_decision", payload={"agent": selected}, level="INFO", element_id=ELEMENT_ID)
+        metrics.log(
+            event_type="beast_cycle_decision",
+            payload={"agent": selected},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
         if not cryovant.validate_ancestry(selected):
-            metrics.log(event_type="beast_cycle_end", payload={"status": "blocked", "agent": selected}, level="ERROR", element_id=ELEMENT_ID)
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload={"status": "blocked", "agent": selected},
+                level="ERROR",
+                element_id=ELEMENT_ID,
+            )
             return {"status": "blocked", "agent": selected}
 
         staged_dir, payload = self._latest_staged(selected)
         if not staged_dir or not payload:
-            metrics.log(event_type="beast_cycle_end", payload={"status": "no_staged", "agent": selected}, level="INFO", element_id=ELEMENT_ID)
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload={"status": "no_staged", "agent": selected},
+                level="INFO",
+                element_id=ELEMENT_ID,
+            )
             return {"status": "no_staged", "agent": selected}
 
         throttled = self._check_mutation_quota()
         if throttled:
             metrics.log(
                 event_type="beast_cycle_end",
-                payload={"status": "throttled", "agent": selected, "reason": throttled.get("reason")},
+                payload={
+                    "status": "throttled",
+                    "agent": selected,
+                    "reason": throttled.get("reason"),
+                },
                 level="WARNING",
                 element_id=ELEMENT_ID,
             )
             return {"status": "throttled", "agent": selected, "reason": throttled.get("reason")}
 
         if payload.get("dream_mode"):
-            contract_ok, reason, contract_sandboxed = self._validate_handoff_contract(payload.get("handoff_contract"))
+            contract_ok, reason, contract_sandboxed = self._validate_handoff_contract(
+                payload.get("handoff_contract")
+            )
             if not contract_ok:
                 metrics.log(
                     event_type="mutation_handoff_blocked",
-                    payload={"agent": selected, "staged": str(staged_dir), "reason": reason},
+                    payload={
+                        "agent": selected,
+                        "staged": str(staged_dir),
+                        "reason": reason,
+                    },
                     level="ERROR",
                     element_id=ELEMENT_ID,
                 )
                 return {"status": "blocked", "agent": selected, "reason": reason}
-            sandboxed = payload.get("sandboxed", contract_sandboxed if contract_sandboxed is not None else True)
+            sandboxed = payload.get(
+                "sandboxed", contract_sandboxed if contract_sandboxed is not None else True
+            )
             if sandboxed:
                 metrics.log(
                     event_type="mutation_sandboxed",
@@ -235,7 +412,11 @@ class BeastModeLoop:
                     level="WARNING",
                     element_id=ELEMENT_ID,
                 )
-                return {"status": "sandboxed", "agent": selected, "staged_path": str(staged_dir)}
+                return {
+                    "status": "sandboxed",
+                    "agent": selected,
+                    "staged_path": str(staged_dir),
+                }
 
         score = fitness.score_mutation(selected, payload)
         metrics.log(
@@ -247,7 +428,12 @@ class BeastModeLoop:
 
         if score < self.threshold:
             self._discard(staged_dir, payload, score)
-            metrics.log(event_type="beast_cycle_end", payload={"status": "discarded", "agent": selected}, level="INFO", element_id=ELEMENT_ID)
+            metrics.log(
+                event_type="beast_cycle_end",
+                payload={"status": "discarded", "agent": selected},
+                level="INFO",
+                element_id=ELEMENT_ID,
+            )
             return {"status": "discarded", "agent": selected, "score": score}
 
         agent_dir = agent_path_from_id(selected, self.agents_root)
@@ -274,18 +460,29 @@ class BeastModeLoop:
         )
         metrics.log(
             event_type="mutation_promoted",
-            payload={"agent": selected, "promoted_path": str(promoted), "score": score},
+            payload={
+                "agent": selected,
+                "promoted_path": str(promoted),
+                "score": score,
+            },
             level="INFO",
             element_id=ELEMENT_ID,
         )
-        metrics.log(event_type="beast_cycle_end", payload={"status": "promoted", "agent": selected}, level="INFO", element_id=ELEMENT_ID)
+        metrics.log(
+            event_type="beast_cycle_end",
+            payload={"status": "promoted", "agent": selected},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
         return {"status": "promoted", "agent": selected, "score": score, "promoted_path": str(promoted)}
 
 
 class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
     """Compatibility adapter preserving legacy projection input helpers for tests/tools."""
 
-    def _build_mutation_candidate(self, payload: Dict[str, object]) -> tuple[MutationCandidate | None, list[str]]:
+    def _build_mutation_candidate(
+        self, payload: Dict[str, object]
+    ) -> tuple[MutationCandidate | None, list[str]]:
         required = ("mutation_id", "expected_gain", "risk_score", "complexity", "coverage_delta")
         missing = [field for field in required if field not in payload]
         if missing:
