@@ -27,13 +27,15 @@ from typing import Dict, List, Optional
 
 from adaad.agents.base_agent import stage_offspring
 from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
-from runtime.api.app_layer import metrics, deterministic_context, deterministic_token
-from runtime.governance.foundation import (
+from runtime.api.app_layer import (
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
-    SystemDeterminismProvider,
+    default_provider,
+    deterministic_context,
+    deterministic_token,
+    metrics,
+    require_replay_safe_provider,
 )
-from runtime.governance.foundation.determinism import require_replay_safe_provider
 from security import cryovant
 
 ELEMENT_ID = "Fire"
@@ -105,7 +107,7 @@ class DreamMode:
             _seed = _os.getenv("ADAAD_DETERMINISTIC_SEED", "adaad-dream-default")
             self.provider: RuntimeDeterminismProvider = SeededDeterminismProvider(seed=_seed)
         else:
-            self.provider = provider or SystemDeterminismProvider()
+            self.provider = provider or default_provider()
 
         # Fail-closed: reject non-deterministic providers for strict/audit contexts
         require_replay_safe_provider(

@@ -38,15 +38,19 @@ from typing import Dict, List, Optional, Tuple
 
 from adaad.agents.base_agent import promote_offspring
 from adaad.agents.discovery import agent_path_from_id, iter_agent_dirs, resolve_agent_id
-from runtime.api.app_layer import MutationCandidate, fitness, metrics, rank_mutation_candidates
-from runtime.api.app_layer import get_capabilities, register_capability
-from runtime.manifest.generator import generate_tool_manifest
-from runtime.governance.foundation import (
+from runtime.api.app_layer import (
+    MutationCandidate,
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
-    SystemDeterminismProvider,
+    default_provider,
+    fitness,
+    generate_tool_manifest,
+    get_capabilities,
+    metrics,
+    rank_mutation_candidates,
+    register_capability,
+    require_replay_safe_provider,
 )
-from runtime.governance.foundation.determinism import require_replay_safe_provider
 from security import cryovant
 from security.ledger import journal
 
@@ -118,7 +122,7 @@ class BeastModeLoop:
                 )
                 if (replay_mode or "off").strip().lower() == "strict"
                 or (recovery_tier or "").strip().lower() in _STRICT_TIERS
-                else SystemDeterminismProvider()
+                else default_provider()
             )
         )
         self._replay_mode = (replay_mode or "off").strip().lower()
