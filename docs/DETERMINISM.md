@@ -97,6 +97,8 @@ Divergence is detected by contract-level hash and schema validation against the 
 
 `runtime.evolution.agm_event.create_event_envelope()` enforces `require_replay_safe_provider(...)` before any ID/timestamp generation so strict replay cannot emit non-deterministic ledger evidence.
 
+`runtime.evolution.population_manager.PopulationManager` default RNG initialization now follows the same deterministic seed path by deriving its default PRNG seed from `ADAAD_DETERMINISTIC_SEED` and falling back to `"adaad"` when unset/blank. Caller-injected `rng` instances and `set_seed()` remain supported for compatibility.
+
 Event envelope validation now requires:
 
 - `event_id` to match 32 lowercase hex chars (`^[0-9a-f]{32}$`).

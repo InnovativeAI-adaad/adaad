@@ -19,6 +19,7 @@ Constants:
 from __future__ import annotations
 
 import hashlib
+import os
 import random
 from typing import List, Optional
 
@@ -38,6 +39,13 @@ ELITE_SIZE:     int   = 3
 MAX_POPULATION: int   = 12
 CROSSOVER_RATE: float = 0.4
 BLX_ALPHA:      float = 0.5
+DEFAULT_POPULATION_RNG_SEED = "adaad"
+
+
+def _resolve_default_population_seed() -> str:
+    """Resolve deterministic default seed from the canonical repository seed env."""
+    seed = os.getenv("ADAAD_DETERMINISTIC_SEED", DEFAULT_POPULATION_RNG_SEED).strip()
+    return seed or DEFAULT_POPULATION_RNG_SEED
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +69,7 @@ class PopulationManager:
         self._population: List[MutationCandidate] = []
         self._state   = PopulationState()
         self._weights: Optional[ScoringWeights] = None
-        self._rng     = rng or random.Random()
+        self._rng     = rng if rng is not None else random.Random(_resolve_default_population_seed())
         self._child_counter = 0
 
     def set_seed(self, seed: int) -> None:
