@@ -2996,7 +2996,7 @@ async function paint(id, endpoint) {
       .replace(/invalid_json_response[^)]*[))]*/gi, 'server_response_error')
       .replace(/unparsabl[a-z]*/gi, 'parse_error')
       .replace(/json_response_must_be_object/gi, 'response_format_error')
-      .replace(/provider_request_failed[^.]*\.?/gi, 'provider_unavailable. ');
+      .replace(/provider_request_failed[^.]*[.]?/gi, 'provider_unavailable. ');
     el.textContent = 'Unavailable: ' + endpoint + ' (' + safe.trim() + ')';
     return null;
   }
@@ -4315,9 +4315,9 @@ function _sanitizeBannerText(text) {
     .replace(/invalid_json_response[^)]*[))]*/gi, 'service_unavailable')
     .replace(/unparsabl[a-z]*/gi, 'parse_error')
     .replace(/json_response_must_be_object/gi, 'response_format_error')
-    .replace(/provider_request_failed[^.]*\.?/gi, 'provider_unavailable. ')
-    .replace(/missing_api_key[^.]*\.?/gi, 'provider_unconfigured. ')
-    .replace(/provider_unavailable[^.]*\.?/gi, 'provider_unavailable. ')
+    .replace(/provider_request_failed[^.]*[.]?/gi, 'provider_unavailable. ')
+    .replace(/missing_api_key[^.]*[.]?/gi, 'provider_unconfigured. ')
+    .replace(/provider_unavailable[^.]*[.]?/gi, 'provider_unavailable. ')
     .trim();
 }
 

@@ -66,6 +66,9 @@ def test_replay_diff_http_endpoint_includes_bundle_metadata(tmp_path, monkeypatc
 
 
 def test_replay_diff_http_endpoint_persists_export_bundle(tmp_path, monkeypatch) -> None:
+    # EvidenceBundleBuilder.build_bundle requires a signing key at export time.
+    # Inject a deterministic test secret so the gate passes without env pollution.
+    monkeypatch.setenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY", "test-signing-secret-phase44")
     ledger = LineageLedgerV2(tmp_path / "lineage_v2.jsonl")
     ledger.append_event("EpochStartEvent", {"epoch_id": "epoch-2", "state": {"x": 3}})
     ledger.append_bundle_with_digest(
