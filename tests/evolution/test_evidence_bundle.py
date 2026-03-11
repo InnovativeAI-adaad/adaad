@@ -14,6 +14,11 @@ from runtime.constitution import CONSTITUTION_VERSION
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
 
 
+@pytest.fixture(autouse=True)
+def _configure_default_evidence_signing_key(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY", "test-evidence-signing-key")
+
+
 def _write_jsonl(path: Path, entries: list[dict]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
@@ -77,6 +82,45 @@ def test_export_bundle_conforms_to_schema_and_is_immutable(tmp_path: Path) -> No
     assert bundle["export_metadata"]["access_scope"]
     assert bundle["export_metadata"]["signer"]["signed_digest"] == bundle["export_metadata"]["digest"]
     assert bundle["export_metadata"]["environment"]["digest_algorithm"] == "sha256"
+
+
+def test_export_bundle_missing_signing_secret_fails_closed_with_deterministic_error(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.delenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY", raising=False)
+    monkeypatch.delenv("ADAAD_EVIDENCE_BUNDLE_KEY_FORENSICS_DEV", raising=False)
+    monkeypatch.setenv("ADAAD_EVIDENCE_BUNDLE_KEY_ID", "forensics-dev")
+
+    ledger = LineageLedgerV2(ledger_path=tmp_path / "lineage_v2.jsonl")
+    ledger.append_event("EpochStartEvent", {"epoch_id": "epoch-1", "state": {}})
+
+    builder = EvidenceBundleBuilder(
+        ledger=ledger,
+        sandbox_evidence_path=tmp_path / "sandbox_evidence.jsonl",
+        export_dir=tmp_path / "exports",
+        schema_path=Path("schemas/evidence_bundle.v1.json"),
+    )
+
+    with pytest.raises(EvidenceBundleError, match="missing_export_signing_secret:forensics-dev"):
+        builder.build_bundle(epoch_start="epoch-1", persist=False)
+
+
+def test_export_bundle_signature_stable_with_configured_key(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY", "stable-signing-key")
+    monkeypatch.setenv("ADAAD_EVIDENCE_BUNDLE_KEY_ID", "forensics-dev")
+
+    ledger = LineageLedgerV2(ledger_path=tmp_path / "lineage_v2.jsonl")
+    ledger.append_event("EpochStartEvent", {"epoch_id": "epoch-1", "state": {"a": 1}})
+
+    builder = EvidenceBundleBuilder(
+        ledger=ledger,
+        sandbox_evidence_path=tmp_path / "sandbox_evidence.jsonl",
+        export_dir=tmp_path / "exports",
+        schema_path=Path("schemas/evidence_bundle.v1.json"),
+    )
+    first = builder.build_bundle(epoch_start="epoch-1", persist=False)
+    second = builder.build_bundle(epoch_start="epoch-1", persist=False)
+
+    assert first["export_metadata"]["signer"]["signature"] == second["export_metadata"]["signer"]["signature"]
+    assert first["export_metadata"]["signer"]["signed_digest"] == second["export_metadata"]["signer"]["signed_digest"]
 
 
 def test_export_bundle_digest_is_reproducible_for_unchanged_ledger(tmp_path: Path) -> None:

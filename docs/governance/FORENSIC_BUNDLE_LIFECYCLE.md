@@ -33,6 +33,8 @@ python scripts/enforce_forensic_retention.py \
 - `export_metadata.retention_days` (when present) overrides default retention.
 - If a bundle cannot be parsed, the script fails closed and performs no deletion.
 - Schedule at least daily in production orchestration with explicit timestamp input.
+- Evidence export signing is fail-closed: configure either `ADAAD_EVIDENCE_BUNDLE_KEY_<KEY_ID>` (preferred, where `<KEY_ID>` is uppercased and `-` is replaced with `_`) or `ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY`.
+- If neither signing key env var is present for the selected `ADAAD_EVIDENCE_BUNDLE_KEY_ID`, export fails with deterministic error `missing_export_signing_secret:<key_id>`.
 
 
 ## Optional systemd scheduling
