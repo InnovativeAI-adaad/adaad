@@ -199,6 +199,24 @@ complete — they are not separate from the lane model.
 
 ## Governance Change Protocol
 
+### Mandatory implementation sequencing for governed mutation work
+
+When change sets touch planning/governance mutation execution, the implementation
+sequence is mandatory and must run in-order:
+
+1. taxonomy + annotation
+2. duplicate assertion audit/merge
+3. constitutional-domain split
+4. endpoint parametrization
+5. full verification
+
+Additional controls:
+- Each sequence step lands as an isolated commit to preserve rollback safety.
+- Governance checks must block steps (2)-(4) whenever taxonomy coverage is incomplete.
+- Final validation must report both a full-suite pass summary and an
+  `autonomous_critical` lane pass summary before completion.
+
+
 When changing mutation or governance execution logic, require all of the following
 in the same PR:
 

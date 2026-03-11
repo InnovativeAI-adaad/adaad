@@ -6,7 +6,7 @@ from runtime.intelligence.planning import PlanStepVerifier, StrategyPlanner
 from runtime.intelligence.strategy import StrategyInput
 
 
-def test_strategy_planner_converts_backlog_to_ranked_multi_step_plan() -> None:
+def test_strategy_planner_uses_mandatory_order_and_keeps_backlog_after_verification() -> None:
     planner = StrategyPlanner()
     plan = planner.build_plan(
         StrategyInput(
@@ -17,15 +17,22 @@ def test_strategy_planner_converts_backlog_to_ranked_multi_step_plan() -> None:
         )
     )
 
-    assert plan.plan_id == "plan-cycle-42"
-    assert plan.steps[0].step_id == "step_00_governance_precheck"
-    assert plan.steps[1].goal_id == "stabilize_replay"
-    assert plan.steps[1].required_governance_checks == ("policy_alignment", "safety_constraints")
-    assert plan.steps[1].dependency_step_ids == ("step_00_governance_precheck",)
-    assert plan.steps[1].required_replay_checks == ("replay_digest_match",)
+    assert [step.step_id for step in plan.steps[:5]] == [
+        "step_00_taxonomy_annotation",
+        "step_01_duplicate_assertion_audit_merge",
+        "step_02_constitutional_domain_split",
+        "step_03_endpoint_parametrization",
+        "step_04_full_verification",
+    ]
+    assert plan.steps[4].completion_criteria == (
+        "validation.full_suite_passed",
+        "validation.autonomous_critical_lane_passed",
+    )
+    assert plan.steps[5].goal_id == "stabilize_replay"
+    assert plan.steps[5].dependency_step_ids == ("step_04_full_verification",)
 
 
-def test_plan_step_verifier_requires_governance_checks_before_step_completion() -> None:
+def test_plan_step_verifier_blocks_steps_b_to_d_without_taxonomy_coverage_check() -> None:
     planner = StrategyPlanner()
     verifier = PlanStepVerifier()
     plan = planner.build_plan(
@@ -36,50 +43,61 @@ def test_plan_step_verifier_requires_governance_checks_before_step_completion() 
             goal_backlog={"secure_merge": 0.8},
         )
     )
-    active_step = plan.steps[1]
 
-    blocked = verifier.verify_step_completion(
-        step=active_step,
-        completed_step_ids=("step_00_governance_precheck",),
-        completion_signals={active_step.success_predicate: True},
-        governance_checks={"policy_alignment": True, "safety_constraints": False},
-        replay_checks={"replay_digest_match": True},
-    )
-    assert blocked.ok is False
-    assert blocked.reason == "governance_check_failed:safety_constraints"
+    completed_by_step = {
+        1: ("step_00_taxonomy_annotation",),
+        2: ("step_00_taxonomy_annotation", "step_01_duplicate_assertion_audit_merge"),
+        3: (
+            "step_00_taxonomy_annotation",
+            "step_01_duplicate_assertion_audit_merge",
+            "step_02_constitutional_domain_split",
+        ),
+    }
+    for step_index in (1, 2, 3):
+        step = plan.steps[step_index]
+        blocked = verifier.verify_step_completion(
+            step=step,
+            completed_step_ids=completed_by_step[step_index],
+            completion_signals={step.success_predicate: True},
+            governance_checks={"policy_alignment": True, "taxonomy_coverage_complete": False},
+            replay_checks={"replay_digest_match": True},
+        )
+        assert blocked.ok is False
+        assert blocked.reason == "governance_check_failed:taxonomy_coverage_complete"
 
-    passed = verifier.verify_step_completion(
-        step=active_step,
-        completed_step_ids=("step_00_governance_precheck",),
-        completion_signals={active_step.success_predicate: True},
-        governance_checks={"policy_alignment": True, "safety_constraints": True},
-        replay_checks={"replay_digest_match": True},
-    )
-    assert passed.ok is True
-    assert passed.completed_step_id == active_step.step_id
 
-
-def test_plan_step_verifier_requires_replay_preconditions_before_step_completion() -> None:
+def test_plan_step_verifier_requires_autonomous_critical_and_full_suite_validation_summaries() -> None:
     planner = StrategyPlanner()
     verifier = PlanStepVerifier()
     plan = planner.build_plan(
         StrategyInput(
-            cycle_id="cycle-replay",
+            cycle_id="cycle-validation",
             mutation_score=0.3,
             governance_debt_score=0.1,
             goal_backlog={"secure_merge": 0.8},
         )
     )
-    precheck = plan.steps[0]
+    final_step = plan.steps[4]
+    completed = tuple(step.step_id for step in plan.steps[:4])
 
     blocked = verifier.verify_step_completion(
-        step=precheck,
-        completed_step_ids=(),
-        completion_signals={precheck.success_predicate: True},
-        governance_checks={"policy_alignment": True},
-        replay_checks={"replay_preconditions_ok": False},
+        step=final_step,
+        completed_step_ids=completed,
+        completion_signals={"validation.full_suite_passed": True},
+        governance_checks={"policy_alignment": True, "validation_report_complete": True},
+        replay_checks={"replay_digest_match": True},
     )
-
     assert blocked.ok is False
-    assert blocked.reason == "replay_check_failed:replay_preconditions_ok"
-    assert blocked.rollback_step_index == 0
+    assert blocked.reason == "criteria_not_satisfied:validation.autonomous_critical_lane_passed"
+
+    passed = verifier.verify_step_completion(
+        step=final_step,
+        completed_step_ids=completed,
+        completion_signals={
+            "validation.full_suite_passed": True,
+            "validation.autonomous_critical_lane_passed": True,
+        },
+        governance_checks={"policy_alignment": True, "validation_report_complete": True},
+        replay_checks={"replay_digest_match": True},
+    )
+    assert passed.ok is True
