@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.branch_manager import BranchManager
 from runtime.governance.foundation.determinism import SeededDeterminismProvider

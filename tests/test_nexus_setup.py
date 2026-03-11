@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 import nexus_setup
 

@@ -2,6 +2,7 @@
 """Tests for NonStationarityDetector — Page-Hinkley change detection."""
 from __future__ import annotations
 import pytest
+pytestmark = pytest.mark.regression_standard
 from runtime.autonomy.non_stationarity_detector import (
     NonStationarityDetector, ArmHistory,
     PAGE_HINKLEY_THRESHOLD, MIN_OBSERVATIONS, ESCALATION_COOLDOWN,

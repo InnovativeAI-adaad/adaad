@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.fitness_weight_tuner import (
     FitnessWeightGovernanceError,

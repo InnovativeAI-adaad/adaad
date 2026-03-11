@@ -10,6 +10,7 @@ import json
 import os
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 _TOKEN = "pr28-enforcement-token"

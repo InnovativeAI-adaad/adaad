@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.mutation_risk_scorer import (
     FileRiskScore,

@@ -20,6 +20,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.ai_mutation_proposer import CodebaseContext
 from runtime.evolution.evolution_loop import EvolutionLoop

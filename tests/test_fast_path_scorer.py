@@ -2,6 +2,8 @@
 """Tests for runtime.evolution.fast_path_scorer."""
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.fast_path_scorer import (
     FAST_PATH_VERSION,

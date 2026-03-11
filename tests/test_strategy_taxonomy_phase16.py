@@ -2,6 +2,7 @@
 """Phase 16 — StrategyModule Taxonomy tests (18 tests, T16-01-01..18)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.strategy import (
     STRATEGY_TAXONOMY,

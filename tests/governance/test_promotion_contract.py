@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.foundation.hashing import ZERO_HASH
 from runtime.governance.pr_lifecycle_event_contract import build_event_digest

@@ -6,6 +6,7 @@ from __future__ import annotations
 import time
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.gate import GateAxisResult
 from runtime.governance.parallel_gate import (

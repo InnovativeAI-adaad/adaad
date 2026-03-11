@@ -12,6 +12,7 @@ import json
 import os
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.admission_band_enforcer import (
     AdmissionBandEnforcer,

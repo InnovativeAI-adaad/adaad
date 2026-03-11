@@ -2,6 +2,8 @@
 """Regression tests for runtime-governance canonicalization and adapter shims."""
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.governance_gate
 
 from pathlib import Path
 

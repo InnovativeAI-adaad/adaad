@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from app.mutation_executor import MutationExecutor

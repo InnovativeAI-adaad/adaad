@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.goal_graph import GoalGraph
 

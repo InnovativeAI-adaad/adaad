@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.evolution.governor import EvolutionGovernor

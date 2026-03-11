@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 _TOKEN = "pr36-gate-decisions-token"

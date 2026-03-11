@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from app.boot_preflight import validate_boot_environment
 from runtime.boot.preflight import evaluate_boot_invariants

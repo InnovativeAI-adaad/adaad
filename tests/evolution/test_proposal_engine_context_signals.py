@@ -16,6 +16,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch, call
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.agent_bandit_selector import AgentBanditSelector, BanditAgentRecommendation
 from runtime.autonomy.ai_mutation_proposer import CodebaseContext

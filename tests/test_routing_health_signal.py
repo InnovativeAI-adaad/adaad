@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.health_aggregator import (
     HEALTH_DEGRADED_THRESHOLD,

@@ -20,6 +20,7 @@ from typing import Any, Dict, List
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 _TEST_KEY_BYTES = bytes.fromhex("d" * 64)
 

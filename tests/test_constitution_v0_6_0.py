@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.constitution import VALIDATOR_REGISTRY, CONSTITUTION_VERSION
 

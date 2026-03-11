@@ -3,6 +3,7 @@
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
 

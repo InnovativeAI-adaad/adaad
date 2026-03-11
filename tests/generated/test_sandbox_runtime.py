@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.sandbox.executor import HardenedSandboxExecutor
 from runtime.sandbox.policy import default_sandbox_policy

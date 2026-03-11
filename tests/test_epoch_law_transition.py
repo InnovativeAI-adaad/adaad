@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.epoch import EpochManager
 from runtime.governance.founders_law_v2 import LawManifest, LawModule, LawRef, LawRuleV2, ManifestSignature

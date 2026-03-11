@@ -21,6 +21,7 @@ from typing import Any, Dict, List
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.federation.mutation_broker import (
     AcceptedFederatedMutation,

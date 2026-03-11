@@ -2,6 +2,7 @@
 """Phase 16 — ProposalAdapter strategy-aware prompt routing tests (12 tests, T16-02-01..12)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.proposal_adapter import (
     _STRATEGY_SYSTEM_PROMPTS,

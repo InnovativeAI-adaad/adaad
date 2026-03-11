@@ -2,6 +2,7 @@
 """Tests for PenaltyAdaptor — Phase 3 adaptive risk/complexity weights."""
 from __future__ import annotations
 import pytest
+pytestmark = pytest.mark.regression_standard
 from pathlib import Path
 from runtime.autonomy.penalty_adaptor import (
     PenaltyAdaptor, PenaltyOutcome,

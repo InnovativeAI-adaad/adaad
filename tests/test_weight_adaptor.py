@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from pathlib import Path
 
 from runtime.autonomy.weight_adaptor import (

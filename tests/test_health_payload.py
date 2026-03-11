@@ -6,6 +6,7 @@ import datetime as dt
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from adaad.core.health import health_report
 

@@ -11,6 +11,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.pr_lifecycle_event_contract import (
     REQUIRED_PR_LIFECYCLE_EVENT_TYPES,

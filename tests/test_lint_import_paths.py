@@ -4,6 +4,7 @@ import ast
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from pathlib import Path
 
 from tools import lint_import_paths
