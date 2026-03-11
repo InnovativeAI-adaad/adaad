@@ -18,6 +18,10 @@ Required compatibility API signatures:
 - `def mutate(src: str) -> str:`
 - `def score(output: dict) -> float:`
 
+Legacy class-based agents should subclass `adaad.agents.base_agent.BaseAgent`, which is an
+abstract base class. Agent authors must implement all four methods (`info`, `run`, `mutate`,
+`score`) to instantiate successfully.
+
 Validation entry points:
 - `adaad.core.agent_contract.validate_agent_module`
 - `adaad.core.agent_contract.validate_agent_contracts`
