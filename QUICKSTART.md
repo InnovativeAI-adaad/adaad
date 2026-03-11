@@ -12,166 +12,132 @@ cd ADAAD
 python onboard.py
 ```
 
-`onboard.py` sets up your environment, validates governance schemas, and runs a governed dry-run. No manual steps required.
+`onboard.py` sets up your environment, validates governance schemas, and runs a governed dry-run. No manual steps required. Safe to re-run any time.
+
+**On Android / Termux:** See [`TERMUX_SETUP.md`](TERMUX_SETUP.md) for the complete guide.
 
 ---
 
 ## What success looks like
 
 ```
-  ✔ Python 3.11.9
-  ✔ Virtual environment ready
+  ✔ Python 3.12.x
+  ✔ Virtual environment created (.venv)
   ✔ Dependencies installed
   ✔ ADAAD_ENV=dev
-  ✔ Workspace initialized
+  ✔ Workspace valid
   ✔ Governance schemas valid
-  ✔ Dry-run complete — no files modified
+  ✔ Dry-run complete  (fail-closed behaviour confirmed)
 
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   ADAAD is ready.
 
-  Run the dashboard:   python server.py
-  Run an epoch:        python -m app.main --verbose
-  Architecture docs:   docs/EVOLUTION_ARCHITECTURE.md
+  Run the dashboard   python server.py
+  Run an epoch        python -m app.main --verbose
+  Strict replay       python -m app.main --replay strict --verbose
+  Architecture docs   docs/EVOLUTION_ARCHITECTURE.md
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+> **Soulbound key warning** — You'll see this on first run. It's expected:
+>
+> ```
+> ⚠  ADAAD_SOULBOUND_KEY is not set.
+>    Phase 9+ soulbound ledger writes will be fail-closed without it.
+>    Generate a dev key: python -c "import secrets; print(secrets.token_hex(32))"
+>    export ADAAD_SOULBOUND_KEY=<your-key>
+> ```
+>
+> For local development, generate a key and export it. For production, source from a secret manager.
+
 ---
 
-## Manual setup (fallback when `python onboard.py` is unavailable)
+## Manual setup (fallback)
+
+Use this if `python onboard.py` is unavailable.
 
 ```bash
-# 1. Environment
-python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
+# 1. Virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
+
+# 2. Dependencies
 python -m pip install --upgrade pip
 pip install -r requirements.server.txt
 
-# 2. Configure
+# 3. Configure
 export ADAAD_ENV=dev
+export ADAAD_SOULBOUND_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
 
-# 3. Initialize
+# 4. Initialize workspace
 python nexus_setup.py
 
-# 4. Verify
+# 5. Verify
 python -m app.main --dry-run --replay audit --verbose
 ```
 
 ---
 
-## Run modes
-
-| Command | What it does |
-|---|---|
-| `python -m app.main --dry-run --replay audit` | Safe first run — no files modified |
-| `python -m app.main --verbose` | Full run with detailed logging |
-| `python -m app.main --replay strict --verbose` | Strict determinism verification |
-| `python server.py` | Start the Aponi dashboard at `localhost:8000` |
-
----
-
-## Hermetic / CI mode
+## Run the governance dashboard
 
 ```bash
-export ADAAD_FORCE_DETERMINISTIC_PROVIDER=1
-export ADAAD_DETERMINISTIC_SEED=ci-seed
-export ADAAD_DISABLE_MUTABLE_FS=1
-export ADAAD_DISABLE_NETWORK=1
-python -m app.main --replay audit
+python server.py
+# → http://localhost:8000
 ```
 
+The Aponi dashboard shows live governance health signals, audit ledger entries, mutation history, and constitution state.
+
 ---
 
-## Dashboard
+## Run an epoch
 
 ```bash
-python server.py --host 0.0.0.0 --port 8000
-```
-
-- UI: `http://127.0.0.1:8000/`
-- Health: `http://127.0.0.1:8000/api/health`
-
----
-
-## Environment variables
-
-| Variable | Purpose | Required |
-|---|---|---|
-| `ADAAD_ENV` | `dev` · `test` · `staging` · `production` | Always |
-| `ADAAD_CLAUDE_API_KEY` | Anthropic key for AI mutation proposals | AI mode |
-| `ADAAD_SOULBOUND_KEY` | 64-hex-char HMAC key for the Soulbound Context Ledger (Phase 9+) | Phase 9+ |
-| `ADAAD_GOVERNANCE_SESSION_SIGNING_KEY` | HMAC key for session tokens | Strict envs |
-| `CRYOVANT_DEV_MODE` | Dev-only overrides (rejected in strict envs) | Never in prod |
-
-Full reference: [docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)
-
----
-
-## Soulbound memory (Phase 9+)
-
-ADAAD v3.4.0+ requires a `ADAAD_SOULBOUND_KEY` to activate the tamper-evident context ledger
-(`runtime/memory/soulbound_ledger.py`). Without it the ledger is fail-closed — the system
-raises `SoulboundKeyError` and halts any epoch that requires ledger writes.
-
-**Generate a dev key:**
-
-```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-# e.g. → a3f8c1...  (64 hex chars = 256-bit key)
-
-export ADAAD_SOULBOUND_KEY=<your-generated-key>
-```
-
-**Production:** source from a secret manager — never check this value into version control.
-
-Key rotation is performed by rotating the env var value; the ledger emits a
-`soulbound_key_rotation.v1` journal event on every rotation. No ledger re-signing is required.
-
-> Runs that do not reach Phase 5c (CraftPatternExtractor) or Phase 5d (RewardSignalBridge)
-> do not require `ADAAD_SOULBOUND_KEY`. Dry-runs and replay-audit mode skip ledger writes.
-
----
-
-## Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| `ModuleNotFoundError` | Re-activate venv: `source .venv/bin/activate` |
-| `ADAAD_ENV is not set` | `export ADAAD_ENV=dev` |
-| Replay fails on first run | Normal — run audit mode first to establish baseline |
-| Policy rejection in dry-run | Expected fail-closed behaviour — inspect `--verbose` output |
-| Dashboard unreachable | Check server started: `curl http://127.0.0.1:8000/api/health` |
-
----
-
-## Federation mode (multi-repo)
-
-> Only needed for deployments connecting multiple ADAAD nodes. Single-repo deployments skip this entirely.
-
-```bash
-# Required: valid HMAC key material for the federation transport
-export ADAAD_FEDERATION_ENABLED=true
-export ADAAD_FEDERATION_HMAC_KEY=<your-key-from-secret-manager>
-
-# Start with federation enabled
+# Single governed epoch
 python -m app.main --verbose
-```
 
-The boot guard validates key material before any federation surface activates. Absent or undersized key → `FederationKeyError` (fail-closed). Key rotation procedure: `docs/runbooks/hmac_key_rotation.md`.
+# Strict deterministic replay (must set ADAAD_DETERMINISTIC_SEED)
+export ADAAD_DETERMINISTIC_SEED=my-seed
+python -m app.main --replay strict --verbose
+```
 
 ---
 
-## Clean reset
+## Run the test suite
 
 ```bash
-rm -rf reports security/ledger security/replay_manifests
-python onboard.py
+# Fast targeted suite (governance + determinism)
+pytest tests/governance/ tests/determinism/ -q
+
+# Full suite
+pytest tests/ -q
 ```
+
+846 tests. Expected failures in pre-existing suites (`test_beast_promotes_on_threshold`, `test_simulation_endpoints`) are tracked as known technical debt.
 
 ---
 
-## Next
+## Key environment variables
 
-- [Architecture](docs/EVOLUTION_ARCHITECTURE.md) — how the evolution loop works
-- [Constitution](docs/CONSTITUTION.md) — governance rules
-- [Contributing](CONTRIBUTING.md) — how to contribute
-- [Security](docs/SECURITY.md) — key handling and threat model
+| Variable | Default | What it does |
+|:---|:---|:---|
+| `ADAAD_ENV` | — | Set to `dev` for local development |
+| `ADAAD_SOULBOUND_KEY` | — | Required for Phase 9+ ledger writes. 32-byte hex. |
+| `ADAAD_REPLAY_MODE` | `off` | Set to `strict` for byte-identical deterministic replay |
+| `ADAAD_DETERMINISTIC_SEED` | — | Required when `ADAAD_REPLAY_MODE=strict` |
+| `ADAAD_GATE_LOCKED` | — | Set to `1` to lock the GovernanceGate in CI |
+| `ADAAD_DISPATCH_LATENCY_BUDGET_MS` | `50.0` | Dispatch latency threshold for governance audit events |
+
+Full reference: [`docs/ENVIRONMENT_VARIABLES.md`](docs/ENVIRONMENT_VARIABLES.md)
+
+---
+
+## Where to go next
+
+| Goal | Resource |
+|:---|:---|
+| Understand the architecture | [`docs/ARCHITECTURE_CONTRACT.md`](docs/ARCHITECTURE_CONTRACT.md) |
+| Read the constitution | [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) |
+| Android / Termux install | [`TERMUX_SETUP.md`](TERMUX_SETUP.md) · [`INSTALL_ANDROID.md`](INSTALL_ANDROID.md) |
+| Current roadmap | [`ROADMAP.md`](ROADMAP.md) |
+| Full changelog | [`CHANGELOG.md`](CHANGELOG.md) |
+| Full docs index | [`docs/README.md`](docs/README.md) |

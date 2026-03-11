@@ -1,3 +1,45 @@
+## [6.5.1] — 2026-03-10
+
+### docs: Harden all docs — accuracy, navigation, and awe
+
+Comprehensive accuracy and hardening pass across every user-facing doc.
+
+#### Accuracy fixes
+
+- **VERSION** — updated from stale `6.0.0` to `6.5.0`
+- **Constitution rule counts** — README hero text and governance section now
+  accurately state "18 rules — 9 globally blocking, 4 tier-conditional blocking"
+  (was: vague "18 deterministic rules, evaluated in order")
+- **Constitution version** — `docs/README.md` incorrectly referenced `v0.7.0`
+  throughout; corrected to `v0.3.0` (authoritative: `runtime/governance/constitution.yaml`)
+- **docs/README.md** — all badges, version infobox, status table, and footer
+  updated: v6.0.0 → v6.5.0, Phase 35 → Phase 39, 810 tests → 846 tests
+- **INSTALL_ANDROID.md** — version bump v6.4.0 → v6.5.0
+- **TERMUX_SETUP.md** — license corrected MIT (was Apache-2.0); version added
+
+#### Navigation improvements
+
+- **README.md** — nav bar now includes `Governance` anchor alongside Quick Start,
+  How It Works, Android, Current Status, Constitution, Roadmap
+- **README.md** — "What's active now" section restructured: recent phases table,
+  full REST endpoint inventory, Phase 6 milestones, direct links to CHANGELOG/
+  ROADMAP/VERSION — one place to understand current system state
+- **QUICKSTART.md** — full rewrite: manual fallback, soulbound key warning,
+  dashboard launch, epoch execution, test suite notes, env var quick-ref table,
+  "Where to go next" navigation table
+- **docs/README.md** — audience-based routes and quick-paths preserved; all
+  stale content updated
+
+#### Files changed
+- `VERSION` — `6.0.0` → `6.5.0`
+- `README.md` — rule accuracy, phase badge, nav bar, governance section
+- `QUICKSTART.md` — full rewrite (accurate output, env vars, nav table)
+- `INSTALL_ANDROID.md` — version bump
+- `TERMUX_SETUP.md` — license fix, version header
+- `docs/README.md` — badges, infobox, status table, constitution version, footer
+
+---
+
 ## [6.5.0] — 2026-03-10
 
 ### fix(termux): Android Termux compatibility fixes (Complete)
