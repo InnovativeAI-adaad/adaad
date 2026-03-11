@@ -1,3 +1,37 @@
+## [6.9.2] — 2026-03-11
+
+### Phase 44 — Main Hardening
+
+Four defects resolved, one SyntaxWarning eliminated:
+
+#### RC-1: `tests/test_aponi_dashboard_e2e.py` — `test_replay_diff_http_endpoint_persists_export_bundle`
+- **Root cause**: `EvidenceBundleBuilder.build_bundle` requires `ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY`
+  environment variable at export time. Test did not inject it → `EvidenceBundleError:
+  missing_export_signing_secret:forensics-dev` → `ok=False`.
+- **Fix**: Added `monkeypatch.setenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY", "test-signing-secret-phase44")`
+  at test entry. Signing gate is not weakened — the test now supplies a deterministic test secret.
+
+#### RC-2: `ui/features/evidence_panel.py` — failure contract hardening
+- `replay_diff_export` previously caught `EvidenceBundleError` and returned an unstructured envelope.
+- **Fix**: Error envelope now includes `error_class` field for audit tracing. Unknown exceptions
+  (non-`EvidenceBundleError`) now **re-raise** rather than being silently swallowed — fail-closed.
+
+#### RC-3: `server.py` — lazy `import re` in simulation DSL parser
+- `import re as _re` was inside `_parse_simulation_dsl` function body (lazy import).
+- **Fix**: Promoted to module-level simulation block imports alongside `hashlib`, `threading`,
+  `time`, `uuid`. Consistent with module import pattern; no behavioral change.
+
+#### RC-4: `ui/aponi_dashboard.py` — invalid Python escape sequences (SyntaxWarning)
+- Four JS regex patterns embedded in non-raw Python strings contained `\.?` as single
+  backslash + dot — invalid Python escape sequences (SyntaxWarning in 3.12,
+  SyntaxError in 3.13+).
+- Lines affected: 2999, 4318, 4319, 4320.
+- **Fix**: Replaced `\.?` → `[.]?` (semantically identical JS regex for optional literal dot;
+  no backslash escaping required). `python3 -W error::SyntaxWarning` now compiles cleanly.
+
+#### Tests
+- Targeted suite: **50/50 passed**
+
 ## [6.9.1] — 2026-03-11
 
 ### Phase 43 Hardening — Thread-Safety + AST Import Validation

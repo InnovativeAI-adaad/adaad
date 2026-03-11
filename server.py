@@ -1990,6 +1990,7 @@ def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
 # ────────────────────────────────────────────────────────────────────────────
 
 import hashlib as _hashlib
+import re as _re
 import threading as _threading
 import time as _time
 import uuid as _uuid
@@ -2011,7 +2012,6 @@ def _parse_simulation_dsl(dsl_text: str) -> list[dict[str, Any]]:
 
     Raises HTTPException(422) on unknown or malformed constraints.
     """
-    import re as _re
     constraints: list[dict[str, Any]] = []
     for raw_line in dsl_text.splitlines():
         line = raw_line.strip()
