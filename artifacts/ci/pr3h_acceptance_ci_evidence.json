@@ -1,0 +1,50 @@
+{
+  "checks": [
+    {
+      "command": "python -m pytest tests/acceptance/pr3h/test_pr3h_acceptance.py -m pr3h_acceptance -q",
+      "return_code": 0,
+      "status": "pass",
+      "stderr": "",
+      "stdout": "..                                                                       [100%]\n=============================== warnings summary ===============================\ntests/acceptance/pr3h/test_pr3h_acceptance.py:17\n  /workspace/ADAAD/tests/acceptance/pr3h/test_pr3h_acceptance.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.dev_only - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    pytestmark = [pytest.mark.pr3h_acceptance, pytest.mark.dev_only]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n2 passed, 1 warning in 0.72s\n"
+    },
+    {
+      "command": "python scripts/validate_pr3h_acceptance.py --output artifacts/pr3h_acceptance_audit.json",
+      "return_code": 0,
+      "status": "pass",
+      "stderr": "",
+      "stdout": "{\n  \"command\": \"/root/.pyenv/versions/3.10.19/bin/python -m pytest tests/acceptance/pr3h -m pr3h_acceptance -q\",\n  \"return_code\": 0,\n  \"status\": \"pass\",\n  \"stderr\": \"\",\n  \"stdout\": \"..                                                                       [100%]\\n=============================== warnings summary ===============================\\ntests/acceptance/pr3h/test_pr3h_acceptance.py:17\\n  /workspace/ADAAD/tests/acceptance/pr3h/test_pr3h_acceptance.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.dev_only - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\\n    pytestmark = [pytest.mark.pr3h_acceptance, pytest.mark.dev_only]\\n\\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\\n2 passed, 1 warning in 0.72s\\n\",\n  \"suite\": \"pr3h_acceptance\",\n  \"timestamp_utc\": \"2026-03-11T16:55:34.238111+00:00\"\n}\n"
+    }
+  ],
+  "evidence_id": "pr3h-acceptance-gate-ci-artifacts",
+  "gating_context": {
+    "policy": "docs/governance/ci-gating.md",
+    "required_check": "pr3h-acceptance-gate",
+    "workflow": ".github/workflows/ci.yml"
+  },
+  "tracked_inputs": [
+    {
+      "path": "tests/acceptance/pr3h/test_pr3h_acceptance.py",
+      "sha256": "d359dee85b9f92ec2600ba01394bdabed76fc473bc92f1c6285de3c97ce99e3d"
+    },
+    {
+      "path": "tests/acceptance/pr3h/fixtures/entropy_triage_replay_cases.json",
+      "sha256": "f8d7373c56c368ea828602e227f8bb9abc4c700400c8b85efb220ce79d5b71bb"
+    },
+    {
+      "path": "scripts/validate_pr3h_acceptance.py",
+      "sha256": "63c57c3c7f410926e6d084e9b0137d0de7c4dcd65fb2240ec8a663e5e0d8edb0"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "5bba516ae74e02c1e8f8dea0ba9c4a3a1ad681a9d4aa9207721def0fedf9742c"
+    },
+    {
+      "path": "docs/governance/ci-gating.md",
+      "sha256": "28b67cbf3a6945236f24ae23b167c501ae89c6a69bc8761d1c488493f707c6e1"
+    },
+    {
+      "path": "artifacts/pr3h_acceptance_audit.json",
+      "sha256": "a9b37df67730ef0bcac2dd3ee7bdeb132200485f7a0631ad9dff6593643b39b6"
+    }
+  ]
+}

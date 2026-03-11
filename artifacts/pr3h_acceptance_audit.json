@@ -1,0 +1,9 @@
+{
+  "command": "/root/.pyenv/versions/3.10.19/bin/python -m pytest tests/acceptance/pr3h -m pr3h_acceptance -q",
+  "return_code": 0,
+  "status": "pass",
+  "stderr": "",
+  "stdout": "..                                                                       [100%]\n=============================== warnings summary ===============================\ntests/acceptance/pr3h/test_pr3h_acceptance.py:17\n  /workspace/ADAAD/tests/acceptance/pr3h/test_pr3h_acceptance.py:17: PytestUnknownMarkWarning: Unknown pytest.mark.dev_only - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html\n    pytestmark = [pytest.mark.pr3h_acceptance, pytest.mark.dev_only]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n2 passed, 1 warning in 0.72s\n",
+  "suite": "pr3h_acceptance",
+  "timestamp_utc": "2026-03-11T16:55:34.238111+00:00"
+}
