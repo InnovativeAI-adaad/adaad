@@ -56,6 +56,53 @@ from ui.features.replay_panel import replay_divergence
 from ui.features.timeline import evolution_timeline
 
 ELEMENT_ID = "Metal"
+
+# ── Cryovant Gate ────────────────────────────────────────────────────────────
+# Mirrors server.py: locks legacy dashboard API when gate.lock exists or
+# ADAAD_GATE_LOCKED env-var is truthy.  "/" and "/index.html" always pass.
+
+_DASHBOARD_GATE_LOCK_FILE = Path(
+    os.environ.get(
+        "ADAAD_GATE_LOCK_FILE",
+        str(APP_ROOT.parent / "security" / "ledger" / "gate.lock"),
+    )
+)
+_DASHBOARD_GATE_PROTOCOL = "adaad-gate/1.0"
+
+
+def _read_gate_state() -> Dict[str, Any]:
+    """Return gate snapshot. Never raises; never surfaces secrets."""
+    locked = False
+    reason: Any = None
+    source = "default"
+
+    env_flag = os.environ.get("ADAAD_GATE_LOCKED")
+    if env_flag:
+        locked = env_flag.lower() not in {"", "0", "false", "no"}
+        source = "env"
+        reason = os.environ.get("ADAAD_GATE_REASON") or reason
+
+    if _DASHBOARD_GATE_LOCK_FILE.exists():
+        source = "file"
+        locked = True
+        try:
+            contents = _DASHBOARD_GATE_LOCK_FILE.read_text(encoding="utf-8").strip()
+            if contents:
+                reason = contents
+        except Exception:
+            pass
+
+    if reason:
+        reason = str(reason)[:280]
+
+    return {
+        "locked": locked,
+        "reason": reason,
+        "source": source,
+        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "protocol": _DASHBOARD_GATE_PROTOCOL,
+    }
+
 HUMAN_DASHBOARD_TITLE = "Aponi Governance Nerve Center"
 
 # Version-resolution paths (used by /version endpoint and state injection)
@@ -1085,6 +1132,33 @@ class AponiDashboard:
                 path = parsed.path
                 query = parse_qs(parsed.query)
 
+                # ── Cryovant gate ──────────────────────────────────────────
+                # SPA paths always open; API data paths blocked when gate locked.
+                _GATE_SPA_PATHS = {"/", "/index.html", "/version"}
+                _DASHBOARD_GATE_PROTECTED_PREFIXES = (
+                    "/state", "/metrics", "/fitness", "/system/",
+                    "/risk/", "/replay/", "/policy/", "/simulation/",
+                    "/alerts/", "/capabilities", "/lineage", "/evolution/",
+                    "/projection/", "/mutations", "/staging", "/control/",
+                    "/ux/", "/governance/",
+                )
+                if path not in _GATE_SPA_PATHS and any(
+                    path.startswith(pfx) for pfx in _DASHBOARD_GATE_PROTECTED_PREFIXES
+                ):
+                    _gate = _read_gate_state()
+                    if _gate["locked"]:
+                        self._send_json(
+                            {
+                                "ok": False,
+                                "error": "cryovant_gate_locked",
+                                "reason": _gate["reason"] or "Cryovant gate LOCKED",
+                                "protocol": _gate["protocol"],
+                            },
+                            status_code=423,
+                        )
+                        return
+
+
                 if path in {"/", "/index.html"}:
                     self._send_html(self._user_console())
                     return
@@ -1285,8 +1359,13 @@ class AponiDashboard:
                     verification = _verify_control_queue(entries)
                     self._send_json({"enabled": self._command_surface_enabled(), "entries": entries[-50:], "latest_digest": verification.get("latest_digest", "")})
                     return
-                self.send_response(404)
-                self.end_headers()
+                # SPA fallback — serve ui/aponi/index.html for browser deep-links
+                _aponi_index = APP_ROOT.parent / "ui" / "aponi" / "index.html"
+                if _aponi_index.exists():
+                    self._send_html(_aponi_index.read_text(encoding="utf-8"))
+                else:
+                    self.send_response(404)
+                    self.end_headers()
 
             def do_POST(self):  # noqa: N802 - required by base class
                 parsed = urlparse(self.path)
