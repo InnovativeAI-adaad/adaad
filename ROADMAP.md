@@ -851,3 +851,42 @@ To maintain constitutional clarity:
 ---
 
 *This roadmap is governed by `docs/CONSTITUTION.md` and `docs/governance/ARCHITECT_SPEC_v2.0.0.md`. Amendments require ArchitectAgent approval and a CHANGELOG entry.*
+
+---
+
+## Phase 40 — BeastModeLoop Determinism Provider Injection
+
+**Status:** ✅ shipped · **Released:** v6.6.0 · **Closed:** 2026-03-10 · **Requires:** Phase 39 shipped ✅
+
+Phase 40 completes the determinism provider injection arc across both agent
+execution modes.  Phase 39 made `DreamMode` replay-safe; Phase 40 applies the
+identical treatment to `BeastModeLoop`, ensuring the evaluation and promotion
+path is also fully auditable and bit-identical under replay.
+
+### Architecture
+
+- `provider` (`RuntimeDeterminismProvider`) injected into `BeastModeLoop.__init__()`.
+- `_now()` helper delegates `time.time()` calls to `provider.now_utc().timestamp()`.
+- `_check_limits()` and `_check_mutation_quota()` use `_now()` — all
+  throttle timestamps and cooldown deadlines are provider-backed.
+- `require_replay_safe_provider()` called at construction — fail-closed guard.
+- Auto-provisioning: strict/audit tiers with no explicit provider receive
+  `SeededDeterminismProvider(seed=ADAAD_DETERMINISTIC_SEED)`.
+- `LegacyBeastModeCompatibilityAdapter` inherits injection via `super().__init__()`.
+- Backward-compatibility: callers omitting all three kwargs receive `SystemDeterminismProvider`.
+
+### Acceptance criteria
+
+- Default construction (no provider) uses `SystemDeterminismProvider`: **✅** (T40-B01)
+- `_now()` returns `provider.now_utc()` timestamp from `SeededDeterminismProvider`: **✅** (T40-B02)
+- `replay_mode="strict"` + `SeededDeterminismProvider` accepted: **✅** (T40-B03)
+- `replay_mode="strict"` + `SystemDeterminismProvider` raises `RuntimeError`: **✅** (T40-B04)
+- `recovery_tier` in `{audit, governance, critical}` + `SystemDeterminismProvider` raises: **✅** (T40-B05)
+- Audit tier without provider auto-provisions `SeededDeterminismProvider`: **✅** (T40-B06)
+- Two instances with identical seed+fixed_now produce identical `_now()`: **✅** (T40-B07)
+- `_check_limits()` writes provider-derived `cooldown_until` on budget exceeded: **✅** (T40-B08)
+- `_check_mutation_quota()` uses provider clock for quota enforcement: **✅** (T40-B09)
+- `_replay_mode` stored on instance: **✅** (T40-B10)
+- `_recovery_tier` normalised to lowercase and stored: **✅** (T40-B11)
+- `LegacyBeastModeCompatibilityAdapter` inherits provider injection: **✅** (T40-B12)
+- **14 tests** — `test_beast_mode_provider_determinism.py` (T40-B01..B12): **✅ 100%**
