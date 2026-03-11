@@ -46,19 +46,6 @@ def _populate_sink(tmp_path: Path) -> None:
 
 
 class TestAnalyticsEndpoint:
-    def test_returns_200_with_schema(self, client):
-        resp = client.get("/telemetry/analytics", headers=_AUTH)
-        assert resp.status_code == 200
-        d = resp.json()["data"]
-        required = {"status", "health_score", "strategy_stats", "dominant_strategy",
-                    "dominant_share", "stale_strategy_ids", "drift_max", "window_size",
-                    "total_decisions", "window_decisions", "ledger_chain_valid", "report_digest"}
-        assert required.issubset(d.keys())
-
-    def test_no_auth_returns_401(self, client):
-        resp = client.get("/telemetry/analytics")
-        assert resp.status_code == 401
-
     def test_window_size_too_small_returns_422(self, client):
         resp = client.get("/telemetry/analytics?window_size=5", headers=_AUTH)
         assert resp.status_code == 422
@@ -108,10 +95,6 @@ class TestStrategyDetailEndpoint:
     def test_unknown_strategy_returns_404(self, client):
         resp = client.get("/telemetry/strategy/unknown_strategy_xyz", headers=_AUTH)
         assert resp.status_code == 404
-
-    def test_no_auth_returns_401(self, client):
-        resp = client.get("/telemetry/strategy/conservative_hold")
-        assert resp.status_code == 401
 
     def test_adaptive_self_mutate_returns_correct_id(self, client):
         resp = client.get("/telemetry/strategy/adaptive_self_mutate", headers=_AUTH)

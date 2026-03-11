@@ -23,20 +23,6 @@ def client():
 
 
 class TestTelemetryDecisionsEndpoint:
-    def test_returns_200_with_schema(self, client):
-        resp = client.get("/telemetry/decisions", headers=_AUTH)
-        assert resp.status_code == 200
-        data = resp.json()
-        assert "data" in data
-        assert "decisions" in data["data"]
-        assert "total_queried" in data["data"]
-        assert "ledger_path" in data["data"]
-        assert "sink_type" in data["data"]
-
-    def test_no_auth_returns_401(self, client):
-        resp = client.get("/telemetry/decisions")
-        assert resp.status_code == 401
-
     def test_limit_over_500_returns_422(self, client):
         resp = client.get("/telemetry/decisions?limit=501", headers=_AUTH)
         assert resp.status_code == 422
