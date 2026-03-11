@@ -13,7 +13,9 @@ from runtime.governance_surface import deterministic_lock_enabled
 
 try:
     from runtime import metrics as runtime_metrics
-except Exception:  # pragma: no cover - runtime package optional for isolated usage
+except ModuleNotFoundError as exc:  # pragma: no cover - runtime package optional for isolated usage
+    if exc.name not in {"runtime", "runtime.metrics"}:
+        raise RuntimeError(f"dispatcher runtime metrics import failed: missing dependency '{exc.name}'") from exc
     runtime_metrics = None
 
 _LATENCY_BUDGET_ENV_VAR = "ADAAD_DISPATCH_LATENCY_BUDGET_MS"

@@ -1,3 +1,11 @@
+## [6.8.1] — 2026-03-11
+
+### fix(orchestrator): fail-closed runtime.metrics optional import handling
+
+- `adaad/orchestrator/dispatcher.py` now only falls back to `runtime_metrics = None` for `ModuleNotFoundError` when `runtime`/`runtime.metrics` is absent.
+- Non-optional missing dependency names during `runtime.metrics` import now raise deterministic `RuntimeError` instead of being swallowed.
+- Added dispatcher import-guard unit tests covering optional fallback and non-`ModuleNotFoundError` propagation.
+
 ## [6.8.0] — 2026-03-11
 
 ### Phase 42 — Critical Defect Sweep

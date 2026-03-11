@@ -151,6 +151,34 @@ def test_dispatch_result_or_raise_fails_closed_for_invalid_top_level_status() ->
         raise AssertionError("expected RuntimeError")
 
 
+def test_dispatcher_runtime_metrics_optional_runtime_module_not_found(monkeypatch) -> None:
+    original_import = __import__
+
+    def _import(name, globals=None, locals=None, fromlist=(), level=0):
+        if name == "runtime" and "metrics" in fromlist:
+            raise ModuleNotFoundError("No module named 'runtime'", name="runtime")
+        return original_import(name, globals, locals, fromlist, level)
+
+    monkeypatch.setattr("builtins.__import__", _import)
+    reloaded = importlib.reload(dispatcher_module)
+
+    assert reloaded.runtime_metrics is None
+
+
+def test_dispatcher_runtime_metrics_non_module_not_found_import_error_surfaces(monkeypatch) -> None:
+    original_import = __import__
+
+    def _import(name, globals=None, locals=None, fromlist=(), level=0):
+        if name == "runtime" and "metrics" in fromlist:
+            raise RuntimeError("runtime.metrics import cycle")
+        return original_import(name, globals, locals, fromlist, level)
+
+    monkeypatch.setattr("builtins.__import__", _import)
+
+    with pytest.raises(RuntimeError, match="runtime.metrics import cycle"):
+        importlib.reload(dispatcher_module)
+
+
 def test_dispatch_latency_budget_defaults_to_50ms_when_env_not_set(monkeypatch) -> None:
     monkeypatch.delenv("ADAAD_DISPATCH_LATENCY_BUDGET_MS", raising=False)
     importlib.reload(dispatcher_module)
