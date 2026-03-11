@@ -590,9 +590,20 @@ import sys"),
       - name: Validate release hardening claims against runtime capability checks
         run: python scripts/validate_release_hardening_claims.py
 
-  simplification-contract-gate:
+  test-marker-inventory:
     runs-on: ubuntu-latest
     needs: classify
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Validate canonical test marker coverage inventory
+        run: python scripts/validate_test_marker_inventory.py
+
+  simplification-contract-gate:
+    runs-on: ubuntu-latest
+    needs: [classify, test-marker-inventory]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
@@ -601,7 +612,7 @@ import sys"),
 
   benchmark-regression-gate:
     runs-on: ubuntu-latest
-    needs: classify
+    needs: [classify, test-marker-inventory]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env

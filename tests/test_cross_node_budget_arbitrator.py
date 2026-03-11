@@ -10,6 +10,8 @@ Coverage
 - TestCrossNodeArbitrateCluster(7 tests) — merge scores, quorum gate, eviction block, lineage digest
 """
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 import time
 import unittest

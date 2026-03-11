@@ -2,6 +2,7 @@
 """Phase 19 — AutonomyLoop persistent IntelligenceRouter tests (10 tests, T19-02-01..10)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.loop import AutonomyLoop, AutonomyLoopResult
 from runtime.intelligence.critique_signal import CritiqueSignalBuffer

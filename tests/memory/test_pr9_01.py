@@ -21,6 +21,7 @@ from typing import Any, Dict
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 # ─── Test key helpers ───────────────────────────────────────────────────────
 

@@ -12,6 +12,7 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
+pytestmark = pytest.mark.regression_standard
 os.environ.setdefault("ADAAD_ENV", "dev")
 os.environ.setdefault("CRYOVANT_DEV_MODE", "1")
 

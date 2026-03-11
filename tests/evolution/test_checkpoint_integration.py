@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from app.main import Orchestrator
 from runtime.evolution.checkpoint_registry import CheckpointRegistry

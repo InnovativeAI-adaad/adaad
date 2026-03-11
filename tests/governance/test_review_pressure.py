@@ -14,6 +14,7 @@ Validates:
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.review_pressure import (
     CONSTITUTIONAL_FLOOR_MIN_REVIEWERS,

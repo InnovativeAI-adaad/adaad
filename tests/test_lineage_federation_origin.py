@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.lineage_v2 import (
     FederationOrigin,

@@ -14,6 +14,7 @@ import time
 from typing import Any, Dict
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 # -- 1. CritiqueModule --------------------------------------------------------
 

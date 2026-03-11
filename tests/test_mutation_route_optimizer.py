@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.mutation_route_optimizer import (
     MutationRouteOptimizer,

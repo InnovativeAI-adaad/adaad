@@ -4,6 +4,7 @@
 from datetime import datetime, timedelta, timezone
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.economic.ingestion import MarketIngestion, MarketIngestionError
 

@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 from unittest.mock import MagicMock, patch
 
 from runtime.governance.simulation.constraint_interpreter import (

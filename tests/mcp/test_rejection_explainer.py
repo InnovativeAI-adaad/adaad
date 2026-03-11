@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.mcp.rejection_explainer import explain_rejection
 from security.ledger import journal

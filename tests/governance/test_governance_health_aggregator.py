@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import pytest
+pytestmark = pytest.mark.governance_gate
 from unittest.mock import MagicMock, patch
 
 from runtime.governance.health_aggregator import (

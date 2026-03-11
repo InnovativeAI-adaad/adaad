@@ -4,6 +4,7 @@ import importlib
 import sys
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 
 def _reload_legacy_modes_module() -> None:

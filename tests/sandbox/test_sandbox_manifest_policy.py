@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.sandbox.manifest import SandboxManifest, manifest_from_mapping, validate_manifest
 from runtime.sandbox.policy import SandboxPolicy, default_sandbox_policy, policy_from_mapping, validate_policy

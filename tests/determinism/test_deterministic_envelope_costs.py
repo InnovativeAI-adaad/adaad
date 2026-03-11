@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.governance.deterministic_envelope import (
     ENTROPY_COSTS,

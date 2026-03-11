@@ -4,6 +4,7 @@
 import time
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from security.cryovant import (
     MissingSigningKeyError,

@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives import serialization

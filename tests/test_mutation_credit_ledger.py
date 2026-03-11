@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.mutation_credit_ledger import (
     ZERO_HASH,

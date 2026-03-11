@@ -28,6 +28,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.simulation.constraint_interpreter import interpret_policy_block
 from runtime.governance.simulation.epoch_simulator import EpochReplaySimulator

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from adaad.agents.mutation_request import MutationRequest
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2

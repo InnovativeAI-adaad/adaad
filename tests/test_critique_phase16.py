@@ -2,6 +2,7 @@
 """Phase 16 — CritiqueModule strategy-weighted dimension floor tests (10 tests, T16-03-01..10)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.critique import (
     DIMENSION_FLOORS,

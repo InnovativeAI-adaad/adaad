@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.promotion_state_machine import PromotionState, can_transition, canary_stage_definitions, require_transition
 

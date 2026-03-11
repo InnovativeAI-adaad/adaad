@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 # Module: test_null_guards
 # Purpose: Verify null-safe access and checkpoint registry behavior under malformed payloads.

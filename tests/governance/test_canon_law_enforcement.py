@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.canon_law import CanonLawError, load_canon_law, one_way_escalation, violation_event_payload
 from runtime.governance.gate_certifier import GateCertifier

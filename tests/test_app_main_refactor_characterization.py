@@ -1,5 +1,7 @@
+import pytest
 import os
 
+pytestmark = pytest.mark.regression_standard
 os.environ.setdefault("ADAAD_ENV", "dev")
 os.environ.setdefault("ADAAD_POLICY_ARTIFACT_SIGNING_KEY", "test-key")
 

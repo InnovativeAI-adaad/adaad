@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.policy_lifecycle import PolicyLifecycleError, apply_transition
 

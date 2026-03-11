@@ -2,6 +2,8 @@
 """Tests for reward ingestion, offline replay evaluation, and guarded promotion."""
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.autonomy.reward_learning import (
     GuardedPromotionPolicy,

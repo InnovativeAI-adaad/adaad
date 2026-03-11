@@ -2,6 +2,7 @@
 """Tests for AGM event envelope determinism."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.agm_event import AGMEventEnvelope, AGMEventValidationError, ScoringEvent, create_event_envelope, validate_event_envelope
 from runtime.governance.foundation.determinism import SeededDeterminismProvider, SystemDeterminismProvider

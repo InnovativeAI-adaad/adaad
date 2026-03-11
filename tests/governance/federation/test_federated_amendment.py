@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.federation.mutation_broker import FederationMutationBroker, FederationMutationBrokerError
 

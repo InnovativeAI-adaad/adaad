@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: MIT
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from pathlib import Path
 from unittest import mock

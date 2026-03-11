@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.constitution import CONSTITUTION_VERSION
 from runtime.mcp.linting_bridge import MutationLintingBridge

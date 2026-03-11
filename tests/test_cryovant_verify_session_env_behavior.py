@@ -3,6 +3,7 @@
 from unittest import mock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from security.cryovant import GovernanceTokenError, verify_session
 

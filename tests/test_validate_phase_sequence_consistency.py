@@ -2,6 +2,8 @@
 """Smoke-test phase sequence consistency validator."""
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 import subprocess
 import sys

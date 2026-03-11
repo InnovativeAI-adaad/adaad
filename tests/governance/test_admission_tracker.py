@@ -7,6 +7,7 @@ Test IDs: T26-01..26
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.admission_tracker import (
     TRACKER_VERSION,

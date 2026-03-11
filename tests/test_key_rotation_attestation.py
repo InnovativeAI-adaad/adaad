@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from security.key_rotation_attestation import compute_attestation_hash, validate_rotation_record
 

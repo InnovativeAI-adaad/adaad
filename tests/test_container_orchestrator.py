@@ -2,6 +2,7 @@
 """Tests for ContainerOrchestrator + ContainerHealthProbe — ADAAD-12 PR-12-02."""
 from __future__ import annotations
 import pytest
+pytestmark = pytest.mark.regression_standard
 from runtime.sandbox.container_orchestrator import (
     ContainerOrchestrator, ContainerPool, ContainerLifecycleState
 )

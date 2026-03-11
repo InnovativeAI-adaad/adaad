@@ -16,6 +16,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 SCHEMAS_DIR = Path(__file__).resolve().parents[1] / "schemas"
 EVIDENCE_SCHEMA_PATH = SCHEMAS_DIR / "evidence_bundle.v1.json"

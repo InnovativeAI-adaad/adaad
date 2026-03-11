@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.foundation.determinism import SeededDeterminismProvider
 from runtime.sandbox.executor import HardenedSandboxExecutor
