@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from security.ledger import journal
 

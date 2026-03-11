@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 _BOOT_KNOWN_ENVS = frozenset({"dev", "test", "staging", "production", "prod"})
 _BOOT_STRICT_ENVS = frozenset({"staging", "production", "prod"})

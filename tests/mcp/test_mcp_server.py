@@ -6,6 +6,7 @@ import json
 import time
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 from runtime.governance.foundation import SeededDeterminismProvider

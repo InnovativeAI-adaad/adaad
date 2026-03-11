@@ -14,6 +14,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.governance.foundation import SeededDeterminismProvider, SystemDeterminismProvider
 

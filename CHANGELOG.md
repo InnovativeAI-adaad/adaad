@@ -1429,7 +1429,8 @@ All signals → ProposalRequest.context → StrategyModule.select()
   - `context_ledger_entry_accepted.v1`, `context_ledger_entry_rejected.v1`
   - `context_ledger_tamper_detected.v1`, `soulbound_key_rotation.v1`
   - `craft_pattern_extracted.v1`, `context_replay_injected.v1`, `soulbound_key_absent.v1`
-- **Tests:** `tests/memory/test_soulbound_pr901.py` — 25 tests (T9-01-01..25), all passing
+- **Tests:** `tests/memory/test_soulbound_pr901.py` — consolidated canonical suite for T9-01-01..25 (including legacy `test_pr9_01.py` assertions), all passing
+  - Legacy paths retained as compatibility stubs to reduce long-lived merge conflicts during branch transitions
   - SoulboundKey (5), SoulboundLedger (12), ContextFilterChain (8)
 
 ### Critical Findings Resolved (CF-2, CF-3, CF-4)
@@ -2555,7 +2556,7 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 
 ### ADAAD-10 Track A — Live Market Signal Adapters
 
-- **PR-10-02 — POST /market/signal webhook endpoint + integration tests:** `server.py` gains `POST /market/signal` bearer-auth-gated endpoint routing raw payloads through `LiveSignalRouter` → lineage-stamped `MarketSignalReading` → fitness advisory injection; journal event `market_signal_ingested.v1`. `tests/test_market_fitness_integrator.py`: 11 tests covering integrator bridging (live, synthetic fallback, lineage propagation, journal), `FitnessOrchestrator.inject_live_signal()` override (score override, no-override passthrough, clamping, bad epoch silent drop). ADAAD-10 Track A complete.
+- **PR-10-02 — POST /market/signal webhook endpoint + integration tests:** `server.py` gains `POST /market/signal` bearer-auth-gated endpoint routing raw payloads through `LiveSignalRouter` → lineage-stamped `MarketSignalReading` → fitness advisory injection; journal event `market_signal_ingested.v1`. `tests/market/test_market_fitness_integrator.py`: canonical consolidated suite covering enrich/integrate pathways, integrator bridging (live, synthetic fallback, lineage propagation, journal), and `FitnessOrchestrator.inject_live_signal()` advisory override semantics. ADAAD-10 Track A complete.
 
 - **PR-10-01 — MarketFitnessIntegrator + FitnessOrchestrator live signal injection:** `runtime/market/market_fitness_integrator.py` bridges `FeedRegistry.composite_reading()` into `FitnessOrchestrator.inject_live_signal()` replacing the static `simulated_market_score` with confidence-weighted live readings; synthetic fallback (0.5, zero confidence) on source failure. `runtime/evolution/fitness_orchestrator.py`: `inject_live_signal()` method + `_apply_live_override()` wired into `score()` pre-snapshot. `runtime/market/__init__.py` updated. Authority invariant: GovernanceGate retains final mutation-approval authority; market scores are fitness inputs only.
 

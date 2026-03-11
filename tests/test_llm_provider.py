@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.llm_provider import (
     EvolutionContextContract,

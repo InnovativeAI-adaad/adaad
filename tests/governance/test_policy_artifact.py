@@ -3,6 +3,7 @@
 import json
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.policy_artifact import (
     GovernancePolicyArtifactEnvelope,

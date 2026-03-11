@@ -2,6 +2,7 @@
 """Phase 17 — RoutedDecisionTelemetry tests (12 tests, T17-02-01..12)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.proposal import Proposal
 from runtime.intelligence.router import IntelligenceRouter

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.state.mutation_job_queue import MutationJobQueueStore
 from runtime.state.mutation_job_transitions import MutationJobTransitionStore

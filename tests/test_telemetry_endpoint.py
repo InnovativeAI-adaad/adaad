@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 _TOKEN = "pr21-audit-token"

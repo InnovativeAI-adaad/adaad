@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 from runtime.intelligence.strategy import STRATEGY_TAXONOMY

@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.scoring_validator import validate_scoring_payload
 

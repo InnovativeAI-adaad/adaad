@@ -1,5 +1,7 @@
+import pytest
 from datetime import datetime, timezone
 
+pytestmark = pytest.mark.regression_standard
 # SPDX-License-Identifier: Apache-2.0
 
 from governance.foundation.canonical import canonical_json

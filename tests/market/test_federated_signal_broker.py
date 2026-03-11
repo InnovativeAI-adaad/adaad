@@ -9,6 +9,8 @@ Coverage
 - TestPeerReading                    (4 tests) — freshness, age, fitness_contribution, stale flag
 """
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 import time
 import unittest

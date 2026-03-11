@@ -20,6 +20,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.constitution import CONSTITUTION_VERSION
 

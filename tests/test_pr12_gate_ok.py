@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import datetime as dt
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from adaad.core.health import health_report
 

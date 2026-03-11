@@ -22,6 +22,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.federation.federated_evidence_matrix import (
     CrossRepoVerificationResult,

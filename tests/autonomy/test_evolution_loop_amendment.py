@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.autonomy.roadmap_amendment_engine import (
     GovernanceViolation,

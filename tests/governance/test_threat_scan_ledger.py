@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.threat_scan_ledger import (
     THREAT_SCAN_LEDGER_VERSION,

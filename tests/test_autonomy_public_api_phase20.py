@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.regression_standard
 # SPDX-License-Identifier: Apache-2.0
 """Phase 20 — runtime.autonomy public API contract tests (8 tests, T20-02-01..08).
 

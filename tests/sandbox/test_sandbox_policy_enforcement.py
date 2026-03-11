@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.sandbox.executor import HardenedSandboxExecutor
 from runtime.sandbox.fs_rules import enforce_write_path_allowlist

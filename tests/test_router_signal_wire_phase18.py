@@ -2,6 +2,7 @@
 """Phase 18 — IntelligenceRouter CritiqueSignalBuffer wire tests (10 tests, T18-02-01..10)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.critique_signal import CritiqueSignalBuffer
 from runtime.intelligence.proposal import Proposal

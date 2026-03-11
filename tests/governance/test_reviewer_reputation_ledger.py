@@ -23,6 +23,7 @@ import threading
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.reviewer_reputation_ledger import (
     DECISION_APPROVE,

@@ -10,6 +10,8 @@ Coverage
 - TestProfileSummary           (2 tests) — no selection, post-selection summary
 """
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 import time
 import unittest

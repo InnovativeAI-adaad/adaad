@@ -14,7 +14,7 @@ from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.runtime import EvolutionRuntime
 
 FIXTURE_PATH = Path(__file__).with_name("fixtures") / "entropy_triage_replay_cases.json"
-pytestmark = pytest.mark.pr3h_acceptance
+pytestmark = [pytest.mark.pr3h_acceptance, pytest.mark.dev_only]
 
 
 class _WarmPoolStub:

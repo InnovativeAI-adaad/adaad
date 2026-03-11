@@ -10,6 +10,7 @@ import hashlib
 import json
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.mutation_admission import (
     AMBER_FLOOR,

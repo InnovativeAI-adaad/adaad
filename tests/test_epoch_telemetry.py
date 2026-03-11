@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.epoch_telemetry import (
     ACCEPTANCE_RATE_HEALTHY_MAX,

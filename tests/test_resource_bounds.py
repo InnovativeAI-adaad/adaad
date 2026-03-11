@@ -3,6 +3,7 @@
 import time
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded, enforce_resource_bounds
 

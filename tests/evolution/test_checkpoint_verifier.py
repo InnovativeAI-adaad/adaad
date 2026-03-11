@@ -3,6 +3,7 @@
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, CheckpointVerifier

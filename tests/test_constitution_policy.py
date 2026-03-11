@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime import constitution

@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.regression_standard
 # SPDX-License-Identifier: Apache-2.0
 
 from runtime.fitness_pipeline import FitnessPipeline, RiskEvaluator, TestOutcomeEvaluator

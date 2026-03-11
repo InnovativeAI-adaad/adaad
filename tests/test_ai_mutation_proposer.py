@@ -11,6 +11,7 @@ import json
 import threading
 import time
 import pytest
+pytestmark = pytest.mark.regression_standard
 from unittest.mock import patch, MagicMock
 
 from runtime.autonomy.ai_mutation_proposer import (

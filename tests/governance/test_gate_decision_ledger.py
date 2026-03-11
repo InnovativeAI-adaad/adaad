@@ -60,6 +60,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.gate_decision_ledger import (
     GATE_DECISION_LEDGER_GENESIS_PREV_HASH,

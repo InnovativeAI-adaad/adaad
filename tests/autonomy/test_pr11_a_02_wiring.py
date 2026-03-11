@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.autonomy.agent_bandit_selector import (
     AGENTS,

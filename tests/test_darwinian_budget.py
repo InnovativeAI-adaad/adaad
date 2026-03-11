@@ -8,6 +8,9 @@ Covers:
 - FitnessOrchestrator post-fitness hook integration
 """
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
+
 
 from pathlib import Path
 from typing import Dict

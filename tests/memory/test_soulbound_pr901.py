@@ -20,6 +20,7 @@ from typing import Any, Dict
 from unittest.mock import MagicMock
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -348,3 +349,49 @@ class TestContextFilterChain:
 
         chain.clear_custom_filters()
         assert chain.filter_count == base_count
+
+
+# ---------------------------------------------------------------------------
+# Compatibility assertions from legacy test_pr9_01.py
+# ---------------------------------------------------------------------------
+
+class TestSoulboundKeyCompat:
+    def test_get_key_returns_bytes_when_env_set(self, monkeypatch):
+        from runtime.memory.soulbound_key import get_key, ENV_VAR
+        monkeypatch.setenv(ENV_VAR, "a" * 64)
+        key = get_key()
+        assert isinstance(key, bytes)
+        assert key == TEST_KEY
+
+    def test_sign_returns_64_char_hex(self):
+        from runtime.memory.soulbound_key import sign
+        result = sign(b"test data", key=TEST_KEY)
+        assert isinstance(result, str)
+        assert len(result) == 64
+        assert all(c in "0123456789abcdef" for c in result)
+
+
+class TestSoulboundLedgerCompat:
+    def test_entry_has_64_char_context_digest(self, tmp_path):
+        ledger = _make_ledger(tmp_path)
+        result = ledger.append(
+            epoch_id="epoch-003",
+            context_type="mutation_proposal",
+            payload=_valid_payload("epoch-003", details={"x": 1}),
+        )
+        assert result.accepted is True
+        assert len(result.entry.context_digest) == 64
+
+
+class TestContextFilterChainCompat:
+    def test_private_key_pattern_reason_contains_private_key(self):
+        from runtime.memory.context_filter_chain import ContextFilterChain
+        chain = ContextFilterChain()
+        payload = {
+            "epoch_id": "epoch-042",
+            "context_hash": "abc123",
+            "secret_key": "sk-abc123def456ghi789jkl000mno111",
+        }
+        result = chain.evaluate(payload=payload, context_type="mutation_proposal")
+        assert result.accepted is False
+        assert "private_key" in (result.rejection_reason or "")

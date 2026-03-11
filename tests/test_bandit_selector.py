@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import math
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.bandit_selector import (
     AGENTS,

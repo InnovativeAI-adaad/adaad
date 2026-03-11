@@ -3,6 +3,7 @@
 from __future__ import annotations
 import time
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 class TestPeerRegistry:
     def _registry(self, self_id="node-1", endpoint="http://localhost:8001"):

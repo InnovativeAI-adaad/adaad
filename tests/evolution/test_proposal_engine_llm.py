@@ -15,6 +15,7 @@ from typing import Any, Mapping
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.proposal_engine import ProposalEngine, ProposalRequest, _noop_proposal
 from runtime.intelligence.proposal import Proposal, ProposalModule
