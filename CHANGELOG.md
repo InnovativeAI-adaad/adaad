@@ -1,3 +1,30 @@
+## [6.5.2] — 2026-03-11
+
+### fix(server): nexus_health gate_ok field missing — UI always locked
+
+**Root cause:** `probeHealth()` in `ui/aponi/index.html` checks `data.gate_ok !== true`
+against the response from `GET /api/nexus/health`. The `nexus_health()` endpoint
+returned `{"ok": ..., "protocol": ..., "gate": ...}` — the `gate_ok` field was never
+included. Since `undefined !== true` is always `true`, the UI evaluated the gate as
+locked on every poll regardless of actual gate state.
+
+`GET /api/health` (different endpoint) correctly returned `gate_ok`, but the UI polls
+`/api/nexus/health`, not `/api/health`.
+
+**Fix:** `nexus_health()` now returns `gate_ok` alongside `ok` — both set to
+`not gate["locked"]`. The fix is a one-field addition; no logic change.
+
+**Test:** `tests/test_nexus_health_gate_ok.py` — 8 tests including:
+- `test_gate_ok_field_present` — gate_ok must be in response
+- `test_gate_ok_is_true_when_unlocked` — must be exactly `True` (not just truthy)
+- `test_ok_matches_gate_ok` — both fields must agree
+
+**Files changed:**
+- `server.py` — `nexus_health()`: add `gate_ok` to response
+- `tests/test_nexus_health_gate_ok.py` — new regression test (8 tests)
+
+---
+
 ## [6.5.1] — 2026-03-10
 
 ### docs: Harden all docs — accuracy, navigation, and awe

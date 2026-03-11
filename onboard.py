@@ -236,7 +236,35 @@ def step_dryrun() -> None:
 
 # ── Entry ───────────────────────────────────────────────────────────────────
 
+def _check_armv8l_redirect() -> None:
+    """Detect armv8l (32-bit ARM Termux) and redirect to onboard_phone.py."""
+    import platform
+    arch = platform.machine()
+    if arch not in ("armv8l", "armv7l"):
+        return
+    phone_onboarder = Path(__file__).resolve().parent / "onboard_phone.py"
+    print()
+    print(f"  {YELLOW}⚠{R}  Detected {arch} architecture (32-bit ARM / Termux).")
+    print()
+    print(f"  {CYAN}requirements.server.txt{R} includes packages that require Rust")
+    print(f"  compilation ({CYAN}pydantic-core{R}, {CYAN}jiter{R}) which fail on {arch}:")
+    print(f"    {RED}maturin: Unsupported Android architecture: {arch}{R}")
+    print()
+    if phone_onboarder.exists():
+        print(f"  Use the phone-optimised onboarder instead:")
+        print(f"    {BOLD}{CYAN}python3 onboard_phone.py{R}")
+        print()
+        print(f"  Or read {CYAN}PHONE_SETUP.md{R} for the complete guide.")
+    else:
+        print(f"  Switch to the phone branch first:")
+        print(f"    git checkout device/phone-armv8l")
+        print(f"    python3 onboard_phone.py")
+    print()
+    sys.exit(0)
+
+
 def main() -> None:
+    _check_armv8l_redirect()
     _banner()
 
     steps = [

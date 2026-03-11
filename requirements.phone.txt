@@ -1,0 +1,40 @@
+# ADAAD — Phone-safe requirements
+# Architecture: armv8l (32-bit ARM, Samsung / other devices running Termux)
+#
+# WHY THIS EXISTS
+# ---------------
+# requirements.server.txt includes packages with Rust extensions:
+#   pydantic-core  (pydantic v2 backend) → maturin fails: "Unsupported Android architecture: armv8l"
+#   jiter          (anthropic dependency) → same maturin failure
+#
+# This file replaces those with pure-Python equivalents.
+#
+# WHAT CHANGES vs requirements.server.txt
+# ----------------------------------------
+#   fastapi 0.99.1     — last version that supports pydantic v1 (has lifespan= support)
+#   pydantic 1.10.18   — pure Python, no Rust, v1 API (mutate.py is v1 compatible)
+#   starlette 0.27.0   — required by fastapi 0.99.1
+#   uvicorn 0.23.2     — pure Python ASGI server
+#   httpx 0.27.2       — pure Python HTTP client
+#   PyYAML             — C extension with pure-Python fallback; installs on armv8l
+#
+# EXCLUDED (Rust compilation required, fails on armv8l):
+#   anthropic          — needs jiter (Rust). AI calls disabled; server/dashboard unaffected.
+#                        To try: pip install anthropic==0.18.1 --only-binary :all:
+#
+# SYSTEM PACKAGE (install via pkg, not pip):
+#   PyNaCl             — pkg install python-nacl
+#                        Already optional in replay_attestation.py via _has_pynacl()
+
+fastapi==0.99.1
+uvicorn==0.23.2
+starlette==0.27.0
+pydantic==1.10.18
+httpx==0.27.2
+PyYAML>=6.0.1
+anyio>=3.6.2,<5
+sniffio>=1.1
+h11>=0.8,<0.15
+click>=7.0
+certifi
+idna

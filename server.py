@@ -216,7 +216,8 @@ def health() -> dict[str, Any]:
 @app.get("/api/nexus/health")
 def nexus_health() -> dict[str, Any]:
     gate = _read_gate_state()
-    snapshot = {"ok": not gate["locked"], "protocol": GATE_PROTOCOL, "gate": gate}
+    unlocked = not gate["locked"]
+    snapshot = {"ok": unlocked, "gate_ok": unlocked, "protocol": GATE_PROTOCOL, "gate": gate}
     if gate["locked"]:
         raise HTTPException(
             status_code=423,
