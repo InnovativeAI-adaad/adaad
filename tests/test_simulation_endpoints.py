@@ -22,6 +22,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 

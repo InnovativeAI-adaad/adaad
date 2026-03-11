@@ -2,6 +2,7 @@
 """Tests for default_provider() strict replay mode enforcement."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.foundation.determinism import SeededDeterminismProvider, SystemDeterminismProvider, default_provider
 

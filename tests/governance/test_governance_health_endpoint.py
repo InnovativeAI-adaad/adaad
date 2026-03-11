@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import inspect
 import pytest
+pytestmark = pytest.mark.governance_gate
 from unittest.mock import patch, MagicMock
 
 

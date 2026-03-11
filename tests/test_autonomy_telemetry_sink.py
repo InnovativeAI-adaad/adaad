@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.loop import AgentAction, AutonomyLoop, AutonomyLoopResult
 from runtime.intelligence.file_telemetry_sink import FileTelemetrySink

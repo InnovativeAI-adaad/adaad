@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.autonomous_critical
 # SPDX-License-Identifier: Apache-2.0
 
 from runtime.evolution.entropy_policy import EntropyPolicy, enforce_entropy_policy

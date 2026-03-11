@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 # ─── Test helpers ──────────────────────────────────────────────────────────
 

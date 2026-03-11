@@ -2,6 +2,8 @@
 """Regression tests for phase sequence consistency validation."""
 
 from __future__ import annotations
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 import importlib.util
 from pathlib import Path

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.health_pressure_adaptor import (
     ADAPTOR_VERSION,

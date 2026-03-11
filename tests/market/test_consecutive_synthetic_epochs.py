@@ -17,6 +17,7 @@ import dataclasses
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.market.market_fitness_integrator import IntegrationResult, MarketFitnessIntegrator
 

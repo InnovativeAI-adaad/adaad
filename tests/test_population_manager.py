@@ -6,6 +6,7 @@ from __future__ import annotations
 import random
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.mutation_scaffold import MutationCandidate, ScoringWeights
 from runtime.evolution.population_manager import (

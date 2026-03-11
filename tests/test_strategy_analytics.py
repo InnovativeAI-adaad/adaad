@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.strategy import STRATEGY_TAXONOMY
 from runtime.intelligence.strategy_analytics import (

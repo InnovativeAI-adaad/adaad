@@ -10,6 +10,7 @@ green — this file validates the v2 additions only.
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.autonomy.mutation_scaffold import (
     DEFAULT_ACCEPTANCE_THRESHOLD,

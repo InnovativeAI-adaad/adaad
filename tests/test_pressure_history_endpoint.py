@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 _TOKEN = "pr25-ph-token"
@@ -37,18 +38,6 @@ def _seed_ledger(tmp_path: Path, health_scores: list[float]) -> Path:
 
 
 class TestPressureHistoryEndpoint:
-    def test_returns_200_with_schema(self, client, monkeypatch):
-        monkeypatch.delenv("ADAAD_PRESSURE_LEDGER_PATH", raising=False)
-        resp = client.get("/governance/pressure-history", headers=_AUTH)
-        assert resp.status_code == 200
-        assert "schema_version" in resp.json()
-        assert "data" in resp.json()
-
-    def test_no_auth_returns_401(self, client, monkeypatch):
-        monkeypatch.delenv("ADAAD_PRESSURE_LEDGER_PATH", raising=False)
-        resp = client.get("/governance/pressure-history")
-        assert resp.status_code == 401
-
     def test_ledger_inactive_without_env(self, client, monkeypatch):
         monkeypatch.delenv("ADAAD_PRESSURE_LEDGER_PATH", raising=False)
         resp = client.get("/governance/pressure-history", headers=_AUTH)

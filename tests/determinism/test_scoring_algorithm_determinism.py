@@ -6,6 +6,7 @@ import copy
 import json
 
 import pytest
+pytestmark = pytest.mark.autonomous_critical
 
 from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
 from runtime.evolution.scoring_algorithm import (

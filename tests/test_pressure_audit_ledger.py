@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
 from runtime.governance.pressure_audit_ledger import (

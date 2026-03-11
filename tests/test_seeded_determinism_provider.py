@@ -2,6 +2,7 @@
 """Tests for SeededDeterminismProvider uniqueness and replay guarantees."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.foundation.determinism import SeededDeterminismProvider
 

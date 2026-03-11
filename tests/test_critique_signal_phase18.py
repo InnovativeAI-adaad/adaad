@@ -2,6 +2,7 @@
 """Phase 18 — CritiqueSignalBuffer + StrategyModule breach penalty tests (15 tests, T18-01-01..15)."""
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.intelligence.critique_signal import (
     CritiqueSignalBuffer,

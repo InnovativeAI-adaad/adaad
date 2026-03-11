@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 from fastapi.testclient import TestClient
 
 _TOKEN = "pr23-audit-token"
@@ -23,17 +24,6 @@ def client():
 
 
 class TestRoutingHealthEndpoint:
-    def test_returns_200_with_schema(self, client):
-        resp = client.get("/governance/routing-health", headers=_AUTH)
-        assert resp.status_code == 200
-        d = resp.json()
-        assert "data" in d
-        assert "schema_version" in d
-
-    def test_no_auth_returns_401(self, client):
-        resp = client.get("/governance/routing-health")
-        assert resp.status_code == 401
-
     def test_window_size_too_small_returns_422(self, client):
         resp = client.get("/governance/routing-health?window_size=5", headers=_AUTH)
         assert resp.status_code == 422

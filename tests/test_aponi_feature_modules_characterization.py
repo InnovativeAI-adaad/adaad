@@ -1,3 +1,5 @@
+import pytest
+pytestmark = pytest.mark.regression_standard
 # SPDX-License-Identifier: Apache-2.0
 
 from ui.features.evidence_panel import replay_diff_export, state_fingerprint

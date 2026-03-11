@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.admission_audit_ledger import (
     ADMISSION_LEDGER_GENESIS_PREV_HASH,

@@ -15,6 +15,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.evolution_loop import EpochResult
 from runtime.market.market_fitness_integrator import IntegrationResult, MarketFitnessIntegrator

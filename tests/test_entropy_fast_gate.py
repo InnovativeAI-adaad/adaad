@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.regression_standard
 
 from runtime.evolution.entropy_fast_gate import (
     DEFAULT_DENY_BITS,

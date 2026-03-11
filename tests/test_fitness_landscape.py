@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import pytest
+pytestmark = pytest.mark.regression_standard
 from pathlib import Path
 
 from runtime.autonomy.fitness_landscape import FitnessLandscape, TypeRecord

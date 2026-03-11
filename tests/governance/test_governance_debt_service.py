@@ -10,6 +10,7 @@ Test IDs: T31-01 through T31-06
 from __future__ import annotations
 
 import pytest
+pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.debt_ledger import (
     DEBT_LEDGER_SCHEMA_VERSION,

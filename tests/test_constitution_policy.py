@@ -7,5 +7,7 @@ Canonical suites:
 - tests/determinism/test_constitution_policy_determinism.py
 - tests/governance/signals/test_constitution_policy_signals.py
 """
+import pytest
+pytestmark = pytest.mark.regression_standard
 
 # ADAAD-LANE: constitutional-inviolability
