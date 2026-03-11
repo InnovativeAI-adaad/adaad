@@ -81,7 +81,7 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_GOVERNOR_ENTROPY_BUDGET` | `unset` | numeric string parsed as int/float | runtime/governance engine | `runtime/evolution/governor.py` |
 | `ADAAD_GOVERNOR_VERSION` | `'3.0.0'` | string/JSON per caller contract | runtime/governance engine | `runtime/evolution/evidence_bundle.py` |
 | `ADAAD_KEY_ROTATION_FILE` | `'security/keys/rotation.json'` | filesystem path/list string | ops/verification scripts | `scripts/validate_key_rotation_attestation.py` |
-| `ADAAD_KEY_ROTATION_MAX_AGE_DAYS` | `'90'` | numeric string parsed as int/float | application orchestration (app) | `app/main.py` |
+| `ADAAD_KEY_ROTATION_MAX_AGE_DAYS` | `'90'` | integer string (`int(...)`); malformed values fail closed via `invalid_key_rotation_max_age_days` in governance gate | application orchestration (app) | `app/main.py` |
 | `ADAAD_KEY_ROTATION_STATUS_FILE` | `'key_rotation_status.json'` | filesystem path/list string | ops/verification scripts | `scripts/validate_key_rotation_attestation.py` |
 | `ADAAD_LIFECYCLE_DRY_RUN` | `''` | boolean-like: `1|true|yes|on` enables | application orchestration (app) | `app/mutation_executor.py` |
 | `ADAAD_LINEAGE_PATH` | `''` | filesystem path/list string | runtime/governance engine | `runtime/metrics_analysis.py` |
