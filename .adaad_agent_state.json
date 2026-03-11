@@ -1,8 +1,8 @@
 {
     "schema_version": "1.5.0",
-    "last_completed_pr": "PR-TERMUX-FIX",
+    "last_completed_pr": "docs/readme-hardening-v650",
     "next_pr": "PR-40-PLAN (Phase 40 \u2014 TBD)",
-    "active_phase": "Termux fix COMPLETE \u00b7 v6.5.0",
+    "active_phase": "Docs hardening COMPLETE \u00b7 v6.5.0",
     "last_invocation": "2026-03-10",
     "blocked_reason": null,
     "blocked_at_gate": null,

@@ -1,6 +1,6 @@
 # ADAAD — Termux Setup Guide
 
-**Run the full ADAAD governance server on Android via Termux**
+**v6.5.0 · Run the full ADAAD governance server on Android via Termux**
 
 > Tested on Android 10+ · Termux 0.118+ · Python 3.11+
 
@@ -192,5 +192,5 @@ start `server.py` in Termux, then open the ADAAD APK pointing at `localhost:8000
 
 ---
 
-*ADAAD · Apache-2.0 License · InnovativeAI LLC · Blackwell, Oklahoma*
+*ADAAD · MIT License · InnovativeAI LLC · Blackwell, Oklahoma*
 *Issues: https://github.com/InnovativeAI-adaad/ADAAD/issues — label: `android`*
