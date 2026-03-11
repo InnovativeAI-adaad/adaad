@@ -97,8 +97,6 @@ def _read_adaad_version() -> str:
         return (APP_ROOT.parent / "VERSION").read_text(encoding="utf-8").strip()
     except OSError:
         return "unknown"
-    logger.propagate = False
-    return logger
 
 
 def _governance_ci_mode_enabled() -> bool:
