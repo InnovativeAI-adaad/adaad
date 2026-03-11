@@ -4,10 +4,48 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import threading
 import time
+from contextlib import contextmanager
 from typing import Any, Dict, Optional
 
 DEFAULT_PATH = os.path.join("security", "ledger", "_nonce_kv.json")
+
+_THREAD_STORE_LOCK = threading.Lock()
+
+
+def _lock_path(path: str) -> str:
+    return path + ".lock"
+
+
+@contextmanager
+def _store_lock(path: str):
+    # Invariant: every mutation executes as a single _load -> mutate -> _atomic_write_json
+    # critical section across threads/processes for a given store path.
+    lock_path = _lock_path(path)
+    os.makedirs(os.path.dirname(lock_path), exist_ok=True)
+    with _THREAD_STORE_LOCK:
+        with open(lock_path, "a+", encoding="utf-8") as handle:
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                if os.name == "nt":
+                    import msvcrt
+
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
 def _load(path: str) -> Dict[str, Any]:
@@ -45,20 +83,22 @@ def seen_nonce(nonce: str, path: str = DEFAULT_PATH) -> bool:
 
 
 def mark_nonce(nonce: str, ttl_seconds: int = 3600, path: str = DEFAULT_PATH) -> None:
-    db = _load(path)
-    now = int(time.time())
-    h = hash_nonce(nonce)
-    db.setdefault("nonces", {})[h] = now + int(ttl_seconds)
-    _gc(db)
-    _atomic_write_json(path, db)
+    with _store_lock(path):
+        db = _load(path)
+        now = int(time.time())
+        h = hash_nonce(nonce)
+        db.setdefault("nonces", {})[h] = now + int(ttl_seconds)
+        _gc(db)
+        _atomic_write_json(path, db)
 
 
 def put_challenge(challenge_id: str, challenge: str, ttl_seconds: int = 300, path: str = DEFAULT_PATH) -> None:
-    db = _load(path)
-    now = int(time.time())
-    db.setdefault("challenges", {})[challenge_id] = {"challenge": challenge, "exp": now + int(ttl_seconds)}
-    _gc(db)
-    _atomic_write_json(path, db)
+    with _store_lock(path):
+        db = _load(path)
+        now = int(time.time())
+        db.setdefault("challenges", {})[challenge_id] = {"challenge": challenge, "exp": now + int(ttl_seconds)}
+        _gc(db)
+        _atomic_write_json(path, db)
 
 
 def get_challenge(challenge_id: str, path: str = DEFAULT_PATH) -> Optional[str]:
@@ -73,11 +113,12 @@ def get_challenge(challenge_id: str, path: str = DEFAULT_PATH) -> Optional[str]:
 
 
 def consume_challenge(challenge_id: str, path: str = DEFAULT_PATH) -> None:
-    db = _load(path)
-    if "challenges" in db and challenge_id in db["challenges"]:
-        del db["challenges"][challenge_id]
-    _gc(db)
-    _atomic_write_json(path, db)
+    with _store_lock(path):
+        db = _load(path)
+        if "challenges" in db and challenge_id in db["challenges"]:
+            del db["challenges"][challenge_id]
+        _gc(db)
+        _atomic_write_json(path, db)
 
 
 __all__ = [
