@@ -4,7 +4,15 @@ pytestmark = pytest.mark.regression_standard
 
 import sys
 
-from scripts.run_tier0_preflight import Check, CheckResult, _command_exists, _print_summary, main
+from scripts.run_tier0_preflight import (
+    Check,
+    CheckResult,
+    _command_exists,
+    _missing_test_extras,
+    _print_summary,
+    _test_mode_enabled,
+    main,
+)
 
 
 def test_check_skip_if_missing_default_is_fail_closed() -> None:
@@ -47,3 +55,35 @@ def test_command_exists_multiple_assignments() -> None:
 
 def test_command_exists_missing_executable() -> None:
     assert not _command_exists("A=1 __definitely_missing_executable__ --version")
+
+
+def test_test_mode_enabled_from_env(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_TEST_MODE", "1")
+    assert _test_mode_enabled() is True
+
+
+def test_missing_test_extras_collects_missing(monkeypatch) -> None:
+    import builtins
+
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "cryptography":
+            raise ModuleNotFoundError(name)
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    missing = _missing_test_extras()
+    assert "cryptography" in missing
+
+
+def test_main_blocks_when_test_mode_missing_extras(monkeypatch, capsys) -> None:
+    monkeypatch.setenv("ADAAD_TEST_MODE", "1")
+    monkeypatch.setattr(sys, "argv", ["run_tier0_preflight.py"])
+    monkeypatch.setattr("scripts.run_tier0_preflight._missing_test_extras", lambda: ["cryptography"])
+
+    code = main()
+    out = capsys.readouterr().out
+
+    assert code == 2
+    assert "[ADAAD BLOCKED] missing test-mode extras" in out

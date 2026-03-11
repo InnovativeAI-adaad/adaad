@@ -119,7 +119,14 @@ python onboard.py
 
 > **Requirements:** Python 3.11.9+ · pip · git
 
-`onboard.py` handles everything: venv creation, dependency install, workspace init, schema validation, and a governed dry-run. Safe to re-run at any time.
+For manual bootstrap before running the full test suite, install both runtime and dev/test manifests:
+
+```bash
+pip install -r requirements.server.txt
+pip install -r requirements.dev.txt
+```
+
+`onboard.py` handles everything: venv creation, runtime dependency install, deterministic dev/test dependency install (`requirements.dev.txt`), workspace init, schema validation, and a governed dry-run. Safe to re-run at any time.
 
 <details>
 <summary><strong>What onboarding does, step by step</strong></summary>

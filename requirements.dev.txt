@@ -1,0 +1,9 @@
+# Source of truth for deterministic dev/test dependency pins.
+-r requirements.server.txt
+
+# Test runner + optional benchmark plugin used by benchmark-marked tests.
+pytest==8.4.2
+pytest-benchmark==5.2.3
+
+# Optional federation transport test dependency (importorskip in tests).
+cryptography==46.0.3

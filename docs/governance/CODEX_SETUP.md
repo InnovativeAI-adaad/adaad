@@ -98,11 +98,14 @@ Fallback (use only when `onboard.py` cannot run in your environment):
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.server.txt
+pip install -r requirements.dev.txt
 python - <<'PY'
 import importlib.util
 assert importlib.util.find_spec("yaml") is not None, "PyYAML missing"
 assert importlib.util.find_spec("nacl") is not None, "PyNaCl missing"
-print("dependency bootstrap ok: yaml + nacl present")
+assert importlib.util.find_spec("cryptography") is not None, "cryptography missing"
+assert importlib.util.find_spec("pytest_benchmark") is not None, "pytest-benchmark missing"
+print("dependency bootstrap ok: runtime + test extras present")
 PY
 ```
 

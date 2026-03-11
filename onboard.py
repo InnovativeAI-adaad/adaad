@@ -113,34 +113,49 @@ def _is_termux() -> bool:
     )
 
 
+def _install_requirements_file(req: Path, *, pip_flags: list[str]) -> subprocess.CompletedProcess:
+    return _run_quiet([_venv_python(), "-m", "pip", "install", "-r", str(req)] + pip_flags)
+
+
 def step_install_deps() -> None:
-    req = ROOT / "requirements.server.txt"
-    if not req.exists():
+    runtime_req = ROOT / "requirements.server.txt"
+    dev_req = ROOT / "requirements.dev.txt"
+
+    if not runtime_req.exists():
         _warn("requirements.server.txt not found — skipping install")
         return
-    _info("Installing dependencies (this may take a moment)…")
 
-    # Termux: many packages (PyNaCl, cffi) require native libs installed
-    # via `pkg install` — use --only-binary to avoid failing source builds.
+    _info("Installing runtime dependencies (this may take a moment)…")
+
     pip_flags = ["--quiet"]
     if _is_termux():
         pip_flags += ["--only-binary", ":all:", "--prefer-binary"]
         _info("Termux detected — using --only-binary to skip source builds")
         _info("If install fails, run:  pkg install libsodium python-cryptography")
 
-    result = _run_quiet(
-        [_venv_python(), "-m", "pip", "install", "-r", str(req)] + pip_flags,
-    )
-    if result.returncode != 0:
+    runtime_result = _install_requirements_file(runtime_req, pip_flags=pip_flags)
+    if runtime_result.returncode != 0:
         if _is_termux():
             _warn("Some packages need native Termux libs. Run:")
             _warn("  pkg install libsodium python-cryptography python-nacl")
             _warn("Then re-run:  python3 onboard.py")
         else:
-            _warn("Dependency install had warnings. Continuing.")
-        _warn(result.stderr[-400:] if result.stderr else "")
+            _warn("Runtime dependency install had warnings. Continuing.")
+        _warn(runtime_result.stderr[-400:] if runtime_result.stderr else "")
+        return
+    _ok("Runtime dependencies installed")
+
+    if not dev_req.exists():
+        _warn("requirements.dev.txt not found — skipping dev/test extras")
+        return
+
+    _info("Installing deterministic dev/test extras…")
+    dev_result = _install_requirements_file(dev_req, pip_flags=pip_flags)
+    if dev_result.returncode != 0:
+        _warn("Dev/test dependency install had warnings. Continuing.")
+        _warn(dev_result.stderr[-400:] if dev_result.stderr else "")
     else:
-        _ok("Dependencies installed")
+        _ok("Dev/test dependencies installed")
 
 
 def step_env() -> None:

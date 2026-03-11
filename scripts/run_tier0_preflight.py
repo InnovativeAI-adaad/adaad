@@ -24,6 +24,24 @@ from runtime.tools.execution_contract import (
 )
 
 
+TEST_MODE_ENV_VARS = ("ADAAD_TEST_MODE", "PYTEST_CURRENT_TEST")
+TEST_EXTRAS = ("cryptography", "pytest_benchmark")
+
+
+def _test_mode_enabled() -> bool:
+    return any(os.getenv(name, "").strip() for name in TEST_MODE_ENV_VARS)
+
+
+def _missing_test_extras() -> list[str]:
+    missing: list[str] = []
+    for module_name in TEST_EXTRAS:
+        try:
+            __import__(module_name)
+        except ModuleNotFoundError:
+            missing.append(module_name)
+    return missing
+
+
 @dataclass(frozen=True)
 class Check:
     name: str
@@ -173,6 +191,16 @@ def main() -> int:
         return 2
 
     checks = build_checks(include_tests=not args.no_tests)
+
+    if _test_mode_enabled() and not args.check_only:
+        missing_test_extras = _missing_test_extras()
+        if missing_test_extras:
+            print(
+                "[ADAAD BLOCKED] missing test-mode extras: "
+                + ", ".join(missing_test_extras)
+                + ". Install requirements.dev.txt before running Tier 0 in test mode."
+            )
+            return 2
     results = [_run_check(check, check_only=args.check_only) for check in checks]
 
     if args.no_tests and args.check_only:
