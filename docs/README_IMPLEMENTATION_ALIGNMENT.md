@@ -142,7 +142,7 @@ Expected status in this repository branch: all tests passing (with one known col
 | Milestone | Status in docs | Reconciled repository posture |
 |---|---|---|
 | PR-1 | Complete | Keep as complete (scoring + deterministic ledger/test claims present and aligned) |
-| PR-2 | Complete | Constitutional rule set is fully enabled and validated; see `runtime/constitution.py` (validator registry + policy loading/enabled-rule gating) and `tests/test_constitution_policy.py` (coverage for lineage/coverage/mutation-rate/resource-bounds behavior). |
+| PR-2 | Complete | Constitutional rule set is fully enabled and validated; see `runtime/constitution.py` (validator registry + policy loading/enabled-rule gating) and `tests/governance/inviolability/test_constitution_policy_inviolability.py + tests/determinism/test_constitution_policy_determinism.py + tests/governance/signals/test_constitution_policy_signals.py` (coverage for lineage/coverage/mutation-rate/resource-bounds behavior). |
 | PR-3 | Complete | Checkpoint registry/verifier and entropy policy enforcement are implemented with deterministic coverage in-tree; milestone scope is satisfied for 0.65.x. |
 | PR-3H (hardening extension) | Implemented | Post-PR-3 hardening scope is implemented in-tree: deterministic checkpoint tamper-escalation evidence path, entropy anomaly triage policy thresholds + replay fixtures, and audit-ready hardening acceptance tests for strict replay governance reviews. |
 | PR-4 | Complete | PR lifecycle contracts, promotion policy/state transitions, and deterministic ledger/event paths are implemented and validated in-tree. |

@@ -1,0 +1,527 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# ADAAD-LANE: governance-signals
+
+import json
+from unittest.mock import patch
+from runtime.governance.event_taxonomy import (
+    EVENT_TYPE_CONSTITUTION_ESCALATION,
+    EVENT_TYPE_AGM_STEP_01,
+    EVENT_TYPE_BUDGET_MODE_CHANGED,
+    EVENT_TYPE_OPERATOR_OVERRIDE,
+    EVENT_TYPE_REPLAY_DIVERGENCE,
+    EVENT_TYPE_REPLAY_FAILURE,
+    normalize_agm_step,
+    normalize_event_type,
+    validate_event_type_for_agm_step,
+)
+from runtime.governance.policy_artifact import GovernanceModelMetadata, GovernancePolicy, GovernanceThresholds
+from ui import aponi_dashboard
+from ui.aponi_dashboard import AponiDashboard, _skill_capability_matrix
+def _handler_class():
+    dashboard = AponiDashboard(host="127.0.0.1", port=0)
+    return dashboard._build_handler()
+def _test_policy() -> GovernancePolicy:
+    return GovernancePolicy(
+        schema_version="governance_policy_v1",
+        model=GovernanceModelMetadata(name="governance_health", version="v1.0.0"),
+        determinism_window=200,
+        mutation_rate_window_sec=3600,
+        thresholds=GovernanceThresholds(determinism_pass=0.98, determinism_warn=0.90),
+        fingerprint="sha256:testpolicy",
+    )
+def test_governance_health_applies_warn_and_block_thresholds() -> None:
+    handler = _handler_class()
+    with patch("ui.aponi_dashboard.GOVERNANCE_POLICY", _test_policy()):
+        with patch.object(
+            handler,
+            "_mutation_rate_state",
+            return_value={"ok": True, "max_mutations_per_hour": 60.0, "rate_per_hour": 6.0},
+        ):
+            with patch("ui.aponi_dashboard.metrics.tail", return_value=[]):
+                with patch.object(handler, "_rolling_determinism_score", return_value={"rolling_score": 0.93}):
+                    warn_snapshot = handler._intelligence_snapshot()
+                with patch.object(handler, "_rolling_determinism_score", return_value={"rolling_score": 0.85}):
+                    block_snapshot = handler._intelligence_snapshot()
+
+    assert warn_snapshot["governance_health"] == "WARN"
+    assert block_snapshot["governance_health"] == "BLOCK"
+def test_replay_divergence_counts_recent_replay_events() -> None:
+    handler = _handler_class()
+    entries = [
+        {"event": "replay_divergence_detected"},
+        {"event_type": EVENT_TYPE_REPLAY_FAILURE},
+        {"event": "fitness_scored"},
+    ]
+    with patch("ui.aponi_dashboard.metrics.tail", return_value=entries):
+        summary = handler._replay_divergence()
+
+    assert summary["window"] == 200
+    assert summary["divergence_event_count"] == 2
+    assert len(summary["latest_events"]) == 2
+def test_constitution_escalations_supports_canonical_and_legacy_names() -> None:
+    handler = _handler_class()
+    entries = [
+        {"event_type": EVENT_TYPE_CONSTITUTION_ESCALATION},
+        {"event": "constitution_escalated"},
+        {"event": "constitution escalation critical"},
+    ]
+
+    assert handler._constitution_escalations(entries) == 3
+def test_risk_summary_uses_normalized_event_types_with_legacy_fallbacks() -> None:
+    handler = _handler_class()
+    entries = [
+        {"event": "manual_override"},
+        {"event_type": EVENT_TYPE_OPERATOR_OVERRIDE},
+        {"event": "replay_check_failed"},
+        {"event_type": EVENT_TYPE_REPLAY_FAILURE},
+    ]
+    intelligence = {
+        "constitution_escalations_last_100": 10,
+        "mutation_aggression_index": 0.25,
+        "determinism_score": 0.95,
+    }
+    with patch.object(handler, "_intelligence_snapshot", return_value=intelligence):
+        with patch("ui.aponi_dashboard.metrics.tail", return_value=entries):
+            summary = handler._risk_summary()
+
+    assert summary["escalation_frequency"] == 0.1
+    assert summary["override_frequency"] == 0.01
+    assert summary["replay_failure_rate"] == 0.01
+def test_normalize_event_type_maps_legacy_and_canonical_fields() -> None:
+    assert normalize_event_type({"event": "constitution_escalated"}) == EVENT_TYPE_CONSTITUTION_ESCALATION
+    assert normalize_event_type({"event": "replay_divergence_detected"}) == EVENT_TYPE_REPLAY_DIVERGENCE
+    assert normalize_event_type({"event_type": EVENT_TYPE_OPERATOR_OVERRIDE}) == EVENT_TYPE_OPERATOR_OVERRIDE
+def test_normalize_event_type_prefers_explicit_event_type() -> None:
+    entry = {"event_type": EVENT_TYPE_REPLAY_FAILURE, "event": "manual_override"}
+
+    assert normalize_event_type(entry) == EVENT_TYPE_REPLAY_FAILURE
+def test_semantic_drift_classifier_assigns_expected_categories() -> None:
+    handler = _handler_class()
+
+    assert handler._semantic_drift_class_for_key("constitution.policy_hash") == "governance_drift"
+    assert handler._semantic_drift_class_for_key("policy/override") == "governance_drift"
+    assert handler._semantic_drift_class_for_key("traits.error_handler") == "trait_drift"
+    assert handler._semantic_drift_class_for_key("runtime/checkpoints/latest") == "runtime_artifact_drift"
+    assert handler._semantic_drift_class_for_key("config.rate_limit") == "config_drift"
+def test_risk_instability_defaults_to_zero_without_timeline() -> None:
+    handler = _handler_class()
+    risk_summary = {
+        "escalation_frequency": 0.0,
+        "override_frequency": 0.0,
+        "replay_failure_rate": 0.0,
+        "aggression_trend_variance": 0.0,
+        "determinism_drift_index": 0.0,
+    }
+    with patch.object(handler, "_risk_summary", return_value=risk_summary):
+        with patch.object(handler, "_evolution_timeline", return_value=[]):
+            with patch.object(handler, "_semantic_drift_weighted_density", return_value={"density": 0.0, "window": 0, "considered": 0}):
+                payload = handler._risk_instability()
+
+    assert payload["instability_index"] == 0.0
+def test_loaders_ignore_schema_version_metadata(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"_schema_version": "1", "wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"_schema_version": "1", "triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+
+    from ui.aponi_dashboard import _load_free_capability_sources, _load_skill_profiles
+
+    sources = _load_free_capability_sources()
+    profiles = _load_skill_profiles()
+
+    assert "_schema_version" not in sources
+    assert "_schema_version" not in profiles
+def test_capability_matrix_uses_canonical_capabilities_key(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    profiles_path = tmp_path / "profiles.json"
+    sources_path.write_text(
+        json.dumps({"_schema_version": "1", "wikipedia": {"provider": "Wikimedia"}}),
+        encoding="utf-8",
+    )
+    profiles_path.write_text(
+        json.dumps(
+            {
+                "_schema_version": "1",
+                "triage-basic": {
+                    "knowledge_domains": ["release_notes"],
+                    "abilities": ["summarize"],
+                    "allowed_capabilities": ["wikipedia"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+
+    matrix = _skill_capability_matrix()
+    profile = matrix["triage-basic"]
+    assert "capabilities" in profile
+    assert profile["capabilities"] == ["wikipedia"]
+    assert "allowed_capabilities" not in profile
+def test_control_command_validation_requires_strict_profile_and_known_capabilities(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"_schema_version": "1", "wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"_schema_version": "1", "triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "create_agent",
+            "agent_id": "Agent#1",
+            "governance_profile": "standard",
+            "mode": "builder",
+            "capabilities": ["unknown"],
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "purpose": "Assist with triage",
+        }
+    )
+    assert invalid["ok"] is False
+
+    valid = handler._validate_control_command(
+        {
+            "type": "create_agent",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "capabilities": ["wikipedia"],
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "purpose": "Assist with triage",
+        }
+    )
+    assert valid["ok"] is True
+    assert valid["command"]["capabilities"] == ["wikipedia"]
+def test_control_command_validation_rejects_unknown_skill_profile(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"_schema_version": "1", "wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"_schema_version": "1", "triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "skill_profile": "unknown-profile",
+            "knowledge_domain": "release_notes",
+            "capabilities": ["wikipedia"],
+            "task": "summarize release risk",
+            "ability": "summarize",
+        }
+    )
+
+    assert invalid["ok"] is False
+    assert invalid["error"] == "invalid_skill_profile"
+def test_control_command_validation_rejects_invalid_mode(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"_schema_version": "1", "wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"_schema_version": "1", "triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "unsupported",
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "capabilities": ["wikipedia"],
+            "task": "summarize release risk",
+            "ability": "summarize",
+        }
+    )
+
+    assert invalid["ok"] is False
+    assert invalid["error"] == "invalid_mode"
+def test_control_command_validation_rejects_capability_outside_profile(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"wikipedia": {"provider": "Wikimedia"}, "crossref": {"provider": "Crossref"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "capabilities": ["crossref"],
+            "task": "summarize release risk",
+            "ability": "summarize",
+        }
+    )
+
+    assert invalid["ok"] is False
+    assert invalid["error"] == "capability_not_allowed_for_skill"
+def test_control_command_validation_enforces_knowledge_domain_membership(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "lineage",
+            "capabilities": ["wikipedia"],
+            "task": "summarize release risk",
+            "ability": "summarize",
+        }
+    )
+
+    assert invalid["ok"] is False
+    assert invalid["error"] == "invalid_knowledge_domain"
+def test_control_command_validation_enforces_ability_membership(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "capabilities": ["wikipedia"],
+            "task": "summarize release risk",
+            "ability": "audit",
+        }
+    )
+
+    assert invalid["ok"] is False
+    assert invalid["error"] == "invalid_ability"
+def test_control_command_validation_caps_capability_count(tmp_path, monkeypatch) -> None:
+    sources = {f"s{i}": {"provider": f"p{i}"} for i in range(12)}
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps(sources), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": list(sources.keys())}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    invalid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "capabilities": list(sources.keys())[:9],
+            "task": "summarize release risk",
+            "ability": "summarize",
+        }
+    )
+
+    assert invalid["ok"] is False
+    assert invalid["error"] == "capabilities_limit_exceeded"
+def test_control_command_validation_deduplicates_capabilities(tmp_path, monkeypatch) -> None:
+    sources_path = tmp_path / "free_sources.json"
+    sources_path.write_text(json.dumps({"wikipedia": {"provider": "Wikimedia"}}), encoding="utf-8")
+    profiles_path = tmp_path / "profiles.json"
+    profiles_path.write_text(json.dumps({"triage-basic": {"knowledge_domains": ["release_notes"], "abilities": ["summarize"], "allowed_capabilities": ["wikipedia"]}}), encoding="utf-8")
+    monkeypatch.setattr("ui.aponi_dashboard.FREE_CAPABILITY_SOURCES_PATH", sources_path)
+    monkeypatch.setattr("ui.aponi_dashboard.SKILL_PROFILES_PATH", profiles_path)
+    handler = _handler_class()
+
+    valid = handler._validate_control_command(
+        {
+            "type": "run_task",
+            "agent_id": "triage_agent",
+            "governance_profile": "strict",
+            "mode": "builder",
+            "skill_profile": "triage-basic",
+            "knowledge_domain": "release_notes",
+            "capabilities": ["wikipedia", "wikipedia"],
+            "task": "summarize release risk",
+            "ability": "summarize",
+        }
+    )
+
+    assert valid["ok"] is True
+    assert valid["command"]["capabilities"] == ["wikipedia"]
+def test_verify_control_queue_detects_tamper(tmp_path, monkeypatch) -> None:
+    queue_path = tmp_path / "aponi_queue.jsonl"
+    monkeypatch.setattr("ui.aponi_dashboard.CONTROL_QUEUE_PATH", queue_path)
+    from ui.aponi_dashboard import _queue_control_command, _read_control_queue, _verify_control_queue
+
+    _queue_control_command({"type": "create_agent", "agent_id": "triage_agent", "governance_profile": "strict", "skill_profile": "triage-basic", "knowledge_domain": "release_notes", "capabilities": ["wikipedia"], "purpose": "triage"})
+    _queue_control_command({"type": "run_task", "agent_id": "triage_agent", "governance_profile": "strict", "skill_profile": "triage-basic", "knowledge_domain": "release_notes", "capabilities": ["wikipedia"], "task": "summarize", "ability": "summarize"})
+
+    entries = _read_control_queue()
+    ok_state = _verify_control_queue(entries)
+    assert ok_state["ok"] is True
+
+    entries[1]["command_id"] = "cmd-corrupted"
+    bad_state = _verify_control_queue(entries)
+    assert bad_state["ok"] is False
+    assert any("unexpected_command_id" in issue for issue in bad_state["issues"])
+
+    entries[0]["payload"] = "corrupted"
+    bad_payload_state = _verify_control_queue(entries)
+    assert bad_payload_state["ok"] is False
+    assert "invalid_payload_type" in bad_payload_state["issues"]
+def test_risk_instability_reports_velocity_and_acceleration() -> None:
+    handler = _handler_class()
+    risk_summary = {
+        "escalation_frequency": 0.0,
+        "override_frequency": 0.0,
+        "replay_failure_rate": 0.0,
+        "aggression_trend_variance": 0.0,
+        "determinism_drift_index": 0.0,
+    }
+    # three fixed windows of 20 entries: densities 0.25, 0.5, 0.75
+    timeline = (
+        [{"risk_tier": "low"}] * 15 + [{"risk_tier": "high"}] * 5
+        + [{"risk_tier": "low"}] * 10 + [{"risk_tier": "critical"}] * 10
+        + [{"risk_tier": "low"}] * 5 + [{"risk_tier": "unknown"}] * 15
+    )
+    with patch.object(handler, "_risk_summary", return_value=risk_summary):
+        with patch.object(handler, "_evolution_timeline", return_value=timeline):
+            with patch.object(handler, "_semantic_drift_weighted_density", return_value={"density": 0.0, "window": 10, "considered": 0}):
+                payload = handler._risk_instability()
+
+    assert payload["inputs"]["momentum_window"] == 20
+    assert payload["instability_velocity"] == 0.25
+    assert payload["instability_acceleration"] == 0.0
+def test_policy_simulation_compares_current_and_candidate_policy() -> None:
+    handler = _handler_class()
+    with patch("ui.aponi_dashboard.GOVERNANCE_POLICY", _test_policy()):
+        with patch("ui.aponi_dashboard.load_governance_policy", return_value=_test_policy()):
+            with patch.object(handler, "_mutation_rate_state", return_value={"ok": True}):
+                with patch.object(handler, "_intelligence_snapshot", return_value={"determinism_score": 0.91}):
+                    payload = handler._policy_simulation({"policy": ["governance_policy_v1.json"]})
+
+    assert payload["ok"] is True
+    assert payload["current_policy"]["health"] in {"PASS", "WARN", "BLOCK"}
+    assert payload["simulated_policy"]["health"] in {"PASS", "WARN", "BLOCK"}
+def test_policy_simulation_rejects_invalid_score_input() -> None:
+    handler = _handler_class()
+    with patch("ui.aponi_dashboard.load_governance_policy", return_value=_test_policy()):
+        payload = handler._policy_simulation({"determinism_score": ["not-a-number"]})
+
+    assert payload["ok"] is False
+    assert payload["error"] == "invalid_determinism_score"
+def test_epoch_chain_anchor_is_emitted_in_replay_diff() -> None:
+    epoch = {
+        "bundles": [{"id": "b-1"}],
+        "initial_state": {"config.max_mutations": 60},
+        "final_state": {"config.max_mutations": 30},
+    }
+    with patch("ui.aponi_dashboard.ReplayEngine") as replay_mock:
+        replay_mock.return_value.reconstruct_epoch.return_value = epoch
+        handler = _handler_class()
+        with patch.object(handler, "_evolution_timeline", return_value=[{"epoch": "epoch-1", "mutation_id": "m1", "timestamp": "t1", "risk_tier": "low", "fitness_score": 0.5}]):
+            payload = handler._replay_diff("epoch-1")
+
+    assert payload["ok"] is True
+    assert "anchor" in payload["epoch_chain_anchor"]
+    assert payload["epoch_chain_anchor"]["anchor"].startswith("sha256:")
+def test_velocity_spike_anomaly_flag_sets_on_large_velocity() -> None:
+    handler = _handler_class()
+    risk_summary = {
+        "escalation_frequency": 0.0,
+        "override_frequency": 0.0,
+        "replay_failure_rate": 0.0,
+        "aggression_trend_variance": 0.0,
+        "determinism_drift_index": 0.0,
+    }
+    timeline = ([{"risk_tier": "low"}] * 20) + ([{"risk_tier": "low"}] * 20) + ([{"risk_tier": "high"}] * 20)
+    with patch.object(handler, "_risk_summary", return_value=risk_summary):
+        with patch.object(handler, "_evolution_timeline", return_value=timeline):
+            with patch.object(handler, "_semantic_drift_weighted_density", return_value={"density": 0.0, "window": 10, "considered": 0}):
+                payload = handler._risk_instability()
+
+    assert payload["instability_velocity"] == 1.0
+    assert payload["velocity_spike_anomaly"] is True
+    assert payload["velocity_anomaly_mode"] == "absolute_delta"
+    assert payload["confidence_interval"]["sample_size"] == 20
+def test_alerts_evaluate_emits_expected_severity_buckets() -> None:
+    handler = _handler_class()
+    instability_payload = {
+        "instability_index": 0.72,
+        "instability_velocity": 0.3,
+        "velocity_spike_anomaly": True,
+        "velocity_anomaly_mode": "absolute_delta",
+    }
+    risk_summary = {
+        "escalation_frequency": 0.0,
+        "override_frequency": 0.0,
+        "replay_failure_rate": 0.06,
+        "aggression_trend_variance": 0.0,
+        "determinism_drift_index": 0.0,
+    }
+
+    with patch.object(handler, "_risk_instability", return_value=instability_payload):
+        with patch.object(handler, "_risk_summary", return_value=risk_summary):
+            alerts = handler._alerts_evaluate()
+
+    assert alerts["critical"][0]["code"] == "instability_critical"
+    assert alerts["warning"][0]["code"] == "replay_failure_warning"
+    assert alerts["info"][0]["code"] == "instability_velocity_spike"
+def test_alerts_evaluate_returns_empty_when_below_thresholds() -> None:
+    handler = _handler_class()
+    with patch.object(
+        handler,
+        "_risk_instability",
+        return_value={"instability_index": 0.1, "instability_velocity": 0.0, "velocity_spike_anomaly": False},
+    ):
+        with patch.object(handler, "_risk_summary", return_value={"replay_failure_rate": 0.0}):
+            alerts = handler._alerts_evaluate()
+
+    assert alerts["critical"] == []
+    assert alerts["warning"] == []
+    assert alerts["info"] == []
+def test_normalize_agm_step_supports_legacy_and_canonical_forms() -> None:
+    assert normalize_agm_step("1") == "agm_step_01"
+    assert normalize_agm_step("step_2") == "agm_step_02"
+    assert normalize_agm_step("agm_step_3") == "agm_step_03"
+    assert normalize_agm_step("agm_step_12") == "agm_step_12"
+def test_validate_event_type_for_agm_step_allows_control_and_step_specific_events() -> None:
+    assert validate_event_type_for_agm_step(event_type="step_1", agm_step="1") == EVENT_TYPE_AGM_STEP_01
+    assert (
+        validate_event_type_for_agm_step(event_type="budget_mode_change", agm_step="step_1")
+        == EVENT_TYPE_BUDGET_MODE_CHANGED
+    )
+def test_validate_event_type_for_agm_step_rejects_mismatched_event_type() -> None:
+    try:
+        validate_event_type_for_agm_step(event_type="agm_step_02", agm_step="agm_step_01")
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert str(exc) == "event_type_not_allowed:agm_step_02:agm_step_01"
