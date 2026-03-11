@@ -37,7 +37,7 @@ This audit records code-grounded hardening actions applied after review feedback
 
 ```bash
 python -m py_compile runtime/constitution.py runtime/api/__init__.py runtime/api/agents.py runtime/api/app_layer.py runtime/evolution/__init__.py
-pytest -q tests/test_constitution_policy.py tests/test_economic_fitness.py tests/evolution/test_evidence_bundle.py tests/test_intelligence_router.py tests/test_intelligence_proposal_adapter.py tests/test_orchestrator_dispatcher.py
+pytest -q tests/governance/inviolability/test_constitution_policy_inviolability.py + tests/determinism/test_constitution_policy_determinism.py + tests/governance/signals/test_constitution_policy_signals.py tests/test_economic_fitness.py tests/evolution/test_evidence_bundle.py tests/test_intelligence_router.py tests/test_intelligence_proposal_adapter.py tests/test_orchestrator_dispatcher.py
 pytest -q tests/determinism/test_boot_runtime_profile.py tests/determinism/test_concurrent_replay.py tests/test_tool_contract.py tests/test_mutation_transaction.py
 ```
 

@@ -62,7 +62,7 @@ Constitution advanced to `v0.2.0`. Five previously dormant rules enforced; one n
 
 **`entropy_budget_limit`** enforces a per-epoch entropy ceiling, paired with `runtime/evolution/telemetry_audit.py` for declared-vs-observed entropy breakdown.
 
-> **Verification:** `tests/test_constitution_policy.py` · `test_resource_bounds.py` · `test_lineage_continuity.py` · `test_mutation_rate_rule.py` · `test_complexity_delta.py` · `test_entropy_budget.py` · `test_constitution_doc_version.py`
+> **Verification:** `tests/governance/inviolability/test_constitution_policy_inviolability.py + tests/determinism/test_constitution_policy_determinism.py + tests/governance/signals/test_constitution_policy_signals.py` · `test_resource_bounds.py` · `test_lineage_continuity.py` · `test_mutation_rate_rule.py` · `test_complexity_delta.py` · `test_entropy_budget.py` · `test_constitution_doc_version.py`
 
 ---
 
