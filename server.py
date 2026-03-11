@@ -1990,10 +1990,16 @@ def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
 # ────────────────────────────────────────────────────────────────────────────
 
 import hashlib as _hashlib
+import threading as _threading
 import time as _time
 import uuid as _uuid
 
 _SIMULATION_STORE: "dict[str, Any]" = {}
+_SIMULATION_STORE_LOCK: "_threading.Lock" = _threading.Lock()
+# NOTE: _SIMULATION_STORE is in-process only. Under multi-worker deployments
+# (uvicorn --workers N) each worker process holds an independent copy; run_id
+# lookups will miss across workers. For production multi-worker use, replace
+# with a shared persistence layer (Redis, sqlite) keyed by run_id.
 
 
 def _parse_simulation_dsl(dsl_text: str) -> list[dict[str, Any]]:
@@ -2097,7 +2103,8 @@ async def simulation_run(
         "simulation_only_notice": "This is a simulation run. No ledger entries were written.",
         "result": result,
     }
-    _SIMULATION_STORE[run_id] = envelope
+    with _SIMULATION_STORE_LOCK:
+        _SIMULATION_STORE[run_id] = envelope
     return {"ok": True, "simulation": True, "data": envelope}
 
 
@@ -2108,7 +2115,8 @@ async def simulation_results(
 ) -> dict[str, Any]:
     """GET /simulation/results/{run_id} — retrieve simulation result by run ID."""
     _require_audit_read_scope(authorization)
-    envelope = _SIMULATION_STORE.get(run_id)
+    with _SIMULATION_STORE_LOCK:
+        envelope = _SIMULATION_STORE.get(run_id)
     if envelope is None:
         # Return a deterministic not-found envelope (still simulation=True)
         envelope = {
