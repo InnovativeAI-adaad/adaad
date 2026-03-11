@@ -172,14 +172,37 @@ class CheckpointVerifier:
         return payload
 
     @staticmethod
+    def _is_checkpoint_entry(entry: Dict[str, Any]) -> bool:
+        """Return True if entry is a checkpoint materialization record."""
+        t = entry.get("type") or ""
+        if t == "checkpoint_created":
+            return True
+        if t == "CheckpointGovernanceEvent":
+            payload = dict(entry.get("payload") or {})
+            return str(payload.get("event_type") or "") == "checkpoint_created"
+        return False
+
+    @staticmethod
+    def _prev_hash_from_entry(entry: Dict[str, Any]) -> str:
+        """Normalize the prev-hash field across entry types."""
+        payload = dict(entry.get("payload") or {})
+        t = entry.get("type") or ""
+        if t == "CheckpointGovernanceEvent":
+            return str(payload.get("prior_checkpoint_event_hash") or ZERO_HASH)
+        return str(payload.get("previous_checkpoint_hash") or ZERO_HASH)
+
+    @staticmethod
     def verify_chain(ledger: LineageLedgerV2, *, provider: RuntimeDeterminismProvider | None = None) -> Dict[str, Any]:
         provider = provider or default_provider()
-        checkpoint_entries = [entry for entry in ledger.read_all() if entry.get("type") == "checkpoint_created"]
+        checkpoint_entries = [
+            entry for entry in ledger.read_all()
+            if CheckpointVerifier._is_checkpoint_entry(entry)
+        ]
         previous_hash = ZERO_HASH
         for entry in checkpoint_entries:
             payload = dict(entry.get("payload") or {})
             checkpoint_id = str(payload.get("checkpoint_id") or "")
-            actual_prev = str(payload.get("previous_checkpoint_hash") or ZERO_HASH)
+            actual_prev = CheckpointVerifier._prev_hash_from_entry(entry)
             if actual_prev != previous_hash:
                 ledger.append_event(
                     "checkpoint_chain_violated",
