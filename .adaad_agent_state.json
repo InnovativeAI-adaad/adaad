@@ -1,9 +1,9 @@
 {
-  "active_phase": "Phase 42 COMPLETE · v6.8.0",
+  "active_phase": "Phase 42 COMPLETE \u00b7 v6.8.0",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 42 — Critical Defect Sweep",
+  "last_completed_phase": "Phase 42 \u2014 Critical Defect Sweep",
   "last_completed_pr": "feat/phase42-defect-sweep",
   "last_gate_results": {
     "tier_0": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-11",
-  "last_sync_sha": "pending-push",
-  "next_pr": "PR-43-PLAN (Phase 43 — TBD)",
+  "last_sync_sha": "4c59263e5825ba544a228142bf723694e55e1bfe",
+  "next_pr": "PR-43-PLAN (Phase 43 \u2014 TBD)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
