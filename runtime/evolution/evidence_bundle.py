@@ -61,7 +61,7 @@ def _resolve_export_signing_secret(key_id: str) -> str:
     generic = os.getenv("ADAAD_EVIDENCE_BUNDLE_SIGNING_KEY", "").strip()
     if generic:
         return generic
-    return f"adaad-evidence-bundle-dev-secret:{key_id}"
+    raise EvidenceBundleError(f"missing_export_signing_secret:{key_id}")
 
 
 def _signature_material(secret: str, signed_digest: str) -> str:
