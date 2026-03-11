@@ -1430,6 +1430,7 @@ All signals → ProposalRequest.context → StrategyModule.select()
   - `context_ledger_tamper_detected.v1`, `soulbound_key_rotation.v1`
   - `craft_pattern_extracted.v1`, `context_replay_injected.v1`, `soulbound_key_absent.v1`
 - **Tests:** `tests/memory/test_soulbound_pr901.py` — consolidated canonical suite for T9-01-01..25 (including legacy `test_pr9_01.py` assertions), all passing
+  - Legacy paths retained as compatibility stubs to reduce long-lived merge conflicts during branch transitions
   - SoulboundKey (5), SoulboundLedger (12), ContextFilterChain (8)
 
 ### Critical Findings Resolved (CF-2, CF-3, CF-4)
