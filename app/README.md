@@ -45,6 +45,12 @@ Legitimate exceptions require updating both `tools/lint_import_paths.py` and `do
 - `Orchestrator._check_key_rotation_status()` now validates `security/keys/rotation.json` via the key-rotation attestation path when the attestation file exists.
 - Environments without rotation attestations keep the existing mtime-based key freshness fallback for migration compatibility.
 
+## Goal graph initialization fail-closed behavior
+
+- `MutationExecutor` now treats `runtime/evolution/goal_graph.json` as a fail-closed initialization dependency in strict contexts.
+- Parse/schema/I-O failures emit structured telemetry (`goal_graph_init_failed`) and halt initialization in strict/fail-closed modes.
+- Empty-graph fallback is only permitted in explicitly non-strict development contexts (`ADAAD_ENV in {dev,test}` **and** `CRYOVANT_DEV_MODE=1`).
+
 
 ## Module map (composition-root refactor)
 

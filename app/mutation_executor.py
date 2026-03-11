@@ -6,6 +6,7 @@ Mutation executor: verifies requests, applies ops, runs post-checks.
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 from typing import Any, Dict, Sequence
 
@@ -101,10 +102,84 @@ class MutationExecutor:
             per_mutation_ceiling_bits=128,
             per_epoch_ceiling_bits=4096,
         )
+        self.goal_graph = self._initialize_goal_graph()
+
+    def _goal_graph_strict_mode(self) -> bool:
+        replay_mode = getattr(self.evolution_runtime.replay_mode, "value", str(self.evolution_runtime.replay_mode or "off"))
+        return bool(self.evolution_runtime.fail_closed) or str(replay_mode).strip().lower() in {"strict", "audit"}
+
+    @staticmethod
+    def _goal_graph_fallback_allowed(*, strict_mode: bool) -> bool:
+        env = (os.getenv("ADAAD_ENV") or "").strip().lower()
+        dev_mode = (os.getenv("CRYOVANT_DEV_MODE") or "").strip().lower() in {"1", "true", "yes", "on"}
+        return (not strict_mode) and env in {"dev", "test"} and dev_mode
+
+    @staticmethod
+    def _validate_goal_graph_payload(raw: Any) -> None:
+        if not isinstance(raw, dict):
+            raise ValueError("goal_graph_payload_not_object")
+        goals = raw.get("goals")
+        if goals is None:
+            return
+        if not isinstance(goals, list):
+            raise ValueError("goal_graph_goals_not_list")
+
+    @staticmethod
+    def _read_goal_graph_raw(goal_graph_path: Path) -> str:
+        return goal_graph_path.read_text(encoding="utf-8")
+
+    def _initialize_goal_graph(self) -> GoalGraph:
+        goal_graph_path = ROOT_DIR / "runtime" / "evolution" / "goal_graph.json"
+        strict_mode = self._goal_graph_strict_mode()
+        fallback_allowed = self._goal_graph_fallback_allowed(strict_mode=strict_mode)
+
         try:
-            self.goal_graph = GoalGraph.load(ROOT_DIR / "runtime" / "evolution" / "goal_graph.json")
-        except Exception:
-            self.goal_graph = GoalGraph(())
+            raw_payload = json.loads(self._read_goal_graph_raw(goal_graph_path))
+            self._validate_goal_graph_payload(raw_payload)
+            return GoalGraph.load(goal_graph_path)
+        except FileNotFoundError as exc:
+            error_code = "missing"
+            telemetry_level = "WARNING"
+            error_message = str(exc)
+        except json.JSONDecodeError as exc:
+            error_code = "parse_error"
+            telemetry_level = "ERROR"
+            error_message = str(exc)
+        except OSError as exc:
+            error_code = "io_error"
+            telemetry_level = "ERROR"
+            error_message = str(exc)
+        except (TypeError, ValueError) as exc:
+            error_code = "schema_error"
+            telemetry_level = "ERROR"
+            error_message = str(exc)
+
+        metrics.log(
+            event_type="goal_graph_init_failed",
+            payload={
+                "path": str(goal_graph_path),
+                "error_code": error_code,
+                "error": error_message,
+                "strict_mode": strict_mode,
+                "fallback_allowed": fallback_allowed,
+            },
+            level=telemetry_level,
+            element_id=ELEMENT_ID,
+        )
+
+        if fallback_allowed:
+            metrics.log(
+                event_type="goal_graph_init_fallback",
+                payload={
+                    "path": str(goal_graph_path),
+                    "reason": error_code,
+                },
+                level="WARNING",
+                element_id=ELEMENT_ID,
+            )
+            return GoalGraph(())
+
+        raise RuntimeError(f"goal_graph_initialization_failed:{error_code}")
 
     def _run_tests(
         self,
