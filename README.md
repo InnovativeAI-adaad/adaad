@@ -318,17 +318,29 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 ## What's active now
 
-> Current version: **v6.5.0** · Phase 39 complete · 846 tests passing
+> Current runtime status: **v6.8.0** · **Phase 42 COMPLETE** · next planned PR: **PR-43-PLAN (Phase 43 — TBD)**
 
-### Recently shipped (Phases 35–39)
+### Current progression snapshot (canonical cross-references)
 
-| Phase | What shipped | Version |
+| Category | Current value | Source of truth |
+|:---|:---|:---|
+| **Historical milestone (completed)** | Phase 6 (`v3.1.0`) PR sequence fully merged | [`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`](docs/governance/ADAAD_PR_PROCESSION_2026-03.md) |
+| **Active phase state** | `active_phase`: `Phase 42 COMPLETE · v6.8.0` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Last completed phase** | `last_completed_phase`: `Phase 42 — Critical Defect Sweep` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Current next step** | `next_pr`: `PR-43-PLAN (Phase 43 — TBD)` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+
+### Recent outcomes (Phases 40–42)
+
+| Phase | Outcome | Version |
 |:---|:---|:---:|
-| **Phase 39** | `DreamMode` provider injection — all clock/token calls provider-routed; strict replay determinism contract closed | `v6.4.0` |
-| **Phase 38** | `GET /governance/mutation-ledger` — REST observability for `MutationLedger` | `v6.3.0` |
-| **Phase 37** | `GET /governance/reviewer-reputation-ledger` — REST surface for `ReviewerReputationLedger` | `v6.2.0` |
-| **Phase 36** | `GET /governance/gate-decisions` — REST surface for `GateDecisionLedger` | `v6.1.0` |
-| **Phase 35** | `GateDecisionLedger` + `gate_approval_rate_score` (9th health signal, weight 0.05) | `v6.0.0` |
+| **Phase 42** | Critical defect sweep completed; replay fingerprinting, null-guard fixes, and determinism hardening landed | `v6.8.0` |
+| **Phase 41** | Cryovant gate middleware + CORS wiring + SPA index fallback + Aponi gate 423 response | `v6.7.0` |
+| **Phase 40** | BeastModeLoop determinism provider injection completed | `v6.6.0` |
+
+Milestone status distinction:
+- **Historical milestone completion:** Phase 6 procession is complete (`v3.1.0`).
+- **Current active/completed delivery state:** Phase 42 is complete (`v6.8.0`).
+- **Next planned item:** PR-43-PLAN (Phase 43) is queued and not yet complete.
 
 ### All audit ledgers — REST endpoints live
 
