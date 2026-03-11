@@ -243,7 +243,7 @@ ADAAD is organized into seven layers as of v4.0.0:
 |---|---|
 | [Release checklist](release/release_checklist.md) | Canonical operator preflight |
 | [Release audit checklist](releases/RELEASE_AUDIT_CHECKLIST.md) | Evidence verification |
-| [CHANGELOG](../CHANGELOG.md) | Full version history; v3.8.0 is current |
+| [CHANGELOG](../CHANGELOG.md) | Full version history; v6.8.0 is current |
 | [v3.2.0 Release notes](releases/3.2.0.md) | Phase 8 — GovernanceHealthAggregator + health endpoint |
 | [v3.1.0 Release notes](releases/3.1.0.md) | Phase 6 governance baseline |
 | [v2.3.0 Release notes](releases/2.3.0.md) | Phase 4 GA: AST scoring + pipeline intelligence |
