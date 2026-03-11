@@ -62,17 +62,57 @@ class StrategyPlanner:
 
         steps: list[PlanStep] = [
             PlanStep(
-                step_id="step_00_governance_precheck",
-                goal_id="governance_precheck",
-                milestone="Governance preconditions validated",
-                success_predicate="governance.preconditions_ok",
-                completion_criteria=("governance.preconditions_ok",),
+                step_id="step_00_taxonomy_annotation",
+                goal_id="taxonomy_annotation",
+                milestone="Taxonomy mapping and annotations completed",
+                success_predicate="taxonomy.annotation_complete",
+                completion_criteria=("taxonomy.annotation_complete", "taxonomy.coverage_complete"),
                 dependency_step_ids=(),
-                required_governance_checks=("policy_alignment",),
+                required_governance_checks=("policy_alignment", "taxonomy_coverage_complete"),
                 required_replay_checks=("replay_preconditions_ok",),
-            )
+            ),
+            PlanStep(
+                step_id="step_01_duplicate_assertion_audit_merge",
+                goal_id="duplicate_assertion_audit_merge",
+                milestone="Duplicate assertion audit and merge completed",
+                success_predicate="assertions.duplicate_audit_merge_complete",
+                completion_criteria=("assertions.duplicate_audit_merge_complete",),
+                dependency_step_ids=("step_00_taxonomy_annotation",),
+                required_governance_checks=("policy_alignment", "taxonomy_coverage_complete"),
+                required_replay_checks=("replay_digest_match",),
+            ),
+            PlanStep(
+                step_id="step_02_constitutional_domain_split",
+                goal_id="constitutional_domain_split",
+                milestone="Constitutional and domain assertions split completed",
+                success_predicate="assertions.constitutional_domain_split_complete",
+                completion_criteria=("assertions.constitutional_domain_split_complete",),
+                dependency_step_ids=("step_01_duplicate_assertion_audit_merge",),
+                required_governance_checks=("policy_alignment", "taxonomy_coverage_complete"),
+                required_replay_checks=("replay_digest_match",),
+            ),
+            PlanStep(
+                step_id="step_03_endpoint_parametrization",
+                goal_id="endpoint_parametrization",
+                milestone="Endpoint parametrization completed",
+                success_predicate="endpoints.parametrization_complete",
+                completion_criteria=("endpoints.parametrization_complete",),
+                dependency_step_ids=("step_02_constitutional_domain_split",),
+                required_governance_checks=("policy_alignment", "taxonomy_coverage_complete"),
+                required_replay_checks=("replay_digest_match",),
+            ),
+            PlanStep(
+                step_id="step_04_full_verification",
+                goal_id="full_verification",
+                milestone="Full verification summary recorded",
+                success_predicate="validation.full_suite_passed",
+                completion_criteria=("validation.full_suite_passed", "validation.autonomous_critical_lane_passed"),
+                dependency_step_ids=("step_03_endpoint_parametrization",),
+                required_governance_checks=("policy_alignment", "validation_report_complete"),
+                required_replay_checks=("replay_digest_match",),
+            ),
         ]
-        for index, (goal_id, weight) in enumerate(ranked_goals, start=1):
+        for index, (goal_id, weight) in enumerate(ranked_goals, start=5):
             normalized_goal_id = goal_id.strip() or f"goal_{index:02d}"
             dependency = steps[-1].step_id
             criteria = (f"goal.{normalized_goal_id}.completed",)
