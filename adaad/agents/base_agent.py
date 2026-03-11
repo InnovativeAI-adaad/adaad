@@ -15,6 +15,7 @@
 Base agent definition and validation utilities.
 """
 
+from abc import ABC, abstractmethod
 import hashlib
 import json
 import shutil
@@ -28,22 +29,26 @@ from runtime.api.app_layer import metrics
 REQUIRED_FILES = ("meta.json", "dna.json", "certificate.json")
 
 
-class BaseAgent:
+class BaseAgent(ABC):
     """
     Minimal interface for agents participating in mutation cycles.
     """
 
+    @abstractmethod
     def info(self) -> Dict:
-        raise NotImplementedError
+        """Return descriptive metadata for the agent instance."""
 
+    @abstractmethod
     def run(self, input=None) -> Dict:
-        raise NotImplementedError
+        """Execute the agent against the provided input payload."""
 
+    @abstractmethod
     def mutate(self, src: str) -> str:
-        raise NotImplementedError
+        """Produce a deterministic mutation of source content."""
 
+    @abstractmethod
     def score(self, output: Dict) -> float:
-        raise NotImplementedError
+        """Score an output payload for downstream selection logic."""
 
 
 def validate_agent_home(agent_path: Path) -> Tuple[bool, List[str]]:
