@@ -214,9 +214,9 @@ class TestParsePolicyBlock:
         """
         exprs = parse_policy_block(block)
         assert len(exprs) == 10
-        types = [e.constraint_type for e in exprs]
-        for ct in ConstraintType:
-            assert ct in types
+        parsed_types = {e.constraint_type for e in exprs}
+        expected_types = set(ConstraintType.__members__.values())
+        assert parsed_types == expected_types
 
 
 class TestGrammarVersion:
