@@ -142,8 +142,8 @@ class HardenedSandboxExecutor:
             preflight=preflight,
             events=events,
             runtime_telemetry=runtime_telemetry,
-            replay_environment_fingerprint=pre_execution_snapshot,
-            replay_diagnostics=capture_post_execution_delta(pre_execution_snapshot),
+            replay_environment_fingerprint=replay_environment_fingerprint,
+            replay_diagnostics=capture_post_execution_delta(replay_environment_fingerprint),
         )
         signed_payload = sign_bundle(
             evidence_payload,

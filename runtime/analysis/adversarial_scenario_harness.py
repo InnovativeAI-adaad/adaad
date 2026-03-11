@@ -52,7 +52,7 @@ def _legacy_signature_misuse(scenario: AdversarialScenario) -> dict[str, Any]:
     payload = f"payload:{scenario.seed}".encode("utf-8")
     digest = hashlib.sha256(payload).hexdigest()
     signature = f"cryovant-static-{digest}"
-    baseline_events = len(metrics.tail(limit=200))
+    baseline = metrics.line_count()
 
     with _temp_env(
         {
@@ -63,8 +63,7 @@ def _legacy_signature_misuse(scenario: AdversarialScenario) -> dict[str, Any]:
     ):
         accepted = cryovant.verify_payload_signature(payload, signature, key_id="redteam")
 
-    observed = metrics.tail(limit=200)
-    new_events = observed[baseline_events:]
+    new_events = metrics.tail_after(baseline)
     has_critical_audit = any(
         entry.get("event") == "cryovant_legacy_static_payload_signature_rejected" and entry.get("level") == "CRITICAL"
         for entry in new_events

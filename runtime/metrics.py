@@ -95,6 +95,40 @@ def log(
                 os.close(fd)
 
 
+def line_count() -> int:
+    """Return the current total number of lines written to the metrics file.
+
+    Used by test harnesses to compute an exact before/after delta without being
+    constrained by the tail() limit cap.
+    """
+    _ensure_metrics_file()
+    try:
+        return sum(1 for _ in METRICS_PATH.open("rb") if _ != b"\n")
+    except OSError:
+        return 0
+
+
+def tail_after(baseline: int, limit: int = 500) -> List[Dict[str, Any]]:
+    """Return all entries appended after *baseline* line count.
+
+    More reliable than ``observed[baseline:]`` when the file already has more
+    than *limit* lines at baseline time.
+    """
+    _ensure_metrics_file()
+    try:
+        all_lines = METRICS_PATH.read_bytes().splitlines()
+    except OSError:
+        return []
+    new_lines = all_lines[baseline:]
+    entries: List[Dict[str, Any]] = []
+    for raw in new_lines[-limit:]:
+        try:
+            entries.append(json.loads(raw))
+        except json.JSONDecodeError:
+            continue
+    return entries
+
+
 def tail(limit: int = 100) -> List[Dict[str, Any]]:
     """
     Return the most recent entries from the metrics log.
