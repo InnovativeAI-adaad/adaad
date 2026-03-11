@@ -176,12 +176,24 @@ def test_clone_permissive_fallback_requires_explicit_flag(monkeypatch) -> None:
     dna = {"lineage": "agent-iota", "metadata": {"hint": hint}}
 
     monkeypatch.setenv("ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY", "1")
+    monkeypatch.setenv("CRYOVANT_DEV_MODE", "1")
     simulated = clone_dna_for_simulation(dna)
 
     assert simulated == dna
     assert simulated is not dna
     assert simulated["metadata"] is not dna["metadata"]
     assert simulated["metadata"]["hint"] is not hint
+
+
+def test_clone_permissive_fallback_is_blocked_without_dev_mode(monkeypatch) -> None:
+    hint = MutationHint(name="blocked", weight=0.5)
+    dna = {"lineage": "agent-kappa", "metadata": {"hint": hint}}
+
+    monkeypatch.setenv("ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY", "1")
+    monkeypatch.delenv("CRYOVANT_DEV_MODE", raising=False)
+
+    with pytest.raises(TypeError, match="unsupported_dna_type:MutationHint"):
+        clone_dna_for_simulation(dna)
 
 
 def test_stable_hash_supports_non_dict_payloads() -> None:

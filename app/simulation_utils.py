@@ -66,18 +66,16 @@ def clone_dna_for_simulation(dna: Dict[str, Any]) -> Dict[str, Any]:
             return value
         raise TypeError(f"unsupported_dna_type:{type(value).__name__}")
 
+    def _env_flag(name: str) -> bool:
+        return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
     try:
         cloned = _clone_value(dna)
         if not isinstance(cloned, dict):
             raise TypeError("unsupported_root_type")
         return cloned
     except TypeError as exc:
-        allow_unsafe_deepcopy = os.getenv("ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY", "").strip().lower() in {
-            "1",
-            "true",
-            "yes",
-            "on",
-        }
+        allow_unsafe_deepcopy = _env_flag("ADAAD_SIMULATION_ALLOW_UNSUPPORTED_DNA_DEEPCOPY") and _env_flag("CRYOVANT_DEV_MODE")
         if allow_unsafe_deepcopy:
             return copy.deepcopy(dna)
         raise TypeError(str(exc)) from None
