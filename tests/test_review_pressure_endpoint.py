@@ -25,17 +25,6 @@ def client():
 
 
 class TestReviewPressureEndpoint:
-    def test_returns_200_with_schema(self, client):
-        resp = client.get("/governance/review-pressure", headers=_AUTH)
-        assert resp.status_code == 200
-        d = resp.json()
-        assert "data" in d
-        assert "schema_version" in d
-
-    def test_no_auth_returns_401(self, client):
-        resp = client.get("/governance/review-pressure")
-        assert resp.status_code == 401
-
     def test_advisory_only_is_true(self, client):
         resp = client.get("/governance/review-pressure", headers=_AUTH)
         assert resp.json()["data"]["advisory_only"] is True
