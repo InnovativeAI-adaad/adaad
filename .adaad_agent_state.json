@@ -1,5 +1,5 @@
 {
-  "active_phase": "Phase 42 COMPLETE \u00b7 v6.8.0",
+  "active_phase": "Phase 42 COMPLETE \u00b7 v6.8.1",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
@@ -79,6 +79,6 @@
     "phase42-checkpoint-governance-event-hash",
     "phase42-dream-mode-clamp-aggression",
     "phase42-tests-21-green-38-resolved",
-    "v6.8.0-released"
+    "v6.8.1-released"
   ]
 }
