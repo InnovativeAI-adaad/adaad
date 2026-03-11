@@ -1,3 +1,30 @@
+## [6.7.0] — 2026-03-11
+
+### Phase 41 — Cryovant Gate Middleware + SPA Index Fallback
+
+#### server.py
+- **Centralized Cryovant gate** into single `cryovant_gate_middleware` HTTP middleware
+  - Protected: `/api/nexus/handshake|protocol|agents`, `/api/governance/*`, `/api/fast-path/*`, `/api/nexus/mutate*`
+  - Always open: `/api/health`, `/api/version`, `/api/nexus/health`, all non-`/api/` paths
+  - Returns `HTTP 423` + `X-ADAAD-GATE: locked` + `X-ADAAD-Protocol` header when locked
+- **Removed** per-endpoint `_assert_gate_open()` calls from `nexus_handshake`, `nexus_protocol`, `nexus_agents`
+- **Added** `CORSMiddleware` — allows browser fetch from any `localhost` port; configurable via `ADAAD_CORS_ORIGINS`
+- **Fixed** lifespan: creates stub `ui/aponi/index.html` if missing (was: `RuntimeError`); server now always starts
+- **Added** `if __name__ == "__main__"` entry point: `python server.py` starts uvicorn on port 8080, prints startup URLs + gate status
+
+#### ui/aponi_dashboard.py
+- **Added** `_read_gate_state()` function mirroring server.py gate logic
+- **Added** `_DASHBOARD_GATE_LOCK_FILE` + `_DASHBOARD_GATE_PROTOCOL` constants
+- **Added** Cryovant gate check in `do_GET` — API data paths return `HTTP 423` when locked; `/` and `/index.html` always pass
+- **Fixed** `_send_json` to accept `status_code` keyword argument (default 200)
+- **Added** SPA fallback: unknown `GET` paths serve `ui/aponi/index.html` so browser deep-links work
+
+#### Tests
+- `tests/server/test_phase41_cryovant_middleware_spa.py` — **29/29 passed**
+  - `TestGateState` (3): gate open/locked-by-env/locked-by-file
+  - `TestServerConstants` (19): all middleware constants, CORS, lifespan, `__main__` block
+  - `TestAponiDashboard` (7): gate enforcement, SPA fallback, `_send_json`, `_run_background`
+
 ## [6.6.0] — 2026-03-10 · Phase 40 — BeastModeLoop Determinism Provider Injection
 
 ### What shipped

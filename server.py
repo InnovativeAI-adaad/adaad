@@ -8,8 +8,9 @@ from typing import Any, Dict
 
 from contextlib import asynccontextmanager
 
-from fastapi import Body, FastAPI, Header, HTTPException, Query
-from fastapi.responses import FileResponse, Response
+from fastapi import Body, FastAPI, Header, HTTPException, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
 
@@ -40,15 +41,90 @@ class SPAStaticFiles(StaticFiles):
 
 @asynccontextmanager
 async def _lifespan(application: FastAPI):  # noqa: ARG001
-    """Lifespan: validate APONI assets at startup; clean up on shutdown."""
-    if not APONI_DIR.exists():
-        raise RuntimeError("ui/aponi not found. Import APONI into ui/aponi first.")
+    """Lifespan: ensure APONI assets exist at startup (stub-safe)."""
+    APONI_DIR.mkdir(parents=True, exist_ok=True)
+    (APONI_DIR / "mock").mkdir(exist_ok=True)
     if not INDEX.exists():
-        raise RuntimeError("ui/aponi/index.html not found. Verify APONI import.")
+        # Minimal stub so the server always starts — replace with real Aponi build
+        INDEX.write_text(
+            "<!doctype html><html><head><meta charset='utf-8'/><title>ADAAD</title></head>"
+            "<body><h2>ADAAD Unified Server</h2>"
+            "<p>Place the full Aponi build in <code>ui/aponi/</code>.</p></body></html>",
+            encoding="utf-8",
+        )
     yield
 
 
 app = FastAPI(title="InnovativeAI-adaad Unified Server", lifespan=_lifespan)
+
+# ── CORS ────────────────────────────────────────────────────────────────────
+import os as _os
+
+_CORS_ORIGINS: list[str] = [
+    o.strip()
+    for o in _os.environ.get("ADAAD_CORS_ORIGINS", "http://localhost,http://127.0.0.1").split(",")
+    if o.strip()
+]
+_CORS_ORIGIN_REGEX = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_CORS_ORIGINS,
+    allow_origin_regex=_CORS_ORIGIN_REGEX,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ── Cryovant Gate Middleware ─────────────────────────────────────────────────
+# Single enforcement point.  Static files + SPA always pass through.
+# Protected API paths return 423 when gate.lock exists or ADAAD_GATE_LOCKED is set.
+
+_GATE_OPEN_PATHS: frozenset[str] = frozenset({
+    "/api/health",
+    "/api/version",
+    "/api/nexus/health",
+})
+
+_GATE_PROTECTED_PREFIXES: tuple[str, ...] = (
+    "/api/nexus/handshake",
+    "/api/nexus/protocol",
+    "/api/nexus/agents",
+    "/api/governance/",
+    "/api/fast-path/",
+    "/api/nexus/mutate",
+)
+
+
+@app.middleware("http")
+async def cryovant_gate_middleware(request: Request, call_next):
+    """Central Cryovant gate: blocks protected API paths when gate is locked.
+    SPA routes (no /api/ prefix) and open API paths always pass through.
+    """
+    path: str = request.url.path
+
+    if not path.startswith("/api/"):           # SPA / static — always open
+        return await call_next(request)
+
+    if path in _GATE_OPEN_PATHS:               # explicitly open API paths
+        return await call_next(request)
+
+    if any(path.startswith(pfx) for pfx in _GATE_PROTECTED_PREFIXES):
+        gate = _read_gate_state()
+        if gate["locked"]:
+            return JSONResponse(
+                status_code=423,
+                content={
+                    "detail": gate["reason"] or "Cryovant gate LOCKED",
+                    "gate": gate,
+                    "protocol": GATE_PROTOCOL,
+                },
+                headers={"X-ADAAD-GATE": "locked", "X-ADAAD-Protocol": GATE_PROTOCOL},
+            )
+
+    return await call_next(request)
+
+
 app.include_router(mutate_router)
 
 
@@ -229,7 +305,8 @@ def nexus_health() -> dict[str, Any]:
 
 @app.get("/api/nexus/handshake")
 def nexus_handshake() -> dict[str, Any]:
-    gate = _assert_gate_open()
+    # Gate enforced by cryovant_gate_middleware — read state for metadata only.
+    gate = _read_gate_state()
     return {
         "ok": True,
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -240,8 +317,8 @@ def nexus_handshake() -> dict[str, Any]:
 
 @app.get("/api/nexus/protocol")
 def nexus_protocol() -> dict[str, Any]:
-    gate = _assert_gate_open()
-    # Static placeholder protocol snapshot
+    # Gate enforced by cryovant_gate_middleware.
+    gate = _read_gate_state()
     return {
         "ok": True,
         "version": "1.0",
@@ -257,7 +334,7 @@ def nexus_protocol() -> dict[str, Any]:
 
 @app.get("/api/nexus/agents")
 def nexus_agents() -> dict[str, Any]:
-    _assert_gate_open()
+    # Gate enforced by cryovant_gate_middleware.
     agents_dir = ROOT / "app" / "agents"
     agents: list[dict[str, Any]] = []
     if agents_dir.exists():
@@ -1900,3 +1977,21 @@ def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
 
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
+
+
+# ── Direct run: python server.py ──────────────────────────────────────────
+# http://localhost:8080      → ui/aponi/index.html (SPA, always open)
+# http://localhost:8080/api/health  → live gate status
+# Override: ADAAD_HOST, ADAAD_PORT, ADAAD_RELOAD
+if __name__ == "__main__":
+    import uvicorn
+
+    _host = os.environ.get("ADAAD_HOST", "0.0.0.0")
+    _port = int(os.environ.get("ADAAD_PORT", "8080"))
+    _reload = os.environ.get("ADAAD_RELOAD", "0").strip() not in {"", "0", "false", "no"}
+    _gate_status = "LOCKED" if _read_gate_state()["locked"] else "OPEN"
+    print(f"[ADAAD] Unified server → http://localhost:{_port}/")
+    print(f"[ADAAD] Aponi UI  : http://localhost:{_port}/")
+    print(f"[ADAAD] API health: http://localhost:{_port}/api/health")
+    print(f"[ADAAD] Gate      : {_gate_status}")
+    uvicorn.run("server:app", host=_host, port=_port, reload=_reload)
