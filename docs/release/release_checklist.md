@@ -62,6 +62,7 @@ Reference: `docs/DEPENDABOT_REVIEW_POLICY.md`.
 - [ ] `docs/governance/LANE_OWNERSHIP.md` exists and all lanes have identified owners.
 - [ ] All pending claims-evidence rows from `ADAAD_STRATEGIC_BUILD_SUGGESTIONS.md §Evidence Lane Output Contract` are `Complete` in `docs/comms/claims_evidence_matrix.md`.
 - [ ] Federation HMAC key rotation runbook exists for `ADAAD_FEDERATION_MANIFEST_HMAC_KEY`, validated by security owner, before creating governance/public-readiness tags.
+- [ ] If `ADAAD_KEY_ROTATION_MAX_AGE_DAYS` is overridden for release validation, ensure it is an integer string; malformed values fail-closed through governance gate reason `invalid_key_rotation_max_age_days`.
 - [ ] Attach CI green status evidence (run URL or artifact) for the exact release commit before creating governance/public-readiness tags.
 - [ ] Only create/publish the tag after evidence gate checks pass.
 

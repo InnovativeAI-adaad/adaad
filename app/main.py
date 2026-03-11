@@ -506,7 +506,11 @@ class Orchestrator:
             if cryovant.dev_signature_allowed("cryovant-dev-probe"):
                 return True, "dev_signature_mode"
             return False, "no_signing_keys"
-        max_age_days = int(os.getenv("ADAAD_KEY_ROTATION_MAX_AGE_DAYS", "90"))
+        max_age_raw = os.getenv("ADAAD_KEY_ROTATION_MAX_AGE_DAYS", "90")
+        try:
+            max_age_days = int(max_age_raw)
+        except ValueError:
+            return False, "invalid_key_rotation_max_age_days"
         newest_mtime = max(path.stat().st_mtime for path in key_files)
         age_days = (default_provider().now_utc().timestamp() - newest_mtime) / 86400
         if age_days > max_age_days:
