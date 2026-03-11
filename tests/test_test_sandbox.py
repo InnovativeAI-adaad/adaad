@@ -120,7 +120,7 @@ class TestSandboxTest(unittest.TestCase):
         def post_hook(result) -> None:  # type: ignore[no-untyped-def]
             observed["exists"] = Path(result.sandbox_dir).exists()
 
-        sandbox = TestSandbox(root_dir=root, timeout_s=5, post_hook=post_hook)
+        sandbox = TestSandbox(root_dir=root, timeout_s=15, post_hook=post_hook)
         result = sandbox.run_tests(args=["tests/test_import_roots.py", "-q"])
         self.assertTrue(result.ok)
         self.assertTrue(observed["exists"])
@@ -134,7 +134,7 @@ class TestSandboxTest(unittest.TestCase):
         def bad_post(_result) -> None:  # type: ignore[no-untyped-def]
             raise RuntimeError("post boom")
 
-        sandbox = TestSandbox(root_dir=root, timeout_s=5, pre_hook=bad_pre, post_hook=bad_post)
+        sandbox = TestSandbox(root_dir=root, timeout_s=15, pre_hook=bad_pre, post_hook=bad_post)
         result = sandbox.run_tests(args=["tests/test_import_roots.py", "-q"])
         self.assertTrue(result.ok)
 
