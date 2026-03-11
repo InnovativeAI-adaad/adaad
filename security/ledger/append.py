@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import string
 from typing import Any, Dict
 
 LEDGER_PATH = os.path.join("security", "ledger", "ledger.jsonl")
@@ -25,9 +26,13 @@ def _read_last_entry_hash(path: str) -> str:
         return "0" * 64
     try:
         obj = json.loads(last.decode("utf-8"))
-        return obj.get("entry_hash") or "0" * 64
-    except Exception:
-        return "0" * 64
+    except Exception as exc:
+        raise ValueError("ledger_tail_invalid") from exc
+
+    entry_hash = obj.get("entry_hash")
+    if not isinstance(entry_hash, str) or len(entry_hash) != 64 or any(ch not in string.hexdigits for ch in entry_hash):
+        raise ValueError("ledger_tail_invalid")
+    return entry_hash
 
 
 def append_entry(entry: Dict[str, Any], path: str = LEDGER_PATH) -> Dict[str, Any]:
