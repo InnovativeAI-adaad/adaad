@@ -333,7 +333,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 | Category | Current value | Source of truth |
 |:---|:---|:---|
 | **Historical milestone (completed)** | Phase 6 (`v3.1.0`) PR sequence fully merged | [`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`](docs/governance/ADAAD_PR_PROCESSION_2026-03.md) |
-| **Active phase state** | `active_phase`: `Phase 42 COMPLETE · v6.8.0` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Active phase state** | `active_phase`: `Phase 42 COMPLETE · v6.8.1` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
 | **Last completed phase** | `last_completed_phase`: `Phase 42 — Critical Defect Sweep` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
 | **Current next step** | `next_pr`: `PR-43-PLAN (Phase 43 — TBD)` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
 
@@ -341,7 +341,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 | Phase | Outcome | Version |
 |:---|:---|:---:|
-| **Phase 42** | Critical defect sweep: fixed replay/evidence breakages across sandbox, metrics, checkpoint governance events, Dream/Beast compatibility, and app replay entry points | `v6.8.0` |
+| **Phase 42** | Critical defect sweep: fixed replay/evidence breakages across sandbox, metrics, checkpoint governance events, Dream/Beast compatibility, and app replay entry points | `v6.8.1` |
 | **Phase 41** | Central Cryovant gate middleware + CORS + SPA index fallback (`423` lock semantics, browser-safe local origins) | `v6.7.0` |
 | **Phase 40** | `BeastModeLoop` determinism provider injection (`provider`/`replay_mode`/`recovery_tier`) with strict fail-closed replay safety | `v6.6.0` |
 
