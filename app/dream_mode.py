@@ -119,6 +119,11 @@ class DreamMode:
         self.entropy_budget = EntropyBudget()
 
     @staticmethod
+    def _clamp_aggression(value: float) -> float:
+        """Clamp aggression coefficient to [0.0, 1.0]."""
+        return max(0.0, min(1.0, float(value)))
+
+    @staticmethod
     def _read_json(path: Path) -> Dict[str, object]:
         if not path.exists():
             return {}

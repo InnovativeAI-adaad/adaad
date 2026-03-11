@@ -127,17 +127,20 @@ class CheckpointRegistry:
         )
         payload = event.to_payload()
         self.ledger.append_event("EpochCheckpointEvent", payload)
-        self.ledger.append_event(
-            "checkpoint_created",
-            {
-                "checkpoint_id": checkpoint_id,
-                "epoch_id": epoch_id,
-                "manifest_hash": checkpoint_hash,
-                "previous_checkpoint_hash": self._latest_checkpoint_event_hash(),
-                "snapshot_path": f"checkpoints/{checkpoint_id}",
-                "timestamp": self.provider.iso_now(),
-            },
-        )
+
+        # Governance audit event — required by checkpoint chain verifier and
+        # test assertions that track `CheckpointGovernanceEvent` entries.
+        prior_event_hash = self._latest_checkpoint_event_hash()
+        governance_payload = {
+            "event_type": "checkpoint_created",
+            "checkpoint_id": checkpoint_id,
+            "epoch_id": epoch_id,
+            "manifest_hash": checkpoint_hash,
+            "prior_checkpoint_event_hash": prior_event_hash,
+            "snapshot_path": f"checkpoints/{checkpoint_id}",
+            "timestamp": self.provider.iso_now(),
+        }
+        self.ledger.append_event("CheckpointGovernanceEvent", governance_payload)
         return payload
 
     def list_checkpoints(self) -> Dict[str, Any]:

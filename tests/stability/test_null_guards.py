@@ -20,6 +20,9 @@ class _RegistryLedgerStub:
     def __init__(self, events: list[dict[str, Any]]) -> None:
         self._events = events
 
+    def read_all(self) -> list[dict[str, Any]]:
+        return list(self._events)
+
     def read_epoch(self, epoch_id: str) -> list[dict[str, Any]]:
         return list(self._events)
 

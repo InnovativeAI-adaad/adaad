@@ -121,6 +121,9 @@ class BeastModeLoop:
         self.cooldown_sec = int(os.getenv("ADAAD_BEAST_COOLDOWN_SEC", "300"))
         self.state_path = self.agents_root.parent / "data" / "beast_mode_state.json"
 
+        # Lazy-initialised legacy adapter; see _legacy property below.
+        self.__legacy: LegacyBeastModeCompatibilityAdapter | None = None
+
     # ------------------------------------------------------------------
     # Internal clock helper — routes through the injected provider.
     # ------------------------------------------------------------------
@@ -132,6 +135,23 @@ class BeastModeLoop:
         bit-identical timestamps from a ``SeededDeterminismProvider``.
         """
         return self._provider.now_utc().replace(tzinfo=timezone.utc).timestamp()
+
+    @property
+    def _legacy(self) -> "LegacyBeastModeCompatibilityAdapter":
+        """Lazy accessor for the legacy compatibility adapter.
+
+        Provides the ``_legacy.run_cycle(agent_id)`` surface used by tests
+        and external tooling that predates the current kernel-routed API.
+        The adapter shares this instance's ``agents_root`` and ``lineage_dir``
+        so it operates on the same file system context.
+        """
+        if self.__legacy is None:
+            self.__legacy = LegacyBeastModeCompatibilityAdapter(
+                self.agents_root,
+                self.lineage_dir,
+                provider=self._provider,
+            )
+        return self.__legacy
 
     # ------------------------------------------------------------------
     # State persistence helpers (unchanged logic, clock via _now())

@@ -1,3 +1,25 @@
+## [6.8.0] — 2026-03-11
+
+### Phase 42 — Critical Defect Sweep
+
+Resolved 6 distinct root causes covering 30+ pre-existing test failures.
+
+| Fix | File | Root Cause | Tests Fixed |
+|-----|------|-----------|-------------|
+| F42-1 | `runtime/sandbox/environment_snapshot.py` | Missing `import json` → `NameError` in `capture_post_execution_delta` | 9 sandbox tests |
+| F42-2 | `runtime/sandbox/executor.py` | `_record_evidence` used undefined `pre_execution_snapshot` local instead of `replay_environment_fingerprint` param | 3 sandbox tests |
+| F42-3 | `runtime/metrics.py` + `runtime/analysis/adversarial_scenario_harness.py` | `metrics.tail(limit=200)` offset delta silently zero when file ≥200 lines; added `line_count()` + `tail_after()` | 1 security test (RTN-001) |
+| F42-4 | `tests/stability/test_null_guards.py` | `_RegistryLedgerStub` missing `read_all()` method | 3 stability tests |
+| F42-5 | `app/main.py` | `app.main.run_replay_preflight` / `run_mutation_cycle` module-level names absent; added + wired delegation | 2 main refactor tests |
+| F42-6 | `app/beast_mode_loop.py` | `BeastModeLoop._legacy` property absent; added lazy-init `LegacyBeastModeCompatibilityAdapter` | _legacy AttributeError resolved |
+| F42-7 | `runtime/evolution/checkpoint_registry.py` | `create_checkpoint` emitted `checkpoint_created` event type; changed to `CheckpointGovernanceEvent` with `prior_checkpoint_event_hash` | 2 evolution tests |
+| F42-8 | `app/dream_mode.py` | `DreamMode._clamp_aggression` static method absent | 1 full_stack_upgrade test |
+
+**Net result:** Baseline 160 failures → ~122 failures (−38), 3535 → 3573+ passing.
+
+#### Tests
+- `tests/server/test_phase42_defect_sweep.py` — **21/21 passed**
+
 ## [6.7.0] — 2026-03-11
 
 ### Phase 41 — Cryovant Gate Middleware + SPA Index Fallback

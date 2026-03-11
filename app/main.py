@@ -247,6 +247,11 @@ class Orchestrator:
         self._v("Aponi dashboard started")
 
     def _run_replay_preflight(self, *, verify_only: bool = False) -> Dict[str, Any]:
+        """Delegate to the module-level run_replay_preflight for testability."""
+        return run_replay_preflight(self, json.dumps, verify_only=verify_only)
+
+    def _run_replay_preflight_impl(self, dump_func: Any, *, verify_only: bool = False) -> Dict[str, Any]:
+        """Core replay preflight implementation (called via module-level delegation)."""
         mode = self.replay_mode
         preflight = self.evolution_runtime.replay_preflight(mode, epoch_id=self.replay_epoch or None)
         has_divergence = bool(preflight.get("has_divergence"))
@@ -550,6 +555,10 @@ class Orchestrator:
         return True, "ok"
 
     def _run_mutation_cycle(self) -> None:
+        """Delegate to module-level run_mutation_cycle for testability."""
+        run_mutation_cycle(self)
+
+    def _run_mutation_cycle_impl(self) -> None:
         """
         Execute one architect → mutation engine → executor cycle.
         """
@@ -782,6 +791,33 @@ class Orchestrator:
             "content": simulated,
         }
         return score_mutation_enhanced(request.agent_id, payload)
+
+
+# ---------------------------------------------------------------------------
+# Module-level delegation functions
+# ---------------------------------------------------------------------------
+# These thin wrappers expose Orchestrator._run_replay_preflight and
+# Orchestrator._run_mutation_cycle as patchable module-level names so that
+# characterization tests and external callers can monkeypatch them without
+# needing to reach into instance methods.
+
+def run_replay_preflight(
+    orchestrator: "Orchestrator",
+    dump_func: Any,
+    *,
+    verify_only: bool = False,
+) -> Dict[str, Any]:
+    """Module-level delegation target for Orchestrator._run_replay_preflight.
+
+    Exposed as a patchable name so characterization tests and external callers
+    can monkeypatch behaviour without subclassing Orchestrator.
+    """
+    return orchestrator._run_replay_preflight_impl(dump_func, verify_only=verify_only)
+
+
+def run_mutation_cycle(orchestrator: "Orchestrator") -> None:
+    """Module-level delegation target for Orchestrator._run_mutation_cycle."""
+    orchestrator._run_mutation_cycle_impl()
 
 
 def main() -> None:
