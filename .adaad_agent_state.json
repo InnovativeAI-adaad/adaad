@@ -1,19 +1,19 @@
 {
-  "active_phase": "Phase 42 COMPLETE \u00b7 v6.8.1",
+  "active_phase": "Phase 46 COMPLETE \u00b7 v7.0.0",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 42 \u2014 Critical Defect Sweep",
-  "last_completed_pr": "feat/phase42-defect-sweep",
+  "last_completed_phase": "Phase 46 \u2014 MarketSignalAdapter Live Bridge to EconomicFitnessEvaluator",
+  "last_completed_pr": "feat/phase46-market-signal-live-bridge",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-03-11",
-  "last_sync_sha": "4c59263e5825ba544a228142bf723694e55e1bfe",
-  "next_pr": "PR-43-PLAN (Phase 43 \u2014 TBD)",
+  "last_invocation": "2026-03-12",
+  "last_sync_sha": "24c04a8",
+  "next_pr": "PR-47-PLAN (Phase 47 \u2014 TBD)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -79,6 +79,11 @@
     "phase42-checkpoint-governance-event-hash",
     "phase42-dream-mode-clamp-aggression",
     "phase42-tests-21-green-38-resolved",
-    "v6.8.1-released"
+    "v6.8.1-released",
+    "phase46-market-adapter-bridge-wired",
+    "phase46-economic-fitness-live-signal",
+    "phase46-bridge-status-endpoint",
+    "phase46-tests-20-green",
+    "v7.0.0-released"
   ]
 }

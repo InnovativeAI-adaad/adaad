@@ -1,4 +1,77 @@
+## [7.0.0] — 2026-03-12
+
+### Phase 46 — MarketSignalAdapter Live Bridge to EconomicFitnessEvaluator
+
+Closes the highest-ROI gap in the codebase: `MarketSignalAdapter` now wires
+directly into `EconomicFitnessEvaluator` as a live, fail-closed signal source
+for `simulated_market_score`.
+
+#### Architecture
+
+- `EconomicFitnessEvaluator.__init__()` accepts new optional parameter
+  `live_market_adapter: MarketSignalAdapter | None = None`.
+- `_simulated_market_score()` elevated: adapter path is now the
+  **highest-priority** signal source, executing before payload inspection
+  and all fallback paths.
+- Fail-closed: adapter exceptions are caught, logged, and silently fallen
+  through to the existing payload/default path — `evaluate()` never raises
+  due to adapter failure.
+- Bridge statistics: `_bridge_fetch_count` and `_bridge_fallback_count`
+  tracked on the evaluator instance for observability.
+- `market_bridge_status()` public method exposes bridge health: `wired`,
+  `bridge_fetch_count`, `bridge_fallback_count`, `last_signal` snapshot.
+- Type safety: `MarketSignalAdapter` imported under `TYPE_CHECKING` only —
+  zero circular-import risk at runtime.
+
+#### New endpoint
+
+`GET /evolution/market-fitness-bridge` (auth: `audit:read`)
+
+Returns bridge health envelope:
+```json
+{
+  "ok": true,
+  "bridge": {
+    "wired": true,
+    "bridge_fetch_count": 0,
+    "bridge_fallback_count": 0,
+    "last_signal": {
+      "dau": 0.5, "retention_d7": 0.4,
+      "simulated_market_score": 0.455,
+      "source": "synthetic",
+      "lineage_digest": "sha256:...",
+      "ingested_at": 1234567890.0
+    }
+  },
+  "phase": "46",
+  "note": "synthetic baseline active — wire a live source_fn to activate real signal"
+}
+```
+
+#### Constitutional invariants
+
+- `live_market_adapter=None` (default): all existing evaluation paths
+  unchanged — backward-compatible for every existing test and caller.
+- Adapter score **overrides** payload `simulated_market_score` when wired.
+- Adapter failure is logged and swallowed; never propagates.
+- Score clamped to `[0.0, 1.0]` on all paths.
+
+#### Tests
+
+- `tests/test_market_fitness_bridge.py` — **20/20 passed** (T46-01..T46-20)
+  - Payload fallback when no adapter (T46-01, T46-02)
+  - Live adapter override (T46-03, T46-04)
+  - Fail-closed on exception (T46-05, T46-06)
+  - Bridge counters (T46-07, T46-08)
+  - `market_bridge_status()` correctness (T46-09..T46-12)
+  - Score clamping (T46-13, T46-14)
+  - Endpoint schema + auth + signal (T46-15..T46-18)
+  - Synthetic vs live source field (T46-19, T46-20)
+
+---
+
 ## [6.9.2] — 2026-03-11
+
 
 ### Phase 44 — Main Hardening
 

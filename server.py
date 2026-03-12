@@ -2128,6 +2128,46 @@ async def simulation_results(
         }
     return {"ok": True, "simulation": True, "data": envelope}
 
+
+# ── Phase 46: Market Signal Live Bridge ──────────────────────────────────────
+
+@app.get("/evolution/market-fitness-bridge")
+async def market_fitness_bridge_status(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """GET /evolution/market-fitness-bridge
+
+    Returns the live MarketSignalAdapter → EconomicFitnessEvaluator bridge status.
+
+    Constitutional invariants (Phase 46):
+    - Never raises; always returns a valid envelope.
+    - ``wired`` is True iff a live MarketSignalAdapter is injected into the evaluator.
+    - When wired, includes the most recent signal snapshot and bridge statistics.
+    - Fail-safe: on any internal error, returns ``ok=True`` with ``wired=False``.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
+        from runtime.market.market_signal_adapter import MarketSignalAdapter
+
+        evaluator = EconomicFitnessEvaluator(live_market_adapter=MarketSignalAdapter())
+        status = evaluator.market_bridge_status()
+        return {
+            "ok": True,
+            "bridge": status,
+            "phase": "46",
+            "note": "synthetic baseline active — wire a live source_fn to activate real signal",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": True,
+            "bridge": {"wired": False, "bridge_fetch_count": 0,
+                       "bridge_fallback_count": 0, "last_signal": None},
+            "phase": "46",
+            "error": str(exc),
+        }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
 
