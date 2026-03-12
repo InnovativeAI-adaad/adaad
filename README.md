@@ -8,9 +8,9 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-42%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-46%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9%2B-7b61ff?style=flat-square&labelColor=060d14"/>
-  <img alt="Tests" src="https://img.shields.io/badge/tests-3573%2B%20passing-22c55e?style=flat-square&labelColor=060d14"/>
+  <img alt="Tests" src="https://img.shields.io/badge/tests-3828%2B%20passing-22c55e?style=flat-square&labelColor=060d14"/>
   &nbsp;
   <img alt="Governance" src="https://img.shields.io/badge/governance-fail--closed-ef4444?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
@@ -34,7 +34,7 @@
 <p align="center">
   <a href="#-start-in-60-seconds"><strong>Quick Start</strong></a> ·
   <a href="#how-the-loop-works"><strong>How It Works</strong></a> ·
-  <a href="#-governance-at-a-glance"><strong>Governance</strong></a> ·
+  <a href="#️-governance-at-a-glance"><strong>Governance</strong></a> ·
   <a href="#-android--termux"><strong>Android</strong></a> ·
   <a href="#whats-active-now"><strong>Current Status</strong></a> ·
   <a href="docs/CONSTITUTION.md"><strong>Constitution</strong></a> ·
@@ -49,13 +49,15 @@
 
 | Field | Value |
 |---|---|
-| **Current version** | `6.8.1` |
-| **Phase** | 42 complete (Critical Defect Sweep) |
-| **Released** | 2026-03-11 |
-| **Tests passing** | 3573+ (latest changelog baseline) |
+| **Current version** | `7.0.0` |
+| **Phase** | 46 complete (MarketSignalAdapter Live Bridge) |
+| **Released** | 2026-03-12 |
+| **Tests passing** | 3828+ collected |
 | **Constitution** | v0.3.0 — 18 rules |
 
-**New in v6.8.1:** Phase 42 critical defect sweep is complete (6 core fixes + checkpoint governance event hash correction), resolving 38+ pre-existing failures and lifting the passing baseline to 3573+. Recently shipped before this: Phase 41 Cryovant gate middleware + SPA fallback and Phase 40 BeastMode determinism provider injection.
+**New in v7.0.0:** Phase 46 closes the highest-ROI gap in the codebase — `MarketSignalAdapter` now wires directly into `EconomicFitnessEvaluator` as a live, fail-closed, highest-priority `simulated_market_score` source. When a real `source_fn` is injected, budget mode switching, ROI attribution, Darwinian agent selection, and earned autonomy progression all activate on real DAU and retention signals. New endpoint: `GET /evolution/market-fitness-bridge`. 20/20 tests passing.
+
+Recently shipped: Phase 45 (routing-health 9-signal test reconciliation), Phase 44 (main hardening — signing-key injection, fail-closed evidence panel, SyntaxWarning elimination), Phase 43 (governance inviolability, simulation endpoints, AST import enforcement).
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -65,7 +67,7 @@
 
 **ADAAD** (Autonomous Development & Adaptation Architecture) is an open-source AI governance and code mutation engine built by **[InnovativeAI LLC](https://github.com/InnovativeAI-adaad)**.
 
-It was conceived, designed, and built entirely by **Dustin L. Reid** — Founder of InnovativeAI LLC — with one conviction: autonomous AI systems must be governed by hard rules, not soft suggestions.
+It was conceived, designed, and built by **Dustin L. Reid** — Founder of InnovativeAI LLC — with one conviction: autonomous AI systems must be governed by hard rules, not soft suggestions.
 
 > *"Autonomy without accountability isn't progress — it's drift. ADAAD makes every decision traceable, every mutation defensible, and every failure visible."*
 > — **Dustin L. Reid**, Founder, InnovativeAI LLC
@@ -102,7 +104,7 @@ After each epoch, scoring weights self-calibrate via momentum gradient descent. 
 | 💭 **Dream** | Creative, exploratory | Novel approaches, experimental rewrites, lateral improvements |
 | 🐉 **Beast** | Aggressive, performance-first | Throughput gains, complexity reduction, raw optimization |
 
-All three agents compete on equal terms through the same governed pipeline. `GovernanceGate` evaluates proposals from all three identically.
+All three agents compete through the same governed pipeline via UCB1 + Thompson Sampling bandit selection. Strategy arms that produce governable, high-fitness proposals accumulate selection pressure. Underperformers decay.
 
 > [!IMPORTANT]
 > `GovernanceGate` is the **only** surface with mutation-approval authority. Fitness scores influence which candidates advance — but approval belongs exclusively to constitutional evaluation. This is enforced architecturally, not by convention.
@@ -119,14 +121,14 @@ python onboard.py
 
 > **Requirements:** Python 3.11.9+ · pip · git
 
-For manual bootstrap before running the full test suite, install both runtime and dev/test manifests:
+For manual bootstrap:
 
 ```bash
 pip install -r requirements.server.txt
 pip install -r requirements.dev.txt
 ```
 
-`onboard.py` handles everything: venv creation, runtime dependency install, deterministic dev/test dependency install (`requirements.dev.txt`), workspace init, schema validation, and a governed dry-run. Safe to re-run at any time.
+`onboard.py` handles everything: venv creation, dependency install, workspace init, schema validation, and a governed dry-run. Safe to re-run at any time.
 
 <details>
 <summary><strong>What onboarding does, step by step</strong></summary>
@@ -199,7 +201,7 @@ print(f"Duration:    {result.duration_seconds:.1f}s")
 ```
 
 > [!NOTE]
-> Every run is replay-verifiable. Use `--replay audit` to re-run any epoch and confirm byte-identical outputs. Divergence from the recorded run halts the pipeline and logs the exact delta.
+> Every run is replay-verifiable. Use `--replay audit` to re-run any epoch and confirm byte-identical outputs. Divergence halts the pipeline and logs the exact delta.
 
 ---
 
@@ -222,26 +224,27 @@ Constitution  →  Architecture Contract  →  ArchitectAgent Spec  →  PR Proc
 
 ADAAD tracks a composite health score `h ∈ [0, 1]` over 9 signals that sum to exactly 1.00:
 
-| Signal | Weight | Source |
-|:---|:---:|:---|
-| `avg_reviewer_reputation` | 0.18 | `ReviewerReputationLedger` |
-| `amendment_gate_pass_rate` | 0.16 | `AmendmentPipeline` |
-| `federation_divergence_clean` | 0.16 | `FederatedSignalBroker` |
-| `epoch_health_score` | 0.12 | Core epoch evaluator |
-| `routing_health_score` | 0.10 | `RoutingHealthAggregator` |
-| `admission_rate_score` | 0.09 | `AdmissionRateTracker` |
-| `governance_debt_health_score` | 0.08 | `GovernanceDebtLedger` |
-| `certifier_rejection_rate_score` | 0.06 | `CertifierScanLedger` |
-| `gate_approval_rate_score` | 0.05 | `GateDecisionLedger` |
+| Signal | Weight | Source Phase |
+|:---|:---:|:---:|
+| `avg_reviewer_reputation` | 0.18 | Ph. 7 |
+| `amendment_gate_pass_rate` | 0.16 | Ph. 6 |
+| `federation_divergence_clean` | 0.16 | Ph. 5 |
+| `epoch_health_score` | 0.12 | core |
+| `routing_health_score` | 0.10 | Ph. 23 |
+| `admission_rate_score` | 0.09 | Ph. 26 |
+| `governance_debt_health_score` | 0.08 | Ph. 32 |
+| `certifier_rejection_rate_score` | 0.06 | Ph. 33 |
+| `gate_approval_rate_score` | 0.05 | Ph. 35 |
 
-`h < 0.60` triggers degraded-mode governance. All signals are exposed via `GET /governance/health`.
+`h < 0.60` triggers degraded-mode governance. `h < 0.40` issues an advisory epoch-pause signal. All signals are exposed via `GET /governance/health`. Weight sum is CI-verified at import time (`tolerance: 1e-9`).
 
 ### Determinism guarantees
 
-- **Strict replay**: Set `ADAAD_REPLAY_MODE=strict` + `ADAAD_DETERMINISTIC_SEED=<seed>` — every token, timestamp, and ID is deterministic. Divergence halts and is journaled.
-- **Hash-chained ledgers**: Every audit ledger (gate decisions, certifier scans, reviewer reputation, threat scans, admission audit, mutation, pressure) uses SHA-256 hash-chaining. Tamper detection is automatic.
-- **Fail-closed**: Missing `ADAAD_SOULBOUND_KEY` halts the pipeline immediately with `soulbound_key_absent.v1` journaled. No silent failures.
+- **Strict replay**: `ADAAD_REPLAY_MODE=strict` + `ADAAD_DETERMINISTIC_SEED=<seed>` — every token, timestamp, and ID is deterministic. Divergence halts and is journaled. Enforced on both DreamMode and BeastModeLoop via `RuntimeDeterminismProvider` injection.
+- **Hash-chained ledgers**: Every audit ledger uses SHA-256 hash-chaining. Tamper detection is automatic on open.
+- **Fail-closed**: Missing `ADAAD_SOULBOUND_KEY` halts the pipeline immediately. No silent failures.
 - **Weight bounds**: All scoring weights bounded to `[0.05, 0.70]`. No single signal can dominate.
+- **Market bridge fail-closed**: `MarketSignalAdapter` errors are caught and logged — `evaluate()` never raises. Synthetic baseline always available offline.
 
 ---
 
@@ -250,39 +253,43 @@ ADAAD tracks a composite health score `h ∈ [0, 1]` over 9 signals that sum to 
 <table>
 <tr>
   <td><strong>🔁&nbsp; Deterministic Replay</strong></td>
-  <td>Every decision re-runs byte-identical under strict mode. Divergence halts the pipeline and is logged.</td>
+  <td>Every decision re-runs byte-identical under strict mode. DreamMode and BeastModeLoop both inject <code>RuntimeDeterminismProvider</code>. Divergence halts the pipeline.</td>
 </tr>
 <tr>
   <td><strong>🛡️&nbsp; Constitutional Gating</strong></td>
-  <td>18 rules across three tiers (Sandbox / Stable / Production) — 9 globally blocking, 4 elevate to blocking in Production. One blocking failure = full halt.</td>
+  <td>18 rules across three tiers — 9 globally blocking, 4 elevate to blocking in Production. One blocking failure = full halt.</td>
 </tr>
 <tr>
   <td><strong>🧾&nbsp; Hash-Chained Evidence</strong></td>
-  <td>Every governed step is SHA-256 hash-chained, signed, and permanently attached across 7 audit ledgers.</td>
+  <td>Every governed step is SHA-256 hash-chained across 8+ append-only audit ledgers. Tamper detection on open.</td>
 </tr>
 <tr>
   <td><strong>🤖&nbsp; AI Mutation Proposals</strong></td>
-  <td>Three Claude-powered agents (Architect / Dream / Beast) produce diverse, scored candidates via the Anthropic API.</td>
+  <td>Three Claude-powered agents (Architect / Dream / Beast) via Anthropic API. UCB1 + Thompson Sampling bandit selects strategy each epoch.</td>
 </tr>
 <tr>
   <td><strong>📈&nbsp; Self-Calibrating Weights</strong></td>
-  <td>Scoring weights adapt via momentum gradient descent. Underperforming strategies decay automatically.</td>
+  <td>Scoring weights adapt via momentum gradient descent. <code>PolicyPromotionController</code> blocks degraded weight promotion.</td>
 </tr>
 <tr>
   <td><strong>🧬&nbsp; Genetic Population Evolution</strong></td>
-  <td>BLX-alpha crossover, elite preservation, and diversity enforcement. UCB1 + Thompson bandit selects agent strategy.</td>
+  <td>BLX-alpha crossover, elite preservation, and diversity enforcement across mutation candidates each epoch.</td>
+</tr>
+<tr>
+  <td><strong>📊&nbsp; Live Market Signal Bridge</strong></td>
+  <td><code>MarketSignalAdapter</code> wires live DAU + retention_d7 into <code>EconomicFitnessEvaluator</code> as highest-priority fitness signal. Fail-closed. Observable via <code>GET /evolution/market-fitness-bridge</code>.</td>
 </tr>
 <tr>
   <td><strong>🧠&nbsp; 6-Strategy Intelligence Layer</strong></td>
-  <td>Selects from 6 context-driven strategies with deterministic payoff ranking, per-strategy LLM prompts, and dimension floor overrides.</td>
+  <td>Deterministic payoff ranking, per-strategy LLM prompts, floor overrides. <code>CritiqueSignalBuffer</code> feeds floor-breach rates back into selection.</td>
 </tr>
 <tr>
   <td><strong>🔄&nbsp; Learn-from-Critique Loop</strong></td>
-  <td>CritiqueSignalBuffer tracks per-strategy floor breach rates. High-breach strategies receive payoff penalties — the system learns which strategies produce governable proposals.</td>
+  <td><code>CritiqueSignalBuffer</code> penalizes strategies with high floor-breach rates — the system learns which strategies produce governable proposals.</td>
 </tr>
 <tr>
   <td><strong>🧪&nbsp; Policy Simulation</strong></td>
-  <td>Replay historical epochs under hypothetical constraints — zero side-effects, full audit trail.</td>
+  <td>Replay historical epochs under hypothetical constraints via <code>POST /simulation/run</code> — zero ledger writes.</td>
 </tr>
 <tr>
   <td><strong>🐳&nbsp; Container Isolation</strong></td>
@@ -290,11 +297,11 @@ ADAAD tracks a composite health score `h ∈ [0, 1]` over 9 signals that sum to 
 </tr>
 <tr>
   <td><strong>🌐&nbsp; Multi-Node Federation</strong></td>
-  <td>Cross-repo mutations with dual-gate constitutional enforcement. Divergence in any node blocks promotion.</td>
+  <td>Cross-repo mutations with dual-gate enforcement and HMAC-verified channel binding.</td>
 </tr>
 <tr>
   <td><strong>📝&nbsp; Roadmap Self-Amendment</strong></td>
-  <td>The engine proposes changes to its own roadmap. Humans approve. No auto-merge path — constitutional invariant.</td>
+  <td>The engine proposes changes to its own roadmap. Humans approve. No auto-merge path.</td>
 </tr>
 </table>
 
@@ -326,40 +333,106 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 ## What's active now
 
-> Current version: **v6.8.1** · Phase 42 complete · 3573+ tests passing (latest changelog baseline)
+> Current version: **v7.0.0** · Phase 46 complete · 3828+ tests collected
 
-### Recently shipped (Phases 40–42)
+### Current state
 
-| Category | Current value | Source of truth |
+| Category | Value | Source |
 |:---|:---|:---|
-| **Historical milestone (completed)** | Phase 6 (`v3.1.0`) PR sequence fully merged | [`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`](docs/governance/ADAAD_PR_PROCESSION_2026-03.md) |
-| **Active phase state** | `active_phase`: `Phase 42 COMPLETE · v6.8.1` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
-| **Last completed phase** | `last_completed_phase`: `Phase 42 — Critical Defect Sweep` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
-| **Current next step** | `next_pr`: `PR-43-PLAN (Phase 43 — TBD)` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Active phase** | `Phase 46 COMPLETE · v7.0.0` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Last completed phase** | Phase 46 — MarketSignalAdapter Live Bridge | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Next step** | Phase 47 — Claude API live integration via `proposal_adapter.py` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Historical milestone** | Phase 6 (`v3.1.0`) PR sequence fully merged | [`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`](docs/governance/ADAAD_PR_PROCESSION_2026-03.md) |
 
-### Recent outcomes (Phases 40–42)
+### Recent outcomes (Phases 40–46)
 
 | Phase | Outcome | Version |
 |:---|:---|:---:|
-| **Phase 42** | Critical defect sweep: fixed replay/evidence breakages across sandbox, metrics, checkpoint governance events, Dream/Beast compatibility, and app replay entry points | `v6.8.1` |
-| **Phase 41** | Central Cryovant gate middleware + CORS + SPA index fallback (`423` lock semantics, browser-safe local origins) | `v6.7.0` |
-| **Phase 40** | `BeastModeLoop` determinism provider injection (`provider`/`replay_mode`/`recovery_tier`) with strict fail-closed replay safety | `v6.6.0` |
+| **Phase 46** | `MarketSignalAdapter` live bridge into `EconomicFitnessEvaluator` — highest-priority market signal path, fail-closed, `GET /evolution/market-fitness-bridge`, 20/20 tests | `v7.0.0` |
+| **Phase 45** | Routing-health test reconciliation — 9-signal weight constants aligned across all assertions, 26/26 tests | `v6.9.2` |
+| **Phase 44** | Main hardening — signing-key injection, fail-closed evidence panel, thread-safe simulation store, SyntaxWarning elimination (3.12/3.13 clean) | `v6.9.2` |
+| **Phase 43** | Governance inviolability, `POST /simulation/run` + `GET /simulation/results/{run_id}`, AST-based import enforcement | `v6.9.0` |
+| **Phase 42** | Critical defect sweep — replay/evidence breakages across sandbox, metrics, checkpoint governance events, Dream/Beast compatibility | `v6.8.1` |
+| **Phase 41** | Cryovant gate middleware + CORS + SPA index fallback (`423` lock semantics, browser-safe local origins) | `v6.7.0` |
+| **Phase 40** | `BeastModeLoop` determinism provider injection with strict fail-closed replay safety | `v6.6.0` |
 
-### All audit ledgers — REST endpoints live
+### All REST endpoints
 
-Every hash-chained audit ledger in ADAAD now has a `GET /governance/*` REST endpoint:
+All endpoints require `Authorization: Bearer <token>` with `audit:read` scope (`ADAAD_AUDIT_TOKENS`).
+
+**Governance — health & admission**
+
+| Endpoint | Purpose | Phase |
+|:---|:---|:---:|
+| `GET /governance/health` | Composite 9-signal health score + breakdown | core |
+| `GET /governance/admission-status` | Current `AdmissionDecision` (advisory) | 25 |
+| `GET /governance/admission-rate` | Rolling admission rate report | 26 |
+| `GET /governance/admission-audit` | Hash-chained `AdmissionAuditLedger` records | 27 |
+| `GET /governance/admission-enforcement` | `AdmissionBandEnforcer` verdict | 28 |
+
+**Governance — audit ledgers**
 
 | Endpoint | Ledger | Phase |
 |:---|:---|:---:|
-| `GET /governance/gate-decisions` | `GateDecisionLedger` | 36 |
-| `GET /governance/reviewer-reputation-ledger` | `ReviewerReputationLedger` | 37 |
-| `GET /governance/mutation-ledger` | `MutationLedger` | 38 |
-| `GET /governance/certifier-scans` | `CertifierScanLedger` | 34 |
-| `GET /governance/threat-scans` | `ThreatScanLedger` | 30 |
-| `GET /governance/admission-audit` | `AdmissionAuditLedger` | 27 |
 | `GET /governance/pressure-history` | `PressureAuditLedger` | 25 |
 | `GET /governance/debt` | `GovernanceDebtLedger` | 31 |
-| `GET /governance/health` | Composite (9 signals) | core |
+| `GET /governance/certifier-scans` | `CertifierScanLedger` | 33–34 |
+| `GET /governance/gate-decisions` | `GateDecisionLedger` | 35–36 |
+| `GET /governance/reviewer-reputation-ledger` | `ReviewerReputationLedger` | 37 |
+| `GET /governance/mutation-ledger` | `MutationLedger` | 38 |
+| `GET /governance/threat-scans` | `ThreatScanLedger` | 30 |
+
+**Governance — calibration & pressure**
+
+| Endpoint | Purpose | Phase |
+|:---|:---|:---:|
+| `GET /governance/routing-health` | Routing health score + signal breakdown | 23 |
+| `GET /governance/review-pressure` | Current review pressure advisory | 24 |
+| `GET /governance/reviewer-calibration` | Reviewer calibration context | 7 |
+| `POST /governance/certify` | Trigger certifier scan | 34 |
+| `GET /api/governance/parallel-gate/probe-library` | Available probe definitions | core |
+| `POST /api/governance/parallel-gate/evaluate` | Evaluate mutation against parallel gate | core |
+
+**Evolution & market**
+
+| Endpoint | Purpose | Phase |
+|:---|:---|:---:|
+| `GET /evolution/market-fitness-bridge` | Live market bridge status + signal snapshot | 46 |
+
+**Simulation**
+
+| Endpoint | Purpose | Phase |
+|:---|:---|:---:|
+| `POST /simulation/run` | Simulate governance evaluation (no ledger writes) | 43 |
+| `GET /simulation/results/{run_id}` | Retrieve simulation result by run ID | 43 |
+
+**Telemetry**
+
+| Endpoint | Purpose |
+|:---|:---|
+| `GET /telemetry/analytics` | Strategy analytics report |
+| `GET /telemetry/decisions` | Routed decision telemetry feed |
+| `GET /telemetry/strategy/{strategy_id}` | Per-strategy telemetry detail |
+
+**Fast path**
+
+| Endpoint | Purpose |
+|:---|:---|
+| `GET /api/fast-path/stats` | Fast-path router statistics |
+| `POST /api/fast-path/route-preview` | Preview routing decision |
+| `POST /api/fast-path/entropy-gate` | Entropy gate check |
+| `GET /api/fast-path/checkpoint-chain/verify` | Checkpoint chain verification |
+
+**System**
+
+| Endpoint | Purpose |
+|:---|:---|
+| `GET /api/health` | System health gate status |
+| `GET /api/version` | Version + phase metadata |
+| `GET /api/nexus/health` | Nexus node health |
+| `GET /api/nexus/agents` | Registered agent inventory |
+| `GET /api/nexus/handshake` | Nexus federation handshake |
+| `GET /api/nexus/protocol` | Nexus protocol version |
 
 ### Phase 6 milestones (complete)
 
@@ -371,8 +444,8 @@ Every hash-chained audit ledger in ADAAD now has a `GET /governance/*` REST endp
 | M6-04 Federated propagation | ✅ | `runtime/governance/federation/mutation_broker.py` |
 | M6-05 Android distribution | ✅ | `.github/workflows/android-free-release.yml` |
 
-📋 Full history → [`CHANGELOG.md`](CHANGELOG.md)  
-📋 Full roadmap → [`ROADMAP.md`](ROADMAP.md)  
+📋 Full history → [`CHANGELOG.md`](CHANGELOG.md)
+📋 Full roadmap → [`ROADMAP.md`](ROADMAP.md)
 🔖 Current version → [`VERSION`](VERSION)
 
 ---
@@ -401,10 +474,13 @@ These are CI-verified on every merge. They cannot be bypassed:
 - **Weight sum invariant** — All 9 `SIGNAL_WEIGHTS` sum to exactly `1.00` (tolerance: `1e-9`). Verified at import time.
 - **Weight bounds** — Every weight is clamped to `[0.05, 0.70]`. No signal can dominate composite health.
 - **Fail-closed soulbound** — `ADAAD_SOULBOUND_KEY` absent → immediate halt with journaled evidence. No default key, no bypass.
-- **Replay determinism** — `ADAAD_REPLAY_MODE=strict` requires `ADAAD_DETERMINISTIC_SEED`. All providers (clock, token, ID) are injected and seeded — not pulled from system entropy.
-- **`GovernanceGate` isolation** — No module except the established gate chain may call `GovernanceGate` directly. Architecturally enforced.
+- **Replay determinism** — `ADAAD_REPLAY_MODE=strict` requires `ADAAD_DETERMINISTIC_SEED`. All providers (clock, token, ID) are injected and seeded. Enforced on DreamMode and BeastModeLoop.
+- **`GovernanceGate` isolation** — No module except the established gate chain may call `GovernanceGate` directly. Advisory surfaces (`AdmissionBandEnforcer`, `GovernanceHealthAggregator`) explicitly never import it.
 - **Dispatch latency budget** — Default `50.0 ms` (`ADAAD_DISPATCH_LATENCY_BUDGET_MS`). Excess triggers a governance audit event.
 - **PolicyPromotionController** — Auto-rollback on regression. No degraded weights are ever promoted.
+- **Market bridge fail-closed** — `MarketSignalAdapter` failures caught and swallowed inside `EconomicFitnessEvaluator`. Synthetic baseline guarantees valid signal in all environments (CI, Pydroid3, offline).
+- **Thread-safe simulation store** — `_SIMULATION_STORE` protected by `threading.Lock`. Safe under multi-worker deployments.
+- **AST import validation** — `tests/test_import_roots.py` uses `ast.parse()` + `ast.walk()`. No false positives from docstrings or comments. `try/except`-guarded optional imports explicitly whitelisted.
 
 > Full environment variable reference: [`docs/ENVIRONMENT_VARIABLES.md`](docs/ENVIRONMENT_VARIABLES.md)
 
@@ -414,7 +490,7 @@ These are CI-verified on every merge. They cannot be bypassed:
 
 **InnovativeAI LLC** is an independent AI research and engineering company based in Blackwell, Oklahoma. ADAAD is its flagship open-source project — a proof that autonomous AI development pipelines can be auditable, deterministic, and constitutionally governed from day one.
 
-**Dustin L. Reid** designed every layer: the multi-agent mutation pipeline, genetic population management, self-calibrating fitness engine, constitutional governance model, and federated execution architecture.
+**Dustin L. Reid** designed every layer: the multi-agent mutation pipeline, genetic population management, self-calibrating fitness engine, constitutional governance model, live market signal bridge, and federated execution architecture.
 
 ---
 
@@ -422,7 +498,7 @@ These are CI-verified on every merge. They cannot be bypassed:
 
 ADAAD is released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
-Compliance metadata: [`LICENSES.md`](LICENSES.md) · [`NOTICE`](NOTICE)  
+Compliance metadata: [`LICENSES.md`](LICENSES.md) · [`NOTICE`](NOTICE)
 Compliance gate: `python scripts/validate_license_compliance.py`
 
 ---

@@ -46,6 +46,8 @@ APPROVED_ROOTS = {
 # These are acknowledged as intentional optional dependencies.
 APPROVED_OPTIONAL_EXTERNALS = {
     "jsonschema",  # tools/interactive_onboarding.py, runtime/governance/simulation/profile_exporter.py
+    "anthropic",   # runtime/intelligence/llm_provider.py — guarded by importlib.util.find_spec
+    "nacl",        # runtime/evolution/replay_attestation.py — lazy-loaded in helper functions, requires PyNaCl
 }
 STDLIB_ROOTS = set(getattr(sys, "stdlib_module_names", ())) | set(sys.builtin_module_names)
 SITE_PACKAGES_MARKERS = ("site-packages", "dist-packages")
