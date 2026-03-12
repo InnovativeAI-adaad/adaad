@@ -1,10 +1,10 @@
 {
-  "active_phase": "Phase 51 COMPLETE · v7.5.0",
+  "active_phase": "Phase 52 COMPLETE \u00b7 v7.6.0",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 51 — Roadmap & Procession Alignment + v1.0.0-GA Checklist",
-  "last_completed_pr": "feat/phase51-roadmap-procession-alignment",
+  "last_completed_phase": "Phase 52 \u2014 Governed Cross-Epoch Memory & Learning Store",
+  "last_completed_pr": "feat/phase52-epoch-memory-store",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -13,7 +13,7 @@
   },
   "last_invocation": "2026-03-12",
   "last_sync_sha": "90e02808",
-  "next_pr": "PR-52-PLAN (Phase 52 — TBD)",
+  "next_pr": "PR-53-PLAN (Phase 53 \u2014 TBD)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -97,6 +97,11 @@
     "phase51-roadmap-procession-alignment",
     "phase51-procession-doc-v2",
     "phase51-v1-ga-checklist",
-    "v7.5.0-released"
+    "v7.5.0-released",
+    "phase52-epoch-memory-store",
+    "phase52-learning-signal-extractor",
+    "phase52-codebase-context-wired",
+    "phase52-epoch-memory-endpoint",
+    "v7.6.0-released"
   ]
 }

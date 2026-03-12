@@ -1208,6 +1208,27 @@ Phase 51 closes the governance documentation gap that accumulated across the Pha
 
 ---
 
+## Phase 52 — Governed Cross-Epoch Memory & Learning Store
+
+**Status:** ✅ shipped · **Released:** v7.6.0 · **Requires:** Phase 51 shipped ✅
+
+Closes the cross-epoch intelligence gap. A SHA-256 hash-chained `EpochMemoryStore`
+records every epoch outcome and a `LearningSignalExtractor` derives advisory guidance
+that enriches future mutation proposals — all without compromising governance invariants.
+
+### Key deliverables
+- `runtime/autonomy/epoch_memory_store.py` — append-only hash-chained 100-entry rolling window
+- `runtime/autonomy/learning_signal_extractor.py` — deterministic `LearningSignal` extraction
+- `CodebaseContext.learning_context` field wired into agent prompts (advisory)
+- `GET /intelligence/epoch-memory` — read-only authenticated endpoint
+- 25 tests (T52-M01..M15, T52-L01..L10): **✅ 25/25**
+
+### Constitutional invariants
+- `MEMORY-0/1/2`: Advisory-only, fail-closed on integrity failure, deterministic
+- `LEARNING-0/1/2/3`: Advisory-only, deterministic, clamped scores, safe empty degradation
+
+---
+
 ## Roadmap Summary — Shipped Phases
 
 | Phase | Title | Version | Status |
@@ -1258,5 +1279,6 @@ Phase 51 closes the governance documentation gap that accumulated across the Pha
 | 45 | Routing Health 9-Signal Reconciliation | v6.9.8 | ✅ |
 | 46 | MarketSignalAdapter Live Bridge | v7.0.0 | ✅ |
 | 51 | Roadmap & Procession Alignment + v1.0.0-GA Checklist | v7.5.0 | ✅ |
+| 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
 
-**Next:** Phase 52 — TBD (governed selection via ArchitectAgent proposal)
+**Next:** Phase 53 — TBD (governed selection via ArchitectAgent proposal)

@@ -1,3 +1,24 @@
+## [7.6.0] — 2026-03-12
+
+### Phase 52 — Governed Cross-Epoch Memory & Learning Store
+
+**Closes the cross-epoch intelligence gap — ADAAD now accumulates structured memory across sessions.**
+
+- `runtime/autonomy/epoch_memory_store.py` — `EpochMemoryStore`: SHA-256 hash-chained append-only JSONL ledger of epoch outcomes. Rolling window of 100 entries. Atomic file writes. Fail-closed on integrity failure (MEMORY-1 invariant).
+- `runtime/autonomy/learning_signal_extractor.py` — `LearningSignalExtractor`: derives deterministic `LearningSignal` from memory window — top-performing agents, strategies, avg fitness delta, acceptance rate. Advisory-only (LEARNING-0 invariant).
+- `runtime/autonomy/ai_mutation_proposer.py` — `CodebaseContext.learning_context` field added; injected into agent prompts as advisory cross-epoch guidance block.
+- `server.py` — `GET /intelligence/epoch-memory` read-only endpoint exposing memory window + learning signal. Auth-gated (`audit:read` scope). Fail-safe.
+- `tests/test_phase52_epoch_memory.py` — 25 tests (T52-M01..M15, T52-L01..L10): **25/25 ✅**
+- Pre-existing regression fix: `tests/evolution/test_epoch_result_market_fields.py` — updated assertion for Phase 22 default-on synthetic market baseline.
+
+**Constitutional invariants enforced:**
+- `MEMORY-0`: EpochMemoryStore is advisory only — GovernanceGate not referenced
+- `MEMORY-1`: Integrity failure degrades gracefully — epoch execution never blocked
+- `MEMORY-2`: All fields deterministic given identical inputs
+- `LEARNING-0/1/2/3`: Advisory-only, deterministic, clamped scores ∈ [0.0, 1.0]
+
+---
+
 ## [7.5.0] — 2026-03-12
 
 ### Phase 51 — Roadmap & Procession Alignment + v1.0.0-GA Checklist
