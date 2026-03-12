@@ -241,6 +241,7 @@ ADAAD tracks a composite health score `h ∈ [0, 1]` over 9 signals that sum to 
 ### Determinism guarantees
 
 - **Strict replay**: `ADAAD_REPLAY_MODE=strict` + `ADAAD_DETERMINISTIC_SEED=<seed>` — every token, timestamp, and ID is deterministic. Divergence halts and is journaled. Enforced on both DreamMode and BeastModeLoop via `RuntimeDeterminismProvider` injection.
+- **Determinism lock**: Set `ADAAD_DETERMINISTIC_LOCK=1` to freeze all non-deterministic paths and fail-fast on any seed-less operation at boot.
 - **Hash-chained ledgers**: Every audit ledger uses SHA-256 hash-chaining. Tamper detection is automatic on open.
 - **Fail-closed**: Missing `ADAAD_SOULBOUND_KEY` halts the pipeline immediately. No silent failures.
 - **Weight bounds**: All scoring weights bounded to `[0.05, 0.70]`. No single signal can dominate.
@@ -466,7 +467,7 @@ All endpoints require `Authorization: Bearer <token>` with `audit:read` scope (`
 
 ---
 
-## Governance & Determinism — Current Invariants
+## Governance & Determinism Guarantees (Current State)
 
 These are CI-verified on every merge. They cannot be bypassed:
 
