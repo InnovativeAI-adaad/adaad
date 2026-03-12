@@ -1,3 +1,43 @@
+## [7.1.0] — 2026-03-12
+
+### Phase 21 — Core Loop Closure: AutonomyLoop wired into EvolutionLoop.run_epoch()
+
+Closes the critical gap identified at Phase 20: the intelligence stack built across
+Phases 16–20 (`AutonomyLoop`, `IntelligenceRouter`, `CritiqueSignalBuffer`,
+`RoutedDecisionTelemetry`) was fully isolated from the production execution path.
+`EvolutionLoop.run_epoch()` now calls `AutonomyLoop.run()` as Phase 5g.
+
+#### Architecture (PR-21-01)
+
+- `EvolutionLoop.__init__()` accepts `autonomy_loop: Optional[AutonomyLoop] = None`
+- **Phase 5g** inserted after the GovernanceDebtLedger accumulation step (5f):
+  - Calls `AutonomyLoop.run()` with live epoch signals:
+    - `cycle_id` ← `epoch_id`
+    - `mutation_score` ← `WeightAdaptor.prediction_accuracy`
+    - `governance_debt_score` ← `_last_debt_score` (Phase 15 accumulation)
+    - `fitness_trend_delta` ← `health_score − _last_epoch_health_score`
+    - `epoch_pass_rate` ← `accepted_count / total_candidates`
+    - `lineage_health` ← `_last_lineage_proximity` (Phase 15-02)
+  - `AutonomyLoop.reset_epoch()` called immediately after `run()` — clears
+    `CritiqueSignalBuffer` at epoch boundary (constitutional invariant: cap 0.20
+    applies per-epoch, not across epochs)
+  - Full exception isolation — `AutonomyLoop` failure never halts the epoch
+
+- `EpochResult` extended with four intelligence output fields:
+  - `intelligence_decision: str` — `"hold"` | `"self_mutate"` | `"escalate"`
+  - `intelligence_strategy_id: Optional[str]` — routing strategy selected
+  - `intelligence_outcome: Optional[str]` — critique outcome (`"execute"` | `"hold"`)
+  - `intelligence_composite: Optional[float]` — weighted critique aggregate ∈ [0,1]
+
+- Default: `autonomy_loop=None` — Phase 5g is skipped silently; all four new
+  EpochResult fields default to `"hold"` / `None` (fully backwards-compatible)
+
+#### Tests — `tests/test_phase21_core_loop_closure.py`
+
+13 tests, 13/13 passing:
+- PR-21-01 … PR-21-10 contract tests
+- Schema completeness test (`EpochResult` dataclass fields)
+
 ## [7.0.0] — 2026-03-12
 
 ### Phase 46 — MarketSignalAdapter Live Bridge to EconomicFitnessEvaluator

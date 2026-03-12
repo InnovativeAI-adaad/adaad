@@ -334,7 +334,7 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 ## What's active now
 
-> Current version: **v7.0.0** · Phase 46 complete · 3828+ tests collected
+> Current version: **v7.1.0** · Phase 46 complete · 3841+ tests collected
 
 ### Current state
 

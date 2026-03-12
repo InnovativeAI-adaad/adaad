@@ -1214,6 +1214,7 @@ Phase 46 wires a live `MarketSignalAdapter` bridge into `EconomicFitnessEvaluato
 | 18 | Critique Signal Buffer | v5.7.0 | ✅ |
 | 19 | AutonomyLoop Persistent Router | v5.8.0 | ✅ |
 | 20 | Public API Consolidation | v7.0.0 | ✅ |
+| 21 | Core Loop Closure | v7.1.0 | ✅ |
 | 25 | Mutation Admission Control | v5.0.0 | ✅ |
 | 26 | Admission Rate Signal Integration | v5.1.0 | ✅ |
 | 27 | Admission Audit Ledger | v5.2.0 | ✅ |
