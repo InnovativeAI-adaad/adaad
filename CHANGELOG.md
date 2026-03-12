@@ -1,3 +1,23 @@
+## [7.3.0] — 2026-03-12
+
+### Phase 23 — Container Isolation as Production Default
+
+#### PR-23-01: `_container_rollout_enabled()` inverted to opt-out model
+
+`runtime/sandbox/executor.py` — `_container_rollout_enabled()` now returns `True`
+by default (when `ADAAD_SANDBOX_CONTAINER_ROLLOUT` is unset). In SANDBOX tier,
+`ContainerIsolationBackend` is selected by `_default_isolation_backend()` without
+any configuration. Operators revert to `ProcessIsolationBackend` by setting
+`ADAAD_SANDBOX_CONTAINER_ROLLOUT=off` (or `false` / `0` / `no` / `disabled`).
+Non-SANDBOX tiers (`ADAAD_FORCE_TIER=PRODUCTION` etc.) continue using
+`ProcessIsolationBackend` regardless of rollout flag.
+
+#### Tests — `tests/test_phase23_container_isolation.py`
+
+18 tests, 18/18 passing (5 opt-out values × PR-23-02, 3 non-SANDBOX tiers × PR-23-05,
+6 truthy values × PR-23-07). 97/98 regression cross-section (1 pre-existing unrelated
+to Phase 23).
+
 ## [7.2.0] — 2026-03-12
 
 ### Phase 22 — Proposal Hardening
