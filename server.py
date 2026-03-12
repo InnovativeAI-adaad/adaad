@@ -33,6 +33,7 @@ from runtime.mcp.proposal_queue import append_proposal                    # noqa
 from runtime.mcp.linting_bridge import MutationLintingBridge              # noqa: E402
 from runtime.governance.foundation.determinism import default_provider    # noqa: E402
 from runtime.intelligence.router import IntelligenceRouter                # noqa: E402
+from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parent
@@ -41,6 +42,8 @@ MOCK_DIR = APONI_DIR / "mock"
 INDEX = APONI_DIR / "index.html"
 ENHANCED_DIR = ROOT / "ui" / "enhanced"
 ENHANCED_INDEX = ENHANCED_DIR / "enhanced_dashboard.html"
+REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
+FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
 GATE_LOCK_FILE = ROOT / "security" / "ledger" / "gate.lock"
 GATE_PROTOCOL = "adaad-gate/1.0"
 
@@ -2408,6 +2411,190 @@ def lint_preview(
 @app.get("/api/status")
 def api_status_mock_disabled() -> dict:
     raise HTTPException(status_code=404, detail="mock_endpoints_disabled")
+
+
+# ── Audit endpoints (Phase 46+ — evidence, replay proofs, lineage) ───────────
+
+@app.get("/api/audit/epochs/{epoch_id}/replay-proof")
+def audit_replay_proof(
+    epoch_id: str,
+    redaction: str | None = Query(default=None),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return the replay attestation proof bundle for an epoch.
+
+    Requires audit:read scope. When redaction=sensitive, strips signature values.
+    Response: {schema_version, authn, data: {epoch_id, bundle_path, bundle, verification}}
+    """
+    authn = _require_audit_read_scope(authorization)
+    proof_file = REPLAY_PROOFS_DIR / f"{epoch_id}.replay_attestation.v1.json"
+    if not proof_file.exists():
+        raise HTTPException(status_code=404, detail="replay_proof_not_found")
+    try:
+        bundle: dict[str, Any] = json.loads(proof_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail="proof_read_error") from exc
+
+    # Redact signature values when redaction=sensitive
+    if redaction == "sensitive" and "signatures" in bundle:
+        redacted_sigs = [
+            {k: v for k, v in sig.items() if k != "signature"}
+            for sig in bundle.get("signatures", [])
+        ]
+        bundle = {**bundle}
+        del bundle["signatures"]
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "epoch_id": epoch_id,
+            "bundle_path": str(proof_file),
+            "bundle": bundle,
+            "verification": {
+                "proof_digest_present": "proof_digest" in bundle,
+                "signatures_present": "signatures" in bundle,
+            },
+        },
+    }
+
+
+@app.get("/api/audit/epochs/{epoch_id}/lineage")
+def audit_epoch_lineage(
+    epoch_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return lineage events and journal entries for an epoch.
+
+    Requires audit:read scope.
+    Response: {schema_version, authn, data: {epoch_id, lineage, lineage_digest,
+               expected_epoch_digest, journal_entries}}
+    """
+    authn = _require_audit_read_scope(authorization)
+    ledger = LineageLedgerV2()
+    lineage = ledger.read_epoch(epoch_id)
+    lineage_digest = ledger.compute_incremental_epoch_digest(epoch_id)
+    expected = ledger.get_expected_epoch_digest(epoch_id) or ""
+    journal_entries = journal.read_entries(limit=200)
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "epoch_id": epoch_id,
+            "lineage": lineage,
+            "lineage_digest": lineage_digest,
+            "expected_epoch_digest": expected,
+            "journal_entries": journal_entries,
+        },
+    }
+
+
+def _load_bundle(bundle_id: str) -> tuple[dict[str, Any], str]:
+    """Load and return a forensic bundle dict + its file path string."""
+    bundle_file = FORENSIC_EXPORT_DIR / f"{bundle_id}.json"
+    if not bundle_file.exists():
+        raise HTTPException(status_code=404, detail="bundle_not_found")
+    try:
+        return json.loads(bundle_file.read_text(encoding="utf-8")), str(bundle_file)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail="bundle_read_error") from exc
+
+
+def _redact_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Strip signature fields from export_metadata.signer for response."""
+    result = dict(bundle)
+    if "export_metadata" in result:
+        em = dict(result["export_metadata"])
+        if "signer" in em:
+            em["signer"] = {k: v for k, v in em["signer"].items() if k != "signature"}
+        result["export_metadata"] = em
+    return result
+
+
+@app.get("/api/audit/bundles/{bundle_id}")
+def audit_bundle(
+    bundle_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return a forensic evidence bundle with validation results.
+
+    Requires audit:read scope.
+    Response: {schema_version, authn, data: {bundle_id, bundle_path, bundle, validation}}
+    """
+    authn = _require_audit_read_scope(authorization)
+    raw_bundle, bundle_path = _load_bundle(bundle_id)
+    builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
+    validation = builder.validate_bundle(raw_bundle)
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "bundle_id": bundle_id,
+            "bundle_path": bundle_path,
+            "bundle": _redact_bundle(raw_bundle),
+            "validation": validation,
+        },
+    }
+
+
+@app.get("/evidence/{bundle_id}")
+def evidence_bundle(
+    bundle_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Alias for /api/audit/bundles/{bundle_id} — legacy path."""
+    authn = _require_audit_read_scope(authorization)
+    raw_bundle, bundle_path = _load_bundle(bundle_id)
+    builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
+    validation = builder.validate_bundle(raw_bundle)
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "bundle_id": bundle_id,
+            "bundle_path": bundle_path,
+            "bundle": _redact_bundle(raw_bundle),
+            "validation": validation,
+        },
+    }
+
+
+# ── Review quality metrics ────────────────────────────────────────────────────
+
+@app.get("/metrics/review-quality")
+def review_quality_metrics(
+    limit: int = Query(default=200, ge=1, le=2000),
+    sla_seconds: int = Query(default=86400, ge=1),
+) -> dict[str, Any]:
+    """Return review latency distribution from the metrics tail.
+
+    Scans metrics entries for governance_review_quality events and
+    computes latency distribution statistics.
+    """
+    entries = metrics.tail(limit=limit)
+    review_entries = [
+        e for e in entries
+        if e.get("event") == "governance_review_quality"
+    ]
+    latencies = [
+        float(e.get("payload", {}).get("latency_seconds", 0))
+        for e in review_entries
+        if "payload" in e
+    ]
+    count = len(latencies)
+    avg = sum(latencies) / count if count else 0.0
+    within_sla = sum(1 for l in latencies if l <= sla_seconds)
+    return {
+        "window_limit": limit,
+        "sla_seconds": sla_seconds,
+        "window_count": count,
+        "review_latency_distribution_seconds": {
+            "count": count,
+            "avg": avg,
+            "within_sla": within_sla,
+            "sla_compliance_rate": within_sla / count if count else 1.0,
+        },
+    }
 
 
 # ── UI path resolution ────────────────────────────────────────────────────────
