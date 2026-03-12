@@ -172,7 +172,9 @@ class TestEvolutionLoopMarketIntegratorWiring:
         ):
             result = loop.run_epoch(ctx)
 
-        assert result.live_market_score == 0.0
+        # Phase 22 default-on: auto-provisioned MarketFitnessIntegrator returns
+        # synthetic baseline 0.5 (not 0.0). market_is_synthetic is True.
+        assert result.live_market_score == pytest.approx(0.5, abs=0.1)
         assert result.market_confidence == 0.0
         assert result.market_is_synthetic is True
 

@@ -161,12 +161,18 @@ class CodebaseContext:
         ContextReplayInterface (Phase 9). When set, appended as a
         supplemental annotation block in the proposal user message.
         Content is a serialised dict; digest is SHA-256 of the ledger window.
+    learning_context: optional cross-epoch learning signal injected by
+        LearningSignalExtractor (Phase 52). When set, appended as an
+        advisory block summarising top-performing agents, strategies, and
+        fitness trends from the EpochMemoryStore window. Advisory only —
+        agents may not follow it verbatim.
     """
     file_summaries:       Dict[str, str]
     recent_failures:      List[str]
     current_epoch_id:     str
     explore_ratio:        float = 0.5
     soulbound_annotation: Optional[str] = None
+    learning_context:     Optional[str] = None  # Phase 52: cross-epoch learning signal
 
     def context_hash(self) -> str:
         """Stable 8-hex-char hash of the codebase state for lineage tracing."""
@@ -200,6 +206,9 @@ class CodebaseContext:
             lines.append("--- Soulbound context (advisory — do not repeat verbatim) ---")
             lines.append(self.soulbound_annotation)
             lines.append("--- end soulbound context ---")
+        if self.learning_context:
+            lines.append("")
+            lines.append(self.learning_context)
         return "\n".join(lines)
 
 

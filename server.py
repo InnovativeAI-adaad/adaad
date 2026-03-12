@@ -2711,6 +2711,60 @@ def serve_aponi_asset(asset_path: str) -> Response:
         raise HTTPException(status_code=404, detail="asset_not_found")
     return FileResponse(str(resolved))
 
+# ── Phase 52: Epoch Memory Store Endpoint ────────────────────────────────────
+
+@app.get("/intelligence/epoch-memory")
+async def get_epoch_memory(
+    authorization: str | None = Header(default=None),
+    n: int | None = None,
+) -> dict[str, Any]:
+    """GET /intelligence/epoch-memory
+
+    Returns the current EpochMemoryStore window and LearningSignal derived
+    from cross-epoch history.
+
+    Constitutional invariants (Phase 52):
+    - Read-only; no side effects on GovernanceGate or any mutation path.
+    - Requires ``audit:read`` scope (same as all governance read endpoints).
+    - Fail-safe: on any internal error returns ``ok=True`` with empty signal.
+    - Learning signal is ADVISORY only; label surfaced in response payload.
+
+    Query params:
+        n (int, optional): Limit window to the n most recent entries.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.autonomy.epoch_memory_store import EpochMemoryStore, STORE_DEFAULT_PATH
+        from runtime.autonomy.learning_signal_extractor import LearningSignalExtractor
+
+        store = EpochMemoryStore(path=STORE_DEFAULT_PATH)
+        extractor = LearningSignalExtractor()
+        signal = extractor.extract(store)
+        window = store.window(n=n)
+        stats = store.stats()
+
+        return {
+            "ok": True,
+            "phase": "52",
+            "advisory_note": "Learning signal is ADVISORY only — does not affect GovernanceGate.",
+            "stats": stats,
+            "learning_signal": signal.to_dict(),
+            "window": [e.to_dict() for e in window],
+        }
+    except Exception as exc:  # noqa: BLE001
+        from runtime.autonomy.learning_signal_extractor import LearningSignal
+        return {
+            "ok": True,
+            "phase": "52",
+            "advisory_note": "Learning signal is ADVISORY only — does not affect GovernanceGate.",
+            "stats": {"count": 0, "window_size": 100, "chain_valid": True},
+            "learning_signal": LearningSignal.empty().to_dict(),
+            "window": [],
+            "degraded": True,
+            "degraded_reason": str(exc)[:120],
+        }
+
+
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
 
