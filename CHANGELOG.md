@@ -1,3 +1,24 @@
+## [7.9.0] — 2026-03-12
+
+### Phase 55 — Aponi UX Polish: Toast, Countdown, Keyboard Nav, Log Filter
+
+**Five operator-experience upgrades — all frontend, zero new backend endpoints.**
+
+- **Toast notification system** — ephemeral non-blocking feedback for all user actions: URL save, log copy/clear, governance/memory refresh, connection errors. CSS `toast-in`/`toast-out` animations. Stacks from bottom-right, auto-dismisses at configurable duration.
+- **Live poll countdown bar** — 2px accent-gradient bar along the viewport bottom edge. Animates from full-width to zero over the 15 s poll interval. Resets on manual refresh. Driven by Web Animations API (`element.animate`).
+- **Keyboard shortcuts** (`bindKeyboard()`):
+  - `1`–`6` — switch tabs (Overview → Logs)
+  - `R` — refresh all data now
+  - `/` — focus log filter when on Logs tab
+  - `?` — toggle keyboard help overlay
+  - `Esc` — close overlay / blur input
+  - Full help overlay (`#kbdHelp`) with shortcut table, accessible (`role=dialog`, `aria-modal`).
+- **Log filter + auto-scroll** — `log-filter` input above log box filters entries client-side in real time; `↓ Latest` button; log pane auto-scrolls to bottom on render; filter state persisted in `state.logFilter`.
+- **Panel freshness timestamps** — `freshTag(tsMs)` renders "just now / Ns ago / Nm ago" inline in Overview "Control" card subtitle after each successful `hardRefresh()`.
+- `tests/test_phase55_aponi_ux_polish.py` — 10 tests (T55-P01..P10): **10/10 ✅**
+
+---
+
 ## [7.8.0] — 2026-03-12
 
 ### Phase 54 — Aponi UX: Governance & Memory Panels
