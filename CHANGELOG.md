@@ -1,3 +1,28 @@
+## [7.2.0] — 2026-03-12
+
+### Phase 22 — Proposal Hardening
+
+#### PR-22-01: `fallback_to_noop=False` as LLM default
+
+`LLMProviderConfig.fallback_to_noop` default flipped from `True` → `False`.
+`load_provider_config()` env-var default also flipped (`ADAAD_LLM_FALLBACK_TO_NOOP`
+reads `"false"` when unset). LLM failures now surface as explicit error payloads
+rather than silently returning noop proposals. Operators can restore the prior
+behaviour by setting `ADAAD_LLM_FALLBACK_TO_NOOP=true`.
+
+#### PR-22-02: `MarketFitnessIntegrator` default-on in `EvolutionLoop`
+
+`EvolutionLoop.__init__()` auto-provisions a zero-configuration
+`MarketFitnessIntegrator()` when `market_integrator` is not injected.
+Market fitness is now always active; the auto-provisioned instance uses
+synthetic fallback until a live `feed_registry` is wired (signal quality
+degrades gracefully — no crash, no silent skip). Explicit injection still
+respected for tests and custom wiring.
+
+#### Tests — `tests/test_phase22_proposal_hardening.py`
+
+14 tests, 14/14 passing (5 parametrized opt-in values for PR-22-01-C).
+
 ## [7.1.0] — 2026-03-12
 
 ### Phase 21 — Core Loop Closure: AutonomyLoop wired into EvolutionLoop.run_epoch()

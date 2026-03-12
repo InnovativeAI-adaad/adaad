@@ -49,7 +49,7 @@ class LLMProviderConfig:
     model: str
     timeout_seconds: float
     max_tokens: int
-    fallback_to_noop: bool = True
+    fallback_to_noop: bool = False
 
 
 @dataclass(frozen=True)
@@ -149,7 +149,7 @@ def load_provider_config(env: Mapping[str, str] | None = None) -> LLMProviderCon
         model=(source.get("ADAAD_LLM_MODEL") or "claude-3-5-sonnet-20241022").strip(),
         timeout_seconds=float(source.get("ADAAD_LLM_TIMEOUT_SECONDS") or "15"),
         max_tokens=int(source.get("ADAAD_LLM_MAX_TOKENS") or "800"),
-        fallback_to_noop=(source.get("ADAAD_LLM_FALLBACK_TO_NOOP") or "true").strip().lower() in {"1", "true", "yes", "on"},
+        fallback_to_noop=(source.get("ADAAD_LLM_FALLBACK_TO_NOOP") or "false").strip().lower() in {"1", "true", "yes", "on"},
     )
 
 

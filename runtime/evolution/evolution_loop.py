@@ -236,9 +236,17 @@ class EvolutionLoop:
         # to FitnessLandscape win-rate heuristic (backwards-compatible).
         self._bandit_selector: Optional[AgentBanditSelector] = bandit_selector
         # Phase 12 / Track 11-D: MarketFitnessIntegrator — live market signal
-        # propagation into EpochResult. Optional; if not injected, market fields
-        # default to synthetic fallback values (backwards-compatible).
-        self._market_integrator: Optional[MarketFitnessIntegrator] = market_integrator
+        # propagation into EpochResult.
+        # Phase 22 (PR-22-02): default-on — if not explicitly injected, a
+        # zero-configuration MarketFitnessIntegrator is auto-provisioned so
+        # market fitness is always active. Pass market_integrator=None explicitly
+        # only if you need to suppress all market signal (e.g. hermetic tests).
+        # The auto-provisioned instance uses synthetic fallback until a live
+        # feed_registry is wired (backwards-compatible signal quality degradation).
+        self._market_integrator: Optional[MarketFitnessIntegrator] = (
+            market_integrator if market_integrator is not None
+            else MarketFitnessIntegrator()
+        )
         # Phase 14: ProposalEngine — strategy-driven LLM proposal path. Optional;
         # if not injected, Phase 1e is skipped silently (backwards-compatible).
         # When injected, generate() runs alongside propose_from_all_agents and the
