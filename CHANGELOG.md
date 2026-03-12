@@ -1,3 +1,25 @@
+## [7.9.1] — 2026-03-12 — Patch
+
+### fix: Cryovant gate no longer blocks dashboard on initial load
+
+**Root cause**: Three independent issues combined to make the dashboard inaccessible before any health probe completed.
+
+1. `loadGate()` restored a persisted `locked:true` from `localStorage`, blocking the UI immediately on page load from a previous session's lock.
+2. `probeHealth()` treated `fetch()` throwing (backend unreachable / CORS / network error) the same as a confirmed `423` — calling `setGateLocked(true, "Backend unreachable")`.
+3. `hardRefresh()` catch block similarly called `setGateLocked` for any error, meaning a DNS failure at boot permanently locked the UI until page reload.
+
+**Fix**:
+- `loadGate()` now always initialises `gate = { locked:false, connecting:true }` and calls `localStorage.removeItem()` to clear stale lock state. Persisted locks are never restored.
+- New `setGateConnecting()` function: sets `gate.locked=false`, `gate.connecting=true` — overlay hidden, dashboard fully interactive.
+- `probeHealth()` catch (network/unreachable) calls `setGateConnecting()`, not `setGateLocked(true)`.
+- Non-423 HTTP errors from `probeHealth()` (404, 500, etc.) call `setGateConnecting()` — server is up, path wrong, dashboard stays open.
+- `hardRefresh()` catch only triggers `setGateLocked` when `e.message === "locked"` (thrown by `getJson` on a confirmed 423). All other errors call `setGateConnecting()`.
+- `renderGate()` updated: overlay (`display:flex`) only shown when `gate.locked === true`. `gate.connecting` renders "CONNECTING" status in the chip with no overlay.
+
+- `tests/test_phase56_gate_initial_load_fix.py` — 8 tests (T56-G01..G08): **8/8 ✅**
+
+---
+
 ## [7.9.0] — 2026-03-12
 
 ### Phase 55 — Aponi UX Polish: Toast, Countdown, Keyboard Nav, Log Filter
