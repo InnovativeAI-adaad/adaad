@@ -1,10 +1,10 @@
 {
-  "active_phase": "Phase 55 COMPLETE \u00b7 v7.9.0",
+  "active_phase": "v7.9.1 \u2014 fix: Aponi gate no longer blocks on initial load",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
   "last_completed_phase": "Phase 55 \u2014 Aponi UX Polish: Toast, Countdown, Keyboard Nav, Log Filter",
-  "last_completed_pr": "feat/phase55-aponi-ux-polish",
+  "last_completed_pr": "fix/aponi-gate-blocks-initial-load",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -116,6 +116,9 @@
     "phase55-keyboard-nav",
     "phase55-log-filter",
     "phase55-freshness",
-    "v7.9.0-released"
+    "v7.9.0-released",
+    "fix-56-gate-connecting-state",
+    "fix-56-no-stale-lock-restore",
+    "v7.9.1-released"
   ]
 }

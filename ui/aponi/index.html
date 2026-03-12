@@ -547,25 +547,43 @@
 
   // ---------- Gate (vanilla) ----------
   const GATE_KEY = "ADAAD_GATE_STATE";
-  const gate = { locked:false, reason:"", lastStatus:null };
+  // gate.locked  → server returned a confirmed 423 with gate_ok=false
+  // gate.connecting → initial load, no confirmed health response yet
+  const gate = { locked:false, reason:"", lastStatus:null, connecting:true };
 
   function loadGate(){
-    try{
-      const raw = localStorage.getItem(GATE_KEY);
-      if (!raw) return;
-      const g = JSON.parse(raw);
-      gate.locked = !!g.locked;
-      gate.reason = g.reason || "";
-      gate.lastStatus = g.lastStatus ?? null;
-    }catch(_){}
+    // Phase 56 fix: NEVER restore a persisted locked state on boot.
+    // A stale lock from a previous session should not block the dashboard.
+    // We always start in connecting mode and let the first health probe decide.
+    gate.locked = false;
+    gate.reason = "";
+    gate.lastStatus = null;
+    gate.connecting = true;
+    // Clear any stale localStorage lock so it can't bleed across sessions.
+    try{ localStorage.removeItem(GATE_KEY); }catch(_){}
   }
-  function saveGate(){ try{ localStorage.setItem(GATE_KEY, JSON.stringify(gate)); }catch(_){} }
+  function saveGate(){
+    // Only persist non-locked state. A lock must always be re-confirmed by a
+    // live health probe — never assumed from a previous session.
+    if (!gate.locked){
+      try{ localStorage.removeItem(GATE_KEY); }catch(_){}
+    }
+  }
 
   function setGateLocked(locked, reason, lastStatus){
     gate.locked = !!locked;
     gate.reason = reason || "";
     gate.lastStatus = lastStatus ?? null;
+    gate.connecting = false;
     saveGate();
+    renderGate();
+  }
+
+  function setGateConnecting(){
+    // Soft state: backend unreachable but NOT confirmed locked.
+    // Dashboard remains fully interactive so operators can change the URL.
+    gate.locked = false;
+    gate.connecting = true;
     renderGate();
   }
 
@@ -577,22 +595,30 @@
     const meta = $("#gateMeta");
     const reason = $("#gateReason");
 
-    const pending = !gate.locked && !state.lastHandshake;
-
+    // Overlay only on a CONFIRMED live 423 lock — never on connecting/unreachable.
     if (gate.locked){
       if (dot) dot.className = "dot bad";
       if (txt) txt.textContent = "LOCKED";
-      if (chip) chip.title = "Gate: Locked";
+      if (chip) chip.title = "Gate: Locked (423)";
       if (reason) reason.textContent = gate.reason || "Cryovant gate is locked.";
       if (meta) meta.textContent = `last status: ${gate.lastStatus ?? "unknown"}`;
       if (ov) ov.style.display = "flex";
       return;
     }
 
+    // Hide overlay — dashboard is accessible even while connecting.
     if (ov) ov.style.display = "none";
-    if (dot) dot.className = pending ? "dot" : "dot ok";
-    if (txt) txt.textContent = pending ? "PENDING" : "VERIFIED";
-    if (chip) chip.title = pending ? "Gate: Pending" : "Gate: Verified";
+
+    if (gate.connecting){
+      if (dot) dot.className = "dot";
+      if (txt) txt.textContent = "CONNECTING";
+      if (chip) chip.title = "Gate: Connecting…";
+      return;
+    }
+
+    if (dot) dot.className = "dot ok";
+    if (txt) txt.textContent = "VERIFIED";
+    if (chip) chip.title = "Gate: Verified";
   }
 
   function installFetchInterceptor(){
@@ -601,8 +627,10 @@
       const res = await orig(input, init);
       try{
         const hdr = res.headers.get("x-adaad-gate");
+        // Phase 56 fix: only lock on a confirmed 423 with gate header.
+        // Other non-ok responses (404, 500, CORS errors) must NOT lock.
         if (res.status === 423 || (hdr && hdr.toLowerCase() === "locked")){
-          setGateLocked(true, "Security Gate Violation (423)", res.status);
+          setGateLocked(true, "Security Gate active (423)", res.status);
         }
       }catch(_){}
       return res;
@@ -615,23 +643,34 @@
     try{
       const res = await fetch(url, { method:"GET" });
       if (res.status === 423){
+        // Confirmed gate lock from the server.
         setGateLocked(true, "Cryovant gate LOCKED", 423);
         return false;
       }
       if (!res.ok){
-        setGateLocked(true, `Health failed (${res.status})`, res.status);
+        // Phase 56 fix: non-200 that isn't 423 means the server is up but
+        // unhealthy or the path is wrong. Show warning in status bar but do
+        // NOT lock — the dashboard remains usable so operators can diagnose.
+        setGateConnecting();
+        state.logs.push(`[health] non-ok ${res.status} — dashboard stays open`);
         return false;
       }
       const data = await res.json().catch(() => null);
       state.lastHealth = data;
       if (!data || data.gate_ok !== true){
+        // Phase 56 fix: gate_ok=false means the server is reachable but Cryovant
+        // has actively locked. This is a genuine lock — overlay is correct here.
         setGateLocked(true, "Gate check failed (gate_ok=false)", res.status);
         return false;
       }
       setGateLocked(false, "", res.status);
       return true;
     }catch(_){
-      setGateLocked(true, "Backend unreachable", 0);
+      // Phase 56 fix: network error / backend unreachable during initial load
+      // must NOT lock the gate. Use soft connecting state so the operator can
+      // still change the URL, view the dashboard, and diagnose the issue.
+      setGateConnecting();
+      state.logs.push(`[health] backend unreachable — retrying`);
       return false;
     }
   }
@@ -1474,13 +1513,16 @@
       render();
     }catch(e){
       state.connected = false;
-      // Sanitize: never surface raw internal error codes in the visible log
       const _raw = (e && e.message) ? e.message : String(e);
       const _safe = _raw
         .replace(/invalid_json_response[^)]*\)*/gi, "server_response_error")
         .replace(/unparsabl[a-z]*/gi, "parse_error")
         .replace(/json_response_must_be_object/gi, "response_format_error");
       state.logs.push(`[err] ${_safe}`);
+      // Phase 56 fix: only show the locked overlay if the error came from a
+      // confirmed 423 (message === "locked"). Network errors / parse errors /
+      // backend-unreachable must leave the dashboard accessible.
+      if (_raw !== "locked") setGateConnecting();
       toast("Connection failed", _safe.slice(0, 60), "bad", 4000);
       renderGate();
       render();
