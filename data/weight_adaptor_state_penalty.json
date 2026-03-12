@@ -1,11 +1,11 @@
 {
-  "velocity_risk": -0.010090695257239707,
-  "velocity_complexity": -0.010011717371560615,
-  "ema_risk_rate": 3.904949676190089e-07,
-  "ema_complexity_rate": 3.904949676190089e-07,
-  "epoch_count": 116,
-  "total_outcomes": 190,
-  "last_risk_penalty": 0.05,
-  "last_complexity_penalty": 0.05,
-  "saved_at": 1772831894.1400979
+  "velocity_risk": 0.019724607045288577,
+  "velocity_complexity": 0.0197246070513947,
+  "ema_risk_rate": 0.1928497056640179,
+  "ema_complexity_rate": 0.1928497056640179,
+  "epoch_count": 236,
+  "total_outcomes": 342,
+  "last_risk_penalty": 0.106151,
+  "last_complexity_penalty": 0.106151,
+  "saved_at": 1773358486.5676713
 }

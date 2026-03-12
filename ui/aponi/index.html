@@ -79,6 +79,22 @@
       backdrop-filter: blur(10px);
     }
     @keyframes spin{ to{ transform: rotate(360deg);} }
+    @keyframes pulse-ring{0%{transform:scale(.8);opacity:.9}70%{transform:scale(1.6);opacity:0}100%{transform:scale(1.6);opacity:0}}
+    @keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+    .pulse-dot{position:relative;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0}
+    .pulse-dot::before{content:"";position:absolute;inset:-3px;border-radius:50%;background:var(--ok);opacity:.4;animation:pulse-ring 1.8s ease-out infinite}
+    .pulse-dot.warn{background:var(--warn)}.pulse-dot.warn::before{background:var(--warn)}
+    .pulse-dot.bad{background:var(--bad)}.pulse-dot.bad::before{background:var(--bad)}
+    .pulse-dot.dim{background:var(--muted)}.pulse-dot.dim::before{background:var(--muted);animation:none}
+
+    .signal-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .signal-bar-label{color:var(--muted);font-size:11px;width:180px;flex-shrink:0}
+    .signal-bar-track{flex:1;height:6px;background:var(--panel2);border-radius:3px;overflow:hidden}
+    .signal-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+    .signal-bar-val{color:var(--text);font-size:11px;width:42px;text-align:right;font-family:var(--mono);flex-shrink:0}
+
+    .epoch-row-enter{animation:fade-in .25s ease forwards}
 
     .title{min-width:0}
     .title h1{margin:0;font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:700}
@@ -319,6 +335,8 @@
           <span id="statusText">pending</span>
           <span class="badge" id="versionBadge" title="ADAAD live version">v—</span>
           <span class="badge" id="protoBadge" title="Protocol version" style="opacity:0.6">proto—</span>
+          <span class="badge" id="govHealthBadge" title="Governance health score" style="opacity:0;transition:opacity .3s">gov —</span>
+          <span class="badge" id="memEpochsBadge" title="Epoch memory entries" style="opacity:0;transition:opacity .3s">mem —</span>
         </div>
         <button class="btn" id="btnReconnect" title="Refresh now">Refresh</button>
         <button class="btn primary" id="btnRunCycle" title="Reserved for mutation cycle endpoint">Run cycle</button>
@@ -329,6 +347,8 @@
       <div class="tab active" data-tab="overview" role="tab">Overview</div>
       <div class="tab" data-tab="agents" role="tab">Agents</div>
       <div class="tab" data-tab="protocol" role="tab">Protocol</div>
+      <div class="tab" data-tab="governance" role="tab">Governance</div>
+      <div class="tab" data-tab="memory" role="tab">Memory</div>
       <div class="tab" data-tab="logs" role="tab">Logs</div>
     </div>
 
@@ -387,6 +407,9 @@
     lastProtocol: null,
     lastAgents: null,
     lastHandshake: null,
+    lastGovernanceHealth: null,
+    lastReviewerCalibration: null,
+    lastEpochMemory: null,
 
     logs: [],
     connected: false,
@@ -569,6 +592,8 @@
     if (state.tab === "overview") v.appendChild(viewOverview());
     if (state.tab === "agents") v.appendChild(viewAgents());
     if (state.tab === "protocol") v.appendChild(viewProtocol());
+    if (state.tab === "governance") v.appendChild(viewGovernance());
+    if (state.tab === "memory") v.appendChild(viewMemory());
     if (state.tab === "logs") v.appendChild(viewLogs());
   }
 
@@ -593,6 +618,16 @@
     k.appendChild(kpi("Protocol", String(protoV), `updated: ${fmtTs(state.lastProtocol?.created_at || null)}`));
     k.appendChild(kpi("Agents", String(agentsCount), `certified set`));
     k.appendChild(kpi("Last check", fmtTs(lastCheck), `poll: ${Math.round(state.pollMs/1000)}s`));
+
+    // Phase 54: governance health KPI from /governance/health
+    const ghScore = state.lastGovernanceHealth?.data?.health_score
+                 ?? state.lastGovernanceHealth?.health_score ?? null;
+    const ghLabel = ghScore === null ? "—"
+                  : ghScore >= 0.80 ? "HEALTHY" : ghScore >= 0.60 ? "DEGRADED" : "CRITICAL";
+    const ghLevel = ghScore === null ? "" : ghScore >= 0.80 ? "ok" : ghScore >= 0.60 ? "warn" : "bad";
+    k.appendChild(kpi("Gov Health",
+      ghScore !== null ? ghScore.toFixed(3) : "—",
+      `<span style="color:${ghLevel==="ok"?"var(--ok)":ghLevel==="warn"?"var(--warn)":"var(--bad)"}">${ghLabel}</span>`));
 
     const lbody = document.createElement("div");
     lbody.appendChild(k);
@@ -811,6 +846,263 @@
     return root;
   }
 
+  // ---------- Governance view ----------
+  function viewGovernance(){
+    const root = document.createElement("div");
+    root.className = "grid";
+    const left = document.createElement("div");
+    const right = document.createElement("div");
+
+    // ── Health Score panel ─────────────────────────────────────────────
+    const gh = state.lastGovernanceHealth;
+    const healthScore = gh?.data?.health_score ?? gh?.health_score ?? null;
+    const signalBreakdown = gh?.data?.signal_breakdown ?? gh?.signal_breakdown ?? {};
+    const constitutionalFloor = gh?.data?.constitutional_floor ?? gh?.constitutional_floor ?? "enforced";
+    const healthLevel = healthScore === null ? "warn"
+                      : healthScore >= 0.80 ? "ok"
+                      : healthScore >= 0.60 ? "warn" : "bad";
+    const healthLabel = healthScore === null ? "—"
+                       : healthScore >= 0.80 ? "HEALTHY"
+                       : healthScore >= 0.60 ? "DEGRADED" : "CRITICAL";
+
+    const hKpis = document.createElement("div");
+    hKpis.className = "kpis";
+    hKpis.appendChild(kpi("Health Score",
+      healthScore !== null ? healthScore.toFixed(3) : "—",
+      `status: ${healthLabel}`));
+    hKpis.appendChild(kpi("Floor",
+      constitutionalFloor === "enforced" ? "ENFORCED" : String(constitutionalFloor),
+      "human review always required"));
+
+    const hBody = document.createElement("div");
+    hBody.appendChild(hKpis);
+
+    // Signal breakdown table
+    if (Object.keys(signalBreakdown).length > 0){
+      const tbl = document.createElement("div");
+      tbl.style.marginTop = "12px";
+      const rows = Object.entries(signalBreakdown)
+        .sort((a,b) => (b[1]??0) - (a[1]??0))
+        .map(([sig, val]) => {
+          const pct = typeof val === "number" ? (val * 100).toFixed(1) + "%" : "—";
+          const barW = typeof val === "number" ? Math.round(val * 100) : 0;
+          const barColor = barW >= 80 ? "var(--ok)" : barW >= 60 ? "var(--warn)" : "var(--bad)";
+          return `<tr>
+            <td style="color:var(--muted);padding:7px 6px;border-bottom:1px solid var(--border);font-size:11px;width:200px">${escapeHtml(sig)}</td>
+            <td style="padding:7px 6px;border-bottom:1px solid var(--border);width:60px" class="mono">${pct}</td>
+            <td style="padding:7px 6px;border-bottom:1px solid var(--border)">
+              <div style="height:6px;background:var(--panel2);border-radius:3px;overflow:hidden">
+                <div style="width:${barW}%;height:100%;background:${barColor};border-radius:3px;transition:width .4s"></div>
+              </div>
+            </td>
+          </tr>`;
+        }).join("");
+      tbl.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${rows}</tbody></table>`;
+      hBody.appendChild(tbl);
+    } else {
+      const empty = document.createElement("div");
+      empty.style.cssText = "color:var(--muted);font-size:12px;padding:14px 0;text-align:center";
+      empty.textContent = "No signal data — connect to a running ADAAD server";
+      hBody.appendChild(empty);
+    }
+
+    left.appendChild(card("Governance Health", "Composite signal score (advisory)",
+      `<span class="badge ${healthLevel}">${healthLabel}</span>`, hBody));
+
+    // ── Reviewer Calibration panel ─────────────────────────────────────
+    const rc = state.lastReviewerCalibration;
+    const cohort = rc?.data?.cohort_summary ?? rc?.cohort_summary ?? null;
+    const avgRep = rc?.data?.avg_reputation ?? rc?.avg_reputation ?? null;
+    const tierPressure = rc?.data?.tier_pressure ?? rc?.tier_pressure ?? "—";
+
+    const rcBody = document.createElement("div");
+    if (cohort){
+      const rcKpis = document.createElement("div");
+      rcKpis.className = "kpis";
+      rcKpis.appendChild(kpi("Avg Reputation",
+        avgRep !== null ? avgRep.toFixed(3) : "—", `tier: ${tierPressure}`));
+      rcKpis.appendChild(kpi("Tier Pressure", String(tierPressure), "review window"));
+      rcBody.appendChild(rcKpis);
+
+      const cohortRows = Object.entries(cohort).map(([tier, count]) =>
+        `<tr>
+          <td style="color:var(--muted);padding:7px 6px;border-bottom:1px solid var(--border);font-size:12px;text-transform:capitalize">${escapeHtml(tier)}</td>
+          <td class="mono" style="padding:7px 6px;border-bottom:1px solid var(--border)">${count}</td>
+        </tr>`
+      ).join("");
+      const ct = document.createElement("div");
+      ct.style.marginTop = "12px";
+      ct.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${cohortRows}</tbody></table>`;
+      rcBody.appendChild(ct);
+    } else {
+      const empty = document.createElement("div");
+      empty.style.cssText = "color:var(--muted);font-size:12px;padding:14px 0;text-align:center";
+      empty.textContent = "No calibration data available";
+      rcBody.appendChild(empty);
+    }
+
+    const rcBadge = avgRep !== null
+      ? `<span class="badge ${avgRep >= 0.80 ? "ok" : avgRep >= 0.60 ? "warn" : "bad"}">r=${avgRep !== null ? avgRep.toFixed(2) : "—"}</span>`
+      : `<span class="badge">unavailable</span>`;
+    right.appendChild(card("Reviewer Calibration", "Reputation-weighted tier pressure (Phase 7)", rcBadge, rcBody));
+
+    // ── Refresh button ─────────────────────────────────────────────────
+    const refreshRow = document.createElement("div");
+    refreshRow.style.cssText = "margin-top:14px;display:flex;gap:8px";
+    refreshRow.innerHTML = `<button class="btn primary" id="btnRefreshGov">Refresh governance data</button>`;
+    left.appendChild(refreshRow);
+
+    root.appendChild(left);
+    root.appendChild(right);
+
+    setTimeout(() => {
+      const btn = document.getElementById("btnRefreshGov");
+      if (btn) btn.onclick = () => fetchGovernanceData().then(() => render());
+    }, 0);
+
+    return root;
+  }
+
+  // ---------- Memory view ----------
+  function viewMemory(){
+    const root = document.createElement("div");
+    root.className = "grid";
+    const left = document.createElement("div");
+    const right = document.createElement("div");
+
+    const em = state.lastEpochMemory;
+    const stats = em?.stats ?? null;
+    const signal = em?.learning_signal ?? null;
+    const window_ = em?.window ?? [];
+
+    // ── Stats panel ────────────────────────────────────────────────────
+    const statsBody = document.createElement("div");
+    const statKpis = document.createElement("div");
+    statKpis.className = "kpis";
+    statKpis.appendChild(kpi("Epochs stored", stats ? String(stats.count) : "—", `window: ${stats?.window_size ?? 100}`));
+    statKpis.appendChild(kpi("Acceptance rate",
+      stats ? (stats.acceptance_rate * 100).toFixed(1) + "%" : "—",
+      `${stats?.total_accepted ?? "—"} / ${stats?.total_proposals ?? "—"} proposals`));
+    statKpis.appendChild(kpi("Avg fitness delta",
+      stats ? (stats.avg_fitness_delta >= 0 ? "+" : "") + stats.avg_fitness_delta.toFixed(4) : "—",
+      `chain: ${stats?.chain_valid ? "✓ valid" : "⚠ invalid"}`));
+    statsBody.appendChild(statKpis);
+
+    // Agent win counts
+    if (stats?.agent_win_counts && Object.keys(stats.agent_win_counts).length > 0){
+      const agentRows = Object.entries(stats.agent_win_counts)
+        .sort((a,b) => b[1]-a[1])
+        .map(([agent, wins]) => `<tr>
+          <td style="color:var(--muted);padding:7px 6px;border-bottom:1px solid var(--border);font-size:12px;text-transform:capitalize">${escapeHtml(agent)}</td>
+          <td class="mono" style="padding:7px 6px;border-bottom:1px solid var(--border)">${wins} wins</td>
+        </tr>`).join("");
+      const at = document.createElement("div");
+      at.style.marginTop = "12px";
+      at.innerHTML = `<div style="color:var(--muted);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Agent win record</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${agentRows}</tbody></table>`;
+      statsBody.appendChild(at);
+    }
+
+    left.appendChild(card("Epoch Memory", "Cross-epoch learning store (Phase 52/53)",
+      `<span class="badge ${stats?.chain_valid === false ? "bad" : "ok"}">${stats ? stats.count + " entries" : "unavailable"}</span>`,
+      statsBody));
+
+    // ── Learning signal panel ──────────────────────────────────────────
+    const sigBody = document.createElement("div");
+    if (signal && signal.window_epochs > 0){
+      const sigKpis = document.createElement("div");
+      sigKpis.className = "kpis";
+      sigKpis.appendChild(kpi("Window epochs", String(signal.window_epochs), "used for signal"));
+      sigKpis.appendChild(kpi("Acceptance rate",
+        (signal.acceptance_rate * 100).toFixed(1) + "%", "cross-epoch avg"));
+      sigKpis.appendChild(kpi("Avg fitness Δ",
+        (signal.avg_fitness_delta >= 0 ? "+" : "") + signal.avg_fitness_delta.toFixed(4), "advisory trend"));
+      sigBody.appendChild(sigKpis);
+
+      if (signal.top_agents && signal.top_agents.length > 0){
+        const agentRows = signal.top_agents.map(([a, r]) =>
+          `<tr><td style="color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--border);font-size:12px;text-transform:capitalize">${escapeHtml(a)}</td>
+          <td class="mono" style="padding:6px 6px;border-bottom:1px solid var(--border)">${(r*100).toFixed(0)}% win rate</td></tr>`
+        ).join("");
+        const at = document.createElement("div");
+        at.style.marginTop = "12px";
+        at.innerHTML = `<div style="color:var(--muted);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Top agents (advisory)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${agentRows}</tbody></table>`;
+        sigBody.appendChild(at);
+      }
+
+      if (signal.top_strategies && signal.top_strategies.length > 0){
+        const stRows = signal.top_strategies.map(([s, r]) =>
+          `<tr><td style="color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--border);font-size:12px">${escapeHtml(s)}</td>
+          <td class="mono" style="padding:6px 6px;border-bottom:1px solid var(--border)">${(r*100).toFixed(0)}% win rate</td></tr>`
+        ).join("");
+        const st = document.createElement("div");
+        st.style.marginTop = "12px";
+        st.innerHTML = `<div style="color:var(--muted);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Top strategies (advisory)</div>
+          <table style="width:100%;border-collapse:collapse;font-size:12px"><tbody>${stRows}</tbody></table>`;
+        sigBody.appendChild(st);
+      }
+
+      const digestNote = document.createElement("div");
+      digestNote.style.cssText = "margin-top:14px;color:var(--muted);font-size:11px;font-family:var(--mono)";
+      digestNote.textContent = `digest: ${signal.signal_digest?.slice(0,16) ?? "—"}…  version: ${signal.signal_version ?? "—"}`;
+      sigBody.appendChild(digestNote);
+    } else {
+      const empty = document.createElement("div");
+      empty.style.cssText = "color:var(--muted);font-size:12px;padding:14px 0;text-align:center";
+      empty.textContent = signal?.window_epochs === 0
+        ? "No epoch history yet — run epochs to build memory"
+        : "Memory endpoint unavailable";
+      sigBody.appendChild(empty);
+    }
+
+    // Recent entries table
+    if (window_.length > 0){
+      const recentDiv = document.createElement("div");
+      recentDiv.style.marginTop = "14px";
+      const rows = window_.slice(-8).reverse().map(e => {
+        const fdelta = typeof e.fitness_delta === "number"
+          ? (e.fitness_delta >= 0 ? "+" : "") + e.fitness_delta.toFixed(4) : "—";
+        return `<tr>
+          <td class="mono" style="color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--border);font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(e.epoch_id ?? "—")}</td>
+          <td style="padding:6px 6px;border-bottom:1px solid var(--border);font-size:11px;text-transform:capitalize">${escapeHtml(e.winning_agent ?? "none")}</td>
+          <td class="mono" style="padding:6px 6px;border-bottom:1px solid var(--border);font-size:11px;color:${typeof e.fitness_delta==="number" && e.fitness_delta>=0 ? "var(--ok)":"var(--bad)"}">${fdelta}</td>
+          <td class="mono" style="padding:6px 6px;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted)">${e.accepted_count ?? 0}/${e.proposal_count ?? 0}</td>
+        </tr>`;
+      }).join("");
+      recentDiv.innerHTML = `<div style="color:var(--muted);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Recent epochs (latest first)</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr>
+            <th style="color:var(--muted);font-size:10px;text-align:left;padding:4px 6px;font-weight:400">Epoch</th>
+            <th style="color:var(--muted);font-size:10px;text-align:left;padding:4px 6px;font-weight:400">Winner</th>
+            <th style="color:var(--muted);font-size:10px;text-align:left;padding:4px 6px;font-weight:400">Fitness Δ</th>
+            <th style="color:var(--muted);font-size:10px;text-align:left;padding:4px 6px;font-weight:400">Accept</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      sigBody.appendChild(recentDiv);
+    }
+
+    right.appendChild(card("Learning Signal", "Cross-epoch advisory guidance (Phase 52/53)",
+      `<span class="badge">${signal?.window_epochs ?? 0} epochs</span>`, sigBody));
+
+    // Refresh button
+    const refreshRow = document.createElement("div");
+    refreshRow.style.cssText = "margin-top:14px;display:flex;gap:8px";
+    refreshRow.innerHTML = `<button class="btn primary" id="btnRefreshMem">Refresh memory data</button>`;
+    left.appendChild(refreshRow);
+
+    root.appendChild(left);
+    root.appendChild(right);
+
+    setTimeout(() => {
+      const btn = document.getElementById("btnRefreshMem");
+      if (btn) btn.onclick = () => fetchMemoryData().then(() => render());
+    }, 0);
+
+    return root;
+  }
+
   // ---------- Data ----------
   async function getJson(path){
     const url = `${state.baseUrl}${state.apiBase}${path}`;
@@ -821,6 +1113,26 @@
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
+  }
+
+  // Phase 54: governance data fetch — non-fatal, uses direct server paths
+  async function fetchGovernanceData(){
+    try{
+      const ghRes = await fetch(`${state.baseUrl}/governance/health`, { method:"GET" });
+      if (ghRes.ok) state.lastGovernanceHealth = await ghRes.json().catch(() => null);
+    }catch(_){}
+    try{
+      const rcRes = await fetch(`${state.baseUrl}/governance/reviewer-calibration`, { method:"GET" });
+      if (rcRes.ok) state.lastReviewerCalibration = await rcRes.json().catch(() => null);
+    }catch(_){}
+  }
+
+  // Phase 54: memory data fetch — non-fatal, uses direct server path
+  async function fetchMemoryData(){
+    try{
+      const memRes = await fetch(`${state.baseUrl}/intelligence/epoch-memory`, { method:"GET" });
+      if (memRes.ok) state.lastEpochMemory = await memRes.json().catch(() => null);
+    }catch(_){}
   }
 
   async function sendStubMutation(){
@@ -877,10 +1189,34 @@
       state.logs.push(`[poll] agents`);
       state.lastAgents = await getJson("/agents");
 
+      // Phase 54: governance + memory data (non-fatal; failures logged)
+      state.logs.push(`[poll] governance`);
+      await fetchGovernanceData();
+      state.logs.push(`[poll] memory`);
+      await fetchMemoryData();
+
       const pv = state.lastProtocol?.version || state.lastHealth?.protocol
                  || state.lastHealth?.protocol_version || "—";
       const _pb = $("#protoBadge");
       if(_pb) _pb.textContent = `proto${pv}`;
+
+      // Phase 54: update governance health badge
+      const _ghScore = state.lastGovernanceHealth?.data?.health_score
+                    ?? state.lastGovernanceHealth?.health_score ?? null;
+      const _ghBadge = $("#govHealthBadge");
+      if(_ghBadge && _ghScore !== null){
+        _ghBadge.textContent = `gov ${_ghScore.toFixed(2)}`;
+        _ghBadge.className = `badge ${_ghScore >= 0.80 ? "ok" : _ghScore >= 0.60 ? "warn" : "bad"}`;
+        _ghBadge.style.opacity = "1";
+      }
+      // Phase 54: update memory epochs badge
+      const _memCount = state.lastEpochMemory?.stats?.count ?? null;
+      const _memBadge = $("#memEpochsBadge");
+      if(_memBadge && _memCount !== null){
+        _memBadge.textContent = `mem ${_memCount}`;
+        _memBadge.style.opacity = "1";
+      }
+
       state.connected = true;
       state.lastEventAt = Date.now();
       renderGate();

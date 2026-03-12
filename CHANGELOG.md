@@ -1,3 +1,20 @@
+## [7.8.0] — 2026-03-12
+
+### Phase 54 — Aponi UX: Governance & Memory Panels
+
+**Operator-facing dashboard now surfaces governance health and cross-epoch memory directly.**
+
+- `ui/aponi/index.html` — Two new tabs added to Aponi dashboard:
+  - **Governance tab**: live `GovernanceHealthAggregator` composite score with signal-breakdown bar chart, `ReviewerCalibration` cohort summary and tier pressure, colour-coded health badge (HEALTHY/DEGRADED/CRITICAL).
+  - **Memory tab**: `EpochMemoryStore` window stats (count, acceptance rate, avg fitness delta, chain valid), `LearningSignal` top-agents and top-strategies with advisory label, recent-epochs table (epoch_id, winner, fitness Δ, accept rate).
+- **Header enrichments**: `gov X.XX` governance health badge + `mem N` epoch count badge appear in the sticky header after first refresh; colour-coded by health level.
+- **Pulse CSS animation**: `@keyframes pulse-ring` live connection indicator; signal-bar-row component for breakdown visualisation; `fade-in` animation for epoch rows.
+- **Overview KPI**: 5th KPI block added — "Gov Health" from `/governance/health`.
+- `fetchGovernanceData()` + `fetchMemoryData()` — non-fatal async fetches wired into `hardRefresh()` poll cycle.
+- `tests/test_phase54_aponi_ux.py` — 8 tests (T54-U01..U08): **8/8 ✅**
+
+---
+
 ## [7.7.0] — 2026-03-12
 
 ### Phase 53 — EvolutionLoop × EpochMemoryStore Live Wiring
