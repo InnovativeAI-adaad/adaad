@@ -52,6 +52,7 @@ from runtime.api.app_layer import (
     require_replay_safe_provider,
 )
 from security import cryovant
+from runtime.evolution.promotion_manifest import emit_pr_lifecycle_event
 from security.ledger import journal
 
 ELEMENT_ID = "Fire"
@@ -562,6 +563,12 @@ class BeastModeLoop:
             level="INFO",
             element_id=ELEMENT_ID,
         )
+        _promotion_decision_id = f"{selected}:{int(__import__("time").time() * 1000)}"
+        emit_pr_lifecycle_event(
+            policy_version="1.0",
+            evaluation_result="allow",
+            decision_id=_promotion_decision_id,
+        )
         return {"status": "promoted", "agent": selected, "score": score, "promoted_path": str(promoted)}
 
 
@@ -897,6 +904,12 @@ class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
             payload={"status": "promoted", "agent": selected},
             level="INFO",
             element_id=ELEMENT_ID,
+        )
+        _promotion_decision_id = f"{selected}:{int(__import__("time").time() * 1000)}"
+        emit_pr_lifecycle_event(
+            policy_version="1.0",
+            evaluation_result="allow",
+            decision_id=_promotion_decision_id,
         )
         return {"status": "promoted", "agent": selected, "score": score, "promoted_path": str(promoted)}
 

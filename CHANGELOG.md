@@ -1,4 +1,117 @@
+## [7.1.0] — 2026-03-12
+
+### Phase 21 — Core Loop Closure: AutonomyLoop wired into EvolutionLoop.run_epoch()
+
+Closes the critical gap identified at Phase 20: the intelligence stack built across
+Phases 16–20 (`AutonomyLoop`, `IntelligenceRouter`, `CritiqueSignalBuffer`,
+`RoutedDecisionTelemetry`) was fully isolated from the production execution path.
+`EvolutionLoop.run_epoch()` now calls `AutonomyLoop.run()` as Phase 5g.
+
+#### Architecture (PR-21-01)
+
+- `EvolutionLoop.__init__()` accepts `autonomy_loop: Optional[AutonomyLoop] = None`
+- **Phase 5g** inserted after the GovernanceDebtLedger accumulation step (5f):
+  - Calls `AutonomyLoop.run()` with live epoch signals:
+    - `cycle_id` ← `epoch_id`
+    - `mutation_score` ← `WeightAdaptor.prediction_accuracy`
+    - `governance_debt_score` ← `_last_debt_score` (Phase 15 accumulation)
+    - `fitness_trend_delta` ← `health_score − _last_epoch_health_score`
+    - `epoch_pass_rate` ← `accepted_count / total_candidates`
+    - `lineage_health` ← `_last_lineage_proximity` (Phase 15-02)
+  - `AutonomyLoop.reset_epoch()` called immediately after `run()` — clears
+    `CritiqueSignalBuffer` at epoch boundary (constitutional invariant: cap 0.20
+    applies per-epoch, not across epochs)
+  - Full exception isolation — `AutonomyLoop` failure never halts the epoch
+
+- `EpochResult` extended with four intelligence output fields:
+  - `intelligence_decision: str` — `"hold"` | `"self_mutate"` | `"escalate"`
+  - `intelligence_strategy_id: Optional[str]` — routing strategy selected
+  - `intelligence_outcome: Optional[str]` — critique outcome (`"execute"` | `"hold"`)
+  - `intelligence_composite: Optional[float]` — weighted critique aggregate ∈ [0,1]
+
+- Default: `autonomy_loop=None` — Phase 5g is skipped silently; all four new
+  EpochResult fields default to `"hold"` / `None` (fully backwards-compatible)
+
+#### Tests — `tests/test_phase21_core_loop_closure.py`
+
+13 tests, 13/13 passing:
+- PR-21-01 … PR-21-10 contract tests
+- Schema completeness test (`EpochResult` dataclass fields)
+
+## [7.0.0] — 2026-03-12
+
+### Phase 46 — MarketSignalAdapter Live Bridge to EconomicFitnessEvaluator
+
+Closes the highest-ROI gap in the codebase: `MarketSignalAdapter` now wires
+directly into `EconomicFitnessEvaluator` as a live, fail-closed signal source
+for `simulated_market_score`.
+
+#### Architecture
+
+- `EconomicFitnessEvaluator.__init__()` accepts new optional parameter
+  `live_market_adapter: MarketSignalAdapter | None = None`.
+- `_simulated_market_score()` elevated: adapter path is now the
+  **highest-priority** signal source, executing before payload inspection
+  and all fallback paths.
+- Fail-closed: adapter exceptions are caught, logged, and silently fallen
+  through to the existing payload/default path — `evaluate()` never raises
+  due to adapter failure.
+- Bridge statistics: `_bridge_fetch_count` and `_bridge_fallback_count`
+  tracked on the evaluator instance for observability.
+- `market_bridge_status()` public method exposes bridge health: `wired`,
+  `bridge_fetch_count`, `bridge_fallback_count`, `last_signal` snapshot.
+- Type safety: `MarketSignalAdapter` imported under `TYPE_CHECKING` only —
+  zero circular-import risk at runtime.
+
+#### New endpoint
+
+`GET /evolution/market-fitness-bridge` (auth: `audit:read`)
+
+Returns bridge health envelope:
+```json
+{
+  "ok": true,
+  "bridge": {
+    "wired": true,
+    "bridge_fetch_count": 0,
+    "bridge_fallback_count": 0,
+    "last_signal": {
+      "dau": 0.5, "retention_d7": 0.4,
+      "simulated_market_score": 0.455,
+      "source": "synthetic",
+      "lineage_digest": "sha256:...",
+      "ingested_at": 1234567890.0
+    }
+  },
+  "phase": "46",
+  "note": "synthetic baseline active — wire a live source_fn to activate real signal"
+}
+```
+
+#### Constitutional invariants
+
+- `live_market_adapter=None` (default): all existing evaluation paths
+  unchanged — backward-compatible for every existing test and caller.
+- Adapter score **overrides** payload `simulated_market_score` when wired.
+- Adapter failure is logged and swallowed; never propagates.
+- Score clamped to `[0.0, 1.0]` on all paths.
+
+#### Tests
+
+- `tests/test_market_fitness_bridge.py` — **20/20 passed** (T46-01..T46-20)
+  - Payload fallback when no adapter (T46-01, T46-02)
+  - Live adapter override (T46-03, T46-04)
+  - Fail-closed on exception (T46-05, T46-06)
+  - Bridge counters (T46-07, T46-08)
+  - `market_bridge_status()` correctness (T46-09..T46-12)
+  - Score clamping (T46-13, T46-14)
+  - Endpoint schema + auth + signal (T46-15..T46-18)
+  - Synthetic vs live source field (T46-19, T46-20)
+
+---
+
 ## [6.9.2] — 2026-03-11
+
 
 ### Phase 44 — Main Hardening
 

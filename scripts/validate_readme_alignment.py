@@ -139,6 +139,8 @@ def _emit(missing: list[str], output_format: str) -> None:
             "missing": sorted(missing),
         }
         print(json.dumps(payload, sort_keys=True))
+        if not missing:
+            print("readme_alignment_ok")
         return
 
     if missing:

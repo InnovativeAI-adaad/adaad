@@ -890,3 +890,352 @@ path is also fully auditable and bit-identical under replay.
 - `_recovery_tier` normalised to lowercase and stored: **✅** (T40-B11)
 - `LegacyBeastModeCompatibilityAdapter` inherits provider injection: **✅** (T40-B12)
 - **14 tests** — `test_beast_mode_provider_determinism.py` (T40-B01..B12): **✅ 100%**
+
+
+---
+
+## Phase 9 — Soulbound Privacy Invariant
+
+**Status:** ✅ shipped · **Released:** v4.0.0 · **Requires:** Phase 8 shipped ✅
+
+Phase 9 adds `soulbound_privacy_invariant` as a BLOCKING constitutional rule (Constitution v0.5.0). Any mutation proposal that touches soulbound key material or private identity artifacts is rejected fail-closed at `GovernanceGate`.
+
+### Key deliverables
+- `_validate_soulbound_privacy_invariant` in `runtime/constitution.py`
+- Rule registered as `Severity.BLOCKING` — no tier override permitted
+- `boot_sanity_check()` verifies rule is active at startup
+
+### Acceptance criteria
+- Proposal targeting soulbound path rejected with `soulbound_privacy_invariant` code: ✅
+- Rule present in `RULES` list at import time: ✅
+
+---
+
+## Phase 10 — Ledger Continuity & Replay Hardening
+
+**Status:** ✅ shipped · **Released:** v4.1.0 · **Requires:** Phase 9 shipped ✅
+
+Phase 10 hardens the SHA-256 append-only evidence ledger with `lineage_continuity` enforcement and replay-safe determinism providers across all write paths.
+
+### Key deliverables
+- `LineageLedger` integrity chain validated at every append
+- `SeededDeterminismProvider` wired into all epoch-scoped write paths
+- `test_replay_proof.py` — bit-identical replay guarantee
+
+---
+
+## Phase 11-A — Bandit Arm Integrity Invariant
+
+**Status:** ✅ shipped · **Released:** v4.2.0 · **Requires:** Phase 10 shipped ✅
+
+Adds `bandit_arm_integrity_invariant` as a BLOCKING constitutional rule (Constitution v0.6.0). Prevents mutation proposals from tampering with the UCB1/Thompson Sampling arm weights or explore-exploit state outside the sanctioned `BanditSelector` API.
+
+### Key deliverables
+- `_validate_bandit_arm_integrity` in `runtime/constitution.py`
+- `Severity.BLOCKING` — applies at all tiers
+- Constitution version bumped 0.5.0 → 0.6.0
+
+---
+
+## Phase 12 — Entropy Budget & Fast-Path Gate
+
+**Status:** ✅ shipped · **Released:** v4.3.0 · **Requires:** Phase 11-A shipped ✅
+
+Phase 12 introduces the entropy budget limit rule and the fast-path entropy gate endpoint. High-entropy proposals are held at `GovernanceGate` until the rolling entropy budget recovers.
+
+### Key deliverables
+- `entropy_budget_limit` rule (Severity.WARNING → budget exceeded escalates to hold)
+- `POST /api/fast-path/entropy-gate` endpoint
+- `GET /api/fast-path/checkpoint-chain/verify`
+- `test_entropy_budget.py`, `test_entropy_fast_gate.py`
+
+---
+
+## Phase 13 — Market Signal Integrity Invariant
+
+**Status:** ✅ shipped · **Released:** v4.5.0 · **Requires:** Phase 12 shipped ✅
+
+Adds `market_signal_integrity_invariant` as a BLOCKING constitutional rule (Constitution v0.7.0). Prevents mutation proposals from forging or suppressing market fitness signals that feed the `EconomicFitnessEvaluator`.
+
+### Key deliverables
+- `_validate_market_signal_integrity` in `runtime/constitution.py`
+- Constitution version bumped 0.6.0 → 0.7.0
+- `MarketFitnessIntegrator` wired as default evaluator
+
+---
+
+## Phase 14 — Parallel Gate & Reviewer Calibration API
+
+**Status:** ✅ shipped · **Released:** v5.0.0 · **Requires:** Phase 13 shipped ✅
+
+Phase 14 introduces the parallel governance gate — multiple reviewer agents evaluate proposals concurrently, and consensus is required before `GovernanceGate` approves.
+
+### Key deliverables
+- `POST /api/governance/parallel-gate/evaluate`
+- `GET /api/governance/parallel-gate/probe-library`
+- Reviewer calibration signal piped through `RoutingHealthSignal`
+- `test_parallel_gate.py`, `test_parallel_gate_api.py`
+
+---
+
+## Phase 15 — Federation Consensus & Mutation Broker
+
+**Status:** ✅ shipped · **Released:** v5.1.0 · **Requires:** Phase 14 shipped ✅
+
+Phase 15 wires federation consensus into the mutation broker so cross-repo proposals require coordinated GovernanceGate approval from all participating nodes.
+
+### Key deliverables
+- `FederationMutationBroker` wired into proposal lifecycle
+- HMAC key validation at federation node boot
+- `test_federation_mutation_broker.py`, `test_federation_autonomous.py`
+
+---
+
+## Phase 16 — Intelligence Stack Foundation
+
+**Status:** ✅ shipped · **Released:** v5.5.0 · **Requires:** Phase 15 shipped ✅
+
+Phase 16 introduces the intelligence stack: `StrategyModule`, `ProposalModule`, `CritiqueModule`, and `STRATEGY_TAXONOMY`. These modules operate independently of `EvolutionLoop` initially — wired in Phase 21.
+
+### Key deliverables
+- `runtime/intelligence/strategy.py` — `StrategyModule`, `StrategyInput`, `StrategyDecision`
+- `runtime/intelligence/proposal.py` — `ProposalModule`, `Proposal`
+- `runtime/intelligence/critique.py` — `CritiqueModule`, `CritiqueResult`, `CRITIQUE_DIMENSIONS`
+- `STRATEGY_TAXONOMY` exported in `runtime.intelligence.__all__`
+- `test_strategy_taxonomy_phase16.py`, `test_critique_phase16.py`, `test_proposal_adapter_phase16.py`
+
+---
+
+## Phase 17 — Routed Decision Telemetry
+
+**Status:** ✅ shipped · **Released:** v5.6.0 · **Requires:** Phase 16 shipped ✅
+
+Phase 17 wires `strategy_id` into `CritiqueModule.review()` and introduces `RoutedDecisionTelemetry` for per-decision audit trails.
+
+### Key deliverables
+- `RoutedDecisionTelemetry` — emits `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION`
+- `IntelligenceRouter.route()` passes `strategy_id` to critique module
+- `test_routed_decision_telemetry_phase17.py`, `test_router_strategy_wire_phase17.py`
+
+---
+
+## Phase 18 — Critique Signal Buffer
+
+**Status:** ✅ shipped · **Released:** v5.7.0 · **Requires:** Phase 17 shipped ✅
+
+Phase 18 introduces `CritiqueSignalBuffer` to accumulate per-strategy critique outcomes across epochs. Penalty is capped at 0.20 (architectural invariant).
+
+### Key deliverables
+- `CritiqueSignalBuffer` — cap enforced at 0.20 by `_apply_penalty()`
+- `IntelligenceRouter` holds persistent `CritiqueSignalBuffer`
+- `test_critique_signal_phase18.py`, `test_router_signal_wire_phase18.py`
+
+---
+
+## Phase 19 — AutonomyLoop Persistent Router
+
+**Status:** ✅ shipped · **Released:** v5.8.0 · **Requires:** Phase 18 shipped ✅
+
+Phase 19 introduces `AutonomyLoop` and wires the persistent `IntelligenceRouter` into the AGM cycle. The router survives across epochs without losing accumulated critique signal state.
+
+### Key deliverables
+- `AutonomyLoop` in `runtime/autonomy/`
+- `ProposalAdapter` bridging `AutonomyLoop` → `IntelligenceRouter`
+- `test_autonomy_loop_persistent_router_phase19.py`, `test_autonomy_loop_intelligence_phase19.py`
+
+---
+
+## Phase 20 — Public API Consolidation
+
+**Status:** ✅ shipped · **Released:** v7.0.0 · **Requires:** Phase 19 shipped ✅
+
+Phase 20 audits and consolidates all public Python API exports across the intelligence and autonomy packages. Nine modules and seventeen symbols from Phases 16–19 were found unexported; all gaps closed.
+
+### Key deliverables
+- `AutonomyLoop` exported in `runtime.autonomy.__all__`
+- `STRATEGY_TAXONOMY`, `CritiqueSignalBuffer`, `RoutedDecisionTelemetry`, `InMemoryTelemetrySink`, `EVENT_TYPE_ROUTED_INTELLIGENCE_DECISION` in `runtime.intelligence.__all__`
+- `strategy.py.bak` deleted
+- 18 import-contract tests added (`tests/test_import_roots.py`)
+
+---
+
+## Phase 36 — Reviewer Reputation Ledger Endpoint
+
+**Status:** ✅ shipped · **Released:** v6.0.0 · **Requires:** Phase 35 shipped ✅
+
+Exposes the reviewer reputation ledger via REST. Reputation scores are deterministic given a fixed ledger state.
+
+### Key deliverables
+- `GET /governance/reviewer-reputation-ledger`
+- `test_reviewer_reputation_ledger_endpoint.py`
+
+---
+
+## Phase 37 — Mutation Ledger Endpoint
+
+**Status:** ✅ shipped · **Released:** v6.1.0 · **Requires:** Phase 36 shipped ✅
+
+Exposes the full mutation bundle event log via REST.
+
+### Key deliverables
+- `GET /governance/mutation-ledger`
+- `test_mutation_ledger_endpoint.py`
+
+---
+
+## Phase 38 — Signing Key Injection & Audit Binding
+
+**Status:** ✅ shipped · **Released:** v6.5.0 · **Requires:** Phase 37 shipped ✅
+
+Phase 38 wires NaCl signing key injection into evidence bundle construction and makes the evidence panel fail-closed when key material is absent.
+
+### Key deliverables
+- `POST /evidence/sign-bundle` (signing endpoint)
+- `GET /evidence/{bundle_id}` — `authn` + `data` envelope
+- Key rotation attestation endpoints
+- `test_key_rotation_attestation.py`, `test_key_rotation_status.py`
+
+---
+
+## Phase 39 — Simulation Policy & Dry-Run Endpoints
+
+**Status:** ✅ shipped · **Released:** v6.7.0 · **Requires:** Phase 38 shipped ✅
+
+Phase 39 introduces `SimulationPolicy` with `simulation=True` blocking all live side-effects architecturally, plus dry-run REST endpoints.
+
+### Key deliverables
+- `POST /simulation/run`
+- `GET /simulation/results/{run_id}`
+- `SimulationPolicy.simulation=True` blocks filesystem + network writes
+- `test_simulation_endpoints.py`, `test_dry_run_simulation.py`
+
+---
+
+## Phase 41 — Fast-Path Scoring & Stats
+
+**Status:** ✅ shipped · **Released:** v6.8.0 · **Requires:** Phase 40 shipped ✅
+
+Phase 41 exposes fast-path scoring stats and route-preview endpoints for the Aponi operator dashboard.
+
+### Key deliverables
+- `GET /api/fast-path/stats`
+- `POST /api/fast-path/route-preview`
+- `test_fast_path_api_endpoints.py`, `test_fast_path_scorer.py`
+
+---
+
+## Phase 42 — Critical Defect Sweep
+
+**Status:** ✅ shipped · **Released:** v6.8.1 · **Requires:** Phase 41 shipped ✅
+
+Phase 42 resolved all critical runtime defects identified in the Phase 0 Track A audit: SyntaxWarning elimination, cgroup v2 sandbox hardening, dashboard error message sanitization.
+
+### Key deliverables
+- All SyntaxWarnings eliminated from production modules
+- cgroup v2 sandboxing enforced as production default
+- Error messages sanitized to opaque codes at dashboard surface
+- 3573 tests passing at release
+
+---
+
+## Phase 43 — Governance Inviolability & Simulation Endpoints
+
+**Status:** ✅ shipped · **Released:** v6.9.0 · **Requires:** Phase 42 shipped ✅
+
+Phase 43 adds governance inviolability assertions and explicit simulation endpoints to close the constitutional integrity surface.
+
+### Key deliverables
+- `GovernanceGate` inviolability assertions — fail-closed on any rule bypass attempt
+- `GET /governance/admission-enforcement` endpoint
+- `test_governance_inviolability.py`
+
+---
+
+## Phase 44 — Signing Key Injection & Fail-Closed Evidence Panel
+
+**Status:** ✅ shipped · **Released:** v6.9.5 · **Requires:** Phase 43 shipped ✅
+
+Phase 44 finalizes NaCl signing key injection into the evidence panel and eliminates the last SyntaxWarnings in the runtime.
+
+### Key deliverables
+- Evidence panel fail-closed: returns 401 if NaCl key absent
+- `test_server_audit_endpoints.py` — 12 tests all passing
+- Zero SyntaxWarnings in production import path
+
+---
+
+## Phase 45 — Routing Health 9-Signal Reconciliation
+
+**Status:** ✅ shipped · **Released:** v6.9.8 · **Requires:** Phase 44 shipped ✅
+
+Phase 45 reconciles the nine governance routing-health signals with canonical weight normalization. `weight_snapshot_digest` is deterministic given a fixed weight vector.
+
+### Key deliverables
+- `GET /governance/routing-health` — 9-signal weight vector
+- `weight_snapshot_digest` — sha256 of canonical vector
+- `test_routing_health_signal.py`, `test_governance_health_routing_field.py`
+
+---
+
+## Phase 46 — MarketSignalAdapter Live Bridge
+
+**Status:** ✅ shipped · **Released:** v7.0.0 · **Requires:** Phase 45 shipped ✅
+
+Phase 46 wires a live `MarketSignalAdapter` bridge into `EconomicFitnessEvaluator`, replacing the synthetic baseline. Market fitness is now a live signal in the governance health score.
+
+### Key deliverables
+- `GET /evolution/market-fitness-bridge`
+- `MarketSignalAdapter` → `EconomicFitnessEvaluator` live bridge
+- `test_market_fitness_bridge.py` — 20/20 tests
+- 3828 tests passing at v7.0.0 release
+
+---
+
+## Roadmap Summary — Shipped Phases
+
+| Phase | Title | Version | Status |
+|-------|-------|---------|--------|
+| 3 | Adaptive Penalty Weights | v1.0.0 | ✅ |
+| 4 | Semantic Mutation Diff Engine | v2.2.0 | ✅ |
+| 5 | Multi-Repo Federation | v2.5.0 | ✅ |
+| 6 | Autonomous Roadmap Self-Amendment | v3.0.0 | ✅ |
+| 6.1 | Complexity, Safety, and Efficiency Simplification | v3.1.0 | ✅ |
+| 7 | Reviewer Reputation & Adaptive Governance | v3.2.0 | ✅ |
+| 8 | Governance Health Dashboard & Telemetry | v3.3.0 | ✅ |
+| 9 | Soulbound Privacy Invariant | v4.0.0 | ✅ |
+| 10 | Ledger Continuity & Replay Hardening | v4.1.0 | ✅ |
+| 11-A | Bandit Arm Integrity Invariant | v4.2.0 | ✅ |
+| 12 | Entropy Budget & Fast-Path Gate | v4.3.0 | ✅ |
+| 13 | Market Signal Integrity Invariant | v4.5.0 | ✅ |
+| 14 | Parallel Gate & Reviewer Calibration API | v5.0.0 | ✅ |
+| 15 | Federation Consensus & Mutation Broker | v5.1.0 | ✅ |
+| 16 | Intelligence Stack Foundation | v5.5.0 | ✅ |
+| 17 | Routed Decision Telemetry | v5.6.0 | ✅ |
+| 18 | Critique Signal Buffer | v5.7.0 | ✅ |
+| 19 | AutonomyLoop Persistent Router | v5.8.0 | ✅ |
+| 20 | Public API Consolidation | v7.0.0 | ✅ |
+| 21 | Core Loop Closure | v7.1.0 | ✅ |
+| 25 | Mutation Admission Control | v5.0.0 | ✅ |
+| 26 | Admission Rate Signal Integration | v5.1.0 | ✅ |
+| 27 | Admission Audit Ledger | v5.2.0 | ✅ |
+| 28 | Admission Band Enforcement Binding | v5.3.0 | ✅ |
+| 29 | Enforcement Verdict Audit Binding | v5.4.0 | ✅ |
+| 30 | Threat Scan Ledger & Endpoint | v5.5.0 | ✅ |
+| 31 | Governance Debt & Gate Certifier Endpoints | v5.6.0 | ✅ |
+| 32 | Governance Debt Health Signal Integration | v5.7.0 | ✅ |
+| 33 | Certifier Scan Ledger & Rejection Rate Signal | v5.8.0 | ✅ |
+| 34 | Certifier Scans REST Endpoint | v5.9.0 | ✅ |
+| 35 | Gate Decision Ledger & Approval Rate Signal | v6.0.0 | ✅ |
+| 36 | Reviewer Reputation Ledger Endpoint | v6.0.0 | ✅ |
+| 37 | Mutation Ledger Endpoint | v6.1.0 | ✅ |
+| 38 | Signing Key Injection & Audit Binding | v6.5.0 | ✅ |
+| 39 | Simulation Policy & Dry-Run Endpoints | v6.7.0 | ✅ |
+| 40 | BeastModeLoop Determinism Provider Injection | v6.8.0 | ✅ |
+| 41 | Fast-Path Scoring & Stats | v6.8.0 | ✅ |
+| 42 | Critical Defect Sweep | v6.8.1 | ✅ |
+| 43 | Governance Inviolability & Simulation Endpoints | v6.9.0 | ✅ |
+| 44 | Signing Key Injection & Fail-Closed Evidence Panel | v6.9.5 | ✅ |
+| 45 | Routing Health 9-Signal Reconciliation | v6.9.8 | ✅ |
+| 46 | MarketSignalAdapter Live Bridge | v7.0.0 | ✅ |
+
+**Next:** Phase 21 — Core Loop Closure (wiring intelligence stack into `EvolutionLoop.run_epoch()`)

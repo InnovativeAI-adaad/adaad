@@ -1,6 +1,6 @@
 # ADAAD — Termux Setup Guide
 
-**v6.5.0 · Run the full ADAAD governance server on Android via Termux**
+**v7.0.0 · Run the full ADAAD governance server on Android via Termux**
 
 > Tested on Android 10+ · Termux 0.118+ · Python 3.11+
 
@@ -162,7 +162,7 @@ python3 onboard.py   # re-runs dependency check
 | `metadata-generation-failed` for PyNaCl | `pkg install python-cryptography -y` then retry |
 | `libsodium` not found at runtime | `pkg install libsodium -y` |
 | `fatal: destination path 'ADAAD' already exists` | `rm -rf ADAAD` then re-clone |
-| Server shows deprecation warning | Update to v6.4.0+: `git pull` |
+| Server shows deprecation warning | Update to v7.0.0+: `git pull` |
 | `ui/aponi not found` at startup | `server.py` requires the Aponi UI assets — run from the ADAAD root directory |
 | Dashboard blank / connection refused | Confirm server is running: `curl http://localhost:8000/api/version` |
 | Permission denied on `~/.bashrc` | Use `~/.profile` instead: `echo 'export ...' >> ~/.profile` |

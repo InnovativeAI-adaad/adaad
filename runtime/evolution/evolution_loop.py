@@ -70,6 +70,8 @@ from runtime.autonomy.agent_bandit_selector import AgentBanditSelector
 from runtime.evolution.proposal_engine import ProposalEngine, ProposalRequest
 from runtime.intelligence.proposal import Proposal
 from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
+# Phase 21: AutonomyLoop wiring into run_epoch()
+from runtime.autonomy.loop import AutonomyLoop, AutonomyLoopResult
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.debt_ledger import GovernanceDebtLedger
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
@@ -174,6 +176,11 @@ class EpochResult:
     market_is_synthetic:    bool       = True
     # Phase 13 / Track 11-B: consecutive synthetic epoch count (PR-13-B-01)
     consecutive_synthetic_market_epochs: int = 0
+    # Phase 21: AutonomyLoop intelligence output fields
+    intelligence_decision:     str        = "hold"
+    intelligence_strategy_id:  Optional[str] = None
+    intelligence_outcome:      Optional[str] = None
+    intelligence_composite:    Optional[float] = None
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +205,7 @@ class EvolutionLoop:
         market_integrator: Optional[MarketFitnessIntegrator] = None,
         proposal_engine: Optional[ProposalEngine] = None,
         debt_ledger: Optional[GovernanceDebtLedger] = None,
+        autonomy_loop: Optional[AutonomyLoop] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -249,6 +257,11 @@ class EvolutionLoop:
         # Phase 10: RewardSignalBridge — wired lazily; if not injected, reward
         # signal ingestion is skipped silently (backwards-compatible).
         self._reward_bridge: Optional[RewardSignalBridge] = None
+        # Phase 21: AutonomyLoop — wired lazily; if not injected, Phase 5g is
+        # skipped silently (backwards-compatible). When injected, .run() is called
+        # once per epoch with live epoch signals and .reset_epoch() is called at
+        # epoch boundary before returning EpochResult.
+        self._autonomy_loop: Optional[AutonomyLoop] = autonomy_loop
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -604,6 +617,42 @@ class EvolutionLoop:
             except Exception:  # noqa: BLE001
                 pass  # debt ledger failure must never halt the epoch
 
+        # Phase 5g: AutonomyLoop intelligence decision (PR-21-01)
+        # Calls AutonomyLoop.run() with live epoch signals → AutonomyLoopResult.
+        # Populates EpochResult intelligence_* fields for operator visibility.
+        # reset_epoch() is called after run() to clear CritiqueSignalBuffer so
+        # penalties from this epoch do not carry forward (constitutional invariant:
+        # buffer cap 0.20 applies per-epoch boundary).
+        # Full exception isolation — any failure is a no-op.
+        _intelligence_decision:    str         = "hold"
+        _intelligence_strategy_id: Optional[str]   = None
+        _intelligence_outcome:     Optional[str]    = None
+        _intelligence_composite:   Optional[float]  = None
+
+        if self._autonomy_loop is not None:
+            try:
+                _al_result: AutonomyLoopResult = self._autonomy_loop.run(
+                    cycle_id              = epoch_id,
+                    actions               = [],      # structural actions resolved externally
+                    post_condition_checks = {},
+                    mutation_score        = float(self._adaptor.prediction_accuracy),
+                    governance_debt_score = float(self._last_debt_score),
+                    fitness_trend_delta   = float(health_score - self._last_epoch_health_score),
+                    epoch_pass_rate       = float(
+                        accepted_count / max(total_candidates, 1)
+                    ),
+                    lineage_health        = float(self._last_lineage_proximity),
+                )
+                _intelligence_decision    = _al_result.decision
+                _intelligence_strategy_id = _al_result.intelligence_strategy_id
+                _intelligence_outcome     = _al_result.intelligence_outcome
+                _intelligence_composite   = _al_result.intelligence_composite
+                # Reset buffer at epoch boundary — constitutional invariant (Ph18)
+                self._autonomy_loop.reset_epoch()
+            except Exception:  # noqa: BLE001
+                # Intelligence layer failure must never halt the epoch
+                pass
+
         # Top-5 IDs
         unique_ids: List[str] = []
         seen_ids:   set = set()
@@ -661,6 +710,10 @@ class EvolutionLoop:
             market_confidence      = _market_confidence,
             market_is_synthetic    = _market_is_synthetic,
             consecutive_synthetic_market_epochs = _market_consec_synthetic,
+            intelligence_decision    = _intelligence_decision,
+            intelligence_strategy_id = _intelligence_strategy_id,
+            intelligence_outcome     = _intelligence_outcome,
+            intelligence_composite   = _intelligence_composite,
         )
 
     def _evaluate_m603_amendment_gates(

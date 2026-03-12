@@ -7,7 +7,10 @@ import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from runtime.market.market_signal_adapter import MarketSignalAdapter
 
 from runtime.evolution.metrics_schema import METRICS_STATE_DIR
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
@@ -70,7 +73,13 @@ class EconomicFitnessResult:
 
 
 class EconomicFitnessEvaluator:
-    def __init__(self, config_path: Path | None = None, *, rebalance_interval: int = 25):
+    def __init__(
+        self,
+        config_path: Path | None = None,
+        *,
+        rebalance_interval: int = 25,
+        live_market_adapter: "Optional[MarketSignalAdapter]" = None,
+    ):
         self.config_path = config_path or Path(__file__).resolve().parent / "config" / "fitness_weights.json"
         config_payload = self._read_config_payload(self.config_path)
         self.weights = self._load_weights(config_payload)
@@ -81,6 +90,10 @@ class EconomicFitnessEvaluator:
         self._eval_count = 0
         self._epoch_weight_snapshots: Dict[str, Dict[str, float]] = {}
         self._epoch_weight_snapshot_hashes: Dict[str, str] = {}
+        # Phase 46: live market signal bridge
+        self._live_market_adapter: Optional["MarketSignalAdapter"] = live_market_adapter
+        self._bridge_fetch_count: int = 0
+        self._bridge_fallback_count: int = 0
 
     @staticmethod
     def _read_config_payload(config_path: Path) -> Dict[str, Any]:
@@ -359,6 +372,27 @@ class EconomicFitnessEvaluator:
         return 0.0
 
     def _simulated_market_score(self, payload: Mapping[str, Any]) -> float:
+        # Phase 46: live MarketSignalAdapter bridge — highest-priority signal source
+        if self._live_market_adapter is not None:
+            try:
+                signal = self._live_market_adapter.fetch()
+                self._bridge_fetch_count += 1
+                import logging as _logging
+                _logging.getLogger(__name__).debug(
+                    "EconomicFitnessEvaluator: live market bridge dau=%.3f "
+                    "retention_d7=%.3f score=%.4f source=%s digest=%.16s",
+                    signal.dau, signal.retention_d7,
+                    signal.simulated_market_score, signal.source,
+                    signal.lineage_digest,
+                )
+                return self._clamp(signal.simulated_market_score)
+            except Exception as exc:  # noqa: BLE001
+                self._bridge_fallback_count += 1
+                import logging as _logging
+                _logging.getLogger(__name__).warning(
+                    "EconomicFitnessEvaluator: live market adapter error, falling back — %s", exc
+                )
+
         if "simulated_market_score" in payload:
             return self._clamp(payload.get("simulated_market_score"))
 
@@ -401,6 +435,37 @@ class EconomicFitnessEvaluator:
                     return self._clamp(adapter.get(key))
 
         return None
+
+
+    def market_bridge_status(self) -> Dict[str, Any]:
+        """Return live market bridge health for /evolution/market-fitness-bridge endpoint.
+
+        Constitutional invariants:
+        - Never raises.
+        - ``wired`` is True iff a live MarketSignalAdapter is injected.
+        - When wired, includes the most recent signal snapshot (fail-safe: None on error).
+        """
+        wired = self._live_market_adapter is not None
+        last_signal: Optional[Dict[str, Any]] = None
+        if wired:
+            try:
+                sig = self._live_market_adapter.fetch()  # type: ignore[union-attr]
+                last_signal = {
+                    "dau":                    sig.dau,
+                    "retention_d7":           sig.retention_d7,
+                    "simulated_market_score": sig.simulated_market_score,
+                    "source":                 sig.source,
+                    "lineage_digest":         sig.lineage_digest,
+                    "ingested_at":            sig.ingested_at,
+                }
+            except Exception:  # noqa: BLE001
+                last_signal = None
+        return {
+            "wired":               wired,
+            "bridge_fetch_count":  self._bridge_fetch_count,
+            "bridge_fallback_count": self._bridge_fallback_count,
+            "last_signal":         last_signal,
+        }
 
 
 __all__ = ["EconomicFitnessResult", "EconomicFitnessEvaluator"]

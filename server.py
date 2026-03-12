@@ -8,18 +8,42 @@ from typing import Any, Dict
 
 from contextlib import asynccontextmanager
 
-from fastapi import Body, FastAPI, Header, HTTPException, Query, Request
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
 
+# ── Module-level runtime imports ─────────────────────────────────────────────
+# These are imported at module scope (not inside function bodies) so that
+# tests can monkeypatch via `server.<name>` and operator endpoints can
+# reference them directly.  All are fail-safe: if a module is unavailable the
+# import error surfaces at startup rather than silently at request time.
+import runtime.metrics as metrics                                          # noqa: E402
+import security.ledger.journal as journal                                  # noqa: E402
+import runtime.constitution as constitution                                # noqa: E402
+from runtime.evolution.lineage_v2 import LineageLedgerV2                  # noqa: E402
+from runtime.metrics_analysis import (                                    # noqa: E402
+    rolling_determinism_score,
+    mutation_rate_snapshot,
+)
+from runtime.mcp.proposal_validator import validate_proposal               # noqa: E402
+from runtime.mcp.proposal_queue import append_proposal                    # noqa: E402
+from runtime.mcp.linting_bridge import MutationLintingBridge              # noqa: E402
+from runtime.governance.foundation.determinism import default_provider    # noqa: E402
+from runtime.intelligence.router import IntelligenceRouter                # noqa: E402
+from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa: E402
+
 
 ROOT = Path(__file__).resolve().parent
 APONI_DIR = ROOT / "ui" / "aponi"
 MOCK_DIR = APONI_DIR / "mock"
 INDEX = APONI_DIR / "index.html"
+ENHANCED_DIR = ROOT / "ui" / "enhanced"
+ENHANCED_INDEX = ENHANCED_DIR / "enhanced_dashboard.html"
+REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
+FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
 GATE_LOCK_FILE = ROOT / "security" / "ledger" / "gate.lock"
 GATE_PROTOCOL = "adaad-gate/1.0"
 
@@ -280,9 +304,18 @@ def api_version() -> Dict[str, Any]:
 def health() -> dict[str, Any]:
     gate = _read_gate_state()
     ok = not gate["locked"]
+    live = _load_live_version()
+    _rp_path = ROOT / "governance_runtime_profile.lock.json"
+    try:
+        _rp = json.loads(_rp_path.read_text(encoding="utf-8"))
+        runtime_profile: dict[str, Any] = {"present": True, **_rp}
+    except (OSError, json.JSONDecodeError):
+        runtime_profile = {"present": False}
     return {
         "ok": ok,
         "gate_ok": ok,
+        "version": live.get("adaad_version", "unknown"),
+        "runtime_profile": runtime_profile,
         "ui_present": APONI_DIR.exists(),
         "mock_present": MOCK_DIR.exists(),
         "gate": gate,
@@ -354,7 +387,8 @@ def nexus_agents() -> dict[str, Any]:
     return {"ok": True, "count": len(agents), "agents": agents}
 
 
-MOCK_ENDPOINTS = ["status", "agents", "tree", "kpis", "changes", "suggestions"]
+# "status" is excluded — GET /api/status returns mock_endpoints_disabled sentinel
+MOCK_ENDPOINTS = ["agents", "tree", "kpis", "changes", "suggestions"]
 
 for endpoint_name in MOCK_ENDPOINTS:
     app.add_api_route(
@@ -2127,6 +2161,555 @@ async def simulation_results(
             "result": None,
         }
     return {"ok": True, "simulation": True, "data": envelope}
+
+
+# ── Phase 46: Market Signal Live Bridge ──────────────────────────────────────
+
+@app.get("/evolution/market-fitness-bridge")
+async def market_fitness_bridge_status(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """GET /evolution/market-fitness-bridge
+
+    Returns the live MarketSignalAdapter → EconomicFitnessEvaluator bridge status.
+
+    Constitutional invariants (Phase 46):
+    - Never raises; always returns a valid envelope.
+    - ``wired`` is True iff a live MarketSignalAdapter is injected into the evaluator.
+    - When wired, includes the most recent signal snapshot and bridge statistics.
+    - Fail-safe: on any internal error, returns ``ok=True`` with ``wired=False``.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
+        from runtime.market.market_signal_adapter import MarketSignalAdapter
+
+        evaluator = EconomicFitnessEvaluator(live_market_adapter=MarketSignalAdapter())
+        status = evaluator.market_bridge_status()
+        return {
+            "ok": True,
+            "bridge": status,
+            "phase": "46",
+            "note": "synthetic baseline active — wire a live source_fn to activate real signal",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": True,
+            "bridge": {"wired": False, "bridge_fetch_count": 0,
+                       "bridge_fallback_count": 0, "last_signal": None},
+            "phase": "46",
+            "error": str(exc),
+        }
+
+
+# ── Operator / Aponi endpoints ──────────────────────────────────────────────
+
+# ── Pydantic models ──────────────────────────────────────────────────────────
+
+class MutationView(BaseModel):
+    """Flattened view of a MutationBundleEvent for the operator dashboard."""
+    event_type: str = ""
+    ts: str = ""
+    epoch_id: str = ""
+    bundle_id: str = ""
+    impact: float = 0.0
+    risk_tier: str = ""
+    applied: bool = False
+
+    @classmethod
+    def from_event(cls, event: dict) -> "MutationView":
+        p = event.get("payload", {}) or {}
+        return cls(
+            event_type=event.get("type", ""),
+            ts=event.get("ts", ""),
+            epoch_id=p.get("epoch_id", ""),
+            bundle_id=p.get("bundle_id", ""),
+            impact=float(p.get("impact", 0.0)),
+            risk_tier=str(p.get("risk_tier", "")),
+            applied=bool(p.get("applied", False)),
+        )
+
+
+class EpochView(BaseModel):
+    """Summary view of an epoch for the operator dashboard."""
+    epoch_id: str
+    event_count: int = 0
+    expected_digest: str = ""
+    computed_digest: str = ""
+
+
+class ConstitutionStatus(BaseModel):
+    version: str
+    policy_hash: str
+    sanity: dict
+
+
+class SystemIntelligenceView(BaseModel):
+    outcome: str
+    strategy: str
+    proposal: str
+    critique: str
+    rolling_determinism: dict
+    mutation_rate: dict
+
+
+class ProposalResponse(BaseModel):
+    ok: bool
+    proposal_id: str
+    authority_level: str
+    validation: dict
+    queue_hash: str
+
+
+# ── GET /api/mutations ────────────────────────────────────────────────────────
+
+@app.get("/api/mutations")
+def operator_mutations() -> list:
+    """List all mutation bundle events from the lineage ledger."""
+    ledger = LineageLedgerV2()
+    return [MutationView.from_event(e).model_dump() for e in ledger.read_all()]
+
+
+# ── GET /api/epochs ───────────────────────────────────────────────────────────
+
+@app.get("/api/epochs")
+def operator_epochs() -> list:
+    """List all epoch IDs with digest integrity summary."""
+    ledger = LineageLedgerV2()
+    result = []
+    for eid in ledger.list_epoch_ids():
+        events = ledger.read_epoch(eid)
+        expected = ledger.get_expected_epoch_digest(eid) or ""
+        computed = ledger.compute_incremental_epoch_digest(eid)
+        result.append(
+            EpochView(
+                epoch_id=eid,
+                event_count=len(events),
+                expected_digest=expected,
+                computed_digest=computed,
+            ).model_dump()
+        )
+    return result
+
+
+# ── GET /api/constitution/status ─────────────────────────────────────────────
+
+@app.get("/api/constitution/status")
+def constitution_status() -> dict:
+    """Return current constitution version, policy hash, and boot sanity check."""
+    sanity = constitution.boot_sanity_check()
+    return ConstitutionStatus(
+        version=str(getattr(constitution, "CONSTITUTION_VERSION", "unknown")),
+        policy_hash=str(getattr(constitution, "POLICY_HASH", "unknown")),
+        sanity=sanity,
+    ).model_dump()
+
+
+# ── GET /api/system/intelligence ─────────────────────────────────────────────
+
+@app.get("/api/system/intelligence")
+def system_intelligence() -> dict:
+    """Return routed intelligence decision with determinism and mutation rate."""
+    from runtime.intelligence.strategy import StrategyInput
+    ctx = StrategyInput(
+        cycle_id="dashboard-probe",
+        mutation_score=0.5,
+        governance_debt_score=0.0,
+    )
+    decision = IntelligenceRouter().route(ctx)
+    det = rolling_determinism_score()
+    rate = mutation_rate_snapshot()
+    return SystemIntelligenceView(
+        outcome=decision.outcome,
+        strategy=str(decision.strategy),
+        proposal=str(decision.proposal),
+        critique=str(decision.critique),
+        rolling_determinism=det,
+        mutation_rate=rate,
+    ).model_dump()
+
+
+# ── POST /api/mutations/proposals  (+ alias /mutation/propose) ───────────────
+
+def _handle_proposal(
+    payload: dict,
+    request: Request,
+) -> dict:
+    """Core proposal handler — validate, queue, optionally emit Aponi editor event."""
+    req_obj, validation = validate_proposal(payload)
+    provider = default_provider()
+    proposal_id: str = provider.next_id(label="proposal", length=12)
+    queue_result = append_proposal(proposal_id=proposal_id, request=req_obj)
+
+    # Aponi editor submission event — only when X-Aponi-Submission-Origin header present
+    origin = request.headers.get("x-aponi-submission-origin", "")
+    if origin:
+        ts = provider.format_utc("%Y-%m-%dT%H:%M:%SZ")
+        event_payload: dict[str, Any] = {
+            "proposal_id": proposal_id,
+            "session_id": request.headers.get("x-aponi-session-id", ""),
+            "actor_context": {
+                "actor_id": request.headers.get("x-aponi-actor-id", ""),
+                "actor_role": request.headers.get("x-aponi-actor-role", ""),
+                "authn_scheme": "unspecified",
+            },
+            "endpoint_path": str(request.url.path),
+            "timestamp": ts,
+        }
+        metrics.log(event_type="aponi_editor_proposal_submitted.v1", payload=event_payload)
+        journal.append_tx(
+            tx_type="aponi_editor_proposal_submitted.v1",
+            payload=event_payload,
+        )
+
+    return ProposalResponse(
+        ok=True,
+        proposal_id=proposal_id,
+        authority_level=req_obj.authority_level,
+        validation=validation,
+        queue_hash=queue_result.get("hash", ""),
+    ).model_dump()
+
+
+@app.post("/api/mutations/proposals")
+async def post_proposal(request: Request) -> dict:
+    payload = await request.json()
+    return _handle_proposal(payload, request)
+
+
+@app.post("/mutation/propose")
+async def post_proposal_alias(request: Request) -> dict:
+    payload = await request.json()
+    return _handle_proposal(payload, request)
+
+
+# ── GET /api/lint/preview ─────────────────────────────────────────────────────
+
+@app.get("/api/lint/preview")
+def lint_preview(
+    agent_id: str = Query(...),
+    target_path: str = Query(...),
+    python_content: str = Query(default=""),
+    metadata: str = Query(default="{}"),
+) -> dict:
+    """Return deterministic lint annotations for a proposed code change."""
+    try:
+        meta = json.loads(metadata)
+    except (json.JSONDecodeError, ValueError):
+        meta = {}
+    lint_payload = {
+        "agent_id": agent_id,
+        "target_path": target_path,
+        "python_content": python_content,
+        "metadata": meta,
+    }
+    return MutationLintingBridge().analyze(lint_payload)
+
+
+# ── GET /api/status (mock disabled sentinel) ──────────────────────────────────
+
+@app.get("/api/status")
+def api_status_mock_disabled() -> dict:
+    raise HTTPException(status_code=404, detail="mock_endpoints_disabled")
+
+
+# ── Audit endpoints (Phase 46+ — evidence, replay proofs, lineage) ───────────
+
+@app.get("/api/audit/epochs/{epoch_id}/replay-proof")
+def audit_replay_proof(
+    epoch_id: str,
+    redaction: str | None = Query(default=None),
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return the replay attestation proof bundle for an epoch.
+
+    Requires audit:read scope. When redaction=sensitive, strips signature values.
+    Response: {schema_version, authn, data: {epoch_id, bundle_path, bundle, verification}}
+    """
+    authn = _require_audit_read_scope(authorization)
+    proof_file = REPLAY_PROOFS_DIR / f"{epoch_id}.replay_attestation.v1.json"
+    if not proof_file.exists():
+        raise HTTPException(status_code=404, detail="replay_proof_not_found")
+    try:
+        bundle: dict[str, Any] = json.loads(proof_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail="proof_read_error") from exc
+
+    # Redact signature values when redaction=sensitive
+    if redaction == "sensitive" and "signatures" in bundle:
+        redacted_sigs = [
+            {k: v for k, v in sig.items() if k != "signature"}
+            for sig in bundle.get("signatures", [])
+        ]
+        bundle = {**bundle}
+        del bundle["signatures"]
+
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "epoch_id": epoch_id,
+            "bundle_path": str(proof_file),
+            "bundle": bundle,
+            "verification": {
+                "proof_digest_present": "proof_digest" in bundle,
+                "signatures_present": "signatures" in bundle,
+            },
+        },
+    }
+
+
+@app.get("/api/audit/epochs/{epoch_id}/lineage")
+def audit_epoch_lineage(
+    epoch_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return lineage events and journal entries for an epoch.
+
+    Requires audit:read scope.
+    Response: {schema_version, authn, data: {epoch_id, lineage, lineage_digest,
+               expected_epoch_digest, journal_entries}}
+    """
+    authn = _require_audit_read_scope(authorization)
+    ledger = LineageLedgerV2()
+    lineage = ledger.read_epoch(epoch_id)
+    lineage_digest = ledger.compute_incremental_epoch_digest(epoch_id)
+    expected = ledger.get_expected_epoch_digest(epoch_id) or ""
+    journal_entries = journal.read_entries(limit=200)
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "epoch_id": epoch_id,
+            "lineage": lineage,
+            "lineage_digest": lineage_digest,
+            "expected_epoch_digest": expected,
+            "journal_entries": journal_entries,
+        },
+    }
+
+
+def _load_bundle(bundle_id: str) -> tuple[dict[str, Any], str]:
+    """Load and return a forensic bundle dict + its file path string."""
+    bundle_file = FORENSIC_EXPORT_DIR / f"{bundle_id}.json"
+    if not bundle_file.exists():
+        raise HTTPException(status_code=404, detail="bundle_not_found")
+    try:
+        return json.loads(bundle_file.read_text(encoding="utf-8")), str(bundle_file)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail="bundle_read_error") from exc
+
+
+def _redact_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
+    """Strip signature fields from export_metadata.signer for response."""
+    result = dict(bundle)
+    if "export_metadata" in result:
+        em = dict(result["export_metadata"])
+        if "signer" in em:
+            em["signer"] = {k: v for k, v in em["signer"].items() if k != "signature"}
+        result["export_metadata"] = em
+    return result
+
+
+@app.get("/api/audit/bundles/{bundle_id}")
+def audit_bundle(
+    bundle_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """Return a forensic evidence bundle with validation results.
+
+    Requires audit:read scope.
+    Response: {schema_version, authn, data: {bundle_id, bundle_path, bundle, validation}}
+    """
+    authn = _require_audit_read_scope(authorization)
+    raw_bundle, bundle_path = _load_bundle(bundle_id)
+    builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
+    validation = builder.validate_bundle(raw_bundle)
+    return {
+        "schema_version": "1.0",
+        "authn": authn,
+        "data": {
+            "bundle_id": bundle_id,
+            "bundle_path": bundle_path,
+            "bundle": _redact_bundle(raw_bundle),
+            "validation": validation,
+        },
+    }
+
+
+def _authenticate_audit_request(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """FastAPI Depends-compatible audit authentication.
+
+    Returns the authn context dict. Tests can override via
+    ``app.dependency_overrides[_authenticate_audit_request]``.
+    """
+    return _require_audit_read_scope(authorization)
+
+
+def api_audit_bundle(bundle_id: str, redaction: str, auth_ctx: dict) -> dict[str, Any]:
+    """Return the flat evidence payload for /evidence/{bundle_id}.
+
+    Extracted as a named function so tests can monkeypatch it without touching
+    the endpoint wiring.
+    """
+    raw_bundle, _ = _load_bundle(bundle_id)
+    builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
+    validation = builder.validate_bundle(raw_bundle)
+    display = _redact_bundle(raw_bundle) if redaction == "sensitive" else raw_bundle
+    return {
+        "authn": auth_ctx,
+        "data": {
+            "bundle_id": bundle_id,
+            "constitution_version": str(getattr(constitution, "CONSTITUTION_VERSION", "unknown")),
+            "scoring_algorithm_version": "1.0",
+            "validation": validation,
+            "bundle": display,
+        },
+    }
+
+
+@app.get("/evidence/{bundle_id}")
+def evidence_bundle(
+    bundle_id: str,
+    redaction: str | None = Query(default=None),
+    auth_ctx: dict = Depends(_authenticate_audit_request),
+) -> dict[str, Any]:
+    """Forensic evidence bundle — flat response for Aponi dashboard and operator API."""
+    return api_audit_bundle(bundle_id, redaction or "", auth_ctx)
+
+
+# ── Review quality metrics ────────────────────────────────────────────────────
+
+@app.get("/metrics/review-quality")
+def review_quality_metrics(
+    limit: int = Query(default=200, ge=1, le=2000),
+    sla_seconds: int = Query(default=86400, ge=1),
+) -> dict[str, Any]:
+    """Return review latency distribution from the metrics tail.
+
+    Scans metrics entries for governance_review_quality events and
+    computes latency distribution statistics.
+    """
+    entries = metrics.tail(limit=limit)
+    review_entries = [
+        e for e in entries
+        if e.get("event") == "governance_review_quality"
+    ]
+    latencies = [
+        float(e.get("payload", {}).get("latency_seconds", 0))
+        for e in review_entries
+        if "payload" in e
+    ]
+    count = len(latencies)
+    avg = sum(latencies) / count if count else 0.0
+    within_sla = sum(1 for l in latencies if l <= sla_seconds)
+    return {
+        "window_limit": limit,
+        "sla_seconds": sla_seconds,
+        "window_count": count,
+        "review_latency_distribution_seconds": {
+            "count": count,
+            "avg": avg,
+            "within_sla": within_sla,
+            "sla_compliance_rate": within_sla / count if count else 1.0,
+        },
+    }
+
+
+# ── UI path resolution ────────────────────────────────────────────────────────
+
+def _current_ui():
+    """Return current UI state without creating any files.
+
+    Returns (ui_dir, ui_index, mock_dir, ui_source) where ui_source is one of
+    "aponi", "enhanced", "placeholder", or "missing".
+    Unlike _resolve_ui_paths, never writes to disk.
+    """
+    if APONI_DIR.exists() and INDEX.exists():
+        return APONI_DIR, INDEX, APONI_DIR / "mock", "aponi"
+    if ENHANCED_DIR.exists() and ENHANCED_INDEX.exists():
+        return ENHANCED_DIR, ENHANCED_INDEX, ENHANCED_DIR / "mock", "enhanced"
+    return APONI_DIR, INDEX, APONI_DIR / "mock", "missing"
+
+
+def _resolve_ui_paths(create_placeholder: bool = False):
+    """Resolve the active UI directory with priority: aponi > enhanced > placeholder.
+
+    Returns (ui_dir, ui_index, mock_dir, ui_source) where ui_source is one of
+    "aponi", "enhanced", or "placeholder".
+    """
+    if APONI_DIR.exists() and INDEX.exists():
+        return APONI_DIR, INDEX, APONI_DIR / "mock", "aponi"
+    if ENHANCED_DIR.exists() and ENHANCED_INDEX.exists():
+        return ENHANCED_DIR, ENHANCED_INDEX, ENHANCED_DIR / "mock", "enhanced"
+    # Placeholder path
+    if create_placeholder:
+        APONI_DIR.mkdir(parents=True, exist_ok=True)
+        (APONI_DIR / "mock").mkdir(exist_ok=True)
+        INDEX.write_text(
+            "<!doctype html><html><head><meta charset='utf-8'/><title>ADAAD</title></head>"
+            "<body><h2>ADAAD — placeholder</h2></body></html>",
+            encoding="utf-8",
+        )
+    return APONI_DIR, INDEX, APONI_DIR / "mock", "placeholder"
+
+
+# ── WebSocket /ws/events ──────────────────────────────────────────────────────
+
+@app.websocket("/ws/events")
+async def ws_events(websocket: WebSocket) -> None:
+    """Real-time event stream: hello frame then a single event_batch.
+
+    Channels:
+    - "metrics"  — recent entries from runtime.metrics.tail()
+    - "journal"  — recent entries from security.ledger.journal.read_entries()
+
+    Each event in the batch has keys: channel, kind, timestamp, event.
+    """
+    await websocket.accept()
+    # Hello frame
+    await websocket.send_json({
+        "type": "hello",
+        "channels": ["metrics", "journal"],
+        "status": "live",
+    })
+    # Collect events from both channels
+    events = []
+    for entry in metrics.tail(limit=200):
+        events.append({
+            "channel": "metrics",
+            "kind": str(entry.get("event", entry.get("event_type", "metric"))),
+            "timestamp": str(entry.get("timestamp", entry.get("ts", ""))),
+            "event": entry,
+        })
+    for entry in journal.read_entries(limit=200):
+        events.append({
+            "channel": "journal",
+            "kind": str(entry.get("action", entry.get("tx_type", "journal"))),
+            "timestamp": str(entry.get("timestamp", entry.get("ts", ""))),
+            "event": entry,
+        })
+    await websocket.send_json({"type": "event_batch", "events": events})
+    await websocket.close()
+
+
+# /ui/aponi/{asset_path} — explicit asset route so monkeypatching APONI_DIR in tests works.
+# A static mount binds the directory at registration time; a route always reads APONI_DIR
+# at request time, making it monkeypatch-safe.
+@app.get("/ui/aponi/{asset_path:path}")
+def serve_aponi_asset(asset_path: str) -> Response:
+    """Serve individual Aponi assets at /ui/aponi/<path>.
+
+    Path-traversal protection: rejects any path that resolves outside APONI_DIR.
+    """
+    resolved = (APONI_DIR / asset_path).resolve()
+    try:
+        resolved.relative_to(APONI_DIR.resolve())
+    except ValueError:
+        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    if not resolved.exists() or not resolved.is_file():
+        raise HTTPException(status_code=404, detail="asset_not_found")
+    return FileResponse(str(resolved))
 
 # Must be last so it can handle deep-link fallbacks after API routes
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")

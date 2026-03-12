@@ -21,7 +21,7 @@ from typing import Dict, List
 from adaad.agents.base_agent import validate_agents
 from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id
 from adaad.agents.invariants import check_invariants
-from adaad.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime.api.app_layer import metrics
 from runtime.api.app_layer import now_iso
 
@@ -58,12 +58,19 @@ class ArchitectAgent:
             strategy_name, ops = select_strategy(agent_dir)
             if not ops:
                 continue
+            target = MutationTarget(
+                agent_id=agent_id,
+                path="dna.json",
+                target_type="dna",
+                ops=ops,
+            )
             proposals.append(
                 MutationRequest(
                     agent_id=agent_id,
                     generation_ts=now_iso(),
                     intent=strategy_name,
                     ops=ops,
+                    targets=[target],
                     signature="cryovant-dev-architect",
                     nonce=f"arch-{agent_id}-{now_iso()}",
                 )

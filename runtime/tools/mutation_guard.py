@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 import json
 import os
 from typing import Any, Dict, List, Tuple
+
+
+# Module-level constant — monkeypatch-safe for tests
+AGENTS_ROOT = Path("app") / "agents"
 
 
 def _sha256_bytes(b: bytes) -> str:
@@ -39,18 +44,21 @@ def _atomic_write_bytes(path: str, data: bytes) -> None:
 
 
 def _ensure_agent_dir(agent_id: str) -> str:
-    agent_dir = os.path.join("app", "agents", agent_id)
+    agent_dir = str(AGENTS_ROOT / agent_id)
     real = os.path.realpath(agent_dir)
-    root = os.path.realpath(os.path.join("app", "agents"))
+    root = os.path.realpath(str(AGENTS_ROOT))
     if not real.startswith(root + os.sep) and real != root:
         raise PermissionError("Mutation outside app/agents blocked.")
     return agent_dir
 
 
-def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Dict[str, Any]:
-    import copy
+def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Tuple[int, int]:
+    """Apply JSON-Patch-style ops to *dna_obj* in-place.
 
-    out = copy.deepcopy(dna_obj)
+    Returns (applied, skipped) counts — applied is the number of ops executed,
+    skipped is the number ignored (e.g. no-ops or conditional skips).
+    """
+    import copy
 
     def parse_ptr(p: str) -> List[str]:
         if not p.startswith("/"):
@@ -69,14 +77,16 @@ def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Dict[str, 
                 cur = cur[k]
         return cur, parts[-1]
 
+    applied = 0
+    skipped = 0
     for op in ops:
         kind = op["op"]
         path = op["path"]
         value = op.get("value")
         parts = parse_ptr(path)
-        parent, leaf = resolve_parent(out, parts)
+        parent, leaf = resolve_parent(dna_obj, parts)
 
-        if kind in ("add", "replace"):
+        if kind in ("add", "replace", "set"):
             if isinstance(parent, list):
                 idx = int(leaf)
                 if kind == "add":
@@ -85,15 +95,17 @@ def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Dict[str, 
                     parent[idx] = value
             else:
                 parent[leaf] = value
+            applied += 1
         elif kind == "remove":
             if isinstance(parent, list):
                 del parent[int(leaf)]
             else:
                 del parent[leaf]
+            applied += 1
         else:
             raise ValueError(f"Unsupported op: {kind}")
 
-    return out
+    return applied, skipped
 
 
 def validate_he65_subset(dna_obj: Dict[str, Any]) -> None:
@@ -112,8 +124,9 @@ def apply_dna_mutation(agent_id: str, ops: List[Dict[str, Any]]) -> Dict[str, An
     parent_lineage = _sha256_bytes(old_bytes)
 
     old_obj = json.loads(old_bytes.decode("utf-8"))
-    new_obj = _apply_ops(old_obj, ops)
-    validate_he65_subset(new_obj)
+    _apply_ops(old_obj, ops)  # mutates old_obj in-place
+    validate_he65_subset(old_obj)
+    new_obj = old_obj  # alias for clarity
 
     new_bytes = json.dumps(new_obj, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
     child_lineage = _sha256_bytes(new_bytes)
