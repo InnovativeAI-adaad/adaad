@@ -15,6 +15,25 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
 
+# ── Module-level runtime imports ─────────────────────────────────────────────
+# These are imported at module scope (not inside function bodies) so that
+# tests can monkeypatch via `server.<name>` and operator endpoints can
+# reference them directly.  All are fail-safe: if a module is unavailable the
+# import error surfaces at startup rather than silently at request time.
+import runtime.metrics as metrics                                          # noqa: E402
+import security.ledger.journal as journal                                  # noqa: E402
+import runtime.constitution as constitution                                # noqa: E402
+from runtime.evolution.lineage_v2 import LineageLedgerV2                  # noqa: E402
+from runtime.metrics_analysis import (                                    # noqa: E402
+    rolling_determinism_score,
+    mutation_rate_snapshot,
+)
+from runtime.mcp.proposal_validator import validate_proposal               # noqa: E402
+from runtime.mcp.proposal_queue import append_proposal                    # noqa: E402
+from runtime.mcp.linting_bridge import MutationLintingBridge              # noqa: E402
+from runtime.governance.foundation.determinism import default_provider    # noqa: E402
+from runtime.intelligence.router import IntelligenceRouter                # noqa: E402
+
 
 ROOT = Path(__file__).resolve().parent
 APONI_DIR = ROOT / "ui" / "aponi"
