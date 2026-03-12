@@ -277,11 +277,19 @@ class EvolutionLoop:
         # once per epoch with live epoch signals and .reset_epoch() is called at
         # epoch boundary before returning EpochResult.
         self._autonomy_loop: Optional[AutonomyLoop] = autonomy_loop
-        # Phase 50 (PR-50-02): EvolutionFederationBridge — wired lazily. When
+# Phase 50 (PR-50-02): EvolutionFederationBridge — wired lazily. When
         # injected, on_epoch_rotation() is called at Phase 6 (post-checkpoint)
         # and on_inbound_evaluation() drains inbound federated proposals before
         # EpochResult is returned. None = federation skipped silently (single-node).
         self._federation_bridge: Optional[EvolutionFederationBridge] = federation_bridge
+        # Phase 52: EpochMemoryStore — append-only hash-chained cross-epoch ledger.
+        # Auto-provisioned with default path; never None so emit() is always safe.
+        # LearningSignalExtractor derives advisory context injected into CodebaseContext
+        # before proposal generation (pre-epoch enrichment).
+        from runtime.autonomy.epoch_memory_store import EpochMemoryStore, STORE_DEFAULT_PATH
+        from runtime.autonomy.learning_signal_extractor import LearningSignalExtractor
+        self._epoch_memory: EpochMemoryStore = EpochMemoryStore(path=STORE_DEFAULT_PATH)
+        self._learning_extractor: LearningSignalExtractor = LearningSignalExtractor()
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -343,6 +351,18 @@ class EvolutionLoop:
                     # else: injection skipped silently; mismatch event already emitted
             except Exception:  # noqa: BLE001
                 pass
+
+        # Phase 52: Learning signal pre-epoch enrichment
+        # Derive advisory LearningSignal from EpochMemoryStore window and inject
+        # into CodebaseContext.learning_context before proposal agents are called.
+        # Exception-isolated; failure is a no-op (learning_context stays None).
+        # Constitutional invariant: signal is advisory only — GovernanceGate unaffected.
+        try:
+            _learning_signal = self._learning_extractor.extract(self._epoch_memory)
+            if not _learning_signal.is_empty():
+                context.learning_context = _learning_signal.as_prompt_block()
+        except Exception:  # noqa: BLE001
+            pass
 
         # Phase 1: Propose
         all_proposals: List[MutationCandidate] = []
@@ -735,6 +755,32 @@ class EvolutionLoop:
             health_score=health_score,
             checkpoint_digest=cp.chain_digest,
         )
+
+        # Phase 52: EpochMemoryStore — record epoch outcome for cross-epoch learning.
+        # Derive winning agent from highest-scoring accepted MutationScore.agent_origin.
+        # Mutation type is not stored on MutationScore; emit None — acceptable per spec.
+        # Exception-isolated; memory emit failure must never block epoch completion.
+        try:
+            _mem_winning_agent: Optional[str] = None
+            _mem_winning_mut_type: Optional[str] = None
+            if accepted:
+                _top_accepted = max(accepted, key=lambda s: s.score)
+                _mem_winning_agent = _top_accepted.agent_origin or None
+                if _mem_winning_agent == "unknown":
+                    _mem_winning_agent = None
+            self._epoch_memory.emit(
+                epoch_id=epoch_id,
+                winning_agent=_mem_winning_agent,
+                winning_mutation_type=_mem_winning_mut_type,
+                winning_strategy_id=_intelligence_strategy_id,
+                fitness_delta=round(health_score - self._last_epoch_health_score, 6),
+                proposal_count=total_candidates,
+                accepted_count=accepted_count,
+                context_hash=context.context_hash(),
+                constitution_version="0.7.0",
+            )
+        except Exception:  # noqa: BLE001
+            pass  # memory emit failure must never halt the epoch
 
         return EpochResult(
             epoch_id               = epoch_id,
