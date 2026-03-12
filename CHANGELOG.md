@@ -1,6 +1,6 @@
 ## [7.3.0] — 2026-03-12
 
-### Phase 23 — Container Isolation as Production Default
+### Phase 49 — Container Isolation as Production Default (gap-closure post-GA)
 
 #### PR-23-01: `_container_rollout_enabled()` inverted to opt-out model
 
@@ -20,7 +20,7 @@ to Phase 23).
 
 ## [7.2.0] — 2026-03-12
 
-### Phase 22 — Proposal Hardening
+### Phase 48 — Proposal Hardening (gap-closure post-GA)
 
 #### PR-22-01: `fallback_to_noop=False` as LLM default
 
@@ -45,7 +45,7 @@ respected for tests and custom wiring.
 
 ## [7.1.0] — 2026-03-12
 
-### Phase 21 — Core Loop Closure: AutonomyLoop wired into EvolutionLoop.run_epoch()
+### Phase 47 — Core Loop Closure (gap-closure post-GA): AutonomyLoop wired into EvolutionLoop.run_epoch()
 
 Closes the critical gap identified at Phase 20: the intelligence stack built across
 Phases 16–20 (`AutonomyLoop`, `IntelligenceRouter`, `CritiqueSignalBuffer`,

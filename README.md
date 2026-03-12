@@ -10,7 +10,7 @@
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
   <img alt="Phase" src="https://img.shields.io/badge/phase-46%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9%2B-7b61ff?style=flat-square&labelColor=060d14"/>
-  <img alt="Tests" src="https://img.shields.io/badge/tests-3828%2B%20passing-22c55e?style=flat-square&labelColor=060d14"/>
+  <img alt="Tests" src="https://img.shields.io/badge/tests-3855%2B%20passing-22c55e?style=flat-square&labelColor=060d14"/>
   &nbsp;
   <img alt="Governance" src="https://img.shields.io/badge/governance-fail--closed-ef4444?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
@@ -52,12 +52,12 @@
 | **Current version** | `7.0.0` |
 | **Phase** | 46 complete (MarketSignalAdapter Live Bridge) |
 | **Released** | 2026-03-12 |
-| **Tests passing** | 3828+ collected |
+| **Tests passing** | 3855+ collected |
 | **Constitution** | v0.7.0 — 18 rules |
 
-**New in v7.0.0:** Phase 46 closes the highest-ROI gap in the codebase — `MarketSignalAdapter` now wires directly into `EconomicFitnessEvaluator` as a live, fail-closed, highest-priority `simulated_market_score` source. When a real `source_fn` is injected, budget mode switching, ROI attribution, Darwinian agent selection, and earned autonomy progression all activate on real DAU and retention signals. New endpoint: `GET /evolution/market-fitness-bridge`. 20/20 tests passing.
+**v7.3.0 (current):** Three gap-closure phases shipped post-GA — Phase 47 wires `AutonomyLoop` into `EvolutionLoop.run_epoch()` (intelligence stack no longer isolated); Phase 48 hardens proposals (`fallback_to_noop=False` default, `MarketFitnessIntegrator` default-on); Phase 49 makes container isolation the production default (opt-out model via `ADAAD_SANDBOX_CONTAINER_ROLLOUT=off`).
 
-Recently shipped: Phase 45 (routing-health 9-signal test reconciliation), Phase 44 (main hardening — signing-key injection, fail-closed evidence panel, SyntaxWarning elimination), Phase 43 (governance inviolability, simulation endpoints, AST import enforcement).
+**v7.0.0 (GA):** Phase 46 closes the highest-ROI market gap — `MarketSignalAdapter` wired into `EconomicFitnessEvaluator` as the highest-priority `simulated_market_score` source, fail-closed. New endpoint: `GET /evolution/market-fitness-bridge`.
 
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
@@ -334,21 +334,23 @@ Download the latest APK from [GitHub Releases](../../releases/latest).
 
 ## What's active now
 
-> Current version: **v7.1.0** · Phase 46 complete · 3841+ tests collected
+> Current version: **v7.3.0** · Phase 49 complete · 3855+ tests collected
 
 ### Current state
 
 | Category | Value | Source |
 |:---|:---|:---|
-| **Active phase** | `Phase 46 COMPLETE · v7.0.0` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
-| **Last completed phase** | Phase 46 — MarketSignalAdapter Live Bridge | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
-| **Next step** | Phase 47 — Claude API live integration via `proposal_adapter.py` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
-| **Historical milestone** | Phase 6 (`v3.1.0`) PR sequence fully merged | [`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`](docs/governance/ADAAD_PR_PROCESSION_2026-03.md) |
+| **Active phase** | `Phase 49 COMPLETE · v7.3.0` | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Last completed phase** | Phase 49 — Container Isolation Default | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
+| **Next step** | Phase 50 — Federation consensus wired to mutation broker | [`.adaad_agent_state.json`](.adaad_agent_state.json) |
 
 ### Recent outcomes (Phases 40–46)
 
 | Phase | Outcome | Version |
 |:---|:---|:---:|
+| **Phase 49** | Container isolation as production default — opt-out model (`ADAAD_SANDBOX_CONTAINER_ROLLOUT=off`), 18/18 tests | `v7.3.0` |
+| **Phase 48** | Proposal hardening — `fallback_to_noop=False` default + `MarketFitnessIntegrator` default-on, 14/14 tests | `v7.2.0` |
+| **Phase 47** | Core loop closure — `AutonomyLoop.run()` wired into `EvolutionLoop.run_epoch()` as Phase 5g, intelligence output in `EpochResult`, 13/13 tests | `v7.1.0` |
 | **Phase 46** | `MarketSignalAdapter` live bridge into `EconomicFitnessEvaluator` — highest-priority market signal path, fail-closed, `GET /evolution/market-fitness-bridge`, 20/20 tests | `v7.0.0` |
 | **Phase 45** | Routing-health test reconciliation — 9-signal weight constants aligned across all assertions, 26/26 tests | `v6.9.2` |
 | **Phase 44** | Main hardening — signing-key injection, fail-closed evidence panel, thread-safe simulation store, SyntaxWarning elimination (3.12/3.13 clean) | `v6.9.2` |
@@ -435,15 +437,6 @@ All endpoints require `Authorization: Bearer <token>` with `audit:read` scope (`
 | `GET /api/nexus/handshake` | Nexus federation handshake |
 | `GET /api/nexus/protocol` | Nexus protocol version |
 
-### Phase 6 milestones (complete)
-
-| Milestone | Status | Module |
-|:---|:---:|:---|
-| M6-01 `RoadmapAmendmentEngine` | ✅ | `runtime/autonomy/roadmap_amendment_engine.py` |
-| M6-02 `ProposalDiffRenderer` | ✅ | `runtime/autonomy/proposal_diff_renderer.py` |
-| M6-03 EvolutionLoop wire | ✅ | `runtime/evolution/evolution_loop.py` |
-| M6-04 Federated propagation | ✅ | `runtime/governance/federation/mutation_broker.py` |
-| M6-05 Android distribution | ✅ | `.github/workflows/android-free-release.yml` |
 
 📋 Full history → [`CHANGELOG.md`](CHANGELOG.md)
 📋 Full roadmap → [`ROADMAP.md`](ROADMAP.md)
