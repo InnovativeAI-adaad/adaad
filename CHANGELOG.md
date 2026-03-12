@@ -1,3 +1,33 @@
+## [7.4.0] — 2026-03-12
+
+### Phase 50 — Federation Consensus wired to Mutation Broker + EvolutionLoop
+
+#### PR-50-01: `FederationConsensusEngine` wired into `FederationMutationBroker`
+
+`FederationMutationBroker.__init__()` accepts `consensus_engine: Optional[FederationConsensusEngine] = None`.
+On every dual-gate-accepted inbound mutation, `consensus_engine.append_entry()` is called with
+`entry_type="federation_mutation_accepted"` and the acceptance payload. Consensus failure is
+exception-isolated — an already-approved mutation is never revoked by a consensus write error.
+`None` (default) skips consensus silently for single-node deployments (backwards-compatible).
+
+#### PR-50-02: `EvolutionFederationBridge` wired into `EvolutionLoop.run_epoch()`
+
+`EvolutionLoop.__init__()` accepts `federation_bridge: Optional[EvolutionFederationBridge] = None`.
+Phase 6b inserted after CheckpointChain (Phase 6):
+- `on_epoch_rotation(epoch_id, chain_digest)` — notifies federation of epoch boundary
+- `on_inbound_evaluation(epoch_id)` — drains buffered inbound federated proposals through destination GovernanceGate
+Both calls exception-isolated. `EpochResult` extended with:
+- `federation_outbound_proposed: int` (default 0)
+- `federation_inbound_accepted: int` (default 0)
+- `federation_inbound_quarantined: int` (default 0)
+
+Also fixes Phase 23 test helpers (removed brittle `importlib.reload()`; re-applies
+`executor.py` opt-out model lost in stash drop).
+
+#### Tests — `tests/test_phase50_federation_consensus.py`
+
+13 tests, 13/13 passing. 89/90 regression cross-section (1 pre-existing unrelated failure).
+
 ## [7.3.0] — 2026-03-12
 
 ### Phase 49 — Container Isolation as Production Default (gap-closure post-GA)

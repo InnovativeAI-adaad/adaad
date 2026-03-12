@@ -70,8 +70,10 @@ from runtime.autonomy.agent_bandit_selector import AgentBanditSelector
 from runtime.evolution.proposal_engine import ProposalEngine, ProposalRequest
 from runtime.intelligence.proposal import Proposal
 from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
-# Phase 21: AutonomyLoop wiring into run_epoch()
+# Phase 47: AutonomyLoop wiring into run_epoch()
 from runtime.autonomy.loop import AutonomyLoop, AutonomyLoopResult
+# Phase 50: EvolutionFederationBridge wiring into run_epoch()
+from runtime.governance.federation.evolution_federation_bridge import EvolutionFederationBridge
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.debt_ledger import GovernanceDebtLedger
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
@@ -176,11 +178,15 @@ class EpochResult:
     market_is_synthetic:    bool       = True
     # Phase 13 / Track 11-B: consecutive synthetic epoch count (PR-13-B-01)
     consecutive_synthetic_market_epochs: int = 0
-    # Phase 21: AutonomyLoop intelligence output fields
+    # Phase 47: AutonomyLoop intelligence output fields
     intelligence_decision:     str        = "hold"
     intelligence_strategy_id:  Optional[str] = None
     intelligence_outcome:      Optional[str] = None
     intelligence_composite:    Optional[float] = None
+    # Phase 50: Federation bridge output fields
+    federation_outbound_proposed: int      = 0
+    federation_inbound_accepted:  int      = 0
+    federation_inbound_quarantined: int    = 0
 
 
 # ---------------------------------------------------------------------------
@@ -206,6 +212,7 @@ class EvolutionLoop:
         proposal_engine: Optional[ProposalEngine] = None,
         debt_ledger: Optional[GovernanceDebtLedger] = None,
         autonomy_loop: Optional[AutonomyLoop] = None,
+        federation_bridge: Optional[EvolutionFederationBridge] = None,
     ) -> None:
         self._api_key          = api_key
         self._generations      = generations
@@ -270,6 +277,11 @@ class EvolutionLoop:
         # once per epoch with live epoch signals and .reset_epoch() is called at
         # epoch boundary before returning EpochResult.
         self._autonomy_loop: Optional[AutonomyLoop] = autonomy_loop
+        # Phase 50 (PR-50-02): EvolutionFederationBridge — wired lazily. When
+        # injected, on_epoch_rotation() is called at Phase 6 (post-checkpoint)
+        # and on_inbound_evaluation() drains inbound federated proposals before
+        # EpochResult is returned. None = federation skipped silently (single-node).
+        self._federation_bridge: Optional[EvolutionFederationBridge] = federation_bridge
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -689,6 +701,35 @@ class EvolutionLoop:
         self._chain_predecessor = cp.chain_digest
         _append_chain_entry(cp, _CHAIN_PATH)
 
+        # Phase 6b: EvolutionFederationBridge hooks (PR-50-02)
+        # on_epoch_rotation() — notifies federation of epoch boundary + chain digest
+        # on_inbound_evaluation() — drains buffered inbound federated proposals
+        # Both exception-isolated. GovernanceGate retains execution authority.
+        _fed_outbound: int = 0
+        _fed_inbound_accepted: int = 0
+        _fed_inbound_quarantined: int = 0
+
+        if self._federation_bridge is not None:
+            try:
+                _rot_result = self._federation_bridge.on_epoch_rotation(
+                    epoch_id=epoch_id,
+                    chain_digest=cp.chain_digest,
+                )
+                if _rot_result.ok:
+                    _fed_outbound = _rot_result.outbound_proposed
+            except Exception:  # noqa: BLE001
+                pass
+
+            try:
+                _inb_result = self._federation_bridge.on_inbound_evaluation(
+                    epoch_id=epoch_id,
+                )
+                if _inb_result.ok:
+                    _fed_inbound_accepted = _inb_result.inbound_accepted
+                    _fed_inbound_quarantined = _inb_result.inbound_quarantined
+            except Exception:  # noqa: BLE001
+                pass
+
         amendment_proposed, amendment_id = self._evaluate_m603_amendment_gates(
             epoch_id=epoch_id,
             health_score=health_score,
@@ -721,7 +762,10 @@ class EvolutionLoop:
             intelligence_decision    = _intelligence_decision,
             intelligence_strategy_id = _intelligence_strategy_id,
             intelligence_outcome     = _intelligence_outcome,
-            intelligence_composite   = _intelligence_composite,
+            intelligence_composite        = _intelligence_composite,
+            federation_outbound_proposed     = _fed_outbound,
+            federation_inbound_accepted      = _fed_inbound_accepted,
+            federation_inbound_quarantined   = _fed_inbound_quarantined,
         )
 
     def _evaluate_m603_amendment_gates(

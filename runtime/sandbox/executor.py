@@ -40,8 +40,17 @@ def _is_sandbox_tier() -> bool:
 
 
 def _container_rollout_enabled() -> bool:
+    """Return True unless the operator explicitly disables container rollout.
+
+    Phase 49 (PR-23-01): container isolation is now the production default when
+    running in SANDBOX tier. Operators revert to ProcessIsolationBackend by setting:
+        ADAAD_SANDBOX_CONTAINER_ROLLOUT=off   (or 0 / false / no / disabled)
+    Any other value — including the empty string — enables container isolation.
+    """
     raw = str(os.getenv("ADAAD_SANDBOX_CONTAINER_ROLLOUT") or "").strip().lower()
-    return raw in {"1", "true", "on", "docker"}
+    if raw in {"0", "false", "off", "no", "disabled"}:
+        return False
+    return True
 
 
 def _default_isolation_backend() -> IsolationBackend:

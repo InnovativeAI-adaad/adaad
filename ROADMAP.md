@@ -1217,6 +1217,7 @@ Phase 46 wires a live `MarketSignalAdapter` bridge into `EconomicFitnessEvaluato
 | 47 | Core Loop Closure (gap) | v7.1.0 | ✅ |
 | 48 | Proposal Hardening (gap) | v7.2.0 | ✅ |
 | 49 | Container Isolation Default (gap) | v7.3.0 | ✅ |
+| 50 | Federation Consensus + Bridge wiring | v7.4.0 | ✅ |
 | 25 | Mutation Admission Control | v5.0.0 | ✅ |
 | 26 | Admission Rate Signal Integration | v5.1.0 | ✅ |
 | 27 | Admission Audit Ledger | v5.2.0 | ✅ |
