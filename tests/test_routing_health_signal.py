@@ -28,26 +28,32 @@ class TestSignalWeights:
         total = sum(SIGNAL_WEIGHTS.values())
         assert abs(total - 1.0) < 1e-9
 
-    def test_weights_has_five_keys(self):
-        assert len(SIGNAL_WEIGHTS) == 5
+    def test_weights_has_nine_keys(self):
+        # Weights have expanded across Phases 26/32/33/35 to 9 signals
+        assert len(SIGNAL_WEIGHTS) == 9
 
     def test_routing_health_score_present(self):
         assert "routing_health_score" in SIGNAL_WEIGHTS
 
     def test_routing_health_score_weight(self):
-        assert abs(SIGNAL_WEIGHTS["routing_health_score"] - 0.15) < 1e-9
+        # Phase 35 rebalance: 0.15 → 0.10 to accommodate 4 additional signals
+        assert abs(SIGNAL_WEIGHTS["routing_health_score"] - 0.10) < 1e-9
 
     def test_avg_reviewer_reputation_rebalanced(self):
-        assert abs(SIGNAL_WEIGHTS["avg_reviewer_reputation"] - 0.25) < 1e-9
+        # Phase 35 rebalance: 0.25 → 0.18
+        assert abs(SIGNAL_WEIGHTS["avg_reviewer_reputation"] - 0.18) < 1e-9
 
     def test_amendment_gate_pass_rate_rebalanced(self):
-        assert abs(SIGNAL_WEIGHTS["amendment_gate_pass_rate"] - 0.22) < 1e-9
+        # Phase 35 rebalance: 0.22 → 0.16
+        assert abs(SIGNAL_WEIGHTS["amendment_gate_pass_rate"] - 0.16) < 1e-9
 
     def test_federation_divergence_clean_rebalanced(self):
-        assert abs(SIGNAL_WEIGHTS["federation_divergence_clean"] - 0.22) < 1e-9
+        # Phase 35 rebalance: 0.22 → 0.16
+        assert abs(SIGNAL_WEIGHTS["federation_divergence_clean"] - 0.16) < 1e-9
 
     def test_epoch_health_score_rebalanced(self):
-        assert abs(SIGNAL_WEIGHTS["epoch_health_score"] - 0.16) < 1e-9
+        # Phase 35 rebalance: 0.16 → 0.12
+        assert abs(SIGNAL_WEIGHTS["epoch_health_score"] - 0.12) < 1e-9
 
 
 # ---------------------------------------------------------------------------
@@ -136,14 +142,19 @@ class TestRoutingHealthSignal:
     def test_degraded_flag_set_correctly(self):
         agg = GovernanceHealthAggregator()
         snap = agg.compute("epoch-1")
-        # All signals degrade: reputation=0, amendment=0, epoch=0,
-        # federation=1.0 (default), routing=1.0 (default)
+        # Signals that default to 0.0 (no data source provided):
+        #   avg_reviewer_reputation, amendment_gate_pass_rate, epoch_health_score
+        # Signals that default to 1.0 (fail-open):
+        #   federation_divergence_clean, routing_health_score,
+        #   admission_rate_score, governance_debt_health_score,
+        #   certifier_rejection_rate_score, gate_approval_rate_score
         expected_h = (
-            0.25 * 0.0   # reputation
-            + 0.22 * 0.0   # amendment
-            + 0.22 * 1.0   # federation default
-            + 0.16 * 0.0   # epoch
-            + 0.15 * 1.0   # routing default
+            SIGNAL_WEIGHTS["federation_divergence_clean"]     * 1.0
+            + SIGNAL_WEIGHTS["routing_health_score"]          * 1.0
+            + SIGNAL_WEIGHTS["admission_rate_score"]          * 1.0
+            + SIGNAL_WEIGHTS["governance_debt_health_score"]  * 1.0
+            + SIGNAL_WEIGHTS["certifier_rejection_rate_score"] * 1.0
+            + SIGNAL_WEIGHTS["gate_approval_rate_score"]      * 1.0
         )
         assert abs(snap.health_score - expected_h) < 1e-9
         assert snap.degraded == (expected_h < HEALTH_DEGRADED_THRESHOLD)
@@ -203,6 +214,14 @@ class TestRoutingHealthSignal:
         """routing=1.0 default should not push h above expected ceiling."""
         agg = GovernanceHealthAggregator()
         snap = agg.compute("epoch-1")
-        # max possible h with routing=1.0, federation=1.0, others=0.0
-        max_h = SIGNAL_WEIGHTS["federation_divergence_clean"] + SIGNAL_WEIGHTS["routing_health_score"]
+        # All fail-open signals (default 1.0): federation, routing,
+        # admission, debt, certifier_rejection, gate_approval
+        max_h = (
+            SIGNAL_WEIGHTS["federation_divergence_clean"]
+            + SIGNAL_WEIGHTS["routing_health_score"]
+            + SIGNAL_WEIGHTS["admission_rate_score"]
+            + SIGNAL_WEIGHTS["governance_debt_health_score"]
+            + SIGNAL_WEIGHTS["certifier_rejection_rate_score"]
+            + SIGNAL_WEIGHTS["gate_approval_rate_score"]
+        )
         assert snap.health_score <= max_h + 1e-9
