@@ -1,10 +1,10 @@
 {
-  "active_phase": "Phase 46 COMPLETE \u00b7 v7.0.0",
+  "active_phase": "Phase 50 COMPLETE \u00b7 v7.4.0",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 46 \u2014 MarketSignalAdapter Live Bridge to EconomicFitnessEvaluator",
-  "last_completed_pr": "feat/phase46-market-signal-live-bridge",
+  "last_completed_phase": "Phase 50 \u2014 Federation Consensus + Bridge Wiring",
+  "last_completed_pr": "feat/phase50-federation-consensus",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-12",
-  "last_sync_sha": "24c04a8",
-  "next_pr": "PR-47-PLAN (Phase 47 \u2014 TBD)",
+  "last_sync_sha": "3c3e14f",
+  "next_pr": "PR-51-PLAN (Phase 51 \u2014 TBD)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -84,6 +84,15 @@
     "phase46-economic-fitness-live-signal",
     "phase46-bridge-status-endpoint",
     "phase46-tests-20-green",
-    "v7.0.0-released"
+    "v7.0.0-released",
+    "phase47-core-loop-closure",
+    "v7.1.0-released",
+    "phase48-proposal-hardening",
+    "v7.2.0-released",
+    "phase49-container-isolation-default",
+    "v7.3.0-released",
+    "phase50-federation-consensus-wired",
+    "phase50-bridge-wiring-complete",
+    "v7.4.0-released"
   ]
 }
