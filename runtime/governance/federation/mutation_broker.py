@@ -41,6 +41,7 @@ import logging
 import uuid
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
+from runtime.governance.federation.consensus import FederationConsensusEngine
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -227,11 +228,17 @@ class FederationMutationBroker:
         governance_gate: Any,
         lineage_chain_digest_fn: Any,
         audit_writer: Optional[Any] = None,
+        consensus_engine: Optional[FederationConsensusEngine] = None,
     ) -> None:
         self._local_repo = local_repo
         self._gate = governance_gate
         self._chain_digest_fn = lineage_chain_digest_fn
         self._audit = audit_writer
+        # Phase 50 (PR-50-01): FederationConsensusEngine wired for log replication.
+        # When injected, every dual-gate-accepted mutation is appended to the
+        # consensus log via append_entry(). None = consensus skipped silently
+        # (backwards-compatible for single-node deployments).
+        self._consensus_engine: Optional[FederationConsensusEngine] = consensus_engine
         self._outbound: List[FederatedMutationProposal] = []
         self._inbound: List[Dict[str, Any]] = []
         self._accepted: List[AcceptedFederatedMutation] = []
@@ -406,6 +413,23 @@ class FederationMutationBroker:
                 "acceptance_digest": acceptance_digest,
                 "federation_gate_id": proposal.federation_gate_id,
             })
+            # Phase 50 (PR-50-01): replicate acceptance into consensus log.
+            # Exception-isolated — consensus failure never quarantines an already
+            # dual-gate-approved mutation. GovernanceGate retains execution authority.
+            if self._consensus_engine is not None:
+                try:
+                    self._consensus_engine.append_entry(
+                        entry_type="federation_mutation_accepted",
+                        payload={
+                            "proposal_id": proposal.proposal_id,
+                            "source_mutation_id": proposal.source_mutation_id,
+                            "source_repo": proposal.source_repo,
+                            "acceptance_digest": acceptance_digest,
+                            "federation_gate_id": proposal.federation_gate_id,
+                        },
+                    )
+                except Exception:  # noqa: BLE001
+                    pass  # consensus failure must never revoke an accepted mutation
             log.info(
                 "FederationMutationBroker: ACCEPTED proposal=%s from %s (digest=%s)",
                 proposal.proposal_id, proposal.source_repo, acceptance_digest[:20],

@@ -11,7 +11,6 @@ PR-23-07  Any unrecognised/truthy value for ADAAD_SANDBOX_CONTAINER_ROLLOUT enab
 """
 from __future__ import annotations
 
-import importlib
 import os
 from unittest.mock import patch
 
@@ -31,29 +30,34 @@ from runtime.sandbox.isolation import (
 # ---------------------------------------------------------------------------
 
 def _rollout_enabled(env_val: str | None) -> bool:
-    env = {} if env_val is None else {"ADAAD_SANDBOX_CONTAINER_ROLLOUT": env_val}
-    with patch.dict(os.environ, env, clear=False):
-        # Pop the key when testing None
-        if env_val is None:
-            patched = dict(os.environ)
-            patched.pop("ADAAD_SANDBOX_CONTAINER_ROLLOUT", None)
-            with patch.dict(os.environ, patched, clear=True):
-                importlib.reload(_executor_module)
-                return _executor_module._container_rollout_enabled()
-        importlib.reload(_executor_module)
-        return _executor_module._container_rollout_enabled()
+    """Test _container_rollout_enabled() by calling it directly with env patched."""
+    import runtime.sandbox.executor as _mod
+    if env_val is None:
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("ADAAD_SANDBOX_CONTAINER_ROLLOUT", None)
+            return _mod._container_rollout_enabled()
+    with patch.dict(os.environ, {"ADAAD_SANDBOX_CONTAINER_ROLLOUT": env_val}):
+        return _mod._container_rollout_enabled()
 
 
 def _default_backend(*, rollout: str | None, tier: str = "SANDBOX"):
-    env = {"ADAAD_FORCE_TIER": tier}
+    """Test _default_isolation_backend() with env patched inline."""
+    import runtime.sandbox.executor as _mod
+    env_patch = {"ADAAD_FORCE_TIER": tier}
     if rollout is not None:
-        env["ADAAD_SANDBOX_CONTAINER_ROLLOUT"] = rollout
-    base = {k: v for k, v in os.environ.items()
-            if k not in ("ADAAD_FORCE_TIER", "ADAAD_SANDBOX_CONTAINER_ROLLOUT")}
-    base.update(env)
-    with patch.dict(os.environ, base, clear=True):
-        importlib.reload(_executor_module)
-        return _executor_module._default_isolation_backend()
+        env_patch["ADAAD_SANDBOX_CONTAINER_ROLLOUT"] = rollout
+    save_rollout = os.environ.pop("ADAAD_SANDBOX_CONTAINER_ROLLOUT", None)
+    save_tier = os.environ.pop("ADAAD_FORCE_TIER", None)
+    try:
+        with patch.dict(os.environ, env_patch):
+            if rollout is None:
+                os.environ.pop("ADAAD_SANDBOX_CONTAINER_ROLLOUT", None)
+            return _mod._default_isolation_backend()
+    finally:
+        if save_rollout is not None:
+            os.environ["ADAAD_SANDBOX_CONTAINER_ROLLOUT"] = save_rollout
+        if save_tier is not None:
+            os.environ["ADAAD_FORCE_TIER"] = save_tier
 
 
 # ---------------------------------------------------------------------------
