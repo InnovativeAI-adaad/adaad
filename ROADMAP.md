@@ -1191,6 +1191,23 @@ Phase 46 wires a live `MarketSignalAdapter` bridge into `EconomicFitnessEvaluato
 
 ---
 
+## Phase 51 — Roadmap & Procession Alignment + v1.0.0-GA Checklist
+
+**Status:** ✅ shipped · **Released:** v7.5.0 · **Requires:** Phase 50 shipped ✅
+
+Phase 51 closes the governance documentation gap that accumulated across the Phase 47–50 gap-closure arc. Delivers an updated PR procession authority document, agent state synchronization, ROADMAP next-pointer correction, stale branch sweep (110 branches), and a v1.0.0-GA readiness checklist establishing the remaining gate criteria for public-readiness tagging.
+
+### Key deliverables
+- `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` — Phase 51 authority document superseding the Phase 6 procession doc
+- `.adaad_agent_state.json` — synced to Phase 50 / v7.4.0 (stale since Phase 46)
+- `ROADMAP.md` — Next pointer corrected, Phase 51 entry added, summary table complete
+- `CHANGELOG.md` — Phase 51 entry
+- `VERSION` — 7.4.0 → 7.5.0
+- 110 stale merged branches deleted from remote
+- v1.0.0-GA gate checklist authored at `docs/governance/V1_GA_READINESS_CHECKLIST.md`
+
+---
+
 ## Roadmap Summary — Shipped Phases
 
 | Phase | Title | Version | Status |
@@ -1240,5 +1257,6 @@ Phase 46 wires a live `MarketSignalAdapter` bridge into `EconomicFitnessEvaluato
 | 44 | Signing Key Injection & Fail-Closed Evidence Panel | v6.9.5 | ✅ |
 | 45 | Routing Health 9-Signal Reconciliation | v6.9.8 | ✅ |
 | 46 | MarketSignalAdapter Live Bridge | v7.0.0 | ✅ |
+| 51 | Roadmap & Procession Alignment + v1.0.0-GA Checklist | v7.5.0 | ✅ |
 
-**Next:** Phase 21 — Core Loop Closure (wiring intelligence stack into `EvolutionLoop.run_epoch()`)
+**Next:** Phase 52 — TBD (governed selection via ArchitectAgent proposal)

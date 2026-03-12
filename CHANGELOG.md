@@ -1,3 +1,23 @@
+## [7.5.0] — 2026-03-12
+
+### Phase 51 — Roadmap & Procession Alignment + v1.0.0-GA Checklist
+
+**Governance documentation hardening arc — closes the alignment debt from Phases 47–50.**
+
+#### Procession Authority
+- `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` — new authority document (schema v2.0) superseding the Phase 6 procession doc; covers Phases 47–51 closure, v1.0.0-GA gate criteria, Phase 52 planning guidance, and automation contract block
+- `docs/governance/V1_GA_READINESS_CHECKLIST.md` — canonical 6-gate checklist for the `v1.0.0-GA` public-readiness tag
+
+#### Repository Hygiene
+- 110 stale merged branches deleted from remote (chore/, codex/, device/, docs/, feat/, feature/, fix/, hardening/, hotfix/, integrate-, opt/, phase9/, pr/, promo/, release/)
+- `ROADMAP.md` — Phase 51 section added; summary table updated; Next pointer corrected from stale `Phase 21` to `Phase 52 TBD`
+- `.adaad_agent_state.json` — synced Phase 50 → Phase 51; all gap-phase (47–50) checkpoints back-filled; version stamps current
+
+#### Version
+- `VERSION`: 7.4.0 → 7.5.0
+
+---
+
 ## [7.4.0] — 2026-03-12
 
 ### Phase 50 — Federation Consensus wired to Mutation Broker + EvolutionLoop

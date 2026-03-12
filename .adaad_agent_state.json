@@ -1,10 +1,10 @@
 {
-  "active_phase": "Phase 50 COMPLETE \u00b7 v7.4.0",
+  "active_phase": "Phase 51 COMPLETE · v7.5.0",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 50 \u2014 Federation Consensus + Bridge Wiring",
-  "last_completed_pr": "feat/phase50-federation-consensus",
+  "last_completed_phase": "Phase 51 — Roadmap & Procession Alignment + v1.0.0-GA Checklist",
+  "last_completed_pr": "feat/phase51-roadmap-procession-alignment",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-12",
-  "last_sync_sha": "3c3e14f",
-  "next_pr": "PR-51-PLAN (Phase 51 \u2014 TBD)",
+  "last_sync_sha": "TBD",
+  "next_pr": "PR-52-PLAN (Phase 52 — TBD)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -93,6 +93,10 @@
     "v7.3.0-released",
     "phase50-federation-consensus-wired",
     "phase50-bridge-wiring-complete",
-    "v7.4.0-released"
+    "v7.4.0-released",
+    "phase51-roadmap-procession-alignment",
+    "phase51-procession-doc-v2",
+    "phase51-v1-ga-checklist",
+    "v7.5.0-released"
   ]
 }
