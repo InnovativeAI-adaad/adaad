@@ -112,7 +112,7 @@ pytest tests/governance/ tests/determinism/ -q
 pytest tests/ -q
 ```
 
-846 tests. Expected failures in pre-existing suites (`test_beast_promotes_on_threshold`, `test_simulation_endpoints`) are tracked as known technical debt.
+3828+ tests passing. All 20 previously-tracked failures resolved as of v7.0.0.
 
 ---
 

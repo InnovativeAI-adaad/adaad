@@ -1,7 +1,7 @@
 # ADAAD Launch Asset Index
 
 > **Prepared by:** ArchitectAgent promotional cycle
-> **Date:** 2026-03-07
+> **Date:** 2026-03-12
 > **Status:** Ready to deploy — all assets written and committed
 
 This directory contains ready-to-post promotional content for every major developer channel. Copy, paste, and post. No editing required, though personalization always improves results.

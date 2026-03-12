@@ -1,6 +1,6 @@
 # ADAAD Implementation ↔ Documentation Alignment
 
-**Authoritative version and posture:** `0.65.x` (latest tagged release: `0.65.0`), **Experimental / pre-1.0**. Governance/replay controls are validated in-tree; mutation autonomy and sovereignty federation remain staged.
+**Authoritative version and posture:** `7.0.0` (latest tagged release: `v7.0.0`), **v7.0.0-GA candidate**. Operator endpoints, WebSocket, intelligence stack wiring, and UI resolution shipped. Constitution v0.7.0 active.
 
 This document cross-references `README.md` operational claims with concrete implementation modules and tests.
 
@@ -9,7 +9,7 @@ This document cross-references `README.md` operational claims with concrete impl
 
 | Metric | Value |
 | --- | --- |
-| Report version | `6.8.0` |
+| Report version | `7.0.0` |
 | Branch | `work` |
 | Tag | `(none)` |
 | Short SHA | `99bfa1f` |
