@@ -1,3 +1,22 @@
+## [7.7.0] — 2026-03-12
+
+### Phase 53 — EvolutionLoop × EpochMemoryStore Live Wiring
+
+**Closes the learning loop — EpochMemoryStore now receives live epoch data and feeds back into proposals.**
+
+- `runtime/evolution/evolution_loop.py` — Two wiring points:
+  1. **Pre-epoch enrichment**: `LearningSignalExtractor.extract()` called before proposal phase; advisory `LearningSignal.as_prompt_block()` injected into `CodebaseContext.learning_context` when window non-empty.
+  2. **Post-epoch recording**: `EpochMemoryStore.emit()` called after checkpoint, recording `epoch_id`, `winning_agent` (from top accepted `MutationScore.agent_origin`), `winning_strategy_id` (from intelligence layer), `fitness_delta`, `proposal_count`, `accepted_count`, `context_hash`.
+- Both wiring points are exception-isolated — failures are silent no-ops that never halt the epoch.
+- `tests/test_phase53_evolution_loop_memory_wiring.py` — 12 tests (T53-W01..W12): **12/12 ✅**
+
+**Constitutional invariants enforced:**
+- `MEMORY-0`: EpochMemoryStore emit never references or invokes GovernanceGate
+- `MEMORY-1`: Emit failure does not block or abort epoch (T53-W06 verified)
+- Winning agent `"unknown"` normalized to `None` before emit
+
+---
+
 ## [7.6.0] — 2026-03-12
 
 ### Phase 52 — Governed Cross-Epoch Memory & Learning Store

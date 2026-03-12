@@ -1229,6 +1229,26 @@ that enriches future mutation proposals — all without compromising governance 
 
 ---
 
+## Phase 53 — EvolutionLoop × EpochMemoryStore Live Wiring
+
+**Status:** ✅ shipped · **Released:** v7.7.0 · **Requires:** Phase 52 shipped ✅
+
+Closes the learning loop opened in Phase 52. `EvolutionLoop.run_epoch()` now:
+1. **Pre-epoch**: derives `LearningSignal` from memory window; injects advisory prompt block into `CodebaseContext.learning_context` before proposals.
+2. **Post-epoch**: emits epoch outcome to `EpochMemoryStore` after checkpoint, recording winning agent, strategy, fitness delta, and proposal statistics.
+
+Both wiring points are exception-isolated — failures are silent no-ops that never halt the epoch.
+
+### Key deliverables
+- `runtime/evolution/evolution_loop.py` — pre-epoch learning injection + post-epoch memory emit
+- `tests/test_phase53_evolution_loop_memory_wiring.py` — 12 tests (T53-W01..W12): **✅ 12/12**
+
+### Constitutional invariants
+- `MEMORY-0`: Emit never references GovernanceGate (T53-W12 AST-verified)
+- `MEMORY-1`: Emit failure does not abort epoch (T53-W06 verified)
+
+---
+
 ## Roadmap Summary — Shipped Phases
 
 | Phase | Title | Version | Status |
@@ -1280,5 +1300,6 @@ that enriches future mutation proposals — all without compromising governance 
 | 46 | MarketSignalAdapter Live Bridge | v7.0.0 | ✅ |
 | 51 | Roadmap & Procession Alignment + v1.0.0-GA Checklist | v7.5.0 | ✅ |
 | 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
+| 53 | EvolutionLoop × EpochMemoryStore Live Wiring | v7.7.0 | ✅ |
 
-**Next:** Phase 53 — TBD (governed selection via ArchitectAgent proposal)
+**Next:** Phase 54 — TBD (governed selection via ArchitectAgent proposal)
