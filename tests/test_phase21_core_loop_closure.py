@@ -25,6 +25,8 @@ from runtime.autonomy.ai_mutation_proposer import CodebaseContext
 from runtime.evolution.evolution_loop import EvolutionLoop, EpochResult
 
 
+pytestmark = pytest.mark.autonomous_critical
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

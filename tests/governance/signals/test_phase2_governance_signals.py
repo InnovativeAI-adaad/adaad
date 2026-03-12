@@ -768,6 +768,9 @@ class TestPhaseTransitionGate(unittest.TestCase):
     def test_phase_4_requires_100_percent_lineage(self):
         self.assertEqual(PHASE_GATE_CRITERIA[4].min_lineage_completeness, 1.00)
 from runtime.evolution.evolution_loop import EvolutionLoop, EpochResult
+import pytest
+pytestmark = pytest.mark.governance_gate
+
 class TestEvolutionLoopIntegration(unittest.TestCase):
 
     def test_epoch_result_has_evolution_mode_field(self):

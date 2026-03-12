@@ -32,6 +32,8 @@ from runtime.market.market_fitness_integrator import MarketFitnessIntegrator, In
 from runtime.autonomy.ai_mutation_proposer import CodebaseContext
 
 
+pytestmark = pytest.mark.autonomous_critical
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

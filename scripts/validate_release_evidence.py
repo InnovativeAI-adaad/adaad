@@ -29,7 +29,7 @@ REQUIRED_CLAIM_IDS = {
 DISALLOWED_TOKENS = {"tbd", "todo", "coming soon"}
 CLAIM_ID_CELL_PATTERN = re.compile(r"^`(?P<claim_id>[^`]+)`$")
 MARKDOWN_LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-EXPECTED_TABLE_COLUMNS = 4
+EXPECTED_TABLE_COLUMNS = 5
 
 
 def _parse_args() -> argparse.Namespace:
@@ -218,7 +218,7 @@ def main() -> int:
             continue
         claim_id = claim_match.group("claim_id").strip()
         evidence_cell = cells[2]
-        status_cell = cells[3]
+        status_cell = cells[4]
         links = MARKDOWN_LINK_PATTERN.findall(evidence_cell)
         rows[claim_id] = {"status": status_cell, "links": links, "evidence": evidence_cell}
 

@@ -7,7 +7,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from security import challenge_store
+import pytest
 
+
+pytestmark = pytest.mark.governance_gate
 
 def _mark_nonce_worker(path: str, nonce: str) -> None:
     challenge_store.mark_nonce(nonce, ttl_seconds=3600, path=path)

@@ -1,7 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
 import pytest
 
 from adaad.agents.base_agent import BaseAgent
 
+
+pytestmark = pytest.mark.regression_standard
 
 class CompleteAgent(BaseAgent):
     def info(self) -> dict:

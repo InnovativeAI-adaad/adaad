@@ -12,6 +12,8 @@ from runtime.evolution.runtime import EvolutionRuntime
 from runtime.governance.foundation import SeededDeterminismProvider
 
 
+pytestmark = pytest.mark.regression_standard
+
 def test_goal_graph_valid_payload_loads_successfully(monkeypatch: pytest.MonkeyPatch) -> None:
     expected = GoalGraph(())
 

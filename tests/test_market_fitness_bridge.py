@@ -29,6 +29,8 @@ from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
 from runtime.market.market_signal_adapter import MarketSignal, MarketSignalAdapter
 
 
+pytestmark = pytest.mark.autonomous_critical
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

@@ -18,6 +18,9 @@ from runtime.governance.event_taxonomy import (
 from runtime.governance.policy_artifact import GovernanceModelMetadata, GovernancePolicy, GovernanceThresholds
 from ui import aponi_dashboard
 from ui.aponi_dashboard import AponiDashboard, _skill_capability_matrix
+import pytest
+pytestmark = pytest.mark.regression_standard
+
 def _handler_class():
     dashboard = AponiDashboard(host="127.0.0.1", port=0)
     return dashboard._build_handler()

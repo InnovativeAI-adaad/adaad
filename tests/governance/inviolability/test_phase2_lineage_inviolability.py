@@ -323,5 +323,8 @@ def _make_failing_evidence() -> TransitionEvidence:
         consecutive_clean_epochs=0,
     )
 from runtime.evolution.evolution_loop import EvolutionLoop, EpochResult
+import pytest
+pytestmark = pytest.mark.governance_gate
+
 if __name__ == "__main__":
     unittest.main()

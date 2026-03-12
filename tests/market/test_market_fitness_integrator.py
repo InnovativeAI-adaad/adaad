@@ -126,7 +126,10 @@ class TestFitnessOrchestratorLiveWiring:
 
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
+import pytest
 
+
+pytestmark = pytest.mark.regression_standard
 
 @dataclass
 class _FakeReading:

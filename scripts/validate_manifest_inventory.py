@@ -12,14 +12,14 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST_PATH = ROOT / "docs" / "manifest.txt"
 VERSION_PATH = ROOT / "VERSION"
 RELEASES_DIR = ROOT / "docs" / "releases"
-CANONICAL_SPEC_PATH = "docs/governance/ARCHITECT_SPEC_v3.0.0.md"
+CANONICAL_SPEC_PATH = "docs/governance/ARCHITECT_SPEC_v3.1.0.md"
 
 HEADER_VERSION_RE = re.compile(r"^# ADAAD v(?P<version>\d+\.\d+\.\d+) — Repository Manifest$")
 HEADER_SPEC_RE = re.compile(r"^# Governance spec: (?P<path>\S+)$")
 ROOT_VERSION_RE = re.compile(r"^VERSION\s+— Canonical version string \((?P<version>\d+\.\d+\.\d+)\)$")
 LATEST_RELEASE_RE = re.compile(r"^Latest tagged release notes\s+— (?P<path>docs/releases/\d+\.\d+\.\d+\.md)$")
 TEST_COUNT_RE = re.compile(r"^tests/\s+— Full test suite \((?P<count>\d+) Python files\)$")
-CANONICAL_SPEC_LINE_RE = re.compile(r"^\s+ARCHITECT_SPEC_v3\.0\.0\.md\s+— CANONICAL architectural specification \(v3\.0\.0\)$")
+CANONICAL_SPEC_LINE_RE = re.compile(r"^\s+ARCHITECT_SPEC_v3\.1\.0\.md\s+— CANONICAL architectural specification \(v3\.1\.0\)$")
 SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 
 

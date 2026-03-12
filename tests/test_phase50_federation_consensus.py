@@ -36,6 +36,8 @@ from runtime.governance.federation.evolution_federation_bridge import (
 from runtime.governance.federation.mutation_broker import FederationMutationBroker
 
 
+pytestmark = pytest.mark.autonomous_critical
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

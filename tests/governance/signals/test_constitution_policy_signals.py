@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime import constitution
+pytestmark = pytest.mark.governance_gate
+
 def _write_policy(path: Path, body: str) -> None:
     path.write_text(body, encoding="utf-8")
 def test_reload_logs_amendment_hashes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

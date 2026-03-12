@@ -24,6 +24,8 @@ from runtime.sandbox.isolation import (
     runtime_hardening_capabilities,
 )
 
+pytestmark = pytest.mark.autonomous_critical
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -43,6 +45,7 @@ def _rollout_enabled(env_val: str | None) -> bool:
 def _default_backend(*, rollout: str | None, tier: str = "SANDBOX"):
     """Test _default_isolation_backend() with env patched inline."""
     import runtime.sandbox.executor as _mod
+
     env_patch = {"ADAAD_FORCE_TIER": tier}
     if rollout is not None:
         env_patch["ADAAD_SANDBOX_CONTAINER_ROLLOUT"] = rollout

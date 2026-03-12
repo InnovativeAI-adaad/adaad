@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Phase 41 — Cryovant Gate Middleware + SPA Index Fallback
 =========================================================

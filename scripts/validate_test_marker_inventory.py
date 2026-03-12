@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 #!/usr/bin/env python3
 """Validate primary test-lane marker coverage across the pytest suite."""
 
