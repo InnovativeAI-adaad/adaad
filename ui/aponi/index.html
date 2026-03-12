@@ -81,6 +81,94 @@
     @keyframes spin{ to{ transform: rotate(360deg);} }
     @keyframes pulse-ring{0%{transform:scale(.8);opacity:.9}70%{transform:scale(1.6);opacity:0}100%{transform:scale(1.6);opacity:0}}
     @keyframes fade-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes toast-in{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @keyframes toast-out{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(8px) scale(.96)}}
+    @keyframes countdown-fill{from{width:100%}to{width:0%}}
+
+    /* ── Toast system ───────────────────────────────────────────────── */
+    #toastStack{
+      position:fixed;bottom:72px;right:18px;z-index:9999;
+      display:flex;flex-direction:column-reverse;gap:8px;pointer-events:none;
+    }
+    .toast{
+      pointer-events:auto;
+      min-width:220px;max-width:340px;
+      padding:10px 14px;border-radius:10px;
+      font-size:12px;line-height:1.45;
+      border:1px solid var(--border);
+      background:var(--panel);
+      box-shadow:0 8px 28px rgba(0,0,0,.55);
+      display:flex;align-items:flex-start;gap:10px;
+      animation:toast-in .22s cubic-bezier(.22,1,.36,1) both;
+    }
+    .toast.exiting{animation:toast-out .18s ease forwards}
+    .toast-icon{flex-shrink:0;width:16px;height:16px;border-radius:50%;margin-top:1px}
+    .toast.ok .toast-icon{background:var(--ok)}
+    .toast.warn .toast-icon{background:var(--warn)}
+    .toast.bad .toast-icon{background:var(--bad)}
+    .toast-body{flex:1;min-width:0}
+    .toast-title{font-weight:600;color:var(--text)}
+    .toast-msg{color:var(--muted);margin-top:2px}
+
+    /* ── Countdown bar ──────────────────────────────────────────────── */
+    #countdownBar{
+      position:fixed;bottom:0;left:0;right:0;height:2px;z-index:200;
+      background:rgba(255,255,255,.04);overflow:hidden;
+    }
+    #countdownFill{
+      height:100%;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      border-radius:0 2px 2px 0;
+      transition:none;
+    }
+
+    /* ── Freshness tag ──────────────────────────────────────────────── */
+    .fresh-tag{
+      font-size:10px;color:var(--muted);
+      display:inline-flex;align-items:center;gap:4px;
+      margin-left:6px;opacity:.7;
+    }
+
+    /* ── Keyboard help overlay ──────────────────────────────────────── */
+    #kbdHelp{
+      display:none;position:fixed;inset:0;z-index:8000;
+      background:rgba(0,0,0,.72);backdrop-filter:blur(6px);
+      align-items:center;justify-content:center;
+    }
+    #kbdHelp.open{display:flex}
+    #kbdHelpBox{
+      background:var(--panel);border:1px solid var(--border);
+      border-radius:var(--r);padding:28px 32px;
+      box-shadow:0 24px 64px rgba(0,0,0,.7);
+      min-width:360px;max-width:480px;
+    }
+    #kbdHelpBox h3{margin:0 0 18px;font-size:15px;font-weight:700;letter-spacing:.02em}
+    .kbd-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)}
+    .kbd-row:last-child{border-bottom:none}
+    kbd{
+      display:inline-block;padding:3px 7px;border-radius:5px;
+      border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+      font-family:var(--mono);font-size:11px;color:var(--text);
+      box-shadow:0 1px 0 rgba(0,0,0,.4);min-width:28px;text-align:center;
+    }
+    .kbd-desc{color:var(--muted);font-size:12px;flex:1}
+
+    /* ── Log filter ─────────────────────────────────────────────────── */
+    .log-filter{
+      width:100%;background:var(--panel2);border:1px solid var(--border);
+      border-radius:8px;color:var(--text);font-size:12px;
+      padding:7px 10px;margin-bottom:10px;font-family:var(--mono);
+      outline:none;transition:border-color .15s;
+    }
+    .log-filter:focus{border-color:rgba(124,58,237,.5)}
+
+    /* ── Help button ────────────────────────────────────────────────── */
+    .btn-ghost{
+      background:none;border:1px solid var(--border);color:var(--muted);
+      border-radius:999px;padding:6px 10px;font-size:11px;cursor:pointer;
+      transition:color .12s,border-color .12s;
+    }
+    .btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.18)}
 
     .pulse-dot{position:relative;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0}
     .pulse-dot::before{content:"";position:absolute;inset:-3px;border-radius:50%;background:var(--ok);opacity:.4;animation:pulse-ring 1.8s ease-out infinite}
@@ -320,6 +408,24 @@
   </style>
 </head>
 <body>
+  <div id="toastStack" aria-live="polite" aria-atomic="false"></div>
+  <div id="countdownBar"><div id="countdownFill" style="width:100%"></div></div>
+
+  <!-- Keyboard shortcut help overlay -->
+  <div id="kbdHelp" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div id="kbdHelpBox">
+      <h3>Keyboard Shortcuts</h3>
+      <div class="kbd-row"><kbd>1</kbd>–<kbd>6</kbd><span class="kbd-desc">Switch tabs (Overview → Logs)</span></div>
+      <div class="kbd-row"><kbd>R</kbd><span class="kbd-desc">Refresh all data now</span></div>
+      <div class="kbd-row"><kbd>/</kbd><span class="kbd-desc">Focus log filter (Logs tab)</span></div>
+      <div class="kbd-row"><kbd>?</kbd><span class="kbd-desc">Toggle this help overlay</span></div>
+      <div class="kbd-row"><kbd>Esc</kbd><span class="kbd-desc">Close overlay / clear focus</span></div>
+      <div style="margin-top:18px;text-align:right">
+        <button class="btn" id="kbdHelpClose">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="wrap">
     <header>
       <div class="brand">
@@ -338,8 +444,9 @@
           <span class="badge" id="govHealthBadge" title="Governance health score" style="opacity:0;transition:opacity .3s">gov —</span>
           <span class="badge" id="memEpochsBadge" title="Epoch memory entries" style="opacity:0;transition:opacity .3s">mem —</span>
         </div>
-        <button class="btn" id="btnReconnect" title="Refresh now">Refresh</button>
+        <button class="btn" id="btnReconnect" title="Refresh now (R)">Refresh</button>
         <button class="btn primary" id="btnRunCycle" title="Reserved for mutation cycle endpoint">Run cycle</button>
+        <button class="btn-ghost" id="btnKbdHelp" title="Keyboard shortcuts (?)">?</button>
       </div>
     </header>
 
@@ -410,8 +517,10 @@
     lastGovernanceHealth: null,
     lastReviewerCalibration: null,
     lastEpochMemory: null,
+    lastRefreshAt: null,   // Phase 55: timestamp of last successful hardRefresh
 
     logs: [],
+    logFilter: "",         // Phase 55: log search filter term
     connected: false,
     lastEventAt: 0,
   };
@@ -528,7 +637,11 @@
   }
 
   function startGatePolling(){
-    setInterval(() => { if (!gate.locked) probeHealth(false); }, state.pollMs);
+    startCountdown(state.pollMs);
+    setInterval(() => {
+      if (!gate.locked){ probeHealth(false); }
+      startCountdown(state.pollMs);
+    }, state.pollMs);
   }
 
   // ---------- UI ----------
@@ -579,6 +692,96 @@
     return d;
   }
   function space(px){ const d=document.createElement("div"); d.style.height=px+"px"; return d; }
+
+  // ---------- Phase 55: Toast system ----------
+  function toast(title, msg="", level="ok", durationMs=3200){
+    const stack = $("#toastStack");
+    if (!stack) return;
+    const el = document.createElement("div");
+    el.className = `toast ${level}`;
+    el.innerHTML = `
+      <div class="toast-icon"></div>
+      <div class="toast-body">
+        <div class="toast-title">${escapeHtml(title)}</div>
+        ${msg ? `<div class="toast-msg">${escapeHtml(msg)}</div>` : ""}
+      </div>
+    `;
+    stack.appendChild(el);
+    setTimeout(() => {
+      el.classList.add("exiting");
+      setTimeout(() => el.remove(), 200);
+    }, durationMs);
+  }
+
+  // ---------- Phase 55: Countdown bar ----------
+  let _cdAnim = null;
+  function startCountdown(durationMs){
+    const fill = $("#countdownFill");
+    if (!fill) return;
+    if (_cdAnim) _cdAnim.cancel();
+    fill.style.animation = "none";
+    fill.style.width = "100%";
+    // Force reflow
+    void fill.offsetWidth;
+    _cdAnim = fill.animate(
+      [{ width: "100%" }, { width: "0%" }],
+      { duration: durationMs, easing: "linear", fill: "forwards" }
+    );
+    _cdAnim.onfinish = () => {};
+  }
+
+  // ---------- Phase 55: Freshness ----------
+  function freshTag(tsMs){
+    if (!tsMs) return "";
+    const sec = Math.round((Date.now() - tsMs) / 1000);
+    const label = sec < 5 ? "just now" : sec < 60 ? `${sec}s ago` : `${Math.round(sec/60)}m ago`;
+    return `<span class="fresh-tag">· ${label}</span>`;
+  }
+
+  // ---------- Phase 55: Keyboard shortcuts ----------
+  function openKbdHelp(){ const el=$("#kbdHelp"); if(el) el.classList.add("open"); }
+  function closeKbdHelp(){ const el=$("#kbdHelp"); if(el) el.classList.remove("open"); }
+
+  function bindKeyboard(){
+    const tabs = ["overview","agents","protocol","governance","memory","logs"];
+    document.addEventListener("keydown", (e) => {
+      // Don't intercept when typing in inputs
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea") {
+        if (e.key === "Escape") { e.target.blur(); }
+        return;
+      }
+      if ($("#kbdHelp")?.classList.contains("open")){
+        if (e.key === "Escape") closeKbdHelp();
+        return;
+      }
+      if (e.key === "?" || (e.key === "/" && !e.ctrlKey && !e.metaKey)){
+        e.preventDefault();
+        if (e.key === "?") { openKbdHelp(); return; }
+      }
+      if (e.key === "r" || e.key === "R"){
+        if (!gate.locked){ hardRefresh(); toast("Refreshing…", "", "ok", 1800); }
+        return;
+      }
+      if (e.key === "/" && state.tab === "logs"){
+        e.preventDefault();
+        const lf = $(".log-filter");
+        if (lf) lf.focus();
+        return;
+      }
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= tabs.length){
+        e.preventDefault();
+        setTab(tabs[num - 1]);
+      }
+    });
+    const closeBtn = $("#kbdHelpClose");
+    if (closeBtn) closeBtn.onclick = closeKbdHelp;
+    const overlay = $("#kbdHelp");
+    if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeKbdHelp(); };
+    const helpBtn = $("#btnKbdHelp");
+    if (helpBtn) helpBtn.onclick = openKbdHelp;
+  }
 
   function setTab(tab){
     state.tab = tab;
@@ -632,7 +835,7 @@
     const lbody = document.createElement("div");
     lbody.appendChild(k);
 
-    left.appendChild(card("Control", "Nexus status snapshot", `
+    left.appendChild(card("Control", `Nexus status snapshot${freshTag(state.lastRefreshAt)}`, `
       <span class="badge ${gate.locked ? "bad" : "ok"}">${gate.locked ? "LOCKED" : "LIVE"}</span>
       <span class="badge">${escapeHtml(state.baseUrl)}</span>
     `, lbody));
@@ -682,6 +885,7 @@
         state.baseUrl = v.replace(/\/+$/,"");
         $("#apiBasePill").textContent = `${state.baseUrl}${state.apiBase}`;
         state.logs.push(`[ui] baseUrl set: ${state.baseUrl}`);
+        toast("URL updated", state.baseUrl, "ok", 2500);
         await hardRefresh();
       };
     }, 0);
@@ -810,37 +1014,82 @@
     const left = document.createElement("div");
     const right = document.createElement("div");
 
+    // Filter input
+    const filterInput = document.createElement("input");
+    filterInput.className = "log-filter";
+    filterInput.placeholder = "Filter logs… (/ to focus)";
+    filterInput.value = state.logFilter || "";
+    filterInput.setAttribute("aria-label", "Filter log entries");
+
     const box = document.createElement("div");
     box.className = "logs";
-    box.textContent = state.logs.slice(-600).join("\n");
+    box.id = "logBox";
 
-    left.appendChild(card("Logs", "UI events and gate transitions", `
-      <span class="badge">${escapeHtml(String(state.logs.length))} lines</span>
-    `, box));
+    const applyFilter = () => {
+      const term = filterInput.value.trim().toLowerCase();
+      state.logFilter = term;
+      const lines = state.logs.slice(-600);
+      const filtered = term ? lines.filter(l => l.toLowerCase().includes(term)) : lines;
+      box.textContent = filtered.join("\n");
+      // Auto-scroll to bottom
+      box.scrollTop = box.scrollHeight;
+    };
+
+    filterInput.oninput = applyFilter;
+    applyFilter();
+
+    const cardBody = document.createElement("div");
+    cardBody.appendChild(filterInput);
+    cardBody.appendChild(box);
+
+    const filtered = state.logFilter
+      ? state.logs.filter(l => l.toLowerCase().includes(state.logFilter))
+      : state.logs;
+
+    left.appendChild(card("Logs", "UI events and gate transitions",
+      `<span class="badge">${escapeHtml(String(filtered.length))} / ${state.logs.length} lines</span>`,
+      cardBody));
 
     const tools = document.createElement("div");
     tools.innerHTML = `
-      <div class="row" style="margin-bottom:10px">
+      <div class="row" style="margin-bottom:12px">
         <button class="btn" id="btnClearLogs">Clear</button>
-        <button class="btn primary" id="btnCopyLogs">Copy</button>
+        <button class="btn primary" id="btnCopyLogs">Copy logs</button>
+        <button class="btn" id="btnScrollBottom" title="Scroll to latest">↓ Latest</button>
       </div>
-      <div style="color:var(--muted); font-size:12px">
-        When gate locks, UI becomes read-only until health returns gate_ok=true.
+      <div style="color:var(--muted); font-size:12px; line-height:1.6">
+        When gate locks, UI becomes read-only until health returns gate_ok=true.<br>
+        Press <kbd style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid var(--border);">/</kbd> to focus filter.
       </div>
     `;
-    right.appendChild(card("Tools", "Operator controls", `
-      <span class="badge">clipboard</span>
-    `, tools));
+    right.appendChild(card("Tools", "Operator controls", `<span class="badge">clipboard</span>`, tools));
 
     root.appendChild(left);
     root.appendChild(right);
 
     setTimeout(() => {
-      $("#btnClearLogs").onclick = () => { state.logs = []; render(); };
-      $("#btnCopyLogs").onclick = async () => {
-        const t = state.logs.join("\n");
-        try{ await navigator.clipboard.writeText(t); }catch(_){}
+      $("#btnClearLogs").onclick = () => {
+        state.logs = [];
+        state.logFilter = "";
+        render();
+        toast("Logs cleared", "", "ok", 1800);
       };
+      $("#btnCopyLogs").onclick = async () => {
+        const t = (state.logFilter
+          ? state.logs.filter(l => l.toLowerCase().includes(state.logFilter))
+          : state.logs).join("\n");
+        try{
+          await navigator.clipboard.writeText(t);
+          toast("Copied", `${t.split("\n").length} lines`, "ok", 2000);
+        }catch(_){ toast("Copy failed", "Clipboard unavailable", "bad"); }
+      };
+      $("#btnScrollBottom").onclick = () => {
+        const lb = $("#logBox");
+        if (lb) lb.scrollTop = lb.scrollHeight;
+      };
+      // Auto-scroll on mount
+      const lb = $("#logBox");
+      if (lb) lb.scrollTop = lb.scrollHeight;
     }, 0);
 
     return root;
@@ -957,7 +1206,7 @@
 
     setTimeout(() => {
       const btn = document.getElementById("btnRefreshGov");
-      if (btn) btn.onclick = () => fetchGovernanceData().then(() => render());
+      if (btn) btn.onclick = () => fetchGovernanceData().then(() => { render(); toast("Governance updated", "", "ok", 2000); });
     }, 0);
 
     return root;
@@ -1097,7 +1346,7 @@
 
     setTimeout(() => {
       const btn = document.getElementById("btnRefreshMem");
-      if (btn) btn.onclick = () => fetchMemoryData().then(() => render());
+      if (btn) btn.onclick = () => fetchMemoryData().then(() => { render(); toast("Memory updated", "", "ok", 2000); });
     }, 0);
 
     return root;
@@ -1219,6 +1468,8 @@
 
       state.connected = true;
       state.lastEventAt = Date.now();
+      state.lastRefreshAt = Date.now();  // Phase 55: freshness tracking
+      startCountdown(state.pollMs);      // Phase 55: reset countdown bar on manual refresh
       renderGate();
       render();
     }catch(e){
@@ -1230,6 +1481,7 @@
         .replace(/unparsabl[a-z]*/gi, "parse_error")
         .replace(/json_response_must_be_object/gi, "response_format_error");
       state.logs.push(`[err] ${_safe}`);
+      toast("Connection failed", _safe.slice(0, 60), "bad", 4000);
       renderGate();
       render();
     }
@@ -1273,6 +1525,7 @@
   $("#pollPill").textContent = `${Math.round(state.pollMs/1000)}s`;
   renderGate();
   bindUi();
+  bindKeyboard();   // Phase 55: keyboard shortcuts
   render();
   hardRefresh();
   startGatePolling();
