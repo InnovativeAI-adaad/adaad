@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from contextlib import asynccontextmanager
 
-from fastapi import Body, FastAPI, Header, HTTPException, Query, Request, WebSocket
+from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
@@ -2537,26 +2537,45 @@ def audit_bundle(
     }
 
 
+def _authenticate_audit_request(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """FastAPI Depends-compatible audit authentication.
+
+    Returns the authn context dict. Tests can override via
+    ``app.dependency_overrides[_authenticate_audit_request]``.
+    """
+    return _require_audit_read_scope(authorization)
+
+
+def api_audit_bundle(bundle_id: str, redaction: str, auth_ctx: dict) -> dict[str, Any]:
+    """Return the flat evidence payload for /evidence/{bundle_id}.
+
+    Extracted as a named function so tests can monkeypatch it without touching
+    the endpoint wiring.
+    """
+    raw_bundle, _ = _load_bundle(bundle_id)
+    builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
+    validation = builder.validate_bundle(raw_bundle)
+    display = _redact_bundle(raw_bundle) if redaction == "sensitive" else raw_bundle
+    return {
+        "authn": auth_ctx,
+        "data": {
+            "bundle_id": bundle_id,
+            "constitution_version": str(getattr(constitution, "CONSTITUTION_VERSION", "unknown")),
+            "scoring_algorithm_version": "1.0",
+            "validation": validation,
+            "bundle": display,
+        },
+    }
+
+
 @app.get("/evidence/{bundle_id}")
 def evidence_bundle(
     bundle_id: str,
-    authorization: str | None = Header(default=None),
+    redaction: str | None = Query(default=None),
+    auth_ctx: dict = Depends(_authenticate_audit_request),
 ) -> dict[str, Any]:
-    """Alias for /api/audit/bundles/{bundle_id} — legacy path."""
-    authn = _require_audit_read_scope(authorization)
-    raw_bundle, bundle_path = _load_bundle(bundle_id)
-    builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
-    validation = builder.validate_bundle(raw_bundle)
-    return {
-        "schema_version": "1.0",
-        "authn": authn,
-        "data": {
-            "bundle_id": bundle_id,
-            "bundle_path": bundle_path,
-            "bundle": _redact_bundle(raw_bundle),
-            "validation": validation,
-        },
-    }
+    """Forensic evidence bundle — flat response for Aponi dashboard and operator API."""
+    return api_audit_bundle(bundle_id, redaction or "", auth_ctx)
 
 
 # ── Review quality metrics ────────────────────────────────────────────────────
