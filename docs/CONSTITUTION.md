@@ -1,4 +1,4 @@
-# ADAAD Constitutional Framework v0.3.0
+# ADAAD Constitutional Framework v0.7.0
 
 ## Philosophy
 
@@ -68,9 +68,9 @@ Rule count is versioned. Downstream docs should avoid hard-coded totals and inst
 
 ---
 
-## Phase 5 Federation Extensions (v0.3.0)
+## Phase 5 Federation Extensions (v0.3.0 — incorporated)
 
-v0.3.0 introduced two additional BLOCKING federation rules. Rule count is versioned and canonicalized by `runtime/governance/constitution.yaml` (`rules` array) and this Constitution; avoid hard-coding totals in downstream docs.
+v0.3.0 introduced two BLOCKING federation rules (federation_dual_gate, federation_hmac_required). These remain active in v0.7.0. Rule count is versioned and canonicalized by `runtime/governance/constitution.yaml` (`rules` array) and this Constitution; avoid hard-coding totals in downstream docs.
 
 ### `federation_dual_gate`
 Every federated mutation must receive `GovernanceGate.approve_mutation()` approval in **both** the source repository and the destination repository before any cross-repo propagation may execute. A gate failure in either repo rejects the federated proposal unconditionally (fail-closed). Enforced in `runtime/governance/federation/mutation_broker.py`.
@@ -133,7 +133,7 @@ Every constitutional evaluation generates:
 {
   "event": "constitutional_evaluation",
   "payload": {
-    "constitution_version": "0.3.0",
+    "constitution_version": "0.7.0",
     "tier": "SANDBOX",
     "passed": true,
     "verdicts": [...],
@@ -175,7 +175,22 @@ Operations dashboards should consume `/metrics/review-quality` for aggregate com
 
 ---
 
-**Version**: 0.3.0
+## Amendment Log
+
+| Version | Phase | Rule Added | Severity |
+|---------|-------|-----------|----------|
+| v0.1.0 | 1 | Initial rule set (single_file_scope, ast_validity, no_banned_tokens, signature_required, lineage_continuity, resource_bounds) | BLOCKING |
+| v0.2.0 | 3 | max_complexity_delta, test_coverage_maintained, max_mutation_rate, deployment_authority_tier, revenue_credit_floor, reviewer_calibration, governance_health_floor | WARNING / ADVISORY |
+| v0.3.0 | 5 | federation_dual_gate, federation_hmac_required | BLOCKING |
+| v0.4.0 | 7 | import_smoke_test | WARNING |
+| v0.5.0 | 9 | soulbound_privacy_invariant | BLOCKING |
+| v0.6.0 | 11-A | bandit_arm_integrity_invariant | BLOCKING |
+| v0.7.0 | 13 | market_signal_integrity_invariant | BLOCKING |
+
+Current rule count: **18 rules** — 9 BLOCKING, 4 WARNING, 3 ADVISORY, 2 federation-BLOCKING.
+Policy hash: `71eb6499bc09d8b4…` (authoritative: `runtime/constitution.py → POLICY_HASH`)
+
+**Version**: 0.7.0
 **Last Updated**: 2026-03-07
 **Next Review**: After 1000 mutations logged
 

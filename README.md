@@ -53,7 +53,7 @@
 | **Phase** | 46 complete (MarketSignalAdapter Live Bridge) |
 | **Released** | 2026-03-12 |
 | **Tests passing** | 3828+ collected |
-| **Constitution** | v0.3.0 — 18 rules |
+| **Constitution** | v0.7.0 — 18 rules |
 
 **New in v7.0.0:** Phase 46 closes the highest-ROI gap in the codebase — `MarketSignalAdapter` now wires directly into `EconomicFitnessEvaluator` as a live, fail-closed, highest-priority `simulated_market_score` source. When a real `source_fn` is injected, budget mode switching, ROI attribution, Darwinian agent selection, and earned autonomy progression all activate on real DAU and retention signals. New endpoint: `GET /evolution/market-fitness-bridge`. 20/20 tests passing.
 
@@ -215,7 +215,7 @@ Constitution  →  Architecture Contract  →  ArchitectAgent Spec  →  PR Proc
 
 | Layer | File | What it governs |
 |:---|:---|:---|
-| **Constitution v0.3.0** | [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | 18 rules (9 globally blocking, 4 tier-conditional blocking). No agent, operator, or PR can override these. |
+| **Constitution v0.7.0** | [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) | 18 rules (9 BLOCKING, 4 WARNING, 3 ADVISORY, 2 federation-BLOCKING). No agent, operator, or PR can override these. |
 | **Architecture Contract** | [`docs/ARCHITECTURE_CONTRACT.md`](docs/ARCHITECTURE_CONTRACT.md) | Interface and boundary invariants across all modules. |
 | **ArchitectAgent Spec** | [`docs/governance/ARCHITECT_SPEC_v3.1.0.md`](docs/governance/ARCHITECT_SPEC_v3.1.0.md) | Phase 6 governance baseline and hardening lane. |
 | **PR Procession** | [`docs/governance/ADAAD_PR_PROCESSION_2026-03.md`](docs/governance/ADAAD_PR_PROCESSION_2026-03.md) | Controls PR order, CI tier, and closure state. |
@@ -471,7 +471,7 @@ All endpoints require `Authorization: Bearer <token>` with `audit:read` scope (`
 
 These are CI-verified on every merge. They cannot be bypassed:
 
-- **Constitution v0.3.0** — 18 rules active. `governance_health_floor`, `soulbound_privacy_invariant`, `bandit_arm_integrity_invariant`, and `market_signal_integrity_invariant` are all BLOCKING.
+- **Constitution v0.7.0** — 18 rules active. `soulbound_privacy_invariant`, `bandit_arm_integrity_invariant`, and `market_signal_integrity_invariant` added in Phases 9, 11-A, and 13 respectively — all BLOCKING.
 - **Weight sum invariant** — All 9 `SIGNAL_WEIGHTS` sum to exactly `1.00` (tolerance: `1e-9`). Verified at import time.
 - **Weight bounds** — Every weight is clamped to `[0.05, 0.70]`. No signal can dominate composite health.
 - **Fail-closed soulbound** — `ADAAD_SOULBOUND_KEY` absent → immediate halt with journaled evidence. No default key, no bypass.
