@@ -27,6 +27,39 @@ def test_load_constitution_policy_parses_rules() -> None:
     assert all(rule.enabled for rule in advisory_rules)
     assert all(rule.severity == constitution.Severity.ADVISORY for rule in advisory_rules)
     assert all(rule.tier_overrides == {} for rule in advisory_rules)
+
+def test_phase63_scaffold_rules_load_as_advisory() -> None:
+    rules, _ = constitution.load_constitution_policy()
+    scaffold_rule_names = {
+        "phase63_ast_safe_scaffold",
+        "phase63_ast_import_scaffold",
+        "phase63_ast_complexity_scaffold",
+        "phase63_semantic_integrity_scaffold",
+        "phase63_exception_scope_scaffold",
+    }
+    scaffold_rules = [rule for rule in rules if rule.name in scaffold_rule_names]
+    assert {rule.name for rule in scaffold_rules} == scaffold_rule_names
+    assert all(rule.enabled for rule in scaffold_rules)
+    assert all(rule.severity == constitution.Severity.ADVISORY for rule in scaffold_rules)
+    assert all(rule.tier_overrides == {} for rule in scaffold_rules)
+
+
+def test_phase63_scaffold_validators_are_discovered_via_policy_load() -> None:
+    rules, _ = constitution.load_constitution_policy()
+    validators_by_name = {
+        rule.name: rule.validator.__name__
+        for rule in rules
+        if rule.name.startswith("phase63_") and rule.name.endswith("_scaffold")
+    }
+
+    assert validators_by_name == {
+        "phase63_ast_safe_scaffold": "_validate_phase63_ast_safe_scaffold",
+        "phase63_ast_import_scaffold": "_validate_phase63_ast_import_scaffold",
+        "phase63_ast_complexity_scaffold": "_validate_phase63_ast_complexity_scaffold",
+        "phase63_semantic_integrity_scaffold": "_validate_phase63_semantic_integrity_scaffold",
+        "phase63_exception_scope_scaffold": "_validate_phase63_exception_scope_scaffold",
+    }
+
 def test_entropy_budget_validator_fails_closed_on_invalid_observed_bits() -> None:
     validator = constitution.VALIDATOR_REGISTRY["entropy_budget_limit"]
     request = MutationRequest(
