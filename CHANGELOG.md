@@ -1,3 +1,52 @@
+## [8.3.0] — 2026-03-13 — Phase 60: AST Mutation Substrate
+
+### feat(phase-60): Motor Layer — ASTDiffPatch + StaticSafetyScanner + PatchApplicator + SandboxTournament
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.3.0 |
+| **Phase** | 60 — Motor: AST Mutation Substrate |
+| **Branch** | feature/phase-60-ast-mutation-substrate |
+| **Tests added** | 59 (T60-AST-01..15) |
+| **Invariants enforced** | SANDBOX-DIV-0, PATCH-SIZE-0, MUTATION_SANDBOX_ONLY |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/mutation/ast_substrate/__init__.py` | Package exports |
+| `runtime/mutation/ast_substrate/ast_diff_patch.py` | ASTDiffPatch — the DNA; formatting-invariant AST hashes; PATCH-SIZE-0 at construction |
+| `runtime/mutation/ast_substrate/static_scanner.py` | StaticSafetyScanner with ImportBoundaryRule, NonDeterminismRule, ComplexityCeilingRule, PatchSizeRule |
+| `runtime/mutation/ast_substrate/patch_applicator.py` | LibCST application + SANDBOX-DIV-0 verification; rollback on divergence |
+| `runtime/mutation/ast_substrate/sandbox_tournament.py` | Ephemeral candidate competition; MUTATION_SANDBOX_ONLY always enforced |
+
+#### Pipeline architecture
+
+```
+ProposalEngine  →  ASTDiffPatch  →  StaticSafetyScanner  →  SandboxTournament  →  GovernanceGate (Phase 63)
+     (Phase 57)        (DNA)           (4 rules)               (ephemeral)
+```
+
+#### Test matrix
+
+| Test ID | Coverage |
+|---|---|
+| T60-AST-01 | Construction, enums, PATCH-SIZE-0 |
+| T60-AST-02 | Formatting-invariant AST hashes (SANDBOX-DIV-0) |
+| T60-AST-03 | patch_hash determinism |
+| T60-AST-04 | Serialisation roundtrip |
+| T60-AST-05 | ImportBoundaryRule |
+| T60-AST-06 | NonDeterminismRule |
+| T60-AST-07 | ComplexityCeilingRule |
+| T60-AST-08 | PatchSizeRule |
+| T60-AST-09 | Full scan pass + fail_fast vs collect-all |
+| T60-AST-10 | PatchApplicator sandbox_only mode |
+| T60-AST-11 | SANDBOX-DIV-0 divergence detection |
+| T60-AST-12 | before_hash mismatch rejection |
+| T60-AST-13 | SandboxTournament single candidate |
+| T60-AST-14 | Multi-candidate ranking |
+| T60-AST-15 | MUTATION_SANDBOX_ONLY always enforced |
+
 ## [8.2.0] — 2026-03-13 — Phase 59: Capability Graph v2
 
 ### feat(phase-59): Capability Layer v2 — CAP-VERS-0 / CAP-DEP-0 / CAP-TIER0-0

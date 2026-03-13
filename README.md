@@ -8,9 +8,9 @@
   </a>
   &nbsp;
   <img alt="Version" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FInnovativeAI-adaad%2FADAAD%2Fmain%2FVERSION&query=%24.version&label=version&color=00d4ff&style=flat-square&labelColor=060d14"/>
-  <img alt="Phase" src="https://img.shields.io/badge/phase-59%20complete-6366f1?style=flat-square&labelColor=060d14"/>
+  <img alt="Phase" src="https://img.shields.io/badge/phase-60%20complete-6366f1?style=flat-square&labelColor=060d14"/>
   <img alt="Python" src="https://img.shields.io/badge/python-3.11.9%2B-7b61ff?style=flat-square&labelColor=060d14"/>
-  <img alt="Tests" src="https://img.shields.io/badge/tests-4075%2B%20passing-22c55e?style=flat-square&labelColor=060d14"/>
+  <img alt="Tests" src="https://img.shields.io/badge/tests-4134%2B%20passing-22c55e?style=flat-square&labelColor=060d14"/>
   &nbsp;
   <img alt="Governance" src="https://img.shields.io/badge/governance-fail--closed-ef4444?style=flat-square&labelColor=060d14"/>
   <img alt="Android" src="https://img.shields.io/badge/android-free-3ddc84?style=flat-square&labelColor=060d14"/>
@@ -52,7 +52,7 @@
 | **Current version** | `7.0.0` |
 | **Phase** | 46 complete (MarketSignalAdapter Live Bridge) |
 | **Released** | 2026-03-12 |
-| **Tests passing** | 4075+ collected |
+| **Tests passing** | 4134+ collected |
 | **Constitution** | v0.7.0 — 18 rules |
 
 **v7.3.0 (current):** Three gap-closure phases shipped post-GA — Phase 47 wires `AutonomyLoop` into `EvolutionLoop.run_epoch()` (intelligence stack no longer isolated); Phase 48 hardens proposals (`fallback_to_noop=False` default, `MarketFitnessIntegrator` default-on); Phase 49 makes container isolation the production default (opt-out model via `ADAAD_SANDBOX_CONTAINER_ROLLOUT=off`).
