@@ -118,3 +118,22 @@ def test_validate_port_availability_sets_reuseaddr(monkeypatch: pytest.MonkeyPat
 
     assert called["reuseaddr"] is True
     assert report["status"] == "pass"
+
+
+
+def test_logger_interface_code_imports_and_defines_required_abstract_methods(tmp_path) -> None:
+    interface_path = tmp_path / "runtime" / "interfaces" / "ilogger.py"
+    interface_path.parent.mkdir(parents=True, exist_ok=True)
+    interface_path.write_text(nexus_setup.LOGGER_INTERFACE_CODE, encoding="utf-8")
+
+    import importlib.util
+
+    module_name = "generated_ilogger"
+    spec = importlib.util.spec_from_file_location(module_name, interface_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    ilogger = module.ILogger
+    assert ilogger.__abstractmethods__ == {"info", "error", "debug", "audit"}
