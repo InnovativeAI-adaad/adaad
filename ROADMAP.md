@@ -337,13 +337,13 @@ All Phase 0 Track A audit findings resolved. The platform is now hardened to Inn
 | PR-OPS-01 | H-07, M-02 | Snapshot atomicity + sequence ordering | ✅ |
 | PR-DOCS-01 | C-03 | Federation key registry governance doc | ✅ |
 
-**Next gate:** Phase 7 ✅ closed (2026-03-08, v3.2.0) → Phase 8 · v3.3.0 target
+**Next gate:** Phase 8 ✅ closed (2026-03-08, v3.3.0) → Phase 9 · v4.0.0 target
 
 ---
 
 ## Phase 8 — Governance Health Dashboard & Telemetry Unification
 
-**Status:** 🔵 planned · **Target:** v3.3.0 · **Requires:** Phase 7 shipped ✅
+**Status:** ✅ shipped · **Released:** v3.3.0 · **Closed:** 2026-03-08 · **Requires:** Phase 7 shipped ✅
 
 Phase 8 unifies the telemetry streams from Phase 7 (reviewer reputation), Phase 6
 (autonomous roadmap amendment gates), and Phase 5 (federated convergence) into a
@@ -393,7 +393,7 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 - `GovernanceGate` remains sole mutation approval surface; health score is advisory ✅
 - Aponi endpoint returns 200 with `constitutional_floor: enforced` field ✅
 
-**PRs planned:** PR-8-01 (aggregator + evidence binding) → PR-8-02 (Aponi panel) → PR-8-03 (constitution v0.4.0)
+**PRs shipped:** PR-8-01 (aggregator + evidence binding) → PR-8-02 (Aponi panel + endpoint) → PR-8-03 (constitution v0.4.0)
 
 ---
 
@@ -408,7 +408,7 @@ new amendment proposals until the floor is restored. `CONSTITUTION_VERSION` bump
 | Phase 6 roadmap self-amendment | ArchitectAgent proposal governed | Human sign-off recorded in ledger | ✅ |
 | Phase 7 reviewer reputation | Reputation score determinism | Identical on identical ledger state | ✅ |
 | Phase 7 reviewer reputation | Constitutional floor | `CONSTITUTIONAL_FLOOR_MIN_REVIEWERS = 1` always enforced | ✅ |
-| Phase 8 governance health | `avg_reputation` stability | ±0.05 variance over 10-epoch rolling window | 🔵 |
+| Phase 8 governance health | `avg_reputation` stability | ±0.05 variance over 10-epoch rolling window | ✅ |
 | Phase 25 admission control | `advisory_only` invariant | `advisory_only == True` on every AdmissionDecision | ✅ |
 | Phase 25 admission control | Admission determinism | Identical inputs → identical digest | ✅ |
 | Phase 26 admission rate | Signal weight sum | `sum(SIGNAL_WEIGHTS) == 1.0` | ✅ |
