@@ -1,54 +1,116 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://innovative-ai-llc.local/schemas/adaad_agent_state.v1.5.0.schema.json",
-  "title": "ADAAD Agent State",
+  "title": "ADAAD Agent State v1.5.0",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "schema_version",
-    "last_completed_pr",
-    "next_pr",
     "active_phase",
-    "last_invocation",
-    "blocked_reason",
     "blocked_at_gate",
     "blocked_at_tier",
+    "blocked_reason",
+    "last_completed_phase",
+    "last_completed_pr",
     "last_gate_results",
+    "last_invocation",
+    "last_sync_sha",
+    "next_pr",
     "open_findings",
-    "value_checkpoints_reached",
-    "pending_evidence_rows"
+    "pending_evidence_rows",
+    "value_checkpoints_reached"
   ],
   "properties": {
-    "schema_version": {"const": "1.1.0"},
-    "last_completed_pr": {"type": "string", "minLength": 1},
-    "next_pr": {"type": "string", "minLength": 1},
-    "active_phase": {"type": "string", "minLength": 1},
-    "last_invocation": {"type": ["string", "null"]},
-    "blocked_reason": {"type": ["string", "null"]},
-    "blocked_at_gate": {"type": ["string", "null"]},
-    "blocked_at_tier": {"type": ["string", "null"]},
+    "schema_version": {
+      "type": "string",
+      "const": "1.5.0"
+    },
+    "active_phase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "blocked_at_gate": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "blocked_at_tier": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": ["tier_0", "tier_1", "tier_2", "tier_3"]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "blocked_reason": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "last_completed_phase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "last_completed_pr": {
+      "type": "string",
+      "minLength": 1
+    },
     "last_gate_results": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["tier_0", "tier_1", "tier_2", "tier_3"],
       "properties": {
-        "tier_0": {"enum": ["pass", "fail", "not_run", "not_applicable"]},
-        "tier_1": {"enum": ["pass", "fail", "not_run", "not_applicable"]},
-        "tier_2": {"enum": ["pass", "fail", "not_run", "not_applicable"]},
-        "tier_3": {"enum": ["pass", "fail", "not_run", "not_applicable"]}
-      },
-      "additionalProperties": true
+        "tier_0": {
+          "type": "string",
+          "enum": ["pass", "fail", "not_run", "not_applicable"]
+        },
+        "tier_1": {
+          "type": "string",
+          "enum": ["pass", "fail", "not_run", "not_applicable"]
+        },
+        "tier_2": {
+          "type": "string",
+          "enum": ["pass", "fail", "not_run", "not_applicable"]
+        },
+        "tier_3": {
+          "type": "string",
+          "enum": ["pass", "fail", "not_run", "not_applicable"]
+        }
+      }
+    },
+    "last_invocation": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "last_sync_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8,40}$"
+    },
+    "next_pr": {
+      "type": "string",
+      "minLength": 1
     },
     "open_findings": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1}
-    },
-    "value_checkpoints_reached": {
-      "type": "array",
-      "items": {"type": "string", "minLength": 1}
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "pending_evidence_rows": {
       "type": "array",
-      "items": {"type": "string", "minLength": 1}
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "value_checkpoints_reached": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     }
-  },
-  "additionalProperties": true
+  }
 }
