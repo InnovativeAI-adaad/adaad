@@ -1,3 +1,54 @@
+## [8.6.0] — 2026-03-13 — Phase 63: GovernanceGate v2 + Exception Tokens
+
+### feat(phase-63): Judgment — GovernanceGateV2 + ExceptionToken infrastructure
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.6.0 |
+| **Phase** | 63 — Judgment: GovernanceGate v2 + Exception Tokens |
+| **Branch** | feature/phase-63-governance-gate-v2 |
+| **Gate** | GATE-V2-RULES / HUMAN-0 — approved by Dustin L. Reid |
+| **Tests added** | 49 (T63-GATE-01..15) |
+| **Invariants enforced** | AST-SAFE-0, AST-IMPORT-0, AST-COMPLEX-0, SANDBOX-DIV-0, SEMANTIC-INT-0, EXCEP-SCOPE-0, EXCEP-HUMAN-0, EXCEP-TTL-0, EXCEP-REVOKE-0, GATE-V2-EXISTING-0 |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/governance/gate_v2.py` | `GovernanceGateV2` — 5 additive rules; `V2GateDecision` with `class_b_eligible` flag |
+| `runtime/governance/exception_tokens.py` | `ExceptionToken` schema; `ExceptionTokenLedger` (append-only JSONL; immediate revocation) |
+| `tests/governance/test_gate_v2.py` | T63-GATE-01..15 — 49 tests; all 10 invariants covered |
+
+#### New rules (additive — GATE-V2-EXISTING-0: all 16 existing rules unchanged)
+
+| Rule ID | Statement | Class B |
+|---|---|---|
+| `AST-SAFE-0` | No exec/eval/os.system; no syntax errors | No |
+| `AST-IMPORT-0` | No new imports from Tier-0 module roots | No |
+| `AST-COMPLEX-0` | cyclomatic delta ≤ +2 (Class A); ≤ +8 with ExceptionToken (Class B) | Yes |
+| `SANDBOX-DIV-0` | Post-apply == sandbox results; divergence = auto-rejection | No |
+| `SEMANTIC-INT-0` | No error guard removal without compensating handler | No |
+
+#### Exception Token invariants
+
+| ID | Rule |
+|---|---|
+| EXCEP-SCOPE-0 | Single capability + single rule (AST-COMPLEX-0 only in Phase 63); Tier-0 ineligible |
+| EXCEP-HUMAN-0 | `human_approval_ref` required for all Tier-1 token grants |
+| EXCEP-TTL-0 | Max 3-epoch TTL; non-renewable without new HUMAN-0 |
+| EXCEP-REVOKE-0 | Immediate revocation on any trigger; no grace period; idempotent |
+
+#### Test results
+
+49/49 PASS. Zero regressions (45 pre-existing baseline failures unchanged).
+
+#### Note for Phase 64
+
+Phase 64 (Constitutional Evolution Loop) is blocked on Phase 63 at main.
+`CEL-DRY-RUN` gate requires **HUMAN-0 sign-off** before Phase 64 PR opens.
+
+---
+
 ## [8.5.0] — 2026-03-13 — Phase 62: Multi-Horizon Fitness Engine v2
 
 ### feat(phase-62): Intelligence — FitnessEngineV2 + FIT-BOUND-0/FIT-DET-0/FIT-DIV-0/FIT-ARCH-0

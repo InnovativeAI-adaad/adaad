@@ -1,10 +1,10 @@
 {
-  "active_phase": "v8.5.0 \u2014 Phase 62: Multi-Horizon Fitness Engine v2",
+  "active_phase": "v8.6.0 \u2014 Phase 63: GovernanceGate v2 + Exception Tokens",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 62 \u2014 Intelligence: Multi-Horizon Fitness Engine v2",
-  "last_completed_pr": "feature/phase-62-fitness-engine-v2",
+  "last_completed_phase": "Phase 63 \u2014 Judgment: GovernanceGate v2 + Exception Tokens",
+  "last_completed_pr": "feature/phase-63-governance-gate-v2",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-13",
-  "last_sync_sha": "5dc0dde",
-  "next_pr": "PR-63-PLAN (Phase 63 \u2014 GovernanceGate v2 + Exception Tokens \u2014 GATE-V2-RULES HUMAN-0 required)",
+  "last_sync_sha": "pending-push",
+  "next_pr": "PR-64-PLAN (Phase 64 \u2014 Constitutional Evolution Loop \u2014 CEL-DRY-RUN HUMAN-0 required)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -138,6 +138,19 @@
     "phase62-fit-det-0-enforced",
     "phase62-fit-div-0-enforced",
     "phase62-fit-arch-0-enforced",
-    "v8.5.0-released"
+    "v8.5.0-released",
+    "phase63-governance-gate-v2",
+    "phase63-exception-token-schema",
+    "phase63-ast-safe-0-enforced",
+    "phase63-ast-import-0-enforced",
+    "phase63-ast-complex-0-enforced",
+    "phase63-sandbox-div-0-gate-integration",
+    "phase63-semantic-int-0-enforced",
+    "phase63-excep-scope-0-enforced",
+    "phase63-excep-human-0-enforced",
+    "phase63-excep-ttl-0-enforced",
+    "phase63-excep-revoke-0-enforced",
+    "phase63-gate-v2-existing-0-verified",
+    "v8.6.0-released"
   ]
 }
