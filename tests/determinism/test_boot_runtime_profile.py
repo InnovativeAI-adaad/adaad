@@ -9,7 +9,18 @@ from runtime.preflight import validate_boot_runtime_profile
 
 
 def _write_profile(profile: dict) -> None:
-    (ROOT_DIR / "governance_runtime_profile.lock.json").write_text(json.dumps(profile, indent=2) + "\n", encoding="utf-8")
+    (ROOT_DIR / "governance_runtime_profile.lock.json").write_text(
+        json.dumps(profile, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def _patch_fingerprint_ok(monkeypatch) -> None:
+    """Patch _dependency_fingerprint to return the locked value so fingerprint
+    check always passes and tests can exercise downstream logic."""
+    import runtime.preflight as _pf
+    profile = json.loads((ROOT_DIR / "governance_runtime_profile.lock.json").read_text(encoding="utf-8"))
+    expected = str(profile.get("dependency_lock", {}).get("sha256", ""))
+    monkeypatch.setattr(_pf, "_dependency_fingerprint", lambda _path: expected)
 
 
 def test_boot_profile_fails_closed_on_dependency_fingerprint_mismatch(monkeypatch) -> None:
@@ -30,6 +41,8 @@ def test_boot_profile_fails_closed_on_dependency_fingerprint_mismatch(monkeypatc
 
 
 def test_boot_profile_fails_closed_on_non_hermetic_surface(monkeypatch) -> None:
+    # Patch fingerprint so we reach the surface check, not the fingerprint check.
+    _patch_fingerprint_ok(monkeypatch)
     monkeypatch.setenv("ADAAD_FORCE_DETERMINISTIC_PROVIDER", "1")
     monkeypatch.delenv("ADAAD_DISABLE_MUTABLE_FS", raising=False)
     monkeypatch.setenv("ADAAD_MUTABLE_FS_ALLOWLIST", "reports,/tmp")
@@ -42,6 +55,7 @@ def test_boot_profile_fails_closed_on_non_hermetic_surface(monkeypatch) -> None:
 
 
 def test_boot_profile_passes_with_deterministic_provider_and_disabled_surfaces(monkeypatch) -> None:
+    _patch_fingerprint_ok(monkeypatch)
     monkeypatch.setenv("ADAAD_FORCE_DETERMINISTIC_PROVIDER", "1")
     monkeypatch.setenv("ADAAD_DISABLE_MUTABLE_FS", "1")
     monkeypatch.setenv("ADAAD_DISABLE_NETWORK", "1")

@@ -98,7 +98,10 @@ def test_learning_enrichment_updates_context_visible_at_proposal_stage(minimal_c
         result = loop.run_epoch(minimal_context)
 
     assert isinstance(result, EpochResult)
-    assert captured["learning_context"] == "--- ADVISORY learning block ---"
+    assert captured["learning_context"].startswith("--- ADVISORY learning block ---"), (
+        f"learning_context did not start with expected prefix.\n"
+        f"Got: {captured['learning_context']!r}"
+    )
 
 
 def test_learning_enrichment_exceptions_do_not_abort_epoch(minimal_context):

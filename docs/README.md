@@ -1,286 +1,188 @@
-<p align="center">
-  <img src="docs/assets/adaad-banner.svg" width="900" alt="ADAAD — Autonomous Device-Anchored Adaptive Development"/>
-</p>
+# ADAAD Documentation — v9.0.0
 
-<p align="center">
-  <b>ADAAD — Autonomous Device-Anchored Adaptive Development</b><br/>
-  <i>The world's first constitutional AI mutation engine: governed, deterministic, self-evolving.</i>
-</p>
+**Version:** 9.0.0 | **Phase:** 65 — Emergence | **Released:** 2026-03-13
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Version-8.4.0-blue?style=for-the-badge" alt="Version"/>
-  <img src="https://img.shields.io/badge/Phase-61%20Complete-success?style=for-the-badge" alt="Phase"/>
-  <img src="https://img.shields.io/badge/Tests-4196%2B%20Passing-brightgreen?style=for-the-badge" alt="Tests"/>
-  <img src="https://img.shields.io/badge/Constitution-v0.7.0-orange?style=for-the-badge" alt="Constitution"/>
-  <img src="https://img.shields.io/badge/Python-3.12%2B-yellow?style=for-the-badge" alt="Python"/>
-  <img src="https://img.shields.io/badge/License-Apache%202.0-lightgrey?style=for-the-badge" alt="License"/>
-</p>
+> The world's first constitutional AI mutation engine: governed, deterministic, self-evolving.
 
 ---
 
-## What is ADAAD?
+## Documentation Index
 
-**ADAAD** is a production-grade autonomous code mutation engine built by **InnovativeAI LLC** (Blackwell, Oklahoma). It does not generate code the way a chatbot does. It *evolves* a living codebase — epoch by epoch — under a 16-rule constitutional governance model that makes every mutation deterministic, auditable, and human-co-signed where the stakes demand it.
-
-> *"ADAAD is not a code generator. It is an autonomous software organism that governs its own evolution."*
-> — Dustin L. Reid, Sole Architect
-
-**The core proposition:** code that rewrites itself, under constitutional law, provably better every epoch.
-
----
-
-## Architecture at a Glance
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          ADAAD v8 Runtime                               │
-│                                                                         │
-│  ProposalEngine          ASTDiffPatch         LineageEngine             │
-│  (Phase 57)              (Phase 60 — DNA)     (Phase 61)                │
-│  ┌──────────────┐        ┌─────────────┐      ┌─────────────────────┐  │
-│  │ LLM-augmented│        │before/after │      │ 5 niches            │  │
-│  │ strategy ctx │──────▶ │ AST hashes  │────▶ │ epistasis detection │  │
-│  │ PROP-AUTO-0  │        │ PATCH-SIZE-0│      │ LINEAGE-STAB-0      │  │
-│  └──────────────┘        └──────┬──────┘      └──────────┬──────────┘  │
-│                                 │                         │             │
-│  StaticSafetyScanner            │             SandboxTournament         │
-│  (Phase 60)                     │             (Phase 60)                │
-│  ┌──────────────────────┐       │             ┌───────────────────┐    │
-│  │ ImportBoundaryRule   │◀──────┘             │ ephemeral clones  │    │
-│  │ NonDeterminismRule   │                     │ SANDBOX-DIV-0     │    │
-│  │ ComplexityCeiling    │────────────────────▶│ MUTATION_SANDBOX  │    │
-│  │ PatchSizeRule        │                     │ _ONLY enforced    │    │
-│  └──────────────────────┘                     └────────┬──────────┘    │
-│                                                        │               │
-│  CodeIntelModel          CapabilityRegistry            ▼               │
-│  (Phase 58)              (Phase 59)           GovernanceGate v1         │
-│  ┌──────────────┐        ┌─────────────┐      ┌───────────────────┐    │
-│  │ FunctionGraph│        │ 10 bootstrap│      │ 16 constitutional │    │
-│  │ HotspotMap   │──────▶ │ capabilities│────▶ │ rules             │    │
-│  │ MutationHist │        │ Tier-0 guard│      │ deterministic     │    │
-│  └──────────────┘        └─────────────┘      └────────┬──────────┘    │
-│                                                        │               │
-│                                              EvolutionLoop.run_epoch() │
-│                                              (production path)          │
-└─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## System State
-
-| Field | Value |
+### Governance & Architecture
+| Document | Description |
 |---|---|
-| **Version** | 8.4.0 |
-| **Phase** | 61 complete — Evolution: Lineage Engine |
-| **Tests passing** | 4,196+ |
-| **Constitution** | v0.7.0 (16 rules active) |
-| **Architecture invariants** | 8 permanent + phase-level |
-| **Next phase** | 62 — Multi-Horizon Fitness Engine (v8.5.0) |
-| **GA target** | v1.0.0 (Phase 65+) |
+| `governance/ARCHITECT_SPEC_v8.0.0.md` | Canonical architecture specification — all invariants, rules, and organ contracts |
+| `governance/CONSTITUTION.md` | The 21 constitutional rules (16 pre-v2 + 5 GovernanceGateV2) |
+| `governance/V8_HUMAN_GATE_READINESS.md` | Human gate signoff tracker — all 6 gates SIGNED_OFF for v9.0.0 |
+| `governance/ADAAD_PR_PROCESSION_2026-03-v2.md` | PR milestone tracker through v9.0.0 |
 
-**Canonical governance architecture specification:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md`.
+### Phase Upgrade Plans
+Located in `governance/phase_plans/` — one plan per phase capturing pre-work analysis, invariant contracts, test acceptance criteria, and post-merge verification.
 
----
+### Evidence Artifacts
+Located in `../artifacts/governance/` — cryptographically signed evidence bundles for every human-gated decision.
 
-## Completed Phases — v8 Session
-
-| Phase | Name | Layer | Key Deliverable | Version | Tests |
-|---|---|---|---|---|---|
-| 57 | Keystone | Proposal | ProposalEngine auto-provisioning, PROP-AUTO-0..5 | 8.0.0 | 16 |
-| 58 | Perception | Intelligence | CodeIntelModel — FunctionGraph, HotspotMap, MutationHistory | 8.1.0 | 60 |
-| 59 | Identity | Capability | CapabilityRegistry v2 — 10 bootstrap caps, Tier-0 guard | 8.2.0 | 59 |
-| 60 | Motor | Mutation | ASTDiffPatch (DNA), StaticSafetyScanner, SandboxTournament | 8.3.0 | 59 |
-| **61** | **Evolution** | **Lineage** | **LineageEngine — 5 niches, epistasis, LINEAGE-STAB-0** | **8.4.0** | **62** |
-
----
-
-## The Five Layers — v8 Architecture
-
-### 1 · Proposal (Phase 57) — The Ignition
-`ProposalEngine` wires the LLM into every epoch. When `ADAAD_ANTHROPIC_API_KEY` is present, Phase 1e fires with live strategy context: `governance_debt_score`, `lineage_health`, `bandit_confidence`, `epoch_count`. Every LLM proposal enters the same governed pipeline — no bypass.
-
-### 2 · Perception (Phase 58) — The Self-Model
-`CodeIntelModel` gives ADAAD its first true self-awareness. It knows which functions are fragile (`HotspotMap`), how they connect (`FunctionGraph`), and what has changed (`MutationHistory` — SHA-256 hash-chained JSONL ledger). Mutations are no longer blind.
-
-### 3 · Identity (Phase 59) — The Capability Graph
-`CapabilityRegistry` maps the codebase into 10 governed capabilities, each with a version (semver), contract, governance tags, and dependency set. **Tier-0 capabilities** (`governance.gate`, `governance.policy`, `determinism.provider`) are architecturally protected from self-mutation.
-
-### 4 · Motor (Phase 60) — The DNA & Sandbox
-`ASTDiffPatch` is the atomic mutation primitive: every change is a `before_source`/`after_source` pair with formatting-invariant SHA-256 AST hashes (`SANDBOX-DIV-0`). `StaticSafetyScanner` runs 4 constitutional rules before any sandbox entry. `SandboxTournament` evaluates candidates in ephemeral clones — `MUTATION_SANDBOX_ONLY=true` is non-negotiable.
-
-### 5 · Evolution (Phase 61) — The Lineage
-`LineageEngine` is the evolutionary memory. Every `ASTDiffPatch` becomes a `LineageNode` tracked across epochs. Five independent **mutation niches** (performance, architecture, safety, simplification, experimental) run parallel bandit arms. Cross-niche **breeding** generates up to 10 hybrid candidates per epoch cycle. **Epistasis detection** (`EPISTASIS-0`) flags mutation pairs that regress when combined and cools them for 3 epochs.
-
----
-
-## Constitutional Architecture
-
-ADAAD's governance is not a safety filter bolted on the outside — it is the **execution substrate**. Every mutation flows through `GovernanceGate` before it can touch the codebase.
-
-```
-16 Constitutional Rules (active)
-├── Core Determinism Rules     (R1–R4)
-├── Mutation Safety Rules      (R5–R9)
-├── Lineage Integrity Rules    (R10–R12)
-├── Capability Boundary Rules  (R13–R14)
-└── Human Approval Rules       (R15–R16 — HUMAN-0 gate)
-
-Phase 63: GovernanceGate v2 adds 5 diff-aware rules:
-├── AST-SAFE-0      diff-aware syntax safety
-├── AST-IMPORT-0    import boundary enforcement
-├── AST-COMPLEX-0   cyclomatic ceiling
-├── SANDBOX-DIV-0   post-apply hash verification
-└── SEMANTIC-INT-0  semantic contract integrity
-```
-
-**Eight Permanent Architecture Invariants** — never violated, not negotiable:
-
-| ID | Invariant |
-|---|---|
-| GOV-SOLE-0 | `GovernanceGate` is the sole mutation approval surface |
-| CRIT-CAP-0 | `CritiqueSignalBuffer` penalty cap = 0.20 |
-| DET-ALL-0 | All governance decisions are deterministic |
-| SIM-BLOCK-0 | `SimulationPolicy.simulation=True` blocks all live side-effects |
-| SANDBOX-DIV-0 | AST hash must match after apply; divergence = auto-rollback |
-| PATCH-SIZE-0 | Max 40 delta AST nodes, max 2 files per patch |
-| TIER0-SELF-0 | Tier-0 bound modules cannot self-mutate |
-| LINEAGE-STAB-0 | Lineage stable iff ≥ 2/5 last epochs passed |
-
----
-
-## Phase Roadmap — v8 to GA
-
-```
-Phase 57 ✅  Keystone      ProposalEngine auto-provisioning
-Phase 58 ✅  Perception    Code Intelligence Model
-Phase 59 ✅  Identity      Capability Graph v2
-Phase 60 ✅  Motor         AST Mutation Substrate (DNA + Sandbox)
-Phase 61 ✅  Evolution     Lineage Engine (niches + epistasis)
-─────────────────────────────────────────────────────────────
-Phase 62 🔜  Intelligence  Multi-Horizon Fitness Engine v2 (7 signals)
-Phase 63     Judgment      GovernanceGate v2 + Exception Tokens (HUMAN-0)
-Phase 64     Selfhood      Constitutional Evolution Loop
-Phase 65+    GA Release    v1.0.0-GA — 32-item release checklist
-```
-
-### Phase 62 Preview — Multi-Horizon Fitness Engine
-
-Seven fitness signals with bounded weights [0.05, 0.70]:
-
-| Signal | Weight | Horizon |
+| Bundle | Gate | Phase |
 |---|---|---|
-| Test fitness (coverage delta, failure reduction) | 30% | Per-epoch |
-| Complexity fitness (cyclomatic delta) | 20% | Per-epoch |
-| Performance fitness (benchmark delta) | 15% | Per-epoch |
-| Governance compliance (rolling pass rate) | 15% | 10-epoch window |
-| Architectural fitness (coupling, centrality) | 12% | 20-epoch window |
-| Determinism fitness (replay divergence = 0) | 8% | Hard floor |
-| Code pressure (deletion bonus) | −5% | Net additions |
-
-Determinism divergence = **total rejection**, no exception.
+| `phase65/mutation_target_signoff.json` | HUMAN-0 — mutation target selection | 65 |
+| `phase65/v9_release_audit_report.json` | AUDIT-0 — 22/22 tests pass | 65 |
+| `phase65/v9_replay_verification.json` | REPLAY-0 — 0 divergences | 65 |
+| `phase64/cel_dry_run_signoff.json` | CEL-DRY-RUN — all 14 steps dry-run verified | 64 |
+| `phase63/governance_gate_v2_signoff.json` | GATE-V2-RULES — GovernanceGateV2 accepted | 63 |
+| `phase59/capability_graph_v2_signoff.json` | CAP-REGISTRY — 10 bootstrap capabilities | 59 |
 
 ---
 
-## Key Technical Properties
+## System Overview — v9.0.0
 
-| Property | Implementation |
-|---|---|
-| **Deterministic hashing** | `hashlib.sha256` — `hash()` never seeds RNGs |
-| **Append-only ledgers** | SHA-256 hash-chained JSONL — tamper-evident |
-| **AST-level mutation** | LibCST application; `ast.dump()` for formatting-invariant hashes |
-| **Sandboxed execution** | `MUTATION_SANDBOX_ONLY=true`; ephemeral clones only |
-| **Replay verification** | Deterministic replay verifier every epoch |
-| **Human gate** | `HUMAN-0` for constitutional amendments + Class B exception tokens |
-| **Semver capability versioning** | `CAP-VERS-0` — version monotonicity enforced |
-| **Epistasis detection** | Co-occurrence tracking; 3-epoch cooling on joint regression |
+### What Changed in v9.0.0
 
----
+Phase 65 (Emergence) wired together all nine evolutionary organs into a single, live, self-governing loop:
 
-## Quick Start
+- **`evolution_loop.py`** now routes `run_epoch()` through `_run_cel_epoch()` when `ADAAD_CEL_ENABLED=true`
+- **`cel_wiring.py`** gained `build_cel()`, `is_cel_enabled()`, `assert_cel_enabled_or_raise()`
+- **`capability_graph.py`** gained `CapabilityChange` dataclass + `record_capability_change()` — the capability mutation ledger
+- **`CapabilityGraph`** class consolidates capability change recording with hash-chaining
+- `_emit_capability_changes()` is called from `_run_cel_epoch()` for every promoted candidate
+- All 6 human gates for the v8→v9 transition signed off and evidenced
 
-```bash
-git clone https://github.com/InnovativeAI-adaad/ADAAD.git
-cd ADAAD
-pip install -r requirements.txt --break-system-packages
-python3 -m pytest tests/ -q
+### The 14-Step CEL Sequence
+
+Every epoch under `ADAAD_CEL_ENABLED=true` executes these steps in strict order (`CEL-ORDER-0`):
+
 ```
+Step  1  MODEL-DRIFT-CHECK    Verify CodeIntelModel hasn't drifted
+Step  2  LINEAGE-SNAPSHOT     Snapshot current LineageEngine state
+Step  3  FITNESS-BASELINE     Record FitnessEngineV2 pre-epoch baseline
+Step  4  PROPOSAL-GENERATE    ProposalEngine → LLM-backed candidates
+Step  5  AST-SCAN             StaticSafetyScanner — 4 constitutional rules
+Step  6  SANDBOX-EXECUTE      SandboxTournament in ephemeral clone
+Step  7  REPLAY-VERIFY        SANDBOX-DIV-0 — hash equivalence check
+Step  8  FITNESS-SCORE        FitnessEngineV2 composite score (7 signals)
+Step  9  GOVERNANCE-GATE-V2   GovernanceGateV2 — 5 AST-aware rules
+Step 10  GOVERNANCE-GATE      GovernanceGate — 16 pre-v2 rules
+Step 11  LINEAGE-REGISTER     LineageEngine.register() for promoted candidates
+Step 12  PROMOTION-DECISION   CapabilityGraph update + PromotionEvent emit
+Step 13  EPOCH-EVIDENCE-WRITE Hash-chained EpochEvidence ledger append
+Step 14  STATE-ADVANCE        Epoch counter increment + journal event
+```
+
+Skipping any step or executing out of order raises `CELOrderViolation`. No exception.
+
+---
+
+## Module Reference
+
+### `runtime/evolution/cel_wiring.py`
 
 ```python
-from runtime.mutation.ast_substrate import ASTDiffPatch, StaticSafetyScanner, SandboxTournament
-from runtime.evolution.lineage import LineageEngine, MutationNiche, EpochOutcome
-from runtime.capability import CapabilityRegistry
+build_cel(*, sandbox_only: bool, ...) -> LiveWiredCEL
+    # Factory. Reads ADAAD_SANDBOX_ONLY env var when sandbox_only not explicitly set.
+    # Returns LiveWiredCEL with _dry_run=sandbox_only.
 
-# Create a governed mutation primitive
-patch = ASTDiffPatch(
-    mutation_kind="refactor",
-    target_file="runtime/my_module.py",
-    before_source=before,
-    after_source=after,
-    intent="Extract complexity into helper",
-)
+is_cel_enabled() -> bool
+    # Returns True iff ADAAD_CEL_ENABLED=true in environment.
 
-# Gate it through static analysis
-scanner = StaticSafetyScanner()
-result = scanner.scan(patch)
+assert_cel_enabled_or_raise() -> None
+    # Raises RuntimeError if CEL is not enabled.
+```
 
-# Compete it in sandbox
-tournament = SandboxTournament()
-score = tournament.run_single(patch)
+### `runtime/evolution/evolution_loop.py`
 
-# Track lineage across epochs
-engine = LineageEngine()
-node = engine.register(patch.patch_hash, MutationNiche.ARCHITECTURE, "2026-03-13T00:00:00Z")
-engine.record_outcome(node.node_id, EpochOutcome.PASSED, fitness=score.composite)
+```python
+EvolutionLoop.run_epoch(context) -> EpochResult
+    # Routes to _run_cel_epoch() when ADAAD_CEL_ENABLED=true,
+    # otherwise to _run_legacy_epoch() (Phase 64 and prior behavior).
+
+EvolutionLoop._run_cel_epoch(context) -> EpochResult
+    # Builds LiveWiredCEL, runs it, extracts promoted IDs,
+    # calls _emit_capability_changes(), wraps into EpochResult.
+
+EvolutionLoop._emit_capability_changes(promoted_ids, epoch_evidence_hash) -> None
+    # Fail-safe. Writes CapabilityChange entries to CapabilityGraph.
+    # Exceptions are logged and swallowed — never propagated.
+
+@dataclass
+EpochResult:
+    ...
+    cel_result: Optional[object] = None   # Added Phase 65
+```
+
+### `runtime/capability_graph.py`
+
+```python
+@dataclass
+CapabilityChange:
+    node_id: str                  # capability node being changed
+    old_version: str              # semver before
+    new_version: str              # semver after
+    epoch_evidence_hash: str      # SHA-256 of the epoch evidence record
+    proposal_hash: str            # SHA-256 of the winning proposal
+    timestamp: str                # ISO-8601
+
+    @property
+    change_id: str
+        # SHA-256[:16] of "node_id:proposal_hash:epoch_evidence_hash"
+        # Deterministic — identical inputs always produce identical IDs (INTEL-DET-0)
+
+    def to_dict(self) -> dict
+        # Returns ledger-ready record including change_id
+
+
+def record_capability_change(change: CapabilityChange, ledger_path: Path = ...) -> str
+    # Appends JSONL to ADAAD_CAP_CHANGE_LEDGER (default: data/capability_changes.jsonl).
+    # Fail-safe on IOError. Returns SHA-256 digest of the appended record.
+
+
+class CapabilityGraph:
+    def __init__(self, ledger_path: Path = ...)
+    def record_change(self, change: CapabilityChange) -> str
+        # Delegates to record_capability_change.
+```
+
+### `runtime/tools/mutation_guard.py`
+
+```python
+apply_dna_mutation(agent_id: str, ops: list) -> dict
+    # Applies JSON-Patch ops to agent DNA file.
+    # UPSERT behaviour: if DNA file does not exist and all ops are "set"/"add"/"replace",
+    #   bootstraps an empty {} DNA and proceeds. Non-upsert ops against missing files
+    #   still raise FileNotFoundError.
+    # Intermediate dict nodes are auto-vivified for set/add ops (no KeyError on deep paths).
+    # Returns: {agent_id, parent_lineage, child_lineage, checksum, applied, skipped}
 ```
 
 ---
 
-## Repository Structure
+## Environment Variables
 
-```
-runtime/
-├── governance/              Constitutional gate (16 rules), policy artifacts
-├── evolution/
-│   ├── evolution_loop.py    Production epoch path
-│   ├── proposal_engine.py   LLM-augmented proposals (Ph57)
-│   ├── lineage/             Lineage Engine (Ph61)
-│   │   ├── lineage_node.py         Immutable nodes, LINEAGE-STAB-0
-│   │   ├── compatibility_matrix.py Epistasis detection, EPISTASIS-0
-│   │   ├── niche_registry.py       5 niches, cross-niche breeding
-│   │   └── lineage_engine.py       Central coordinator
-│   └── scoring_ledger.py    Hash-chained fitness ledger
-├── mutation/
-│   ├── code_intel/          Code Intelligence Model (Ph58)
-│   │   ├── function_graph.py       AST call-graph, graph_hash
-│   │   ├── hotspot_map.py          Churn-weighted fragility
-│   │   ├── mutation_history.py     Hash-chained JSONL ledger
-│   │   └── code_intel_model.py     Frozen dataclass, INTEL-ISO-0
-│   └── ast_substrate/       Motor layer (Ph60)
-│       ├── ast_diff_patch.py       DNA primitive, PATCH-SIZE-0
-│       ├── static_scanner.py       4-rule constitutional gate
-│       ├── patch_applicator.py     LibCST + SANDBOX-DIV-0 rollback
-│       └── sandbox_tournament.py   Ephemeral competition
-├── capability/              Capability Graph v2 (Ph59)
-│   ├── capability_node.py          Semver nodes, dependency sets
-│   ├── capability_registry.py      10 bootstrap caps, Tier-0
-│   └── capability_target_discovery.py  Mutation-safe targets
-├── intelligence/            Critique + telemetry (Ph16–20)
-├── state/                   Epoch memory, scoring state
-└── determinism.py           RuntimeDeterminismProvider
-tests/                       4,196+ tests — T57..T61 complete
-```
+| Variable | Default | Description |
+|---|---|---|
+| `ADAAD_CEL_ENABLED` | `false` | `true` activates 14-step ConstitutionalEvolutionLoop routing |
+| `ADAAD_SANDBOX_ONLY` | `false` | `true` runs CEL in dry-run mode — no real writes |
+| `ADAAD_CAP_CHANGE_LEDGER` | `data/capability_changes.jsonl` | Path for CapabilityChange JSONL ledger |
+| `ADAAD_DETERMINISTIC_LOCK` | `0` | `1` enforces deterministic-only execution paths |
+| `ADAAD_REPLAY_PROOF_HMAC_SECRET_PROOF_KEY` | (required in prod) | HMAC secret for replay proof signing |
+| `ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV` | (required in prod) | Ed25519 private key for replay attestation |
+| `ADAAD_ANTHROPIC_API_KEY` | — | Enables live LLM proposals in ProposalEngine |
 
 ---
 
-## InnovativeAI LLC
+## Test Coverage by Phase
 
-**Co-founders:** Weirdo · Dustin L. Reid (Sole Architect, ADAAD)
-**Location:** Blackwell, Oklahoma
-**Mission:** Build the most rigorously governed autonomous code evolution engine ever shipped.
-
-> ADAAD demonstrates that **autonomous capability and constitutional governance are synergistic, not adversarial**. Every phase that expands what ADAAD can do is matched by a phase that deepens what it cannot do without consent. This is the architecture of trustworthy autonomy.
+| Phase | Test File | Tests | Scope |
+|---|---|---|---|
+| 57 | `tests/evolution/test_phase57_*.py` | 16 | ProposalEngine, PROP-AUTO-0..5 |
+| 58 | `tests/mutation/test_phase58_*.py` | 60 | CodeIntelModel, FunctionGraph, HotspotMap |
+| 59 | `tests/capability/test_phase59_*.py` | 59 | CapabilityRegistry, Tier-0 guard |
+| 60 | `tests/mutation/test_phase60_*.py` | 59 | ASTDiffPatch, StaticSafetyScanner, SandboxTournament |
+| 61 | `tests/evolution/test_phase61_*.py` | 62 | LineageEngine, niches, epistasis |
+| 62 | `tests/evolution/test_phase62_*.py` | ~50 | FitnessEngineV2, FIT-BOUND-0 |
+| 63 | `tests/governance/test_phase63_*.py` | ~55 | GovernanceGateV2, exception tokens |
+| 64 | `tests/evolution/test_phase64_*.py` | ~45 | LiveWiredCEL, 14-step sequence |
+| **65** | **`tests/evolution/test_phase65_emergence.py`** | **22** | **CEL wiring, CapabilityChange, routing** |
+| determinism | `tests/determinism/` | 102 | Replay attestation, boot profile, determinism |
 
 ---
 
-*v8.4.0 — Phase 61 complete — 2026-03-13*
+*ADAAD Documentation — v9.0.0 — Phase 65: Emergence — 2026-03-13*

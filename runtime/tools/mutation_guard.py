@@ -66,7 +66,7 @@ def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Tuple[int,
         parts = p.split("/")[1:]
         return [x.replace("~1", "/").replace("~0", "~") for x in parts]
 
-    def resolve_parent(obj: Any, parts: List[str]) -> Tuple[Any, str]:
+    def resolve_parent(obj: Any, parts: List[str], *, create_missing: bool = False) -> Tuple[Any, str]:
         if not parts:
             raise ValueError("Path empty.")
         cur = obj
@@ -74,6 +74,8 @@ def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Tuple[int,
             if isinstance(cur, list):
                 cur = cur[int(k)]
             else:
+                if create_missing and k not in cur:
+                    cur[k] = {}
                 cur = cur[k]
         return cur, parts[-1]
 
@@ -84,7 +86,8 @@ def _apply_ops(dna_obj: Dict[str, Any], ops: List[Dict[str, Any]]) -> Tuple[int,
         path = op["path"]
         value = op.get("value")
         parts = parse_ptr(path)
-        parent, leaf = resolve_parent(dna_obj, parts)
+        create_missing = kind in ("add", "set")
+        parent, leaf = resolve_parent(dna_obj, parts, create_missing=create_missing)
 
         if kind in ("add", "replace", "set"):
             if isinstance(parent, list):
@@ -118,13 +121,22 @@ def apply_dna_mutation(agent_id: str, ops: List[Dict[str, Any]]) -> Dict[str, An
     dna_path = os.path.join(agent_dir, "dna.json")
 
     if not os.path.exists(dna_path):
-        raise FileNotFoundError(f"Agent {agent_id} DNA not found.")
+        # Bootstrap an empty DNA object so "set" ops can upsert into a new agent.
+        # Only allowed when all ops are "set" (non-destructive); any remove/delete
+        # op against a non-existent file raises FileNotFoundError as before.
+        non_set_ops = [o for o in ops if o.get("op") not in ("set", "add", "replace")]
+        if non_set_ops:
+            raise FileNotFoundError(f"Agent {agent_id} DNA not found.")
+        initial: Dict[str, Any] = {}
+        os.makedirs(agent_dir, exist_ok=True)
+        with open(dna_path, "w", encoding="utf-8") as _f:
+            json.dump(initial, _f)
 
     old_bytes = _read_bytes(dna_path)
     parent_lineage = _sha256_bytes(old_bytes)
 
     old_obj = json.loads(old_bytes.decode("utf-8"))
-    _apply_ops(old_obj, ops)  # mutates old_obj in-place
+    applied, skipped = _apply_ops(old_obj, ops)
     validate_he65_subset(old_obj)
     new_obj = old_obj  # alias for clarity
 
@@ -137,6 +149,9 @@ def apply_dna_mutation(agent_id: str, ops: List[Dict[str, Any]]) -> Dict[str, An
         "agent_id": agent_id,
         "parent_lineage": parent_lineage,
         "child_lineage": child_lineage,
+        "checksum": child_lineage,
+        "applied": applied,
+        "skipped": skipped,
     }
 
 
