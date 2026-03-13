@@ -140,6 +140,33 @@ class TestGossipProtocol:
         ev = GossipEvent.build(origin_peer_id="n1", event_type="test", payload={})
         assert ev.lineage_digest.startswith("sha256:")
 
+    def test_journal_callback_exception_does_not_break_broadcast_flow(self):
+        from runtime.governance.federation.peer_discovery import PeerRegistry, GossipProtocol
+
+        def _boom(_event_type, _payload):
+            raise RuntimeError("journal write failed")
+
+        registry = PeerRegistry(self_id="node-g1", self_endpoint="http://g1:8080")
+        gossip = GossipProtocol(registry=registry, journal_fn=_boom)
+
+        results = gossip.broadcast("test_event.v1", {"data": "x"})
+
+        assert results == {}
+
+    def test_journal_callback_exception_emits_warning_log(self, caplog):
+        from runtime.governance.federation.peer_discovery import PeerRegistry, GossipProtocol
+
+        def _boom(_event_type, _payload):
+            raise ValueError("journal offline")
+
+        caplog.set_level("WARNING")
+        registry = PeerRegistry(self_id="node-g1", self_endpoint="http://g1:8080")
+        gossip = GossipProtocol(registry=registry, journal_fn=_boom)
+
+        gossip.broadcast("test_event.v1", {"data": "x"})
+
+        assert "GossipProtocol: journal callback failed for event_type=federation_gossip.v1 error=journal offline" in caplog.text
+
 
 class TestFederationConsensusEngine:
     def _engine(self, node_id="node-1", peers=None):
@@ -464,4 +491,3 @@ class TestFederationNodeSupervisor:
         assert first_journal == second_journal
         assert first_journal[0][1]["detected_at"] == 200.0
         assert first_events[0][1]["requested_at"] == 201.0
-
