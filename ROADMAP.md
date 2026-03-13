@@ -1302,4 +1302,112 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 | 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
 | 53 | EvolutionLoop × EpochMemoryStore Live Wiring | v7.7.0 | ✅ |
 
-**Next:** Phase 54 — TBD (governed selection via ArchitectAgent proposal)
+**Next:** Phase 57 — ProposalEngine Auto-Provisioning (Keystone, v8.0.0)
+
+---
+
+## v8 Roadmap — Constitutional Autonomous Software Evolution (Phases 57–65)
+
+**Status:** CONSTITUTIONAL DRAFT · v8.0.0-dev · 2026-03-13  
+**Canonical spec:** `docs/governance/ARCHITECT_SPEC_v8.0.0.md`  
+**Invariants:** `docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md`
+
+> HUMAN-0 applies at every constitutional gate. No implementation PR opens without prior human sign-off.
+
+ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The sequence is load-bearing, not cosmetic.
+
+| Phase | Layer | Organ | Version | Status | Human Gate |
+|-------|-------|-------|---------|--------|------------|
+| 57 | Keystone | Brainstem — ProposalEngine Auto-Provisioning | v8.0.0 | 🔲 NEXT | HUMAN-0 (SPEC-57) |
+| 58 | Perception | Code Intelligence Layer (CodeIntelModel) | v8.1.0 | 🔲 Blocked on 57 | — |
+| 59 | Identity | Capability Graph v2 + CapabilityTargetDiscovery | v8.2.0 | 🔲 Blocked on 58 | HUMAN-0 (CAP-REGISTRY) |
+| 60 | Motor | AST Mutation Substrate + SandboxTournament | v8.3.0 | 🔲 Blocked on 59 | — |
+| 61 | Evolution | Lineage Engine + Compatibility Graph | v8.4.0 | 🔲 Blocked on 60 | — |
+| 62 | Intelligence | Multi-Horizon Fitness Engine v2 | v8.5.0 | 🔲 Blocked on 61 | — |
+| 63 | Judgment | GovernanceGate v2 + Exception Tokens | v8.6.0 | 🔲 Blocked on 62 | HUMAN-0 (GATE-V2-RULES, constitutional amendment) |
+| 64 | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7.0 | 🔲 Blocked on 63 | HUMAN-0 (CEL-DRY-RUN) |
+| 65 | Emergence | First Autonomous Capability Evolution | v9.0.0 | 🔲 Blocked on 64 | HUMAN-0 (MUTATION-TARGET) + AUDIT-0 + REPLAY-0 |
+
+### Phase 57 — Keystone (ProposalEngine Auto-Provisioning)
+
+**Target:** v8.0.0 · **Gate:** SPEC-57 (HUMAN-0) · **Tests:** T57-AP-01..12
+
+ProposalEngine becomes default-on when `ADAAD_ANTHROPIC_API_KEY` is present. Phase 1e in `EvolutionLoop.run_epoch()` fires every epoch with live strategy context. All proposals enter the governed pipeline — no bypass.
+
+**Key invariants:** PROP-AUTO-0..5  
+**Acceptance:** T57-AP-01..12 pass; 0 regressions against 3,960 baseline tests
+
+### Phase 58 — Perception (Code Intelligence Layer)
+
+**Target:** v8.1.0 · **Blocks on:** Phase 57 at main · **Tests:** T58-INTEL-01..12
+
+New module `runtime/mutation/code_intel/` gives ADAAD a self-model. FunctionGraph, HotspotMap, MutationHistory, CodeIntelModel. ADAAD knows where it is fragile, slow, and complex. ProposalEngine context enriched with CodeIntel signals.
+
+**Key invariants:** INTEL-DET-0, INTEL-TS-0, INTEL-ISO-0
+
+### Phase 59 — Identity (Capability Graph v2)
+
+**Target:** v8.2.0 · **Gate:** CAP-REGISTRY (HUMAN-0) · **Tests:** T59-CAP-01..10
+
+`runtime/capability_graph.py` promoted to a full Capability Layer. CapabilityNode v2 adds contract, version, governance_tags, telemetry, bound_modules, dependency_set. CapabilityTargetDiscovery maps function targets to capability targets. First 10 capabilities registered with contracts.
+
+**Key invariants:** CAP-VERS-0, CAP-DEP-0, CAP-TIER0-0
+
+### Phase 60 — Motor (AST Mutation Substrate + Sandbox)
+
+**Target:** v8.3.0 · **Blocks on:** Phase 59 at main · **Tests:** T60-AST-01..15
+
+ASTDiffPatch dataclass — the DNA. StaticSafetyScanner (ImportBoundaryRule, NonDeterminismRule, ComplexityCeilingRule, PatchSizeRule). SandboxTournament with ephemeral clones. LibCST for patch application. `MUTATION_SANDBOX_ONLY=true` enforced during stabilisation.
+
+**Key invariants:** SANDBOX-DIV-0, TIER0-SELF-0, PATCH-SIZE-0
+
+### Phase 61 — Evolution (Lineage Engine)
+
+**Target:** v8.4.0 · **Blocks on:** Phase 60 at main · **Tests:** T61-LIN-01..12
+
+LineageDAG extended with compatibility matrix and epistasis detection. LineageSurvival scoring (≥ 2 passes in 5 consecutive epochs). 5 mutation niches (performance, architecture, safety, simplicity, experimental). Multi-step refactor valley-crossing protocol.
+
+**Key invariants:** LINEAGE-STAB-0, EPISTASIS-0
+
+### Phase 62 — Intelligence (Multi-Horizon Fitness Engine v2)
+
+**Target:** v8.5.0 · **Blocks on:** Phase 61 at main · **Tests:** T62-FIT-01..10
+
+7 fitness signals: test (30%), complexity (20%), performance (15%), governance compliance (15%), architectural (12%), determinism (8%), code pressure (−5%). All weights bounded [0.05, 0.70]. Composite bounded [0.0, 1.0]. Determinism divergence = total rejection, no exception.
+
+**Key invariants:** FIT-BOUND-0, FIT-DET-0, FIT-DIV-0, FIT-ARCH-0
+
+### Phase 63 — Judgment (GovernanceGate v2 + Exception Tokens)
+
+**Target:** v8.6.0 · **Gate:** GATE-V2-RULES (HUMAN-0, constitutional amendment) · **Tests:** T63-GATE-01..15
+
+5 new GovernanceGate rules (AST-SAFE-0, AST-IMPORT-0, AST-COMPLEX-0, SANDBOX-DIV-0, SEMANTIC-INT-0) added after existing 16. Exception Token system for Class B valley-crossing mutations — scoped, time-bounded, HUMAN-0 gated, auto-revocable.
+
+**Key invariants:** AST-SAFE-0, AST-IMPORT-0, AST-COMPLEX-0, SEMANTIC-INT-0, EXCEP-SCOPE-0..REVOKE-0, GATE-V2-EXISTING-0
+
+### Phase 64 — Selfhood (Constitutional Evolution Loop)
+
+**Target:** v8.7.0 · **Gate:** CEL-DRY-RUN (HUMAN-0) · **Tests:** T64-CEL-01..12
+
+CEL assembles all prior organs into a 14-step unified, replay-verifiable epoch lifecycle. EpochEvidence — the atomic cryptographic proof of every epoch. Aponi CEL Console with Diff Viewer, Rule Trace, Fitness Breakdown, Lineage Tree, Exception Token Status, EpochEvidence Audit. Full loop dry-run in SANDBOX_ONLY mode before any real writes.
+
+**Key invariants:** CEL-ORDER-0, CEL-EVIDENCE-0, CEL-HASH-0, CEL-TS-0
+
+### Phase 65 — Emergence (First Autonomous Capability Evolution)
+
+**Target:** v9.0.0 MILESTONE · **Gate:** MUTATION-TARGET (HUMAN-0) + V9-RELEASE (AUDIT-0, REPLAY-0) · **Tests:** Full regression 3,960+
+
+First end-to-end governed code improvement without human authorship. All 9 organs active. 12-step acceptance protocol. Cryptographic proof: perception → target → proposal → scan → sandbox → fitness → governance → apply → capability update → evidence → audit. Version v9.0.0 tagged at completion.
+
+---
+
+### v8 Constitutional Sign-Off Block
+
+| Gate | Phase | Invariant | Required Before |
+|------|-------|-----------|-----------------|
+| SPEC-57 | 57 | HUMAN-0 | Phase 57 implementation PR |
+| CAP-REGISTRY | 59 | HUMAN-0 | Phase 59 implementation PR |
+| GATE-V2-RULES | 63 | HUMAN-0 (constitutional amendment) | Phase 63 implementation PR |
+| CEL-DRY-RUN | 64 | HUMAN-0 | Phase 64 implementation PR |
+| MUTATION-TARGET | 65 | HUMAN-0 | Phase 65 mutation application |
+| V9-RELEASE | 65 | AUDIT-0, REPLAY-0 | v9.0.0 tag |

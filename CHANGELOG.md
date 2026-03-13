@@ -1,4 +1,39 @@
+## [8.0.0-dev] — 2026-03-13 — Constitutional Draft
+
+### feat: ADAAD v8 Unified Roadmap — Constitutional Autonomous Software Evolution (Phases 57–65)
+
+**ArchitectAgent constitutional specification for v8.0.0 → v9.0.0 roadmap committed to main.**
+
+This commit establishes the full governance architecture, invariants matrix, and dependency chain for Phases 57–65. No implementation code is included — all implementation PRs are gated behind the constitutional sign-off block defined below.
+
+**New documents:**
+
+- `docs/governance/ARCHITECT_SPEC_v8.0.0.md` — Canonical constitutional specification for Phases 57–65. Supersedes ARCHITECT_SPEC_v3.1.0.md for this phase range. Covers: organism layer architecture, CEL 14-step lifecycle, EpochEvidence schema, ProposalEngine prompt contract, Aponi CEL Console, prevention plan for three critical failure modes, full constitutional sign-off block.
+
+- `docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md` — Machine-readable registry of all 34 new constitutional invariants (PROP-AUTO-0..5, INTEL-DET-0..ISO-0, CAP-VERS-0..TIER0-0, SANDBOX-DIV-0, TIER0-SELF-0, PATCH-SIZE-0, LINEAGE-STAB-0, EPISTASIS-0, FIT-BOUND-0..ARCH-0, AST-SAFE-0..SEMANTIC-INT-0, EXCEP-SCOPE-0..REVOKE-0, GATE-V2-EXISTING-0, CEL-ORDER-0..TS-0). 33 Hard; 1 Class B eligible (AST-COMPLEX-0).
+
+- `ROADMAP.md` — v8 Roadmap section added with all 9 phases, status, gates, and constitutional sign-off block.
+
+**Architectural summary:**
+
+| Phase | Organ | Version | Human Gate |
+|-------|-------|---------|------------|
+| 57 | ProposalEngine Auto-Provisioning | v8.0.0 | SPEC-57 (HUMAN-0) |
+| 58 | Code Intelligence Layer | v8.1.0 | — |
+| 59 | Capability Graph v2 | v8.2.0 | CAP-REGISTRY (HUMAN-0) |
+| 60 | AST Mutation Substrate + Sandbox | v8.3.0 | — |
+| 61 | Lineage Engine | v8.4.0 | — |
+| 62 | Multi-Horizon Fitness Engine v2 | v8.5.0 | — |
+| 63 | GovernanceGate v2 + Exception Tokens | v8.6.0 | GATE-V2-RULES (HUMAN-0, constitutional amendment) |
+| 64 | Constitutional Evolution Loop (CEL) | v8.7.0 | CEL-DRY-RUN (HUMAN-0) |
+| 65 | First Autonomous Capability Evolution | v9.0.0 | MUTATION-TARGET (HUMAN-0) + AUDIT-0 + REPLAY-0 |
+
+**HUMAN-0 applies at every constitutional gate. No implementation PR opens without prior human sign-off.**
+
+---
+
 ## [7.9.2] — 2026-03-13 — Patch
+
 
 ### fix: pre-existing test failures resolved (sandbox + AGM plan resume)
 
