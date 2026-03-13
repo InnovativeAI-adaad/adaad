@@ -4,7 +4,7 @@
   "blocked_at_tier": null,
   "blocked_reason": null,
   "last_completed_phase": "Phase 65 \u2014 Emergence: First Autonomous Capability Evolution",
-  "last_completed_pr": "feature/phase-65-emergence",
+  "last_completed_pr": "fix/phase66-doc-alignment-ci-pin",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -14,7 +14,48 @@
   "last_invocation": "2026-03-13",
   "last_sync_sha": "pending-push",
   "next_pr": "PR-66-PLAN (Phase 66 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
-  "open_findings": [],
+  "open_findings": [
+    {
+      "id": "FINDING-66-001",
+      "title": "LLM failover strategy undocumented",
+      "severity": "P2",
+      "source": "Deep Dive \u00a74.7",
+      "status": "open",
+      "phase_target": "66"
+    },
+    {
+      "id": "FINDING-66-002",
+      "title": "WeightAdaptor telemetry record not published (prediction_accuracy progression)",
+      "severity": "P1",
+      "source": "Deep Dive \u00a74.4",
+      "status": "open",
+      "phase_target": "66"
+    },
+    {
+      "id": "FINDING-66-003",
+      "title": "Patent filing: constitutional mutation governance method \u2014 pre-v1.1-GA deadline",
+      "severity": "P1",
+      "source": "Deep Dive \u00a72.2.3",
+      "status": "open",
+      "phase_target": "66"
+    },
+    {
+      "id": "FINDING-66-004",
+      "title": "Governance Key Ceremony (PR-01): 2-of-3 Ed25519 threshold not yet executed",
+      "severity": "P2",
+      "source": "Deep Dive \u00a7VI Medium Term",
+      "status": "open",
+      "phase_target": "66"
+    },
+    {
+      "id": "FINDING-66-005",
+      "title": "LineageLedgerV2 O(n) fix (C-04/PR-PERF-01): streaming verification + _verified_tail_hash",
+      "severity": "P1",
+      "source": "Deep Dive \u00a73.5 / \u00a7VI Medium Term",
+      "status": "open",
+      "phase_target": "66"
+    }
+  ],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
   "value_checkpoints_reached": [
@@ -162,7 +203,10 @@
     "phase64-gate-v2-existing-0-step10",
     "phase64-cel-evidence-ledger-append-only",
     "v8.7.0-released",
-    "phase65_first_autonomous_capability_evolution"
+    "phase65_first_autonomous_capability_evolution",
+    "phase66-doc-alignment-ci-pin-pr",
+    "phase66-constitution-v0.9.0-rule-count-reconciled",
+    "phase66-deep-dive-p0-findings-resolved"
   ],
   "current_version": "9.0.0"
 }
