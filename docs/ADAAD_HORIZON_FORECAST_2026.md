@@ -2,26 +2,26 @@
 
 > **Document class:** Strategic / Directional  
 > **Authority:** Founder-level · InnovativeAI-adaad  
-> **Version:** 2.1 · March 6, 2026  
+> **Version:** 9.0 · March 13, 2026  
 > **Horizon:** 18 months (Q1 2026 → Q2 2027)  
-> **Current Version:** v2.1.0  
+> **Current Version:** v9.0.0  
 > **Governance:** Human-in-Loop · All autonomy gates require human sign-off
 
 ---
 
 ## Executive Summary
 
-ADAAD is further along than most people expect. As of v2.1.0, the adaptive mutation engine is live: three AI agent personas compete per epoch, a UCB1/Thompson bandit selector allocates exploration budget, adaptive penalty weights respond to real post-merge outcomes, and an AST-based semantic diff engine scores mutation risk from first principles — all with deterministic replay and a SHA-256 hash-chained evidence ledger.
+ADAAD is further along than most people expect. As of v9.0.0 (Phase 65 — Emergence), the system has achieved its first fully autonomous, governed self-improvement cycle: capability gap identification, LLM-backed ProposalEngine mutation generation, 14-step ConstitutionalEvolutionLoop with AST safety, sandbox, fitness, and GovernanceGate approval, atomic patch application, and cryptographic evidence production — all with deterministic replay and a SHA-256 hash-chained evidence ledger.
 
-The directional thesis remains unchanged: **autonomy is earned, not assumed.** Every mutation scored, every decision traceable, every action reversible. The 18-month horizon below maps the progression from today's operational Phase 3/4 to a fully governed, compound-evolution system by Q2 2027.
+The directional thesis remains unchanged: **autonomy is earned, not assumed.** Every mutation scored, every decision traceable, every action reversible. The 18-month horizon below maps the progression from today's autonomous Phase 65 baseline to a fully governed, compound-evolution system by Q2 2027.
 
-**Current state:** v2.1.0 — Phase 3 shipped, Phase 4 in progress.  
-**Active autonomy level:** L2 — Constrained (mutation loop operational under constitutional gating).  
-**Next inflection:** Phase 4 GA + governed Explore/Exploit scheduling upgrade — targeted Q3 2026.
+**Current state:** v9.0.0 — Phase 65 (Emergence) complete. First autonomous capability evolution executed and evidenced.  
+**Active autonomy level:** L4 — First Autonomous Evolution (governed self-directed capability improvement).  
+**Next inflection:** Phase 66 — direction to be proposed by ArchitectAgent and human-approved.
 
 ---
 
-## System Reality Today — v2.1.0
+## System Reality Today — v9.0.0
 
 | Subsystem | Status | Notes |
 |-----------|--------|-------|
@@ -30,7 +30,7 @@ The directional thesis remains unchanged: **autonomy is earned, not assumed.** E
 | `BanditSelector` (UCB1) | ✅ Shipped | Activates at ≥10 pulls; `ThompsonBanditSelector` standby |
 | `PenaltyAdaptor` (Phase 3) | ✅ Shipped | Adaptive `risk_penalty` + `complexity_penalty`, EMA momentum |
 | `NonStationarityDetector` | ✅ Shipped | Page-Hinkley sequential detection; triggers Thompson at ≥30 epochs |
-| `SemanticDiffEngine` (Phase 4) | 🔄 In Progress | AST-aware risk/complexity scoring, `stdlib ast` only |
+| `SemanticDiffEngine` (Phase 4) | ✅ Shipped | AST-aware risk/complexity scoring, `stdlib ast` only |
 | `WeightAdaptor` (momentum descent) | ✅ Shipped | `LR=0.05`, weights bounded `[0.05, 0.70]` |
 | `FitnessLandscape` + plateau detection | ✅ Shipped | Per-type win/loss ledger |
 | `PopulationManager` (BLX-alpha GA) | ✅ Shipped | MD5 dedup, elite preservation |
@@ -82,7 +82,7 @@ First operational evolution loop with human-gated releases. CI/CD integration, k
 
 ---
 
-### Phase 3 — Adaptive Scoring Engine `✅ Shipped · v2.1.0 · Q1 2026`
+### Phase 3 — Adaptive Scoring Engine `✅ Shipped · v2.1.0 → v9.0.0`
 **Autonomy Level: L2+ — Adaptive Weights**
 
 `PenaltyAdaptor` live: `risk_penalty` and `complexity_penalty` adapt via momentum-descent from real post-merge outcome data. `NonStationarityDetector` (Page-Hinkley) active — triggers `ThompsonBanditSelector` when reward distribution shifts. All weights constitutionally bounded.
@@ -93,7 +93,7 @@ First operational evolution loop with human-gated releases. CI/CD integration, k
 
 ---
 
-### Phase 4 — Semantic Mutation Diff Engine `🔄 In Progress · v2.2.0 target`
+### Phase 4 — Semantic Mutation Diff Engine `✅ Shipped · v9.0.0`
 **Autonomy Level: L3 — Semantic-Aware**
 
 `SemanticDiffEngine` replaces heuristic scoring with AST-aware analysis. `ASTMetrics.from_source()` computes: node count, max depth, cyclomatic complexity, import surface, function/class counts, max nesting. Zero new dependencies (Python `ast` stdlib only).

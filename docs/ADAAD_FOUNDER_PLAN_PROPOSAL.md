@@ -23,9 +23,9 @@ Every action ADAAD takes is **traceable**, every improvement is **measurable**, 
 
 ---
 
-## 2. Current State Assessment — v2.1.0
+## 2. Current State Assessment — v9.0.0
 
-ADAAD is at **v2.1.0** with Phase 3 (Adaptive Scoring Engine) fully shipped and Phase 4 (Semantic Mutation Diff Engine) in active development.
+ADAAD is at **v9.0.0** with Phase 65 (Emergence — First Autonomous Capability Evolution) fully shipped. The system has executed its first fully governed, self-directed capability evolution with cryptographic evidence chain and deterministic replay verification.
 
 **What is operational today:**
 
@@ -56,7 +56,7 @@ ADAAD is at **v2.1.0** with Phase 3 (Adaptive Scoring Engine) fully shipped and 
 | 0 — Foundation | Q4 2025 | ✅ Complete | L0 — Manual | — |
 | 1 — Bootstrap | Q1 2026 | ✅ Complete | L1 — Supervised | Replay tests, approval gates live |
 | 2 — Governed Loop | Q1 2026 | ✅ Complete | L2 — Constrained | CI/CD, audit chain, scoring v2 |
-| 3 — Adaptive Score | Q1 2026 | ✅ Shipped (v2.1.0) | L2+ Adaptive | PenaltyAdaptor, Thompson live |
+| 3 — Adaptive Score | Q1 2026 | ✅ Shipped (v2.1.0→v9.0.0) | L2+ Adaptive | PenaltyAdaptor, Thompson live |
 | 4 — Semantic Diff | Q2 2026 | 🔄 In Progress | L3 — Semantic | SemanticDiffEngine GA, Phase 3 done ✅ |
 | 5 — Multi-Gen Lineage | Q3 2026 | Planned | L3 — Multi-Gen | G3+ active, DAG lineage graph |
 | 6 — Compound Evo. | Q1–Q2 2027 | Horizon | L4 — Gov. Auto | G7+ lineage, per-generation review |
