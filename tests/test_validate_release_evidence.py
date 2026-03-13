@@ -53,14 +53,14 @@ def test_require_complete_validates_non_required_rows(tmp_path: Path) -> None:
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
-| `extra-claim` | x | [missing](../releases/does-not-exist.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
+| `extra-claim` | x | [missing](../releases/does-not-exist.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -81,14 +81,14 @@ def test_default_mode_only_enforces_required_claims(tmp_path: Path) -> None:
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
-| `extra-claim` | x | [missing](../releases/does-not-exist.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
+| `extra-claim` | x | [missing](../releases/does-not-exist.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -108,13 +108,13 @@ def test_require_complete_rejects_external_links_by_default(tmp_path: Path) -> N
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md), [external](https://example.com/spec) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md), [external](https://example.com/spec) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -135,13 +135,13 @@ def test_require_complete_allows_external_links_with_opt_in(tmp_path: Path) -> N
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md), [external](https://example.com/spec) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md), [external](https://example.com/spec) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -165,13 +165,13 @@ def test_governance_docs_reject_stale_evidence_matrix_links(tmp_path: Path) -> N
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -197,13 +197,13 @@ def test_validator_fails_when_version_exceeds_latest_release_note(tmp_path: Path
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -225,13 +225,13 @@ def test_validator_accepts_version_equal_to_latest_release_note(tmp_path: Path) 
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -251,20 +251,20 @@ def test_validator_rejects_duplicate_authoritative_matrix(tmp_path: Path) -> Non
     duplicate = repo / "docs" / "RELEASE_EVIDENCE_MATRIX.md"
     duplicate.parent.mkdir(parents=True, exist_ok=True)
     duplicate.write_text(
-        "# Claims-to-Evidence Matrix\n\n| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |\n",
+        "# Claims-to-Evidence Matrix\n\n| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |\n",
         encoding="utf-8",
     )
 
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -286,13 +286,13 @@ def test_validator_rejects_missing_authoritative_marker(tmp_path: Path) -> None:
     matrix.parent.mkdir(parents=True, exist_ok=True)
     matrix.write_text(
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
         encoding="utf-8",
@@ -320,10 +320,16 @@ def _load_validator_module():
 def test_markdown_table_parser_handles_normal_rows() -> None:
     module = _load_validator_module()
 
-    row = "| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |"
+    row = "| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |"
     cells = module._parse_markdown_table_row(row)
 
-    assert cells == ["`ci-status-requirements`", "x", "[ci](../../.github/workflows/ci.yml)", "Complete"]
+    assert cells == [
+        "`ci-status-requirements`",
+        "x",
+        "[ci](../../.github/workflows/ci.yml)",
+        "reports/evidence.json",
+        "Complete",
+    ]
 
 
 def test_markdown_table_parser_handles_escaped_pipe_in_evidence() -> None:
@@ -331,12 +337,12 @@ def test_markdown_table_parser_handles_escaped_pipe_in_evidence() -> None:
 
     row = (
         "| `versioned-docs-spec-links` | x | "
-        "proof text with escaped pipe \\| marker and [spec](../governance/schema_versioning_and_migration.md) | Complete |"
+        "proof text with escaped pipe \\| marker and [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |"
     )
     cells = module._parse_markdown_table_row(row)
 
     assert cells is not None
-    assert len(cells) == 4
+    assert len(cells) == 5
     assert "\\|" in cells[2]
 
 
@@ -350,11 +356,39 @@ def test_validator_reports_explicit_parse_error_for_short_row(tmp_path: Path) ->
     _write_matrix(
         repo,
         """
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
+""".strip()
+        + "\n",
+    )
+
+    result = _run_validator(repo)
+
+    assert result.returncode == 1
+    assert "matrix parse error at line" in result.stdout
+    assert "expected 5 columns, found 3" in result.stdout
+
+
+def test_validator_rejects_four_column_matrix_schema(tmp_path: Path) -> None:
+    repo = tmp_path
+    (repo / "scripts").mkdir(parents=True, exist_ok=True)
+    src = Path(__file__).resolve().parents[1] / "scripts" / "validate_release_evidence.py"
+    (repo / "scripts" / "validate_release_evidence.py").write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    _seed_links(repo)
+
+    _write_matrix(
+        repo,
+        """
 | Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
 | --- | --- | --- | --- |
 | `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
 | `replay-proof-outputs` | x | [det](../../tests/determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
 | `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
 | `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
 """.strip()
@@ -364,8 +398,7 @@ def test_validator_reports_explicit_parse_error_for_short_row(tmp_path: Path) ->
     result = _run_validator(repo)
 
     assert result.returncode == 1
-    assert "matrix parse error at line" in result.stdout
-    assert "expected 4 columns, found 3" in result.stdout
+    assert "expected 5 columns, found 4" in result.stdout
 
 
 def test_validator_accepts_relative_links_with_anchors(tmp_path: Path) -> None:
@@ -378,13 +411,13 @@ def test_validator_accepts_relative_links_with_anchors(tmp_path: Path) -> None:
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml#jobs) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md#determinism) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md#lifecycle) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml#scan) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md#v1) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml#jobs) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md#determinism) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md#lifecycle) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml#scan) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md#v1) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -404,13 +437,13 @@ def test_require_adversarial_summary_rejects_missing_artifact(tmp_path: Path) ->
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
@@ -431,13 +464,13 @@ def test_require_adversarial_summary_accepts_complete_artifact(tmp_path: Path) -
     _write_matrix(
         repo,
         """
-| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Status |
-| --- | --- | --- | --- |
-| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | Complete |
-| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md) | Complete |
-| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | Complete |
-| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | Complete |
-| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | Complete |
+| Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
+| --- | --- | --- | --- | --- |
+| `ci-status-requirements` | x | [ci](../../.github/workflows/ci.yml) | reports/evidence.json | Complete |
+| `replay-proof-outputs` | x | [det](../../tests/determinism/README.md) | reports/evidence.json | Complete |
+| `forensic-bundle-examples` | x | [for](../governance/FORENSIC_BUNDLE_LIFECYCLE.md) | reports/evidence.json | Complete |
+| `codeql-status` | x | [codeql](../../.github/workflows/codeql.yml) | reports/evidence.json | Complete |
+| `versioned-docs-spec-links` | x | [spec](../governance/schema_versioning_and_migration.md) | reports/evidence.json | Complete |
 """.strip()
         + "\n",
     )
