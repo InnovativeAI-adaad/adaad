@@ -1,10 +1,10 @@
 {
-  "active_phase": "v8.6.0 \u2014 Phase 63: GovernanceGate v2 + Exception Tokens",
+  "active_phase": "v8.7.0 \u2014 Phase 64: Constitutional Evolution Loop",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 63 \u2014 Judgment: GovernanceGate v2 + Exception Tokens",
-  "last_completed_pr": "feature/phase-63-governance-gate-v2",
+  "last_completed_phase": "Phase 64 \u2014 Selfhood: Constitutional Evolution Loop",
+  "last_completed_pr": "feature/phase-64-constitutional-evolution-loop",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -13,7 +13,7 @@
   },
   "last_invocation": "2026-03-13",
   "last_sync_sha": "pending-push",
-  "next_pr": "PR-64-PLAN (Phase 64 \u2014 Constitutional Evolution Loop \u2014 CEL-DRY-RUN HUMAN-0 required)",
+  "next_pr": "PR-65-PLAN (Phase 65 \u2014 Full CEL-EvolutionLoop wiring; no HUMAN-0 gate required)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -151,6 +151,16 @@
     "phase63-excep-ttl-0-enforced",
     "phase63-excep-revoke-0-enforced",
     "phase63-gate-v2-existing-0-verified",
-    "v8.6.0-released"
+    "v8.6.0-released",
+    "phase64-constitutional-evolution-loop-14-steps",
+    "phase64-cel-order-0-enforced",
+    "phase64-cel-evidence-0-epoch-hash-chain",
+    "phase64-cel-block-0-halt-on-blocked",
+    "phase64-cel-dryrun-0-sandbox-only",
+    "phase64-cel-replay-0-no-datetime-now",
+    "phase64-cel-gate-0-gate-v2-step9",
+    "phase64-gate-v2-existing-0-step10",
+    "phase64-cel-evidence-ledger-append-only",
+    "v8.7.0-released"
   ]
 }
