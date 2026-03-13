@@ -1,3 +1,30 @@
+## [7.9.2] — 2026-03-13 — Patch
+
+### fix: pre-existing test failures resolved (sandbox + AGM plan resume)
+
+**11 sandbox tests** (`tests/sandbox/test_sandbox_executor.py` etc.) failed with
+`sandbox_policy_unenforceable:container_runtime`.  Phase 49 made
+`ContainerIsolationBackend` the default for SANDBOX tier but the CI environment
+has no Docker runtime.  Fix: add `tests/sandbox/conftest.py` with an `autouse`
+session fixture that sets `ADAAD_SANDBOX_CONTAINER_ROLLOUT=off`, restoring
+`ProcessIsolationBackend` as default.  Per-test `monkeypatch` overrides
+(e.g. `test_container_rollout_fail_closed_without_profiles`) continue to work
+because `monkeypatch` runs after the session fixture.
+
+**1 AGM test** (`test_run_agm_cycle_resumes_plan_and_persists_ledger_progress`)
+failed with `AssertionError: 0 != 1`.  Commit `207c2dd` prepended five fixed
+prerequisite steps to `StrategyPlanner.build_plan()`.  Step 0
+(`step_00_taxonomy_annotation`) now requires completion signals
+`taxonomy.annotation_complete` + `taxonomy.coverage_complete` and governance
+check `taxonomy_coverage_complete`, none of which the test supplied.  Step 1
+(`step_01_duplicate_assertion_audit_merge`) now requires
+`assertions.duplicate_audit_merge_complete`.  Both test payloads updated to
+match the current step definitions.
+
+All 3,960 tests now pass.
+
+---
+
 ## [7.9.1] — 2026-03-12 — Patch
 
 ### fix: Cryovant gate no longer blocks dashboard on initial load
