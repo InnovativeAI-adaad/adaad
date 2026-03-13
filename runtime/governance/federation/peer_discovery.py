@@ -255,7 +255,13 @@ class GossipProtocol:
 
     def _journal(self, event_type: str, payload: Dict[str, Any]) -> None:
         if self._journal_fn:
-            try: self._journal_fn(event_type, payload)
-            except Exception: pass
+            try:
+                self._journal_fn(event_type, payload)
+            except Exception as exc:
+                log.warning(
+                    "GossipProtocol: journal callback failed for event_type=%s error=%s",
+                    event_type,
+                    exc,
+                )
 
 __all__ = ["PeerRegistry", "PeerRecord", "GossipProtocol", "GossipEvent"]
