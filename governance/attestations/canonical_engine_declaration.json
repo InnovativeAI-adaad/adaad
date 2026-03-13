@@ -1,0 +1,73 @@
+{
+  "record_type": "canonical_engine_declaration",
+  "schema_version": "2.0.0",
+  "engine_id": "adaad-evolution-engine-v2",
+  "version": "9.1.0",
+  "phase": 66,
+  "status": "active",
+  "effective_at": "2026-03-13T00:00:00Z",
+  "supersedes_record": "none",
+  "governance_workflow": "declaration-review-ratify",
+  "required_approvals": 2,
+  "signature_scheme": "ed25519",
+  "signature_threshold": "2-of-3",
+
+  "engine_identity": {
+    "canonical_components": [
+      "runtime/evolution/constitutional_evolution_loop.py",
+      "runtime/evolution/cel_wiring.py",
+      "runtime/evolution/fitness_v2.py",
+      "runtime/governance/gate.py",
+      "runtime/governance/gate_v2.py",
+      "runtime/evolution/lineage_v2.py",
+      "runtime/evolution/replay_attestation.py",
+      "runtime/capability_graph.py",
+      "runtime/autonomy/ai_mutation_proposer.py"
+    ],
+    "sole_approval_surface": "runtime/governance/gate.py + runtime/governance/gate_certifier.py",
+    "constitutional_spec": "docs/governance/ARCHITECT_SPEC_v8.0.0.md",
+    "constitution_version": "v0.9.0",
+    "constitutional_rule_count": 23
+  },
+
+  "invariants": {
+    "GOV-SOLE-0": "GovernanceGate is the sole mutation approval surface — no bypass exists",
+    "DET-ALL-0": "All governance decisions are deterministic",
+    "SIM-BLOCK-0": "simulation=True blocks all live side-effects",
+    "SANDBOX-DIV-0": "AST hash must match post-apply; any divergence = automatic rollback",
+    "PATCH-SIZE-0": "Max 40 delta AST nodes, max 2 files per patch",
+    "TIER0-SELF-0": "Tier-0 bound modules cannot self-mutate",
+    "LINEAGE-STAB-0": "Lineage stable iff >= 2/5 last epochs passed",
+    "CEL-ORDER-0": "All 14 CEL steps execute in strict sequence; no skipping allowed"
+  },
+
+  "hardening_record": {
+    "phase_66_audit_gaps_closed": [
+      "C-01: assert_env_mode_set() — ADAAD_ENV unset fails closed",
+      "C-04: LineageLedgerV2 O(n) append fix",
+      "H-02: assert_governance_signing_key_boot() — staging/prod requires key material",
+      "H-03: _validate_write_allowlist() — sandbox path traversal rejection",
+      "H-06: ProposalRateLimiter — POST /api/mutations/proposals rate limiting"
+    ],
+    "phase_67_audit_gaps_closed": [
+      "M-01: lint_import_paths inline suppression + --fix mode",
+      "M-06: enforce_redteam_retention size-cap sentinel",
+      "Error budget tracker (ADAAD_ERROR_BUDGET_WINDOW/THRESHOLD)"
+    ]
+  },
+
+  "key_ceremony": {
+    "status": "pending_signatures",
+    "note": "2-of-3 Ed25519 signature threshold required. Key holders must sign the SHA-256 hash of this document's canonical payload (sorted keys, no whitespace) and append their signatures below.",
+    "canonical_payload_hash_algorithm": "sha256",
+    "signatures": []
+  },
+
+  "attestation_metadata": {
+    "created_at": "2026-03-13T21:00:00Z",
+    "created_by": "ADAAD Bot / InnovativeAI-adaad",
+    "commit_sha": "phase66-improvements",
+    "audit_basis": "docs/ADAAD_STRATEGIC_BUILD_SUGGESTIONS.md",
+    "ga_gate": "v1.1-GA No-Go criterion — requires 2-of-3 signatures before GA promotion"
+  }
+}

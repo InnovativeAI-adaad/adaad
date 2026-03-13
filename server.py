@@ -2205,6 +2205,73 @@ async def market_fitness_bridge_status(
 
 # ── Operator / Aponi endpoints ──────────────────────────────────────────────
 
+# ── PR-04: GET /economic/market-fitness ──────────────────────────────────────
+# Canonical economic market-fitness endpoint. Validates the market-fitness
+# signal pipeline end-to-end: FeedRegistry → MarketFitnessIntegrator →
+# composite score. This endpoint is the primary valuation signal for the
+# income approach — a live, non-zero composite_score transitions the
+# valuation from speculative to grounded.
+
+@app.get("/economic/market-fitness")
+async def get_economic_market_fitness(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """GET /economic/market-fitness
+
+    Returns the current composite market-fitness score from the live
+    MarketFitnessIntegrator pipeline. Includes feed registry status,
+    composite score, signal freshness, and integration metadata.
+
+    Constitutional invariants:
+    - Never raises; always returns a valid envelope (ok=True).
+    - composite_score is 0.0 when no live feeds are configured.
+    - signal_source reflects the active feed backend (synthetic/live).
+    - Fail-safe: on any internal error returns ok=True with degraded=True.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
+        from runtime.market.feed_registry import FeedRegistry
+
+        registry = FeedRegistry()
+        integrator = MarketFitnessIntegrator(feed_registry=registry)
+        result = integrator.integrate()
+
+        reading = registry.composite_reading()
+        feed_count = len(registry.list_feeds()) if hasattr(registry, "list_feeds") else 0
+
+        return {
+            "ok": True,
+            "composite_score": float(result.composite_score) if hasattr(result, "composite_score") else 0.0,
+            "signal_source": "live" if feed_count > 0 else "synthetic",
+            "feed_count": feed_count,
+            "integration_metadata": {
+                "epoch_id": getattr(result, "epoch_id", None),
+                "fitness_delta": getattr(result, "fitness_delta", None),
+                "injected": getattr(result, "injected", False),
+            },
+            "raw_reading": {
+                "composite_score": float(reading.composite_score) if hasattr(reading, "composite_score") else 0.0,
+                "source_count": getattr(reading, "source_count", 0),
+            },
+            "note": (
+                "live market signal active" if feed_count > 0
+                else "synthetic baseline active — register a live feed source to activate real signal"
+            ),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "ok": True,
+            "degraded": True,
+            "composite_score": 0.0,
+            "signal_source": "unavailable",
+            "feed_count": 0,
+            "error": str(exc),
+            "note": "market-fitness pipeline unavailable — check feed registry configuration",
+        }
+
+
+
 # ── Pydantic models ──────────────────────────────────────────────────────────
 
 class MutationView(BaseModel):

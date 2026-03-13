@@ -26,8 +26,10 @@ Payload sensitivity rules:
 
 import json
 import os
+import sys
 import threading
 import time
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -39,6 +41,103 @@ ELEMENT_ID = "Earth"
 
 METRICS_PATH = ROOT_DIR / "reports" / "metrics.jsonl"
 _THREAD_LOCK = threading.Lock()
+
+
+# ---------------------------------------------------------------------------
+# MetricsSink abstraction (Phase 67 / Phase 3 metrics fan-out)
+# ---------------------------------------------------------------------------
+
+class MetricsSink(ABC):
+    """Abstract base for metrics output backends."""
+    @abstractmethod
+    def emit(self, record: "Dict[str, Any]") -> None:
+        """Emit a single structured metrics record."""
+
+
+class JsonlSink(MetricsSink):
+    """Appends records to METRICS_PATH as line-delimited JSON (default backend)."""
+    def __init__(self, path: "Path | None" = None) -> None:
+        self._path = path or METRICS_PATH
+
+    def emit(self, record: "Dict[str, Any]") -> None:
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        if not self._path.exists():
+            self._path.touch()
+        line = (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
+        lock_path = self._path.with_suffix(self._path.suffix + ".lock")
+        with _FileLock(lock_path):
+            fd = os.open(self._path, os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o644)
+            try:
+                os.write(fd, line)
+            finally:
+                os.close(fd)
+
+
+class StdoutSink(MetricsSink):
+    """Writes records as JSON lines to stdout (activated via ADAAD_METRICS_STDOUT=1)."""
+    def emit(self, record: "Dict[str, Any]") -> None:
+        print(json.dumps(record, ensure_ascii=False), file=sys.stdout, flush=True)
+
+
+class OpenTelemetrySink(MetricsSink):
+    """Optional OTel export sink — silently no-ops if opentelemetry is not installed.
+
+    Activated by ADAAD_METRICS_OTEL=1. Requires the opentelemetry-api package.
+    Counter name: adaad.metrics.events; attributes: event, level, element.
+    """
+    def __init__(self) -> None:
+        self._counter = None
+        try:
+            from opentelemetry import metrics as otel_metrics  # type: ignore[import]
+            meter = otel_metrics.get_meter("adaad.runtime.metrics")
+            self._counter = meter.create_counter(
+                "adaad.metrics.events",
+                description="Count of ADAAD governance metrics events",
+            )
+        except Exception:  # noqa: BLE001
+            pass
+
+    def emit(self, record: "Dict[str, Any]") -> None:
+        if self._counter is None:
+            return
+        try:
+            self._counter.add(1, attributes={
+                "event": record.get("event", "unknown"),
+                "level": record.get("level", "INFO"),
+                "element": record.get("element", ELEMENT_ID),
+            })
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _is_truthy(val: str) -> bool:
+    return val.strip().lower() in {"1", "true", "yes", "on"}
+
+
+_sinks: "List[MetricsSink] | None" = None
+_sinks_lock = threading.Lock()
+
+
+def get_active_sinks() -> "List[MetricsSink]":
+    """Return the ordered list of active sinks. Initialised lazily on first call."""
+    global _sinks
+    if _sinks is None:
+        with _sinks_lock:
+            if _sinks is None:
+                active: List[MetricsSink] = [JsonlSink()]
+                if _is_truthy(os.environ.get("ADAAD_METRICS_STDOUT", "")):
+                    active.append(StdoutSink())
+                if _is_truthy(os.environ.get("ADAAD_METRICS_OTEL", "")):
+                    active.append(OpenTelemetrySink())
+                _sinks = active
+    return _sinks
+
+
+def _set_sinks(sinks: "List[MetricsSink]") -> None:
+    """Replace active sinks — for test isolation only."""
+    global _sinks
+    with _sinks_lock:
+        _sinks = sinks
 
 
 class _FileLock:
@@ -73,10 +172,7 @@ def log(
     level: str = "INFO",
     element_id: Optional[str] = None,
 ) -> None:
-    """
-    Append a structured JSON line to the metrics file.
-    """
-    _ensure_metrics_file()
+    """Append a structured metrics record to all active MetricsSinks."""
     record = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "event": event_type,
@@ -84,15 +180,15 @@ def log(
         "element": element_id or ELEMENT_ID,
         "payload": payload or {},
     }
-    line = (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
-    lock_path = METRICS_PATH.with_suffix(METRICS_PATH.suffix + ".lock")
     with _THREAD_LOCK:
-        with _FileLock(lock_path):
-            fd = os.open(METRICS_PATH, os.O_APPEND | os.O_CREAT | os.O_WRONLY, 0o644)
+        for sink in get_active_sinks():
             try:
-                os.write(fd, line)
-            finally:
-                os.close(fd)
+                sink.emit(record)
+            except Exception:  # noqa: BLE001
+                # Never let a sink failure propagate — metrics are observability,
+                # not control flow. The JSONL sink is always first; if it fails,
+                # subsequent sinks still run.
+                pass
 
 
 def line_count() -> int:
