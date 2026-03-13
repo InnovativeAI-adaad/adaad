@@ -492,7 +492,18 @@ _ALWAYS_SYNC: list[str] = [
     "docs/FOUNDATIONS.md",
 ]
 
-_SCAN_DIRS: list[str] = ["docs"]
+_SCAN_DIRS: list[str] = ["."]
+
+_SKIP_SCAN_DIR_PREFIXES: tuple[str, ...] = (
+    ".git/",
+    ".venv/",
+    "venv/",
+    "node_modules/",
+    "dist/",
+    "build/",
+    "site-packages/",
+    "archives/",
+)
 
 
 def _collect_targets() -> list[Path]:
@@ -507,7 +518,10 @@ def _collect_targets() -> list[Path]:
         dr = ROOT / d
         if dr.is_dir():
             for p in sorted(dr.rglob("*.md")):
-                if p not in seen and not _is_protected(str(p.relative_to(ROOT))):
+                rel = str(p.relative_to(ROOT))
+                if rel.startswith(_SKIP_SCAN_DIR_PREFIXES):
+                    continue
+                if p not in seen and not _is_protected(rel):
                     targets.append(p)
                     seen.add(p)
     return targets
