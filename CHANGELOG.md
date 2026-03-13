@@ -1,3 +1,51 @@
+## [8.7.0] — 2026-03-13 — Phase 64: Constitutional Evolution Loop
+
+### feat(phase-64): Selfhood — 14-Step Constitutional Evolution Loop
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.7.0 |
+| **Phase** | 64 — Selfhood: Constitutional Evolution Loop |
+| **Gate** | CEL-DRY-RUN / HUMAN-0 — approved by Dustin L. Reid |
+| **Tests added** | 30 (T64-CEL-01..18) |
+| **Invariants enforced** | CEL-ORDER-0, CEL-EVIDENCE-0, CEL-BLOCK-0, CEL-DRYRUN-0, CEL-REPLAY-0, CEL-GATE-0, GATE-V2-EXISTING-0 |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/evolution/constitutional_evolution_loop.py` | `ConstitutionalEvolutionLoop` — 14-step ordered CEL; `CELEvidenceLedger` (append-only chain); `RunMode`, `StepOutcome`, `EpochCELResult` |
+| `tests/evolution/test_constitutional_evolution_loop.py` | T64-CEL-01..18 — 30 tests covering all 7 CEL invariants |
+
+#### 14-Step Sequence (CEL-ORDER-0)
+
+| Step | Name | Key invariant |
+|---|---|---|
+| 1 | MODEL-DRIFT-CHECK | Block if `determinism_verified=False` |
+| 2 | LINEAGE-SNAPSHOT | Capture `capability_graph_before` hash |
+| 3 | FITNESS-BASELINE | Record pre-epoch FitnessEngineV2 composite |
+| 4 | PROPOSAL-GENERATE | Collect proposals; record `mutations_attempted` |
+| 5 | AST-SCAN | GovernanceGateV2 pre-flight (AST-SAFE-0, AST-IMPORT-0, AST-COMPLEX-0) |
+| 6 | SANDBOX-EXECUTE | Ephemeral sandbox; record `sandbox_container_id`; respects `SANDBOX_ONLY` |
+| 7 | REPLAY-VERIFY | Deterministic replay; SANDBOX-DIV-0 block on divergence |
+| 8 | FITNESS-SCORE | FitnessEngineV2 scores all sandbox results |
+| 9 | GOVERNANCE-GATE-V2 | Full GovernanceGateV2 (all 5 Phase 63 rules); CEL-GATE-0 |
+| 10 | GOVERNANCE-GATE | Existing GovernanceGate (16 pre-63 rules); GATE-V2-EXISTING-0 |
+| 11 | LINEAGE-REGISTER | Register survivors in LineageEngine |
+| 12 | PROMOTION-DECISION | Write PromotionEvent; **SKIPPED** in `SANDBOX_ONLY` (CEL-DRYRUN-0) |
+| 13 | EPOCH-EVIDENCE-WRITE | Assemble `EvolutionEvidence`; write ledger; chain `predecessor_hash` |
+| 14 | STATE-ADVANCE | Advance epoch counter; emit `epoch_complete.v1` |
+
+#### Test results
+
+30/30 PASS. Zero regressions (1 pre-existing baseline failure unchanged).
+
+#### Note for Phase 65
+
+Phase 65 (Full CEL–EvolutionLoop wiring + real GovernanceGate integration) does not require an additional HUMAN-0 gate. Phase 65 PR may open directly.
+
+---
+
 ## [8.6.0] — 2026-03-13 — Phase 63: GovernanceGate v2 + Exception Tokens
 
 ### feat(phase-63): Judgment — GovernanceGateV2 + ExceptionToken infrastructure
