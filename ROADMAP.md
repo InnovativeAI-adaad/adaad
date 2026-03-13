@@ -1316,6 +1316,22 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 
 ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The sequence is load-bearing, not cosmetic.
 
+### v8 Governance Tracker (Phases 57–65)
+
+> **Tracker policy (required):** Every PR for phases 57–65 must update this table in the same change set (at minimum: `Current status` and `Evidence row status`) to keep governance state current.
+
+| Phase | PR ID | Dependency phase | CI tier | Human gate token required | Current status (`planned/in-progress/blocked/shipped`) | Evidence row status |
+|-------|-------|------------------|---------|---------------------------|---------------------------------------------------------|---------------------|
+| 57 | PR-PHASE57-01 ([SPEC-57](docs/governance/ARCHITECT_SPEC_v8.0.0.md#spec-57)) | 53 | critical | Yes — HUMAN-0 (`SPEC-57`) | planned | pending |
+| 58 | PR-PHASE58-01 | 57 | critical | No | planned | pending |
+| 59 | PR-PHASE59-01 ([CAP-REGISTRY](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cap-registry)) | 58 | critical | Yes — HUMAN-0 (`CAP-REGISTRY`) | planned | pending |
+| 60 | PR-PHASE60-01 | 59 | critical | No | planned | pending |
+| 61 | PR-PHASE61-01 | 60 | critical | No | planned | pending |
+| 62 | PR-PHASE62-01 | 61 | critical | No | planned | pending |
+| 63 | PR-PHASE63-01 ([GATE-V2-RULES](docs/governance/ARCHITECT_SPEC_v8.0.0.md#gate-v2-rules)) | 62 | critical | Yes — HUMAN-0 (`GATE-V2-RULES`) | planned | pending |
+| 64 | PR-PHASE64-01 ([CEL-DRY-RUN](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cel-dry-run)) | 63 | critical | Yes — HUMAN-0 (`CEL-DRY-RUN`) | planned | pending |
+| 65 | PR-PHASE65-01 ([MUTATION-TARGET](docs/governance/ARCHITECT_SPEC_v8.0.0.md#mutation-target)) | 64 | critical | Yes — HUMAN-0 (`MUTATION-TARGET`) + AUDIT-0 + REPLAY-0 | planned | pending |
+
 | Phase | Layer | Organ | Version | Status | Human Gate |
 |-------|-------|-------|---------|--------|------------|
 | 57 | Keystone | Brainstem — ProposalEngine Auto-Provisioning | v8.0.0 | ✅ Shipped | HUMAN-0 (SPEC-57) |
