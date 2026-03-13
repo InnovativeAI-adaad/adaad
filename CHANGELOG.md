@@ -1,3 +1,43 @@
+## [8.1.0] — 2026-03-13 — Phase 58: Code Intelligence Model
+
+### feat(phase-58): Code Intelligence Sub-package — INTEL-ISO-0 / INTEL-DET-0 / INTEL-TS-0
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.1.0 |
+| **Phase** | 58 — Code Intelligence Model |
+| **Branch** | feature/phase-58-code-intel-model |
+| **Tests added** | 60 (T58-INTEL-01..12) |
+| **Invariants enforced** | INTEL-ISO-0, INTEL-DET-0, INTEL-TS-0 |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/mutation/__init__.py` | Package root — re-exports all code_intel public API |
+| `runtime/mutation/code_intel/__init__.py` | Sub-package exports |
+| `runtime/mutation/code_intel/function_graph.py` | AST call-graph + adjacency; `graph_hash` via sha256 (INTEL-DET-0) |
+| `runtime/mutation/code_intel/hotspot_map.py` | Fragility/complexity/churn scores bounded [0.0, 1.0]; `map_hash` deterministic |
+| `runtime/mutation/code_intel/mutation_history.py` | Append-only hash-chained JSONL ledger; timestamps via `RuntimeDeterminismProvider.now_utc()` (INTEL-TS-0); `IntegrityError` on tamper |
+| `runtime/mutation/code_intel/code_intel_model.py` | Frozen snapshot `@dataclass`; `model_hash = sha256(json.dumps(state, sort_keys=True))`; zero governance/ledger imports (INTEL-ISO-0) |
+
+#### Test matrix
+
+| Test ID | Coverage |
+|---|---|
+| T58-INTEL-01 | `FunctionCallGraph.from_source` — call extraction |
+| T58-INTEL-02 | `graph_hash` determinism (INTEL-DET-0) |
+| T58-INTEL-03 | Multi-file merge + `from_source_tree` |
+| T58-INTEL-04 | `callees_of` / `callers_of` helpers |
+| T58-INTEL-05 | Hotspot scores bounded [0, 1] |
+| T58-INTEL-06 | `map_hash` determinism |
+| T58-INTEL-07 | Churn integration + clamping |
+| T58-INTEL-08 | Append + hash-chain integrity |
+| T58-INTEL-09 | `IntegrityError` on tampered record |
+| T58-INTEL-10 | INTEL-ISO-0 import scan |
+| T58-INTEL-11 | `CodeIntelModel.build` frozen snapshot |
+| T58-INTEL-12 | Enrichment helpers |
+
 ## [8.0.0-dev] — 2026-03-13 — Constitutional Draft
 
 ### feat: ADAAD v8 Unified Roadmap — Constitutional Autonomous Software Evolution (Phases 57–65)
