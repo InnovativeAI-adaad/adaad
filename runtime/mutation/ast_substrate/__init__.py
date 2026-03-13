@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 runtime.mutation.ast_substrate — AST Mutation Substrate (Phase 60)
 ===================================================================

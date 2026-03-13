@@ -1,0 +1,192 @@
+name: AST Substrate & Lineage Gate
+
+# Fires on any change to Phase 60/61 modules or their tests.
+# Mirrors the coding conventions of ci.yml: uses setup-python-env composite action.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "runtime/mutation/ast_substrate/**"
+      - "runtime/evolution/lineage/**"
+      - "tests/test_ast_substrate_phase60.py"
+      - "tests/test_lineage_engine_phase61.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - "runtime/mutation/ast_substrate/**"
+      - "runtime/evolution/lineage/**"
+      - "tests/test_ast_substrate_phase60.py"
+      - "tests/test_lineage_engine_phase61.py"
+
+jobs:
+  spdx-headers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Enforce SPDX headers on substrate + lineage modules
+        run: |
+          python scripts/check_spdx_headers.py \
+            runtime/mutation/ast_substrate/ \
+            runtime/evolution/lineage/ \
+            tests/test_ast_substrate_phase60.py \
+            tests/test_lineage_engine_phase61.py
+
+  determinism-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Determinism lint — ast_substrate + lineage
+        run: |
+          python tools/lint_determinism.py \
+            runtime/mutation/ast_substrate/ \
+            runtime/evolution/lineage/
+
+  substrate-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [spdx-headers, determinism-lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Run Phase 60 AST Substrate tests (T60-AST-01..15)
+        env:
+          PYTHONPATH: "."
+          MUTATION_SANDBOX_ONLY: "true"
+        run: pytest tests/test_ast_substrate_phase60.py -v --tb=short -q
+
+  lineage-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [spdx-headers, determinism-lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Run Phase 61 Lineage Engine tests (T61-LIN-01..12)
+        env:
+          PYTHONPATH: "."
+        run: pytest tests/test_lineage_engine_phase61.py -v --tb=short -q
+
+  sandbox-invariants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [substrate-tests, lineage-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Verify SANDBOX-DIV-0 and PATCH-SIZE-0 invariants
+        env:
+          PYTHONPATH: "."
+          MUTATION_SANDBOX_ONLY: "true"
+        run: |
+          python - << 'PY'
+          import hashlib, json, os
+          assert os.environ.get("MUTATION_SANDBOX_ONLY") == "true", "MUTATION_SANDBOX_ONLY not set"
+
+          from runtime.mutation.ast_substrate import (
+              ASTDiffPatch, MutationKind, StaticSafetyScanner, SandboxTournament,
+              PatchSizeViolation, MAX_AST_NODES, MAX_FILES,
+          )
+
+          # SANDBOX-DIV-0: patch_hash deterministic
+          p1 = ASTDiffPatch(MutationKind.REFACTOR, "x.py",
+                            "def f(): pass\n", "def f(): return 1\n", "inv check")
+          p2 = ASTDiffPatch(MutationKind.REFACTOR, "x.py",
+                            "def f(): pass\n", "def f(): return 1\n", "inv check")
+          assert p1.patch_hash == p2.patch_hash, "SANDBOX-DIV-0 VIOLATED: patch_hash not deterministic"
+          assert p1.before_ast_hash == p2.before_ast_hash, "SANDBOX-DIV-0: before_ast_hash not deterministic"
+          assert p1.after_ast_hash  == p2.after_ast_hash,  "SANDBOX-DIV-0: after_ast_hash not deterministic"
+
+          # PATCH-SIZE-0: too many files rejected at construction
+          try:
+              ASTDiffPatch(MutationKind.REFACTOR, "a.py",
+                           "pass\n", "pass\n", "x",
+                           auxiliary_files=["b.py", "c.py"])
+              raise AssertionError("PATCH-SIZE-0: should have raised PatchSizeViolation")
+          except PatchSizeViolation:
+              pass
+
+          # SandboxTournament never writes to disk
+          t = SandboxTournament()
+          assert t._applicator.sandbox_only, "SandboxTournament must run sandbox_only"
+
+          # StaticSafetyScanner: 4 rules present
+          s = StaticSafetyScanner()
+          assert len(s.rule_names) == 4, f"Expected 4 rules, got {len(s.rule_names)}"
+
+          print("SANDBOX-DIV-0 ✅  PATCH-SIZE-0 ✅  MUTATION_SANDBOX_ONLY ✅  4-rule scanner ✅")
+          PY
+
+      - name: Verify LINEAGE-STAB-0 and EPISTASIS-0 invariants
+        env:
+          PYTHONPATH: "."
+        run: |
+          python - << 'PY'
+          from runtime.evolution.lineage import (
+              LineageEngine, EpochOutcome, MutationNiche,
+              EPISTASIS_COOLING_EPOCHS,
+          )
+
+          engine = LineageEngine()
+          ts = "2026-03-13T00:00:00Z"
+
+          # LINEAGE-STAB-0: 5 consecutive rejections → cooling
+          n = engine.register("phash1", MutationNiche.PERFORMANCE, ts)
+          for _ in range(5):
+              engine.record_outcome(n.node_id, EpochOutcome.REJECTED, 0.0)
+          node = engine.node(n.node_id)
+          assert node.in_cooling, "LINEAGE-STAB-0 VIOLATED: 5 rejections should trigger cooling"
+
+          # LINEAGE-STAB-0: 2/5 passes → stable, no cooling
+          n2 = engine.register("phash2", MutationNiche.SAFETY, ts)
+          for o in [EpochOutcome.PASSED, EpochOutcome.REJECTED,
+                    EpochOutcome.REJECTED, EpochOutcome.REJECTED, EpochOutcome.PASSED]:
+              engine.record_outcome(n2.node_id, o, 0.5)
+          node2 = engine.node(n2.node_id)
+          assert not node2.in_cooling, "LINEAGE-STAB-0: 2/5 passes should NOT trigger cooling"
+
+          # EPISTASIS-0: joint regression → cooling for EPISTASIS_COOLING_EPOCHS
+          rec = engine.record_co_occurrence("p1", "p2", "E01", True, True, False)
+          assert rec.epistatic, "EPISTASIS-0: joint regression not flagged"
+          assert engine.is_epistatic_pair("p1", "p2"), "EPISTASIS-0: pair not blocked"
+          for _ in range(EPISTASIS_COOLING_EPOCHS):
+              engine.end_epoch(f"E{_+2:02d}")
+          assert not engine.is_epistatic_pair("p1", "p2"), "EPISTASIS-0: cooling did not expire"
+
+          assert EPISTASIS_COOLING_EPOCHS == 3, "EPISTASIS_COOLING_EPOCHS must be 3"
+
+          print(f"LINEAGE-STAB-0 ✅  EPISTASIS-0 ✅  EPISTASIS_COOLING_EPOCHS={EPISTASIS_COOLING_EPOCHS} ✅")
+          PY
+
+  gate-summary:
+    runs-on: ubuntu-latest
+    needs: [spdx-headers, determinism-lint, substrate-tests, lineage-tests, sandbox-invariants]
+    if: always()
+    steps:
+      - name: Write gate summary
+        run: |
+          {
+            echo "## AST Substrate & Lineage Gate"
+            echo ""
+            echo "| Job | Result |"
+            echo "| --- | --- |"
+            echo "| spdx-headers | ${{ needs.spdx-headers.result }} |"
+            echo "| determinism-lint | ${{ needs.determinism-lint.result }} |"
+            echo "| substrate-tests (T60-AST-01..15) | ${{ needs.substrate-tests.result }} |"
+            echo "| lineage-tests (T61-LIN-01..12) | ${{ needs.lineage-tests.result }} |"
+            echo "| sandbox-invariants (SANDBOX-DIV-0, PATCH-SIZE-0, LINEAGE-STAB-0, EPISTASIS-0) | ${{ needs.sandbox-invariants.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
