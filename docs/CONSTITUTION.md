@@ -186,12 +186,16 @@ Operations dashboards should consume `/metrics/review-quality` for aggregate com
 | v0.5.0 | 9 | soulbound_privacy_invariant | BLOCKING |
 | v0.6.0 | 11-A | bandit_arm_integrity_invariant | BLOCKING |
 | v0.7.0 | 13 | market_signal_integrity_invariant | BLOCKING |
+| v0.7.0 | 23 | entropy_budget_limit | WARNING |
+| v0.9.0 | 63 | phase63_ast_safe_scaffold, phase63_ast_import_scaffold, phase63_ast_complexity_scaffold, phase63_semantic_integrity_scaffold, phase63_exception_scope_scaffold | ADVISORY (GovernanceGateV2) |
 
-Current rule count: **18 rules** — 9 BLOCKING, 4 WARNING, 3 ADVISORY, 2 federation-BLOCKING.
+Current rule count: **23 rules** — 9 BLOCKING, 5 WARNING, 9 ADVISORY (includes 5 GovernanceGateV2 scaffold rules introduced Phase 63).
+Federation constraints (governed separately): 2 federation-BLOCKING.
+**Canonical source:** `runtime/governance/constitution.yaml` (`rules` array). Do not hard-code this total in downstream docs; reference the YAML directly.
 Policy hash: `71eb6499bc09d8b4…` (authoritative: `runtime/constitution.py → POLICY_HASH`)
 
-**Version**: 0.7.0
-**Last Updated**: 2026-03-07
+**Version**: 0.9.0
+**Last Updated**: 2026-03-13
 **Next Review**: After 1000 mutations logged
 
 **Canonical implementation specs:**

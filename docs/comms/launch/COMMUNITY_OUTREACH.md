@@ -66,7 +66,7 @@ The angle: most AI coding tools ask humans to approve every suggestion. ADAAD is
 
 The technically interesting part: every governance decision is deterministically replayable from logged inputs. Replay divergence = immediate halt. This is what makes it auditable rather than just logged.
 
-Current version: 7.0.0, Phase 46 complete (Public API Consolidation — all operator endpoints, WebSocket, UI resolution, and intelligence stack wiring shipped). Free Android app. MIT license.
+Current version: 9.0.0, Phase 65 complete (Emergence — First Autonomous Capability Evolution: governed self-improvement cycle, cryptographic evidence chain, deterministic replay). Free Android app. MIT license.
 
 Happy to provide more technical detail or a demo.
 

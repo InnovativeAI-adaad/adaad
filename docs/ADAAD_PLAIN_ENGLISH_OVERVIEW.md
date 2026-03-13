@@ -154,5 +154,5 @@ The system is designed to make AI useful in contexts where "trust but don't veri
 
 ---
 
-*Current version: 7.0.0 · Phase 46 complete · Free Android app available*
+*Current version: 9.0.0 · Phase 65 complete · Free Android app available*
 *Full documentation: [docs/README.md](README.md) · Constitution: [docs/CONSTITUTION.md](CONSTITUTION.md) · Roadmap: [ROADMAP.md](../../ROADMAP.md)*

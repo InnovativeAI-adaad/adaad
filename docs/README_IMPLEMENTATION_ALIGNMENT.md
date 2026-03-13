@@ -1,6 +1,6 @@
 # ADAAD Implementation ↔ Documentation Alignment
 
-**Authoritative version and posture:** `7.0.0` (latest tagged release: `v7.0.0`), **v7.0.0-GA candidate**. Operator endpoints, WebSocket, intelligence stack wiring, and UI resolution shipped. Constitution v0.7.0 active.
+**Authoritative version and posture:** `9.0.0` (latest tagged release: `v9.0.0`), **v9.0.0-GA**. Phase 65 Emergence complete — first autonomous capability evolution evidenced. Constitution v0.9.0 active (23 rules).
 
 This document cross-references `README.md` operational claims with concrete implementation modules and tests.
 
