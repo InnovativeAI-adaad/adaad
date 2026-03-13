@@ -228,6 +228,7 @@ git clone https://github.com/InnovativeAI-adaad/ADAAD.git
 cd ADAAD
 pip install -r requirements.txt --break-system-packages
 python3 -m pytest tests/ -q
+python3 -m pytest -m autonomous_critical -q
 ```
 
 ```python

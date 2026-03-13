@@ -375,7 +375,7 @@ jobs:
           install-deps: "true"
       - name: Run Phase 6 amendment gate determinism selector
         run: >-
-          PYTHONPATH=. pytest tests/autonomy/ -k "phase6 and amendment and gate and determinism" -q
+          PYTHONPATH=. pytest tests/autonomy/ -m autonomous_critical -k "phase6 and amendment and gate and determinism" -q
 
   phase6-storm-invariant:
     runs-on: ubuntu-latest
@@ -388,7 +388,7 @@ jobs:
           install-deps: "true"
       - name: Run Phase 6 storm invariant selector
         run: >-
-          PYTHONPATH=. pytest tests/autonomy/test_evolution_loop_amendment.py -k "test_storm_invariant_" -q
+          PYTHONPATH=. pytest tests/autonomy/test_evolution_loop_amendment.py -m autonomous_critical -k "test_storm_invariant_" -q
 
   phase6-human-signoff-path:
     runs-on: ubuntu-latest
@@ -401,7 +401,7 @@ jobs:
           install-deps: "true"
       - name: Run Phase 6 human signoff selector
         run: >-
-          PYTHONPATH=. pytest tests/autonomy/test_evolution_loop_amendment.py -k "test_no_auto_approval_" -q
+          PYTHONPATH=. pytest tests/autonomy/test_evolution_loop_amendment.py -m autonomous_critical -k "test_no_auto_approval_" -q
 
   phase6-federated-propagation-all-or-nothing:
     runs-on: ubuntu-latest
