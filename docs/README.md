@@ -79,6 +79,8 @@
 | **Next phase** | 62 — Multi-Horizon Fitness Engine (v8.5.0) |
 | **GA target** | v1.0.0 (Phase 65+) |
 
+**Canonical governance architecture specification:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md`.
+
 ---
 
 ## Completed Phases — v8 Session
