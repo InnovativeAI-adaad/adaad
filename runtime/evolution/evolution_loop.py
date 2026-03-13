@@ -477,7 +477,20 @@ class EvolutionLoop:
                     "mutation_score":          float(self._adaptor.prediction_accuracy),
                     "governance_debt_score":   float(self._last_debt_score),  # Phase 15-01: live
                     "lineage_health":          float(self._last_lineage_proximity),  # Phase 15-02: live
+                    # Phase 58/59+: CodeIntel advisory context passthrough.
+                    # Kept in request.context (not ProposalRequest schema) so
+                    # ProposalEngine can route via StrategyInput.signals.
+                    "capability_target":       getattr(context, "capability_target", None),
+                    "hotspot_functions":       tuple(getattr(context, "hotspot_functions", ()) or ()),
                 }
+                _fragility_score = getattr(context, "fragility_score", None)
+                if _fragility_score is not None:
+                    _engine_context["fragility_score"] = float(_fragility_score)
+
+                _fragility_delta = getattr(context, "fragility_delta", None)
+                if _fragility_delta is not None:
+                    _engine_context["fragility_delta"] = float(_fragility_delta)
+
                 _engine_req = ProposalRequest(
                     cycle_id=epoch_id,
                     strategy_id="auto",

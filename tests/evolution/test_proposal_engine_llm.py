@@ -171,6 +171,40 @@ class TestLLMHappyPath:
         assert ctx.lineage_health == pytest.approx(1.0)
         assert ctx.horizon_cycles == 1
 
+    def test_code_intel_context_keys_propagate_via_signals_passthrough(self):
+        expected = _make_proposal()
+        adapter = _make_adapter(expected)
+        engine = ProposalEngine(adapter=adapter)
+
+        req = ProposalRequest(
+            cycle_id="cyc6",
+            strategy_id="adaptive",
+            context={
+                "mutation_score": 0.7,
+                "capability_target": "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch",
+                "hotspot_functions": (
+                    "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch",
+                    "runtime.evolution.proposal_engine.ProposalEngine.generate",
+                ),
+                "fragility_score": 0.42,
+                "fragility_delta": -0.07,
+            },
+        )
+        engine.generate(req)
+
+        call_kwargs = adapter.build_from_strategy.call_args.kwargs
+        ctx: StrategyInput = call_kwargs["context"]
+        assert ctx.mutation_score == pytest.approx(0.7)
+        assert ctx.signals["capability_target"] == (
+            "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch"
+        )
+        assert ctx.signals["hotspot_functions"] == (
+            "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch",
+            "runtime.evolution.proposal_engine.ProposalEngine.generate",
+        )
+        assert ctx.signals["fragility_score"] == pytest.approx(0.42)
+        assert ctx.signals["fragility_delta"] == pytest.approx(-0.07)
+
 
 # ────────────────────────────────────────────────────────────────────────────
 # Auto-configuration from environment
