@@ -21,7 +21,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -516,6 +516,61 @@ class TestRepoLedgerSync:
             # Simulate manual edit
             mod.write_text("x = 999\n")  # changed without telling orchestrator
             assert not watchdog.is_clean()
+
+    def test_T_SYNC_04_poll_failure_writes_telemetry_event(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            watchdog = RepoLedgerSyncWatchdog(
+                repo_root=tmp,
+                sync_events_path=str(Path(tmp, "sync_events.jsonl")),
+                state_path=str(Path(tmp, "sync_state.json")),
+                poll_interval_s=1,
+                poll_failure_threshold=3,
+            )
+            with patch.object(watchdog, "_check_once", side_effect=RuntimeError("boom")):
+                watchdog._handle_poll_failure(RuntimeError("boom"))
+
+            events = [
+                json.loads(line)
+                for line in Path(tmp, "sync_events.jsonl").read_text().splitlines()
+                if line.strip()
+            ]
+            assert events[-1]["event_type"] == "WATCHDOG_POLL_FAILURE"
+            assert events[-1]["exception_type"] == "RuntimeError"
+            assert events[-1]["exception_message"] == "boom"
+            assert events[-1]["poll_interval_s"] == 1
+            assert events[-1]["thread_name"]
+            assert events[-1]["timestamp"]
+
+    def test_T_SYNC_05_repeated_poll_failures_set_monitoring_impaired_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state_path = Path(tmp, "sync_state.json")
+            watchdog = RepoLedgerSyncWatchdog(
+                repo_root=tmp,
+                sync_events_path=str(Path(tmp, "sync_events.jsonl")),
+                state_path=str(state_path),
+                poll_interval_s=2,
+                poll_failure_threshold=2,
+                max_poll_failure_backoff_s=16,
+            )
+
+            watchdog._handle_poll_failure(ValueError("f1"))
+            assert watchdog._state.get("monitoring_impaired") is not True
+            assert watchdog._compute_poll_sleep_s() == 4.0
+
+            watchdog._handle_poll_failure(ValueError("f2"))
+            assert watchdog._state.get("monitoring_impaired") is True
+            assert watchdog._state.get("monitoring_impaired_reason") == "WATCHDOG_POLL_FAILURE"
+            assert watchdog._state.get("monitoring_impaired_consecutive_failures") == 2
+            assert watchdog._state.get("monitoring_impaired_since")
+            assert watchdog._compute_poll_sleep_s() == 8.0
+
+            persisted = json.loads(state_path.read_text())
+            assert persisted["monitoring_impaired"] is True
+
+            watchdog._handle_poll_success()
+            assert watchdog._state["monitoring_impaired"] is False
+            assert watchdog._state["monitoring_last_recovered_at"]
+            assert watchdog._compute_poll_sleep_s() == 2.0
 
     def test_T_SYNC_03_lockdown_blocked_by_assert_clean(self):
         with tempfile.TemporaryDirectory() as tmp:
