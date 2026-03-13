@@ -82,6 +82,7 @@ docs/ENVIRONMENT_VARIABLES.md    — All env vars reference
 docs/RELEASE_EVIDENCE_MATRIX.md  — Deprecated pointer to canonical claims evidence matrix
 docs/governance/                 — Governance runbooks, specs, plans
     ARCHITECT_SPEC_v3.1.0.md              — CANONICAL architectural specification (v3.1.0)
+    ARCHITECT_SPEC_v8.0.0.md              — NON-CANONICAL forward draft (excluded from canonical-spec validators)
   SECURITY_INVARIANTS_MATRIX.md
   DETERMINISM_CONTRACT_SPEC.md
   STRICT_REPLAY_INVARIANTS.md

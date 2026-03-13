@@ -39,6 +39,10 @@ ASTDiffPatch (Ph60) → LineageEngine.register() → LineageNode (niche, generat
 | LINEAGE-STAB-0 | Stable iff ≥ 2/5 last epochs passed; < 2 → 1-epoch cooling |
 | EPISTASIS-0 | Joint regression flags pair; cooled EPISTASIS_COOLING_EPOCHS=3 epochs |
 
+#### Governance note
+
+- `docs/governance/ARCHITECT_SPEC_v8.0.0.md` is explicitly designated a non-canonical forward draft for future phases and must not be treated as the active governance source by manifest/validator canonical checks.
+
 ## [8.3.0] — 2026-03-13 — Phase 60: AST Mutation Substrate
 
 ### feat(phase-60): Motor Layer — ASTDiffPatch + StaticSafetyScanner + PatchApplicator + SandboxTournament

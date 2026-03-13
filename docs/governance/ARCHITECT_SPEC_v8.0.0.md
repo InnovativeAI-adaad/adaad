@@ -1,7 +1,7 @@
 # ADAAD Architect Spec — v8.0.0
 ## Constitutional Autonomous Software Evolution — Phases 57–65
 
-**Status:** CONSTITUTIONAL DRAFT  
+**Status:** NON-CANONICAL FORWARD DRAFT (DO NOT USE AS ACTIVE GOVERNANCE SOURCE)  
 **Date:** 2026-03-13  
 **Author:** ArchitectAgent · InnovativeAI-adaad/ADAAD  
 **Supersedes:** ARCHITECT_SPEC_v3.1.0.md (for Phases 57–65)  
@@ -13,7 +13,7 @@
 
 ## 1. Document Scope and Authority
 
-This document is the canonical constitutional specification for ADAAD Phases 57–65. It defines:
+This document is a forward-looking constitutional draft for ADAAD Phases 57–65. It is not the active canonical governance specification. The canonical governance spec remains `docs/governance/ARCHITECT_SPEC_v3.1.0.md` until a governance-controlled cutover explicitly updates manifest + validators in the same change set. This draft defines:
 
 - All new architectural components (organs)
 - All new invariants and governance rules
