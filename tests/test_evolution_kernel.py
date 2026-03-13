@@ -211,6 +211,8 @@ class EvolutionKernelTest(unittest.TestCase):
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "set", "path": "/last_mutation", "value": "x"}]}}),
             mock.patch("runtime.evolution.evolution_kernel.classify_mutation_change") as classify,
             mock.patch("runtime.evolution.evolution_kernel.apply_metadata_updates", return_value={"mutation_count": 2, "version": 3, "last_mutation": "2025-01-01T00:00:00Z"}) as metadata,
+            mock.patch("runtime.evolution.evolution_kernel.cryovant.touch_non_functional_metadata", return_value={"status": "metadata_touched"}) as touch_metadata,
+            mock.patch("runtime.evolution.evolution_kernel.metrics.log") as metrics_log,
             mock.patch.object(kernel, "execute_in_sandbox") as execute,
             mock.patch.object(kernel, "evaluate_fitness") as evaluate,
             mock.patch.object(kernel, "sign_certificate") as sign,
@@ -219,11 +221,29 @@ class EvolutionKernelTest(unittest.TestCase):
             result = kernel.run_cycle("agent-x")
 
         metadata.assert_called_once()
+        touch_metadata.assert_called_once_with(
+            "agent-x",
+            self.agent_dir,
+            metadata_version=3,
+            mutation_count=2,
+            metadata_last_mutation="2025-01-01T00:00:00Z",
+        )
+        metrics_log.assert_called_once_with(
+            event_type="cosmetic_update_only",
+            payload={
+                "agent_id": "agent-x",
+                "change_reason": "allowed_metadata_only",
+                "metadata_version": 3,
+                "metadata_mutation_count": 2,
+                "metadata_last_mutation": "2025-01-01T00:00:00Z",
+            },
+        )
         execute.assert_not_called()
         evaluate.assert_not_called()
         sign.assert_not_called()
         self.assertEqual(result["status"], "metadata_only")
         self.assertEqual(result["change_classification"], "NON_FUNCTIONAL_CHANGE")
+        self.assertTrue(result["cosmetic_only"])
 
 
 if __name__ == "__main__":
