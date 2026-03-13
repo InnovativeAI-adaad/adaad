@@ -29,6 +29,23 @@ class SupervisorStatus:
     safe_mode_active: bool
 
 
+class NodeSupervisorJournalError(RuntimeError):
+    """Raised when supervisor cannot persist critical journal events."""
+
+
+class NodeSupervisorJournalFailureMode(str, Enum):
+    FAIL_OPEN = "fail_open"
+    FAIL_CLOSED_CRITICAL = "fail_closed_critical"
+
+
+@dataclass(frozen=True)
+class NodeSupervisorJournalStatus:
+    event_type: str
+    ok: bool
+    reason: str
+    error_type: Optional[str] = None
+
+
 class FederationNodeSupervisor:
     """Monitors federation health; enforces safe mode on partition; triggers autonomous rejoin.
 
@@ -48,6 +65,7 @@ class FederationNodeSupervisor:
         rejoin_interval_s: float = 10.0,
         journal_fn: Optional[Callable] = None,
         provider: RuntimeDeterminismProvider | None = None,
+        journal_failure_mode: NodeSupervisorJournalFailureMode = NodeSupervisorJournalFailureMode.FAIL_CLOSED_CRITICAL,
     ) -> None:
         self._registry = registry
         self._consensus = consensus
@@ -56,6 +74,11 @@ class FederationNodeSupervisor:
         self._rejoin_interval_s = rejoin_interval_s
         self._journal_fn = journal_fn
         self._provider: RuntimeDeterminismProvider = provider or default_provider()
+        self._journal_failure_mode = NodeSupervisorJournalFailureMode(journal_failure_mode)
+        self._critical_journal_events = {
+            "federation_partition_detected.v1",
+        }
+        self._last_journal_status: Optional[NodeSupervisorJournalStatus] = None
         self._state = NodeSupervisorState.HEALTHY
         self._last_rejoin_attempt = 0.0
 
@@ -117,9 +140,51 @@ class FederationNodeSupervisor:
         })
         log.info("FederationNodeSupervisor: rejoin broadcast sent")
 
-    def _journal(self, event_type: str, payload: Dict[str, Any]) -> None:
-        if self._journal_fn:
-            try: self._journal_fn(event_type, payload)
-            except Exception: pass
+    @property
+    def last_journal_status(self) -> Optional[NodeSupervisorJournalStatus]:
+        return self._last_journal_status
 
-__all__ = ["FederationNodeSupervisor", "NodeSupervisorState", "SupervisorStatus"]
+    def _journal(self, event_type: str, payload: Dict[str, Any]) -> NodeSupervisorJournalStatus:
+        if not self._journal_fn:
+            self._last_journal_status = NodeSupervisorJournalStatus(
+                event_type=event_type,
+                ok=True,
+                reason="journal_fn_not_configured",
+            )
+            return self._last_journal_status
+        try:
+            self._journal_fn(event_type, payload)
+            self._last_journal_status = NodeSupervisorJournalStatus(
+                event_type=event_type,
+                ok=True,
+                reason="persisted",
+            )
+            return self._last_journal_status
+        except Exception as exc:  # noqa: BLE001
+            self._last_journal_status = NodeSupervisorJournalStatus(
+                event_type=event_type,
+                ok=False,
+                reason="journal_persistence_failed",
+                error_type=exc.__class__.__name__,
+            )
+            fail_closed_triggered = (
+                self._journal_failure_mode == NodeSupervisorJournalFailureMode.FAIL_CLOSED_CRITICAL
+                and event_type in self._critical_journal_events
+            )
+            log.error(
+                "federation_node_supervisor_journal_failed event_type=%s reason=%s error_type=%s error=%s mode=%s fail_closed=%s payload=%s",
+                event_type,
+                self._last_journal_status.reason,
+                self._last_journal_status.error_type,
+                str(exc),
+                self._journal_failure_mode.value,
+                fail_closed_triggered,
+                payload,
+            )
+            if fail_closed_triggered:
+                raise NodeSupervisorJournalError(
+                    f"journal_persistence_failed:{event_type}:{exc.__class__.__name__}:{exc}"
+                ) from exc
+            return self._last_journal_status
+
+__all__ = ["FederationNodeSupervisor", "NodeSupervisorState", "SupervisorStatus", "NodeSupervisorJournalError", "NodeSupervisorJournalFailureMode", "NodeSupervisorJournalStatus"]

@@ -30,7 +30,7 @@ Invariants (constitutional requirements)
    (sort_keys=True, no floats without decimal representation).
 5. **No GovernanceGate calls in broadcast path**: ``propose_federated_mutation``
    packages an *already-approved* gate decision; it does not re-evaluate it.
-6. **Audit ledger write failures never block decisions** (fail-open on audit only).
+6. **Audit persistence is explicit**: write outcomes are structured and critical events are fail-closed by default.
 """
 
 from __future__ import annotations
@@ -41,6 +41,7 @@ import logging
 import uuid
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
+from enum import Enum
 from runtime.governance.federation.consensus import FederationConsensusEngine
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -62,6 +63,19 @@ class FederationProposalValidationError(FederationMutationBrokerError):
 
 class FederationDualGateError(FederationMutationBrokerError):
     """Raised when the destination GovernanceGate rejects an inbound proposal."""
+
+
+class FederationAuditFailureMode(str, Enum):
+    FAIL_OPEN = "fail_open"
+    FAIL_CLOSED_CRITICAL = "fail_closed_critical"
+
+
+@dataclass(frozen=True)
+class FederationAuditStatus:
+    event_type: str
+    ok: bool
+    reason: str
+    error_type: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -217,8 +231,10 @@ class FederationMutationBroker:
         ``source_chain_digest``.
     audit_writer:
         Optional callable ``(event_type: str, payload: dict) -> None`` for
-        appending broker events to the evidence ledger.  Failures are
-        logged but never re-raised (fail-open on audit).
+        appending broker events to the evidence ledger.
+    audit_failure_mode:
+        Audit persistence mode. Critical events are fail-closed by default,
+        and may be set to ``"fail_open"`` for test/development ergonomics.
     """
 
     def __init__(
@@ -228,12 +244,21 @@ class FederationMutationBroker:
         governance_gate: Any,
         lineage_chain_digest_fn: Any,
         audit_writer: Optional[Any] = None,
+        audit_failure_mode: FederationAuditFailureMode = FederationAuditFailureMode.FAIL_CLOSED_CRITICAL,
         consensus_engine: Optional[FederationConsensusEngine] = None,
     ) -> None:
         self._local_repo = local_repo
         self._gate = governance_gate
         self._chain_digest_fn = lineage_chain_digest_fn
         self._audit = audit_writer
+        self._audit_failure_mode = FederationAuditFailureMode(audit_failure_mode)
+        self._critical_audit_events = {
+            "federated_amendment_propagated",
+            "federated_amendment_rollback",
+            "federation_mutation_quarantined",
+            "federation_partition_detected.v1",
+        }
+        self._last_audit_status: Optional[FederationAuditStatus] = None
         # Phase 50 (PR-50-01): FederationConsensusEngine wired for log replication.
         # When injected, every dual-gate-accepted mutation is appended to the
         # consensus log via append_entry(). None = consensus skipped silently
@@ -243,6 +268,10 @@ class FederationMutationBroker:
         self._inbound: List[Dict[str, Any]] = []
         self._accepted: List[AcceptedFederatedMutation] = []
         self._quarantined: List[Dict[str, Any]] = []
+
+    @property
+    def last_audit_status(self) -> Optional[FederationAuditStatus]:
+        return self._last_audit_status
 
     # ------------------------------------------------------------------
     # Source-side: package and enqueue a local GovernanceGate-approved mutation
@@ -498,10 +527,12 @@ class FederationMutationBroker:
         ordered_destinations = self._ordered_destination_nodes(destination_nodes)
         rollback_entries: List[Dict[str, Any]] = []
         applied_destinations: List[str] = []
+        failed_destination_id = "unknown"
 
         try:
             for destination in ordered_destinations:
                 destination_id = self._destination_id(destination)
+                failed_destination_id = destination_id
                 snapshot = state_reader(destination)
 
                 gate_payload = gate_evaluator(
@@ -529,7 +560,7 @@ class FederationMutationBroker:
             rollback_payload = {
                 "proposal_id": proposal_id,
                 "source_node": source_node,
-                "failed_destination": self._destination_id(destination) if "destination" in locals() else "unknown",
+                "failed_destination": failed_destination_id,
                 "rolled_back_destinations": sorted(applied_destinations),
             }
             self._emit_audit("federated_amendment_rollback", rollback_payload)
@@ -559,13 +590,49 @@ class FederationMutationBroker:
             "reason": reason,
         })
 
-    def _emit_audit(self, event_type: str, payload: Dict[str, Any]) -> None:
+    def _emit_audit(self, event_type: str, payload: Dict[str, Any]) -> FederationAuditStatus:
         if self._audit is None:
-            return
+            self._last_audit_status = FederationAuditStatus(
+                event_type=event_type,
+                ok=True,
+                reason="audit_writer_not_configured",
+            )
+            return self._last_audit_status
+
         try:
             self._audit(event_type, payload)
-        except Exception as exc:  # noqa: BLE001 — audit writes are fail-open
-            log.warning("FederationMutationBroker: audit write failed (%s) — %s", event_type, exc)
+            self._last_audit_status = FederationAuditStatus(
+                event_type=event_type,
+                ok=True,
+                reason="persisted",
+            )
+            return self._last_audit_status
+        except Exception as exc:  # noqa: BLE001
+            self._last_audit_status = FederationAuditStatus(
+                event_type=event_type,
+                ok=False,
+                reason="audit_persistence_failed",
+                error_type=exc.__class__.__name__,
+            )
+            fail_closed_triggered = (
+                self._audit_failure_mode == FederationAuditFailureMode.FAIL_CLOSED_CRITICAL
+                and event_type in self._critical_audit_events
+            )
+            log.error(
+                "federation_audit_write_failed event_type=%s reason=%s error_type=%s error=%s mode=%s fail_closed=%s payload=%s",
+                event_type,
+                self._last_audit_status.reason,
+                self._last_audit_status.error_type,
+                str(exc),
+                self._audit_failure_mode.value,
+                fail_closed_triggered,
+                payload,
+            )
+            if fail_closed_triggered:
+                raise FederationMutationBrokerError(
+                    f"audit_persistence_failed:{event_type}:{exc.__class__.__name__}:{exc}"
+                ) from exc
+            return self._last_audit_status
 
     def _validate_federation_hmac_key_path(self, federation_hmac_key_path: str) -> None:
         key_path = Path(federation_hmac_key_path) if federation_hmac_key_path else None
@@ -639,6 +706,8 @@ class FederationMutationBroker:
 __all__ = [
     "AcceptedFederatedMutation",
     "FederatedMutationProposal",
+    "FederationAuditFailureMode",
+    "FederationAuditStatus",
     "FederationDualGateError",
     "FederationMutationBroker",
     "FederationMutationBrokerError",
