@@ -33,8 +33,8 @@ def _validate_state(payload: dict[str, Any]) -> list[str]:
     if missing:
         errors.append(f"missing_keys:{','.join(missing)}")
 
-    if payload.get("schema_version") != "1.1.0":
-        errors.append("schema_version:expected_1.1.0")
+    if payload.get("schema_version") != "1.5.0":
+        errors.append("schema_version:expected_1.5.0")
 
     for key in ("last_completed_pr", "next_pr", "active_phase"):
         value = payload.get(key)
