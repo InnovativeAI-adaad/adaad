@@ -31,9 +31,9 @@ entry point and must document:
 2. who can update it,
 3. when it was last synchronized with `AGENTS.md`.
 
-## Installation checklist (v1.1 alignment)
+## Installation checklist (current agent-state schema alignment)
 
-- [ ] `AGENTS.md` is present at repository root and matches v1.1.0 contract semantics.
+- [ ] `AGENTS.md` is present at repository root and matches current governed contract semantics.
 - [ ] Codex has read access to the full ADAAD repository tree.
 - [ ] `.adaad_agent_state.json` is ignored via `.gitignore`.
 - [ ] `python scripts/validate_adaad_agent_state.py` passes before session actions.
@@ -44,6 +44,66 @@ entry point and must document:
 - [ ] First invocation test executed with `ADAAD status`.
 - [ ] Second invocation test executed with `ADAAD preflight`.
 - [ ] Third invocation test executed with `ADAAD`.
+
+## Agent-state schema contract (canonical guidance)
+
+### Canonical schema location
+
+The canonical JSON Schema for `.adaad_agent_state.json` is maintained at:
+
+- `docs/schemas/adaad_agent_state.schema.json`
+
+Operational validator logic remains in `scripts/validate_adaad_agent_state.py`; the script and schema must evolve together so preflight behavior stays deterministic.
+
+### Supported-version policy
+
+The validator must run in one of two explicit governance modes:
+
+1. **Strict latest (default)**
+   - Accept only the current schema version.
+   - Reject every older/newer unknown version fail-closed.
+2. **Controlled allowlist (migration windows only)**
+   - Accept only versions explicitly listed in a deterministic allowlist.
+   - Require a documented removal date for legacy versions.
+
+Never use open-ended version acceptance (for example prefix-only checks or semantic "greater-than" acceptance).
+
+### Deterministic fail-closed examples
+
+Expected validator outcomes (machine-readable and reproducible):
+
+- **Unsupported version**
+
+  ```text
+  adaad_agent_state_validation:failed
+  - schema_version:unsupported:<value>
+  ```
+
+- **Missing required keys**
+
+  ```text
+  adaad_agent_state_validation:failed
+  - missing_keys:last_gate_results,pending_evidence_rows
+  ```
+
+- **Invalid tier status**
+
+  ```text
+  adaad_agent_state_validation:failed
+  - last_gate_results.tier_2:invalid_status
+  ```
+
+The validator must return non-zero exit status for all three classes above.
+
+### CI enforcement lane
+
+Agent-state validator coverage is enforced in CI through:
+
+- **Workflow:** `.github/workflows/ci.yml`
+- **Job lane:** `full-test-suite`
+- **Mechanism:** `PYTHONPATH=. pytest tests/ -q`, which includes `tests/test_validate_adaad_agent_state.py`
+
+In addition, operators should keep the direct script call (`python scripts/validate_adaad_agent_state.py`) in local ADAAD preflight before any build actions.
 
 ## Ongoing synchronization checklist
 
