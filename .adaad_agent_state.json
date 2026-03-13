@@ -1,10 +1,10 @@
 {
-  "active_phase": "v7.9.2 \u2014 fix: pre-existing test failures resolved",
+  "active_phase": "v8.5.0 \u2014 Phase 62: Multi-Horizon Fitness Engine v2",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 55 \u2014 Aponi UX Polish: Toast, Countdown, Keyboard Nav, Log Filter",
-  "last_completed_pr": "fix/pre-existing-test-failures",
+  "last_completed_phase": "Phase 62 \u2014 Intelligence: Multi-Horizon Fitness Engine v2",
+  "last_completed_pr": "feature/phase-62-fitness-engine-v2",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-13",
-  "last_sync_sha": "90e02808",
-  "next_pr": "PR-56-PLAN (Phase 56 \u2014 TBD)",
+  "last_sync_sha": "5dc0dde",
+  "next_pr": "PR-63-PLAN (Phase 63 \u2014 GovernanceGate v2 + Exception Tokens \u2014 GATE-V2-RULES HUMAN-0 required)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -122,6 +122,22 @@
     "v7.9.1-released",
     "fix-sandbox-container-rollout-conftest",
     "fix-agm-step-signals-taxonomy",
-    "v7.9.2-released"
+    "v7.9.2-released",
+    "phase57-proposal-engine-auto-provision",
+    "v8.0.0-released",
+    "phase58-code-intel-model",
+    "v8.1.0-released",
+    "phase59-capability-graph-v2",
+    "v8.2.0-released",
+    "phase60-ast-mutation-substrate",
+    "v8.3.0-released",
+    "phase61-lineage-engine",
+    "v8.4.0-released",
+    "phase62-fitness-engine-v2",
+    "phase62-fit-bound-0-enforced",
+    "phase62-fit-det-0-enforced",
+    "phase62-fit-div-0-enforced",
+    "phase62-fit-arch-0-enforced",
+    "v8.5.0-released"
   ]
 }
