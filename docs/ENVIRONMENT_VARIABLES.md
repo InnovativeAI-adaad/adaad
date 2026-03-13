@@ -130,6 +130,10 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_REPLAY_PROOF_HMAC_SECRET` / `ADAAD_REPLAY_PROOF_HMAC_SECRET_<KEY_ID>` | `unset` | secret string override for replay HMAC key material; highest priority | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
 | `ADAAD_REPLAY_PROOF_PRIVATE_KEY` / `ADAAD_REPLAY_PROOF_PRIVATE_KEY_<KEY_ID>` | `unset` | base64 Ed25519 private key override; highest priority | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
 | `ADAAD_REPLAY_PROOF_KEY_ID` | `'replay-proof-dev'` | string key selector; required in secured deployments | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
+| `ADAAD_REPLAY_PROOF_ALGO` | `unset` | string/JSON per caller contract; `ed25519` requires `nacl` and fails closed if unavailable unless explicit downgrade is allowed | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
+| `ADAAD_REPLAY_PROOF_ALLOW_ED25519_DOWNGRADE` | `unset` | boolean-like: `1|true|yes|on` enables explicit downgrade from requested `ed25519` to `hmac-sha256` when `nacl` is unavailable (no silent downgrade) | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
+| `ADAAD_REPLAY_PROOF_KEYRING_PATH` | `unset` | secret string; required in secured deployments | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
+| `ADAAD_REPLAY_PROOF_KEY_ID` | `'replay-proof-dev'` | secret string; required in secured deployments | runtime/governance engine | `runtime/evolution/replay_attestation.py` |
 | `ADAAD_ROOT` | `repo root (code), ${DEFAULT_ROOT} (ops wrappers)` | filesystem path/list string | agent/orchestrator packages | `adaad/core/root.py` |
 | `ADAAD_RUNTIME_BUILD_HASH` | `'unavailable'` | string/JSON per caller contract | runtime/governance engine | `runtime/evolution/evidence_bundle.py` |
 | `ADAAD_RUNTIME_IMPORT_GUARD` | `''` | boolean-like: `1|true|yes|on` enables | runtime/governance engine | `runtime/import_guard.py` |

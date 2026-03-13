@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import threading
 import time
@@ -62,6 +63,9 @@ TIER_0_PATHS_RELATIVE = [
 ]
 
 WATCHED_EXTENSIONS = {".py", ".yaml", ".yml", ".json", ".md"}
+
+
+logger = logging.getLogger(__name__)
 
 
 class SyncDriftError(RuntimeError):
@@ -140,6 +144,8 @@ class RepoLedgerSyncWatchdog:
         state_path: str = "data/sync_state.json",
         poll_interval_s: int = 30,
         drift_threshold: float = 0.05,
+        max_poll_failure_backoff_s: int = 300,
+        poll_failure_threshold: int = 3,
     ):
         self.repo_root          = Path(repo_root).resolve()
         self.ledger_path        = Path(ledger_path)
@@ -147,6 +153,9 @@ class RepoLedgerSyncWatchdog:
         self.state_path         = Path(state_path)
         self.poll_interval_s    = poll_interval_s
         self.drift_threshold    = drift_threshold
+        self.max_poll_failure_backoff_s = max_poll_failure_backoff_s
+        self.poll_failure_threshold = poll_failure_threshold
+        self._consecutive_poll_failures = 0
 
         self._lock              = threading.Lock()
         self._thread: Optional[threading.Thread] = None
@@ -185,9 +194,70 @@ class RepoLedgerSyncWatchdog:
         while self._running:
             try:
                 self._check_once()
-            except Exception:
-                pass  # watchdog must never crash the system
-            time.sleep(self.poll_interval_s)
+                self._handle_poll_success()
+            except Exception as exc:
+                self._handle_poll_failure(exc)
+            time.sleep(self._compute_poll_sleep_s())
+
+    def _compute_poll_sleep_s(self) -> float:
+        if self._consecutive_poll_failures <= 0:
+            return float(self.poll_interval_s)
+        multiplier = min(2 ** self._consecutive_poll_failures, 16)
+        return float(min(self.poll_interval_s * multiplier, self.max_poll_failure_backoff_s))
+
+    def _handle_poll_success(self) -> None:
+        if self._consecutive_poll_failures <= 0:
+            return
+        self._consecutive_poll_failures = 0
+        self._state["monitoring_impaired"] = False
+        self._state["monitoring_impaired_reason"] = None
+        self._state["monitoring_impaired_since"] = None
+        self._state["monitoring_impaired_consecutive_failures"] = 0
+        self._state["monitoring_impaired_thread"] = None
+        self._state["monitoring_last_recovered_at"] = datetime.now(timezone.utc).isoformat()
+        self._save_state()
+
+    def _handle_poll_failure(self, exc: Exception) -> None:
+        self._consecutive_poll_failures += 1
+        timestamp = datetime.now(timezone.utc).isoformat()
+        thread_name = threading.current_thread().name
+        degraded = self._consecutive_poll_failures >= self.poll_failure_threshold
+
+        event_payload = {
+            "event_type": "WATCHDOG_POLL_FAILURE",
+            "consecutive_failures": self._consecutive_poll_failures,
+            "exception_message": str(exc),
+            "exception_type": type(exc).__name__,
+            "poll_interval_s": self.poll_interval_s,
+            "thread_name": thread_name,
+            "timestamp": timestamp,
+            "watchdog_degraded": degraded,
+        }
+
+        if degraded:
+            self._state["monitoring_impaired"] = True
+            self._state["monitoring_impaired_reason"] = "WATCHDOG_POLL_FAILURE"
+            self._state["monitoring_impaired_since"] = self._state.get("monitoring_impaired_since") or timestamp
+            self._state["monitoring_impaired_consecutive_failures"] = self._consecutive_poll_failures
+            self._state["monitoring_impaired_thread"] = thread_name
+            self._save_state()
+
+        logger.error(
+            "RepoLedgerSyncWatchdog poll failure",
+            extra={
+                "event_type": event_payload["event_type"],
+                "exception_type": event_payload["exception_type"],
+                "exception_message": event_payload["exception_message"],
+                "timestamp": timestamp,
+                "poll_interval_s": self.poll_interval_s,
+                "thread_name": thread_name,
+                "consecutive_failures": self._consecutive_poll_failures,
+                "watchdog_degraded": degraded,
+            },
+        )
+
+        with open(self.sync_events_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(event_payload, sort_keys=True) + "\n")
 
     def _check_once(self) -> None:
         """One poll cycle: compare current disk state to baseline."""
@@ -421,10 +491,19 @@ class RepoLedgerSyncWatchdog:
     # ------------------------------------------------------------------
 
     def _load_state(self) -> dict:
+        default_state = {
+            "lockdown_active": False,
+            "monitoring_impaired": False,
+            "monitoring_impaired_reason": None,
+            "monitoring_impaired_since": None,
+            "monitoring_impaired_consecutive_failures": 0,
+            "monitoring_impaired_thread": None,
+        }
         if self.state_path.exists():
             with open(self.state_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        return {"lockdown_active": False}
+                loaded = json.load(f)
+            return {**default_state, **loaded}
+        return default_state
 
     def _save_state(self) -> None:
         tmp = self.state_path.with_suffix(".adaad_tmp")

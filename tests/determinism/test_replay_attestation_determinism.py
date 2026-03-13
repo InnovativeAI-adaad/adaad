@@ -7,6 +7,7 @@ pytestmark = pytest.mark.autonomous_critical
 import json
 
 from runtime.evolution.lineage_v2 import LineageLedgerV2
+from runtime.evolution import replay_attestation
 from runtime.evolution.replay_attestation import ReplayProofBuilder, validate_replay_proof_schema, verify_replay_proof_bundle
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
 from security import cryovant
@@ -272,7 +273,9 @@ def test_replay_attestation_cross_instance_revocation_check(tmp_path) -> None:
     assert result["signature_results"][0]["error"] == "key_revoked"
 
 
-def test_replay_attestation_ed25519_happy_path(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
+    if not replay_attestation._has_pynacl():
+        pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519"
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
@@ -291,7 +294,9 @@ def test_replay_attestation_ed25519_happy_path(tmp_path, monkeypatch: pytest.Mon
     assert verify_replay_proof_bundle(bundle)["ok"]
 
 
-def test_replay_attestation_ed25519_tamper_detection(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
+    if not replay_attestation._has_pynacl():
+        pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519-tamper"
     monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_tamper.jsonl")
@@ -312,7 +317,9 @@ def test_replay_attestation_ed25519_tamper_detection(tmp_path, monkeypatch: pyte
     assert result["signature_results"][0]["error"] == "signature_mismatch"
 
 
-def test_replay_attestation_ed25519_unknown_key_id(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_replay_attestation_ed25519_unknown_key_id(tmp_path) -> None:
+    if not replay_attestation._has_pynacl():
+        pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519-unknown"
     monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_unknown.jsonl")
@@ -367,3 +374,74 @@ def test_replay_attestation_rejects_environment_mismatch_even_when_replay_digest
     assert not result["ok"]
     assert result["error"] == "replay_environment_fingerprint_mismatch"
 
+
+
+def test_replay_attestation_builder_blocks_ed25519_without_pynacl(tmp_path, monkeypatch) -> None:
+    epoch_id = "epoch-ed25519-no-pynacl"
+    ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_no_pynacl.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    monkeypatch.delenv("ADAAD_REPLAY_PROOF_ALLOW_ED25519_DOWNGRADE", raising=False)
+    monkeypatch.setattr(replay_attestation, "_has_pynacl", lambda: False)
+
+    with pytest.raises(RuntimeError, match="ed25519_requires_pynacl_or_explicit_downgrade"):
+        ReplayProofBuilder(
+            ledger=ledger,
+            proofs_dir=tmp_path / "proofs",
+            key_id="replay-proof-ed25519-dev",
+            algorithm="ed25519",
+        )
+
+
+def test_replay_attestation_builder_explicit_downgrade_without_pynacl(tmp_path, monkeypatch) -> None:
+    epoch_id = "epoch-ed25519-explicit-downgrade"
+    ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_explicit_downgrade.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_ALLOW_ED25519_DOWNGRADE", "true")
+    monkeypatch.setattr(replay_attestation, "_has_pynacl", lambda: False)
+
+    builder = ReplayProofBuilder(
+        ledger=ledger,
+        proofs_dir=tmp_path / "proofs",
+        key_id="proof-key",
+        algorithm="ed25519",
+    )
+    bundle = builder.build_bundle(epoch_id)
+
+    assert builder.algorithm == "hmac-sha256"
+    assert bundle["signature_bundle"]["algorithm"] == "hmac-sha256"
+
+
+def test_ed25519_signer_sign_fails_closed_without_pynacl(monkeypatch) -> None:
+    signer = replay_attestation.Ed25519ReplayProofSigner(
+        keyring={
+            "key": {
+                "private_key": "c2VjcmV0",
+                "public_key": "cHVibGlj",
+            }
+        }
+    )
+    monkeypatch.setattr(replay_attestation, "_has_pynacl", lambda: False)
+
+    with pytest.raises(RuntimeError, match="ed25519_signing_requires_pynacl"):
+        signer.sign(key_id="key", signed_digest="sha256:" + ("1" * 64))
+
+
+def test_ed25519_verify_reports_missing_dependency(tmp_path, monkeypatch) -> None:
+    epoch_id = "epoch-ed25519-verify-no-pynacl"
+    ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_verify_no_pynacl.jsonl")
+    _seed_epoch(ledger, epoch_id=epoch_id)
+
+    builder = ReplayProofBuilder(ledger=ledger, proofs_dir=tmp_path / "proofs", key_id="proof-key", algorithm="hmac-sha256")
+    bundle = builder.build_bundle(epoch_id)
+    bundle["signature_bundle"]["algorithm"] = "ed25519"
+    bundle["signature_bundle"]["signature"] = "ed25519:Zm9v"
+    bundle["signatures"][0]["algorithm"] = "ed25519"
+    bundle["signatures"][0]["signature"] = "ed25519:Zm9v"
+
+    monkeypatch.setattr(replay_attestation, "_has_pynacl", lambda: False)
+    result = verify_replay_proof_bundle(bundle, keyring={"proof-key": {"public_key": "cHVibGlj"}})
+
+    assert not result["ok"]
+    assert result["signature_results"][0]["error"] == "missing_dependency_pynacl"

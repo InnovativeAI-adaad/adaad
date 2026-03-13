@@ -22,6 +22,8 @@ When legitimacy checks are enforced, the bundle must include `trust_root_metadat
 - `trust_policy_version`: policy semantic version used by the producer.
 
 ## Verification Procedure
+> **Ed25519 hard requirement:** PyNaCl (`nacl`) is required for `ed25519` replay-proof signing and verification. If `nacl` is unavailable, runtime fails closed unless operators explicitly allow deterministic downgrade to `hmac-sha256` via `ADAAD_REPLAY_PROOF_ALLOW_ED25519_DOWNGRADE`.
+
 1. Validate schema integrity for the bundle.
 2. Recompute proof digest over the unsigned payload (including `trust_root_metadata` when present).
 3. Verify signatures against explicit keyring entries.

@@ -203,19 +203,15 @@ class Ed25519ReplayProofSigner(ReplayProofSigner):
         self.keyring = keyring
 
     def sign(self, *, key_id: str, signed_digest: str) -> str:
+        if not _has_pynacl():
+            raise RuntimeError("ed25519_signing_requires_pynacl")
         key_payload = self.keyring.get(key_id) or {}
         seed_b64 = key_payload.get("private_key")
         if not seed_b64:
             raise ValueError(f"missing_private_key:{key_id}")
-        if _has_pynacl():
-            SigningKey = _load_ed25519_signing_key()
-            signing_key = SigningKey(base64.b64decode(seed_b64))
-            signature = signing_key.sign(signed_digest.encode("utf-8")).signature
-        else:
-            verify_key_b64 = str(key_payload.get("public_key") or "")
-            if not verify_key_b64:
-                raise ValueError(f"missing_public_key:{key_id}")
-            signature = hashlib.sha256(f"{verify_key_b64}:{signed_digest}".encode("utf-8")).digest()
+        SigningKey = _load_ed25519_signing_key()
+        signing_key = SigningKey(base64.b64decode(seed_b64))
+        signature = signing_key.sign(signed_digest.encode("utf-8")).signature
         return "ed25519:" + base64.b64encode(signature).decode("ascii")
 
     def verify(self, *, key_id: str, signed_digest: str, signature: str) -> bool:
@@ -225,18 +221,15 @@ class Ed25519ReplayProofSigner(ReplayProofSigner):
             return False
         if not isinstance(signature, str) or not signature.startswith("ed25519:"):
             return False
-        if _has_pynacl():
-            VerifyKey = _load_ed25519_verify_key()
-            verify_key = VerifyKey(base64.b64decode(verify_key_b64))
-            try:
-                verify_key.verify(signed_digest.encode("utf-8"), base64.b64decode(signature.split(":", 1)[1]))
-            except Exception:
-                return False
-            return True
-        expected = "ed25519:" + base64.b64encode(
-            hashlib.sha256(f"{verify_key_b64}:{signed_digest}".encode("utf-8")).digest()
-        ).decode("ascii")
-        return hmac.compare_digest(signature, expected)
+        if not _has_pynacl():
+            return False
+        VerifyKey = _load_ed25519_verify_key()
+        verify_key = VerifyKey(base64.b64decode(verify_key_b64))
+        try:
+            verify_key.verify(signed_digest.encode("utf-8"), base64.b64decode(signature.split(":", 1)[1]))
+        except Exception:
+            return False
+        return True
 
 
 def _build_signer(algorithm: str, *, keyring: Any = None) -> ReplayProofSigner:
@@ -352,6 +345,17 @@ class ReplayProofBuilder:
                 resolved_algorithm = PREFERRED_PROOF_SIGNING_ALGORITHM
             else:
                 resolved_algorithm = DEFAULT_PROOF_SIGNING_ALGORITHM
+        if resolved_algorithm == "ed25519" and not _has_pynacl():
+            allow_downgrade = os.getenv("ADAAD_REPLAY_PROOF_ALLOW_ED25519_DOWNGRADE", "").strip().lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
+            if allow_downgrade:
+                resolved_algorithm = DEFAULT_PROOF_SIGNING_ALGORITHM
+            else:
+                raise RuntimeError("ed25519_requires_pynacl_or_explicit_downgrade")
         self.algorithm = resolved_algorithm
 
     def _collect_checkpoint_chain(self, epoch_id: str) -> List[Dict[str, str]]:
@@ -665,6 +669,16 @@ def verify_replay_proof_bundle(
                 validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "key_revoked"})
                 continue
         if algorithm == "ed25519":
+            if not _has_pynacl():
+                validation.append(
+                    {
+                        "ok": False,
+                        "key_id": key_id,
+                        "algorithm": algorithm,
+                        "error": "missing_dependency_pynacl",
+                    }
+                )
+                continue
             signer = _build_signer("ed25519", keyring=keyring or _load_replay_proof_keyring())
             if key_id not in (keyring or _load_replay_proof_keyring()):
                 validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "unknown_key_id"})
