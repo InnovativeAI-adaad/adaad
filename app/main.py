@@ -20,6 +20,7 @@ import json
 import logging
 import os
 import re
+from pathlib import Path
 import time
 import sys
 from typing import Any, Dict, Optional
@@ -71,6 +72,7 @@ from runtime.api.runtime_services import (
 )
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
+from runtime.preflight import validate_agent_contract_preflight
 from security import cryovant
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
@@ -190,6 +192,43 @@ class Orchestrator:
                 sys.stderr.write(f"orchestrator_dump_failed:{exc}\n")
         sys.exit(1)
 
+    @staticmethod
+    def _extract_blocked_agent_ids(preflight: Dict[str, Any]) -> list[str]:
+        blocked: set[str] = set()
+        for module in preflight.get("failing_modules", []):
+            module_name = str(module.get("module", "")).strip()
+            if not module_name:
+                continue
+            rel = Path(module_name)
+            if rel.parts[:2] == ("adaad", "agents") and len(rel.parts) >= 3:
+                blocked.add(rel.parts[2])
+            else:
+                blocked.add(rel.stem)
+        return sorted(blocked)
+
+    def _validate_agent_contract_gate(self) -> None:
+        preflight = validate_agent_contract_preflight()
+        if preflight.get("ok"):
+            self.state["agent_contract_preflight"] = {
+                "ok": True,
+                "checked_modules": preflight.get("checked_modules", 0),
+                "blocked_agent_ids": [],
+            }
+            return
+
+        blocked_agent_ids = self._extract_blocked_agent_ids(preflight)
+        fail_reason = "agent_contract_preflight_failed"
+        self.state["agent_contract_preflight"] = {
+            "ok": False,
+            "reason": fail_reason,
+            "checked_modules": preflight.get("checked_modules", 0),
+            "blocked_agent_ids": blocked_agent_ids,
+            "failing_modules": preflight.get("failing_modules", []),
+        }
+        self.state["fail_closed"] = True
+        self.evolution_runtime.fail_closed = True
+        self._fail(fail_reason, payload=self.state["agent_contract_preflight"])
+
     def boot(self) -> None:
         self._v(f"Replay mode normalized: {self.replay_mode.value}")
         if self.dry_run and self.replay_mode == ReplayMode.STRICT:
@@ -201,6 +240,8 @@ class Orchestrator:
             self._fail(boot_invariants.reason, payload=boot_invariants.payload)
         self._v("Boot invariant preflight passed")
         self.state["boot_invariants"] = boot_invariants.payload
+        self._validate_agent_contract_gate()
+        self._v("Agent contract preflight passed")
         bootstrap_tool_registry()
         self._register_elements()
         self.warm_pool.start()
