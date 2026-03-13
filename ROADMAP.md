@@ -1311,6 +1311,7 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 **Status:** ACTIVE DELIVERY · v8.1.0-dev · 2026-03-13  
 **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v8.0.0.md`  
 **Invariants:** `docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md`
+**Human gate checklist:** `docs/governance/V8_HUMAN_GATE_READINESS.md`
 
 > HUMAN-0 applies at every constitutional gate. No implementation PR opens without prior human sign-off.
 
@@ -1418,6 +1419,8 @@ First end-to-end governed code improvement without human authorship. All 9 organ
 ---
 
 ### v8 Constitutional Sign-Off Block
+
+Checklist reference: `docs/governance/V8_HUMAN_GATE_READINESS.md`
 
 | Gate | Phase | Invariant | Required Before |
 |------|-------|-----------|-----------------|
