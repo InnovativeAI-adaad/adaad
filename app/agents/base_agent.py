@@ -77,15 +77,23 @@ def validate_agents(agents_root: Path) -> Tuple[bool, List[str]]:
             continue
         if agent_dir.name.startswith(("__", ".")):
             continue
-        if agent_dir.name.startswith(("__", ".")):
-            continue
         valid, missing = validate_agent_home(agent_dir)
         if not valid:
-            errors.append(f"{resolve_agent_id(agent_dir, agents_root)}: {','.join(missing)}")
+            errors.append(
+                f"{resolve_agent_id(agent_dir, agents_root)}: {','.join(missing)}"
+            )
     if errors:
-        metrics.log(event_type="agent_validation_failed", payload={"errors": errors}, level="ERROR")
+        metrics.log(
+            event_type="agent_validation_failed",
+            payload={"errors": errors},
+            level="ERROR",
+        )
         return False, errors
-    metrics.log(event_type="agent_validation_passed", payload={"agents": agents_root.name}, level="INFO")
+    metrics.log(
+        event_type="agent_validation_passed",
+        payload={"agents": agents_root.name},
+        level="INFO",
+    )
     return True, []
 
 
@@ -120,7 +128,9 @@ def stage_offspring(
         payload["handoff_contract"] = handoff_contract
     with (staged_dir / "mutation.json").open("w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
-    metrics.log(event_type="offspring_staged", payload={"path": str(staged_dir)}, level="INFO")
+    metrics.log(
+        event_type="offspring_staged", payload={"path": str(staged_dir)}, level="INFO"
+    )
     return staged_dir
 
 
@@ -133,5 +143,9 @@ def promote_offspring(staged_dir: Path, lineage_dir: Path) -> Path:
     lineage_dir.mkdir(parents=True, exist_ok=True)
     target_dir = lineage_dir / staged_dir.name
     shutil.move(str(staged_dir), target_dir)
-    metrics.log(event_type="offspring_promoted", payload={"from": str(staged_dir), "to": str(target_dir)}, level="INFO")
+    metrics.log(
+        event_type="offspring_promoted",
+        payload={"from": str(staged_dir), "to": str(target_dir)},
+        level="INFO",
+    )
     return target_dir
