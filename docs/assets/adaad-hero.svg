@@ -1,0 +1,198 @@
+<svg viewBox="0 0 960 260" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#050810"/>
+      <stop offset="100%" style="stop-color:#0a1628"/>
+    </linearGradient>
+    <linearGradient id="cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4ff"/>
+      <stop offset="100%" style="stop-color:#0099cc"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f5c842"/>
+      <stop offset="100%" style="stop-color:#e8a020"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="260" fill="url(#bg)"/>
+
+  <!-- Grid lines -->
+  <g opacity="0.06" stroke="#00d4ff" stroke-width="0.5">
+    <line x1="0" y1="40" x2="960" y2="40"/>
+    <line x1="0" y1="80" x2="960" y2="80"/>
+    <line x1="0" y1="120" x2="960" y2="120"/>
+    <line x1="0" y1="160" x2="960" y2="160"/>
+    <line x1="0" y1="200" x2="960" y2="200"/>
+    <line x1="80" y1="0" x2="80" y2="260"/>
+    <line x1="200" y1="0" x2="200" y2="260"/>
+    <line x1="320" y1="0" x2="320" y2="260"/>
+    <line x1="440" y1="0" x2="440" y2="260"/>
+    <line x1="560" y1="0" x2="560" y2="260"/>
+    <line x1="680" y1="0" x2="680" y2="260"/>
+    <line x1="800" y1="0" x2="800" y2="260"/>
+    <line x1="880" y1="0" x2="880" y2="260"/>
+  </g>
+
+  <!-- Ambient glow orbs -->
+  <ellipse cx="480" cy="130" rx="320" ry="80" fill="#00d4ff" opacity="0.03" filter="url(#softglow)"/>
+  <ellipse cx="120" cy="130" rx="100" ry="60" fill="#f5c842" opacity="0.04" filter="url(#softglow)"/>
+  <ellipse cx="860" cy="100" rx="80" ry="50" fill="#00d4ff" opacity="0.05" filter="url(#softglow)"/>
+
+  <!-- Left side: CEL pipeline visualization -->
+  <g transform="translate(28, 40)">
+    <text x="0" y="0" fill="#00d4ff" font-size="8" opacity="0.7" letter-spacing="2">CONSTITUTIONAL EVOLUTION LOOP</text>
+    <!-- 14 steps as dots with connector -->
+    <g transform="translate(0, 18)">
+      <line x1="6" y1="0" x2="6" y2="155" stroke="#00d4ff" stroke-width="1" opacity="0.3"/>
+      <!-- Step dots -->
+      <g filter="url(#glow)">
+        <circle cx="6" cy="0" r="4" fill="#00d4ff" opacity="0.9"/>
+        <circle cx="6" cy="12" r="4" fill="#00d4ff" opacity="0.85"/>
+        <circle cx="6" cy="24" r="4" fill="#00d4ff" opacity="0.8"/>
+        <circle cx="6" cy="36" r="4" fill="#f5c842" opacity="0.9"/>
+        <circle cx="6" cy="48" r="4" fill="#00d4ff" opacity="0.75"/>
+        <circle cx="6" cy="60" r="4" fill="#00d4ff" opacity="0.7"/>
+        <circle cx="6" cy="72" r="4" fill="#f5c842" opacity="0.85"/>
+        <circle cx="6" cy="84" r="4" fill="#00d4ff" opacity="0.8"/>
+        <circle cx="6" cy="96" r="4" fill="#f5c842" opacity="0.9"/>
+        <circle cx="6" cy="108" r="4" fill="#00d4ff" opacity="0.75"/>
+        <circle cx="6" cy="120" r="4" fill="#00d4ff" opacity="0.7"/>
+        <circle cx="6" cy="132" r="4" fill="#f5c842" opacity="0.8"/>
+        <circle cx="6" cy="144" r="4" fill="#00d4ff" opacity="0.85"/>
+        <circle cx="6" cy="156" r="3" fill="#00ff88" opacity="1"/>
+      </g>
+      <!-- Step labels -->
+      <g fill="#7a9ab5" font-size="7" letter-spacing="0.5">
+        <text x="16" y="4">DRIFT CHECK</text>
+        <text x="16" y="16">LINEAGE SNAP</text>
+        <text x="16" y="28">FITNESS BASE</text>
+        <text x="16" y="40" fill="#f5c842" opacity="0.8">PROPOSAL GEN</text>
+        <text x="16" y="52">AST SCAN</text>
+        <text x="16" y="64">SANDBOX EXEC</text>
+        <text x="16" y="76" fill="#f5c842" opacity="0.8">REPLAY VERIFY</text>
+        <text x="16" y="88">FITNESS SCORE</text>
+        <text x="16" y="100" fill="#f5c842" opacity="0.8">GATE V2</text>
+        <text x="16" y="112">GATE BASE</text>
+        <text x="16" y="124">LINEAGE REG</text>
+        <text x="16" y="136" fill="#f5c842" opacity="0.8">PROMOTION</text>
+        <text x="16" y="148">EVIDENCE</text>
+        <text x="16" y="160" fill="#00ff88">STATE ADVANCE ✓</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Center: Main title -->
+  <g transform="translate(480, 0)" text-anchor="middle">
+    <!-- Decorative bracket lines -->
+    <line x1="-180" y1="42" x2="-120" y2="42" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+    <line x1="120" y1="42" x2="180" y2="42" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+
+    <!-- ADAAD wordmark -->
+    <text x="0" y="90" fill="url(#cyan)" font-size="72" font-weight="900" letter-spacing="-2" font-family="'Courier New', monospace" filter="url(#glow)">ADAAD</text>
+
+    <!-- Subtitle -->
+    <text x="0" y="118" fill="#7a9ab5" font-size="11" letter-spacing="4">AUTONOMOUS DEVICE-ANCHORED ADAPTIVE DEVELOPMENT</text>
+
+    <!-- Tagline -->
+    <rect x="-200" y="128" width="400" height="1" fill="#00d4ff" opacity="0.2"/>
+    <text x="0" y="148" fill="#00d4ff" font-size="13" letter-spacing="1" opacity="0.9" font-style="italic">Your codebase. Under constitutional law. Evolving itself.</text>
+    <rect x="-200" y="154" width="400" height="1" fill="#00d4ff" opacity="0.2"/>
+
+    <!-- Stats row -->
+    <g transform="translate(0, 180)" font-size="9" letter-spacing="1">
+      <text x="-170" y="0" fill="#f5c842" font-weight="700">v9.1.0</text>
+      <text x="-170" y="14" fill="#7a9ab5">VERSION</text>
+
+      <text x="-85" y="0" fill="#00ff88" font-weight="700">4,441</text>
+      <text x="-85" y="14" fill="#7a9ab5">TESTS PASS</text>
+
+      <text x="10" y="0" fill="#00d4ff" font-weight="700">23 RULES</text>
+      <text x="10" y="14" fill="#7a9ab5">CONSTITUTION</text>
+
+      <text x="100" y="0" fill="#f5c842" font-weight="700">14 STEPS</text>
+      <text x="100" y="14" fill="#7a9ab5">CEL PIPELINE</text>
+
+      <text x="175" y="0" fill="#00ff88" font-weight="700">APACHE 2.0</text>
+      <text x="175" y="14" fill="#7a9ab5">FREE/OPEN</text>
+    </g>
+
+    <!-- Bottom status -->
+    <text x="0" y="248" fill="#00ff88" font-size="8" letter-spacing="3" opacity="0.8">● SELF-EVOLUTION ACTIVE — PHASE 66 — HASH IN LEDGER</text>
+  </g>
+
+  <!-- Right side: Constitution rules visualization -->
+  <g transform="translate(760, 40)">
+    <text x="0" y="0" fill="#f5c842" font-size="8" opacity="0.7" letter-spacing="2">CONSTITUTIONAL RULES</text>
+    <g transform="translate(0, 18)">
+      <!-- Blocking rules -->
+      <text x="0" y="0" fill="#ff4466" font-size="7" letter-spacing="1">BLOCKING ×9</text>
+      <g fill="#ff4466" opacity="0.8">
+        <rect x="0" y="6" width="160" height="6" rx="1"/>
+        <rect x="0" y="14" width="145" height="6" rx="1"/>
+        <rect x="0" y="22" width="152" height="6" rx="1"/>
+        <rect x="0" y="30" width="138" height="6" rx="1"/>
+        <rect x="0" y="38" width="160" height="6" rx="1"/>
+        <rect x="0" y="46" width="148" height="6" rx="1"/>
+        <rect x="0" y="54" width="155" height="6" rx="1"/>
+        <rect x="0" y="62" width="142" height="6" rx="1"/>
+        <rect x="0" y="70" width="160" height="6" rx="1"/>
+      </g>
+      <!-- Rule labels -->
+      <g fill="#7a9ab5" font-size="6.5" letter-spacing="0.3">
+        <text x="0" y="5">single_file_scope</text>
+        <text x="0" y="13">ast_validity</text>
+        <text x="0" y="21">no_banned_tokens</text>
+        <text x="0" y="29">signature_required</text>
+        <text x="0" y="37">lineage_continuity</text>
+        <text x="0" y="45">resource_bounds</text>
+        <text x="0" y="53">federation_dual_gate</text>
+        <text x="0" y="61">federation_hmac</text>
+        <text x="0" y="69">soulbound_privacy</text>
+      </g>
+
+      <!-- Warning rules -->
+      <text x="0" y="88" fill="#f5c842" font-size="7" letter-spacing="1">WARNING ×5</text>
+      <g fill="#f5c842" opacity="0.6">
+        <rect x="0" y="94" width="130" height="6" rx="1"/>
+        <rect x="0" y="102" width="145" height="6" rx="1"/>
+        <rect x="0" y="110" width="120" height="6" rx="1"/>
+        <rect x="0" y="118" width="138" height="6" rx="1"/>
+        <rect x="0" y="126" width="125" height="6" rx="1"/>
+      </g>
+      <g fill="#7a9ab5" font-size="6.5">
+        <text x="0" y="93">max_complexity_delta</text>
+        <text x="0" y="101">test_coverage_maintained</text>
+        <text x="0" y="109">max_mutation_rate</text>
+        <text x="0" y="117">import_smoke_test</text>
+        <text x="0" y="125">entropy_budget_limit</text>
+      </g>
+
+      <!-- Advisory rules -->
+      <text x="0" y="144" fill="#00d4ff" font-size="7" letter-spacing="1">ADVISORY ×9</text>
+      <rect x="0" y="150" width="160" height="26" rx="2" fill="#00d4ff" opacity="0.06"/>
+      <text x="4" y="160" fill="#00d4ff" font-size="6.5" opacity="0.7">deployment_authority_tier</text>
+      <text x="4" y="169" fill="#00d4ff" font-size="6.5" opacity="0.7">reviewer_calibration  +7 more</text>
+    </g>
+  </g>
+
+  <!-- Corner decorations -->
+  <g opacity="0.3">
+    <line x1="0" y1="0" x2="20" y2="0" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="0" y1="0" x2="0" y2="20" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="960" y1="0" x2="940" y2="0" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="960" y1="0" x2="960" y2="20" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="0" y1="260" x2="20" y2="260" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="0" y1="260" x2="0" y2="240" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="960" y1="260" x2="940" y2="260" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="960" y1="260" x2="960" y2="240" stroke="#00d4ff" stroke-width="1.5"/>
+  </g>
+</svg>
