@@ -1,11 +1,44 @@
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 import time
+import resource
 
 import pytest
-pytestmark = pytest.mark.regression_standard
 
 from runtime.governance.validators.resource_bounds import ResourceBoundsExceeded, enforce_resource_bounds
+
+pytestmark = pytest.mark.regression_standard
+
+
+_RESOURCE_ENV_KEYS = (
+    "ADAAD_RESOURCE_WALL_SECONDS",
+    "ADAAD_RESOURCE_MEMORY_MB",
+    "ADAAD_RESOURCE_CPU_SECONDS",
+    "ADAAD_MAX_WALL_SECONDS",
+    "ADAAD_MAX_MEMORY_MB",
+    "ADAAD_MAX_CPU_SECONDS",
+)
+
+
+@pytest.fixture(autouse=True)
+def _restore_resource_process_state() -> None:
+    env_snapshot = {key: os.environ.get(key) for key in _RESOURCE_ENV_KEYS}
+    limits_snapshot = {
+        name: resource.getrlimit(getattr(resource, name))
+        for name in ("RLIMIT_AS", "RLIMIT_CPU", "RLIMIT_DATA")
+        if hasattr(resource, name)
+    }
+    try:
+        yield
+    finally:
+        for key, value in env_snapshot.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+        for name, limits in limits_snapshot.items():
+            resource.setrlimit(getattr(resource, name), limits)
 
 
 def _memory_heavy() -> None:
