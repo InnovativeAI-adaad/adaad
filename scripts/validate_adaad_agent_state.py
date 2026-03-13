@@ -41,11 +41,8 @@ def _validate_state(payload: dict[str, Any]) -> list[str]:
     if missing:
         errors.append(f"missing_keys:{','.join(missing)}")
 
-    schema_version = payload.get("schema_version")
-    if not isinstance(schema_version, str) or not schema_version.strip():
-        errors.append("schema_version:expected_non_empty_string")
-    elif _resolve_supported_schema(schema_version) is None:
-        errors.append(f"schema_version:unsupported:{schema_version}")
+    if payload.get("schema_version") != "1.5.0":
+        errors.append("schema_version:expected_1.5.0")
 
     for key in ("last_completed_pr", "next_pr", "active_phase"):
         value = payload.get(key)
