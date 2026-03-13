@@ -77,6 +77,11 @@ from runtime.governance.federation.evolution_federation_bridge import EvolutionF
 from runtime.autonomy.roadmap_amendment_engine import GovernanceViolation, MilestoneEntry, RoadmapAmendmentEngine
 from runtime.governance.debt_ledger import GovernanceDebtLedger
 from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
+from runtime.capability.capability_target_discovery import CapabilityTargetDiscovery
+from runtime.capability.contracts import BOOTSTRAP_REGISTRY
+from runtime.mutation.code_intel.code_intel_model import CodeIntelModel
+from runtime.mutation.code_intel.function_graph import FunctionCallGraph
+from runtime.mutation.code_intel.hotspot_map import HotspotMap
 from security.ledger import journal
 
 _LOG = logging.getLogger(__name__)
@@ -345,6 +350,55 @@ class EvolutionLoop:
         from runtime.autonomy.learning_signal_extractor import LearningSignalExtractor
         self._epoch_memory: EpochMemoryStore = EpochMemoryStore(path=STORE_DEFAULT_PATH)
         self._learning_extractor: LearningSignalExtractor = LearningSignalExtractor()
+        # Phase 58: capability-aware code-intel enrichment is advisory-only and
+        # exception-isolated. The default registry uses shipped bootstrap
+        # capability contracts; discovery never blocks run_epoch progress.
+        self._capability_registry = BOOTSTRAP_REGISTRY
+
+    def _build_phase58_enrichment_block(self, context: CodebaseContext) -> Optional[str]:
+        """Build advisory Phase 58 context enrichment using shipped primitives."""
+        candidate_files = sorted(
+            filepath
+            for filepath in context.file_summaries.keys()
+            if filepath.endswith(".py")
+        )
+        if not candidate_files:
+            return None
+
+        source_root = Path(__file__).resolve().parents[2] / "runtime"
+        call_graph = FunctionCallGraph.from_source_tree(str(source_root))
+        hotspot_map = HotspotMap.from_source_tree(str(source_root))
+        code_intel = CodeIntelModel.build(call_graph=call_graph, hotspot_map=hotspot_map)
+        discovery = CapabilityTargetDiscovery(self._capability_registry, code_intel)
+
+        lines = [
+            "--- Phase 58 context enrichment (ADVISORY ONLY) ---",
+            f"code_intel_model_hash={code_intel.model_hash}",
+        ]
+
+        for filepath in candidate_files[:5]:
+            resolved = discovery.resolve_file(filepath)
+            lines.append(
+                "target="
+                f"{filepath} "
+                f"capability={resolved.capability_id or 'unclaimed'} "
+                f"mutation_safe={resolved.mutation_safe} "
+                f"hotspot={resolved.hotspot_score:.3f} "
+                f"churn={resolved.churn_score:.3f} "
+                f"top_hotspot={resolved.is_top_hotspot}"
+            )
+
+        for function_name in ("run_epoch", "propose_from_all_agents"):
+            resolved_fn = discovery.resolve_function(function_name)
+            lines.append(
+                "function="
+                f"{function_name} "
+                f"callers={len(resolved_fn.callers)} "
+                f"callees={len(resolved_fn.callees)}"
+            )
+
+        lines.append("--- end Phase 58 context enrichment ---")
+        return "\n".join(lines)
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
@@ -416,6 +470,21 @@ class EvolutionLoop:
             _learning_signal = self._learning_extractor.extract(self._epoch_memory)
             if not _learning_signal.is_empty():
                 context.learning_context = _learning_signal.as_prompt_block()
+        except Exception:  # noqa: BLE001
+            pass
+
+        # Phase 58: capability-aware code-intelligence enrichment.
+        # Advisory-only and exception-isolated: enrichment failure must never
+        # block proposal generation or epoch completion.
+        try:
+            enrichment_block = self._build_phase58_enrichment_block(context)
+            if enrichment_block:
+                if context.learning_context:
+                    context.learning_context = (
+                        f"{context.learning_context}\n\n{enrichment_block}"
+                    )
+                else:
+                    context.learning_context = enrichment_block
         except Exception:  # noqa: BLE001
             pass
 

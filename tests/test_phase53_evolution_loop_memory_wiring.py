@@ -208,3 +208,62 @@ class TestEvolutionLoopMemoryWiringT53W:
                     for alias in node.names:
                         assert "GovernanceGate" not in alias.name, \
                             f"GovernanceGate referenced in {mod.__name__} imports"
+
+
+def test_T53_W13_phase58_enrichment_uses_shipped_code_intel_factories(monkeypatch):
+    """T53-W13: Phase 58 enrichment builds CodeIntelModel from shipped from_source_tree APIs."""
+    loop, _ = _make_loop_with_tmp_memory()
+    ctx = _make_ctx("ep-w13")
+    ctx.file_summaries = {
+        "runtime/evolution/evolution_loop.py": "Epoch orchestration.",
+        "runtime/autonomy/ai_mutation_proposer.py": "Proposal entrypoint.",
+    }
+
+    from runtime.mutation.code_intel.function_graph import FunctionCallGraph
+    from runtime.mutation.code_intel.hotspot_map import HotspotMap
+
+    calls = {"fg": 0, "hs": 0}
+
+    original_fg = FunctionCallGraph.from_source_tree
+    original_hs = HotspotMap.from_source_tree
+
+    def _fg(*args, **kwargs):
+        calls["fg"] += 1
+        return original_fg(*args, **kwargs)
+
+    def _hs(*args, **kwargs):
+        calls["hs"] += 1
+        return original_hs(*args, **kwargs)
+
+    monkeypatch.setattr(FunctionCallGraph, "from_source_tree", _fg)
+    monkeypatch.setattr(HotspotMap, "from_source_tree", _hs)
+
+    with patch("runtime.evolution.evolution_loop.propose_from_all_agents", return_value=[]):
+        loop.run_epoch(ctx)
+
+    assert calls["fg"] == 1
+    assert calls["hs"] == 1
+    assert ctx.learning_context is not None
+    assert "Phase 58 context enrichment" in ctx.learning_context
+    assert "code_intel_model_hash=" in ctx.learning_context
+    assert "target=runtime/evolution/evolution_loop.py" in ctx.learning_context
+
+
+def test_T53_W14_phase58_enrichment_failure_is_exception_isolated(monkeypatch):
+    """T53-W14: Phase 58 enrichment failure never blocks run_epoch."""
+    from runtime.evolution.evolution_loop import EpochResult
+
+    loop, _ = _make_loop_with_tmp_memory()
+    ctx = _make_ctx("ep-w14")
+    ctx.file_summaries = {"runtime/evolution/evolution_loop.py": "Epoch orchestration."}
+
+    monkeypatch.setattr(
+        loop,
+        "_build_phase58_enrichment_block",
+        lambda _context: (_ for _ in ()).throw(RuntimeError("phase58-boom")),
+    )
+
+    with patch("runtime.evolution.evolution_loop.propose_from_all_agents", return_value=[]):
+        result = loop.run_epoch(ctx)
+
+    assert isinstance(result, EpochResult)
