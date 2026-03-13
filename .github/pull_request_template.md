@@ -23,6 +23,14 @@ Briefly describe the change and why it is needed.
 - [ ] CHANGELOG updated (if applicable)
 - [ ] No secrets or sensitive data added
 
+## Post-merge docs automation contract
+- [ ] Post-merge docs automation contract satisfied (`scripts/validate_post_merge_doc_sync.py`)
+- [ ] Contract artifact links included:
+  - [ ] `ROADMAP.md` update link
+  - [ ] `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` update link
+  - [ ] `docs/releases/<version>.md` link
+  - [ ] `docs/comms/claims_evidence_matrix.md` evidence row link
+
 ## CI gating
 Review the CI gating policy: [`docs/governance/ci-gating.md`](../docs/governance/ci-gating.md).
 
