@@ -1,3 +1,54 @@
+## [8.5.0] — 2026-03-13 — Phase 62: Multi-Horizon Fitness Engine v2
+
+### feat(phase-62): Intelligence — FitnessEngineV2 + FIT-BOUND-0/FIT-DET-0/FIT-DIV-0/FIT-ARCH-0
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.5.0 |
+| **Phase** | 62 — Intelligence: Multi-Horizon Fitness Engine v2 |
+| **Branch** | feature/phase-62-fitness-engine-v2 |
+| **Tests added** | 28 (T62-FIT-01..10) |
+| **Invariants enforced** | FIT-BOUND-0, FIT-DET-0, FIT-DIV-0, FIT-ARCH-0 |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/evolution/fitness_v2.py` | `FitnessEngineV2` — canonical 7-signal scorer; `FitnessConfig` (FIT-BOUND-0); `FitnessScores` with `score_hash`; `ReplayResult` |
+| `tests/evolution/test_fitness_engine_v2.py` | T62-FIT-01..10 — 28 tests; all four constitutional invariants covered |
+
+#### Signal architecture
+
+| Signal | Weight | Horizon |
+|---|---|---|
+| `test_fitness` | 0.30 | Per-epoch |
+| `complexity_fitness` | 0.20 | Per-epoch |
+| `performance_fitness` | 0.15 | Per-epoch |
+| `governance_compliance` | 0.15 | 10-epoch rolling |
+| `architectural_fitness` | 0.12 | 20-epoch rolling (neutral 0.5 until PHASE62_ARCH_SIGNAL=true) |
+| `determinism_fitness` | 0.08 | Hard floor per-epoch |
+| `code_pressure` | −0.05 × net_additions | Per-epoch modifier |
+
+#### Invariants
+
+| ID | Rule |
+|---|---|
+| FIT-BOUND-0 | Weights in [0.05, 0.70]; composite in [0.0, 1.0]; fail-closed at `FitnessConfig` construction |
+| FIT-DET-0 | Composite deterministic given identical inputs; `score_hash = sha256(canonical payload)` |
+| FIT-DIV-0 | `replay_result.diverged=True` → `composite=0.0`; `TOTAL_REJECTION`; no Class B path |
+| FIT-ARCH-0 | `architectural_fitness=0.5` (neutral) until `PHASE62_ARCH_SIGNAL=true`; premature block blocked |
+
+#### Test results
+
+28/28 PASS. Zero regressions (45 pre-existing baseline failures unchanged).
+
+#### Note for Phase 63
+
+Phase 63 (GovernanceGate v2 + Exception Tokens) is blocked on Phase 62 at main.
+`GATE-V2-RULES` gate requires **HUMAN-0 constitutional amendment sign-off** before Phase 63 PR opens.
+
+---
+
 ## [8.4.0] — 2026-03-13 — Phase 61: Lineage Engine
 
 ### feat(phase-61): Evolution — LineageNode + CompatibilityMatrix + NicheRegistry + LineageEngine
