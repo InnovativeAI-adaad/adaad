@@ -805,6 +805,60 @@ def evolve_certificate(agent_id: str, agent_dir: Path, mutation_dir: Path, capab
     return certificate
 
 
+def touch_non_functional_metadata(
+    agent_id: str,
+    agent_dir: Path,
+    *,
+    metadata_version: int,
+    mutation_count: int,
+    metadata_last_mutation: str,
+) -> Dict[str, Any]:
+    """Record non-functional metadata advancement without re-signing certificate."""
+
+    certificate_path = Path(agent_dir) / "certificate.json"
+    certificate = _read_json(certificate_path)
+    touched_at = metadata_last_mutation or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    signature = certificate.get("signature")
+    lineage_hash = certificate.get("lineage_hash")
+
+    registry_path = LEDGER_DIR / "non_functional_metadata_registry.json"
+    registry: Dict[str, Any] = {}
+    if registry_path.exists():
+        try:
+            loaded = json.loads(registry_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                registry = loaded
+        except json.JSONDecodeError:
+            registry = {}
+
+    registry[agent_id] = {
+        "metadata_version": int(metadata_version),
+        "metadata_mutation_count": int(mutation_count),
+        "metadata_touched_at": touched_at,
+        "signature": signature,
+        "lineage_hash": lineage_hash,
+    }
+    registry_path.parent.mkdir(parents=True, exist_ok=True)
+    registry_path.write_text(json.dumps(registry, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    payload = {
+        "metadata_version": int(metadata_version),
+        "metadata_mutation_count": int(mutation_count),
+        "metadata_touched_at": touched_at,
+        "signature": signature,
+        "lineage_hash": lineage_hash,
+        "registry_path": str(registry_path),
+    }
+    journal.write_entry(agent_id=agent_id, action="certificate_metadata_touched", payload=payload)
+    metrics.log(
+        event_type="certificate_metadata_touched",
+        payload={"agent": agent_id, **payload},
+        level="INFO",
+        element_id=ELEMENT_ID,
+    )
+    return {"status": "metadata_touched", **payload}
+
+
 def validate_environment() -> bool:
     """
     Ensure ledger and keys directories exist and ledger is writable.
