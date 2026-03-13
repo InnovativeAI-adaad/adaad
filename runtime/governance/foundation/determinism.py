@@ -14,6 +14,13 @@ from typing import Protocol
 _SHA256_HEX_WIDTH = 64
 
 
+def _validate_identifier_length(*, method: str, length: int, max_length: int = _SHA256_HEX_WIDTH) -> None:
+    if length <= 0:
+        raise ValueError(f"{method}: invalid length={length}; expected 1..{max_length}")
+    if length > max_length:
+        raise ValueError(f"{method}: invalid length={length}; expected 1..{max_length}")
+
+
 class RuntimeDeterminismProvider(Protocol):
     """Clock + entropy interface for replay-safe runtime behavior."""
 
@@ -49,11 +56,13 @@ class SystemDeterminismProvider:
 
     def next_id(self, *, label: str = "id", length: int = 32) -> str:
         _ = label
-        return uuid.uuid4().hex[:length]
+        _validate_identifier_length(method="next_id", length=length)
+        return (uuid.uuid4().hex + uuid.uuid4().hex)[:length]
 
     def next_token(self, *, label: str = "token", length: int = 16) -> str:
         _ = label
-        return uuid.uuid4().hex[:length]
+        _validate_identifier_length(method="next_token", length=length)
+        return (uuid.uuid4().hex + uuid.uuid4().hex)[:length]
 
     def next_int(self, *, low: int, high: int, label: str = "int") -> int:
         _ = label
@@ -89,13 +98,11 @@ class SeededDeterminismProvider:
         return self._now.strftime(fmt)
 
     def next_id(self, *, label: str = "id", length: int = 32) -> str:
-        if length > _SHA256_HEX_WIDTH:
-            raise ValueError(f"next_id: length={length} exceeds sha256 hex width ({_SHA256_HEX_WIDTH})")
+        _validate_identifier_length(method="next_id", length=length)
         return self._counted_digest(f"id:{label}")[:length]
 
     def next_token(self, *, label: str = "token", length: int = 16) -> str:
-        if length > _SHA256_HEX_WIDTH:
-            raise ValueError(f"next_token: length={length} exceeds sha256 hex width ({_SHA256_HEX_WIDTH})")
+        _validate_identifier_length(method="next_token", length=length)
         return self._counted_digest(f"token:{label}")[:length]
 
     def next_int(self, *, low: int, high: int, label: str = "int") -> int:
