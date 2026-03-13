@@ -274,6 +274,7 @@ class FitnessPipeline:
                 "simulated_market_score": float(
                     mutation_data.get("simulated_market_score", breakdown.get("risk", 0.0)) or 0.0
                 ),
+                "replay_divergence": bool(mutation_data.get("replay_divergence") or mutation_data.get("divergence_rejected")),
             }
         )
 
@@ -287,6 +288,9 @@ class FitnessPipeline:
                 "config_hash": orchestrator_result.config_hash,
                 "component_breakdown": dict(orchestrator_result.breakdown),
                 "weight_snapshot_hash": orchestrator_result.weight_snapshot_hash,
+                "algorithm_version": orchestrator_result.algorithm_version,
+                "weight_digest": orchestrator_result.weight_digest,
+                "divergence_rejected": orchestrator_result.divergence_rejected,
             },
         }
 
