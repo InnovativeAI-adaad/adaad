@@ -12,6 +12,26 @@ Briefly describe the change and why it is needed.
 - [ ] Changes policy/constitution behavior
 - [ ] Changes replay or ledger behavior
 
+## Invariant notes (required for mutation/governance logic changes)
+If this PR touches mutation execution, governance gates, replay logic, or ledger
+write paths, list every constitutional invariant affected and confirm it is preserved:
+
+| Invariant ID | Rule | Status |
+|---|---|---|
+| _(e.g. GOV-SOLE-0)_ | _(GovernanceGate is the sole approval surface)_ | ✅ Preserved / ⚠️ Changed (explain) |
+
+> Leave this table empty only if the "No governance impact" box is checked above.
+
+## Migration notes (required for governed contract changes)
+If this PR changes a public API, schema, governance policy, or replay contract,
+document the migration path here. PRs that change governed contracts without
+migration notes will be blocked at the Evidence lane gate.
+
+- [ ] No governed contract changed
+- [ ] Migration notes provided below:
+
+_(Describe what changes, what breaks, and how consumers migrate.)_
+
 ## Testing
 - [ ] Tests pass locally (`python -m pytest` or targeted suite)
 - [ ] Replay verification checked (`python -m app.main --verify-replay --replay strict`)

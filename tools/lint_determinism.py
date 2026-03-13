@@ -71,6 +71,12 @@ ENTROPY_ALLOWLIST: frozenset[str] = frozenset(
         # throttling windows; banning all time sources here would block the
         # module's deterministic-by-injection design.
         "app/beast_mode_loop.py",
+        # H-04 (Phase 66): runtime/api/__init__.py uses a __getattr__ lazy-export
+        # pattern with explicit module routing (not importlib.import_module) to break
+        # circular import cycles between replay/governance and orchestration layers.
+        # The routing table (_EXPORTS/_resolve_module) is statically declared and
+        # deterministic — no dynamic string construction at call time. Governance-reviewed.
+        "runtime/api/__init__.py",
     }
 )
 FORBIDDEN_ENTROPY_IMPORTS: frozenset[str] = frozenset({"random", "secrets"})
