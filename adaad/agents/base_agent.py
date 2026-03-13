@@ -16,6 +16,7 @@ Base agent definition and validation utilities.
 """
 
 from abc import ABC, abstractmethod
+import ast
 import hashlib
 import json
 import shutil
@@ -23,10 +24,16 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id
+from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id, resolve_agent_module_entrypoint
 from runtime.api.app_layer import metrics
 
 REQUIRED_FILES = ("meta.json", "dna.json", "certificate.json")
+_FUNCTION_SIGNATURES = {
+    "info": {"params": [], "return": "dict"},
+    "run": {"params": ["input"], "defaults": {"input": None}, "return": "dict"},
+    "mutate": {"params": ["src"], "annotations": {"src": "str"}, "return": "str"},
+    "score": {"params": ["output"], "annotations": {"output": "dict"}, "return": "float"},
+}
 
 
 class BaseAgent(ABC):
@@ -69,6 +76,111 @@ def validate_agent_home(agent_path: Path) -> Tuple[bool, List[str]]:
     return True, []
 
 
+def _annotation_name(node: Optional[ast.AST]) -> Optional[str]:
+    if node is None:
+        return None
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    return ast.unparse(node)
+
+
+def _extract_module_functions(module_tree: ast.Module) -> Dict[str, ast.FunctionDef]:
+    functions: Dict[str, ast.FunctionDef] = {}
+    for node in module_tree.body:
+        if isinstance(node, ast.FunctionDef):
+            functions[node.name] = node
+        if isinstance(node, ast.ClassDef):
+            for class_node in node.body:
+                if isinstance(class_node, ast.FunctionDef) and class_node.name not in functions:
+                    functions[class_node.name] = class_node
+    return functions
+
+
+def _validate_function_signature(func: ast.FunctionDef, name: str) -> List[str]:
+    errors: List[str] = []
+    expected = _FUNCTION_SIGNATURES[name]
+    positional_args = [arg.arg for arg in func.args.posonlyargs + func.args.args]
+    normalized_args = positional_args[:]
+    if normalized_args and normalized_args[0] in {"self", "cls"}:
+        normalized_args = normalized_args[1:]
+    if normalized_args != expected["params"]:
+        errors.append(
+            f"AGENT_CONTRACT_SIGNATURE_MISMATCH:{name}: expected params {expected['params']}, got {normalized_args}"
+        )
+    if func.args.vararg or func.args.kwarg or func.args.kwonlyargs:
+        errors.append(
+            f"AGENT_CONTRACT_SIGNATURE_MISMATCH:{name}: variadic and keyword-only parameters are not allowed"
+        )
+
+    expected_defaults = expected.get("defaults", {})
+    defaults_by_param = {}
+    if func.args.defaults:
+        defaults_by_param = {
+            param: default for param, default in zip(positional_args[-len(func.args.defaults) :], func.args.defaults)
+        }
+    for param, default_value in expected_defaults.items():
+        if param not in defaults_by_param:
+            errors.append(f"AGENT_CONTRACT_SIGNATURE_MISMATCH:{name}: missing default for parameter '{param}'")
+            continue
+        default_node = defaults_by_param[param]
+        if not (isinstance(default_node, ast.Constant) and default_node.value is default_value):
+            errors.append(
+                f"AGENT_CONTRACT_SIGNATURE_MISMATCH:{name}: default for '{param}' must be {default_value!r}"
+            )
+
+    for param, annotation in expected.get("annotations", {}).items():
+        arg_node = next((arg for arg in func.args.posonlyargs + func.args.args if arg.arg == param), None)
+        actual_annotation = _annotation_name(arg_node.annotation if arg_node else None)
+        if actual_annotation != annotation:
+            errors.append(
+                f"AGENT_CONTRACT_SIGNATURE_MISMATCH:{name}: annotation for '{param}' must be {annotation}, got {actual_annotation or 'None'}"
+            )
+
+    actual_return = _annotation_name(func.returns)
+    if actual_return != expected["return"]:
+        errors.append(
+            f"AGENT_CONTRACT_SIGNATURE_MISMATCH:{name}: return annotation must be {expected['return']}, got {actual_return or 'None'}"
+        )
+    return errors
+
+
+def validate_agent_entrypoint(agent_path: Path) -> Tuple[bool, List[str]]:
+    entrypoint = resolve_agent_module_entrypoint(agent_path)
+    if entrypoint is None:
+        return False, ["AGENT_MODULE_ENTRYPOINT_MISSING: unable to resolve agent python module entrypoint"]
+
+    try:
+        source = entrypoint.read_text(encoding="utf-8")
+    except OSError as exc:
+        return False, [f"AGENT_MODULE_READ_ERROR: failed to read {entrypoint}: {exc}"]
+
+    try:
+        module_tree = ast.parse(source, filename=str(entrypoint))
+    except SyntaxError as exc:
+        return False, [f"AGENT_MODULE_PARSE_ERROR: {entrypoint}:{exc.lineno}:{exc.offset}: {exc.msg}"]
+
+    functions = _extract_module_functions(module_tree)
+    errors: List[str] = []
+    for required_name in _FUNCTION_SIGNATURES:
+        if required_name not in functions:
+            errors.append(f"AGENT_CONTRACT_MISSING_FUNCTION:{required_name}: required function is not defined")
+            continue
+        errors.extend(_validate_function_signature(functions[required_name], required_name))
+
+    return (len(errors) == 0), errors
+
+
+
+
+def _extract_error_code(error: str) -> str:
+    segments = [segment.strip() for segment in error.split(":") if segment.strip()]
+    for segment in segments:
+        if segment.startswith("AGENT_"):
+            return segment
+    return "UNKNOWN"
+
 def validate_agents(agents_root: Path) -> Tuple[bool, List[str]]:
     """
     Validate all agent directories and fail fast on missing metadata.
@@ -85,8 +197,18 @@ def validate_agents(agents_root: Path) -> Tuple[bool, List[str]]:
         valid, missing = validate_agent_home(agent_dir)
         if not valid:
             errors.append(f"{resolve_agent_id(agent_dir, agents_root)}: {','.join(missing)}")
+            continue
+        entry_valid, entry_errors = validate_agent_entrypoint(agent_dir)
+        if not entry_valid:
+            agent_id = resolve_agent_id(agent_dir, agents_root)
+            for entry_error in entry_errors:
+                errors.append(f"{agent_id}: {entry_error}")
     if errors:
-        metrics.log(event_type="agent_validation_failed", payload={"errors": errors}, level="ERROR")
+        metrics.log(
+            event_type="agent_validation_failed",
+            payload={"errors": errors, "error_count": len(errors), "error_codes": sorted({_extract_error_code(e) for e in errors})},
+            level="ERROR",
+        )
         return False, errors
     metrics.log(event_type="agent_validation_passed", payload={"agents": agents_root.name}, level="INFO")
     return True, []
