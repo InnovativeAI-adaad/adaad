@@ -25,6 +25,14 @@ REQUIRED_TOP_LEVEL_KEYS = {
     "pending_evidence_rows",
 }
 ALLOWED_GATE_RESULTS = {"pass", "fail", "not_run", "not_applicable"}
+SUPPORTED_SCHEMA_PATHS = {
+    "1.1.0": REPO_ROOT / "schemas" / "adaad_agent_state.v1.1.0.json",
+}
+
+
+def _resolve_supported_schema(schema_version: str) -> Path | None:
+    """Resolve a supported schema version to its canonical schema file path."""
+    return SUPPORTED_SCHEMA_PATHS.get(schema_version)
 
 
 def _validate_state(payload: dict[str, Any]) -> list[str]:
@@ -33,8 +41,11 @@ def _validate_state(payload: dict[str, Any]) -> list[str]:
     if missing:
         errors.append(f"missing_keys:{','.join(missing)}")
 
-    if payload.get("schema_version") != "1.1.0":
-        errors.append("schema_version:expected_1.1.0")
+    schema_version = payload.get("schema_version")
+    if not isinstance(schema_version, str) or not schema_version.strip():
+        errors.append("schema_version:expected_non_empty_string")
+    elif _resolve_supported_schema(schema_version) is None:
+        errors.append(f"schema_version:unsupported:{schema_version}")
 
     for key in ("last_completed_pr", "next_pr", "active_phase"):
         value = payload.get(key)
