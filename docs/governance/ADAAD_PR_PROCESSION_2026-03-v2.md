@@ -5,7 +5,7 @@
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
 **Last reviewed:** 2026-03-13
-**Milestone:** `v8.0.0` (Phase 57 complete) · active planning for Phase 58
+**Milestone:** `v8.7.0` (Phase 64 complete) · active planning for Phase 65
 
 ---
 
@@ -62,18 +62,20 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 | Phase | Version | Depends on | Status |
 |---|---|---|---|
 | 57 | v8.0.0 | Phase 53 complete | shipped |
-| 58 | v8.1.0 | Phase 57 | next |
-| 59 | v8.2.0 | Phase 58 | blocked |
-| 60 | v8.3.0 | Phase 59 | blocked |
-| 61 | v8.4.0 | Phase 60 | blocked |
-| 62 | v8.5.0 | Phase 61 | blocked |
-| 63 | v8.6.0 | Phase 62 | blocked |
-| 64 | v8.7.0 | Phase 63 | blocked |
-| 65 | v9.0.0 | Phase 64 | blocked |
+| 58 | v8.1.0 | Phase 57 | shipped |
+| 59 | v8.2.0 | Phase 58 | shipped |
+| 60 | v8.3.0 | Phase 59 | shipped |
+| 61 | v8.4.0 | Phase 60 | shipped |
+| 62 | v8.5.0 | Phase 61 | shipped |
+| 63 | v8.6.0 | Phase 62 | shipped |
+| 64 | v8.7.0 | Phase 63 | shipped |
+| 65 | v9.0.0 | Phase 64 | next |
 
 ### 1A.3 Dependency pointer
 
-- Next: **Phase 58** (Code Intelligence Layer, v8.1.0).
+> **v8 sequencing source of truth:** This document controls active v8.x PR sequencing and status. `ROADMAP.md` mirrors this state for human-facing roadmap context and must remain aligned.
+
+- Next: **Phase 65** (First Autonomous Capability Evolution, v9.0.0).
 
 ## 2) Active Planning — v1.0.0-GA Gate
 
@@ -111,8 +113,8 @@ adaad_pr_procession_contract:
   schema_version: "2.0"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase51_complete"
-  milestone: "v7.5.0"
+  active_phase: "phase64_complete"
+  milestone: "v8.7.0"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -146,9 +148,9 @@ adaad_pr_procession_contract:
       status: merged
       version: "v7.5.0"
   state_alignment:
-    expected_active_phase: "Phase 51 COMPLETE · v7.5.0"
-    expected_last_completed_pr: "feat/phase51-roadmap-procession-alignment"
-    expected_next_pr: "PR-PHASE58-01 (Phase 58 — Code Intelligence Layer)"
+    expected_active_phase: "Phase 64 COMPLETE · v8.7.0"
+    expected_last_completed_pr: "feature/phase-64-constitutional-evolution-loop"
+    expected_next_pr: "PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)"
     blocked_reason_must_be_null: true
   v1_ga_gate:
     status: "in_progress"
@@ -163,10 +165,10 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feat/phase51-roadmap-procession-alignment`
+2. `last_completed_pr` is not `feature/phase-64-constitutional-evolution-loop`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null (nothing should be blocked post-Phase 51)
-5. `next_pr` is not `PR-PHASE58-01 (Phase 58 — Code Intelligence Layer)`
+5. `next_pr` is not `PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)`
 
 ---
 
