@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://innovative-ai-llc.local/schemas/adaad_agent_state.v1.5.0.schema.json",
+  "title": "ADAAD Agent State",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "last_completed_pr",
+    "next_pr",
+    "active_phase",
+    "last_invocation",
+    "blocked_reason",
+    "blocked_at_gate",
+    "blocked_at_tier",
+    "last_gate_results",
+    "open_findings",
+    "value_checkpoints_reached",
+    "pending_evidence_rows"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.1.0"},
+    "last_completed_pr": {"type": "string", "minLength": 1},
+    "next_pr": {"type": "string", "minLength": 1},
+    "active_phase": {"type": "string", "minLength": 1},
+    "last_invocation": {"type": ["string", "null"]},
+    "blocked_reason": {"type": ["string", "null"]},
+    "blocked_at_gate": {"type": ["string", "null"]},
+    "blocked_at_tier": {"type": ["string", "null"]},
+    "last_gate_results": {
+      "type": "object",
+      "required": ["tier_0", "tier_1", "tier_2", "tier_3"],
+      "properties": {
+        "tier_0": {"enum": ["pass", "fail", "not_run", "not_applicable"]},
+        "tier_1": {"enum": ["pass", "fail", "not_run", "not_applicable"]},
+        "tier_2": {"enum": ["pass", "fail", "not_run", "not_applicable"]},
+        "tier_3": {"enum": ["pass", "fail", "not_run", "not_applicable"]}
+      },
+      "additionalProperties": true
+    },
+    "open_findings": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "value_checkpoints_reached": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "pending_evidence_rows": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "additionalProperties": true
+}
