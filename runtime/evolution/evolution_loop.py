@@ -187,11 +187,49 @@ class EpochResult:
     federation_outbound_proposed: int      = 0
     federation_inbound_accepted:  int      = 0
     federation_inbound_quarantined: int    = 0
+    # Phase 57: ProposalEngine auto-provisioning signal (PROP-AUTO-0)
+    proposal_engine_active:       bool     = False
 
 
 # ---------------------------------------------------------------------------
 # EvolutionLoop
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Phase 57: ProposalEngine auto-provisioning helper (PROP-AUTO-0..5)
+# ---------------------------------------------------------------------------
+
+def _autoprovision_proposal_engine(
+    *,
+    explicit: Optional[ProposalEngine],
+) -> Optional[ProposalEngine]:
+    """Return explicit engine if provided; otherwise auto-provision from env.
+
+    Invariants:
+      PROP-AUTO-0  Auto-provision when ADAAD_ANTHROPIC_API_KEY is present.
+      PROP-AUTO-1  Auto-provisioned instance uses default (zero-config) ctor.
+      PROP-AUTO-2  Provisioning failure is fail-closed: return None, no raise.
+      PROP-AUTO-5  ADAAD_PROPOSAL_ENGINE_DISABLED=true suppresses provisioning.
+    """
+    if explicit is not None:
+        # PROP-AUTO-1 corollary: explicit injection always wins (PROP-AUTO-1)
+        return explicit
+    _disabled = os.getenv("ADAAD_PROPOSAL_ENGINE_DISABLED", "false").strip().lower()
+    if _disabled == "true":
+        return None  # PROP-AUTO-5: operator suppression
+    _api_key = os.getenv("ADAAD_ANTHROPIC_API_KEY", "").strip()
+    if not _api_key:
+        return None  # PROP-AUTO-0: no key → no engine
+    try:
+        engine = ProposalEngine()  # PROP-AUTO-1: zero-config default ctor
+        journal.append_tx(
+            tx_type="PROP_ENGINE_AUTO_PROVISIONED",
+            payload={"invariant": "PROP-AUTO-0", "source": "env"},
+        )
+        return engine
+    except Exception:  # noqa: BLE001  PROP-AUTO-2: fail-closed
+        return None
 
 
 class EvolutionLoop:
@@ -254,12 +292,29 @@ class EvolutionLoop:
             market_integrator if market_integrator is not None
             else MarketFitnessIntegrator()
         )
+        # Phase 57 (PR-0800): ProposalEngine auto-provisioning (PROP-AUTO-0).
+        # When ADAAD_ANTHROPIC_API_KEY is present and
+        # ADAAD_PROPOSAL_ENGINE_DISABLED != "true", a ProposalEngine is
+        # auto-provisioned so Phase 1e fires every epoch without explicit
+        # injection. Explicit injection (proposal_engine != None) always wins.
+        # Auto-provisioning failure is fail-closed: engine stays None, epoch
+        # continues (PROP-AUTO-2). Suppression via env var supports hermetic
+        # tests and operator override (PROP-AUTO-5).
         # Phase 14: ProposalEngine — strategy-driven LLM proposal path. Optional;
         # if not injected, Phase 1e is skipped silently (backwards-compatible).
-        # When injected, generate() runs alongside propose_from_all_agents and the
-        # resulting Proposal is bridged to a MutationCandidate that enters the same
-        # governed pipeline. Noop proposals (empty real_diff) are silently skipped.
-        self._proposal_engine: Optional[ProposalEngine] = proposal_engine
+        # When injected (or auto-provisioned), generate() runs alongside
+        # propose_from_all_agents and the resulting Proposal is bridged to a
+        # MutationCandidate that enters the same governed pipeline. Noop
+        # proposals (empty real_diff) are silently skipped.
+        # All auto-provisioned proposals enter the governed pipeline unchanged —
+        # entropy gate, route optimizer, and GovernanceGate are never bypassed
+        # (PROP-AUTO-3, PROP-AUTO-4).
+        self._proposal_engine: Optional[ProposalEngine] = _autoprovision_proposal_engine(
+            explicit=proposal_engine,
+        )
+        self._proposal_engine_auto: bool = (
+            proposal_engine is None and self._proposal_engine is not None
+        )
         # Phase 15: GovernanceDebtLedger — accumulate constitutional warning verdicts
         # per epoch; compound_debt_score fed into ProposalRequest.context (PR-15-01).
         # Optional; if not injected, governance_debt_score stays 0.0 (Phase 14 behaviour).
@@ -812,6 +867,7 @@ class EvolutionLoop:
             federation_outbound_proposed     = _fed_outbound,
             federation_inbound_accepted      = _fed_inbound_accepted,
             federation_inbound_quarantined   = _fed_inbound_quarantined,
+            proposal_engine_active           = self._proposal_engine is not None,
         )
 
     def _evaluate_m603_amendment_gates(
