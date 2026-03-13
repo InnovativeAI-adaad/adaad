@@ -43,7 +43,7 @@
 | **Released** | 2026-03-13 |
 | **Release branch** | `main` |
 | **Tests passing** | 3,960+ |
-| **Constitution** | v0.7.0 (21 rules: 16 pre-v2 + 5 Phase 63 GovernanceGateV2) |
+| **Constitution** | v0.9.0 (23 rules: 18 base + 5 Phase 63 GovernanceGateV2; see `runtime/governance/constitution.yaml`) |
 | **Canonical governance spec** | `docs/governance/ARCHITECT_SPEC_v8.0.0.md` |
 | **All 9 Organs** | Active and production-wired |
 | **CEL mode** | `ADAAD_CEL_ENABLED=true` activates live ConstitutionalEvolutionLoop |
@@ -74,7 +74,7 @@
 │  │  Step  7  REPLAY-VERIFY       SANDBOX-DIV-0 hash check            │  │
 │  │  Step  8  FITNESS-SCORE       FitnessEngineV2 (7 signals)         │  │
 │  │  Step  9  GOVERNANCE-GATE-V2  5 Phase 63 rules (AST-aware)        │  │
-│  │  Step 10  GOVERNANCE-GATE     16 pre-v2 constitutional rules       │  │
+│  │  Step 10  GOVERNANCE-GATE     18 base constitutional rules            │  │
 │  │  Step 11  LINEAGE-REGISTER    LineageEngine.register()            │  │
 │  │  Step 12  PROMOTION-DECISION  CapabilityGraph + PromotionEvent    │  │
 │  │  Step 13  EPOCH-EVIDENCE-WRITE hash-chained ledger entry          │  │
@@ -108,13 +108,14 @@
 ADAAD's governance is not a safety filter bolted on the outside — it is the **execution substrate**. Every mutation flows through `GovernanceGate` and `GovernanceGateV2` before it can touch the codebase.
 
 ```
-21 Constitutional Rules (active)
-├── GovernanceGate (16 rules — pre-Phase 63)
+23 Constitutional Rules (active — canonical: runtime/governance/constitution.yaml)
+├── GovernanceGate (18 base rules — v0.9.0)
 │   ├── Core Determinism       R1–R4
 │   ├── Mutation Safety        R5–R9
 │   ├── Lineage Integrity      R10–R12
 │   ├── Capability Boundary    R13–R14
-│   └── Human Approval         R15–R16 (HUMAN-0 gate)
+│   ├── Human Approval         R15–R16 (HUMAN-0 gate)
+│   └── Phase 23–63 additions  R17–R18 (entropy_budget_limit + market_signal_integrity)
 │
 └── GovernanceGateV2 (5 rules — Phase 63, diff-aware)
     ├── AST-SAFE-0     diff-aware syntax safety
@@ -150,7 +151,7 @@ ADAAD's first governed self-improvement executed as follows:
 5. **SandboxTournament** evaluated candidates in an ephemeral container
 6. **FitnessEngineV2** scored all 7 signals — composite exceeded baseline
 7. **GovernanceGateV2** approved the proposal (Class A)
-8. **GovernanceGate** confirmed all 16 pre-v2 rules passed
+8. **GovernanceGate** confirmed all 18 base constitutional rules passed
 9. Patch applied atomically — `replay_verifier` confirmed **0 divergences**
 10. **CapabilityGraph** updated — `CapabilityChange` written to capability ledger
 11. **EpochEvidence** hash-chained into the evolution ledger
@@ -230,7 +231,7 @@ print(result.epoch_evidence_hash)  # SHA-256 of the evidence record
 
 ```
 runtime/
-├── governance/              Constitutional gate (21 rules), policy artifacts
+├── governance/              Constitutional gate (23 rules), policy artifacts
 ├── evolution/
 │   ├── evolution_loop.py    Top-level epoch path — CEL routing (Phase 65)
 │   ├── cel_wiring.py        build_cel(), is_cel_enabled(), assert_cel_enabled_or_raise()
