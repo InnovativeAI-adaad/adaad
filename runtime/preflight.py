@@ -21,6 +21,7 @@ from typing import Any, Dict, Mapping, Optional, Sequence, Set
 
 from runtime.api.agents import agent_path_from_id
 from runtime.api.agents import MutationRequest
+from adaad.agents.path_guard import AgentPathEscapeError, resolve_agent_scoped_path
 
 from adaad.core.agent_contract import DEFAULT_AGENT_SCOPES, validate_agent_contracts
 from adaad.core.tool_contract import DEFAULT_DISCOVERY_SCOPES, validate_tool_contracts
@@ -221,15 +222,13 @@ def validate_mutation_proposal_schema(proposal: Mapping[str, Any]) -> Dict[str, 
 
 def _extract_targets(request: MutationRequest) -> Set[Path]:
     targets: Set[Path] = set()
+    agents_root = ROOT_DIR / "app" / "agents"
+    agent_dir = agent_path_from_id(request.agent_id, agents_root)
     if request.targets:
-        agents_root = ROOT_DIR / "app" / "agents"
-        agent_dir = agent_path_from_id(request.agent_id, agents_root)
         for target in request.targets:
             if not target.path:
                 continue
-            path = Path(target.path)
-            if not path.is_absolute():
-                path = agent_dir / path
+            path = resolve_agent_scoped_path(agent_dir, target.path)
             targets.add(path)
         if targets:
             return targets
@@ -239,34 +238,30 @@ def _extract_targets(request: MutationRequest) -> Set[Path]:
         for key in _FILE_KEYS:
             value = op.get(key)
             if isinstance(value, str) and value.strip():
-                targets.add(Path(value))
+                targets.add(resolve_agent_scoped_path(agent_dir, value))
         value = op.get("files")
         if isinstance(value, list):
             for entry in value:
                 if isinstance(entry, str) and entry.strip():
-                    targets.add(Path(entry))
+                    targets.add(resolve_agent_scoped_path(agent_dir, entry))
                 if isinstance(entry, dict):
                     for key in _FILE_KEYS:
                         nested = entry.get(key)
                         if isinstance(nested, str) and nested.strip():
-                            targets.add(Path(nested))
+                            targets.add(resolve_agent_scoped_path(agent_dir, nested))
     if targets:
         return targets
-    agents_root = ROOT_DIR / "app" / "agents"
-    agent_dir = agent_path_from_id(request.agent_id, agents_root)
     return {agent_dir / "dna.json"}
 
 
 def _extract_source(request: MutationRequest, target: Path) -> Optional[str]:
+    agents_root = ROOT_DIR / "app" / "agents"
+    agent_dir = agent_path_from_id(request.agent_id, agents_root)
     if request.targets:
         for target_entry in request.targets:
             if not target_entry.ops:
                 continue
-            candidate = Path(target_entry.path)
-            if not candidate.is_absolute():
-                agents_root = ROOT_DIR / "app" / "agents"
-                agent_dir = agent_path_from_id(request.agent_id, agents_root)
-                candidate = agent_dir / candidate
+            candidate = resolve_agent_scoped_path(agent_dir, target_entry.path)
             if candidate != target:
                 continue
             for op in target_entry.ops:
@@ -284,7 +279,7 @@ def _extract_source(request: MutationRequest, target: Path) -> Optional[str]:
         for key in _FILE_KEYS:
             value = op.get(key)
             if isinstance(value, str):
-                target_value = value
+                target_value = str(resolve_agent_scoped_path(agent_dir, value))
                 break
         if target_value and Path(target_value) != target:
             continue
@@ -296,7 +291,7 @@ def _extract_source(request: MutationRequest, target: Path) -> Optional[str]:
                     for key in _FILE_KEYS:
                         nested_value = entry.get(key)
                         if isinstance(nested_value, str):
-                            nested_target = nested_value
+                            nested_target = str(resolve_agent_scoped_path(agent_dir, nested_value))
                             break
                     if nested_target and Path(nested_target) != target:
                         continue
@@ -449,7 +444,17 @@ def _import_smoke_check(target: Path, source: Optional[str]) -> Dict[str, Any]:
 
 
 def _legacy_validate_mutation(request: MutationRequest) -> Dict[str, Any]:
-    targets = _extract_targets(request)
+    try:
+        targets = _extract_targets(request)
+    except AgentPathEscapeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "reason_code": exc.reason_code,
+            "agent": request.agent_id,
+            "targets": [],
+            "checks": {},
+        }
     result: Dict[str, Any] = {
         "ok": True,
         "reason": "ok",
@@ -459,7 +464,11 @@ def _legacy_validate_mutation(request: MutationRequest) -> Dict[str, Any]:
     }
     per_target: Dict[str, Any] = {}
     for target in targets:
-        source = _extract_source(request, target)
+        try:
+            source = _extract_source(request, target)
+        except AgentPathEscapeError as exc:
+            result.update({"ok": False, "reason": str(exc), "reason_code": exc.reason_code})
+            break
         ast_result = _ast_check(target, source)
         import_result = _import_smoke_check(target, source)
         per_target[str(target)] = {

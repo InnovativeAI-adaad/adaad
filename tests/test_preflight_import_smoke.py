@@ -5,7 +5,7 @@ pytestmark = pytest.mark.regression_standard
 import os
 from pathlib import Path
 
-from adaad.agents.mutation_request import MutationRequest
+from adaad.agents.mutation_request import MutationRequest, MutationTarget
 import runtime.preflight as preflight
 from runtime.preflight import _import_smoke_check, _legacy_validate_mutation, validate_mutation_proposal_schema
 
@@ -19,6 +19,15 @@ def _request_for_target(target: Path) -> MutationRequest:
         signature="",
         nonce="",
     )
+
+
+def _seed_agent_root(tmp_path: Path, agent_id: str = "test_subject") -> Path:
+    agents_root = tmp_path / "app" / "agents"
+    agent_dir = agents_root / agent_id
+    agent_dir.mkdir(parents=True)
+    for name in ("meta.json", "dna.json", "certificate.json"):
+        (agent_dir / name).write_text("{}\n", encoding="utf-8")
+    return agent_dir
 
 
 def test_import_smoke_check_does_not_execute_module(tmp_path: Path, monkeypatch) -> None:
@@ -79,10 +88,19 @@ except ImportError:
     assert result["optional_dependency"] == ["definitely_missing_optional_123"]
 
 
-def test_legacy_preflight_pipeline_preserves_structured_reason_codes(tmp_path: Path) -> None:
-    target = tmp_path / "needs_dep.py"
+def test_legacy_preflight_pipeline_preserves_structured_reason_codes(tmp_path: Path, monkeypatch) -> None:
+    agent_dir = _seed_agent_root(tmp_path)
+    target = agent_dir / "needs_dep.py"
     target.write_text("import definitely_missing_package_123\n", encoding="utf-8")
-    request = _request_for_target(target)
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[{"file": "needs_dep.py"}],
+        signature="",
+        nonce="",
+    )
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
 
     legacy = _legacy_validate_mutation(request)
     assert legacy["ok"] is False
@@ -94,10 +112,19 @@ def test_legacy_preflight_pipeline_preserves_structured_reason_codes(tmp_path: P
     assert target_details["optional_dependency"] == []
 
 
-def test_legacy_preflight_pipeline_preserves_syntax_reason(tmp_path: Path) -> None:
-    target = tmp_path / "broken.py"
+def test_legacy_preflight_pipeline_preserves_syntax_reason(tmp_path: Path, monkeypatch) -> None:
+    agent_dir = _seed_agent_root(tmp_path)
+    target = agent_dir / "broken.py"
     target.write_text("def broken(:\n", encoding="utf-8")
-    request = _request_for_target(target)
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[{"file": "broken.py"}],
+        signature="",
+        nonce="",
+    )
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
 
     legacy = _legacy_validate_mutation(request)
 
@@ -169,9 +196,18 @@ def test_validate_mutation_fail_closed_when_legacy_preflight_disabled_in_strict_
 
 
 def test_validate_mutation_allows_legacy_preflight_with_explicit_flag(tmp_path: Path, monkeypatch) -> None:
-    target = tmp_path / "noop.py"
+    agent_dir = _seed_agent_root(tmp_path)
+    target = agent_dir / "noop.py"
     target.write_text("x = 1\n", encoding="utf-8")
-    request = _request_for_target(target)
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[{"file": "noop.py"}],
+        signature="",
+        nonce="",
+    )
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
 
     monkeypatch.setenv("ADAAD_REPLAY_MODE", "strict")
     monkeypatch.setenv("ADAAD_ENABLE_LEGACY_MUTATION_PREFLIGHT", "1")
@@ -180,3 +216,90 @@ def test_validate_mutation_allows_legacy_preflight_with_explicit_flag(tmp_path: 
 
     assert result["ok"] is True
     assert result["reason"] == "ok"
+
+
+def test_legacy_preflight_rejects_parent_traversal_escape(tmp_path: Path, monkeypatch) -> None:
+    _seed_agent_root(tmp_path)
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[{"file": "../../outside.py", "content": "x = 1\n"}],
+        signature="",
+        nonce="",
+    )
+
+    result = _legacy_validate_mutation(request)
+
+    assert result["ok"] is False
+    assert result["reason_code"] == "path_outside_agent_root"
+
+
+def test_legacy_preflight_rejects_absolute_path_injection(tmp_path: Path, monkeypatch) -> None:
+    _seed_agent_root(tmp_path)
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[{"file": "/etc/passwd"}],
+        signature="",
+        nonce="",
+    )
+
+    result = _legacy_validate_mutation(request)
+
+    assert result["ok"] is False
+    assert result["reason_code"] == "path_outside_agent_root"
+
+
+def test_legacy_preflight_rejects_symlink_escape_target(tmp_path: Path, monkeypatch) -> None:
+    agent_dir = _seed_agent_root(tmp_path)
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
+    outside = tmp_path / "outside.py"
+    outside.write_text("x = 1\n", encoding="utf-8")
+    (agent_dir / "escape.py").symlink_to(outside)
+
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[],
+        targets=[
+            MutationTarget(
+                agent_id="test_subject",
+                path="escape.py",
+                target_type="code",
+                ops=[{"content": "x = 2\n"}],
+            )
+        ],
+        signature="",
+        nonce="",
+    )
+
+    result = _legacy_validate_mutation(request)
+
+    assert result["ok"] is False
+    assert result["reason_code"] == "path_outside_agent_root"
+
+
+def test_legacy_preflight_accepts_valid_nested_in_root_target(tmp_path: Path, monkeypatch) -> None:
+    agent_dir = _seed_agent_root(tmp_path)
+    monkeypatch.setattr(preflight, "ROOT_DIR", tmp_path)
+    nested = agent_dir / "pkg" / "agent_impl.py"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("x = 1\n", encoding="utf-8")
+
+    request = MutationRequest(
+        agent_id="test_subject",
+        generation_ts="0",
+        intent="test",
+        ops=[{"file": "pkg/agent_impl.py", "content": "x = 2\n"}],
+        signature="",
+        nonce="",
+    )
+
+    result = _legacy_validate_mutation(request)
+
+    assert result["ok"] is True

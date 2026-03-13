@@ -2,6 +2,8 @@
 """Tests for Autonomous Multi-Node Federation — ADAAD-13 PR-13-02."""
 from __future__ import annotations
 import time
+from datetime import datetime, timezone
+
 import pytest
 pytestmark = pytest.mark.regression_standard
 
@@ -352,3 +354,114 @@ class TestFederationNodeSupervisor:
                                         journal_fn=lambda ev,p: journal.append((ev,p)))
         sup.tick()
         assert any("partition" in ev for ev,_ in journal)
+
+
+    def test_rejoin_cadence_uses_provider_time(self):
+        from runtime.governance.federation.consensus import FederationConsensusEngine
+        from runtime.governance.federation.node_supervisor import FederationNodeSupervisor, NodeSupervisorState
+
+        class _Registry:
+            def alive_peers(self):
+                return []
+
+            def stale_peers(self):
+                return [object()]
+
+            def is_partitioned(self, partition_threshold=0.5):
+                _ = partition_threshold
+                return True
+
+        class _Gossip:
+            def __init__(self):
+                self.events = []
+
+            def broadcast(self, event_type, payload):
+                self.events.append((event_type, payload))
+
+        class _Provider:
+            deterministic = True
+
+            def __init__(self, values):
+                self._values = list(values)
+
+            def now_utc(self):
+                ts = self._values.pop(0)
+                return datetime.fromtimestamp(ts, tz=timezone.utc)
+
+        provider = _Provider([100.0, 101.0, 102.0, 103.0, 111.0, 112.0])
+        gossip = _Gossip()
+        supervisor = FederationNodeSupervisor(
+            registry=_Registry(),
+            consensus=FederationConsensusEngine(node_id="n1", peer_ids=[]),
+            gossip=gossip,
+            rejoin_interval_s=10.0,
+            provider=provider,
+        )
+
+        supervisor.tick()
+        supervisor.tick()
+        supervisor.tick()
+
+        rejoin_events = [event for event in gossip.events if event[0] == "federation_rejoin_request.v1"]
+        assert len(rejoin_events) == 2
+        assert rejoin_events[0][1]["requested_at"] == 101.0
+        assert rejoin_events[1][1]["requested_at"] == 111.0
+        assert supervisor._state == NodeSupervisorState.REJOINING
+
+    def test_rejoin_behavior_is_stable_across_repeated_runs(self):
+        from runtime.governance.federation.consensus import FederationConsensusEngine
+        from runtime.governance.federation.node_supervisor import FederationNodeSupervisor
+
+        class _Registry:
+            def alive_peers(self):
+                return []
+
+            def stale_peers(self):
+                return [object()]
+
+            def is_partitioned(self, partition_threshold=0.5):
+                _ = partition_threshold
+                return True
+
+        class _Gossip:
+            def __init__(self):
+                self.events = []
+
+            def broadcast(self, event_type, payload):
+                self.events.append((event_type, payload))
+
+        class _Provider:
+            deterministic = True
+
+            def __init__(self, values):
+                self._values = list(values)
+
+            def now_utc(self):
+                ts = self._values.pop(0)
+                return datetime.fromtimestamp(ts, tz=timezone.utc)
+
+        def _run_once():
+            provider = _Provider([200.0, 201.0, 202.0, 203.0, 211.0, 212.0])
+            gossip = _Gossip()
+            journal = []
+            supervisor = FederationNodeSupervisor(
+                registry=_Registry(),
+                consensus=FederationConsensusEngine(node_id="n1", peer_ids=[]),
+                gossip=gossip,
+                rejoin_interval_s=10.0,
+                provider=provider,
+                journal_fn=lambda event_type, payload: journal.append((event_type, payload)),
+            )
+            supervisor.tick()
+            supervisor.tick()
+            supervisor.tick()
+            return gossip.events, journal
+
+        first_events, first_journal = _run_once()
+        second_events, second_journal = _run_once()
+
+        assert first_events == second_events
+        assert first_journal == second_journal
+        assert first_journal[0][1]["detected_at"] == 200.0
+        assert first_events[0][1]["requested_at"] == 201.0
+
