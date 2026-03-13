@@ -51,6 +51,7 @@ from runtime.api.app_layer import (
     register_capability,
     require_replay_safe_provider,
 )
+from runtime.preflight import validate_agent_contract_preflight
 from security import cryovant
 from runtime.evolution.promotion_manifest import emit_pr_lifecycle_event
 from security.ledger import journal
@@ -318,6 +319,31 @@ class BeastModeLoop:
     def _latest_staged(
         self, agent_id: str
     ) -> Tuple[Optional[Path], Optional[Dict[str, object]]]:
+        preflight = validate_agent_contract_preflight()
+        if not preflight.get("ok"):
+            blocked_ids: set[str] = set()
+            for module in preflight.get("failing_modules", []):
+                module_name = str(module.get("module", "")).strip()
+                if not module_name:
+                    continue
+                rel = Path(module_name)
+                if rel.parts[:2] == ("adaad", "agents") and len(rel.parts) >= 3:
+                    blocked_ids.add(rel.parts[2])
+                else:
+                    blocked_ids.add(rel.stem)
+
+            metrics.log(
+                event_type="beast_agent_contract_recheck_failed",
+                payload={
+                    "agent": agent_id,
+                    "blocked_agent_ids": sorted(blocked_ids),
+                    "failing_modules": preflight.get("failing_modules", []),
+                },
+                level="ERROR",
+                element_id=ELEMENT_ID,
+            )
+            return None, None
+
         staging_root = self.lineage_dir / "_staging"
         if not staging_root.exists():
             return None, None
@@ -951,4 +977,3 @@ class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
             forecast_roi=float(payload.get("forecast_roi", 0.0)),
         )
         return candidate, []
-

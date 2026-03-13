@@ -73,6 +73,7 @@ class OrchestratorReplayModeTest(unittest.TestCase):
             stack.enter_context(mock.patch("app.main.DreamMode"))
             stack.enter_context(mock.patch("app.main.BeastModeLoop"))
             stack.enter_context(mock.patch("app.main.evaluate_boot_invariants", return_value=mock.Mock(ok=True, payload={"event_type": "boot_invariant_evaluation.v1"})))
+            stack.enter_context(mock.patch("app.main.validate_agent_contract_preflight", return_value={"ok": True, "checked_modules": 2, "failing_modules": []}))
             stack.enter_context(mock.patch.object(Orchestrator, "_verify_checkpoint_chain"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_architect"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_dream"))
@@ -114,6 +115,7 @@ class OrchestratorReplayModeTest(unittest.TestCase):
             stack.enter_context(mock.patch("app.main.DreamMode"))
             stack.enter_context(mock.patch("app.main.BeastModeLoop"))
             stack.enter_context(mock.patch("app.main.evaluate_boot_invariants", return_value=mock.Mock(ok=True, payload={"event_type": "boot_invariant_evaluation.v1"})))
+            stack.enter_context(mock.patch("app.main.validate_agent_contract_preflight", return_value={"ok": True, "checked_modules": 2, "failing_modules": []}))
             stack.enter_context(mock.patch.object(Orchestrator, "_verify_checkpoint_chain", side_effect=_mark("checkpoint")))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_architect"))
             stack.enter_context(mock.patch.object(Orchestrator, "_health_check_dream"))
@@ -159,6 +161,49 @@ class OrchestratorReplayModeTest(unittest.TestCase):
                 "reason_code": "boot_invariant_governance_invariants_failed",
             },
         )
+
+    def test_boot_fail_closed_on_agent_contract_preflight_failure(self) -> None:
+        preflight_failure = {
+            "ok": False,
+            "checked_modules": 3,
+            "failing_modules": [
+                {
+                    "module": "adaad/agents/sample_agent.py",
+                    "ok": False,
+                    "violations": [{"code": "signature_mismatch", "message": "def run(input=None) -> dict:"}],
+                }
+            ],
+        }
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(mock.patch.dict(os.environ, {"ADAAD_FORCE_DETERMINISTIC_PROVIDER": "1"}, clear=False))
+            stack.enter_context(mock.patch("app.main.evaluate_boot_invariants", return_value=mock.Mock(ok=True, payload={})))
+            stack.enter_context(mock.patch("app.main.validate_agent_contract_preflight", return_value=preflight_failure))
+            fail = stack.enter_context(mock.patch.object(Orchestrator, "_fail", side_effect=SystemExit(1)))
+            stack.enter_context(mock.patch("app.main.metrics.log"))
+            orch = Orchestrator(replay_mode="strict")
+            with self.assertRaises(SystemExit):
+                orch.boot()
+
+        fail.assert_called_once()
+        fail_reason = fail.call_args.args[0]
+        fail_payload = fail.call_args.kwargs.get("payload", {})
+        self.assertEqual(fail_reason, "agent_contract_preflight_failed")
+        self.assertEqual(fail_payload.get("blocked_agent_ids"), ["sample_agent"])
+
+    def test_boot_records_agent_contract_preflight_on_success(self) -> None:
+        with self._boot_context():
+            orch = Orchestrator(replay_mode="off")
+            orch.evolution_runtime.replay_preflight = mock.Mock(return_value={
+                "mode": "off",
+                "verify_target": "none",
+                "has_divergence": False,
+                "decision": "skip",
+                "results": [],
+            })
+            orch.boot()
+
+        self.assertEqual(orch.state["agent_contract_preflight"]["ok"], True)
+        self.assertEqual(orch.state["agent_contract_preflight"]["blocked_agent_ids"], [])
 
     def test_replay_off_skips_verification_and_continues_to_ready(self) -> None:
         with self._boot_context():

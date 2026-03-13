@@ -184,6 +184,42 @@ class BeastPromotionTest(unittest.TestCase):
         self.assertTrue(fallback_rows)
         self.assertIn("expected_gain", fallback_rows[0]["payload"]["missing_candidate_fields"])
 
+    def test_beast_recheck_blocks_on_invalid_agent_contract_signature(self) -> None:
+        agents_root, lineage_dir, _ = self._seed_agent()
+        staged = stage_offspring("agentA", "mutate-me", lineage_dir)
+        self._update_staged_payload(staged, mutation_id="m-recheck-block")
+
+        beast = BeastModeLoop(agents_root, lineage_dir)
+        with mock.patch("app.beast_mode_loop.validate_agent_contract_preflight", return_value={
+            "ok": False,
+            "failing_modules": [{"module": "adaad/agents/agentA.py", "violations": [{"code": "signature_mismatch", "message": "def score(output: dict) -> float:"}]}],
+        }):
+            result = beast._legacy.run_cycle("agentA")
+
+        self.assertEqual(result["status"], "no_staged")
+        self.assertTrue(staged.exists())
+
+    def test_beast_recheck_allows_valid_contracts_without_regression(self) -> None:
+        agents_root, lineage_dir, _ = self._seed_agent()
+        staged = stage_offspring("agentA", "mutate-me", lineage_dir)
+        self._update_staged_payload(
+            staged,
+            mutation_id="m-recheck-pass",
+            expected_gain=0.8,
+            risk_score=0.1,
+            complexity=0.1,
+            coverage_delta=0.3,
+        )
+
+        beast = BeastModeLoop(agents_root, lineage_dir)
+        with (
+            mock.patch("app.beast_mode_loop.validate_agent_contract_preflight", return_value={"ok": True, "failing_modules": []}),
+            mock.patch("app.beast_mode_loop.fitness.score_mutation", return_value=0.2),
+        ):
+            result = beast._legacy.run_cycle("agentA")
+
+        self.assertEqual(result["status"], "promoted")
+
     def test_public_run_cycle_routes_through_kernel(self) -> None:
         agents_root, lineage_dir, _ = self._seed_agent()
         beast = BeastModeLoop(agents_root, lineage_dir)
