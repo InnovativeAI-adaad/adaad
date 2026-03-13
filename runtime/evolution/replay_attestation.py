@@ -27,7 +27,92 @@ REPLAY_PROOFS_DIR = ROOT_DIR / "security" / "ledger" / "replay_proofs"
 DEFAULT_PROOF_SIGNING_ALGORITHM = "hmac-sha256"
 PREFERRED_PROOF_SIGNING_ALGORITHM = "ed25519"
 PROOF_KEYRING_PATH = ROOT_DIR / "security" / "replay_proof_keyring.json"
+LOCAL_PROOF_KEYRING_PATH = ROOT_DIR / "security" / "replay_proof_keyring.local.json"
 REPLAY_ATTESTATION_SCHEMA_PATH = ROOT_DIR / "schemas" / "replay_attestation.v1.json"
+
+_SECRET_FIELDS = frozenset({"hmac_secret", "private_key"})
+_PLACEHOLDER_MARKERS = ("placeholder", "replace_with", "example", "dummy", "unset")
+
+
+def _explicit_dev_mode_enabled() -> bool:
+    env = (os.getenv("ADAAD_ENV") or "").strip().lower()
+    return env in {"dev", "test"}
+
+
+def _looks_like_placeholder_secret(value: str) -> bool:
+    normalized = value.strip().lower()
+    if not normalized:
+        return True
+    return any(marker in normalized for marker in _PLACEHOLDER_MARKERS)
+
+
+def _load_keyring_file(path: Path) -> Dict[str, Dict[str, str]]:
+    if not path.exists():
+        return {}
+    raw = json.loads(read_file_deterministic(path))
+    if not isinstance(raw, dict):
+        return {}
+    keys = raw.get("keys")
+    if not isinstance(keys, dict):
+        return {}
+    normalized: Dict[str, Dict[str, str]] = {}
+    for key_id, payload in keys.items():
+        if not isinstance(key_id, str) or not isinstance(payload, dict):
+            continue
+        normalized[key_id] = {str(k): str(v) for k, v in payload.items() if isinstance(v, str)}
+    return normalized
+
+
+def _merge_keyring_payloads(base: Dict[str, Dict[str, str]], overlay: Mapping[str, Mapping[str, str]]) -> None:
+    for key_id, payload in overlay.items():
+        target = base.setdefault(key_id, {})
+        for field, value in payload.items():
+            if isinstance(value, str) and value.strip():
+                target[field] = value.strip()
+
+
+def _key_variant_tokens(key_id: str) -> List[str]:
+    normalized = key_id.strip().upper().replace("-", "_")
+    compact = normalized.replace("_", "")
+    variants = [normalized]
+    if compact != normalized:
+        variants.append(compact)
+    return variants
+
+
+def _resolve_env_secret_field(*, key_id: str, field: str) -> str:
+    field_token = field.upper()
+    for key_variant in _key_variant_tokens(key_id):
+        specific = os.getenv(f"ADAAD_REPLAY_PROOF_{field_token}_{key_variant}", "").strip()
+        if specific:
+            return specific
+    generic = os.getenv(f"ADAAD_REPLAY_PROOF_{field_token}", "").strip()
+    if generic:
+        return generic
+    return ""
+
+
+def _apply_env_secret_overrides(keys: Dict[str, Dict[str, str]]) -> None:
+    for key_id, payload in keys.items():
+        for field in _SECRET_FIELDS:
+            resolved = _resolve_env_secret_field(key_id=key_id, field=field)
+            if resolved:
+                payload[field] = resolved
+
+
+def _validate_keyring_secrets(keys: Mapping[str, Mapping[str, str]]) -> None:
+    if _explicit_dev_mode_enabled():
+        return
+    for key_id, payload in keys.items():
+        algorithm = str(payload.get("algorithm") or "").strip().lower()
+        if algorithm == "hmac-sha256":
+            secret = str(payload.get("hmac_secret") or "")
+            if _looks_like_placeholder_secret(secret):
+                raise RuntimeError(f"replay_proof_keyring_placeholder_secret:{key_id}:hmac_secret")
+        if algorithm == "ed25519":
+            secret = str(payload.get("private_key") or "")
+            if _looks_like_placeholder_secret(secret):
+                raise RuntimeError(f"replay_proof_keyring_placeholder_secret:{key_id}:private_key")
 
 
 def _load_hmac_replay_proof_keyring(path: Path | None = None) -> Dict[str, str]:
@@ -66,19 +151,16 @@ def _has_ed25519_private_key(key_id: str, *, keyring: Mapping[str, Mapping[str, 
 
 def _load_replay_proof_keyring(path: Path | None = None) -> Dict[str, Dict[str, str]]:
     target = path or Path(os.getenv("ADAAD_REPLAY_PROOF_KEYRING_PATH", str(PROOF_KEYRING_PATH)))
-    if not target.exists():
-        return {}
-    raw = json.loads(read_file_deterministic(target))
-    if not isinstance(raw, dict):
-        return {}
-    keys = raw.get("keys")
-    if not isinstance(keys, dict):
-        return {}
+    local_override = Path(os.getenv("ADAAD_REPLAY_PROOF_KEYRING_LOCAL_PATH", str(LOCAL_PROOF_KEYRING_PATH)))
+    secret_mount = os.getenv("ADAAD_REPLAY_PROOF_KEYRING_SECRET_PATH", "").strip()
+
     normalized: Dict[str, Dict[str, str]] = {}
-    for key_id, payload in keys.items():
-        if not isinstance(key_id, str) or not isinstance(payload, dict):
-            continue
-        normalized[key_id] = {str(k): str(v) for k, v in payload.items() if isinstance(v, str)}
+    _merge_keyring_payloads(normalized, _load_keyring_file(target))
+    _merge_keyring_payloads(normalized, _load_keyring_file(local_override))
+    if secret_mount:
+        _merge_keyring_payloads(normalized, _load_keyring_file(Path(secret_mount)))
+    _apply_env_secret_overrides(normalized)
+    _validate_keyring_secrets(normalized)
     return normalized
 
 

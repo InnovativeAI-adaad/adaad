@@ -280,6 +280,8 @@ def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
 
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
+
     builder = ReplayProofBuilder(
         ledger=ledger,
         proofs_dir=tmp_path / "proofs",
@@ -296,6 +298,7 @@ def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
     if not replay_attestation._has_pynacl():
         pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519-tamper"
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_tamper.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
 
@@ -318,6 +321,7 @@ def test_replay_attestation_ed25519_unknown_key_id(tmp_path) -> None:
     if not replay_attestation._has_pynacl():
         pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519-unknown"
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_unknown.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
 

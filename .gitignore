@@ -73,3 +73,6 @@ app/agents/
 /security/ledger/cryovant_journal.tail.json
 /security/promotion_manifests/*.json
 /security/replay_manifests/
+
+# Local replay signing keyring override (never commit)
+security/replay_proof_keyring.local.json
