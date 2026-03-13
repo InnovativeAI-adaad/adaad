@@ -362,7 +362,9 @@ class LineageLedgerV2:
         return self.append_event(event.event_type, event.payload)
 
     def append_event(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        self.verify_integrity()
+        # C-04: skip full O(n) re-scan when tail hash is already cached and valid.
+        # _last_hash() triggers verify_integrity() only when _verified_tail_hash is None.
+        # This converts repeated appends from O(n²) to O(n) total over the ledger lifetime.
         prev_hash = self._last_hash()
         entry: Dict[str, Any] = {
             "type": event_type,
@@ -372,7 +374,8 @@ class LineageLedgerV2:
         entry["hash"] = self._compute_hash(prev_hash, entry)
         with self.ledger_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        self._verified_tail_hash = None
+        # Advance the cached tail hash to the new entry — no re-scan needed.
+        self._verified_tail_hash = entry["hash"]
         if event_type == "MutationBundleEvent":
             epoch_id = str(payload.get("epoch_id") or "")
             digest = str(payload.get("epoch_digest") or "")

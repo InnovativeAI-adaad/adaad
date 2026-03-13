@@ -1061,3 +1061,60 @@ def validate_ancestry(agent_id: Optional[str]) -> bool:
     journal.write_entry(agent_id=agent_id, action="ancestry_validated", payload={})
     metrics.log(event_type="cryovant_ancestry_valid", payload={"agent_id": agent_id}, level="INFO", element_id=ELEMENT_ID)
     return True
+
+
+# ---------------------------------------------------------------------------
+# H-02: Governance signing key boot assertion (Phase 66)
+# Fails closed when ADAAD_ENV != dev and no governance signing key is set.
+# ---------------------------------------------------------------------------
+_GOVERNANCE_SIGNING_KEY_ENVVARS: tuple[str, ...] = (
+    "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY",
+)
+_GOVERNANCE_SIGNING_KEY_PREFIX = "ADAAD_GOVERNANCE_SESSION_KEY_"
+
+
+def assert_governance_signing_key_boot() -> None:
+    """Fail closed if no governance signing key is configured in non-dev environments.
+
+    Enforces invariant H-02: staging/production boots MUST have signing key material.
+    Logs ``missing_governance_signing_key:critical`` and raises ``RuntimeError`` to
+    halt the process before any governance surface is reached.
+    Dev mode (``ADAAD_ENV=dev``) is exempt to support local development workflows.
+    """
+    current_env = env_mode()
+    if current_env == "dev":
+        return
+
+    for var in _GOVERNANCE_SIGNING_KEY_ENVVARS:
+        val = (os.environ.get(var) or "").strip()
+        if val:
+            metrics.log(
+                event_type="governance_signing_key_source",
+                payload={"source": var, "env": current_env},
+                level="INFO",
+                element_id=ELEMENT_ID,
+            )
+            return
+
+    for key, val in os.environ.items():
+        if key.startswith(_GOVERNANCE_SIGNING_KEY_PREFIX) and (val or "").strip():
+            metrics.log(
+                event_type="governance_signing_key_source",
+                payload={"source": key, "env": current_env},
+                level="INFO",
+                element_id=ELEMENT_ID,
+            )
+            return
+
+    metrics.log(
+        event_type="missing_governance_signing_key",
+        payload={"env": current_env, "severity": "critical"},
+        level="ERROR",
+        element_id=ELEMENT_ID,
+    )
+    raise RuntimeError(
+        f"missing_governance_signing_key:critical — "
+        f"ADAAD_ENV={current_env!r} requires a governance signing key. "
+        f"Set ADAAD_GOVERNANCE_SESSION_SIGNING_KEY or "
+        f"ADAAD_GOVERNANCE_SESSION_KEY_<KEY_ID> before starting."
+    )

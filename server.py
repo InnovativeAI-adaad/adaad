@@ -34,6 +34,7 @@ from runtime.mcp.linting_bridge import MutationLintingBridge              # noqa
 from runtime.governance.foundation.determinism import default_provider    # noqa: E402
 from runtime.intelligence.router import IntelligenceRouter                # noqa: E402
 from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa: E402
+from runtime.governance.rate_limiter import get_limiter as _get_proposal_limiter  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parent
@@ -2373,6 +2374,24 @@ def _handle_proposal(
 
 @app.post("/api/mutations/proposals")
 async def post_proposal(request: Request) -> dict:
+    # H-06: token-bucket rate limiting per source IP (ADAAD_PROPOSAL_RATE_LIMIT, default 10/min).
+    source_ip = (request.client.host if request.client else "unknown")
+    allowed, rate_info = _get_proposal_limiter().check(source_ip)
+    if not allowed:
+        metrics.log(
+            event_type="governance_proposal_rate_limited",
+            payload=rate_info,
+            level="WARNING",
+        )
+        from fastapi.responses import JSONResponse as _JSONResponse
+        return _JSONResponse(
+            status_code=429,
+            content={
+                "ok": False,
+                "reason": "governance_proposal_rate_limited",
+                "retry_after_seconds": rate_info.get("retry_after_seconds"),
+            },
+        )
     payload = await request.json()
     return _handle_proposal(payload, request)
 

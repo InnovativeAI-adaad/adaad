@@ -1,3 +1,73 @@
+## [9.1.0] — 2026-03-13 — Phase 66: Foundation Hardening
+
+### feat(phase-66): Audit Gap Closure & Performance Hardening
+
+| Item | Detail |
+|---|---|
+| **Version** | 9.1.0 |
+| **Phase** | 66 — Foundation Hardening |
+| **Branch** | phase66-improvements |
+| **Constitutional authority** | CONSTITUTION.md → ARCHITECTURE_CONTRACT.md |
+
+### Summary
+
+Phase 66 closes the highest-priority audit gaps identified in the March 2026
+Deep Dive Strategic Audit. All changes are additive hardening — no governance
+contracts, public APIs, or constitutional rules are modified. Fail-closed
+behavior is strengthened at three surfaces: boot, sandbox preflight, and
+API ingress.
+
+### Changes
+
+#### C-04: LineageLedgerV2 O(n²) → O(n) append fix
+- `runtime/evolution/lineage_v2.py` — `append_event()` no longer calls
+  `verify_integrity()` (full ledger re-scan) on every write. When
+  `_verified_tail_hash` is already cached, the new entry hash is computed
+  directly from it and the cache is advanced in-place. Converts repeated
+  appends from O(n²) to O(n) amortized; prevents OOM on large ledgers.
+
+#### H-02: Governance signing key boot assertion
+- `security/cryovant.py` — `assert_governance_signing_key_boot()` added.
+  Fails closed with `missing_governance_signing_key:critical` in
+  staging/production if no signing key envvar is configured. Dev mode exempt.
+  Logs `governance_signing_key_source` metric on success.
+- `app/main.py` — `boot()` calls `assert_governance_signing_key_boot()`
+  before `evaluate_boot_invariants()` so no governance surface is reached
+  without key material present.
+
+#### H-03: Write-path allowlist validation (sandbox preflight)
+- `runtime/sandbox/preflight.py` — `_validate_write_allowlist()` added.
+  Rejects non-absolute paths and entries containing `..` traversal sequences.
+  Runs before mount processing so a malformed allowlist cannot silently open
+  a path bypass. Violations propagate into `analyze_execution_plan()` result.
+
+#### H-06: API rate limiting on POST /api/mutations/proposals
+- `runtime/governance/rate_limiter.py` — New `ProposalRateLimiter` class.
+  Thread-safe sliding-window token bucket keyed by source IP. Default limit:
+  10 req/min (configurable via `ADAAD_PROPOSAL_RATE_LIMIT`). Window
+  configurable via `ADAAD_PROPOSAL_RATE_WINDOW_SECONDS`.
+- `server.py` — `POST /api/mutations/proposals` checks limiter before
+  processing. Returns HTTP 429 with `retry_after_seconds` on breach. Emits
+  `governance_proposal_rate_limited` ledger event on every blocked request.
+
+### Tests Added
+- `tests/test_phase66_improvements.py` — 20 tests covering all four
+  improvements: O(n) regression guard (3 cases), signing key boot assertion
+  (6 cases), write-path allowlist validation (8 cases), rate limiter (6 cases).
+
+### Constitutional Invariants Enforced
+
+`GOV-SOLE-0` · `DET-ALL-0` · `SANDBOX-DIV-0` · `CEL-ORDER-0` · `TIER0-SELF-0`
+
+### Safety Invariants
+
+- No mutation authority added or modified.
+- No governance bypass introduced.
+- All existing public APIs and governance flow unchanged.
+- Hardening applies only to: boot sequence, sandbox preflight, and API ingress.
+
+---
+
 ## [9.0.0] — 2026-03-13 — Phase 65: Emergence
 
 ### feat(phase-65): First Autonomous Capability Evolution

@@ -49,6 +49,24 @@ def _validate_command_token(token: str) -> tuple[str, ...]:
     return tuple(violations)
 
 
+def _validate_write_allowlist(write_path_allowlist: Any) -> tuple[str, ...]:
+    """H-03: Validate write-path allowlist entries before mount processing.
+
+    Rejects non-absolute paths and any entry containing ``..`` path traversal
+    sequences. Fails closed so a malformed allowlist cannot silently open a
+    path-bypass during mount validation.
+    """
+    violations: list[str] = []
+    entries = list(write_path_allowlist) if write_path_allowlist is not None else []
+    for entry in entries:
+        entry_str = str(entry)
+        if ".." in PurePosixPath(entry_str).parts:
+            violations.append(f"write_allowlist_traversal:{entry_str}")
+        elif not entry_str.startswith("/"):
+            violations.append(f"write_allowlist_non_absolute:{entry_str}")
+    return tuple(violations)
+
+
 def analyze_execution_plan(*, manifest: SandboxManifest, policy: SandboxPolicy) -> dict[str, Any]:
     """Return deterministic preflight verdict for execution plan safety."""
     violations: list[str] = []
@@ -61,6 +79,9 @@ def analyze_execution_plan(*, manifest: SandboxManifest, policy: SandboxPolicy) 
     for key, _ in manifest.env:
         if key in _DISALLOWED_ENV_KEYS:
             violations.append(f"disallowed_env:{key}")
+
+    # H-03: validate write-path allowlist entries before processing mounts.
+    violations.extend(_validate_write_allowlist(policy.write_path_allowlist))
 
     allowed_write_roots = tuple(PurePosixPath(root) for root in policy.write_path_allowlist)
     for mount in manifest.mounts:

@@ -291,6 +291,11 @@ class Orchestrator:
             self._v("Warning: dry-run + strict replay may not reflect production execution semantics.")
         self._v("Starting governance spine initialization")
         metrics.log(event_type="orchestrator_start", payload={}, level="INFO")
+        # H-02: assert governance signing key present before any governance surface is reached.
+        try:
+            cryovant.assert_governance_signing_key_boot()
+        except RuntimeError as exc:
+            self._fail(str(exc), payload={"boot_stage": "governance_signing_key_assertion"})
         boot_invariants = evaluate_boot_invariants(replay_mode=self.replay_mode.value, agents_root=self.agents_root)
         if not boot_invariants.ok:
             self._fail(boot_invariants.reason, payload=boot_invariants.payload)
