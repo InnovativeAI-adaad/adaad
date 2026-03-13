@@ -75,6 +75,7 @@
 | **Phase** | 61 complete — Evolution: Lineage Engine |
 | **Tests passing** | 4,196+ |
 | **Constitution** | v0.7.0 (16 rules active) |
+| **Canonical governance spec** | docs/governance/ARCHITECT_SPEC_v3.1.0.md |
 | **Architecture invariants** | 8 permanent + phase-level |
 | **Next phase** | 62 — Multi-Horizon Fitness Engine (v8.5.0) |
 | **GA target** | v1.0.0 (Phase 65+) |
