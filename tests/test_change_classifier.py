@@ -71,6 +71,43 @@ class ChangeClassifierTest(unittest.TestCase):
             self.assertEqual(decision.classification, "FUNCTIONAL_CHANGE")
             self.assertTrue(decision.run_mutation)
 
+    def test_classify_rejects_parent_traversal_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            request = {"ops": [{"file": "../../outside.py", "content": "x = 1\n"}]}
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.reason, "path_outside_agent_root")
+            self.assertEqual(decision.classification, "FUNCTIONAL_CHANGE")
+
+    def test_classify_rejects_absolute_path_injection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            request = {"ops": [{"file": "/etc/passwd", "content": "x = 1\n"}]}
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.reason, "path_outside_agent_root")
+            self.assertEqual(decision.classification, "FUNCTIONAL_CHANGE")
+
+    def test_classify_rejects_symlink_escape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            outside = agent_path.parent / "outside.py"
+            outside.write_text("x = 1\n", encoding="utf-8")
+            (agent_path / "escape.py").symlink_to(outside)
+            request = {"ops": [{"file": "escape.py", "content": "x = 2\n"}]}
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.reason, "path_outside_agent_root")
+            self.assertEqual(decision.classification, "FUNCTIONAL_CHANGE")
+
+    def test_classify_accepts_valid_nested_file_in_agent_root(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            nested = agent_path / "pkg" / "agent.py"
+            nested.parent.mkdir(parents=True)
+            nested.write_text("x = 1\n", encoding="utf-8")
+            request = {"ops": [{"file": "pkg/agent.py", "content": "x = 2\n"}]}
+            decision = classify_mutation_change(agent_path, request)
+            self.assertNotEqual(decision.reason, "path_outside_agent_root")
+
 
 if __name__ == "__main__":
     unittest.main()
