@@ -545,6 +545,206 @@
           ]
         }
       ]
+    },
+    {
+      "name": "phase63_ast_safe_scaffold",
+      "description": "Phase 63 scaffold applicability for AST-SAFE-0. Advisory-only metadata until HUMAN-0 sign-off is recorded.",
+      "scope": {
+        "directories": [
+          "runtime",
+          "governance",
+          "app",
+          "security"
+        ],
+        "change_types": [
+          "mutation_request",
+          "code",
+          "governance"
+        ]
+      },
+      "triggers": {
+        "requires_targets": true,
+        "min_ops": 0,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ]
+      },
+      "severity": "advisory",
+      "fail_behavior": {
+        "on_fail": "record_advisory",
+        "log_level": "INFO"
+      },
+      "required_evidence": [
+        "rule_id",
+        "phase",
+        "human_signoff_recorded",
+        "enforcement_mode"
+      ],
+      "required_log_output": [
+        "constitutional_evaluation.payload.verdicts[].details.details.rule_id"
+      ]
+    },
+    {
+      "name": "phase63_ast_import_scaffold",
+      "description": "Phase 63 scaffold applicability for AST-IMPORT-0. Advisory-only metadata until HUMAN-0 sign-off is recorded.",
+      "scope": {
+        "directories": [
+          "runtime",
+          "governance",
+          "app",
+          "security"
+        ],
+        "change_types": [
+          "mutation_request",
+          "code",
+          "governance"
+        ]
+      },
+      "triggers": {
+        "requires_targets": true,
+        "min_ops": 0,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ]
+      },
+      "severity": "advisory",
+      "fail_behavior": {
+        "on_fail": "record_advisory",
+        "log_level": "INFO"
+      },
+      "required_evidence": [
+        "rule_id",
+        "phase",
+        "human_signoff_recorded",
+        "enforcement_mode"
+      ],
+      "required_log_output": [
+        "constitutional_evaluation.payload.verdicts[].details.details.rule_id"
+      ]
+    },
+    {
+      "name": "phase63_ast_complexity_scaffold",
+      "description": "Phase 63 scaffold applicability for AST-COMPLEX-0. Advisory-only metadata until HUMAN-0 sign-off is recorded.",
+      "scope": {
+        "directories": [
+          "runtime",
+          "governance",
+          "app",
+          "security"
+        ],
+        "change_types": [
+          "mutation_request",
+          "code",
+          "governance"
+        ]
+      },
+      "triggers": {
+        "requires_targets": true,
+        "min_ops": 0,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ]
+      },
+      "severity": "advisory",
+      "fail_behavior": {
+        "on_fail": "record_advisory",
+        "log_level": "INFO"
+      },
+      "required_evidence": [
+        "rule_id",
+        "phase",
+        "human_signoff_recorded",
+        "enforcement_mode"
+      ],
+      "required_log_output": [
+        "constitutional_evaluation.payload.verdicts[].details.details.rule_id"
+      ]
+    },
+    {
+      "name": "phase63_semantic_integrity_scaffold",
+      "description": "Phase 63 scaffold applicability for SEMANTIC-INT-0. Advisory-only metadata until HUMAN-0 sign-off is recorded.",
+      "scope": {
+        "directories": [
+          "runtime",
+          "governance",
+          "app",
+          "security"
+        ],
+        "change_types": [
+          "mutation_request",
+          "code",
+          "governance"
+        ]
+      },
+      "triggers": {
+        "requires_targets": true,
+        "min_ops": 0,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ]
+      },
+      "severity": "advisory",
+      "fail_behavior": {
+        "on_fail": "record_advisory",
+        "log_level": "INFO"
+      },
+      "required_evidence": [
+        "rule_id",
+        "phase",
+        "human_signoff_recorded",
+        "enforcement_mode"
+      ],
+      "required_log_output": [
+        "constitutional_evaluation.payload.verdicts[].details.details.rule_id"
+      ]
+    },
+    {
+      "name": "phase63_exception_scope_scaffold",
+      "description": "Phase 63 scaffold applicability for EXCEP-SCOPE-0. Advisory-only metadata until HUMAN-0 sign-off is recorded.",
+      "scope": {
+        "directories": [
+          "runtime",
+          "governance",
+          "app",
+          "security"
+        ],
+        "change_types": [
+          "mutation_request",
+          "code",
+          "governance"
+        ]
+      },
+      "triggers": {
+        "requires_targets": true,
+        "min_ops": 0,
+        "tiers": [
+          "PRODUCTION",
+          "STABLE",
+          "SANDBOX"
+        ]
+      },
+      "severity": "advisory",
+      "fail_behavior": {
+        "on_fail": "record_advisory",
+        "log_level": "INFO"
+      },
+      "required_evidence": [
+        "rule_id",
+        "phase",
+        "human_signoff_recorded",
+        "enforcement_mode"
+      ],
+      "required_log_output": [
+        "constitutional_evaluation.payload.verdicts[].details.details.rule_id"
+      ]
     }
   ],
   "domain_classification": {

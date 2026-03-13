@@ -214,6 +214,46 @@
       "phase": 13,
       "max_synthetic_epochs": 5,
       "env_override": "ADAAD_MARKET_MAX_SYNTHETIC_EPOCHS"
+    },
+    {
+      "name": "phase63_ast_safe_scaffold",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Phase 63 scaffold for AST-SAFE-0. Advisory-only until HUMAN-0 sign-off is recorded; pre-amendment enforcement remains non-blocking.",
+      "validator": "phase63_ast_safe_scaffold"
+    },
+    {
+      "name": "phase63_ast_import_scaffold",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Phase 63 scaffold for AST-IMPORT-0. Advisory-only until HUMAN-0 sign-off is recorded; pre-amendment enforcement remains non-blocking.",
+      "validator": "phase63_ast_import_scaffold"
+    },
+    {
+      "name": "phase63_ast_complexity_scaffold",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Phase 63 scaffold for AST-COMPLEX-0. Advisory-only until HUMAN-0 sign-off is recorded; pre-amendment enforcement remains non-blocking.",
+      "validator": "phase63_ast_complexity_scaffold"
+    },
+    {
+      "name": "phase63_semantic_integrity_scaffold",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Phase 63 scaffold for SEMANTIC-INT-0. Advisory-only until HUMAN-0 sign-off is recorded; pre-amendment enforcement remains non-blocking.",
+      "validator": "phase63_semantic_integrity_scaffold"
+    },
+    {
+      "name": "phase63_exception_scope_scaffold",
+      "enabled": true,
+      "severity": "advisory",
+      "tier_overrides": {},
+      "reason": "Phase 63 scaffold for EXCEP-SCOPE-0. Advisory-only until HUMAN-0 sign-off is recorded; pre-amendment enforcement remains non-blocking.",
+      "validator": "phase63_exception_scope_scaffold"
     }
   ],
   "resource_bounds_policy": {

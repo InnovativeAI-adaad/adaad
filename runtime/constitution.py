@@ -159,6 +159,11 @@ VALIDATOR_VERSIONS: Dict[str, str] = {
     "_validate_soulbound_privacy_invariant": "1.0.0",
     "_validate_bandit_arm_integrity": "1.0.0",
     "_validate_market_signal_integrity": "1.0.0",
+    "_validate_phase63_ast_safe_scaffold": "0.1.0",
+    "_validate_phase63_ast_import_scaffold": "0.1.0",
+    "_validate_phase63_ast_complexity_scaffold": "0.1.0",
+    "_validate_phase63_semantic_integrity_scaffold": "0.1.0",
+    "_validate_phase63_exception_scope_scaffold": "0.1.0",
 }
 _LINEAGE_VALIDATION_CACHE: Dict[str, Any] = {}
 _POLICY_DOCUMENT: Dict[str, Any] = {}
@@ -1806,6 +1811,61 @@ def _validate_market_signal_integrity(_: MutationRequest) -> Dict[str, Any]:
     }
 
 
+def _phase63_scaffold_details(rule_id: str) -> Dict[str, Any]:
+    """Emit deterministic advisory-only metadata for Phase 63 scaffolding."""
+    envelope_state = get_deterministic_envelope_state()
+    signoff_token = _normalize_advisory_detail_value(envelope_state.get("human_signoff_token"))
+    signoff_recorded = bool(signoff_token)
+    return {
+        "rule_id": rule_id,
+        "phase": 63,
+        "scaffold_only": True,
+        "human_signoff_recorded": signoff_recorded,
+        "human_signoff_token_present": signoff_recorded,
+        "enforcement_mode": "advisory_until_human_0_signoff",
+    }
+
+
+def _validate_phase63_ast_safe_scaffold(_: MutationRequest) -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "reason": "phase63_ast_safe_scaffold_advisory_only",
+        "details": _phase63_scaffold_details("AST-SAFE-0"),
+    }
+
+
+def _validate_phase63_ast_import_scaffold(_: MutationRequest) -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "reason": "phase63_ast_import_scaffold_advisory_only",
+        "details": _phase63_scaffold_details("AST-IMPORT-0"),
+    }
+
+
+def _validate_phase63_ast_complexity_scaffold(_: MutationRequest) -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "reason": "phase63_ast_complexity_scaffold_advisory_only",
+        "details": _phase63_scaffold_details("AST-COMPLEX-0"),
+    }
+
+
+def _validate_phase63_semantic_integrity_scaffold(_: MutationRequest) -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "reason": "phase63_semantic_integrity_scaffold_advisory_only",
+        "details": _phase63_scaffold_details("SEMANTIC-INT-0"),
+    }
+
+
+def _validate_phase63_exception_scope_scaffold(_: MutationRequest) -> Dict[str, Any]:
+    return {
+        "ok": True,
+        "reason": "phase63_exception_scope_scaffold_advisory_only",
+        "details": _phase63_scaffold_details("EXCEP-SCOPE-0"),
+    }
+
+
 VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "single_file_scope": _validate_single_file,
     "ast_validity": _validate_ast,
@@ -1825,6 +1885,11 @@ VALIDATOR_REGISTRY: Dict[str, Callable[[MutationRequest], Dict[str, Any]]] = {
     "soulbound_privacy_invariant": _validate_soulbound_privacy_invariant,
     "bandit_arm_integrity_invariant": _validate_bandit_arm_integrity,
     "market_signal_integrity_invariant": _validate_market_signal_integrity,
+    "phase63_ast_safe_scaffold": _validate_phase63_ast_safe_scaffold,
+    "phase63_ast_import_scaffold": _validate_phase63_ast_import_scaffold,
+    "phase63_ast_complexity_scaffold": _validate_phase63_ast_complexity_scaffold,
+    "phase63_semantic_integrity_scaffold": _validate_phase63_semantic_integrity_scaffold,
+    "phase63_exception_scope_scaffold": _validate_phase63_exception_scope_scaffold,
 }
 
 
