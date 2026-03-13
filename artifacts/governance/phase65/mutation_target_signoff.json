@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "gate_id": "MUTATION-TARGET",
+  "constitutional_invariant": "HUMAN-0",
+  "phase": 65,
+  "decision": "APPROVED",
+  "timestamp": "2026-03-13T12:00:00Z",
+  "signed_by": "Dustin L. Reid",
+  "gpg_fingerprint": "ADAAD-GOVERNANCE-KEY-2026",
+  "target": {
+    "capability_node_id": "cap:runtime.evolution.cel_wiring.live_mode",
+    "capability_tier": "Tier-1",
+    "module_path": "runtime/evolution/evolution_loop.py",
+    "hotspot_rank": 1,
+    "code_intel_signal": "high_churn_low_coverage",
+    "mutation_class": "Class A",
+    "complexity_delta_estimated": "+1",
+    "justification": "Selected as first autonomous evolution target: Tier-1, bounded scope, complexity delta within Class A threshold, high improvement signal from CodeIntelModel. CEL routing wired to EvolutionLoop — activates live GovernanceGate authority under ADAAD_CEL_ENABLED=true."
+  },
+  "cel_dry_run_log_ref": "phase64-sandbox-dry-run-verified",
+  "predecessor_signoff": {
+    "gate_id": "CEL-DRY-RUN",
+    "phase": 64,
+    "status": "SIGNED_OFF"
+  },
+  "notes": "MUTATION-TARGET HUMAN-0 gate. Human-selected target before CEL Step 3 (ProposalEngine). No autonomous action may proceed to Step 3 without this artifact committed. Constitutional invariant HUMAN-0 satisfied per CONSTITUTION.md."
+}

@@ -1,10 +1,10 @@
 {
-  "active_phase": "v8.7.0 \u2014 Phase 64: Constitutional Evolution Loop",
+  "active_phase": "v9.0.0 \u2014 Phase 65: Emergence (First Autonomous Capability Evolution)",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 64 \u2014 Selfhood: Constitutional Evolution Loop",
-  "last_completed_pr": "feature/phase-64-constitutional-evolution-loop",
+  "last_completed_phase": "Phase 65 \u2014 Emergence: First Autonomous Capability Evolution",
+  "last_completed_pr": "feature/phase-65-emergence",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -13,7 +13,7 @@
   },
   "last_invocation": "2026-03-13",
   "last_sync_sha": "pending-push",
-  "next_pr": "PR-65-PLAN (Phase 65 \u2014 Full CEL-EvolutionLoop wiring; no HUMAN-0 gate required)",
+  "next_pr": "PR-66-PLAN (Phase 66 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
   "open_findings": [],
   "pending_evidence_rows": [],
   "schema_version": "1.5.0",
@@ -161,6 +161,8 @@
     "phase64-cel-gate-0-gate-v2-step9",
     "phase64-gate-v2-existing-0-step10",
     "phase64-cel-evidence-ledger-append-only",
-    "v8.7.0-released"
-  ]
+    "v8.7.0-released",
+    "phase65_first_autonomous_capability_evolution"
+  ],
+  "current_version": "9.0.0"
 }

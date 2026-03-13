@@ -5,7 +5,7 @@
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
 **Last reviewed:** 2026-03-13
-**Milestone:** `v8.7.0` (Phase 64 complete) · active planning for Phase 65
+**Milestone:** `v9.0.0` (Phase 65 complete — Emergence)
 
 ---
 

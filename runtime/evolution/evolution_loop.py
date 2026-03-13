@@ -194,6 +194,8 @@ class EpochResult:
     federation_inbound_quarantined: int    = 0
     # Phase 57: ProposalEngine auto-provisioning signal (PROP-AUTO-0)
     proposal_engine_active:       bool     = False
+    # Phase 65: CEL result (None when legacy loop is used)
+    cel_result:                   Optional[object] = None
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +403,95 @@ class EvolutionLoop:
         return "\n".join(lines)
 
     def run_epoch(self, context: CodebaseContext) -> EpochResult:
+        # Phase 65: Route to ConstitutionalEvolutionLoop when ADAAD_CEL_ENABLED=true.
+        from runtime.evolution.cel_wiring import is_cel_enabled
+        if is_cel_enabled():
+            return self._run_cel_epoch(context)
+        return self._run_legacy_epoch(context)
+
+    def _run_cel_epoch(self, context: CodebaseContext) -> EpochResult:
+        """Execute epoch through the LiveWiredCEL (Phase 65 route).
+
+        Routes through the 14-step ConstitutionalEvolutionLoop when
+        ADAAD_CEL_ENABLED=true.  Wraps the EpochCELResult into a
+        legacy-compatible EpochResult so callers require no changes.
+
+        Constitutional invariants enforced by CEL:
+          CEL-ORDER-0, CEL-EVIDENCE-0, CEL-BLOCK-0, SANDBOX-DIV-0,
+          GATE-V2-EXISTING-0, MUTATION-TARGET / HUMAN-0
+        """
+        import os as _os
+        from runtime.evolution.cel_wiring import build_cel, assert_cel_enabled_or_raise
+
+        assert_cel_enabled_or_raise()
+        sandbox_only = _os.environ.get("ADAAD_SANDBOX_ONLY", "false").lower() == "true"
+        cel = build_cel(sandbox_only=sandbox_only)
+
+        cel_result = cel.run_epoch(
+            epoch_id=context.current_epoch_id,
+            context={"epoch_id": context.current_epoch_id},
+        )
+
+        # Extract promoted mutation IDs from step detail records.
+        # Step 12 (PROMOTION-DECISION) stores promoted_count; step 14
+        # (STATE-ADVANCE) summarises mutations_succeeded in its detail dict.
+        promoted: list = []
+        for sr in cel_result.step_results:
+            if sr.detail:
+                val = sr.detail.get("mutations_succeeded")
+                if isinstance(val, (list, tuple)) and val:
+                    promoted = list(val)
+                    break
+        if not promoted:
+            # Fall back: collect mutation IDs from step-12 promotion events
+            for sr in cel_result.step_results:
+                if sr.step_number == 12 and sr.detail:
+                    cnt = sr.detail.get("promoted_count", 0)
+                    if cnt and isinstance(cnt, int):
+                        promoted = [f"cel-promo-{i}" for i in range(cnt)]
+                    break
+
+        # Emit CapabilityChange on successful live promotion (CAP-VERS-0, fail-safe)
+        if not sandbox_only and promoted:
+            self._emit_capability_changes(promoted, cel_result.epoch_evidence_hash)
+
+        return EpochResult(
+            epoch_id=context.current_epoch_id,
+            generation_count=1,
+            total_candidates=len(promoted),
+            accepted_count=len(promoted),
+            top_mutation_ids=promoted,
+            evolution_mode="cel_live" if not sandbox_only else "cel_sandbox",
+            cel_result=cel_result,
+        )
+
+    def _emit_capability_changes(
+        self,
+        promoted_ids: list,
+        epoch_evidence_hash: "Optional[str]" = None,
+    ) -> None:
+        """Record CapabilityChange entries to CapabilityGraph (CAP-VERS-0).
+
+        Fail-safe: any exception is logged and swallowed, never propagated.
+        Wired post-CEL-Step-12 for each promoted mutation (Phase 65).
+        """
+        try:
+            from runtime.capability_graph import CapabilityGraph, CapabilityChange
+            cap_graph = CapabilityGraph()
+            ev_hash = epoch_evidence_hash or ("0" * 64)
+            for mid in promoted_ids:
+                change = CapabilityChange(
+                    node_id=f"cap:runtime.evolution.{mid}",
+                    old_version="0.0.0",
+                    new_version="0.1.0",
+                    epoch_evidence_hash=ev_hash,
+                    proposal_hash=mid,
+                )
+                cap_graph.record_change(change)
+        except Exception:  # noqa: BLE001 — fail-safe emit
+            logger.warning("_emit_capability_changes: suppressed exception", exc_info=True)
+
+    def _run_legacy_epoch(self, context: CodebaseContext) -> EpochResult:
         t_start  = time.monotonic()
         epoch_id = context.current_epoch_id
         self._epoch_count += 1

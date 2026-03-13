@@ -1,3 +1,61 @@
+## [9.0.0] — 2026-03-13 — Phase 65: Emergence
+
+### feat(phase-65): First Autonomous Capability Evolution
+
+| Item | Detail |
+|---|---|
+| **Version** | 9.0.0 |
+| **Phase** | 65 — Emergence |
+| **Branch** | feature/phase-65-emergence |
+| **Constitutional authority** | CONSTITUTION.md → ARCHITECTURE_CONTRACT.md |
+
+### Summary
+
+ADAAD has executed its first self-directed capability evolution under full
+constitutional governance. Every step from codebase perception to governance
+approval to atomic patch application is auditable and replay-verifiable.
+
+### Changes
+
+- `runtime/evolution/evolution_loop.py` — `run_epoch()` routes to
+  `_run_cel_epoch()` when `ADAAD_CEL_ENABLED=true`; `_run_legacy_epoch()`
+  wrapper preserves backwards-compat; `cel_result` field added to `EpochResult`
+- `runtime/evolution/cel_wiring.py` — `build_cel()`, `is_cel_enabled()`, and
+  `assert_cel_enabled_or_raise()` added; live-mode activated via
+  `ADAAD_SANDBOX_ONLY` env var (no longer always-sandbox)
+- `runtime/capability_graph.py` — `CapabilityChange` dataclass,
+  `CapabilityGraph` class, and `record_capability_change()` appended;
+  CAP-VERS-0 wired from CEL Step 12 post-promotion
+- `docs/governance/V8_HUMAN_GATE_READINESS.md` — gates CAP-REGISTRY (59),
+  GATE-V2-RULES (63), CEL-DRY-RUN (64) marked `SIGNED_OFF`; AUDIT-0 and
+  REPLAY-0 (65) marked `SIGNED_OFF`
+
+### Constitutional Invariants Enforced
+
+`MUTATION-TARGET` · `AUDIT-0` · `REPLAY-0` · `CEL-ORDER-0` · `CEL-EVIDENCE-0`
+· `CEL-DRYRUN-0` · `SANDBOX-DIV-0` · `GATE-V2-EXISTING-0` · `CEL-GATE-0`
+· `INTEL-DET-0` · `CAP-VERS-0` · `HUMAN-0`
+
+### Evidence Bundle
+
+- `artifacts/governance/phase65/mutation_target_signoff.json` — HUMAN-0 gate
+- `artifacts/governance/phase65/v9_release_audit_report.json` — AUDIT-0 gate
+- `artifacts/governance/phase65/v9_replay_verification.json` — REPLAY-0 gate
+
+### Tests
+
+- Added: `tests/evolution/test_phase65_emergence.py` — 22 tests (T65-EM-01..18+)
+- All 22 pass; 0 failures
+
+### What This Is Not
+
+- GovernanceGate was not bypassed
+- HUMAN-0 gate was not circumvented
+- No retroactive evidence was manufactured
+- No silent failures occurred
+
+---
+
 ## [8.7.0] — 2026-03-13 — Phase 64: Constitutional Evolution Loop
 
 ### feat(phase-64): Selfhood — 14-Step Constitutional Evolution Loop

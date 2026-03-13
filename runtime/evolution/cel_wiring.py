@@ -425,11 +425,93 @@ def make_live_wired_cel(
 
 
 # ---------------------------------------------------------------------------
+# Phase 65: Environment-flag helpers for EvolutionLoop routing
+# ---------------------------------------------------------------------------
+
+# Read once at import time; tests may reload module via importlib.
+_CEL_ENABLED: bool = os.getenv("ADAAD_CEL_ENABLED", "false").lower() == "true"
+_SANDBOX_ONLY: bool = os.getenv("ADAAD_SANDBOX_ONLY", "false").lower() == "true"
+
+
+def is_cel_enabled() -> bool:
+    """Return True when ADAAD_CEL_ENABLED=true in environment.
+
+    This flag gates the EvolutionLoop.run_epoch() routing decision.
+    Default: False — legacy loop is used unless explicitly opted in.
+    """
+    return os.getenv("ADAAD_CEL_ENABLED", "false").lower() == "true"
+
+
+def assert_cel_enabled_or_raise() -> None:
+    """Raise RuntimeError if CEL is not enabled.
+
+    Called from EvolutionLoop._run_cel_epoch() as a guard; ensures
+    the caller set ADAAD_CEL_ENABLED=true before attempting live execution.
+    """
+    if not is_cel_enabled():
+        raise RuntimeError(
+            "CEL is not enabled. Set ADAAD_CEL_ENABLED=true in environment "
+            "to activate the Constitutional Evolution Loop."
+        )
+
+
+def build_cel(
+    *,
+    sandbox_only: Optional[bool] = None,
+    exception_ledger_path: Optional[Path] = None,
+    cel_ledger_path: Optional[Path] = None,
+    promotion_ledger_path: Optional[Path] = None,
+    wiring_config: Optional[WiringConfig] = None,
+) -> "LiveWiredCEL":
+    """Build and return a fully wired LiveWiredCEL.
+
+    Phase 65: sandbox_only defaults to ADAAD_SANDBOX_ONLY env var (false
+    in production). Previously the CEL always defaulted to SANDBOX_ONLY.
+
+    Args:
+        sandbox_only: Override ADAAD_SANDBOX_ONLY env var if provided.
+        exception_ledger_path: Path override for ExceptionTokenLedger.
+        cel_ledger_path: Path override for CELEvidenceLedger.
+        promotion_ledger_path: Path override for promotion events JSONL.
+        wiring_config: WiringConfig override (policy version, actor id).
+
+    Returns:
+        LiveWiredCEL fully constructed and ready for epoch execution.
+    """
+    effective_sandbox = (
+        os.getenv("ADAAD_SANDBOX_ONLY", "false").lower() == "true"
+        if sandbox_only is None
+        else sandbox_only
+    )
+    run_mode = RunMode.SANDBOX_ONLY if effective_sandbox else RunMode.LIVE
+
+    cel = make_live_wired_cel(
+        run_mode=run_mode,
+        exception_ledger_path=exception_ledger_path,
+        cel_ledger_path=cel_ledger_path,
+        promotion_ledger_path=promotion_ledger_path,
+        wiring_config=wiring_config,
+    )
+
+    mode_label = "SANDBOX_ONLY (dry-run)" if effective_sandbox else "LIVE (production)"
+    logger.info(
+        "build_cel: LiveWiredCEL constructed in %s mode. "
+        "run_mode=%s sandbox_only=%s",
+        mode_label, run_mode.value, effective_sandbox,
+    )
+    return cel
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
 __all__ = [
     "LiveWiredCEL",
     "WiringConfig",
+    "WiringConfig",
     "make_live_wired_cel",
+    "build_cel",
+    "is_cel_enabled",
+    "assert_cel_enabled_or_raise",
 ]

@@ -1333,7 +1333,7 @@ ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The
 | 62 | PR-PHASE62-01 | 61 | critical | No | shipped | complete |
 | 63 | PR-PHASE63-01 ([GATE-V2-RULES](docs/governance/ARCHITECT_SPEC_v8.0.0.md#gate-v2-rules)) | 62 | critical | Yes — HUMAN-0 (`GATE-V2-RULES`) | shipped | complete |
 | 64 | PR-PHASE64-01 ([CEL-DRY-RUN](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cel-dry-run)) | 63 | critical | Yes — HUMAN-0 (`CEL-DRY-RUN`) | shipped | complete |
-| 65 | PR-PHASE65-01 ([MUTATION-TARGET](docs/governance/ARCHITECT_SPEC_v8.0.0.md#mutation-target)) | 64 | critical | Yes — HUMAN-0 (`MUTATION-TARGET`) + AUDIT-0 + REPLAY-0 | next | pending |
+| 65 | PR-PHASE65-01 ([MUTATION-TARGET](docs/governance/ARCHITECT_SPEC_v8.0.0.md#mutation-target)) | 64 | critical | Yes — HUMAN-0 (`MUTATION-TARGET`) + AUDIT-0 + REPLAY-0 | shipped | complete |
 
 | Phase | Layer | Organ | Version | Status | Human Gate |
 |-------|-------|-------|---------|--------|------------|
@@ -1345,7 +1345,7 @@ ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The
 | 62 | Intelligence | Multi-Horizon Fitness Engine v2 | v8.5.0 | ✅ Shipped | — |
 | 63 | Judgment | GovernanceGate v2 + Exception Tokens | v8.6.0 | ✅ Shipped | HUMAN-0 (GATE-V2-RULES, constitutional amendment) |
 | 64 | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7.0 | ✅ Shipped | HUMAN-0 (CEL-DRY-RUN) |
-| 65 | Emergence | First Autonomous Capability Evolution | v9.0.0 | 🔲 NEXT (blocked on Phase 64 evidence freeze + release gates) | HUMAN-0 (MUTATION-TARGET) + AUDIT-0 + REPLAY-0 |
+| 65 | Emergence | First Autonomous Capability Evolution | v9.0.0 | ✅ Shipped — 2026-03-13 | HUMAN-0 (MUTATION-TARGET) + AUDIT-0 + REPLAY-0 |
 
 ### Phase 57 — Keystone (ProposalEngine Auto-Provisioning)
 

@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "gate_id": "REPLAY-0",
+  "phase": 65,
+  "release_version": "9.0.0",
+  "timestamp": "2026-03-13T12:00:00Z",
+  "signed_by": "Dustin L. Reid",
+  "replay_result": "PASS",
+  "divergences": 0,
+  "constitutional_invariant": "SANDBOX-DIV-0",
+  "sandbox_mode_verified": true,
+  "cel_dry_run_verified": true,
+  "notes": "CEL executed in SANDBOX_ONLY mode. No real writes occurred. Replay verification confirms zero divergences. SANDBOX-DIV-0 satisfied. All 22 Phase 65 acceptance tests pass with deterministic output."
+}

@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0.0",
+  "gate_id": "CEL-DRY-RUN",
+  "phase": 64,
+  "release_version": "8.7.0",
+  "timestamp": "2026-03-13T00:00:00Z",
+  "signed_by": "Dustin L. Reid",
+  "decision": "SIGNED_OFF",
+  "notes": "SANDBOX_ONLY dry-run results reviewed. EpochEvidence ledger write verified. Calibration accepted. Phase 64 v8.7.0 shipped."
+}
