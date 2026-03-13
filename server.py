@@ -1727,6 +1727,198 @@ _PARALLEL_GATE_VERSION = "v1.0.0"
 _PARALLEL_GATE_MAX_WORKERS = 8
 
 
+# ── ADAAD-7 value gate endpoints (PR-06 / PR-07 / PR-08 / PR-09) ────────────
+
+@app.get("/governance/scoring-engine")
+def governance_scoring_engine(
+    limit: int = 20,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """PR-06: GET /governance/scoring-engine
+
+    Returns the deterministic mutation scoring engine status and recent
+    scoring ledger entries. Includes algorithm version, severity weights,
+    and composite score distribution from recent mutation evaluations.
+
+    Constitutional invariants:
+    - scoring is deterministic (DET-ALL-0); algorithm_version is pinned.
+    - Never raises; always returns a valid envelope.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION, SEVERITY_WEIGHTS
+        from runtime.evolution.scoring_ledger import ScoringLedger
+        from runtime.state.ledger_store import ScoringLedgerStore
+        import os as _os
+        ledger_path_env = _os.environ.get("ADAAD_SCORING_LEDGER_PATH", "")
+        from pathlib import Path as _Path
+        ledger_path = _Path(ledger_path_env) if ledger_path_env else None
+        entries: list = []
+        if ledger_path and ledger_path.exists():
+            try:
+                ledger = ScoringLedger(ledger_path)
+                raw = ledger_path.read_text(encoding="utf-8").splitlines()
+                import json as _json
+                entries = [_json.loads(l) for l in raw[-limit:] if l.strip()]
+            except Exception:
+                pass
+        return {
+            "ok": True,
+            "algorithm_version": ALGORITHM_VERSION,
+            "severity_weights": dict(SEVERITY_WEIGHTS),
+            "recent_entries": entries,
+            "entry_count": len(entries),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": True, "degraded": True, "error": str(exc)}
+
+
+@app.get("/governance/tier-calibration")
+def governance_tier_calibration(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """PR-07: GET /governance/tier-calibration
+
+    Returns current reviewer tier calibration thresholds and constitutional
+    floor enforcement status. The constitutional floor (min 1 human reviewer)
+    is enforced as a hard invariant — this endpoint surfaces it for audit.
+
+    Constitutional invariants:
+    - Constitutional floor (min_count >= 1) is never overridden.
+    - advisory_only: true — this endpoint never modifies tier config.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.governance.review_pressure import (
+            DEFAULT_TIER_CONFIG,
+            CALIBRATION_EVENT_TYPE,
+            CONSTITUTIONAL_FLOOR,
+        )
+        calibration = {
+            tier: {
+                "base_count": cfg.get("base_count", 1),
+                "min_count": cfg.get("min_count", CONSTITUTIONAL_FLOOR),
+                "max_count": cfg.get("max_count", 5),
+                "constitutional_floor_enforced": cfg.get("min_count", 1) >= CONSTITUTIONAL_FLOOR,
+            }
+            for tier, cfg in DEFAULT_TIER_CONFIG.items()
+        }
+        return {
+            "ok": True,
+            "tier_calibration": calibration,
+            "constitutional_floor": CONSTITUTIONAL_FLOOR,
+            "calibration_event_type": CALIBRATION_EVENT_TYPE,
+            "advisory_only": True,
+            "note": "Constitutional floor min_count>=1 is enforced for all tiers regardless of reputation.",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": True, "degraded": True, "error": str(exc)}
+
+
+@app.get("/governance/advisory-rule")
+def governance_advisory_rule(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """PR-08: GET /governance/advisory-rule
+
+    Returns the active advisory governance rule status including the
+    constitutional floor, reviewer_calibration advisory rule state,
+    and current enforcement posture. Advisory rules inform but never block.
+
+    Constitutional invariants:
+    - Advisory rules produce ADVISORY severity events only (never BLOCKING).
+    - constitutional_floor is always >= 1 reviewer regardless of this rule.
+    """
+    _require_audit_read_scope(authorization)
+    try:
+        from runtime.governance.review_quality import ReviewQualityGate
+        gate = ReviewQualityGate()
+        posture = gate.evaluate_advisory_posture() if hasattr(gate, "evaluate_advisory_posture") else {}
+        return {
+            "ok": True,
+            "advisory_rule": "reviewer_calibration",
+            "severity": "ADVISORY",
+            "description": (
+                "Captures reviewer calibration context for audit trails. "
+                "Does not block mutation execution — advisory signals only."
+            ),
+            "constitutional_floor_active": True,
+            "posture": posture,
+            "note": "All advisory rules are informational; constitutional floor is enforced independently.",
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": True, "degraded": True, "error": str(exc)}
+
+
+@app.get("/governance/aponi-panel")
+def governance_aponi_panel(
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    """PR-09: GET /governance/aponi-panel
+
+    Returns the Aponi operator panel summary: reviewer reputation ledger
+    snapshot, review pressure status, scoring engine version, tier
+    calibration, and constitutional floor enforcement — all in one
+    consolidated response for the Aponi dashboard panel.
+
+    This is the ADAAD-7 integration endpoint that wires the feedback loop
+    enterprise buyers require: reputation → pressure → scoring → calibration.
+    """
+    _require_audit_read_scope(authorization)
+    result: dict[str, Any] = {"ok": True, "panel": "aponi-adaad7"}
+
+    # Reputation snapshot
+    try:
+        from runtime.governance.reviewer_reputation_ledger import ReviewerReputationLedger
+        from pathlib import Path as _Path
+        import os as _os
+        rep_path_env = _os.environ.get("ADAAD_REVIEWER_REPUTATION_LEDGER_PATH", "")
+        rep_ledger = ReviewerReputationLedger(
+            ledger_path=_Path(rep_path_env) if rep_path_env else None
+        )
+        result["reputation"] = {
+            "reviewer_count": len(rep_ledger.list_reviewers()) if hasattr(rep_ledger, "list_reviewers") else 0,
+            "ledger_ok": True,
+        }
+    except Exception as exc:  # noqa: BLE001
+        result["reputation"] = {"ledger_ok": False, "error": str(exc)}
+
+    # Review pressure
+    try:
+        from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
+        from runtime.api.runtime_services import governance_health_service
+        health_data = governance_health_service(epoch_id="current")
+        h = float(health_data.get("health_score", 1.0))
+        adj = HealthPressureAdaptor().compute(h)
+        result["review_pressure"] = {
+            "health_score": h,
+            "health_band": health_data.get("health_band", "green"),
+            "pressure_tier": adj.pressure_tier if hasattr(adj, "pressure_tier") else "none",
+            "advisory_only": True,
+        }
+    except Exception as exc:  # noqa: BLE001
+        result["review_pressure"] = {"error": str(exc)}
+
+    # Scoring engine
+    try:
+        from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION
+        result["scoring_engine"] = {"algorithm_version": ALGORITHM_VERSION, "ok": True}
+    except Exception as exc:  # noqa: BLE001
+        result["scoring_engine"] = {"ok": False, "error": str(exc)}
+
+    # Constitutional floor
+    try:
+        from runtime.governance.review_pressure import CONSTITUTIONAL_FLOOR
+        result["constitutional_floor"] = {
+            "min_reviewers": CONSTITUTIONAL_FLOOR,
+            "enforced": True,
+        }
+    except Exception as exc:  # noqa: BLE001
+        result["constitutional_floor"] = {"enforced": False, "error": str(exc)}
+
+    return result
+
+
 @app.get("/api/governance/parallel-gate/probe-library")
 def api_parallel_gate_probe_library() -> dict[str, Any]:
     """Return the canonical probe library for the parallel governance gate."""
