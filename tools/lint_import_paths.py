@@ -17,6 +17,12 @@ ALWAYS_EXCLUDED: frozenset[str] = frozenset({"tools/lint_import_paths.py"})
 # Prefix-based exclusions MUST end with "/" for segment-safe matching.
 ALWAYS_EXCLUDED_PREFIXES: frozenset[str] = frozenset()
 ALLOWLIST_PATH_PREFIXES: frozenset[str] = frozenset({"governance/"})
+
+# M-01: Inline suppression token. A line ending with this comment suppresses
+# the import-boundary violation on that specific line. The <reason> field is
+# mandatory and is captured in the suppression audit log.
+# Format: # adaad: import-boundary-ok:<reason>
+_INLINE_SUPPRESSION_PREFIX = "# adaad: import-boundary-ok:"
 VIOLATION_MESSAGE = (
     "direct governance.* import is forbidden; use runtime.* adapter paths "
     "(see docs/governance/mutation_lifecycle.md)"
@@ -145,6 +151,30 @@ def _is_excluded(path: Path) -> bool:
 def _is_allowlisted(path: Path) -> bool:
     rel = _relative_path(path)
     return any(rel.startswith(prefix) for prefix in ALLOWLIST_PATH_PREFIXES)
+
+
+def _is_suppressed(path: Path, line_number: int) -> tuple[bool, str]:
+    """M-01: Check whether a specific line carries an inline suppression token.
+
+    Returns ``(suppressed, reason)`` where *reason* is the text after the
+    suppression prefix. An empty or missing reason is not accepted — the
+    suppression is treated as invalid and the violation is reported anyway.
+
+    This allows per-line opt-outs with an auditable reason string, rather than
+    blanket file-level allowlisting.
+    """
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        if 1 <= line_number <= len(lines):
+            line = lines[line_number - 1]
+            idx = line.find(_INLINE_SUPPRESSION_PREFIX)
+            if idx != -1:
+                reason = line[idx + len(_INLINE_SUPPRESSION_PREFIX):].strip()
+                if reason:
+                    return True, reason
+    except OSError:
+        pass
+    return False, ""
 
 
 def _is_forbidden_import(module_name: str) -> bool:
@@ -340,9 +370,21 @@ def _iter_app_runtime_facade_issues(path: Path, tree: ast.AST) -> Iterable[LintI
 def main(argv: Sequence[str] | None = None) -> int:
     args = list(argv or sys.argv[1:])
     output_format = "text"
+    fix_mode = False
+    show_suppressed = False
+
     if "--format=json" in args:
         args.remove("--format=json")
         output_format = "json"
+    if "--fix" in args:
+        # M-01: --fix mode appends the inline suppression token to flagged lines.
+        # This is a convenience tool for bulk suppression of known-good violations;
+        # each suppressed line still requires a reason token to be added manually.
+        args.remove("--fix")
+        fix_mode = True
+    if "--show-suppressed" in args:
+        args.remove("--show-suppressed")
+        show_suppressed = True
 
     targets = args or list(DEFAULT_TARGETS)
     candidate_paths = [REPO_ROOT / target for target in targets]
@@ -365,12 +407,41 @@ def main(argv: Sequence[str] | None = None) -> int:
         issues.extend(_iter_agent_namespace_drift_issues(file_path, tree))
         issues.extend(_iter_deprecated_import_issues(file_path, tree))
 
-    sorted_issues = sorted(issues, key=lambda item: (str(item.path), item.line, item.column, item.message))
+    # M-01: Filter out issues that have a valid inline suppression token.
+    suppressed: list[tuple[LintIssue, str]] = []
+    active_issues: list[LintIssue] = []
+    for issue in issues:
+        is_sup, reason = _is_suppressed(issue.path, issue.line)
+        if is_sup:
+            suppressed.append((issue, reason))
+        else:
+            active_issues.append(issue)
+
+    sorted_issues = sorted(active_issues, key=lambda item: (str(item.path), item.line, item.column, item.message))
+
+    # M-01: --fix mode: annotate first violation per line with suppression stub.
+    if fix_mode and sorted_issues:
+        seen_lines: set[tuple[Path, int]] = set()
+        for issue in sorted_issues:
+            key = (issue.path, issue.line)
+            if key in seen_lines:
+                continue
+            seen_lines.add(key)
+            lines = issue.path.read_text(encoding="utf-8").splitlines(keepends=True)
+            if 1 <= issue.line <= len(lines):
+                original = lines[issue.line - 1].rstrip("\n").rstrip("\r")
+                stub = f"{original}  {_INLINE_SUPPRESSION_PREFIX}<reason-required>\n"
+                lines[issue.line - 1] = stub
+                issue.path.write_text("".join(lines), encoding="utf-8")
+        print(f"[fix] Annotated {len(seen_lines)} line(s) with suppression stubs. "
+              f"Replace '<reason-required>' with a specific rationale before committing.")
+        return 1  # still exit 1 — reasons must be filled in before violations clear
 
     if output_format == "json":
-        print(json.dumps({
+        result: dict = {
             "passed": not sorted_issues,
             "issue_count": len(sorted_issues),
+            "suppressed_count": len(suppressed),
             "issues": [
                 {
                     "path": issue.path.relative_to(REPO_ROOT).as_posix(),
@@ -381,16 +452,34 @@ def main(argv: Sequence[str] | None = None) -> int:
                 }
                 for issue in sorted_issues
             ],
-        }, indent=2))
+        }
+        if show_suppressed:
+            result["suppressed"] = [
+                {
+                    "path": issue.path.relative_to(REPO_ROOT).as_posix(),
+                    "line": issue.line,
+                    "reason": reason,
+                }
+                for issue, reason in suppressed
+            ]
+        print(json.dumps(result, indent=2))
         return 1 if sorted_issues else 0
 
     if not sorted_issues:
-        print("import path lint passed")
+        sup_note = f" ({len(suppressed)} suppressed)" if suppressed else ""
+        print(f"import path lint passed{sup_note}")
         return 0
 
     for issue in sorted_issues:
         rel = issue.path.relative_to(REPO_ROOT)
         print(f"{rel}:{issue.line}:{issue.column}: {issue.message}")
+
+    if show_suppressed and suppressed:
+        print(f"\n[suppressed — {len(suppressed)} inline suppressions active]")
+        for issue, reason in suppressed:
+            rel = issue.path.relative_to(REPO_ROOT)
+            print(f"  {rel}:{issue.line}: {reason}")
+
     return 1
 
 

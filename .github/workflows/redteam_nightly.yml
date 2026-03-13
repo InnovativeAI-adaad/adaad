@@ -17,5 +17,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.server.txt
+      - name: M-06 — Enforce red-team evidence retention (size-cap sentinel)
+        run: python scripts/enforce_redteam_retention.py --check-only
+        env:
+          ADAAD_REDTEAM_EVIDENCE_RETENTION_DAYS: "90"
+          ADAAD_REDTEAM_EVIDENCE_SIZE_CAP_MB: "500"
       - name: Run deterministic red-team full corpus
         run: PYTHONPATH=. python tools/run_redteam_harness.py --subset all --output reports/redteam/nightly.json
+      - name: M-06 — Rotate stale red-team evidence files
+        run: python scripts/enforce_redteam_retention.py
+        env:
+          ADAAD_REDTEAM_EVIDENCE_RETENTION_DAYS: "90"
+          ADAAD_REDTEAM_EVIDENCE_SIZE_CAP_MB: "500"
