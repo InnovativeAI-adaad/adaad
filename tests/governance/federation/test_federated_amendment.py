@@ -10,15 +10,26 @@ from typing import Any
 import pytest
 pytestmark = pytest.mark.governance_gate
 
-from runtime.governance.federation.mutation_broker import FederationMutationBroker, FederationMutationBrokerError
+from runtime.governance.federation.mutation_broker import (
+    FederationAuditFailureMode,
+    FederationMutationBroker,
+    FederationMutationBrokerError,
+)
 
 
-def _make_broker(audit_events: list[tuple[str, dict[str, Any]]]) -> FederationMutationBroker:
+def _make_broker(
+    audit_events: list[tuple[str, dict[str, Any]]],
+    *,
+    audit_writer: Callable[[str, dict[str, Any]], None] | None = None,
+    audit_failure_mode: FederationAuditFailureMode = FederationAuditFailureMode.FAIL_CLOSED_CRITICAL,
+) -> FederationMutationBroker:
+    writer = audit_writer or (lambda event, payload: audit_events.append((event, payload)))
     return FederationMutationBroker(
         local_repo="source-node",
         governance_gate=object(),
         lineage_chain_digest_fn=lambda: "sha256:" + "a" * 64,
-        audit_writer=lambda event, payload: audit_events.append((event, payload)),
+        audit_writer=writer,
+        audit_failure_mode=audit_failure_mode,
     )
 
 
@@ -265,3 +276,62 @@ def test_t6_04_10_pending_peer_blocks_storm_invariant(tmp_path: Path) -> None:
             hmac_key_path=_write_hmac_key(tmp_path),
             gate_evaluator=pending_storm_gate,
         )
+
+
+def test_t6_04_11_propagation_audit_failure_is_surfaced_fail_closed(tmp_path: Path) -> None:
+    def fail_on_propagate(event: str, _payload: dict[str, Any]) -> None:
+        if event == "federated_amendment_propagated":
+            raise RuntimeError("audit down")
+
+    broker = _make_broker([], audit_writer=fail_on_propagate)
+
+    with pytest.raises(FederationMutationBrokerError, match="audit_persistence_failed:federated_amendment_propagated"):
+        _propagate(
+            broker=broker,
+            destination_nodes=[{"node_id": "peer-a"}],
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+        )
+
+    status = broker.last_audit_status
+    assert status is not None
+    assert status.ok is False
+    assert status.reason == "audit_persistence_failed"
+    assert status.error_type == "RuntimeError"
+
+
+def test_t6_04_12_rollback_remains_deterministic_when_rollback_audit_fails_fail_open(tmp_path: Path) -> None:
+    events: list[tuple[str, dict[str, Any]]] = []
+
+    def fail_on_rollback(event: str, payload: dict[str, Any]) -> None:
+        if event == "federated_amendment_rollback":
+            raise RuntimeError("rollback audit unavailable")
+        events.append((event, payload))
+
+    broker = _make_broker(
+        events,
+        audit_writer=fail_on_rollback,
+        audit_failure_mode=FederationAuditFailureMode.FAIL_OPEN,
+    )
+    destinations = [{"node_id": "peer-a"}, {"node_id": "peer-b"}]
+
+    def fail_second_write(node: dict[str, Any], mutation_payload: dict[str, Any], gate_payload: dict[str, Any]) -> None:
+        if node["node_id"] == "peer-b":
+            raise RuntimeError("simulated write failure")
+        broker._default_destination_mutation_writer(node, mutation_payload, gate_payload)
+
+    with pytest.raises(FederationMutationBrokerError, match="federated_propagation_rolled_back"):
+        _propagate(
+            broker=broker,
+            destination_nodes=destinations,
+            hmac_key_path=_write_hmac_key(tmp_path),
+            gate_evaluator=lambda *_args, **_kwargs: {"approved": True, "decision": "approved", "decision_id": "dest-1"},
+            mutation_writer=fail_second_write,
+        )
+
+    assert all(node.get("applied_mutations") is None for node in destinations)
+    status = broker.last_audit_status
+    assert status is not None
+    assert status.ok is False
+    assert status.reason == "audit_persistence_failed"
+    assert status.error_type == "RuntimeError"
