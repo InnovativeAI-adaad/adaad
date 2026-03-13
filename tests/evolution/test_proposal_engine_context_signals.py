@@ -227,3 +227,53 @@ class TestLastHealthScoreInContext:
         loop = EvolutionLoop(api_key="k", simulate_outcomes=True, proposal_engine=engine)
         _run(loop)
         assert isinstance(captured[0].context["last_health_score"], float)
+
+
+# ---------------------------------------------------------------------------
+# T58/T59: CodeIntel keys propagate into ProposalRequest.context
+# ---------------------------------------------------------------------------
+
+class TestCodeIntelContextFields:
+    def test_capability_target_and_hotspot_functions_present(self):
+        engine, captured = _capture_engine_context()
+        loop = EvolutionLoop(api_key="k", simulate_outcomes=True, proposal_engine=engine)
+
+        ctx = CodebaseContext(
+            file_summaries={},
+            recent_failures=[],
+            current_epoch_id="ep-001",
+            explore_ratio=0.5,
+        )
+        ctx.capability_target = "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch"
+        ctx.hotspot_functions = (
+            "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch",
+            "runtime.evolution.proposal_engine.ProposalEngine.generate",
+        )
+        with patch("runtime.evolution.evolution_loop.propose_from_all_agents", return_value=[]):
+            loop.run_epoch(ctx)
+
+        assert captured[0].context["capability_target"] == (
+            "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch"
+        )
+        assert captured[0].context["hotspot_functions"] == (
+            "runtime.evolution.evolution_loop.EvolutionLoop.run_epoch",
+            "runtime.evolution.proposal_engine.ProposalEngine.generate",
+        )
+
+    def test_optional_fragility_metrics_present_when_set(self):
+        engine, captured = _capture_engine_context()
+        loop = EvolutionLoop(api_key="k", simulate_outcomes=True, proposal_engine=engine)
+
+        ctx = CodebaseContext(
+            file_summaries={},
+            recent_failures=[],
+            current_epoch_id="ep-001",
+            explore_ratio=0.5,
+        )
+        ctx.fragility_score = 0.41
+        ctx.fragility_delta = -0.05
+        with patch("runtime.evolution.evolution_loop.propose_from_all_agents", return_value=[]):
+            loop.run_epoch(ctx)
+
+        assert captured[0].context["fragility_score"] == pytest.approx(0.41)
+        assert captured[0].context["fragility_delta"] == pytest.approx(-0.05)
