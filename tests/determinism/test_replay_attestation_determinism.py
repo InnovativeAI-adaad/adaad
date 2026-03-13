@@ -272,10 +272,12 @@ def test_replay_attestation_cross_instance_revocation_check(tmp_path) -> None:
     assert result["signature_results"][0]["error"] == "key_revoked"
 
 
-def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
+def test_replay_attestation_ed25519_happy_path(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     epoch_id = "epoch-ed25519"
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
+
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
 
     builder = ReplayProofBuilder(
         ledger=ledger,
@@ -289,8 +291,9 @@ def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
     assert verify_replay_proof_bundle(bundle)["ok"]
 
 
-def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
+def test_replay_attestation_ed25519_tamper_detection(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     epoch_id = "epoch-ed25519-tamper"
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_tamper.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
 
@@ -309,8 +312,9 @@ def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
     assert result["signature_results"][0]["error"] == "signature_mismatch"
 
 
-def test_replay_attestation_ed25519_unknown_key_id(tmp_path) -> None:
+def test_replay_attestation_ed25519_unknown_key_id(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
     epoch_id = "epoch-ed25519-unknown"
+    monkeypatch.setenv("ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV", "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=")
     ledger = LineageLedgerV2(tmp_path / "lineage_ed25519_unknown.jsonl")
     _seed_epoch(ledger, epoch_id=epoch_id)
 

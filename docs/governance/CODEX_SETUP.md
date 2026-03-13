@@ -179,3 +179,20 @@ Use `python scripts/tier0_remediation.py` to run Tier 0 gate verification and pr
 - VCS network operations belong in a separate wrapper script.
 - Optional local-only commit mode is available via `--local-commit` (no network).
 - The helper always prints a deterministic commit message template for operator use.
+
+
+## Replay proof signing key material setup
+
+Replay proof key material is now fail-closed and must not be committed in `security/replay_proof_keyring.json`.
+
+- Keep committed keyring entries metadata-only (`algorithm`, `public_key`, `*_ref` fields).
+- Store local developer secrets in `security/replay_proof_keyring.local.json` (gitignored).
+- For CI/production, mount secrets and set `ADAAD_REPLAY_PROOF_KEYRING_SECRET_PATH`.
+- Environment overrides (`ADAAD_REPLAY_PROOF_HMAC_SECRET[_<KEY_ID>]`, `ADAAD_REPLAY_PROOF_PRIVATE_KEY[_<KEY_ID>]`) take highest precedence.
+- Outside explicit dev/test mode, placeholder or missing secret values cause replay proof load to fail closed.
+
+Run the guard before committing:
+
+```bash
+python scripts/check_replay_keyring_secrets.py
+```

@@ -3,12 +3,14 @@
   "keys": {
     "proof-key": {
       "algorithm": "hmac-sha256",
-      "hmac_secret": "adaad-replay-proof-dev-secret:proof-key"
+      "key_purpose": "replay-proof signing",
+      "hmac_secret_ref": "env:ADAAD_REPLAY_PROOF_HMAC_SECRET_PROOF_KEY"
     },
     "replay-proof-ed25519-dev": {
       "algorithm": "ed25519",
-      "private_key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
-      "public_key": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg="
+      "key_purpose": "replay-proof signing",
+      "public_key": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=",
+      "private_key_ref": "env:ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV"
     }
   }
 }
