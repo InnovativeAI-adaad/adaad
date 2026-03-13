@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADAAD — What It Is & Why It Matters</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --amber: #e8a020;
+    --amber-dark: #b87a10;
+    --red: #c0392b;
+    --navy: #0f2740;
+    --slate: #3d5166;
+    --cream-light: #faf7f2;
+    --rule: #0d0d0d;
+    --col-gap: 2rem;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── MASTHEAD ──────────────────────────────────────── */
+  .masthead {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.4rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Source Serif 4', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 3px solid var(--amber);
+  }
+  .masthead-left { opacity: 0.55; }
+  .masthead-center {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.25em;
+    color: var(--amber);
+  }
+  .masthead-right { opacity: 0.55; }
+
+  /* ─── HERO ──────────────────────────────────────────── */
+  .hero {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 39px,
+        rgba(255,255,255,0.025) 40px
+      );
+  }
+  .hero-kicker {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.35em;
+    color: var(--amber);
+    margin-bottom: 1.2rem;
+    position: relative;
+  }
+  .hero-headline {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-weight: 900;
+    line-height: 1.0;
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--amber);
+  }
+  .hero-sub {
+    font-size: 1.25rem;
+    max-width: 620px;
+    margin: 0 auto 2.5rem;
+    opacity: 0.78;
+    position: relative;
+    line-height: 1.6;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--amber);
+    color: var(--ink);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.18em;
+    padding: 0.55rem 1.4rem;
+    position: relative;
+  }
+
+  /* ─── HORIZONTAL RULE / DIVIDERS ───────────────────── */
+  .rule-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.4rem 2rem;
+    background: var(--ink);
+    color: var(--amber);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.3em;
+  }
+  .rule-section::before, .rule-section::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--amber);
+    opacity: 0.4;
+  }
+
+  .thick-rule {
+    border: none;
+    height: 4px;
+    background: var(--ink);
+    margin: 0;
+  }
+  .thin-rule {
+    border: none;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.15;
+    margin: 2rem 0;
+  }
+
+  /* ─── CONTENT WRAPPERS ──────────────────────────────── */
+  .wrapper {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  .wrapper-narrow {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ─── SECTION LABELS ────────────────────────────────── */
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.35em;
+    color: var(--amber-dark);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  /* ─── INTRO STRIP ───────────────────────────────────── */
+  .intro-strip {
+    background: var(--cream-light);
+    border-top: 4px solid var(--ink);
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    padding: 3.5rem 2rem;
+  }
+  .intro-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 2px 1fr;
+    gap: 0 3rem;
+    align-items: start;
+  }
+  .intro-divider {
+    background: var(--ink);
+    opacity: 0.15;
+    align-self: stretch;
+  }
+  .intro-big {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 3.5vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+  }
+  .intro-big em { font-style: italic; color: var(--red); }
+  .intro-body { font-size: 1.05rem; line-height: 1.8; opacity: 0.85; }
+
+  /* ─── ANALOGY BLOCK ─────────────────────────────────── */
+  .analogy-block {
+    padding: 4rem 2rem;
+    background: var(--navy);
+    color: var(--paper);
+    position: relative;
+    overflow: hidden;
+  }
+  .analogy-block::after {
+    content: '"';
+    position: absolute;
+    right: -0.05em;
+    top: -0.2em;
+    font-family: 'Playfair Display', serif;
+    font-size: 28rem;
+    color: rgba(255,255,255,0.03);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .analogy-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .analogy-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 700;
+    font-style: italic;
+    line-height: 1.35;
+    margin-bottom: 1.5rem;
+    border-left: 5px solid var(--amber);
+    padding-left: 1.5rem;
+  }
+  .analogy-caption {
+    font-size: 0.95rem;
+    opacity: 0.65;
+    letter-spacing: 0.05em;
+    padding-left: 1.5rem;
+  }
+
+  /* ─── HOW IT WORKS ──────────────────────────────────── */
+  .how-section {
+    padding: 5rem 2rem;
+    background: var(--paper);
+  }
+  .how-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+  .how-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .how-steps {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0 1.5rem;
+    position: relative;
+    padding-bottom: 2.5rem;
+  }
+  .step:last-child { padding-bottom: 0; }
+  .step-num-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .step-num {
+    width: 64px;
+    height: 64px;
+    background: var(--ink);
+    color: var(--amber);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-line {
+    width: 2px;
+    flex: 1;
+    background: var(--ink);
+    opacity: 0.12;
+    margin-top: 4px;
+  }
+  .step:last-child .step-line { display: none; }
+  .step-content {
+    padding-top: 0.7rem;
+  }
+  .step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .step-body { font-size: 1rem; opacity: 0.82; line-height: 1.75; }
+  .step-pill {
+    display: inline-block;
+    margin-top: 0.6rem;
+    background: var(--amber);
+    color: var(--ink);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.2em;
+    padding: 0.2rem 0.7rem;
+  }
+
+  /* ─── THREE WORKERS ─────────────────────────────────── */
+  .workers-section {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 5rem 2rem;
+  }
+  .workers-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .workers-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+  }
+  .workers-sub {
+    opacity: 0.6;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+  }
+  .workers-grid {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5px;
+    background: rgba(255,255,255,0.08);
+  }
+  .worker-card {
+    background: var(--ink);
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .worker-card:hover { background: #1a1a1a; }
+  .worker-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+    line-height: 1;
+  }
+  .worker-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.1em;
+    color: var(--amber);
+    margin-bottom: 0.3rem;
+  }
+  .worker-role {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    opacity: 0.45;
+    margin-bottom: 1rem;
+    font-family: 'Source Serif 4', serif;
+  }
+  .worker-body { font-size: 0.97rem; line-height: 1.75; opacity: 0.78; }
+  .worker-when {
+    margin-top: 1rem;
+    font-size: 0.82rem;
+    opacity: 0.5;
+    font-style: italic;
+  }
+
+  /* ─── SCORECARD ─────────────────────────────────────── */
+  .scorecard-section {
+    padding: 5rem 2rem;
+    background: var(--cream-light);
+    border-top: 4px solid var(--ink);
+  }
+  .scorecard-header { text-align: center; margin-bottom: 3rem; }
+  .scorecard-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+  }
+  .scorecard-grid {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1.5rem;
+  }
+  .score-card {
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    padding: 1.8rem 1.5rem;
+    position: relative;
+  }
+  .score-card::before {
+    content: attr(data-num);
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    background: var(--amber);
+    color: var(--ink);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    padding: 0.15rem 0.5rem;
+  }
+  .score-emoji { font-size: 2rem; margin-bottom: 0.8rem; display: block; }
+  .score-metric {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+  }
+  .score-target {
+    font-size: 1.6rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    color: var(--red);
+    margin-bottom: 0.4rem;
+  }
+  .score-explain { font-size: 0.88rem; opacity: 0.7; line-height: 1.6; }
+
+  /* ─── WHY IT MATTERS ────────────────────────────────── */
+  .matters-section {
+    padding: 5rem 2rem;
+    background: var(--paper);
+  }
+  .matters-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .matters-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    margin-bottom: 2.5rem;
+    line-height: 1.1;
+  }
+  .matters-title em { font-style: italic; color: var(--red); }
+  .matters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.5rem;
+  }
+  .matter-item {}
+  .matter-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .matter-heading span { font-size: 1.4rem; flex-shrink: 0; }
+  .matter-body { font-size: 0.97rem; opacity: 0.8; line-height: 1.8; }
+
+  /* ─── RULES STRIP ───────────────────────────────────── */
+  .rules-strip {
+    background: var(--amber);
+    color: var(--ink);
+    padding: 4rem 2rem;
+  }
+  .rules-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+  .rules-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 900;
+    margin-bottom: 2rem;
+    line-height: 1.15;
+  }
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1.5rem;
+  }
+  .rule-item {
+    background: rgba(0,0,0,0.07);
+    padding: 1.4rem 1.2rem;
+    border-left: 4px solid var(--ink);
+  }
+  .rule-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    line-height: 1;
+    opacity: 0.22;
+    margin-bottom: 0.3rem;
+  }
+  .rule-text {
+    font-size: 0.97rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .rule-sub { font-size: 0.84rem; opacity: 0.7; margin-top: 0.3rem; }
+
+  /* ─── ROADMAP TIMELINE ──────────────────────────────── */
+  .timeline-section {
+    padding: 5rem 2rem;
+    background: var(--navy);
+    color: var(--paper);
+  }
+  .timeline-header { text-align: center; margin-bottom: 3.5rem; }
+  .timeline-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+  }
+  .timeline-sub { opacity: 0.55; margin-top: 0.5rem; font-size: 1rem; }
+  .timeline {
+    max-width: 820px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255,255,255,0.1);
+  }
+  .tl-item {
+    display: grid;
+    grid-template-columns: 58px 1fr;
+    gap: 0 1.5rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+  }
+  .tl-dot {
+    width: 58px;
+    height: 58px;
+    border-radius: 0;
+    background: var(--navy);
+    border: 2px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .tl-dot.done {
+    background: var(--amber);
+    border-color: var(--amber);
+    font-size: 1.2rem;
+  }
+  .tl-content { padding-top: 0.8rem; }
+  .tl-version {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    color: var(--amber);
+    margin-bottom: 0.2rem;
+  }
+  .tl-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+  .tl-body { font-size: 0.93rem; opacity: 0.65; line-height: 1.7; }
+
+  /* ─── CLOSING SPREAD ────────────────────────────────── */
+  .closing {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 6rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .closing::before {
+    content: 'ADAAD';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(8rem, 22vw, 22rem);
+    color: rgba(255,255,255,0.025);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .closing-inner { position: relative; max-width: 700px; margin: 0 auto; }
+  .closing-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4.5vw, 3.4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+  }
+  .closing-title em { font-style: italic; color: var(--amber); }
+  .closing-body { font-size: 1.05rem; opacity: 0.65; line-height: 1.8; margin-bottom: 2.5rem; }
+  .closing-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+  .closing-link {
+    display: inline-block;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--paper);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.2em;
+    padding: 0.6rem 1.4rem;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .closing-link:hover { border-color: var(--amber); color: var(--amber); }
+  .closing-link.primary {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: var(--ink);
+  }
+  .closing-link.primary:hover { background: var(--amber-dark); border-color: var(--amber-dark); }
+
+  /* ─── FOOTER ────────────────────────────────────────── */
+  footer {
+    background: #080808;
+    color: rgba(255,255,255,0.3);
+    padding: 1.5rem 2rem;
+    text-align: center;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    font-family: 'Source Serif 4', serif;
+  }
+  footer strong { color: var(--amber); }
+
+  /* ─── PULL QUOTE ────────────────────────────────────── */
+  .pull-quote-section {
+    background: var(--paper);
+    padding: 3rem 2rem;
+    border-top: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+  }
+  .pull-quote {
+    max-width: 820px;
+    margin: 0 auto;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.4rem, 2.8vw, 2rem);
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+    position: relative;
+    padding: 0 2rem;
+  }
+  .pull-quote::before {
+    content: '—';
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--amber-dark);
+    margin-bottom: 0.8rem;
+    font-style: normal;
+  }
+  .pull-quote::after {
+    content: '—';
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--amber-dark);
+    margin-top: 0.8rem;
+    font-style: normal;
+  }
+
+  /* ─── ANIMATIONS ────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-kicker  { animation: fadeUp 0.5s ease both 0.1s; }
+  .hero-headline{ animation: fadeUp 0.6s ease both 0.25s; }
+  .hero-sub     { animation: fadeUp 0.6s ease both 0.4s; }
+  .hero-badge   { animation: fadeUp 0.6s ease both 0.55s; }
+
+  /* ─── RESPONSIVE ────────────────────────────────────── */
+  @media (max-width: 700px) {
+    .intro-grid { grid-template-columns: 1fr; }
+    .intro-divider { display: none; }
+    .masthead-left, .masthead-right { display: none; }
+    .step { grid-template-columns: 56px 1fr; }
+    .step-num { width: 48px; height: 48px; font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <span class="masthead-left">Vol. II · No. 4 · 2026</span>
+  <span class="masthead-center">The ADAAD Dispatch</span>
+  <span class="masthead-right">Plain English Edition</span>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-kicker">Special Report · Artificial Intelligence</div>
+  <h1 class="hero-headline">The Software That<br/><em>Teaches Itself</em><br/>— With Your Permission</h1>
+  <p class="hero-sub">A plain-English guide to ADAAD: what it does, why it matters, and why it could change how every software company works.</p>
+  <div class="hero-badge">✦ No Computer Science Degree Required ✦</div>
+</section>
+
+<div class="rule-section">✦ &nbsp; Start Here &nbsp; ✦</div>
+
+<!-- INTRO -->
+<section class="intro-strip">
+  <div class="intro-grid">
+    <div>
+      <span class="section-label">The Big Picture</span>
+      <h2 class="intro-big">Imagine a contractor who <em>gets better</em> at their job every single day — but you still approve every invoice.</h2>
+    </div>
+    <div class="intro-divider"></div>
+    <div>
+      <p class="intro-body">That's ADAAD in a nutshell. It's a system that uses artificial intelligence to find ways to improve software code — then submits every single suggestion for review before anything actually changes.</p>
+      <hr class="thin-rule"/>
+      <p class="intro-body">The wild part? It <em>learns</em> from what gets approved and what gets rejected. Over time, it gets better at making suggestions that are actually good. And there's a full paper trail for every single decision — forever.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="thick-rule"/>
+
+<!-- ANALOGY -->
+<section class="analogy-block">
+  <div class="analogy-inner">
+    <span class="section-label" style="color: var(--amber); opacity: 0.7;">The Best Analogy We've Got</span>
+    <div class="analogy-quote">"Think of it like the world's most disciplined intern. It works around the clock suggesting improvements — but it can't staple a single page without a manager signing off. And it keeps a permanent record of every suggestion, every rejection, and every reason why."</div>
+    <div class="analogy-caption">— The core idea behind ADAAD's "governed mutation pipeline"</div>
+  </div>
+</section>
+
+<!-- PULL QUOTE -->
+<section class="pull-quote-section">
+  <div class="pull-quote">Software that never stops trying to improve itself — but never changes anything without proof it's allowed to.</div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="how-header">
+    <span class="section-label" style="text-align:center; display:block;">Step by Step</span>
+    <h2 class="how-title">How ADAAD Actually Works</h2>
+    <p style="max-width: 540px; margin: 0.8rem auto 0; opacity: 0.65; font-size: 1rem;">Six simple steps. No jargon. Promise.</p>
+  </div>
+  <div class="how-steps">
+
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">1</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-title">It looks at your software</div>
+        <p class="step-body">ADAAD scans the existing code — like a home inspector going room by room, taking notes on what could be better. It builds a snapshot of the current state before touching anything.</p>
+        <span class="step-pill">📸 Snapshot taken</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">2</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-title">Three AI workers brainstorm improvements</div>
+        <p class="step-body">Three different AI personalities — the Architect (thinks big picture), the Beast (cranks out fast fixes), and the Dreamer (tries wild new ideas) — each write up their own suggestions. Competition makes the ideas better.</p>
+        <span class="step-pill">🤖 Proposals generated</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">3</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-title">The best ideas survive — like a talent show</div>
+        <p class="step-body">All the proposals get scored and ranked. They even "breed" with each other — taking the best parts of idea A and idea B to create idea C. The weakest suggestions get cut. This is the same logic nature uses: survival of the fittest.</p>
+        <span class="step-pill">🏆 Best proposals ranked</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">4</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-title">The Constitution decides: yes or no</div>
+        <p class="step-body">Every surviving proposal goes through a strict rulebook — like a constitutional court. If it violates any rule, it's rejected on the spot. No exceptions, no workarounds, no appeals. The rulebook is public and permanently stored.</p>
+        <span class="step-pill">⚖️ Gate evaluated</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">5</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-title">Evidence gets filed — permanently</div>
+        <p class="step-body">Whether a proposal passed or failed, every decision gets written into a tamper-proof log. You can replay any decision, see exactly why it was made, and verify nothing was changed after the fact. It's like a court transcript that can never be edited.</p>
+        <span class="step-pill">📋 Permanent record filed</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num-col">
+        <div class="step-num">6</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step-content">
+        <div class="step-title">ADAAD learns and does it all over again</div>
+        <p class="step-body">Based on what passed and what failed, the system recalibrates. Ideas that tend to succeed get proposed more often. Ideas that keep getting rejected get phased out. Every cycle, the suggestions get smarter. Then it starts over.</p>
+        <span class="step-pill">🔄 Learning complete — restart</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="thick-rule"/>
+
+<!-- THREE WORKERS -->
+<section class="workers-section">
+  <div class="workers-header">
+    <span class="section-label" style="color: var(--amber); opacity: 0.7; text-align:center; display:block;">Meet the Team</span>
+    <h2 class="workers-title">The Three AI Workers</h2>
+    <p class="workers-sub">Each one has a different job. All three compete. The best idea wins.</p>
+  </div>
+  <div class="workers-grid">
+    <div class="worker-card">
+      <span class="worker-icon">🏛️</span>
+      <div class="worker-name">The Architect</div>
+      <div class="worker-role">Big Picture Thinker</div>
+      <p class="worker-body">Proposes changes that redesign how things are organized at a higher level — like a city planner redesigning street layouts rather than just fixing potholes. Slower, more thoughtful, higher risk, higher reward.</p>
+      <p class="worker-when">Called in when: the system needs structural improvement, not just patches.</p>
+    </div>
+    <div class="worker-card">
+      <span class="worker-icon">🦁</span>
+      <div class="worker-name">The Beast</div>
+      <div class="worker-role">Fast, Safe, Reliable</div>
+      <p class="worker-body">Grinds out practical, well-tested improvements fast. Think of the tradesperson who's fixed a thousand leaky faucets — they may not redesign your whole plumbing, but they'll definitely stop the drip. Conservative but highly effective.</p>
+      <p class="worker-when">Called in when: you need reliable wins without big risks.</p>
+    </div>
+    <div class="worker-card">
+      <span class="worker-icon">🌙</span>
+      <div class="worker-name">The Dreamer</div>
+      <div class="worker-role">Wild Card Explorer</div>
+      <p class="worker-body">Tries unconventional approaches that the other two would never consider. Most ideas get rejected — but every so often the Dreamer finds something genuinely brilliant that nobody else would have thought of. Highest variance, most creative.</p>
+      <p class="worker-when">Called in when: everything else has stopped working and fresh eyes are needed.</p>
+    </div>
+  </div>
+</section>
+
+<div class="rule-section">✦ &nbsp; The Scorecard &nbsp; ✦</div>
+
+<!-- SCORECARD -->
+<section class="scorecard-section">
+  <div class="scorecard-header">
+    <span class="section-label" style="text-align:center; display:block;">How We Know It's Working</span>
+    <h2 class="scorecard-title">ADAAD Reports Its Own Health</h2>
+    <p style="max-width: 560px; margin: 0.8rem auto 0; opacity: 0.65; font-size: 1rem;">Every week, ADAAD generates a public report card. Here's what each number actually means.</p>
+  </div>
+  <div class="scorecard-grid">
+    <div class="score-card" data-num="METRIC 1">
+      <span class="score-emoji">🎯</span>
+      <div class="score-metric">Acceptance Rate</div>
+      <div class="score-target">20%–60%</div>
+      <p class="score-explain">Of all the suggestions made, between 20% and 60% should be approved. Too high means the system isn't being critical enough. Too low means it's wasting everyone's time.</p>
+    </div>
+    <div class="score-card" data-num="METRIC 2">
+      <span class="score-emoji">⚖️</span>
+      <div class="score-metric">Weight Bounds</div>
+      <div class="score-target">5% → 70%</div>
+      <p class="score-explain">The importance given to any single factor — like "how risky is this?" — must stay between 5% and 70%. This prevents the system from obsessing over one thing and ignoring everything else.</p>
+    </div>
+    <div class="score-card" data-num="METRIC 3">
+      <span class="score-emoji">📊</span>
+      <div class="score-metric">Plateau Events</div>
+      <div class="score-target">≤ 2 per 10 rounds</div>
+      <p class="score-explain">A "plateau" is when all three workers' ideas keep getting rejected. That's a sign to shake things up. If it happens more than twice in ten rounds, something's wrong with the strategy.</p>
+    </div>
+    <div class="score-card" data-num="METRIC 4">
+      <span class="score-emoji">👥</span>
+      <div class="score-metric">Agent Balance</div>
+      <div class="score-target">No one &gt; 70%</div>
+      <p class="score-explain">No single worker should be making more than 70% of all the suggestions. If the Architect is doing all the work, you're missing the Beast's reliability and the Dreamer's creativity.</p>
+    </div>
+    <div class="score-card" data-num="METRIC 5">
+      <span class="score-emoji">⏱️</span>
+      <div class="score-metric">Round Duration</div>
+      <div class="score-target">&lt; 45 seconds</div>
+      <p class="score-explain">One complete cycle — from "look at the code" to "file the evidence" — should take under 45 seconds when connected to the real AI. Speed matters; slow systems don't get used.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY IT MATTERS -->
+<section class="matters-section">
+  <div class="matters-inner">
+    <span class="section-label">Why You Should Care</span>
+    <h2 class="matters-title">This Isn't Just Cool Tech.<br/>It's a <em>New Way</em> of Building Software.</h2>
+    <div class="matters-grid">
+      <div class="matter-item">
+        <div class="matter-heading"><span>🏥</span> It could run in any software industry</div>
+        <p class="matter-body">Hospitals, banks, airlines, logistics companies — every industry runs on software. A system that automatically finds and proposes improvements, with full accountability, could prevent bugs that cost lives or money before they ever ship.</p>
+      </div>
+      <div class="matter-item">
+        <div class="matter-heading"><span>🔍</span> Full transparency, no black boxes</div>
+        <p class="matter-body">Most AI systems make decisions nobody can explain. ADAAD is the opposite — every decision comes with a permanent paper trail, a reason code, and a replay button. You can always ask "why did it do that?" and get a real answer.</p>
+      </div>
+      <div class="matter-item">
+        <div class="matter-heading"><span>🚫</span> No AI goes rogue here</div>
+        <p class="matter-body">The constitutional rulebook is the only thing that can approve changes. Not the AI workers, not the scoring system, not any external signal. One gate, one authority. The system is designed to fail closed — when in doubt, nothing happens.</p>
+      </div>
+      <div class="matter-item">
+        <div class="matter-heading"><span>📈</span> Gets smarter the more it runs</div>
+        <p class="matter-body">Traditional software stays the same until a human updates it. ADAAD adapts — learning which strategies work, which agents perform best, and adjusting its own priorities accordingly. The longer it runs, the more tailored its suggestions become.</p>
+      </div>
+      <div class="matter-item">
+        <div class="matter-heading"><span>🤝</span> AI and humans stay partners</div>
+        <p class="matter-body">Nothing in the system removes humans from the loop. The AI proposes; humans set the rules; the constitutional gate enforces them. You can always see what's happening, change the rules, or shut it down. Control stays with people.</p>
+      </div>
+      <div class="matter-item">
+        <div class="matter-heading"><span>🌎</span> Open source and auditable</div>
+        <p class="matter-body">ADAAD is publicly available code. That means anyone — a company, a regulator, a researcher, a curious person — can download it, inspect it, and verify for themselves that it does what it claims. No secrets, no hidden logic.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RULES STRIP -->
+<section class="rules-strip">
+  <div class="rules-inner">
+    <span class="section-label" style="color: rgba(0,0,0,0.4); margin-bottom: 0.7rem;">The Constitution — In Plain English</span>
+    <h2 class="rules-title">The 6 Rules Every Suggestion Must Pass</h2>
+    <p style="margin-bottom: 2rem; opacity: 0.6; font-size: 0.97rem; max-width: 580px;">These are baked into the system. They can't be switched off, overridden, or bypassed. Ever.</p>
+    <div class="rules-grid">
+      <div class="rule-item">
+        <div class="rule-num">01</div>
+        <div class="rule-text">No suggestion can approve itself</div>
+        <p class="rule-sub">Only the constitutional gate has that authority — never the AI that proposed it.</p>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">02</div>
+        <div class="rule-text">Every decision must be replayable</div>
+        <p class="rule-sub">Run the same inputs again later, you get the same decision. No randomness in the courtroom.</p>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">03</div>
+        <div class="rule-text">Every decision has a permanent record</div>
+        <p class="rule-sub">Approvals, rejections, reasons — all filed in a tamper-proof log that nobody can edit.</p>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">04</div>
+        <div class="rule-text">When in doubt, do nothing</div>
+        <p class="rule-sub">The system is designed to fail closed. Uncertainty = halt, not proceed.</p>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">05</div>
+        <div class="rule-text">No banned tokens, no backdoors</div>
+        <p class="rule-sub">Certain secret codes that could bypass security are permanently blocked, full stop.</p>
+      </div>
+      <div class="rule-item">
+        <div class="rule-num">06</div>
+        <div class="rule-text">No silent failures</div>
+        <p class="rule-sub">If something breaks, it says so loudly, with a specific error name, in the permanent log.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="timeline-section">
+  <div class="timeline-header">
+    <span class="section-label" style="color: var(--amber); opacity: 0.7; text-align:center; display:block;">Past & Future</span>
+    <h2 class="timeline-title">Where ADAAD Has Been — Where It's Going</h2>
+    <p class="timeline-sub">In plain English, no version numbers required.</p>
+  </div>
+  <div class="timeline">
+
+    <div class="tl-item">
+      <div class="tl-dot done">✓</div>
+      <div class="tl-content">
+        <div class="tl-version">Done · The Foundation</div>
+        <div class="tl-title">Built the courthouse before letting anyone propose cases</div>
+        <p class="tl-body">Established the constitutional rulebook, tamper-proof evidence ledger, and deterministic replay system. Before any AI worked on code, the rules of the game were locked in and tested.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot done">✓</div>
+      <div class="tl-content">
+        <div class="tl-version">Done · Live AI</div>
+        <div class="tl-title">Plugged in the three AI workers for the first time</div>
+        <p class="tl-body">Connected Claude AI to the pipeline. The Architect, Beast, and Dreamer are now writing real suggestions. Scoring weights adapt. The genetic algorithm picks winners. The loop runs.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot done">✓</div>
+      <div class="tl-content">
+        <div class="tl-version">Done · Smarter Selection</div>
+        <div class="tl-title">Replaced gut instinct with math for picking which worker to use</div>
+        <p class="tl-body">Instead of static rules about when to call the Architect vs. the Beast, ADAAD now uses a bandit algorithm — the same math casinos use to figure out which slot machines pay best — to pick the right worker based on real historical performance.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot">🔜</div>
+      <div class="tl-content">
+        <div class="tl-version">Coming Next</div>
+        <div class="tl-title">Teaching the scoring system what "risky" actually means in practice</div>
+        <p class="tl-body">Right now, "risk" and "complexity" scores are fixed numbers. Next, they'll adapt based on what actually happened after past changes — if risky changes have been going great, the system learns to worry less about them.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot">🔬</div>
+      <div class="tl-content">
+        <div class="tl-version">Research Phase</div>
+        <div class="tl-title">Reading code like a human reader, not a word scanner</div>
+        <p class="tl-body">Future versions will understand code structure — not just count lines — to figure out which suggestions are actually risky versus which just look complicated on the surface.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot">🌐</div>
+      <div class="tl-content">
+        <div class="tl-version">Big Vision</div>
+        <div class="tl-title">One system improving many connected projects at once</div>
+        <p class="tl-body">Eventually, ADAAD will be able to suggest improvements across multiple related software projects simultaneously — and still require constitutional approval in every single one before anything changes.</p>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-dot">🚀</div>
+      <div class="tl-content">
+        <div class="tl-version">The Moonshot</div>
+        <div class="tl-title">The system rewrites its own roadmap — but still needs a human signature</div>
+        <p class="tl-body">The ultimate goal: ADAAD proposes updates to its own improvement plan. It still can't approve those changes itself — a human has to sign off. But the system becomes a genuine partner in planning its own evolution.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section class="closing">
+  <div class="closing-inner">
+    <span class="section-label" style="color: var(--amber); opacity: 0.7; text-align:center; display:block; margin-bottom:1.5rem;">The Bottom Line</span>
+    <h2 class="closing-title">Software that works <em>harder</em> than any team — and answers to every rule you set.</h2>
+    <p class="closing-body">ADAAD isn't trying to replace programmers. It's trying to be the best possible assistant they've ever had — one that never sleeps, never forgets a rule, never hides a mistake, and gets genuinely smarter every single day. With a paper trail that would make any lawyer jealous.</p>
+    <div class="closing-links">
+      <a class="closing-link primary" href="https://github.com/InnovativeAI-adaad/ADAAD" target="_blank">View on GitHub</a>
+      <a class="closing-link" href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/ROADMAP.md" target="_blank">See the Roadmap</a>
+      <a class="closing-link" href="https://github.com/InnovativeAI-adaad/ADAAD/blob/main/docs/CONSTITUTION.md" target="_blank">Read the Constitution</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>ADAAD</strong> · Autonomous Development &amp; Adaptation Architecture · Open Source · MIT License · v2.0.0<br/>
+  <span style="opacity:0.5; font-size:0.72rem; margin-top:0.4rem; display:block;">This document is an educational summary. No jargon was harmed in the making of this explainer.</span>
+</footer>
+
+</body>
+</html>

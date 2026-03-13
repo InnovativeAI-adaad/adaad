@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADAAD — Founder Plan Proposal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0c; --ink2: #2a2824; --ink3: #5a5650; --ink4: #9a9490;
+    --paper: #fdfbf7; --paper2: #f5f1e8; --paper3: #ebe5d5;
+    --amber: #b8721e; --amber2: #d4903a; --amber3: #f0c060;
+    --amberBg: rgba(184,114,30,0.07);
+    --navy: #1a2840; --navy2: #243858;
+    --green: #1e5a3a; --greenBg: rgba(30,90,58,0.07);
+    --red: #8a2020;
+    --border: rgba(15,14,12,0.1); --border2: rgba(15,14,12,0.055);
+    --r: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink2);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 64px 48px 96px;
+    line-height: 1.65;
+  }
+
+  /* COVER */
+  .cover {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 48px;
+    margin-bottom: 56px;
+  }
+  .cover-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cover-tag::after { content: ''; flex: 1; height: 1px; background: var(--amberBg); }
+  .cover h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+  }
+  .cover h1 em { font-style: italic; color: var(--amber); }
+  .cover-sub {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--ink3);
+    margin-bottom: 36px;
+    max-width: 620px;
+    line-height: 1.6;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+  }
+  .cover-meta-cell {
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+  }
+  .cover-meta-cell:last-child { border-right: none; }
+  .cmc-label { font-size: 9px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink4); margin-bottom: 5px; }
+  .cmc-value { font-size: 13px; font-weight: 500; color: var(--ink); }
+
+  /* SECTION */
+  .section { margin-bottom: 52px; }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+  .section h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border2);
+    padding-bottom: 12px;
+  }
+  p { font-size: 15px; color: var(--ink3); line-height: 1.75; margin-bottom: 14px; }
+  p strong { color: var(--ink2); font-weight: 500; }
+  p em { color: var(--amber); font-style: normal; }
+
+  /* CALLOUT */
+  .callout {
+    background: var(--amberBg);
+    border-left: 3px solid var(--amber2);
+    border-radius: 0 var(--r) var(--r) 0;
+    padding: 18px 22px;
+    margin: 20px 0;
+    font-size: 14px;
+    color: var(--ink2);
+    line-height: 1.65;
+  }
+  .callout strong { color: var(--amber); }
+
+  .callout-navy {
+    background: rgba(26,40,64,0.05);
+    border-left-color: var(--navy2);
+  }
+  .callout-navy strong { color: var(--navy2); }
+
+  .callout-green {
+    background: var(--greenBg);
+    border-left-color: var(--green);
+  }
+  .callout-green strong { color: var(--green); }
+
+  /* MILESTONE TABLE */
+  .milestone-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    border-radius: var(--r);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .milestone-table thead th {
+    background: var(--ink);
+    color: var(--amber3);
+    padding: 12px 18px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .milestone-table tbody tr { border-bottom: 1px solid var(--border2); }
+  .milestone-table tbody tr:last-child { border-bottom: none; }
+  .milestone-table tbody tr:nth-child(even) { background: var(--paper2); }
+  .milestone-table td {
+    padding: 14px 18px;
+    font-size: 13px;
+    color: var(--ink3);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .milestone-table td.phase { font-weight: 500; color: var(--ink); white-space: nowrap; }
+  .milestone-table td.date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--amber); white-space: nowrap; }
+
+  /* PILL */
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pill.active  { background: var(--amberBg); color: var(--amber); }
+  .pill.done    { background: var(--greenBg); color: var(--green); }
+  .pill.planned { background: rgba(26,40,64,0.07); color: var(--navy2); }
+
+  /* PRINCIPLE GRID */
+  .principle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .principle-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 22px;
+  }
+  .pc-icon { font-size: 22px; margin-bottom: 10px; }
+  .pc-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+  .pc-body { font-size: 12px; color: var(--ink4); line-height: 1.6; margin: 0; }
+
+  /* METRIC ROW */
+  .metric-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border2);
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .mr-label { font-size: 13px; color: var(--ink3); flex: 1; }
+  .mr-target {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    min-width: 80px;
+    text-align: right;
+  }
+  .mr-bar-wrap { width: 120px; height: 4px; background: var(--paper3); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+  .mr-bar { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--amber), var(--amber2)); }
+
+  /* COMMITMENT TABLE */
+  .commit-list { margin: 16px 0; }
+  .commit-item {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border2);
+    align-items: flex-start;
+    font-size: 14px;
+    color: var(--ink3);
+    line-height: 1.55;
+  }
+  .commit-item:last-child { border-bottom: none; }
+  .commit-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--amber);
+    padding-top: 3px;
+    flex-shrink: 0;
+    width: 24px;
+  }
+
+  /* PR BLOCK */
+  .pr-block {
+    background: var(--ink);
+    border-radius: var(--r);
+    padding: 28px 32px;
+    margin: 20px 0;
+  }
+  .pr-block-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber3);
+    opacity: 0.6;
+    margin-bottom: 12px;
+  }
+  .pr-block pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: rgba(253,251,247,0.82);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .pr-block pre .hl { color: var(--amber3); }
+  .pr-block pre .dim { color: rgba(253,251,247,0.35); }
+
+  /* SIGNATURE */
+  .sig {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .sig-left {}
+  .sig-from { font-size: 11px; color: var(--ink4); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .sig-name { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: var(--ink); }
+  .sig-title { font-size: 12px; color: var(--ink4); margin-top: 3px; }
+  .sig-right { text-align: right; }
+  .sig-doc { font-size: 11px; color: var(--ink4); margin-bottom: 4px; }
+  .sig-stamp {
+    width: 64px; height: 64px;
+    border: 2px solid var(--amber);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: auto;
+    color: var(--amber);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    opacity: 0.6;
+  }
+
+  @media print {
+    body { padding: 32px; }
+    .pr-block { break-inside: avoid; }
+    .principle-grid { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══ -->
+<div class="cover">
+  <div class="cover-tag">InnovativeAI-adaad · Founder Proposal · March 2026</div>
+  <h1><em>ADAAD</em><br>Founder Plan<br>Proposal</h1>
+  <div class="cover-sub">
+    A strategic proposal outlining the 18-month development plan, governance philosophy, 
+    measurable milestones, and founder-level commitments for the Autonomous Development 
+    &amp; Adaptation Architecture project.
+  </div>
+  <div class="cover-meta">
+    <div class="cover-meta-cell">
+      <div class="cmc-label">Prepared For</div>
+      <div class="cmc-value">Founder / Owner</div>
+    </div>
+    <div class="cover-meta-cell">
+      <div class="cmc-label">Date</div>
+      <div class="cmc-value">March 6, 2026</div>
+    </div>
+    <div class="cover-meta-cell">
+      <div class="cmc-label">Horizon</div>
+      <div class="cmc-value">18 Months</div>
+    </div>
+    <div class="cover-meta-cell">
+      <div class="cmc-label">Status</div>
+      <div class="cmc-value">Phase 1 Active</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ §1 WHAT IS ADAAD ══ -->
+<div class="section">
+  <div class="section-label">Section 01</div>
+  <h2>What ADAAD Is — And What It Is Not</h2>
+
+  <p>
+    <strong>ADAAD is a governed software evolution engine.</strong> It is a system that continuously
+    generates, tests, scores, and selects improved versions of software agents — under strict human
+    oversight and auditable governance. It is not a sentient system, not a business decision-maker,
+    and not an autonomous agent acting on its own judgment.
+  </p>
+
+  <p>
+    Every action ADAAD takes is <em>traceable</em>, every improvement is <em>measurable</em>, and
+    every autonomous operation is <em>reversible</em>. The system earns the right to act more
+    independently — one demonstrated generation at a time.
+  </p>
+
+  <div class="callout">
+    <strong>The core insight:</strong> Most AI-driven development tools treat autonomy as a starting point.
+    ADAAD treats autonomy as a destination — a reward for demonstrated, measurable reliability under 
+    human governance. This makes it uniquely auditable, uniquely safe, and uniquely trustworthy.
+  </div>
+
+  <div class="principle-grid">
+    <div class="principle-card">
+      <div class="pc-icon">🔗</div>
+      <div class="pc-title">Traceability Over Speed</div>
+      <div class="pc-body">Every agent, mutation, and decision has a parent and a score. Nothing ships without a verified lineage chain from origin to current state.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-icon">🛡️</div>
+      <div class="pc-title">Stability Over Novelty</div>
+      <div class="pc-body">High-quality, proven improvements are valued over high-volume experimentation. The fitness function rewards usefulness, not mutation count.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-icon">↩️</div>
+      <div class="pc-title">Reversibility as a Requirement</div>
+      <div class="pc-body">No autonomous action is permitted unless it can be fully undone within the current generation window. Non-reversible mutations are blocked at the gate.</div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-icon">👁️</div>
+      <div class="pc-title">Human Authority Always</div>
+      <div class="pc-body">Humans set goals, define constraints, and approve releases. The system advises and executes — it never decides or overrides human judgment.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ §2 WHERE WE ARE ══ -->
+<div class="section">
+  <div class="section-label">Section 02</div>
+  <h2>Where We Are Today</h2>
+
+  <p>
+    ADAAD is currently in <strong>Phase 1 — Meta-Controller Bootstrap</strong>, the first active
+    phase of development. Phase 0 (Foundation &amp; Scaffold) is complete: core architecture
+    contracts, agent identity primitives, the lineage graph model, and the Android/Pydroid3
+    constraint layer are all in place and committed to the repository.
+  </p>
+
+  <p>
+    What exists now is a <em>functional scaffold</em> — the bones of the system. The meta-controller
+    loop, automated mode switching, and scoring rubric are actively being implemented. Human approval
+    gates are wired at every mutation commit boundary. Deterministic replay tests are being drafted.
+  </p>
+
+  <div class="callout callout-navy">
+    <strong>Current autonomy level: L1 — Supervised.</strong> Every action requires human review and
+    approval before execution. This is intentional. We are building trust into the system before we
+    extend any operational freedom.
+  </div>
+
+  <p>
+    The platform constraint — pure Python, Android-compatible, Pydroid3-runnable — is a deliberate
+    design choice, not a limitation. It ensures ADAAD remains accessible, portable, and testable
+    in resource-constrained environments from day one.
+  </p>
+</div>
+
+<!-- ══ §3 18-MONTH PLAN ══ -->
+<div class="section">
+  <div class="section-label">Section 03</div>
+  <h2>The 18-Month Plan</h2>
+
+  <p>
+    Five phases. Each phase increases autonomy by exactly one level — and only after the prior
+    level demonstrates measurable stability. No phase can be skipped. No autonomy level is assumed.
+  </p>
+
+  <table class="milestone-table">
+    <thead>
+      <tr>
+        <th>Phase</th>
+        <th>Timeline</th>
+        <th>Status</th>
+        <th>Autonomy Level</th>
+        <th>Key Deliverable</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="phase">0 — Foundation</td>
+        <td class="date">Q4 2025</td>
+        <td><span class="pill done">Done</span></td>
+        <td>L0 — Manual</td>
+        <td>Architecture contracts, lineage graph schema, Android constraint layer</td>
+      </tr>
+      <tr>
+        <td class="phase">1 — Bootstrap</td>
+        <td class="date">Q1–Q2 2026</td>
+        <td><span class="pill active">Active</span></td>
+        <td>L1 — Supervised</td>
+        <td>Meta-controller loop, scoring rubric v1, deterministic replay tests, human approval gates</td>
+      </tr>
+      <tr>
+        <td class="phase">2 — Governed Loop</td>
+        <td class="date">Q3 2026</td>
+        <td><span class="pill planned">Planned</span></td>
+        <td>L2 — Constrained</td>
+        <td>Explore/Exploit loop live, CI/CD integration, cryptographic audit chain, scoring rubric v2</td>
+      </tr>
+      <tr>
+        <td class="phase">3 — Adaptive Score</td>
+        <td class="date">Q4 2026</td>
+        <td><span class="pill planned">Planned</span></td>
+        <td>L3 — Adaptive</td>
+        <td>Self-adjusting fitness functions, multi-gen lineage tracking, G3+ achieved, ≥87% pass rate</td>
+      </tr>
+      <tr>
+        <td class="phase">4 — Compound Evo.</td>
+        <td class="date">Q1–Q2 2027</td>
+        <td><span class="pill planned">Planned</span></td>
+        <td>L4 — Gov. Auto</td>
+        <td>ADAAD evolves its own heuristics within locked bounds. G7+ lineage. Per-generation human review.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-green">
+    <strong>Gate condition:</strong> No phase transition occurs unless the prior phase demonstrates
+    stability over a defined number of agent generations, all audit chains pass integrity checks,
+    and a human operator formally approves the advancement. This is structural, not optional.
+  </div>
+</div>
+
+<!-- ══ §4 MEASURABLE SUCCESS ══ -->
+<div class="section">
+  <div class="section-label">Section 04</div>
+  <h2>How Success Is Measured</h2>
+
+  <p>
+    Every optimization target has a number. Vague claims about "improvement" are rejected.
+    ADAAD's success at any phase is either demonstrated or it isn't.
+  </p>
+
+  <div class="metric-row"><span class="mr-label">Mutation pass rate (automated test + replay gate)</span><span class="mr-target">87%</span><div class="mr-bar-wrap"><div class="mr-bar" style="width:87%"></div></div></div>
+  <div class="metric-row"><span class="mr-label">Lineage completeness (every mutation traced)</span><span class="mr-target">100%</span><div class="mr-bar-wrap"><div class="mr-bar" style="width:100%"></div></div></div>
+  <div class="metric-row"><span class="mr-label">CI/CD compliance per pipeline run</span><span class="mr-target">≥95%</span><div class="mr-bar-wrap"><div class="mr-bar" style="width:95%"></div></div></div>
+  <div class="metric-row"><span class="mr-label">Governance overhead vs. throughput</span><span class="mr-target">&lt;15%</span><div class="mr-bar-wrap"><div class="mr-bar" style="width:15%"></div></div></div>
+  <div class="metric-row"><span class="mr-label">Active agent generation depth at horizon</span><span class="mr-target">G7+</span><div class="mr-bar-wrap"><div class="mr-bar" style="width:70%"></div></div></div>
+  <div class="metric-row"><span class="mr-label">Action reversibility rate (no exceptions)</span><span class="mr-target">100%</span><div class="mr-bar-wrap"><div class="mr-bar" style="width:100%"></div></div></div>
+
+  <div class="callout" style="margin-top:20px">
+    <strong>North star:</strong> Useful mutation rate — not mutation volume. A system producing
+    10 traceable, human-approved, high-quality improvements per generation outperforms one
+    producing 100 unverified ones by every meaningful measure.
+  </div>
+</div>
+
+<!-- ══ §5 GOVERNANCE COMMITMENTS ══ -->
+<div class="section">
+  <div class="section-label">Section 05</div>
+  <h2>Founder-Level Governance Commitments</h2>
+
+  <p>
+    As the founder and owner of ADAAD, the following commitments are non-negotiable —
+    not aspirational guidelines, but structural guarantees built into the architecture itself.
+  </p>
+
+  <div class="commit-list">
+    <div class="commit-item"><span class="commit-num">01</span>Human authority over all releases is permanent. No autonomy level permits automated production deployment without an explicit human approval event.</div>
+    <div class="commit-item"><span class="commit-num">02</span>The constraint layer is enforced by the system itself. Humans define mutation bounds; those bounds cannot be overridden autonomously at any phase.</div>
+    <div class="commit-item"><span class="commit-num">03</span>Every autonomous action is logged with a cryptographically-signed entry containing agent ID, parent ID, score, timestamp, and decision rationale.</div>
+    <div class="commit-item"><span class="commit-num">04</span>All audit logs are append-only, chain-linked, and subject to integrity verification on every CI/CD pipeline run. A broken chain blocks the release.</div>
+    <div class="commit-item"><span class="commit-num">05</span>Rollback authority is immediate and unilateral. Any designated operator may revert a generation without quorum, approval, or system delay.</div>
+    <div class="commit-item"><span class="commit-num">06</span>Autonomy level advancement requires formal milestone review — demonstrated stability, passing audit chains, and written human sign-off. No phase can be skipped.</div>
+    <div class="commit-item"><span class="commit-num">07</span>The Android/Pydroid3 execution constraint is preserved as a hard floor. No mutation that breaks mobile compatibility enters production, regardless of fitness score.</div>
+    <div class="commit-item"><span class="commit-num">08</span>ADAAD's lineage graph — the full generational record of every agent and mutation — will be published as the canonical system of record for all released artifacts by Q2 2027.</div>
+  </div>
+</div>
+
+<!-- ══ §6 PR MERGE BRIEF ══ -->
+<div class="section">
+  <div class="section-label">Section 06</div>
+  <h2>PR Merge Brief — Strategic Docs to Main</h2>
+
+  <p>
+    The following content is ready for submission as a Pull Request to the
+    <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--paper2);padding:2px 6px;border-radius:4px">InnovativeAI-adaad</code>
+    main branch. This PR updates the strategic documentation layer of the repository with the
+    v2 Directional Forecast and this Founder Plan Proposal.
+  </p>
+
+  <div class="pr-block">
+    <div class="pr-block-label">// Pull Request — Copy &amp; Submit to GitHub</div>
+    <pre><span class="hl">Title:</span>
+docs: ADAAD Horizon v2 — Strategic Forecast &amp; Founder Plan Proposal
+
+<span class="hl">Branch:</span>  docs/adaad-horizon-v2  →  main
+
+<span class="hl">Description:</span>
+This PR merges the v2 strategic documentation layer into main, comprising:
+
+  1. ADAAD_Horizon_v2.html
+     Updated directional forecast (Q1 2026 → Q2 2027).
+     Redesigned for human-oriented visual clarity.
+     Covers: 5-phase roadmap, architecture delta, 8 quantified
+     success metrics, 3-pillar governance model, and 6-item risk register.
+
+  2. ADAAD_Founder_Plan_Proposal.html
+     Founder-level strategic proposal with:
+     - Governance commitments (8 structural guarantees)
+     - Measurable success criteria with phase gates
+     - 18-month milestone table with autonomy progression
+     - Design principles and non-negotiable floors
+
+<span class="hl">Changes:</span>
+  + docs/ADAAD_Horizon_v2.html             (new)
+  + docs/ADAAD_Founder_Plan_Proposal.html  (new)
+  ~ README.md                              (update doc links)
+
+<span class="hl">Governance Gate:</span>
+  - Lineage: This PR is authored and reviewed by human operator.
+  - Audit: Commit evidence bound to this PR ID on merge.
+  - Reversibility: Full revert possible via git revert on merge commit.
+  - Autonomy Level: L0 — Manual human authorship. No automated
+    mutations in this PR.
+
+<span class="hl">Reviewers:</span>  @dreezy66 (founder)
+<span class="hl">Labels:</span>    docs, strategic, governance, human-authored
+<span class="hl">Milestone:</span> Phase 1 — Meta-Controller Bootstrap
+
+<span class="dim">─────────────────────────────────────────────────────
+This PR does not modify any agent logic, scoring rubrics,
+or execution runtime. It is documentation only.
+─────────────────────────────────────────────────────</span></pre>
+  </div>
+
+  <p style="margin-top:16px">
+    Once the network constraint on <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--paper2);padding:2px 6px;border-radius:4px">api.github.com</code>
+    is resolved or the token is used directly in the browser, this PR can be submitted via
+    GitHub's web interface or CLI using the body above. The branch should be named
+    <code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--paper2);padding:2px 6px;border-radius:4px">docs/adaad-horizon-v2</code>.
+  </p>
+</div>
+
+<!-- ══ §7 RECOMMENDED NEXT ACTIONS ══ -->
+<div class="section">
+  <div class="section-label">Section 07</div>
+  <h2>Recommended Next Actions</h2>
+
+  <p>Ordered by priority. Each action has a clear owner and completion signal.</p>
+
+  <div class="commit-list">
+    <div class="commit-item"><span class="commit-num" style="color:var(--red)">!1</span><strong style="color:var(--ink2)">Submit this PR to main.</strong> Create branch <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--paper2);padding:1px 5px;border-radius:3px">docs/adaad-horizon-v2</code>, upload both HTML files to <code style="font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--paper2);padding:1px 5px;border-radius:3px">docs/</code>, open PR with the body in §06 above. Owner: founder.</div>
+    <div class="commit-item"><span class="commit-num" style="color:var(--red)">!2</span><strong style="color:var(--ink2)">Implement scoring rubric v1.</strong> Define the first weighted fitness function with at least three axes: test pass rate, lineage completeness, and reversibility confirmation. Done signal: rubric produces a numeric score for at least one test agent.</div>
+    <div class="commit-item"><span class="commit-num" style="color:var(--amber)">!3</span><strong style="color:var(--ink2)">Wire the first human approval gate.</strong> Build the simplest possible gate: a mutation cannot advance to "scored" state without a logged human approval event. Done signal: first approved mutation in the audit log.</div>
+    <div class="commit-item"><span class="commit-num" style="color:var(--amber)">!4</span><strong style="color:var(--ink2)">Draft the lineage graph schema v1.</strong> Define the node and edge structure for the DAG. At minimum: agent_id, parent_id, score, timestamp, mutation_delta, human_approved_by. Done signal: first multi-node lineage chain in the graph.</div>
+    <div class="commit-item"><span class="commit-num" style="color:var(--ink4)">!5</span><strong style="color:var(--ink2)">Establish replay test suite.</strong> Write 3–5 deterministic scenarios where a known input → known mutation → known score. Done signal: all 5 replay tests pass in Pydroid3 environment.</div>
+    <div class="commit-item"><span class="commit-num" style="color:var(--ink4)">!6</span><strong style="color:var(--ink2)">Set the Phase 2 gate criteria.</strong> Formally document the stability threshold required to advance from L1 to L2. Minimum: N consecutive approved mutations, 100% lineage completeness, zero audit chain failures. Done signal: criteria committed to repo as a governance doc.</div>
+  </div>
+</div>
+
+<!-- ══ SIGNATURE ══ -->
+<div class="sig">
+  <div class="sig-left">
+    <div class="sig-from">Prepared by</div>
+    <div class="sig-name">ADAAD Strategic Intelligence</div>
+    <div class="sig-title">InnovativeAI-adaad · Autonomous Architecture Division</div>
+  </div>
+  <div class="sig-right">
+    <div class="sig-doc">ADAAD-PROPOSAL-2026-03-06</div>
+    <div class="sig-stamp">ADAAD<br>HORIZON<br>v2.0</div>
+  </div>
+</div>
+
+</body>
+</html>
