@@ -1302,13 +1302,13 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 | 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
 | 53 | EvolutionLoop × EpochMemoryStore Live Wiring | v7.7.0 | ✅ |
 
-**Next:** Phase 57 — ProposalEngine Auto-Provisioning (Keystone, v8.0.0)
+**Next:** Phase 58 — Code Intelligence Layer (Perception, v8.1.0)
 
 ---
 
 ## v8 Roadmap — Constitutional Autonomous Software Evolution (Phases 57–65)
 
-**Status:** CONSTITUTIONAL DRAFT · v8.0.0-dev · 2026-03-13  
+**Status:** ACTIVE DELIVERY · v8.1.0-dev · 2026-03-13  
 **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v8.0.0.md`  
 **Invariants:** `docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md`
 
@@ -1318,8 +1318,8 @@ ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The
 
 | Phase | Layer | Organ | Version | Status | Human Gate |
 |-------|-------|-------|---------|--------|------------|
-| 57 | Keystone | Brainstem — ProposalEngine Auto-Provisioning | v8.0.0 | 🔲 NEXT | HUMAN-0 (SPEC-57) |
-| 58 | Perception | Code Intelligence Layer (CodeIntelModel) | v8.1.0 | 🔲 Blocked on 57 | — |
+| 57 | Keystone | Brainstem — ProposalEngine Auto-Provisioning | v8.0.0 | ✅ Shipped | HUMAN-0 (SPEC-57) |
+| 58 | Perception | Code Intelligence Layer (CodeIntelModel) | v8.1.0 | 🔲 NEXT | — |
 | 59 | Identity | Capability Graph v2 + CapabilityTargetDiscovery | v8.2.0 | 🔲 Blocked on 58 | HUMAN-0 (CAP-REGISTRY) |
 | 60 | Motor | AST Mutation Substrate + SandboxTournament | v8.3.0 | 🔲 Blocked on 59 | — |
 | 61 | Evolution | Lineage Engine + Compatibility Graph | v8.4.0 | 🔲 Blocked on 60 | — |
@@ -1335,7 +1335,7 @@ ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The
 ProposalEngine becomes default-on when `ADAAD_ANTHROPIC_API_KEY` is present. Phase 1e in `EvolutionLoop.run_epoch()` fires every epoch with live strategy context. All proposals enter the governed pipeline — no bypass.
 
 **Key invariants:** PROP-AUTO-0..5  
-**Acceptance:** T57-AP-01..12 pass; 0 regressions against 3,960 baseline tests
+**Acceptance:** ✅ T57-AP-01..12 pass in `tests/test_phase57_proposal_engine_autoprovision.py`; Phase 57 runtime wiring shipped in `runtime/evolution/evolution_loop.py`; all proposals continue through governed pipeline.
 
 ### Phase 58 — Perception (Code Intelligence Layer)
 

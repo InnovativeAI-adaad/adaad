@@ -4,8 +4,8 @@
 > **Canonical source (automation sequence control):** This document is the controlling source for **Phase 51+ PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
-**Last reviewed:** 2026-03-12
-**Milestone:** `v7.5.0` (Phase 51 complete) · active planning for v1.0.0-GA
+**Last reviewed:** 2026-03-13
+**Milestone:** `v8.0.0` (Phase 57 complete) · active planning for Phase 58
 
 ---
 
@@ -47,6 +47,33 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 ```
 
 ---
+
+
+## 1A) v8 Constitutional Sequence (Active)
+
+### 1A.1 Sequence order (authoritative)
+
+```text
+57 → 58 → 59 → 60 → 61 → 62 → 63 → 64 → 65
+```
+
+### 1A.2 Phase status + dependency table
+
+| Phase | Version | Depends on | Status |
+|---|---|---|---|
+| 57 | v8.0.0 | Phase 53 complete | shipped |
+| 58 | v8.1.0 | Phase 57 | next |
+| 59 | v8.2.0 | Phase 58 | blocked |
+| 60 | v8.3.0 | Phase 59 | blocked |
+| 61 | v8.4.0 | Phase 60 | blocked |
+| 62 | v8.5.0 | Phase 61 | blocked |
+| 63 | v8.6.0 | Phase 62 | blocked |
+| 64 | v8.7.0 | Phase 63 | blocked |
+| 65 | v9.0.0 | Phase 64 | blocked |
+
+### 1A.3 Dependency pointer
+
+- Next: **Phase 58** (Code Intelligence Layer, v8.1.0).
 
 ## 2) Active Planning — v1.0.0-GA Gate
 
@@ -121,7 +148,7 @@ adaad_pr_procession_contract:
   state_alignment:
     expected_active_phase: "Phase 51 COMPLETE · v7.5.0"
     expected_last_completed_pr: "feat/phase51-roadmap-procession-alignment"
-    expected_next_pr: "PR-52-PLAN (Phase 52 — TBD)"
+    expected_next_pr: "PR-PHASE58-01 (Phase 58 — Code Intelligence Layer)"
     blocked_reason_must_be_null: true
   v1_ga_gate:
     status: "in_progress"
@@ -139,7 +166,7 @@ A validator comparing this document to `.adaad_agent_state.json` should fail if:
 2. `last_completed_pr` is not `feat/phase51-roadmap-procession-alignment`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null (nothing should be blocked post-Phase 51)
-5. `next_pr` is not `PR-52-PLAN (Phase 52 — TBD)`
+5. `next_pr` is not `PR-PHASE58-01 (Phase 58 — Code Intelligence Layer)`
 
 ---
 
