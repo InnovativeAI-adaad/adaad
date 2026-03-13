@@ -421,8 +421,18 @@ class AutonomyEnhancementTest(unittest.TestCase):
                         "mutation_score": 0.4,
                         "governance_debt_score": 0.2,
                     },
-                    "plan_completion_signals": {"governance.preconditions_ok": True},
-                    "plan_governance_checks": {"policy_alignment": True, "safety_constraints": True},
+                    # step_00_taxonomy_annotation requires these completion signals
+                    # (added in commit 207c2dd when 5 fixed prerequisite steps were prepended)
+                    "plan_completion_signals": {
+                        "taxonomy.annotation_complete": True,
+                        "taxonomy.coverage_complete": True,
+                    },
+                    # step_00 also requires taxonomy_coverage_complete governance check
+                    "plan_governance_checks": {
+                        "policy_alignment": True,
+                        "safety_constraints": True,
+                        "taxonomy_coverage_complete": True,
+                    },
                     "plan_replay_checks": {"replay_preconditions_ok": True, "replay_digest_match": True},
                 },
             )
@@ -456,8 +466,13 @@ class AutonomyEnhancementTest(unittest.TestCase):
                         "completed_step_ids": list(first.plan_state.completed_step_ids),
                         "progress_notes": list(first.plan_state.progress_notes),
                     },
-                    "plan_completion_signals": {"goal.stabilize_replay.completed": True},
-                    "plan_governance_checks": {"policy_alignment": True, "safety_constraints": True},
+                    # step_01_duplicate_assertion_audit_merge requires this completion signal
+                    "plan_completion_signals": {"assertions.duplicate_audit_merge_complete": True},
+                    "plan_governance_checks": {
+                        "policy_alignment": True,
+                        "safety_constraints": True,
+                        "taxonomy_coverage_complete": True,
+                    },
                     "plan_replay_checks": {"replay_preconditions_ok": True, "replay_digest_match": True},
                 },
             )

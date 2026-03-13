@@ -1,10 +1,10 @@
 {
-  "active_phase": "v7.9.1 \u2014 fix: Aponi gate no longer blocks on initial load",
+  "active_phase": "v7.9.2 \u2014 fix: pre-existing test failures resolved",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
   "last_completed_phase": "Phase 55 \u2014 Aponi UX Polish: Toast, Countdown, Keyboard Nav, Log Filter",
-  "last_completed_pr": "fix/aponi-gate-blocks-initial-load",
+  "last_completed_pr": "fix/pre-existing-test-failures",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -119,6 +119,9 @@
     "v7.9.0-released",
     "fix-56-gate-connecting-state",
     "fix-56-no-stale-lock-restore",
-    "v7.9.1-released"
+    "v7.9.1-released",
+    "fix-sandbox-container-rollout-conftest",
+    "fix-agm-step-signals-taxonomy",
+    "v7.9.2-released"
   ]
 }
