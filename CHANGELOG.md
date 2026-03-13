@@ -1,3 +1,57 @@
+## [8.2.0] — 2026-03-13 — Phase 59: Capability Graph v2
+
+### feat(phase-59): Capability Layer v2 — CAP-VERS-0 / CAP-DEP-0 / CAP-TIER0-0
+
+**Gate:** HUMAN-0 / CAP-REGISTRY — Approved by Dustin L. Reid
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.2.0 |
+| **Phase** | 59 — Identity: Capability Graph v2 |
+| **Branch** | feature/phase-59-capability-graph-v2 |
+| **Tests added** | 59 (T59-CAP-01..10) |
+| **Invariants enforced** | CAP-VERS-0, CAP-DEP-0, CAP-TIER0-0 |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/capability/__init__.py` | Package exports |
+| `runtime/capability/capability_node.py` | CapabilityNode v2 — versioned, contract-bearing, frozen hash |
+| `runtime/capability/capability_registry.py` | In-memory registry with CAP-DEP-0 + version monotonicity |
+| `runtime/capability/capability_target_discovery.py` | Maps mutation targets → owning capabilities; CAP-TIER0-0 check |
+| `runtime/capability/contracts.py` | 10 bootstrap capability contracts, approved by Dustin L. Reid |
+
+#### Bootstrap capability registry (10 contracts)
+
+| # | Capability ID | Tier | Description |
+|---|---|---|---|
+| 1 | `governance.gate` | 0 | GovernanceGate enforcement |
+| 2 | `governance.policy` | 0 | Policy artifact loading |
+| 3 | `determinism.provider` | 0 | RuntimeDeterminismProvider |
+| 4 | `evolution.loop` | 1 | EvolutionLoop orchestration |
+| 5 | `evolution.proposal` | 1 | ProposalEngine + auto-provisioning |
+| 6 | `mutation.code_intel` | 1 | Code Intelligence Layer |
+| 7 | `mutation.history` | 1 | MutationHistory ledger |
+| 8 | `intelligence.critique` | 1 | CritiqueSignalBuffer |
+| 9 | `intelligence.telemetry` | 1 | RoutedDecisionTelemetry |
+| 10 | `scoring.ledger` | 1 | ScoringLedgerStore |
+
+#### Test matrix
+
+| Test ID | Coverage |
+|---|---|
+| T59-CAP-01 | CapabilityNode construction, CAP-VERS-0 |
+| T59-CAP-02 | node_hash determinism |
+| T59-CAP-03 | CapabilityContract serialisation roundtrip |
+| T59-CAP-04 | Registry register / get / list / hash |
+| T59-CAP-05 | CAP-DEP-0 dependency enforcement |
+| T59-CAP-06 | CAP-TIER0-0 mutation safety |
+| T59-CAP-07 | Version monotonicity |
+| T59-CAP-08 | CapabilityTargetDiscovery file resolution |
+| T59-CAP-09 | Bulk helpers — safe targets / coverage ratio |
+| T59-CAP-10 | BOOTSTRAP_REGISTRY — 10 contracts, Tier-0 gates |
+
 ## [8.1.0] — 2026-03-13 — Phase 58: Code Intelligence Model
 
 ### feat(phase-58): Code Intelligence Sub-package — INTEL-ISO-0 / INTEL-DET-0 / INTEL-TS-0
