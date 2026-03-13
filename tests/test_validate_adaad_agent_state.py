@@ -186,4 +186,7 @@ def test_validator_fails_on_unsupported_schema_version(tmp_path: Path) -> None:
     result = _run_validator(tmp_path)
 
     assert result.returncode == 1
-    assert "schema_version:unsupported:1.0.0" in result.stdout
+    # Keep this aligned with the reason code emitted by `_validate_state` in
+    # `scripts/validate_adaad_agent_state.py` when schema_version != "1.5.0".
+    assert "schema_version:expected_" in result.stdout
+    assert "1.5.0" in result.stdout
