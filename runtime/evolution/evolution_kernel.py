@@ -17,6 +17,7 @@ from runtime.api.agents import (
 )
 from runtime.api.mutation import MutationExecutor
 from runtime import ROOT_DIR
+from runtime import metrics
 from runtime.evolution.change_classifier import apply_metadata_updates, classify_mutation_change
 from runtime.evolution.mutation_fitness_evaluator import MutationFitnessEvaluator
 from runtime.governance.policy_validator import PolicyValidator
@@ -179,11 +180,29 @@ class EvolutionKernel:
         change_decision = classify_mutation_change(target_agent_path, mutation.get("request") or mutation)
         if not change_decision.run_mutation:
             metadata = apply_metadata_updates(target_agent_path)
+            cryovant.touch_non_functional_metadata(
+                str(agent.get("agent_id") or ""),
+                target_agent_path,
+                metadata_version=int(metadata.get("version", 0) or 0),
+                mutation_count=int(metadata.get("mutation_count", 0) or 0),
+                metadata_last_mutation=str(metadata.get("last_mutation") or ""),
+            )
+            metrics.log(
+                event_type="cosmetic_update_only",
+                payload={
+                    "agent_id": agent.get("agent_id"),
+                    "change_reason": change_decision.reason,
+                    "metadata_version": metadata.get("version"),
+                    "metadata_mutation_count": metadata.get("mutation_count"),
+                    "metadata_last_mutation": metadata.get("last_mutation"),
+                },
+            )
             return {
                 "status": "metadata_only",
                 "agent_id": agent.get("agent_id"),
                 "change_classification": change_decision.classification,
                 "change_reason": change_decision.reason,
+                "cosmetic_only": True,
                 "metadata": {
                     "mutation_count": metadata.get("mutation_count"),
                     "version": metadata.get("version"),

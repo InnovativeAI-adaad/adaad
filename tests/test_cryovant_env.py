@@ -13,7 +13,9 @@ pytestmark = pytest.mark.regression_standard
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import os
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -42,6 +44,53 @@ class CryovantEnvironmentTest(unittest.TestCase):
                 cryovant.validate_environment()
 
         self.assertEqual(str(exc.exception), "cryovant_bootstrap_failed:ledger_bootstrap_failed")
+
+
+    def test_touch_non_functional_metadata_updates_timestamp_without_resign(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_dir = Path(tmpdir) / "agent-x"
+            agent_dir.mkdir(parents=True, exist_ok=True)
+            certificate_path = agent_dir / "certificate.json"
+            certificate_path.write_text(
+                json.dumps(
+                    {
+                        "signature": "cryovant-dev-seed",
+                        "lineage_hash": "lineage-1",
+                        "issued_at": "2025-01-01T00:00:00Z",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            before_certificate = certificate_path.read_text(encoding="utf-8")
+            registry_path = Path(tmpdir) / "security" / "ledger" / "non_functional_metadata_registry.json"
+
+            with (
+                patch("security.cryovant.LEDGER_DIR", registry_path.parent),
+                patch("security.cryovant.journal.write_entry") as write_entry,
+                patch("security.cryovant.metrics.log") as metrics_log,
+            ):
+                result = cryovant.touch_non_functional_metadata(
+                    "agent-x",
+                    agent_dir,
+                    metadata_version=4,
+                    mutation_count=8,
+                    metadata_last_mutation="2025-01-02T00:00:00Z",
+                )
+
+            after_certificate = certificate_path.read_text(encoding="utf-8")
+            self.assertEqual(after_certificate, before_certificate)
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+            self.assertEqual(registry["agent-x"]["metadata_version"], 4)
+            self.assertEqual(registry["agent-x"]["metadata_mutation_count"], 8)
+            self.assertEqual(registry["agent-x"]["metadata_touched_at"], "2025-01-02T00:00:00Z")
+            self.assertEqual(registry["agent-x"]["signature"], "cryovant-dev-seed")
+            self.assertEqual(registry["agent-x"]["lineage_hash"], "lineage-1")
+            self.assertEqual(result["status"], "metadata_touched")
+            self.assertEqual(result["signature"], "cryovant-dev-seed")
+            self.assertEqual(result["lineage_hash"], "lineage-1")
+            self.assertEqual(result["registry_path"], str(registry_path))
+            write_entry.assert_called_once()
+            metrics_log.assert_called_once()
 
 
 if __name__ == "__main__":
