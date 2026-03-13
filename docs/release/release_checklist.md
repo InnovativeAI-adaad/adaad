@@ -53,6 +53,20 @@ Reference: `docs/DEPENDABOT_REVIEW_POLICY.md`.
 - [ ] Governance/spec deltas are reflected in versioned docs.
 - [ ] Any externally referenced docs/spec links are immutable/versioned.
 
+## Phase 65 post-merge sync automation (v9.0.0)
+
+- [ ] `.github/workflows/phase65_post_merge_sync.yml` executed for merged `PR-PHASE65-01` (title or label match) and completed successfully.
+- [ ] `python scripts/sync_phase_status_on_merge.py` passed with evidence gate (`scripts/validate_release_evidence.py --require-complete`) before any docs mutation.
+- [ ] `ROADMAP.md` updated: Phase 65 tracker row is `shipped` + `complete`, and `Next` pointer moved to post-v9.0.0 item.
+- [ ] `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` updated: Phase 65 status is `shipped`, and `active_phase`/`milestone` moved to post-65 state.
+- [ ] If the workflow produced no diff, treat as idempotent no-op (do not force a commit).
+
+### Rollback (fail-closed)
+
+- [ ] If sync script fails due to missing anchors or unmet dependency checks, do **not** hand-edit docs in the same merge path; open remediation PR to restore canonical anchors/state first.
+- [ ] If workflow commit is incorrect, revert only the bot-generated sync commit and rerun the workflow after fixing source anchors.
+- [ ] Re-run `python scripts/validate_release_evidence.py --require-complete` and `python scripts/sync_phase_status_on_merge.py --dry-run` before reattempting.
+
 ## Tagging controls for governance/public-readiness releases
 
 - [ ] For milestone tags (for example `vX.Y.Z-governance-*` or `vX.Y.Z-public-readiness-*`), confirm `.github/workflows/governance_strict_release_gate.yml` passed (including terminal `release-gate`).

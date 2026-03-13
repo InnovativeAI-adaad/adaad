@@ -354,6 +354,33 @@ The following check is added to `governance_strict_release_gate.yml` before v3.1
 
 ---
 
+### Phase 65 Post-Merge Documentation Sync Gate
+
+| Job | Workflow | Gate type |
+|---|---|---|
+| `phase65-post-merge-sync` | `phase65_post_merge_sync.yml` | Governance state alignment |
+
+**Purpose:** When `PR-PHASE65-01` is merged, enforce deterministic post-merge status synchronization
+for `ROADMAP.md` and `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` using fail-closed anchors.
+
+**Trigger condition:** `pull_request.closed` with `merged == true` and PR title or labels containing
+`PR-PHASE65-01`.
+
+**Command set:**
+
+- `python scripts/sync_phase_status_on_merge.py`
+
+**Pass condition:**
+
+- `scripts/validate_release_evidence.py --require-complete` passes inside the sync script before writes.
+- Phase 65 rows update from `next/pending` to `shipped/complete` (if not already synced).
+- Procession `active_phase`/`milestone` and `Next` pointer update to post-65 state.
+- Commit is created only when diff is non-empty.
+
+**Fail condition:** Missing anchors, unmet dependency state, or evidence-validation failure aborts with no writes.
+
+---
+
 ### Formal Amendment Model Check Gate
 
 | Job | Workflow | Gate type |
