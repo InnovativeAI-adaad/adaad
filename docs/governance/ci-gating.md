@@ -47,6 +47,7 @@ These jobs run only when classifier gates evaluate to `true`:
 | `phase7-reputation-gate` | governance/server/relevant UI path changes (`governance/**`, `server.py`, `ui/**`) | reviewer reputation + ledger + pressure + constitutional-floor + reviewer panel endpoint/UI coverage |
 | `pr3h-acceptance-gate` | PR-3H closure scope (`tests/acceptance/pr3h/**`, `scripts/validate_pr3h_acceptance.py`, checkpoint/entropy replay acceptance surfaces) | checkpoint tamper escalation + entropy triage replay fixtures via machine-readable audit output |
 | `benchmark-regression-gate` | always-on CI promotion check | deterministic benchmark generation + category delta non-regression (`scripts/validate_benchmark_deltas.py`) |
+| `post-merge-doc-sync-contract-gate` | phase-governance docs/procession/release/evidence contract changes (`docs/governance/post_merge_doc_sync_contract.yaml`, `ROADMAP.md`, `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`, `docs/releases/*.md`, `docs/comms/claims_evidence_matrix.md`) | post-merge docs consistency validator (`scripts/validate_post_merge_doc_sync.py`) |
 
 - `strict-replay`
   - Runs for `critical` tier or replay/ledger impact flag.
@@ -62,6 +63,12 @@ These jobs run only when classifier gates evaluate to `true`:
 - `phase7-reputation-gate`
   - Runs when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`).
   - Executes the Phase 7 invariant selector set: reviewer reputation scoring, reviewer reputation ledger, review pressure, constitutional-floor coverage, and reviewer panel endpoint/UI coverage.
+
+- `post-merge-doc-sync-contract-gate`
+  - Required Tier 3 completeness gate for phase-governance PRs that touch roadmap/procession/release/evidence synchronization surfaces.
+  - Runs `python scripts/validate_post_merge_doc_sync.py`.
+  - Fails closed when contract-required docs, release note version alignment, roadmap/procession phase status consistency, or evidence completion requirements drift.
+
 
 - `pr3h-acceptance-gate`
   - Required evidence gate for PR-3H closure.
