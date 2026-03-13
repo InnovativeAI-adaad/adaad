@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adaad"
+version = "3.1.0"
+description = "ADAAD governance-first autonomous development runtime"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "cryptography==44.0.3",
+    "pytest-benchmark==5.1.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["adaad*", "runtime*", "app*", "security*", "tools*"]
+
+[tool.pytest.ini_options]
+markers = [
+    "qa7: lint scope expansion rollout tests gated behind QA7_LINT_ROLLOUT.",
+    "pr3h_acceptance: PR-3H acceptance suite (checkpoint tamper escalation + entropy triage replay fixtures).",
+    "pr3h_checkpoint_tamper: PR-3H acceptance checkpoint tamper escalation coverage.",
+    "pr3h_entropy_triage: PR-3H acceptance entropy triage replay fixture coverage.",
+    "governance_gate: Governance-lane endpoint contract coverage.",
+    "regression_standard: Standard-lane regression endpoint contract coverage.",
+    "benchmark: Optional performance benchmark coverage; non-blocking and excluded from required safety-critical CI gates.",
+]
