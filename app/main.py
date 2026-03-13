@@ -166,28 +166,84 @@ class Orchestrator:
         self.logger.info(f"[ADAAD] {safe_message}")
 
     def _fail(self, reason: str, *, payload: Optional[Dict[str, Any]] = None) -> None:
-        event_payload: Dict[str, Any] = {"reason": reason}
+        reason_code = reason.split(":", 1)[0] if reason else "unknown_failure"
+        event_payload: Dict[str, Any] = {"reason": reason, "reason_code": reason_code}
         if payload:
             event_payload["failure_event"] = payload
         metrics.log(event_type="orchestrator_error", payload=event_payload, level="ERROR")
         self.state["status"] = "error"
         self.state["reason"] = reason
+        self.state["reason_code"] = reason_code
+        failure_chain: list[Dict[str, str]] = []
+        journal_status = "not_attempted"
+        dump_status = "not_attempted"
+        fallback_stderr_status = "not_needed"
         try:
+            journal_status = "attempted"
             journal.ensure_ledger()
-            journal.write_entry(agent_id="system", action="orchestrator_failed", payload={"reason": reason})
-        except Exception:
-            pass
-        try:
-            dump()
+            journal.write_entry(
+                agent_id="system",
+                action="orchestrator_failed",
+                payload={
+                    "reason": reason,
+                    "reason_code": reason_code,
+                    "event_type": "orchestrator_failure_envelope.v1",
+                },
+            )
+            journal_status = "ok"
         except Exception as exc:
+            journal_status = "failed"
+            failure_chain.append(
+                {
+                    "step": "journal_write",
+                    "reason_code": "orchestrator_failure_journal_write_failed",
+                    "error": f"{type(exc).__name__}:{exc}",
+                }
+            )
+        try:
+            dump_status = "attempted"
+            dump()
+            dump_status = "ok"
+        except Exception as exc:
+            dump_status = "failed"
+            failure_chain.append(
+                {
+                    "step": "dump",
+                    "reason_code": "orchestrator_failure_dump_failed",
+                    "error": f"{type(exc).__name__}:{exc}",
+                }
+            )
             try:
                 metrics.log(
                     event_type="orchestrator_dump_failed",
-                    payload={"error": str(exc)},
+                    payload={"error": str(exc), "reason_code": "orchestrator_failure_dump_failed"},
                     level="ERROR",
                 )
             except Exception:
-                sys.stderr.write(f"orchestrator_dump_failed:{exc}\n")
+                fallback_stderr_status = "write_attempted"
+                try:
+                    sys.stderr.write(f"orchestrator_dump_failed:{exc}\n")
+                    fallback_stderr_status = "ok"
+                except Exception as stderr_exc:
+                    fallback_stderr_status = "failed"
+                    failure_chain.append(
+                        {
+                            "step": "stderr_fallback",
+                            "reason_code": "orchestrator_failure_stderr_fallback_failed",
+                            "error": f"{type(stderr_exc).__name__}:{stderr_exc}",
+                        }
+                    )
+        envelope = {
+            "event_type": "orchestrator_failure_envelope.v1",
+            "primary_reason": reason,
+            "primary_reason_code": reason_code,
+            "journal_write_status": journal_status,
+            "dump_status": dump_status,
+            "fallback_stderr_status": fallback_stderr_status,
+            "failure_chain": failure_chain,
+        }
+        metrics.log(event_type="orchestrator_failure_envelope", payload=envelope, level="ERROR")
+        self.state["failure_envelope"] = envelope
         sys.exit(1)
 
     def boot(self) -> None:

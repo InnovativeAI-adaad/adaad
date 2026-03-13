@@ -321,8 +321,56 @@ class OrchestratorDreamHealthMetricsTest(unittest.TestCase):
             level="WARN",
         )
 
-if __name__ == "__main__":
-    unittest.main()
+
+class OrchestratorFailEnvelopeTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._mutation_executor_patch = mock.patch("app.main.MutationExecutor")
+        self._mutation_executor_patch.start()
+        self._default_provider_patch = mock.patch("app.main.default_provider", return_value=mock.Mock(deterministic=True))
+        self._default_provider_patch.start()
+
+    def tearDown(self) -> None:
+        self._default_provider_patch.stop()
+        self._mutation_executor_patch.stop()
+
+    def test_fail_emits_structured_envelope_when_journal_and_dump_fail(self) -> None:
+        orch = Orchestrator(replay_mode="off")
+        with contextlib.ExitStack() as stack:
+            log_metric = stack.enter_context(mock.patch("app.main.metrics.log"))
+            stack.enter_context(mock.patch("app.main.journal.ensure_ledger", side_effect=RuntimeError("ledger down")))
+            stack.enter_context(mock.patch("app.main.dump", side_effect=RuntimeError("dump down")))
+            stack.enter_context(mock.patch("sys.stderr.write"))
+            with self.assertRaises(SystemExit):
+                orch._fail("checkpoint_chain_violated:missing_previous")
+
+        self.assertEqual(orch.state["reason_code"], "checkpoint_chain_violated")
+        envelope = orch.state["failure_envelope"]
+        self.assertEqual(envelope["event_type"], "orchestrator_failure_envelope.v1")
+        self.assertEqual(envelope["journal_write_status"], "failed")
+        self.assertEqual(envelope["dump_status"], "failed")
+        self.assertEqual(envelope["fallback_stderr_status"], "not_needed")
+        self.assertEqual(
+            envelope["failure_chain"],
+            [
+                {
+                    "step": "journal_write",
+                    "reason_code": "orchestrator_failure_journal_write_failed",
+                    "error": "RuntimeError:ledger down",
+                },
+                {
+                    "step": "dump",
+                    "reason_code": "orchestrator_failure_dump_failed",
+                    "error": "RuntimeError:dump down",
+                },
+            ],
+        )
+        self.assertTrue(
+            any(
+                call.kwargs.get("event_type") == "orchestrator_failure_envelope"
+                and call.kwargs.get("payload", {}).get("primary_reason_code") == "checkpoint_chain_violated"
+                for call in log_metric.mock_calls
+            )
+        )
 
 
 class ReplayProofExportCliTest(unittest.TestCase):
@@ -340,3 +388,7 @@ class ReplayProofExportCliTest(unittest.TestCase):
         with mock.patch("sys.argv", ["app.main", "--export-replay-proof"]):
             with self.assertRaises(SystemExit):
                 main()
+
+
+if __name__ == "__main__":
+    unittest.main()
