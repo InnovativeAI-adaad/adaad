@@ -218,7 +218,6 @@ This commit establishes the full governance architecture, invariants matrix, and
 
 ## [7.9.2] — 2026-03-13 — Patch
 
-
 ### fix: pre-existing test failures resolved (sandbox + AGM plan resume)
 
 **11 sandbox tests** (`tests/sandbox/test_sandbox_executor.py` etc.) failed with
@@ -552,7 +551,6 @@ Returns bridge health envelope:
 ---
 
 ## [6.9.2] — 2026-03-11
-
 
 ### Phase 44 — Main Hardening
 
@@ -1433,7 +1431,6 @@ the admission control surface to full audit parity.
 
 ## [5.1.0] — 2026-03-10
 
-
 ### Phase 26 — Admission Rate Signal Integration (Complete)
 
 Phase 26 closes the Phase 25 feedback loop: `AdmissionRateTracker` records
@@ -1478,7 +1475,6 @@ self-reinforcing governance feedback loop with no authority delegation.
 
 ## [5.0.0] — 2026-03-10
 
-
 ### Phase 25 — Mutation Admission Control (Complete)
 
 ## [4.10.0] — 2026-03-09
@@ -1515,7 +1511,6 @@ completing the governance advisory arc: emit → persist → verify → query.
 ---
 
 ## [4.9.0] — 2026-03-09
-
 
 ### Phase 24 — Health-Driven Review Pressure Adaptation (Complete)
 
@@ -1976,7 +1971,6 @@ All signals → ProposalRequest.context → StrategyModule.select()
 
 **Totals:** 31 new tests · 2,497+ passing
 
-
 ## [3.6.0] — 2026-03-09
 
 ### Phase 11-A — Bandit-Informed Agent Selection (Complete)
@@ -2133,8 +2127,6 @@ All signals → ProposalRequest.context → StrategyModule.select()
 
 ### Phase 9 Soulbound Context Whitepaper
 - Whitepaper v2.0 added to docs — fully aligned with ADAAD runtime architecture
-
-
 
 ## [3.2.0] — 2026-03-08 · Phase 7 — Reviewer Reputation & Adaptive Governance Calibration
 
@@ -2524,8 +2516,6 @@ machine-interpretable invariants, and audit-ready architectural blueprints.**
 | `PR-PHASE6-04` | M6-05 Distribution complete | standard | Required (F-Droid MR) |
 | **v3.1.0 tag** | Phase 6 GA | — | **REQUIRED** |
 
-
-
 The mutation engine can now propose, score, and submit governed amendments to
 ROADMAP.md itself. All proposals are constitutional-gated (authority_level =
 `governor-review`), require ≥2 human governor approvals, and are deterministically
@@ -2617,7 +2607,6 @@ ADAAD is now publicly launchable on Android at **zero cost** via three parallel 
 
 ### Summary
 Phase 5 completes the multi-repo federation architecture described in the ADAAD roadmap. Every federated mutation now requires dual GovernanceGate approval, carries cross-repo lineage provenance, and is blocked by the FederatedEvidenceMatrix if any determinism divergence is detected. The federation_determinism CI job enforces these invariants on every PR. Phase 6 (Autonomous Roadmap Self-Amendment) is promoted to active.
-
 
 ## [2.3.0] — 2026-03-06
 
@@ -2725,7 +2714,6 @@ Phase 5 completes the multi-repo federation architecture described in the ADAAD 
 - All audit writers: fail-open on external ledger failures; core operations never blocked by audit unavailability
 - Constitutional invariant coverage: MIN_EXPLORE_RATIO, MAX_CONSECUTIVE_EXPLOIT, phase-skip prevention, promoted⟹approved, G20 depth cap, 100% lineage requirement at L4
 
-
 ## [2.1.0] — 2026-03-06
 
 ### Phase 3 — Adaptive Penalty Weights (SHIPPED)
@@ -2765,6 +2753,14 @@ Phase 5 completes the multi-repo federation architecture described in the ADAAD 
 - **Tests: 22 new tests passing**
 
 ## [Unreleased]
+
+### governance: canonical import-surface deprecation enforcement
+
+- Declared canonical import surfaces in governance architecture docs: `runtime/*`, `runtime/api/*`, and `adaad.agents.*`.
+- Marked legacy `app/agents/*` and `app/root.py` as deprecated compatibility trees and added migration record (`MIGRATION.md`).
+- Updated compatibility shims (`app/agents/*`, `app/root.py`) to emit `DeprecationWarning` on import.
+- Extended `tools/lint_import_paths.py` to block new imports from deprecated paths (`app.root`) outside compatibility shims, with test coverage updates.
+- Added governance evidence row documenting deprecation decision and enforcement artifacts.
 
 ## [2.1.0] — 2026-03-06
 
@@ -2932,7 +2928,6 @@ Six-file capability expansion delivering the first functional AI mutation pipeli
 - `tests/test_evolution_loop.py`: 5 integration tests — EpochResult, accepted count, weight accuracy, landscape recording, agent recommendation.
 - `tests/test_pr12_gate_ok.py`: 5 tests — presence, default, override, kwarg, backward compat.
 
-
 ### ADAAD-14 — Cross-Track Convergence (v1.8)
 
 - **PR-14-03 — MarketDrivenContainerProfiler: market × container convergence:** `runtime/sandbox/market_driven_profiler.py` — `MarketDrivenContainerProfiler` uses `score_provider` callable (wrapping `FeedRegistry` or `FederatedSignalBroker`) to select `ContainerProfileTier` (CONSTRAINED / STANDARD / BURST); thresholds: <0.35 → CONSTRAINED (cpu=25%, mem=128MB), ≥0.65 → BURST (cpu=80%, mem=512MB); confidence guard (below 0.30 → STANDARD forced, `overridden=True`); `ProfileSelection` dataclass with lineage digest + journal event; `profile_for_slot()` convenience returning resource dict directly. Two new container profiles: `container_profiles/market_constrained.json` + `market_burst.json`. Factory helpers: `make_profiler_from_feed_registry()` + `make_profiler_from_federated_broker()`. Authority invariant: profiler is advisory; ContainerOrchestrator retains pool authority. 22 tests in `tests/test_market_driven_profiler.py`.
@@ -3091,7 +3086,6 @@ Six-file capability expansion delivering the first functional AI mutation pipeli
 - Evolution governance helpers for deterministic checkpoint digests, promotion transition enforcement, and authority score clamping/threshold resolution.
 - Unit tests covering governance foundation canonicalization/hash determinism and promotion state transitions.
 
-
 ### Security
 - Enabled blocking constitutional checks for `lineage_continuity` and `resource_bounds`, strengthening mutation safety controls while retaining policy-defined tier behavior.
 - Enabled warning-path governance checks for `max_complexity_delta` and `test_coverage_maintained`, and enforced `max_mutation_rate` tier escalation/demotion semantics for production/sandbox replay consistency.
@@ -3176,8 +3170,6 @@ Authoritative current version/maturity for these notes: **0.65.x, Experimental /
 - Zero new dependencies — uses Python stdlib `ast` module only
 - **Tests: 22 new tests passing**
 
-## [Unreleased]
-
 ## [2.1.0] — 2026-03-06
 
 ### Phase 3 — Adaptive Penalty Weights (SHIPPED)
@@ -3233,7 +3225,6 @@ Live economic signals replace synthetic constants across the entire fitness pipe
 **Schema**: `schemas/market_signal_reading.v1.json` — validated signal reading contract.
 
 Authority invariant: adapters are read-only; they influence fitness scoring but cannot approve mutations.
-
 
 ### ADAAD-11 Track B — Darwinian Agent Budget Competition
 
@@ -3292,7 +3283,6 @@ PeerRegistry (TTL liveness, partition detection) + GossipProtocol (HTTP broadcas
 - Budget arbitration reallocates pool shares; never approves mutations.
 - Container backend hardens execution surface; does not expand mutation authority.
 - Consensus provides ordering; GovernanceGate retains execution authority for cross-node policy changes.
-
 
 ## [1.3.0] — 2026-03-05 · ADAAD-9 Developer Experience
 
