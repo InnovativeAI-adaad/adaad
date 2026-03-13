@@ -1,3 +1,44 @@
+## [8.4.0] — 2026-03-13 — Phase 61: Lineage Engine
+
+### feat(phase-61): Evolution — LineageNode + CompatibilityMatrix + NicheRegistry + LineageEngine
+
+| Item | Detail |
+|---|---|
+| **Version** | 8.4.0 |
+| **Phase** | 61 — Evolution: Lineage Engine |
+| **Branch** | feature/phase-61-lineage-engine |
+| **Tests added** | 62 (T61-LIN-01..12) |
+| **Invariants enforced** | LINEAGE-STAB-0, EPISTASIS-0 |
+
+#### New modules
+
+| Module | Description |
+|---|---|
+| `runtime/evolution/lineage/__init__.py` | Package exports |
+| `runtime/evolution/lineage/lineage_node.py` | Immutable LineageNode; survival_score; LINEAGE-STAB-0 cooling |
+| `runtime/evolution/lineage/compatibility_matrix.py` | Co-occurrence tracking; EPISTASIS-0 detection + cooling |
+| `runtime/evolution/lineage/niche_registry.py` | 5 independent niches; cross-niche breeding (C(5,2)=10 hybrids) |
+| `runtime/evolution/lineage/lineage_engine.py` | Central coordinator: register/outcome/epistasis/chain/epoch |
+
+#### Architecture
+
+```
+ASTDiffPatch (Ph60) → LineageEngine.register() → LineageNode (niche, generation)
+                                ↓
+              CompatibilityMatrix ← co-occurrence → EPISTASIS-0 cooling
+                                ↓
+              NicheRegistry [performance|architecture|safety|simplification|experimental]
+                                ↓
+              cross-niche breed → HybridCandidate → SandboxTournament (Ph60)
+```
+
+#### Invariants
+
+| ID | Rule |
+|---|---|
+| LINEAGE-STAB-0 | Stable iff ≥ 2/5 last epochs passed; < 2 → 1-epoch cooling |
+| EPISTASIS-0 | Joint regression flags pair; cooled EPISTASIS_COOLING_EPOCHS=3 epochs |
+
 ## [8.3.0] — 2026-03-13 — Phase 60: AST Mutation Substrate
 
 ### feat(phase-60): Motor Layer — ASTDiffPatch + StaticSafetyScanner + PatchApplicator + SandboxTournament
