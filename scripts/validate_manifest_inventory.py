@@ -90,7 +90,7 @@ def validate_manifest() -> list[str]:
         )
 
     if not _contains_exact_line(CANONICAL_SPEC_LINE_RE, manifest_lines):
-        errors.append("manifest canonical spec inventory entry missing or drifted: ARCHITECT_SPEC_v3.0.0.md")
+        errors.append("manifest canonical spec inventory entry missing or drifted: ARCHITECT_SPEC_v3.1.0.md")
 
     latest_release = _latest_release()
     if latest_release is None:
