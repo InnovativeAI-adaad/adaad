@@ -75,6 +75,14 @@ def test_diversity_deduplicates_identical(manager) -> None:
     assert len(result) == 1
 
 
+
+def test_fingerprint_uses_truncated_sha256() -> None:
+    candidate = _candidate("fp-001", gain=0.5, risk=0.2, complexity=0.3, coverage=0.3)
+    fingerprint = PopulationManager._fingerprint(candidate)
+
+    assert len(fingerprint) == 8
+    assert fingerprint == "d55c9456"
+
 def test_max_population_enforced(manager) -> None:
     candidates = [_candidate(f"mc-{i:03d}", gain=i * 0.04) for i in range(20)]
     manager.seed(candidates)

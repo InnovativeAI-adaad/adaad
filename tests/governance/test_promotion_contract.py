@@ -9,9 +9,9 @@ from runtime.governance.pr_lifecycle_event_contract import build_event_digest
 from runtime.governance.validators.promotion_contract import PromotionContractViolation, validate_promotion_policy_event
 
 
-def _event(decision_id: str = "d-1") -> dict[str, object]:
+def _event(decision_id: str = "d-1", *, schema_version: str = "1.0") -> dict[str, object]:
     event = {
-        "schema_version": "1.0",
+        "schema_version": schema_version,
         "event_id": "prl_abc123",
         "event_type": "promotion_policy_evaluated",
         "pr_number": 1,
@@ -29,6 +29,8 @@ def _event(decision_id: str = "d-1") -> dict[str, object]:
             "decision_id": decision_id,
         },
     }
+    if schema_version == "1.1":
+        event["synthetic_commit_id"] = "sha256:" + ("c" * 64)
     event["event_digest"] = build_event_digest(event)
     return event
 
@@ -47,3 +49,17 @@ def test_rejects_duplicate_decision_id() -> None:
 def test_accepts_valid_schema_event() -> None:
     event = _event("fresh-id")
     validate_promotion_policy_event(event=event, lineage_entries=[])
+
+
+def test_accepts_v11_schema_event_with_synthetic_commit_id() -> None:
+    event = _event("fresh-v11", schema_version="1.1")
+    validate_promotion_policy_event(event=event, lineage_entries=[])
+
+
+def test_v11_schema_rejects_missing_synthetic_commit_id() -> None:
+    event = _event("missing-v11", schema_version="1.1")
+    event.pop("synthetic_commit_id", None)
+    event["event_digest"] = build_event_digest(event)
+
+    with pytest.raises(PromotionContractViolation, match="invalid:synthetic_commit_id"):
+        validate_promotion_policy_event(event=event, lineage_entries=[])

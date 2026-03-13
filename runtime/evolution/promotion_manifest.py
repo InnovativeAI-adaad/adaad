@@ -70,17 +70,23 @@ def emit_pr_lifecycle_event(
         if same_key_attempts:
             attempt = max(same_key_attempts) + 1
 
-    commit_sha = hashlib.sha1(decision_id.encode("utf-8")).hexdigest()
+    synthetic_commit_id = sha256_prefixed_digest({"decision_id": decision_id})
+    legacy_commit_sha_alias = synthetic_commit_id.split(":", 1)[1][:40]
     pr_number = 1
-    idempotency_key = derive_idempotency_key(pr_number=pr_number, commit_sha=commit_sha, event_type="promotion_policy_evaluated")
+    idempotency_key = derive_idempotency_key(
+        pr_number=pr_number,
+        commit_sha=legacy_commit_sha_alias,
+        event_type="promotion_policy_evaluated",
+    )
     event_id = f"prl_{sha256_prefixed_digest(f'{decision_id}:{sequence}:{attempt}').split(':', 1)[1][:16]}"
     emitted_at = runtime_provider.iso_now()
     event: Dict[str, Any] = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "event_id": event_id,
         "event_type": "promotion_policy_evaluated",
         "pr_number": pr_number,
-        "commit_sha": commit_sha,
+        "synthetic_commit_id": synthetic_commit_id,
+        "commit_sha": legacy_commit_sha_alias,
         "idempotency_key": idempotency_key,
         "attempt": attempt,
         "sequence": sequence,

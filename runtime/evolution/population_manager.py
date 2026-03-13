@@ -6,7 +6,7 @@ Implements:
 - seed(): fingerprint-based deduplication + MAX_POPULATION cap.
 - evolve_generation(): score → select elites → crossover → advance.
 - BLX-alpha crossover (alpha=0.5) for numeric MutationCandidate fields.
-- Diversity enforcement via MD5 fingerprint of rounded numeric fields.
+- Diversity enforcement via truncated SHA-256 fingerprint of rounded numeric fields.
 - Elitism: top ELITE_SIZE candidates survive each generation unchanged.
 
 Constants:
@@ -220,14 +220,14 @@ class PopulationManager:
     @staticmethod
     def _fingerprint(candidate: MutationCandidate) -> str:
         """
-        8-hex MD5 fingerprint over 4 numeric fields at 3 d.p. precision.
+        8-hex SHA-256 fingerprint over 4 numeric fields at 3 d.p. precision.
 
         Near-duplicates (same scores to 3 d.p.) share a fingerprint and are
         deduplicated — genetic diversity beats marginal score precision.
         """
         key = f"{candidate.expected_gain:.3f}|{candidate.risk_score:.3f}|" \
               f"{candidate.complexity:.3f}|{candidate.coverage_delta:.3f}"
-        return hashlib.md5(key.encode()).hexdigest()[:8]
+        return hashlib.sha256(key.encode()).hexdigest()[:8]
 
     @classmethod
     def _enforce_diversity(

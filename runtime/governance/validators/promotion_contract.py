@@ -10,6 +10,7 @@ from runtime.governance.pr_lifecycle_event_contract import build_event_digest
 
 _SHA256_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
 _COMMIT_SHA_RE = re.compile(r"^[a-f0-9]{40}$")
+_SYNTHETIC_COMMIT_ID_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
 
 
 class PromotionContractViolation(ValueError):
@@ -29,7 +30,6 @@ def validate_promotion_policy_event(*, event: Mapping[str, Any], lineage_entries
         "event_id",
         "event_type",
         "pr_number",
-        "commit_sha",
         "idempotency_key",
         "attempt",
         "sequence",
@@ -42,13 +42,24 @@ def validate_promotion_policy_event(*, event: Mapping[str, Any], lineage_entries
     for field in required_fields:
         _require(field in event, f"missing:{field}")
 
-    _require(event["schema_version"] == "1.0", "schema_version_mismatch")
+    schema_version = str(event["schema_version"])
+    _require(schema_version in {"1.0", "1.1"}, "schema_version_mismatch")
     _require(event["event_type"] == "promotion_policy_evaluated", "event_type_mismatch")
     _require(isinstance(event["event_id"], str) and bool(event["event_id"].strip()), "invalid:event_id")
     _require(isinstance(event["pr_number"], int) and event["pr_number"] >= 1, "invalid:pr_number")
     _require(isinstance(event["attempt"], int) and event["attempt"] >= 1, "invalid:attempt")
     _require(isinstance(event["sequence"], int) and event["sequence"] >= 1, "invalid:sequence")
-    _require(isinstance(event["commit_sha"], str) and bool(_COMMIT_SHA_RE.fullmatch(event["commit_sha"])), "invalid:commit_sha")
+    if schema_version == "1.0":
+        _require(isinstance(event.get("commit_sha"), str) and bool(_COMMIT_SHA_RE.fullmatch(str(event.get("commit_sha")))), "invalid:commit_sha")
+    else:
+        _require(
+            isinstance(event.get("synthetic_commit_id"), str)
+            and bool(_SYNTHETIC_COMMIT_ID_RE.fullmatch(str(event.get("synthetic_commit_id")))),
+            "invalid:synthetic_commit_id",
+        )
+        commit_sha_alias = event.get("commit_sha")
+        if commit_sha_alias is not None:
+            _require(isinstance(commit_sha_alias, str) and bool(_COMMIT_SHA_RE.fullmatch(commit_sha_alias)), "invalid:commit_sha")
     _require(isinstance(event["idempotency_key"], str) and bool(_SHA256_RE.fullmatch(event["idempotency_key"])), "invalid:idempotency_key")
     _require(isinstance(event["previous_event_digest"], str) and bool(_SHA256_RE.fullmatch(event["previous_event_digest"])), "invalid:previous_event_digest")
     _require(isinstance(event["event_digest"], str) and bool(_SHA256_RE.fullmatch(event["event_digest"])), "invalid:event_digest")
