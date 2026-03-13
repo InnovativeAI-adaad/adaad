@@ -281,3 +281,21 @@ def test_duplicate_namespace_pattern_is_reported() -> None:
     issues = list(lint_import_paths._iter_agent_namespace_drift_issues(path, tree))
 
     assert any(issue.message == lint_import_paths.DUPLICATE_AGENT_NAMESPACE_VIOLATION_MESSAGE for issue in issues)
+
+
+def test_deprecated_import_path_flags_app_root_import() -> None:
+    path = lint_import_paths.REPO_ROOT / "runtime" / "x.py"
+    tree = _parse("from app.root import ROOT_DIR\n")
+
+    issues = list(lint_import_paths._iter_deprecated_import_issues(path, tree))
+
+    assert any(issue.message == lint_import_paths.DEPRECATED_IMPORT_VIOLATION_MESSAGE for issue in issues)
+
+
+def test_deprecated_import_path_allows_app_root_compatibility_module() -> None:
+    path = lint_import_paths.REPO_ROOT / "app" / "root.py"
+    tree = _parse("from adaad.core.root import ROOT_DIR\n")
+
+    issues = list(lint_import_paths._iter_deprecated_import_issues(path, tree))
+
+    assert issues == []

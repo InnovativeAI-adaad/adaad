@@ -13,6 +13,14 @@ Legend: the **Trust layer** maps to Cryovant runtime trust validation and ancest
 - **Primary platform entrypoint:** `app/main.py` (`python -m app.main`).
 - **Canonical runtime adapter root:** `runtime/__init__.py` (exports stable runtime root symbols and import guard setup only).
 
+## Canonical import surface policy
+
+- **Canonical production import surface:** `runtime/*` and `runtime/api/*` bridges for app-facing integration boundaries.
+- **Canonical agent namespace:** `adaad.agents.*`.
+- **Deprecated compatibility trees:** `app/agents/*` and `app/root.py` are adapter shims only and must not receive new domain logic.
+- **Migration target:** callers importing deprecated shims must migrate to `adaad.agents.*` and `adaad.core.root`.
+- **Static enforcement:** `tools/lint_import_paths.py` blocks new imports from deprecated paths outside explicitly allowlisted compatibility modules.
+
 ## Layer dependency model
 
 Allowed dependency direction is downward only:
