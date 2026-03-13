@@ -64,6 +64,7 @@ from runtime.evolution.evidence.schemas import (
     MutationLineageEvidence,
     CapabilityVersionEvidence,
     GovernanceExceptionEvidence,
+    PromotionStatus,
 )
 from runtime.governance.foundation import sha256_prefixed_digest, canonical_json
 
@@ -595,10 +596,7 @@ class ConstitutionalEvolutionLoop:
                     fitness_trajectory=score,
                     stability_score=score,
                     governance_exceptions_used=(),
-                    promotion_status=__import__(
-                        "runtime.evolution.evidence.schemas",
-                        fromlist=["PromotionStatus"]
-                    ).PromotionStatus.PROMOTED,
+                    promotion_status=PromotionStatus.PROMOTED,
                 )
             )
 
