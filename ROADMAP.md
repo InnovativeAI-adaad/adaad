@@ -1302,15 +1302,17 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 | 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
 | 53 | EvolutionLoop × EpochMemoryStore Live Wiring | v7.7.0 | ✅ |
 
-**Next:** Phase 58 — Code Intelligence Layer (Perception, v8.1.0)
+**Next:** Phase 65 — Emergence (First Autonomous Capability Evolution, v9.0.0)
 
 ---
 
 ## v8 Roadmap — Constitutional Autonomous Software Evolution (Phases 57–65)
 
-**Status:** ACTIVE DELIVERY · v8.1.0-dev · 2026-03-13  
+**Status:** ACTIVE DELIVERY · v8.7.0 shipped through Phase 64 · 2026-03-13  
 **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v8.0.0.md`  
 **Invariants:** `docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md`
+
+> **v8 sequencing source of truth:** `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` controls active v8.x execution order/status. This section must mirror that procession state and must not advance independently.
 
 > HUMAN-0 applies at every constitutional gate. No implementation PR opens without prior human sign-off.
 
@@ -1322,27 +1324,27 @@ ADAAD v8 is structured as a living organism. Each phase unlocks a new organ. The
 
 | Phase | PR ID | Dependency phase | CI tier | Human gate token required | Current status (`planned/in-progress/blocked/shipped`) | Evidence row status |
 |-------|-------|------------------|---------|---------------------------|---------------------------------------------------------|---------------------|
-| 57 | PR-PHASE57-01 ([SPEC-57](docs/governance/ARCHITECT_SPEC_v8.0.0.md#spec-57)) | 53 | critical | Yes — HUMAN-0 (`SPEC-57`) | planned | pending |
-| 58 | PR-PHASE58-01 | 57 | critical | No | planned | pending |
-| 59 | PR-PHASE59-01 ([CAP-REGISTRY](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cap-registry)) | 58 | critical | Yes — HUMAN-0 (`CAP-REGISTRY`) | planned | pending |
-| 60 | PR-PHASE60-01 | 59 | critical | No | planned | pending |
-| 61 | PR-PHASE61-01 | 60 | critical | No | planned | pending |
-| 62 | PR-PHASE62-01 | 61 | critical | No | planned | pending |
-| 63 | PR-PHASE63-01 ([GATE-V2-RULES](docs/governance/ARCHITECT_SPEC_v8.0.0.md#gate-v2-rules)) | 62 | critical | Yes — HUMAN-0 (`GATE-V2-RULES`) | planned | pending |
-| 64 | PR-PHASE64-01 ([CEL-DRY-RUN](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cel-dry-run)) | 63 | critical | Yes — HUMAN-0 (`CEL-DRY-RUN`) | planned | pending |
-| 65 | PR-PHASE65-01 ([MUTATION-TARGET](docs/governance/ARCHITECT_SPEC_v8.0.0.md#mutation-target)) | 64 | critical | Yes — HUMAN-0 (`MUTATION-TARGET`) + AUDIT-0 + REPLAY-0 | planned | pending |
+| 57 | PR-PHASE57-01 ([SPEC-57](docs/governance/ARCHITECT_SPEC_v8.0.0.md#spec-57)) | 53 | critical | Yes — HUMAN-0 (`SPEC-57`) | shipped | complete |
+| 58 | PR-PHASE58-01 | 57 | critical | No | shipped | complete |
+| 59 | PR-PHASE59-01 ([CAP-REGISTRY](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cap-registry)) | 58 | critical | Yes — HUMAN-0 (`CAP-REGISTRY`) | shipped | complete |
+| 60 | PR-PHASE60-01 | 59 | critical | No | shipped | complete |
+| 61 | PR-PHASE61-01 | 60 | critical | No | shipped | complete |
+| 62 | PR-PHASE62-01 | 61 | critical | No | shipped | complete |
+| 63 | PR-PHASE63-01 ([GATE-V2-RULES](docs/governance/ARCHITECT_SPEC_v8.0.0.md#gate-v2-rules)) | 62 | critical | Yes — HUMAN-0 (`GATE-V2-RULES`) | shipped | complete |
+| 64 | PR-PHASE64-01 ([CEL-DRY-RUN](docs/governance/ARCHITECT_SPEC_v8.0.0.md#cel-dry-run)) | 63 | critical | Yes — HUMAN-0 (`CEL-DRY-RUN`) | shipped | complete |
+| 65 | PR-PHASE65-01 ([MUTATION-TARGET](docs/governance/ARCHITECT_SPEC_v8.0.0.md#mutation-target)) | 64 | critical | Yes — HUMAN-0 (`MUTATION-TARGET`) + AUDIT-0 + REPLAY-0 | next | pending |
 
 | Phase | Layer | Organ | Version | Status | Human Gate |
 |-------|-------|-------|---------|--------|------------|
 | 57 | Keystone | Brainstem — ProposalEngine Auto-Provisioning | v8.0.0 | ✅ Shipped | HUMAN-0 (SPEC-57) |
-| 58 | Perception | Code Intelligence Layer (CodeIntelModel) | v8.1.0 | 🔲 NEXT | — |
-| 59 | Identity | Capability Graph v2 + CapabilityTargetDiscovery | v8.2.0 | 🔲 Blocked on 58 | HUMAN-0 (CAP-REGISTRY) |
-| 60 | Motor | AST Mutation Substrate + SandboxTournament | v8.3.0 | 🔲 Blocked on 59 | — |
-| 61 | Evolution | Lineage Engine + Compatibility Graph | v8.4.0 | 🔲 Blocked on 60 | — |
-| 62 | Intelligence | Multi-Horizon Fitness Engine v2 | v8.5.0 | 🔲 Blocked on 61 | — |
-| 63 | Judgment | GovernanceGate v2 + Exception Tokens | v8.6.0 | 🔲 Blocked on 62 | HUMAN-0 (GATE-V2-RULES, constitutional amendment) |
-| 64 | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7.0 | 🔲 Blocked on 63 | HUMAN-0 (CEL-DRY-RUN) |
-| 65 | Emergence | First Autonomous Capability Evolution | v9.0.0 | 🔲 Blocked on 64 | HUMAN-0 (MUTATION-TARGET) + AUDIT-0 + REPLAY-0 |
+| 58 | Perception | Code Intelligence Layer (CodeIntelModel) | v8.1.0 | ✅ Shipped | — |
+| 59 | Identity | Capability Graph v2 + CapabilityTargetDiscovery | v8.2.0 | ✅ Shipped | HUMAN-0 (CAP-REGISTRY) |
+| 60 | Motor | AST Mutation Substrate + SandboxTournament | v8.3.0 | ✅ Shipped | — |
+| 61 | Evolution | Lineage Engine + Compatibility Graph | v8.4.0 | ✅ Shipped | — |
+| 62 | Intelligence | Multi-Horizon Fitness Engine v2 | v8.5.0 | ✅ Shipped | — |
+| 63 | Judgment | GovernanceGate v2 + Exception Tokens | v8.6.0 | ✅ Shipped | HUMAN-0 (GATE-V2-RULES, constitutional amendment) |
+| 64 | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7.0 | ✅ Shipped | HUMAN-0 (CEL-DRY-RUN) |
+| 65 | Emergence | First Autonomous Capability Evolution | v9.0.0 | 🔲 NEXT (blocked on Phase 64 evidence freeze + release gates) | HUMAN-0 (MUTATION-TARGET) + AUDIT-0 + REPLAY-0 |
 
 ### Phase 57 — Keystone (ProposalEngine Auto-Provisioning)
 
@@ -1355,7 +1357,7 @@ ProposalEngine becomes default-on when `ADAAD_ANTHROPIC_API_KEY` is present. Pha
 
 ### Phase 58 — Perception (Code Intelligence Layer)
 
-**Target:** v8.1.0 · **Blocks on:** Phase 57 at main · **Tests:** T58-INTEL-01..12
+**Status:** ✅ shipped (v8.1.0) · **Dependency:** Phase 57 merged at main · **Tests:** T58-INTEL-01..12
 
 New module `runtime/mutation/code_intel/` gives ADAAD a self-model. FunctionGraph, HotspotMap, MutationHistory, CodeIntelModel. ADAAD knows where it is fragile, slow, and complex. ProposalEngine context enriched with CodeIntel signals.
 
@@ -1363,7 +1365,7 @@ New module `runtime/mutation/code_intel/` gives ADAAD a self-model. FunctionGrap
 
 ### Phase 59 — Identity (Capability Graph v2)
 
-**Target:** v8.2.0 · **Gate:** CAP-REGISTRY (HUMAN-0) · **Tests:** T59-CAP-01..10
+**Status:** ✅ shipped (v8.2.0) · **Dependency:** Phase 58 merged at main · **Gate:** CAP-REGISTRY (HUMAN-0) · **Tests:** T59-CAP-01..10
 
 `runtime/capability_graph.py` promoted to a full Capability Layer. CapabilityNode v2 adds contract, version, governance_tags, telemetry, bound_modules, dependency_set. CapabilityTargetDiscovery maps function targets to capability targets. First 10 capabilities registered with contracts.
 
@@ -1371,7 +1373,7 @@ New module `runtime/mutation/code_intel/` gives ADAAD a self-model. FunctionGrap
 
 ### Phase 60 — Motor (AST Mutation Substrate + Sandbox)
 
-**Target:** v8.3.0 · **Blocks on:** Phase 59 at main · **Tests:** T60-AST-01..15
+**Status:** ✅ shipped (v8.3.0) · **Dependency:** Phase 59 merged at main · **Tests:** T60-AST-01..15
 
 ASTDiffPatch dataclass — the DNA. StaticSafetyScanner (ImportBoundaryRule, NonDeterminismRule, ComplexityCeilingRule, PatchSizeRule). SandboxTournament with ephemeral clones. LibCST for patch application. `MUTATION_SANDBOX_ONLY=true` enforced during stabilisation.
 
@@ -1379,7 +1381,7 @@ ASTDiffPatch dataclass — the DNA. StaticSafetyScanner (ImportBoundaryRule, Non
 
 ### Phase 61 — Evolution (Lineage Engine)
 
-**Target:** v8.4.0 · **Blocks on:** Phase 60 at main · **Tests:** T61-LIN-01..12
+**Status:** ✅ shipped (v8.4.0) · **Dependency:** Phase 60 merged at main · **Tests:** T61-LIN-01..12
 
 LineageDAG extended with compatibility matrix and epistasis detection. LineageSurvival scoring (≥ 2 passes in 5 consecutive epochs). 5 mutation niches (performance, architecture, safety, simplicity, experimental). Multi-step refactor valley-crossing protocol.
 
@@ -1387,7 +1389,7 @@ LineageDAG extended with compatibility matrix and epistasis detection. LineageSu
 
 ### Phase 62 — Intelligence (Multi-Horizon Fitness Engine v2)
 
-**Target:** v8.5.0 · **Blocks on:** Phase 61 at main · **Tests:** T62-FIT-01..10
+**Status:** ✅ shipped (v8.5.0) · **Dependency:** Phase 61 merged at main · **Tests:** T62-FIT-01..10
 
 7 fitness signals: test (30%), complexity (20%), performance (15%), governance compliance (15%), architectural (12%), determinism (8%), code pressure (−5%). All weights bounded [0.05, 0.70]. Composite bounded [0.0, 1.0]. Determinism divergence = total rejection, no exception.
 
@@ -1395,7 +1397,7 @@ LineageDAG extended with compatibility matrix and epistasis detection. LineageSu
 
 ### Phase 63 — Judgment (GovernanceGate v2 + Exception Tokens)
 
-**Target:** v8.6.0 · **Gate:** GATE-V2-RULES (HUMAN-0, constitutional amendment) · **Tests:** T63-GATE-01..15
+**Status:** ✅ shipped (v8.6.0) · **Dependency:** Phase 62 merged at main · **Gate:** GATE-V2-RULES (HUMAN-0, constitutional amendment) · **Tests:** T63-GATE-01..15
 
 5 new GovernanceGate rules (AST-SAFE-0, AST-IMPORT-0, AST-COMPLEX-0, SANDBOX-DIV-0, SEMANTIC-INT-0) added after existing 16. Exception Token system for Class B valley-crossing mutations — scoped, time-bounded, HUMAN-0 gated, auto-revocable.
 
@@ -1403,7 +1405,7 @@ LineageDAG extended with compatibility matrix and epistasis detection. LineageSu
 
 ### Phase 64 — Selfhood (Constitutional Evolution Loop)
 
-**Target:** v8.7.0 · **Gate:** CEL-DRY-RUN (HUMAN-0) · **Tests:** T64-CEL-01..12
+**Status:** ✅ shipped (v8.7.0) · **Dependency:** Phase 63 merged at main · **Gate:** CEL-DRY-RUN (HUMAN-0) · **Tests:** T64-CEL-01..12
 
 CEL assembles all prior organs into a 14-step unified, replay-verifiable epoch lifecycle. EpochEvidence — the atomic cryptographic proof of every epoch. Aponi CEL Console with Diff Viewer, Rule Trace, Fitness Breakdown, Lineage Tree, Exception Token Status, EpochEvidence Audit. Full loop dry-run in SANDBOX_ONLY mode before any real writes.
 
