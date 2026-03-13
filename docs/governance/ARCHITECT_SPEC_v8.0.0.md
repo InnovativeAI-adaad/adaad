@@ -599,6 +599,8 @@ Each phase requires all predecessors merged to main. Human sign-off gates are co
 
 ## 14. Constitutional Sign-Off Block
 
+Checklist reference: `docs/governance/V8_HUMAN_GATE_READINESS.md`
+
 All constitutional gates require human maintainer sign-off before the corresponding implementation PR opens. No gate can be bypassed. No PR can open on a successor phase until the predecessor's gate is recorded in the evidence ledger.
 
 | Gate | Phase | Invariant | Condition for Sign-off |

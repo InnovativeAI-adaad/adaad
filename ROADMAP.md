@@ -1311,6 +1311,7 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 **Status:** ACTIVE DELIVERY · v8.7.0 shipped through Phase 64 · 2026-03-13  
 **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v8.0.0.md`  
 **Invariants:** `docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md`
+**Human gate checklist:** `docs/governance/V8_HUMAN_GATE_READINESS.md`
 
 > **v8 sequencing source of truth:** `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` controls active v8.x execution order/status. This section must mirror that procession state and must not advance independently.
 
@@ -1420,6 +1421,8 @@ First end-to-end governed code improvement without human authorship. All 9 organ
 ---
 
 ### v8 Constitutional Sign-Off Block
+
+Checklist reference: `docs/governance/V8_HUMAN_GATE_READINESS.md`
 
 | Gate | Phase | Invariant | Required Before |
 |------|-------|-----------|-----------------|
