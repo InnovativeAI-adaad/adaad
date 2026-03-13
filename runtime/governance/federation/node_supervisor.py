@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import logging
-import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Dict, Optional
+
+from runtime.governance.foundation import RuntimeDeterminismProvider, default_provider
 
 log = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ class FederationNodeSupervisor:
         partition_threshold: float = 0.5,
         rejoin_interval_s: float = 10.0,
         journal_fn: Optional[Callable] = None,
+        provider: RuntimeDeterminismProvider | None = None,
     ) -> None:
         self._registry = registry
         self._consensus = consensus
@@ -53,8 +55,12 @@ class FederationNodeSupervisor:
         self._partition_threshold = partition_threshold
         self._rejoin_interval_s = rejoin_interval_s
         self._journal_fn = journal_fn
+        self._provider: RuntimeDeterminismProvider = provider or default_provider()
         self._state = NodeSupervisorState.HEALTHY
         self._last_rejoin_attempt = 0.0
+
+    def _now_timestamp(self) -> float:
+        return self._provider.now_utc().timestamp()
 
     def tick(self) -> SupervisorStatus:
         """Run one supervision cycle. Call periodically (e.g. every heartbeat interval)."""
@@ -95,10 +101,11 @@ class FederationNodeSupervisor:
             "node_id": self._consensus.node_id,
             "alive_peers": len(self._registry.alive_peers()),
             "stale_peers": len(self._registry.stale_peers()),
+            "detected_at": self._now_timestamp(),
         })
 
     def _maybe_rejoin(self) -> None:
-        now = time.time()
+        now = self._now_timestamp()
         if (now - self._last_rejoin_attempt) < self._rejoin_interval_s:
             return
         self._last_rejoin_attempt = now
@@ -106,6 +113,7 @@ class FederationNodeSupervisor:
         self._gossip.broadcast("federation_rejoin_request.v1", {
             "node_id": self._consensus.node_id,
             "term": self._consensus.term,
+            "requested_at": now,
         })
         log.info("FederationNodeSupervisor: rejoin broadcast sent")
 
