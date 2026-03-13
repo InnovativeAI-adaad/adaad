@@ -4,7 +4,7 @@
 import pytest
 pytestmark = pytest.mark.regression_standard
 
-from runtime.governance.foundation.determinism import SeededDeterminismProvider
+from runtime.governance.foundation.determinism import SeededDeterminismProvider, SystemDeterminismProvider
 
 
 def test_repeated_same_label_produces_unique_ids() -> None:
@@ -79,11 +79,65 @@ def test_call_counters_are_isolated_across_id_token_int() -> None:
 
 def test_next_id_raises_on_length_exceeding_digest_width() -> None:
     provider = SeededDeterminismProvider(seed="len-guard")
-    with pytest.raises(ValueError, match="exceeds sha256 hex width"):
+    with pytest.raises(ValueError, match=r"next_id: invalid length=65; expected 1..64"):
         provider.next_id(label="x", length=65)
 
 
 def test_next_token_raises_on_length_exceeding_digest_width() -> None:
     provider = SeededDeterminismProvider(seed="len-guard")
-    with pytest.raises(ValueError, match="exceeds sha256 hex width"):
+    with pytest.raises(ValueError, match=r"next_token: invalid length=65; expected 1..64"):
+        provider.next_token(label="x", length=65)
+
+
+@pytest.mark.parametrize("length", [0, -1])
+def test_next_id_raises_on_non_positive_length_seeded(length: int) -> None:
+    provider = SeededDeterminismProvider(seed="len-guard")
+    with pytest.raises(ValueError, match=rf"next_id: invalid length={length}; expected 1..64"):
+        provider.next_id(label="x", length=length)
+
+
+@pytest.mark.parametrize("length", [0, -1])
+def test_next_token_raises_on_non_positive_length_seeded(length: int) -> None:
+    provider = SeededDeterminismProvider(seed="len-guard")
+    with pytest.raises(ValueError, match=rf"next_token: invalid length={length}; expected 1..64"):
+        provider.next_token(label="x", length=length)
+
+
+@pytest.mark.parametrize("length", [1, 16, 32, 64])
+def test_seeded_length_boundaries(length: int) -> None:
+    provider = SeededDeterminismProvider(seed="len-boundary")
+    assert len(provider.next_id(label="x", length=length)) == length
+    assert len(provider.next_token(label="x", length=length)) == length
+
+
+@pytest.mark.parametrize("length", [0, -1])
+def test_next_id_raises_on_non_positive_length_system(length: int) -> None:
+    provider = SystemDeterminismProvider()
+    with pytest.raises(ValueError, match=rf"next_id: invalid length={length}; expected 1..64"):
+        provider.next_id(label="x", length=length)
+
+
+@pytest.mark.parametrize("length", [0, -1])
+def test_next_token_raises_on_non_positive_length_system(length: int) -> None:
+    provider = SystemDeterminismProvider()
+    with pytest.raises(ValueError, match=rf"next_token: invalid length={length}; expected 1..64"):
+        provider.next_token(label="x", length=length)
+
+
+@pytest.mark.parametrize("length", [1, 16, 32, 64])
+def test_system_length_boundaries(length: int) -> None:
+    provider = SystemDeterminismProvider()
+    assert len(provider.next_id(label="x", length=length)) == length
+    assert len(provider.next_token(label="x", length=length)) == length
+
+
+def test_next_id_raises_on_length_exceeding_digest_width_system() -> None:
+    provider = SystemDeterminismProvider()
+    with pytest.raises(ValueError, match=r"next_id: invalid length=65; expected 1..64"):
+        provider.next_id(label="x", length=65)
+
+
+def test_next_token_raises_on_length_exceeding_digest_width_system() -> None:
+    provider = SystemDeterminismProvider()
+    with pytest.raises(ValueError, match=r"next_token: invalid length=65; expected 1..64"):
         provider.next_token(label="x", length=65)
