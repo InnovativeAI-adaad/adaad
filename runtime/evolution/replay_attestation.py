@@ -10,6 +10,7 @@ import base64
 import hashlib
 import hmac
 import importlib.util
+from functools import lru_cache
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping
@@ -139,6 +140,7 @@ def _load_ed25519_verify_key():
     return VerifyKey
 
 
+@lru_cache(maxsize=1)
 def _has_pynacl() -> bool:
     return importlib.util.find_spec("nacl") is not None and importlib.util.find_spec("nacl.signing") is not None
 
@@ -210,7 +212,11 @@ class Ed25519ReplayProofSigner(ReplayProofSigner):
         if not seed_b64:
             raise ValueError(f"missing_private_key:{key_id}")
         SigningKey = _load_ed25519_signing_key()
-        signing_key = SigningKey(base64.b64decode(seed_b64))
+        try:
+            private_key_seed = base64.b64decode(seed_b64)
+            signing_key = SigningKey(private_key_seed)
+        except Exception as exc:
+            raise ValueError(f"invalid_private_key:{key_id}") from exc
         signature = signing_key.sign(signed_digest.encode("utf-8")).signature
         return "ed25519:" + base64.b64encode(signature).decode("ascii")
 
@@ -223,10 +229,11 @@ class Ed25519ReplayProofSigner(ReplayProofSigner):
             return False
         if not _has_pynacl():
             return False
-        VerifyKey = _load_ed25519_verify_key()
-        verify_key = VerifyKey(base64.b64decode(verify_key_b64))
         try:
-            verify_key.verify(signed_digest.encode("utf-8"), base64.b64decode(signature.split(":", 1)[1]))
+            VerifyKey = _load_ed25519_verify_key()
+            verify_key = VerifyKey(base64.b64decode(verify_key_b64))
+            decoded_signature = base64.b64decode(signature.split(":", 1)[1])
+            verify_key.verify(signed_digest.encode("utf-8"), decoded_signature)
         except Exception:
             return False
         return True
