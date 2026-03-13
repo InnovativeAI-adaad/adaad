@@ -445,3 +445,101 @@ def test_ed25519_verify_reports_missing_dependency(tmp_path, monkeypatch) -> Non
 
     assert not result["ok"]
     assert result["signature_results"][0]["error"] == "missing_dependency_pynacl"
+
+
+def test_ed25519_verify_returns_false_for_invalid_public_key_base64() -> None:
+    signer = replay_attestation.Ed25519ReplayProofSigner(
+        keyring={"key": {"public_key": "!!!not-base64!!!"}}
+    )
+
+    assert signer.verify(
+        key_id="key",
+        signed_digest="sha256:" + ("1" * 64),
+        signature="ed25519:Zm9v",
+    ) is False
+
+
+def test_ed25519_verify_returns_false_for_invalid_signature_payload_base64() -> None:
+    if not replay_attestation._has_pynacl():
+        pytest.skip("PyNaCl not installed")
+    signer = replay_attestation.Ed25519ReplayProofSigner(
+        keyring={
+            "key": {
+                "public_key": "VCpo0nP2e+8j0f55X08AS6slquAElv5mkI4kmQDAfPo=",
+            }
+        }
+    )
+
+    assert signer.verify(
+        key_id="key",
+        signed_digest="sha256:" + ("1" * 64),
+        signature="ed25519:!!!!",
+    ) is False
+
+
+def test_ed25519_sign_raises_deterministic_error_for_invalid_private_key() -> None:
+    if not replay_attestation._has_pynacl():
+        pytest.skip("PyNaCl not installed")
+    signer = replay_attestation.Ed25519ReplayProofSigner(
+        keyring={
+            "key": {
+                "private_key": "not-base64",
+                "public_key": "VCpo0nP2e+8j0f55X08AS6slquAElv5mkI4kmQDAfPo=",
+            }
+        }
+    )
+
+    with pytest.raises(ValueError, match="invalid_private_key:key"):
+        signer.sign(key_id="key", signed_digest="sha256:" + ("1" * 64))
+
+
+def test_ed25519_signer_missing_pynacl_is_fail_closed(monkeypatch) -> None:
+    signer = replay_attestation.Ed25519ReplayProofSigner(
+        keyring={
+            "key": {
+                "private_key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+                "public_key": "VCpo0nP2e+8j0f55X08AS6slquAElv5mkI4kmQDAfPo=",
+            }
+        }
+    )
+    monkeypatch.setattr(replay_attestation, "_has_pynacl", lambda: False)
+
+    with pytest.raises(RuntimeError, match="ed25519_signing_requires_pynacl"):
+        signer.sign(key_id="key", signed_digest="sha256:" + ("1" * 64))
+    assert signer.verify(
+        key_id="key",
+        signed_digest="sha256:" + ("1" * 64),
+        signature="ed25519:Zm9v",
+    ) is False
+
+
+def test_ed25519_sign_verify_happy_path() -> None:
+    if not replay_attestation._has_pynacl():
+        pytest.skip("PyNaCl not installed")
+    signer = replay_attestation.Ed25519ReplayProofSigner(
+        keyring={
+            "key": {
+                "private_key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+                "public_key": "VCpo0nP2e+8j0f55X08AS6slquAElv5mkI4kmQDAfPo=",
+            }
+        }
+    )
+    signed_digest = "sha256:" + ("1" * 64)
+    signature = signer.sign(key_id="key", signed_digest=signed_digest)
+
+    assert signer.verify(key_id="key", signed_digest=signed_digest, signature=signature) is True
+
+
+def test_has_pynacl_result_is_cached(monkeypatch) -> None:
+    calls = {"count": 0}
+
+    def _fake_find_spec(name: str):
+        calls["count"] += 1
+        return object()
+
+    replay_attestation._has_pynacl.cache_clear()
+    monkeypatch.setattr(replay_attestation.importlib.util, "find_spec", _fake_find_spec)
+
+    assert replay_attestation._has_pynacl() is True
+    assert replay_attestation._has_pynacl() is True
+    assert calls["count"] == 2
