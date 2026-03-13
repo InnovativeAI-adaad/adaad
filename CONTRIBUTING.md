@@ -17,8 +17,8 @@ By submitting a contribution, you agree that your work is licensed under the MIT
 # 1. Create and activate virtual environment
 python -m venv .venv && source .venv/bin/activate
 
-# 2. Install dependencies
-pip install -r requirements.server.txt
+# 2. Install editable package + dev extras
+pip install -e .[dev]
 
 # 3. Initialize workspace
 python nexus_setup.py
