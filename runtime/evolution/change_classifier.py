@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+from adaad.agents.path_guard import AgentPathEscapeError, resolve_agent_scoped_path
 from runtime.timeutils import now_iso
 
 FUNCTIONAL_NODE_TYPES = (
@@ -193,7 +194,10 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
                 return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "non_metadata_path_change")
             return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unscoped_op_change")
 
-        path = (agent_path / file_name).resolve()
+        try:
+            path = resolve_agent_scoped_path(agent_path, file_name)
+        except AgentPathEscapeError:
+            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "path_outside_agent_root")
         if ext == ".py":
             old_src = path.read_text(encoding="utf-8") if path.exists() else ""
             new_src = op.get("content") or op.get("value")
