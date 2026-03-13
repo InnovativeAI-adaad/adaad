@@ -77,3 +77,38 @@ def test_deterministic_seed_propagates_into_snapshot_hashes() -> None:
     assert seeded_a.config_hash == seeded_b.config_hash
     assert seeded_a.weight_snapshot_hash == seeded_b.weight_snapshot_hash
     assert seeded_a.config_hash != seeded_c.config_hash
+
+
+def test_phase62_feature_flag_defaults_to_legacy_metadata() -> None:
+    orchestrator = FitnessOrchestrator()
+    result = orchestrator.score(_context(epoch_id="legacy-default"))
+
+    assert result.algorithm_version == "legacy.v1"
+    assert result.divergence_rejected is False
+
+
+def test_phase62_active_path_rejects_divergence_and_is_deterministic(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ADAAD_PHASE62_FITNESS_ADAPTER", "1")
+    orchestrator = FitnessOrchestrator()
+    context = _context(epoch_id="phase62", replay_divergence=True)
+
+    first = orchestrator.score(context)
+    second = orchestrator.score(context)
+
+    assert first.algorithm_version == "phase62.v1"
+    assert first.divergence_rejected is True
+    assert first.total_score == 0.0
+    assert first.total_score == second.total_score
+    assert first.config_hash == second.config_hash
+
+
+def test_epoch_metadata_emits_phase62_deterministic_fields(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("ADAAD_PHASE62_FITNESS_ADAPTER", "true")
+    ledger = _LedgerStub()
+    orchestrator = FitnessOrchestrator()
+    orchestrator.score(_context(epoch_id="phase62-metadata", ledger=ledger, replay_divergence=True))
+
+    epoch_meta = ledger.events[1]["payload"]["metadata"]
+    assert epoch_meta["fitness_algorithm_version"] == "phase62.v1"
+    assert epoch_meta["fitness_divergence_rejected"] is True
+    assert epoch_meta["fitness_weight_digest"].startswith("sha256:")

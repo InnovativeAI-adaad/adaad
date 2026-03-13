@@ -611,6 +611,9 @@ class MutationExecutor:
             "breakdown": dict(orchestrated_fitness.breakdown),
             "regime": orchestrated_fitness.regime,
             "config_hash": orchestrated_fitness.config_hash,
+            "algorithm_version": orchestrated_fitness.algorithm_version,
+            "weight_digest": orchestrated_fitness.weight_digest,
+            "divergence_rejected": orchestrated_fitness.divergence_rejected,
         }
 
         entropy_metadata = detect_entropy_metadata(

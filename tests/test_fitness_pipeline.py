@@ -53,3 +53,19 @@ def test_fitness_pipeline_caches_canonicalization_hot_path() -> None:
 
     assert canon_info.hits >= 1
     assert digest_info.hits >= 1
+
+
+def test_fitness_pipeline_phase62_active_path_changes_score(monkeypatch: pytest.MonkeyPatch) -> None:
+    pipeline = FitnessPipeline([TestOutcomeEvaluator(), RiskEvaluator()])
+    payload = {"tests_ok": True, "impact_risk_score": 0.1, "epoch_id": "epoch-phase62", "replay_divergence": True}
+
+    baseline = pipeline.evaluate(dict(payload))
+    monkeypatch.setenv("ADAAD_PHASE62_FITNESS_ADAPTER", "1")
+    phase62_payload = dict(payload)
+    phase62_payload["epoch_id"] = "epoch-phase62-enabled"
+    phase62 = pipeline.evaluate(phase62_payload)
+
+    assert baseline["overall_score"] > 0.0
+    assert phase62["overall_score"] == 0.0
+    assert phase62["orchestrator"]["algorithm_version"] == "phase62.v1"
+    assert phase62["orchestrator"]["divergence_rejected"] is True

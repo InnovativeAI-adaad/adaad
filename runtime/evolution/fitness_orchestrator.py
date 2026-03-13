@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, Dict, Mapping, MutableMapping
 
+from runtime.evolution.fitness_signal_adapter import FitnessSignalInput, adapt_context_to_fitness_signal_input
 from runtime.governance.foundation import canonical_json, sha256_prefixed_digest
 
 _COMPONENT_KEYS = (
@@ -48,7 +49,10 @@ class _Snapshot:
     weights: Mapping[str, float]
     config_hash: str
     weight_snapshot_hash: str
+    weight_digest: str
     seed_fingerprint: str
+    algorithm_version: str
+    divergence_rejected: bool
 
 
 @dataclass(frozen=True)
@@ -58,6 +62,9 @@ class _ScoreResult:
     regime: str
     config_hash: str
     weight_snapshot_hash: str
+    algorithm_version: str
+    weight_digest: str
+    divergence_rejected: bool
 
 
 class FitnessOrchestrator:
@@ -114,38 +121,54 @@ class FitnessOrchestrator:
 
         # Apply live market signal override (advisory — no authority change)
         context = self._apply_live_override(epoch_id, context)
+        signal_input = adapt_context_to_fitness_signal_input(context)
 
         snapshot = self._epoch_snapshots.get(epoch_id)
         if snapshot is None:
-            snapshot = self._create_snapshot(context)
+            snapshot = self._create_snapshot(context, signal_input=signal_input)
             self._epoch_snapshots[epoch_id] = snapshot
             self._append_snapshot_event(epoch_id=epoch_id, context=context, snapshot=snapshot)
 
-        breakdown = self._normalize_breakdown(context)
+        breakdown = self._normalize_breakdown(signal_input)
         weighted = sum(breakdown[name] * snapshot.weights[name] for name in _COMPONENT_KEYS)
         total_score = max(0.0, min(1.0, weighted))
+        if snapshot.divergence_rejected:
+            total_score = 0.0
         return _ScoreResult(
             total_score=total_score,
             breakdown=MappingProxyType(dict(breakdown)),
             regime=snapshot.regime,
             config_hash=snapshot.config_hash,
             weight_snapshot_hash=snapshot.weight_snapshot_hash,
+            algorithm_version=snapshot.algorithm_version,
+            weight_digest=snapshot.weight_digest,
+            divergence_rejected=snapshot.divergence_rejected,
         )
 
-    def _create_snapshot(self, context: Mapping[str, Any]) -> _Snapshot:
-        regime = self._regime_for_tier(context.get("mutation_tier"))
+    def _create_snapshot(self, context: Mapping[str, Any], *, signal_input: FitnessSignalInput) -> _Snapshot:
+        regime = self._regime_for_tier(signal_input.mutation_tier)
         canonical_weights = self._canonicalize_weights(_REGIME_WEIGHTS[regime])
         deterministic_seed = str(context.get("deterministic_seed") or "").strip()
         seed_fingerprint = sha256_prefixed_digest(canonical_json({"deterministic_seed": deterministic_seed})) if deterministic_seed else "sha256:0"
         weight_snapshot_hash = sha256_prefixed_digest(canonical_json({"regime": regime, "weights": canonical_weights}))
-        config_material = {"regime": regime, "weights": canonical_weights, "seed_fingerprint": seed_fingerprint}
+        weight_digest = sha256_prefixed_digest(canonical_json(canonical_weights))
+        config_material = {
+            "regime": regime,
+            "weights": canonical_weights,
+            "seed_fingerprint": seed_fingerprint,
+            "algorithm_version": signal_input.algorithm_version,
+            "divergence_rejected": bool(signal_input.divergence_rejected),
+        }
         config_hash = sha256_prefixed_digest(canonical_json(config_material))
         return _Snapshot(
             regime=regime,
             weights=MappingProxyType(canonical_weights),
             config_hash=config_hash,
             weight_snapshot_hash=weight_snapshot_hash,
+            weight_digest=weight_digest,
             seed_fingerprint=seed_fingerprint,
+            algorithm_version=signal_input.algorithm_version,
+            divergence_rejected=bool(signal_input.divergence_rejected),
         )
 
     @staticmethod
@@ -168,7 +191,10 @@ class FitnessOrchestrator:
             "weights": dict(snapshot.weights),
             "config_hash": snapshot.config_hash,
             "weight_snapshot_hash": snapshot.weight_snapshot_hash,
+            "weight_digest": snapshot.weight_digest,
             "seed_fingerprint": snapshot.seed_fingerprint,
+            "algorithm_version": snapshot.algorithm_version,
+            "divergence_rejected": bool(snapshot.divergence_rejected),
         }
         ledger.append_event("fitness_regime_snapshot", payload)
         ledger.append_event(
@@ -177,8 +203,11 @@ class FitnessOrchestrator:
                 "epoch_id": epoch_id,
                 "metadata": {
                     "fitness_weight_snapshot_hash": snapshot.weight_snapshot_hash,
+                    "fitness_weight_digest": snapshot.weight_digest,
                     "fitness_config_hash": snapshot.config_hash,
                     "fitness_seed_fingerprint": snapshot.seed_fingerprint,
+                    "fitness_algorithm_version": snapshot.algorithm_version,
+                    "fitness_divergence_rejected": bool(snapshot.divergence_rejected),
                 },
             },
         )
@@ -192,18 +221,14 @@ class FitnessOrchestrator:
         return {key: canonical[key] / total for key in sorted(canonical.keys())}
 
     @staticmethod
-    def _normalize_breakdown(context: Mapping[str, Any]) -> Dict[str, float]:
-        breakdown: Dict[str, float] = {}
-        for key in _COMPONENT_KEYS:
-            breakdown[key] = FitnessOrchestrator._clamp(context.get(key, 0.0))
-        return breakdown
-
-    @staticmethod
-    def _clamp(value: Any) -> float:
-        try:
-            return max(0.0, min(1.0, float(value)))
-        except (TypeError, ValueError):
-            return 0.0
+    def _normalize_breakdown(signal_input: Any) -> Dict[str, float]:
+        return {
+            "correctness_score": signal_input.correctness_score,
+            "efficiency_score": signal_input.efficiency_score,
+            "policy_compliance_score": signal_input.policy_compliance_score,
+            "goal_alignment_score": signal_input.goal_alignment_score,
+            "simulated_market_score": signal_input.simulated_market_score,
+        }
 
 
 __all__ = ["FitnessOrchestrator"]
