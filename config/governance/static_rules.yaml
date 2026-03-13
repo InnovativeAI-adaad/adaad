@@ -1,0 +1,177 @@
+# ADAAD v8 — Governance Static Rules
+# =====================================
+# All configurable governance thresholds live here.
+# Changes to this file are treated as constitutional amendments —
+# they must be reviewed and GPG-signed before merge to main.
+#
+# CONSTITUTIONAL INVARIANT: CONFIG-GOVERN-0
+# This file is a Tier-0-adjacent governance artifact.
+# Modification requires HUMAN-0 sign-off and evidence ledger record.
+#
+# Usage (Python):
+#   import yaml
+#   with open("config/governance/static_rules.yaml") as f:
+#       rules = yaml.safe_load(f)
+
+# ---------------------------------------------------------------------------
+# StaticSafetyScanner thresholds (Phase 60)
+# ---------------------------------------------------------------------------
+static_safety_scanner:
+  complexity_ceiling:
+    class_a_max_delta: 2        # cyclomatic complexity increase — Class A hard limit
+    class_b_max_delta: 8        # cyclomatic complexity increase — Class B (requires Exception Token)
+  patch_size:
+    max_node_count_delta: 40    # maximum net AST node increase
+    max_files_touched: 2        # maximum files a single mutation may touch
+  non_determinism:
+    blocked_patterns:
+      - "random."
+      - "time.time()"
+      - "datetime.now()"
+      - "uuid.uuid4()"
+      - "os.urandom("
+    allowed_with_provider:
+      - "RuntimeDeterminismProvider"
+
+# ---------------------------------------------------------------------------
+# GovernanceGate v2 rules (Phase 63)
+# ---------------------------------------------------------------------------
+governance_gate_v2:
+  rules:
+    AST_SAFE_0:
+      description: "No exec/eval/bare os.system/subprocess without determinism wrapper"
+      class_b_eligible: false
+      hard_reject: true
+
+    AST_IMPORT_0:
+      description: "No new imports from Tier-0 module roots; import surface delta <= 0"
+      class_b_eligible: false
+      hard_reject: true
+
+    AST_COMPLEX_0:
+      description: "cyclomatic_after <= cyclomatic_before + threshold"
+      class_b_eligible: true
+      class_b_max_delta: 8
+      class_b_max_window_epochs: 3
+      hard_reject: false
+
+    SANDBOX_DIV_0:
+      description: "Post-apply test results must match sandbox results exactly"
+      class_b_eligible: false
+      hard_reject: true
+
+    SEMANTIC_INT_0:
+      description: "No try/except removal without compensating handler"
+      class_b_eligible: false
+      hard_reject: true
+
+  tier_0_paths:
+    - "runtime/governance/gate.py"
+    - "runtime/evolution/replay_verifier.py"
+    - "runtime/evolution/evidence/schemas.py"
+    - "runtime/evolution/evidence_bundle.py"
+    - "runtime/sandbox/ephemeral_clone.py"
+    - "CONSTITUTION.md"
+    - "ARCHITECTURE_CONTRACT.md"
+    - "config/governance/"
+    - "data/evolution_ledger.jsonl"
+    - "data/exception_tokens.jsonl"
+
+# ---------------------------------------------------------------------------
+# FitnessEngine v2 signal weights (Phase 62)
+# ---------------------------------------------------------------------------
+fitness_engine_v2:
+  signal_weights:
+    test_fitness: 0.30           # coverage delta + failure reduction
+    complexity_fitness: 0.20     # cyclomatic delta (lower = better)
+    performance_fitness: 0.15    # benchmark delta
+    governance_compliance: 0.15  # rolling 10-epoch pass rate
+    architectural_fitness: 0.12  # coupling/centrality (20-epoch window)
+    determinism_fitness: 0.08    # replay divergence = 0 (hard floor)
+    code_pressure: -0.05         # penalty per net positive node count
+  weight_bounds:
+    min: 0.05
+    max: 0.70
+  architectural_fitness:
+    window_epochs: 20
+    neutral_before_phase_62: 0.5  # returns this value until Phase 62 active
+  governance_compliance:
+    window_epochs: 10
+  determinism:
+    divergence_triggers_total_rejection: true  # overrides all other scores
+
+# ---------------------------------------------------------------------------
+# AdversarialFitnessEngine thresholds (Phase 63 Gemini recommendation)
+# ---------------------------------------------------------------------------
+adversarial_fitness:
+  threshold_test_ratio: 1.5        # min test-lines / changed-code-lines
+  min_mutation_test_score: 0.60    # min fraction of micro-mutations caught
+  max_logic_density: 0.40          # max cyclomatic/node ratio
+  bloat_threshold_nodes: 40        # same as PatchSizeRule.max_node_count_delta
+  collusion_overlap_threshold: 0.70  # fraction of impl literals in tests = reward hacking
+
+# ---------------------------------------------------------------------------
+# Lineage Engine thresholds (Phase 61)
+# ---------------------------------------------------------------------------
+lineage_engine:
+  survival:
+    min_governance_passes_in_5_epochs: 2   # below this: cooling
+    cooling_duration_epochs: 1
+  niches:
+    - performance
+    - architecture
+    - safety
+    - simplicity
+    - experimental
+  cross_niche_breeding: true
+  multi_step_refactor:
+    simulation_lookahead_epochs: 3
+    required_net_improvement: true  # simulation must show net fitness gain
+
+# ---------------------------------------------------------------------------
+# ModelDriftEvidence thresholds (Phase 58 + Gemini recommendation)
+# ---------------------------------------------------------------------------
+model_drift:
+  drift_threshold: 0.15              # function_graph_delta above this = lockdown
+  hotspot_shift_alert_threshold: 0.30
+  determinism_block_on_failure: true # if determinism_verified=False, block epoch
+
+# ---------------------------------------------------------------------------
+# LedgerPruner thresholds (Gemini "State Bloat" recommendation)
+# ---------------------------------------------------------------------------
+ledger_pruner:
+  snapshot_interval_epochs: 1000    # epochs between checkpoint/archive operations
+  retention_epochs: 100             # minimum epochs kept in active ledger
+  max_ledger_size_mb: 512           # trigger pruning if ledger exceeds this
+
+# ---------------------------------------------------------------------------
+# RepoLedgerSyncWatchdog thresholds (Gemini "Sync Gap" recommendation)
+# ---------------------------------------------------------------------------
+repo_ledger_sync:
+  poll_interval_s: 30               # seconds between background poll cycles
+  drift_threshold: 0.05             # fraction of changed files that triggers lockdown
+  tier0_change_always_lockdown: true # any Tier-0 file change = immediate lockdown
+
+# ---------------------------------------------------------------------------
+# Exception Token governance
+# ---------------------------------------------------------------------------
+exception_tokens:
+  max_duration_epochs: 3            # hard TTL — non-renewable without new human gate
+  eligible_rules:
+    - "AST-COMPLEX-0"
+  ineligible_tier0_capabilities:
+    - "ConstitutionEnforcement"
+    - "DeterministicReplay"
+    - "LedgerEvidence"
+    - "GovernanceGate"
+  require_human_cosign: true        # HUMAN-0 — no exceptions to this
+  require_lineage_projection: true  # simulation must show net improvement
+
+# ---------------------------------------------------------------------------
+# Sandbox execution
+# ---------------------------------------------------------------------------
+sandbox:
+  mutation_sandbox_only: true       # set false ONLY at Phase 65 (first live mutation)
+  timeout_s: 120
+  replay_verification: true         # SANDBOX-DIV-0 — always verify
+  network_access: false             # zero external network inside sandbox
