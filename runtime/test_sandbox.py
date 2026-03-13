@@ -39,6 +39,7 @@ class TestSandboxStatus(str, Enum):
 
 @dataclass(frozen=True)
 class TestSandboxResult:
+    __test__ = False
     """Outcome of a sandboxed test execution."""
 
     ok: bool

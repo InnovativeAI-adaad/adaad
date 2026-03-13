@@ -42,7 +42,6 @@ from runtime.api.app_layer import (
     MutationCandidate,
     RuntimeDeterminismProvider,
     SeededDeterminismProvider,
-    default_provider,
     fitness,
     generate_tool_manifest,
     get_capabilities,
@@ -51,6 +50,7 @@ from runtime.api.app_layer import (
     register_capability,
     require_replay_safe_provider,
 )
+from runtime.governance.foundation.determinism import SystemDeterminismProvider
 from runtime.preflight import validate_agent_contract_preflight
 from security import cryovant
 from runtime.evolution.promotion_manifest import emit_pr_lifecycle_event
@@ -124,7 +124,7 @@ class BeastModeLoop:
                 )
                 if (replay_mode or "off").strip().lower() == "strict"
                 or (recovery_tier or "").strip().lower() in _STRICT_TIERS
-                else default_provider()
+                else SystemDeterminismProvider()
             )
         )
         self._replay_mode = (replay_mode or "off").strip().lower()
@@ -589,7 +589,7 @@ class BeastModeLoop:
             level="INFO",
             element_id=ELEMENT_ID,
         )
-        _promotion_decision_id = f"{selected}:{int(__import__("time").time() * 1000)}"
+        _promotion_decision_id = f"{selected}:{int(time.time() * 1000)}"
         emit_pr_lifecycle_event(
             policy_version="1.0",
             evaluation_result="allow",
@@ -931,7 +931,7 @@ class LegacyBeastModeCompatibilityAdapter(BeastModeLoop):
             level="INFO",
             element_id=ELEMENT_ID,
         )
-        _promotion_decision_id = f"{selected}:{int(__import__("time").time() * 1000)}"
+        _promotion_decision_id = f"{selected}:{int(time.time() * 1000)}"
         emit_pr_lifecycle_event(
             policy_version="1.0",
             evaluation_result="allow",
