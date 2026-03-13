@@ -248,3 +248,83 @@ class TestProposalRateLimiter:
         a = get_limiter()
         b = get_limiter()
         assert a is b
+
+
+# ---------------------------------------------------------------------------
+# C-01: assert_env_mode_set
+# ---------------------------------------------------------------------------
+
+class TestEnvModeSetAssertion:
+    """Verify C-01: boot fails closed when ADAAD_ENV is unset outside CI/dev-bootstrap."""
+
+    def _call(self, env_overrides: dict):
+        import importlib
+        # Clear all relevant envvars then apply overrides
+        clean = {
+            "ADAAD_ENV": "",
+            "CI": "",
+            "ADAAD_DEV_BOOTSTRAP": "",
+        }
+        clean.update(env_overrides)
+        with patch.dict(os.environ, clean, clear=False):
+            # Force removal of empty-string keys so they appear truly unset
+            for k, v in clean.items():
+                if v == "":
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+            from security import cryovant
+            cryovant.assert_env_mode_set()
+
+    def test_explicit_dev_passes(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADAAD_ENV", "dev")
+        monkeypatch.delenv("CI", raising=False)
+        monkeypatch.delenv("ADAAD_DEV_BOOTSTRAP", raising=False)
+        from security import cryovant
+        cryovant.assert_env_mode_set()  # must not raise
+
+    def test_explicit_staging_passes(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADAAD_ENV", "staging")
+        monkeypatch.delenv("CI", raising=False)
+        monkeypatch.delenv("ADAAD_DEV_BOOTSTRAP", raising=False)
+        from security import cryovant
+        cryovant.assert_env_mode_set()  # must not raise
+
+    def test_explicit_production_passes(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ADAAD_ENV", "production")
+        monkeypatch.delenv("CI", raising=False)
+        monkeypatch.delenv("ADAAD_DEV_BOOTSTRAP", raising=False)
+        from security import cryovant
+        cryovant.assert_env_mode_set()  # must not raise
+
+    def test_ci_flag_exempts_unset_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("ADAAD_ENV", raising=False)
+        monkeypatch.setenv("CI", "true")
+        monkeypatch.delenv("ADAAD_DEV_BOOTSTRAP", raising=False)
+        from security import cryovant
+        cryovant.assert_env_mode_set()  # CI environments are exempt
+
+    def test_dev_bootstrap_flag_exempts_unset_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("ADAAD_ENV", raising=False)
+        monkeypatch.delenv("CI", raising=False)
+        monkeypatch.setenv("ADAAD_DEV_BOOTSTRAP", "1")
+        from security import cryovant
+        cryovant.assert_env_mode_set()  # dev-bootstrap explicitly opted in
+
+    def test_unset_env_no_exemption_fails_closed(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("ADAAD_ENV", raising=False)
+        monkeypatch.delenv("CI", raising=False)
+        monkeypatch.delenv("ADAAD_DEV_BOOTSTRAP", raising=False)
+        from security import cryovant
+        with pytest.raises(RuntimeError, match="adaad_env_unset:critical"):
+            cryovant.assert_env_mode_set()
+
+    def test_error_message_lists_valid_envs(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("ADAAD_ENV", raising=False)
+        monkeypatch.delenv("CI", raising=False)
+        monkeypatch.delenv("ADAAD_DEV_BOOTSTRAP", raising=False)
+        from security import cryovant
+        with pytest.raises(RuntimeError) as exc_info:
+            cryovant.assert_env_mode_set()
+        assert "dev" in str(exc_info.value)
+        assert "staging" in str(exc_info.value)

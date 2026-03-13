@@ -104,6 +104,49 @@ def env_mode() -> str:
     return mode
 
 
+def assert_env_mode_set() -> None:
+    """C-01: Fail closed when ADAAD_ENV is unset outside of CI/local dev contexts.
+
+    The audit identified that an unset ADAAD_ENV silently defaults to 'prod',
+    meaning production deployments can start without explicit environment
+    configuration. This function must be called during boot to enforce
+    explicit environment declaration.
+
+    CI environments are detected via the ``CI`` envvar (set by GitHub Actions
+    and most CI systems). Local dev is detected via ``ADAAD_DEV_BOOTSTRAP``.
+    All other contexts with an unset ADAAD_ENV fail closed.
+
+    Raises
+    ------
+    RuntimeError
+        With code ``adaad_env_unset:critical`` when ADAAD_ENV is not set
+        in a non-CI, non-dev-bootstrap context.
+    """
+    raw = os.environ.get("ADAAD_ENV", "").strip()
+    if raw:
+        return  # explicitly set — nothing to enforce
+
+    # CI runners always set CI=true; allow them to run without ADAAD_ENV
+    if os.environ.get("CI", "").strip().lower() in {"1", "true", "yes"}:
+        return
+
+    # Local bootstrap mode explicitly opted in
+    if os.environ.get("ADAAD_DEV_BOOTSTRAP", "").strip().lower() in {"1", "true", "yes"}:
+        return
+
+    metrics.log(
+        event_type="adaad_env_unset",
+        payload={"severity": "critical"},
+        level="ERROR",
+        element_id=ELEMENT_ID,
+    )
+    raise RuntimeError(
+        "adaad_env_unset:critical — ADAAD_ENV must be explicitly set to one of "
+        f"{sorted(_KNOWN_ENVS)!r}. Unset ADAAD_ENV is not permitted outside CI "
+        "or dev-bootstrap mode. Set ADAAD_ENV before starting."
+    )
+
+
 def _keys_configured() -> bool:
     try:
         return KEYS_DIR.exists() and any(KEYS_DIR.iterdir())

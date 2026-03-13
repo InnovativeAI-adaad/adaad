@@ -19,6 +19,15 @@ API ingress.
 
 ### Changes
 
+#### C-01: Boot environment validation (ADAAD_ENV unset assertion)
+- `security/cryovant.py` — `assert_env_mode_set()` added. Fails closed with
+  `adaad_env_unset:critical` when `ADAAD_ENV` is not explicitly set outside
+  of CI (detected via `CI=true`) or dev-bootstrap (`ADAAD_DEV_BOOTSTRAP=1`)
+  contexts. Prevents silent default-to-prod on misconfigured deployments.
+- `app/main.py` — `boot()` calls `assert_env_mode_set()` before
+  `assert_governance_signing_key_boot()`, making env declaration the
+  very first boot invariant enforced.
+
 #### C-04: LineageLedgerV2 O(n²) → O(n) append fix
 - `runtime/evolution/lineage_v2.py` — `append_event()` no longer calls
   `verify_integrity()` (full ledger re-scan) on every write. When
@@ -51,9 +60,9 @@ API ingress.
   `governance_proposal_rate_limited` ledger event on every blocked request.
 
 ### Tests Added
-- `tests/test_phase66_improvements.py` — 20 tests covering all four
-  improvements: O(n) regression guard (3 cases), signing key boot assertion
-  (6 cases), write-path allowlist validation (8 cases), rate limiter (6 cases).
+- `tests/test_phase66_improvements.py` — 30 tests covering all five
+  improvements: O(n) regression guard (3), env mode assertion (7),
+  signing key boot assertion (6), write-path allowlist (8), rate limiter (6).
 
 ### Constitutional Invariants Enforced
 

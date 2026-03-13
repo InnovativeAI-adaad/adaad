@@ -291,6 +291,11 @@ class Orchestrator:
             self._v("Warning: dry-run + strict replay may not reflect production execution semantics.")
         self._v("Starting governance spine initialization")
         metrics.log(event_type="orchestrator_start", payload={}, level="INFO")
+        # C-01: assert ADAAD_ENV is explicitly set before any governance surface.
+        try:
+            cryovant.assert_env_mode_set()
+        except RuntimeError as exc:
+            self._fail(str(exc), payload={"boot_stage": "env_mode_assertion"})
         # H-02: assert governance signing key present before any governance surface is reached.
         try:
             cryovant.assert_governance_signing_key_boot()
