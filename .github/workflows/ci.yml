@@ -585,6 +585,10 @@ import sys"),
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
+      - name: Validate ADAAD agent state governance ledger
+        run: python scripts/validate_adaad_agent_state.py
+      - name: Validate phase sequence consistency
+        run: python scripts/validate_phase_sequence_consistency.py
       - name: Validate claims evidence matrix links
         run: python scripts/validate_release_evidence.py
       - name: Validate release hardening claims against runtime capability checks
