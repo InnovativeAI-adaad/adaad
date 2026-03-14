@@ -36,8 +36,9 @@ from runtime.capability.seed_registry_adapter import register_seeds_bulk
 from runtime.innovations import ADAADInnovationEngine, CapabilitySeed
 from runtime.oracle_ledger import OracleLedger
 from runtime.seed_promotion import SeedPromotionQueue, get_promotion_queue
+from runtime.seed_review import ReviewAuthorityError, SeedNotFoundError, record_review
 from runtime.personality_profiles import PersonalityProfileStore
-from runtime.audit_auth import require_audit_read_scope
+from runtime.audit_auth import require_audit_read_scope, require_audit_write_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
 
 logger = logging.getLogger(__name__)
@@ -348,6 +349,71 @@ def list_promoted_seeds(
             "SEED-PROMO-HUMAN-0: this queue is advisory only. "
             "No mutation is created or applied without explicit human approval."
         ),
+    }
+
+
+def _require_audit_write(authorization: Optional[str]) -> None:
+    """Require audit:write scope (Phase 73 — SEED-REVIEW-AUTH-0)."""
+    require_audit_write_scope(authorization)
+
+
+@router.post("/seeds/promoted/{seed_id}/review")
+def review_promoted_seed(
+    seed_id: str,
+    body: Dict[str, Any] = Body(default_factory=dict),
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """Record a human review decision for a promoted seed (Phase 73).
+
+    SEED-REVIEW-AUTH-0:  requires audit:write bearer token scope.
+    SEED-REVIEW-HUMAN-0: operator_id must be non-empty — no self-approval.
+    SEED-REVIEW-0:       decision written to lineage ledger before status change.
+    SEED-REVIEW-IDEM-0:  reviewing an already-terminal seed is a no-op.
+    SEED-REVIEW-BUS-0:   bus frame emitted after ledger write.
+
+    Request body::
+
+        {
+          "status":      "approved" | "rejected",
+          "operator_id": "dustin",
+          "notes":       "optional free-text rationale"
+        }
+    """
+    _require_audit_write(authorization)
+
+    status = str(body.get("status", "")).strip()
+    operator_id = str(body.get("operator_id", "")).strip()
+    notes = str(body.get("notes", ""))
+
+    if status not in ("approved", "rejected"):
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(
+            status_code=422,
+            detail="status must be 'approved' or 'rejected'",
+        )
+
+    try:
+        decision = record_review(
+            seed_id,
+            status=status,
+            operator_id=operator_id,
+            notes=notes,
+            queue=_promotion_queue,
+        )
+    except SeedNotFoundError:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=404, detail=f"seed_id {seed_id!r} not in promotion queue")
+    except ReviewAuthorityError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=422, detail=str(exc))
+    except RuntimeError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return {
+        "seed_id": seed_id,
+        "decision": decision,
+        "queue_depth": len(_promotion_queue),
     }
 
 

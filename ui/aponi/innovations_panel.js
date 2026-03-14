@@ -584,6 +584,84 @@
     }
     .inno-toast.seed-grad .inno-toast-title { color: #ffd700; }
 
+    /* ── Phase 73: Promotion Review Queue ─────────────────────────── */
+    .promo-queue-list {
+      display: flex; flex-direction: column; gap: 6px;
+      max-height: 260px; overflow-y: auto;
+    }
+    .promo-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px; border-radius: 10px;
+      border: 1px solid rgba(255,215,0,0.12);
+      background: rgba(255,215,0,0.03);
+      transition: background .15s;
+    }
+    .promo-row:hover { background: rgba(255,215,0,0.06); }
+    .promo-row.promo-approved {
+      border-color: rgba(105,255,71,0.25);
+      background: rgba(105,255,71,0.04);
+    }
+    .promo-row.promo-rejected {
+      border-color: rgba(255,64,64,0.18);
+      background: rgba(255,64,64,0.03);
+    }
+    .promo-row-left { flex: 1; min-width: 0; }
+    .promo-seed-id {
+      font-size: 12px; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+      color: #ffd700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .promo-seed-meta { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+    .promo-status-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;
+      background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .promo-row.promo-approved .promo-status-badge {
+      background: rgba(105,255,71,0.1); color: #69ff47;
+      border-color: rgba(105,255,71,0.25);
+    }
+    .promo-row.promo-rejected .promo-status-badge {
+      background: rgba(255,64,64,0.1); color: #ff6b6b;
+      border-color: rgba(255,64,64,0.22);
+    }
+    .promo-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .promo-btn {
+      font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+      border: 1px solid; cursor: pointer; transition: all .14s;
+      background: transparent; font-family: inherit;
+    }
+    .promo-btn.approve {
+      color: #69ff47; border-color: rgba(105,255,71,0.3);
+    }
+    .promo-btn.approve:hover {
+      background: rgba(105,255,71,0.1); box-shadow: 0 0 12px rgba(105,255,71,0.1);
+    }
+    .promo-btn.reject {
+      color: #ff6b6b; border-color: rgba(255,100,100,0.3);
+    }
+    .promo-btn.reject:hover {
+      background: rgba(255,64,64,0.08); box-shadow: 0 0 12px rgba(255,64,64,0.08);
+    }
+    .promo-empty {
+      text-align: center; padding: 20px; color: rgba(255,255,255,0.2);
+      font-size: 12px; font-style: italic;
+    }
+    .promo-queue-list::-webkit-scrollbar { width: 3px; }
+    .promo-queue-list::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.12); border-radius: 2px; }
+
+    /* Phase 73: review toast variants */
+    .inno-toast.seed-approved {
+      border-left: 3px solid #69ff47;
+      box-shadow: 0 4px 24px rgba(105,255,71,0.1);
+    }
+    .inno-toast.seed-approved .inno-toast-title { color: #69ff47; }
+    .inno-toast.seed-rejected {
+      border-left: 3px solid #ff6b6b;
+      box-shadow: 0 4px 24px rgba(255,64,64,0.08);
+    }
+    .inno-toast.seed-rejected .inno-toast-title { color: #ff6b6b; }
+
     /* ── Reflection banner ────────────────────────────────────────── */
     .reflect-banner {
       border-radius: 12px; padding: 14px 18px;
@@ -632,6 +710,8 @@
     personalityProfiles: [],
     personalityHistory: [],
     personalityLoaded: false,
+    promotionQueue: {},         // Phase 73 — seed_id → {status, operator_id}
+    graduatedSeeds: {},         // Phase 72 — seed_id → {expansion_score, epoch_id, lane}
   };
 
   const VEC_LABELS = ["intent", "explore", "risk", "speed"];
@@ -1161,6 +1241,95 @@
 
     if (!innState.seedsLoaded) loadSeeds();
 
+    // ── Phase 73: Promotion Queue Review Panel ───────────────────────
+    const promoCard = h("div", {class: "inno-card", style:"margin-top:12px;"});
+    const promoHdr  = h("div", {class: "inno-card-header"});
+    promoHdr.appendChild(h("div", {class: "inno-card-title"},
+      h("div", {class: "inno-card-icon", style:"background:rgba(255,215,0,0.07);"}, "⚖️"),
+      "Promotion Review"
+    ));
+    const promoStatus = h("span", {class: "inno-status"}, "loading…");
+    promoHdr.appendChild(promoStatus);
+    promoCard.appendChild(promoHdr);
+
+    const promoBody = h("div", {class: "inno-card-body"});
+    const promoList = h("div", {class: "promo-queue-list"});
+    promoBody.appendChild(promoList);
+    promoCard.appendChild(promoBody);
+    wrap.appendChild(promoCard);
+
+    (async () => {
+      try {
+        const data = await apiFetch("/innovations/seeds/promoted");
+        const entries = data.entries || [];
+        promoStatus.textContent = `${data.queue_depth} pending`;
+        promoList.innerHTML = "";
+        if (!entries.length) {
+          promoList.innerHTML = `<div class="promo-empty">No seeds awaiting review.</div>`;
+          return;
+        }
+        entries.forEach(entry => {
+          const currentStatus = (innState.promotionQueue && innState.promotionQueue[entry.seed_id])
+            ? innState.promotionQueue[entry.seed_id].status
+            : entry.status;
+          const isTerminal = currentStatus === "approved" || currentStatus === "rejected";
+          const row = h("div", {
+            class: `promo-row${isTerminal ? ` promo-${currentStatus}` : " pending"}`,
+          });
+          row.dataset.seedId = entry.seed_id;
+
+          const rowLeft = h("div", {class: "promo-row-left"});
+          rowLeft.appendChild(h("div", {class: "promo-seed-id"}, entry.seed_id));
+          rowLeft.appendChild(h("div", {class: "promo-seed-meta"},
+            `lane: ${entry.lane}  ·  score: ${(entry.expansion_score * 100).toFixed(1)}%`
+          ));
+          row.appendChild(rowLeft);
+
+          const statusBadge = h("span", {class: "promo-status-badge"},
+            isTerminal ? currentStatus : "pending_human_review"
+          );
+          row.appendChild(statusBadge);
+
+          if (!isTerminal) {
+            const actions = h("div", {class: "promo-actions"});
+            const approveBtn = h("button", {class: "promo-btn approve"}, "✅ Approve");
+            const rejectBtn  = h("button", {class: "promo-btn reject"},  "🚫 Reject");
+
+            approveBtn.addEventListener("click", async () => {
+              await submitReview(entry.seed_id, "approved", row, statusBadge);
+            });
+            rejectBtn.addEventListener("click", async () => {
+              await submitReview(entry.seed_id, "rejected", row, statusBadge);
+            });
+            actions.appendChild(approveBtn);
+            actions.appendChild(rejectBtn);
+            row.appendChild(actions);
+          }
+          promoList.appendChild(row);
+        });
+      } catch(_) {
+        promoStatus.textContent = "unavailable";
+        promoList.innerHTML = `<div class="promo-empty">Promotion queue endpoint not reachable.</div>`;
+      }
+    })();
+
+    async function submitReview(seedId, status, rowEl, badgeEl) {
+      const opId = "operator";  // In production: prompt or session operator id
+      try {
+        await apiFetch(`/innovations/seeds/promoted/${encodeURIComponent(seedId)}/review`, {
+          method: "POST",
+          body: JSON.stringify({ status, operator_id: opId, notes: "" }),
+        });
+        rowEl.classList.remove("pending");
+        rowEl.classList.add(`promo-${status}`);
+        badgeEl.textContent = status;
+        if (!innState.promotionQueue) innState.promotionQueue = {};
+        innState.promotionQueue[seedId] = { status, operator_id: opId };
+      } catch(e) {
+        badgeEl.textContent = "error";
+      }
+    }
+
     function renderSeedList() {
       listWrap.innerHTML = "";
       const seeds = innState.seeds.length ? innState.seeds : [];
@@ -1685,6 +1854,8 @@
         case "reflection":    this._onReflection(frame); break;
         case "seed_planted":  this._onSeed(frame);             break;
         case "seed_graduated": this._onSeedGraduated(frame);   break;
+        case "seed_promotion_approved": this._onSeedReview(frame, true);  break;
+        case "seed_promotion_rejected": this._onSeedReview(frame, false); break;
         case "gplugin":       this._onGPlugin(frame);          break;
       }
     },
@@ -1803,6 +1974,35 @@
               badge.textContent = `🎓 ${score}`;
               item.appendChild(badge);
             }
+          }
+        });
+      }
+    },
+
+    _onSeedReview(f, approved) {
+      // Phase 73 — promotion review decision toast
+      const icon  = approved ? "✅" : "🚫";
+      const verb  = approved ? "Approved" : "Rejected";
+      const cls   = approved ? "seed-approved" : "seed-rejected";
+      this._toast(cls, icon,
+        `Seed ${verb}  ·  ${f.seed_id}`,
+        `operator: ${f.operator_id || "—"}  ·  epoch: ${f.epoch_id || "—"}`
+      );
+      // Update promoted queue display if panel visible
+      if (!innState.promotionQueue) innState.promotionQueue = {};
+      innState.promotionQueue[f.seed_id] = {
+        status: approved ? "approved" : "rejected",
+        operator_id: f.operator_id,
+      };
+      const qList = document.querySelector(".promo-queue-list");
+      if (qList) {
+        const rows = qList.querySelectorAll(".promo-row");
+        rows.forEach(row => {
+          if (row.dataset.seedId === f.seed_id) {
+            row.classList.remove("pending");
+            row.classList.add(approved ? "promo-approved" : "promo-rejected");
+            const badge = row.querySelector(".promo-status-badge");
+            if (badge) badge.textContent = verb;
           }
         });
       }

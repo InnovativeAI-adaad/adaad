@@ -48,4 +48,30 @@ def require_audit_read_scope(authorization: str | None) -> dict[str, str]:
     return {"scheme": "bearer", "scope": "audit:read", "redaction": "sensitive"}
 
 
-__all__ = ["load_audit_tokens", "require_audit_read_scope"]
+def require_audit_write_scope(authorization: str | None) -> dict[str, str]:
+    """Require audit:write bearer token scope.
+
+    Phase 73 — seed review decisions require elevated write authority.
+    SEED-REVIEW-AUTH-0: all seed review decision endpoints require audit:write.
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="missing_authentication")
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="missing_authentication")
+
+    token_scopes = load_audit_tokens().get(token)
+    if token_scopes is None:
+        raise HTTPException(status_code=401, detail="invalid_token")
+    if "audit:write" not in token_scopes:
+        raise HTTPException(status_code=403, detail="insufficient_scope")
+
+    return {"scheme": "bearer", "scope": "audit:write", "redaction": "sensitive"}
+
+
+__all__ = [
+    "load_audit_tokens",
+    "require_audit_read_scope",
+    "require_audit_write_scope",
+]

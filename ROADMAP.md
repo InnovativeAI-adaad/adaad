@@ -1480,3 +1480,11 @@ Oracle answers cached to append-only JSONL ledger (`OracleLedger`) for determini
 Graduated Capability Seeds (expansion_score ≥ 0.85) enter an advisory FIFO promotion queue (`SeedPromotionQueue`) — never automatically acted upon without human review. New `GET /innovations/seeds/promoted` endpoint exposes queue depth, entries, and `SEED-PROMO-HUMAN-0` advisory notice. Aponi: `_onSeedGraduated()` WS handler renders gold graduation toast and live badge on seeds list; seeds panel header shows graduated count; Oracle panel gains **Query History** card rendering last 20 oracle ledger records (Phase 71 `OracleLedger`) newest-first with query type, trajectory score, and timestamp.
 
 **Key invariants:** SEED-PROMO-0, SEED-PROMO-IDEM-0, SEED-PROMO-HUMAN-0, SEED-PROMO-ORDER-0
+
+### Phase 73 — Seed Review Decision + Governance Wire
+
+**Status:** ✅ shipped (v9.8.0) · **Dependency:** Phase 72 merged at main · **Tests:** T73-REV-01..09, T73-BUS-01..02, T73-AUTH-01..02, T73-API-01..03
+
+Governed human-approval workflow for promoted seeds. `record_review()` enforces non-empty `operator_id` (SEED-REVIEW-HUMAN-0), writes `SeedReviewDecisionEvent` to `LineageLedgerV2` before any status mutation (SEED-REVIEW-0), carries deterministic `decision_digest` (SEED-REVIEW-AUDIT-0), and is idempotent on terminal status (SEED-REVIEW-IDEM-0). `require_audit_write_scope()` added to `audit_auth` for elevated write gating. `POST /innovations/seeds/promoted/{seed_id}/review` endpoint. Aponi: `_onSeedReview()` WS handler with green/red toasts; **Promotion Review** card in Seeds panel with live Approve/Reject buttons and real-time status reflection on bus frames.
+
+**Key invariants:** SEED-REVIEW-0, SEED-REVIEW-HUMAN-0, SEED-REVIEW-IDEM-0, SEED-REVIEW-AUDIT-0, SEED-REVIEW-BUS-0, SEED-REVIEW-AUTH-0
