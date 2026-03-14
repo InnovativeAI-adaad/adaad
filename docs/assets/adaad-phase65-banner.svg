@@ -1,0 +1,278 @@
+<svg viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <style>
+    @keyframes scan2 { 0%{transform:translateY(-160px)} 100%{transform:translateY(480px)} }
+    @keyframes check-glow { 0%,100%{opacity:1;r:4.5} 50%{opacity:0.5;r:3} }
+    @keyframes border-pulse { 0%,100%{stroke-opacity:0.6} 50%{stroke-opacity:0.25} }
+    @keyframes title-flare { 0%,100%{opacity:1} 45%{opacity:0.85} 55%{opacity:0.95} }
+    @keyframes trace-appear { from{opacity:0} to{opacity:1} }
+  </style>
+
+  <pattern id="dots2" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="10" cy="10" r="0.9" fill="#00d4ff" opacity="0.22"/>
+  </pattern>
+  <pattern id="grid2" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+    <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#00d4ff" stroke-width="0.25" opacity="0.1"/>
+  </pattern>
+
+  <filter id="glow-s">
+    <feGaussianBlur stdDeviation="3" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glow-m">
+    <feGaussianBlur stdDeviation="7" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="glow-xl">
+    <feGaussianBlur stdDeviation="16" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+  <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#020406"/>
+    <stop offset="35%" stop-color="#030c14"/>
+    <stop offset="70%" stop-color="#04080e"/>
+    <stop offset="100%" stop-color="#020406"/>
+  </linearGradient>
+  <radialGradient id="center-glow2" cx="38%" cy="52%" r="50%">
+    <stop offset="0%" stop-color="#1a0600" stop-opacity="0.4"/>
+    <stop offset="50%" stop-color="#0a1020" stop-opacity="0.1"/>
+    <stop offset="100%" stop-color="#020406" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="right-glow2" cx="82%" cy="45%" r="35%">
+    <stop offset="0%" stop-color="#001018" stop-opacity="0.6"/>
+    <stop offset="100%" stop-color="#020406" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="cyan2" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#00a8d4"/>
+    <stop offset="50%" stop-color="#00e8ff"/>
+    <stop offset="100%" stop-color="#00a8d4"/>
+  </linearGradient>
+  <linearGradient id="gold2" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#8a6010"/>
+    <stop offset="40%" stop-color="#f5c842"/>
+    <stop offset="60%" stop-color="#f5c842"/>
+    <stop offset="100%" stop-color="#8a6010"/>
+  </linearGradient>
+  <linearGradient id="phase65-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#00d4ff"/>
+    <stop offset="45%" stop-color="#00e8ff"/>
+    <stop offset="55%" stop-color="#f5c842"/>
+    <stop offset="100%" stop-color="#e8a020"/>
+  </linearGradient>
+  <linearGradient id="scan2-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0"/>
+    <stop offset="50%" stop-color="#00d4ff" stop-opacity="0.03"/>
+    <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="vignette2" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#020406" stop-opacity="0.85"/>
+    <stop offset="10%" stop-color="#020406" stop-opacity="0"/>
+    <stop offset="90%" stop-color="#020406" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#020406" stop-opacity="0.85"/>
+  </linearGradient>
+  <linearGradient id="vignette2-tb" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#020406" stop-opacity="0.65"/>
+    <stop offset="12%" stop-color="#020406" stop-opacity="0"/>
+    <stop offset="88%" stop-color="#020406" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#020406" stop-opacity="0.7"/>
+  </linearGradient>
+
+  <clipPath id="clip2">
+    <rect width="1200" height="480"/>
+  </clipPath>
+</defs>
+
+<!-- ════ BACKGROUND ════ -->
+<rect width="1200" height="480" fill="url(#bg2)"/>
+<rect width="1200" height="480" fill="url(#dots2)"/>
+<rect width="1200" height="480" fill="url(#grid2)" opacity="0.6"/>
+<rect width="1200" height="480" fill="url(#center-glow2)"/>
+<rect width="1200" height="480" fill="url(#right-glow2)"/>
+
+<!-- Scan line -->
+<g clip-path="url(#clip2)">
+  <rect x="0" y="0" width="1200" height="160" fill="url(#scan2-grad)">
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,480" dur="7s" repeatCount="indefinite"/>
+  </rect>
+</g>
+
+<rect width="1200" height="480" fill="url(#vignette2)"/>
+<rect width="1200" height="480" fill="url(#vignette2-tb)"/>
+
+<!-- ════ BORDERS ════ -->
+<rect x="0" y="0" width="1200" height="1.5" fill="url(#cyan2)" opacity="0.5"/>
+<rect x="0" y="478.5" width="1200" height="1.5" fill="url(#gold2)" opacity="0.6"/>
+
+<!-- Top rule with diamond -->
+<line x1="60" y1="26" x2="520" y2="26" stroke="#00d4ff" stroke-width="0.5" opacity="0.3"/>
+<polygon points="600,18 609,26 600,34 591,26" fill="none" stroke="#f5c842" stroke-width="1.2" opacity="0.85" filter="url(#glow-s)">
+  <animate attributeName="stroke-opacity" values="0.85;0.35;0.85" dur="3s" repeatCount="indefinite"/>
+</polygon>
+<polygon points="600,21 607,26 600,31 593,26" fill="#f5c842" opacity="0.5"/>
+<line x1="680" y1="26" x2="1140" y2="26" stroke="#00d4ff" stroke-width="0.5" opacity="0.3"/>
+
+<!-- Bottom rule -->
+<line x1="60" y1="454" x2="520" y2="454" stroke="#00d4ff" stroke-width="0.5" opacity="0.3"/>
+<polygon points="600,446 609,454 600,462 591,454" fill="none" stroke="#f5c842" stroke-width="1.2" opacity="0.7" filter="url(#glow-s)"/>
+<line x1="680" y1="454" x2="1140" y2="454" stroke="#00d4ff" stroke-width="0.5" opacity="0.3"/>
+
+<!-- ════ CORNERS ════ -->
+<g filter="url(#glow-s)" opacity="0.75">
+  <line x1="18" y1="18" x2="55" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="18" y1="18" x2="18" y2="55" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="1182" y1="18" x2="1145" y2="18" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="1182" y1="18" x2="1182" y2="55" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="18" y1="462" x2="55" y2="462" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="18" y1="462" x2="18" y2="425" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="1182" y1="462" x2="1145" y2="462" stroke="#00d4ff" stroke-width="1.5"/>
+  <line x1="1182" y1="462" x2="1182" y2="425" stroke="#00d4ff" stroke-width="1.5"/>
+</g>
+
+<!-- ════ HEADER ════ -->
+<g text-anchor="middle">
+  <!-- Phase label -->
+  <text x="600" y="66" font-family="'Courier New',monospace" font-size="10" fill="#4a7a99" letter-spacing="6">PHASE 65  ·  2026-03-13  ·  v9.0.0  ·  GOVERNED EXECUTION</text>
+
+  <!-- Main title with glow layers -->
+  <text x="600" y="130" fill="#003355" font-family="'Courier New',monospace" font-size="56" font-weight="900" letter-spacing="2">Phase 65</text>
+  <text x="600" y="130" fill="#00d4ff" font-family="'Courier New',monospace" font-size="56" font-weight="900" letter-spacing="2" opacity="0.15" filter="url(#glow-xl)">Phase 65</text>
+  <text x="600" y="130" fill="url(#phase65-grad)" font-family="'Courier New',monospace" font-size="56" font-weight="900" letter-spacing="2" filter="url(#glow-m)">Phase 65</text>
+
+  <!-- Subtitle -->
+  <line x1="200" y1="148" x2="470" y2="148" stroke="#00d4ff" stroke-width="0.5" opacity="0.25"/>
+  <text x="600" y="165" font-family="'Courier New',monospace" font-size="13" fill="#6aaccc" letter-spacing="4">FIRST AUTONOMOUS SELF-EVOLUTION</text>
+  <line x1="730" y1="148" x2="1000" y2="148" stroke="#f5c842" stroke-width="0.5" opacity="0.25"/>
+
+  <!-- Description lines -->
+  <text x="600" y="190" font-family="'Courier New',monospace" font-size="8.5" fill="#3a6070" letter-spacing="1.5">On March 13, 2026, ADAAD produced its first fully governed autonomous self-improvement cycle.</text>
+  <text x="600" y="204" font-family="'Courier New',monospace" font-size="8.5" fill="#3a6070" letter-spacing="1.5">Zero human intervention in the execution path. Full human oversight of the constitutional framework.</text>
+  <text x="600" y="218" font-family="'Courier New',monospace" font-size="8.5" fill="#3a6070" letter-spacing="1.5">Every step cryptographically evidenced and deterministically replayable.</text>
+</g>
+
+<!-- Divider -->
+<line x1="44" y1="234" x2="1156" y2="234" stroke="#00d4ff" stroke-width="0.5" opacity="0.18"/>
+
+<!-- ════ LEFT PANEL — EXECUTION TRACE ════ -->
+<g transform="translate(50, 252)" font-family="'Courier New',monospace">
+  <text x="0" y="0" fill="#00d4ff" font-size="8" letter-spacing="3" opacity="0.7">EXECUTION TRACE</text>
+  <line x1="0" y1="8" x2="580" y2="8" stroke="#00d4ff" stroke-width="0.5" opacity="0.18"/>
+
+  <!-- Vertical timeline -->
+  <line x1="8" y1="22" x2="8" y2="182" stroke="#00d4ff" stroke-width="1" opacity="0.18"/>
+
+  <g>
+    <!-- Step 01 - check -->
+    <circle cx="8" cy="30" r="4.5" fill="#00ff88" opacity="0.95" filter="url(#glow-s)"/>
+    <text x="8" y="24" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+    <text x="26" y="26" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">01_TARGET_DISCOVERY</text>
+    <text x="26" y="36" fill="#3a6070" font-size="7" letter-spacing="0.5">CodeIntelModel → highest-priority Tier-1 capability identified</text>
+
+    <!-- Step 02 -->
+    <circle cx="8" cy="58" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+    <text x="8" y="52" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+    <text x="26" y="54" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">02_CAPABILITY_MAP</text>
+    <text x="26" y="64" fill="#3a6070" font-size="7" letter-spacing="0.5">CapabilityDiscovery → cap:runtime.evolution.cel_wiring.live_mode</text>
+
+    <!-- Step 03 -->
+    <circle cx="8" cy="86" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+    <text x="8" y="80" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+    <text x="26" y="82" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">03_PROPOSAL_GENERATE</text>
+    <text x="26" y="92" fill="#3a6070" font-size="7" letter-spacing="0.5">ProposalEngine → AST-level mutation — proposal_hash recorded</text>
+
+    <!-- Step 04 -->
+    <circle cx="8" cy="114" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+    <text x="8" y="108" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+    <text x="26" y="110" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">04_STATIC_SCAN</text>
+    <text x="26" y="120" fill="#3a6070" font-size="7" letter-spacing="0.5">StaticSafetyScanner → all 4 AST safety rules PASS</text>
+
+    <!-- Step 05 -->
+    <circle cx="8" cy="142" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+    <text x="8" y="136" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+    <text x="26" y="138" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">05_SANDBOX_TOURNAMENT</text>
+    <text x="26" y="148" fill="#3a6070" font-size="7" letter-spacing="0.5">SandboxTournament → top candidate recorded in ephemeral container</text>
+
+    <!-- Step 06 -->
+    <circle cx="8" cy="170" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+    <text x="8" y="164" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+    <text x="26" y="166" fill="#f5c842" font-size="7.5" letter-spacing="0.5">06_FITNESS_SCORE</text>
+    <text x="26" y="176" fill="#3a6070" font-size="7" letter-spacing="0.5">FitnessEngineV2 → 7/7 signals above baseline — composite PASS</text>
+  </g>
+</g>
+
+<!-- Vertical divider between panels -->
+<line x1="640" y1="240" x2="640" y2="470" stroke="#1a2a3a" stroke-width="0.5"/>
+
+<g transform="translate(656, 252)" font-family="'Courier New',monospace">
+  <text x="0" y="0" fill="#f5c842" font-size="8" letter-spacing="3" opacity="0.7">GOVERNANCE OUTCOME</text>
+  <line x1="0" y1="8" x2="498" y2="8" stroke="#f5c842" stroke-width="0.5" opacity="0.18"/>
+
+  <line x1="8" y1="22" x2="8" y2="182" stroke="#f5c842" stroke-width="1" opacity="0.15"/>
+
+  <!-- Step 07 - gate v2 APPROVED -->
+  <circle cx="8" cy="30" r="5" fill="#00ff88" opacity="0.95" filter="url(#glow-s)"/>
+  <text x="8" y="24" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+  <text x="26" y="26" fill="#f5c842" font-size="7.5" letter-spacing="0.5">07_GOVERNANCE_GATE_V2</text>
+  <text x="26" y="36" fill="#3a6070" font-size="7">GovernanceGateV2 → APPROVED (Class A — no exception token required)</text>
+
+  <!-- Step 08 - gate base -->
+  <circle cx="8" cy="58" r="5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+  <text x="8" y="52" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+  <text x="26" y="54" fill="#f5c842" font-size="7.5" letter-spacing="0.5">08_GOVERNANCE_GATE</text>
+  <text x="26" y="64" fill="#3a6070" font-size="7">GovernanceGate → CONFIRMED — all 23 constitutional rules pass</text>
+
+  <!-- Step 09 - patch -->
+  <circle cx="8" cy="86" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+  <text x="8" y="80" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+  <text x="26" y="82" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">09_PATCH_APPLY</text>
+  <text x="26" y="92" fill="#3a6070" font-size="7">ASTDiffPatch applied atomically — replay_verifier: 0 divergences</text>
+
+  <!-- Step 10 - capability -->
+  <circle cx="8" cy="114" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+  <text x="8" y="108" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+  <text x="26" y="110" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">10_CAPABILITY_UPDATE</text>
+  <text x="26" y="120" fill="#3a6070" font-size="7">CapabilityGraph → target version bumped, CapabilityChange written to ledger</text>
+
+  <!-- Step 11 - evidence -->
+  <circle cx="8" cy="142" r="4.5" fill="#00ff88" opacity="0.9" filter="url(#glow-s)"/>
+  <text x="8" y="136" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+  <text x="26" y="138" fill="#00d4ff" font-size="7.5" letter-spacing="0.5">11_EPOCH_EVIDENCE</text>
+  <text x="26" y="148" fill="#3a6070" font-size="7">EpochEvidence → SHA-256 hash-chained into evolution ledger</text>
+
+  <!-- Step 12 - human -->
+  <circle cx="8" cy="170" r="5.5" fill="#00ff88" opacity="1" filter="url(#glow-m)">
+    <animate attributeName="r" values="5;7;5" dur="2.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0.5;1" dur="2.5s" repeatCount="indefinite"/>
+  </circle>
+  <text x="8" y="164" fill="#00ff88" font-size="8" text-anchor="middle">✓</text>
+  <text x="26" y="166" fill="#00ff88" font-size="7.5" letter-spacing="0.5" font-weight="bold">12_HUMAN_OVERSIGHT</text>
+  <text x="26" y="176" fill="#3a6070" font-size="7">Full audit trail reviewed in Aponi — acknowledgement hash committed</text>
+</g>
+
+<!-- ════ BOTTOM PROOF STRIP ════ -->
+<line x1="44" y1="440" x2="1156" y2="440" stroke="#00d4ff" stroke-width="0.5" opacity="0.18"/>
+<g text-anchor="middle" font-family="'Courier New',monospace">
+  <!-- Proof badges -->
+  <rect x="50" y="448" width="148" height="20" rx="2" fill="#0a0810" stroke="#ff4466" stroke-width="0.6" stroke-opacity="0.7"/>
+  <text x="124" y="462" fill="#ff4466" font-size="7" letter-spacing="1.5">REPLAY DIV : 0</text>
+
+  <rect x="208" y="448" width="164" height="20" rx="2" fill="#0a0810" stroke="#f5c842" stroke-width="0.6" stroke-opacity="0.7"/>
+  <text x="290" y="462" fill="#f5c842" font-size="7" letter-spacing="1.5">GOV BYPASSES : 0</text>
+
+  <rect x="382" y="448" width="174" height="20" rx="2" fill="#0a0810" stroke="#00d4ff" stroke-width="0.6" stroke-opacity="0.7"/>
+  <text x="469" y="462" fill="#00d4ff" font-size="7" letter-spacing="1.5">RETROACTIVE : FALSE</text>
+
+  <rect x="566" y="448" width="156" height="20" rx="2" fill="#0a0810" stroke="#00ff88" stroke-width="0.6" stroke-opacity="0.7"/>
+  <text x="644" y="462" fill="#00ff88" font-size="7" letter-spacing="1.5">SILENT FAIL : 0</text>
+
+  <rect x="732" y="448" width="200" height="20" rx="2" fill="#0a0810" stroke="#00d4ff" stroke-width="0.6" stroke-opacity="0.5"/>
+  <text x="832" y="462" fill="#4a7a99" font-size="7" letter-spacing="1.5">SHA-256 HASH-CHAINED</text>
+
+  <rect x="942" y="448" width="210" height="20" rx="2" fill="#0a0810" stroke="#f5c842" stroke-width="0.6" stroke-opacity="0.5"/>
+  <text x="1047" y="462" fill="#6a5020" font-size="7" letter-spacing="1.5">artifacts/governance/phase65/</text>
+</g>
+
+<!-- Constitutional invariants enforced line -->
+<text x="600" y="472" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#2a4858" letter-spacing="2.5">MUTATION-TARGET  ·  AUDIT-0  ·  REPLAY-0  ·  CEL-ORDER-0  ·  CEL-EVIDENCE-0  ·  SANDBOX-DIV-0  ·  GATE-V2-EXISTING-0</text>
+
+</svg>

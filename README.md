@@ -360,6 +360,11 @@ CRYOVANT_DEV_MODE=1 ADAAD_ENV=dev python app/main.py --host 0.0.0.0 --port 8000
 
 ## ⛓ Phase 65 — First Autonomous Self-Evolution
 
+<div align="center">
+<img src="docs/assets/adaad-phase65-banner.svg" width="100%" alt="Phase 65 — First Autonomous Self-Evolution"/>
+</div>
+
+
 *On March 13, 2026, ADAAD produced its first fully governed autonomous self-improvement cycle. Zero human intervention in the execution path. Full human oversight of the constitutional framework. Every step cryptographically evidenced and deterministically replayable.*
 
 ```json
