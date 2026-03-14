@@ -22,6 +22,7 @@ from runtime.tools.execution_contract import (
     lint_check_request,
     test_check_request,
 )
+from adaad.orchestrator.remediation import format_blocked_state, gate_id_for_tier0_check
 
 
 TEST_MODE_ENV_VARS = ("ADAAD_TEST_MODE", "PYTEST_CURRENT_TEST")
@@ -129,6 +130,16 @@ def _print_summary(results: list[CheckResult]) -> None:
 
     if blocked:
         print("[ADAAD BLOCKED] one or more Tier 0 gates are incomplete/blocked.")
+        for item in sorted(blocked, key=lambda r: r.name):
+            gate_id = gate_id_for_tier0_check(item.name)
+            print(
+                format_blocked_state(
+                    status="[ADAAD BLOCKED]",
+                    gate_id=gate_id,
+                    failure_detail=item.detail,
+                    action_required="Fix the failing Tier 0 gate and rerun scripts/run_tier0_preflight.py.",
+                )
+            )
     elif skipped:
         print("Tier 0 diagnostic complete (not full green: checks were skipped).")
     else:
@@ -187,7 +198,14 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.no_tests and not args.check_only:
-        print("[ADAAD BLOCKED] --no-tests is restricted to diagnostic mode; rerun with --check-only.")
+        print(
+            format_blocked_state(
+                status="[ADAAD BLOCKED]",
+                gate_id="TIER0_FAST_CONFIDENCE_TESTS",
+                failure_detail="--no-tests is restricted to diagnostic mode; rerun with --check-only.",
+                action_required="Rerun scripts/run_tier0_preflight.py without --no-tests, or pair --no-tests with --check-only.",
+            )
+        )
         return 2
 
     checks = build_checks(include_tests=not args.no_tests)
@@ -196,9 +214,14 @@ def main() -> int:
         missing_test_extras = _missing_test_extras()
         if missing_test_extras:
             print(
-                "[ADAAD BLOCKED] missing test-mode extras: "
-                + ", ".join(missing_test_extras)
-                + ". Install requirements.dev.txt before running Tier 0 in test mode."
+                format_blocked_state(
+                    status="[ADAAD BLOCKED]",
+                    gate_id="TIER0_FAST_CONFIDENCE_TESTS",
+                    failure_detail="missing test-mode extras: "
+                    + ", ".join(missing_test_extras)
+                    + ". Install requirements.dev.txt before running Tier 0 in test mode.",
+                    action_required="Install requirements.dev.txt extras and rerun scripts/run_tier0_preflight.py.",
+                )
             )
             return 2
     results = [_run_check(check, check_only=args.check_only) for check in checks]

@@ -196,3 +196,19 @@ Run the guard before committing:
 ```bash
 python scripts/check_replay_keyring_secrets.py
 ```
+
+## Troubleshooting matrix keyed by blocked-state gate ID
+
+When a blocked state (`[ADAAD BLOCKED]`, `[ADAAD WAITING]`, `[DEVADAAD MERGE-BLOCKED]`) is emitted, use the gate ID in the remediation payload and run the exact command below.
+
+| Gate ID | Minimal reproducible command | Expected pass condition | Next allowed action |
+|---|---|---|---|
+| `TIER0_SCHEMA_VALIDATION` | `python scripts/validate_governance_schemas.py` | exit code `0`; output includes `governance_schema_validation:ok` | Correct schema payloads and re-run Tier 0 baseline. |
+| `TIER0_ARCHITECTURE_SNAPSHOT` | `python scripts/validate_architecture_snapshot.py` | exit code `0`; output includes `architecture snapshot metadata OK` | Regenerate/fix architecture snapshot artifacts and re-run Tier 0 baseline. |
+| `TIER0_DETERMINISM_LINT` | `python tools/lint_determinism.py runtime/ security/ adaad/orchestrator/ app/main.py` | exit code `0`; no determinism violations | Remove nondeterminism and re-run Tier 0. |
+| `TIER0_IMPORT_BOUNDARY_LINT` | `python tools/lint_import_paths.py` | exit code `0`; no boundary violations | Repair import boundaries and re-run Tier 0. |
+| `TIER0_FAST_CONFIDENCE_TESTS` | `PYTHONPATH=. pytest tests/determinism/ tests/recovery/test_tier_manager.py -k "not shared_epoch_parallel_validation_is_deterministic_in_strict_mode" -q` | exit code `0`; zero failed tests | Fix deterministic confidence failures and re-run Tier 0. |
+| `TIER1_FULL_TEST_SUITE` | `PYTHONPATH=. pytest tests/ -q` | exit code `0`; full suite green | Fix failing tests, then re-run Tier 1. |
+| `TIERM_WORKING_CODE_ASSERTION` | `PYTHONPATH=. pytest tests/ -q` | merge SHA run is fully green with zero failures and zero skips in scope | Re-run full Tier 0–3 + Tier M on merge SHA before merge. |
+
+Probable root causes are emitted as a deterministic list in the blocked remediation JSON payload (`probable_root_causes`).
