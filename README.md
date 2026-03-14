@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Device-Anchored Adaptive Development"/>
+<img src="docs/assets/adaad-hero.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD — Autonomous Device-Anchored Adaptive Development"/>
 
 <br/>
 
@@ -16,9 +16,13 @@
 
 </div>
 
+> [!NOTE]
+> **Docs image styling convention (GitHub-safe):** Non-essential decorative artwork (hero images, section dividers, cards, banners) should use inline low-weight styling with `style="opacity:0.72; box-shadow:none;"` so visuals stay present but subdued.
+> **Exception:** Core technical diagrams that carry architectural or operational meaning should remain at normal clarity (no low-weight style) for readability.
+
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 <br/>
 
@@ -30,11 +34,11 @@
 
 <br/>
 
-<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats"/>
+<img src="docs/assets/adaad-stats-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Stats"/>
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Why This Exists
 
@@ -49,7 +53,7 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## ADAAD vs. Everything Else
 
@@ -128,7 +132,7 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Live System Status
 
@@ -151,7 +155,7 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Architecture
 
@@ -169,7 +173,7 @@ Three LLM-backed agents — **Architect**, **Dream**, **Beast** — compete for 
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## The Constitutional Evolution Loop
 
@@ -206,11 +210,11 @@ SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitnes
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Three Competing Mutation Agents
 
-<img src="docs/assets/adaad-agents-card.svg" width="100%" alt="ADAAD Agent Competition"/>
+<img src="docs/assets/adaad-agents-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Agent Competition"/>
 
 <br/>
 
@@ -218,7 +222,7 @@ All three compete via **UCB1 multi-armed bandit** — switches to Thompson Sampl
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## The 23 Constitutional Rules
 
@@ -279,7 +283,7 @@ A single blocking violation discards the entire proposal and halts the epoch. No
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## 8 Permanent Architectural Invariants
 
@@ -320,7 +324,7 @@ CEL-ORDER-0:     All 14 CEL steps in strict declared sequence.
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Fitness Engine — 7 Signals
 
@@ -355,7 +359,7 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Mutation Tier System
 
@@ -367,7 +371,7 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Federation — Cross-Repo Governed Evolution
 
@@ -394,7 +398,7 @@ EvolutionLedger                                        EvolutionLedger
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## The Aponi Dashboard
 
@@ -424,11 +428,11 @@ PYTHONPATH=. python -m ui.aponi --port 8080
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## ⛓ Phase 65 — First Autonomous Self-Evolution
 
-<img src="docs/assets/adaad-phase65-banner.svg" width="100%" alt="Phase 65 — First Autonomous Self-Evolution"/>
+<img src="docs/assets/adaad-phase65-banner.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Phase 65 — First Autonomous Self-Evolution"/>
 
 <br/>
 
@@ -479,7 +483,7 @@ PYTHONPATH=. python -m ui.aponi --port 8080
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Quick Start
 
@@ -541,7 +545,7 @@ PYTHONPATH=. python -m ui.aponi \
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## DEVADAAD — The Governed Build Agent
 
@@ -562,7 +566,7 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Phase Timeline — 66 Phases Complete
 
@@ -597,7 +601,7 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Codebase at a Glance
 
@@ -622,7 +626,7 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Governance Authority Chain
 
@@ -649,7 +653,7 @@ docs/CONSTITUTION.md                         ← 23 rules · v0.9.0
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Project Structure
 
@@ -678,7 +682,7 @@ ADAAD/
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## FAQ
 
@@ -714,7 +718,7 @@ Both are trigger tokens for the governed build agent in <code>AGENTS.md</code>. 
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## What ADAAD Is Not
 
@@ -729,7 +733,7 @@ Both are trigger tokens for the governed build agent in <code>AGENTS.md</code>. 
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## License & Trademarks
 
@@ -741,7 +745,7 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 
 <br/>
 
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 <div align="center">
 
