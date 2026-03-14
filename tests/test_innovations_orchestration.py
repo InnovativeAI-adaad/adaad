@@ -24,6 +24,8 @@ from typing import Any, Dict, List
 from unittest.mock import patch
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from runtime.capability.capability_registry import CapabilityRegistry
 from runtime.capability.seed_registry_adapter import (
@@ -123,6 +125,51 @@ class TestSeedRegistryAdapter:
         """T68-SEED-08: capability_id follows seed.<lane>.<seed_id> pattern."""
         node = seed_to_capability_node(_seed("my-seed", lane="performance"))
         assert node.capability_id == "seed.performance.my-seed"
+
+
+class TestSeedRegistrationEndpoint:
+    """T68-SEED-API-01..02"""
+
+    @staticmethod
+    def _client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+        token = "innovations-seed-token"
+        monkeypatch.setenv("ADAAD_AUDIT_TOKENS", token)
+        app = FastAPI()
+        app.include_router(router)
+        return TestClient(app, raise_server_exceptions=True)
+
+    def test_register_seeds_omitted_body_defaults_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """T68-SEED-API-01: omitted JSON body preserves empty-submission behavior."""
+        client = self._client(monkeypatch)
+
+        response = client.post(
+            "/innovations/seeds/register",
+            headers={"Authorization": "Bearer innovations-seed-token"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["submitted"] == 0
+        assert payload["registered"] == 0
+        assert payload["results"] == []
+        assert payload["parse_errors"] == []
+
+    def test_register_seeds_explicit_empty_body_defaults_empty(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """T68-SEED-API-02: explicit empty list preserves empty-submission behavior."""
+        client = self._client(monkeypatch)
+
+        response = client.post(
+            "/innovations/seeds/register",
+            json=[],
+            headers={"Authorization": "Bearer innovations-seed-token"},
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["submitted"] == 0
+        assert payload["registered"] == 0
+        assert payload["results"] == []
+        assert payload["parse_errors"] == []
 
 
 # ---------------------------------------------------------------------------

@@ -171,7 +171,7 @@ def federation_map(
 
 @router.post("/seeds/register")
 def register_seeds(
-    seeds: List[Dict[str, Any]] = Body(default=[]),
+    seeds: List[Dict[str, Any]] | None = Body(default=None),
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
     """Register Capability Seeds in the lineage ledger.
@@ -185,6 +185,7 @@ def register_seeds(
         "author": "...", "lane": "governance"}]
     """
     _require_audit_read(authorization)
+    seeds = seeds or []
     seed_objects: List[CapabilitySeed] = []
     parse_errors: List[Dict[str, Any]] = []
 
