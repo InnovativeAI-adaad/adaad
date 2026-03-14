@@ -1145,8 +1145,8 @@
     const AGENT_DATA = [
       {
         id: "architect",
-        img: "agent_architect.png",
-        noahImg: "agent_noah.png",
+        img: "/docs/assets/readme/agent_architect.svg",
+        noahImg: "/docs/assets/readme/agent_architect.svg",
         color: "#ffd700",
         philosophy: "minimalist",
         description: "The constitutional guardian. Architect enforces governance law with precision, bearing the Law-Book of invariants and the Justice Emblem. Every epoch begins with her approval.",
@@ -1155,7 +1155,7 @@
       },
       {
         id: "dream",
-        img: "agent_dream.png",
+        img: "/docs/assets/readme/agent_dream.svg",
         color: "#b388ff",
         philosophy: "exploratory",
         description: "Vision made manifest. Dream navigates the possibility space with Galaxy Eyes that see 200 epochs ahead, guided by the Dream Orb that pulses with future capability paths.",
@@ -1164,7 +1164,7 @@
       },
       {
         id: "beast",
-        img: "agent_beast.png",
+        img: "/docs/assets/readme/agent_beast.svg",
         color: "#00e5ff",
         philosophy: "aggressive",
         description: "Raw evolutionary pressure. Beast drives mutation velocity to the constitutional edge — Mutation Spines crackling with entropy, Faceplate locked on fitness regression targets.",
@@ -1276,7 +1276,7 @@
 
     // ── Trio banner ───────────────────────────────────────────────────
     const banner = h("div", {class: "roster-trio-banner"});
-    const bannerImg = h("img", {class: "trio-banner-img img-low-weight", src: "agent_trio.png", alt: "ADAAD Agents"});
+    const bannerImg = h("img", {class: "trio-banner-img img-low-weight", src: "/docs/assets/readme/agent_trio.svg", alt: "ADAAD Agents"});
     bannerImg.onerror = () => { banner.style.display = "none"; };
     banner.appendChild(bannerImg);
     const overlay = h("div", {class: "trio-banner-overlay"});
@@ -1639,7 +1639,7 @@
         portrait.style.cssText = "width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0;";
         badge.insertBefore(portrait, badge.firstChild);
       }
-      const imgMap = { architect: "agent_architect.png", dream: "agent_dream.png", beast: "agent_beast.png" };
+      const imgMap = { architect: "/docs/assets/readme/agent_architect.svg", dream: "/docs/assets/readme/agent_dream.svg", beast: "/docs/assets/readme/agent_beast.svg" };
       portrait.src = imgMap[f.agent_id] || "";
       portrait.onerror = () => { portrait.style.display = "none"; };
 
