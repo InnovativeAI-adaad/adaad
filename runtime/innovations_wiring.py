@@ -161,9 +161,15 @@ def run_self_reflection(
 
     Writes result into state["reflection_report"].  Fail-safe (CEL-WIRE-FAIL-0).
     """
-    if epoch_seq % cadence != 0:
-        return None
     try:
+        if cadence <= 0:
+            logger.warning(
+                "innovations_wiring: self_reflect invalid cadence=%s; skipping",
+                cadence,
+            )
+            return None
+        if epoch_seq % cadence != 0:
+            return None
         agent_scores: Dict[str, float] = state.get("agent_scores", {})
         # Derive agent scores from fitness_summary if agent_scores not explicit
         if not agent_scores:

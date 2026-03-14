@@ -263,6 +263,22 @@ class TestSelfReflection:
         assert report is not None
         assert "rebalance" in report.rebalance_hint
 
+
+    def test_invalid_zero_cadence_is_fail_safe(self) -> None:
+        """T67-REF-06: cadence=0 is fail-safe and returns None."""
+        engine = _engine()
+        state: Dict[str, Any] = {}
+        result = run_self_reflection(engine, "e-1", epoch_seq=1, state=state, cadence=0)
+        assert result is None
+        assert "reflection_report" not in state
+
+    def test_invalid_negative_cadence_is_fail_safe(self) -> None:
+        """T67-REF-07: negative cadence is fail-safe and returns None."""
+        engine = _engine()
+        state: Dict[str, Any] = {}
+        result = run_self_reflection(engine, "e-1", epoch_seq=1, state=state, cadence=-5)
+        assert result is None
+        assert "reflection_report" not in state
     def test_agent_scores_derived_from_fitness_summary(self) -> None:
         """T67-REF-05: agent scores inferred from fitness_summary when agent_scores absent."""
         engine = _engine()
