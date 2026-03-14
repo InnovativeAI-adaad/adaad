@@ -37,6 +37,7 @@ from runtime.innovations import ADAADInnovationEngine, CapabilitySeed
 from runtime.oracle_ledger import OracleLedger
 from runtime.seed_promotion import SeedPromotionQueue, get_promotion_queue
 from runtime.seed_review import ReviewAuthorityError, SeedNotFoundError, record_review
+from runtime.seed_proposal_bridge import SeedNotApprovedError, build_proposal_request
 from runtime.personality_profiles import PersonalityProfileStore
 from runtime.audit_auth import require_audit_read_scope, require_audit_write_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
@@ -414,6 +415,58 @@ def review_promoted_seed(
         "seed_id": seed_id,
         "decision": decision,
         "queue_depth": len(_promotion_queue),
+    }
+
+
+@router.post("/seeds/promoted/{seed_id}/propose")
+def generate_seed_proposal(
+    seed_id: str,
+    body: Dict[str, Any] = Body(default_factory=dict),
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """Generate a ProposalRequest from an approved seed (Phase 74).
+
+    SEED-REVIEW-AUTH-0: requires audit:write bearer token scope.
+    SEED-PROP-0:        seed must have status='approved' in promotion queue.
+    SEED-PROP-HUMAN-0:  returned ProposalRequest is advisory only — no mutation
+                        is applied without GovernanceGate + HUMAN-0.
+    SEED-PROP-LEDGER-0: SeedProposalEvent written to lineage ledger before return.
+    SEED-PROP-BUS-0:    seed_proposal_generated bus frame emitted after ledger write.
+
+    Request body (optional)::
+
+        { "epoch_id": "ep-156" }
+
+    Returns the ProposalRequest fields (cycle_id, strategy_id, context) and an
+    advisory notice confirming no mutation is applied automatically.
+    """
+    _require_audit_write(authorization)
+
+    epoch_id = str(body.get("epoch_id", "")).strip()
+
+    try:
+        request = build_proposal_request(
+            seed_id, epoch_id=epoch_id, queue=_promotion_queue
+        )
+    except KeyError:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=404, detail=f"seed_id {seed_id!r} not in promotion queue")
+    except SeedNotApprovedError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=422, detail=str(exc))
+    except RuntimeError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return {
+        "seed_id":      seed_id,
+        "cycle_id":     request.cycle_id,
+        "strategy_id":  request.strategy_id,
+        "context":      dict(request.context),
+        "advisory_notice": (
+            "SEED-PROP-HUMAN-0: this ProposalRequest is advisory only. "
+            "No mutation is applied without GovernanceGate approval and human sign-off."
+        ),
     }
 
 

@@ -662,6 +662,19 @@
     }
     .inno-toast.seed-rejected .inno-toast-title { color: #ff6b6b; }
 
+    /* ── Phase 74: Seed Proposal ──────────────────────────────────── */
+    .promo-btn.propose {
+      color: rgba(180,140,255,0.9); border-color: rgba(180,140,255,0.3);
+    }
+    .promo-btn.propose:hover {
+      background: rgba(180,140,255,0.08); box-shadow: 0 0 12px rgba(180,140,255,0.1);
+    }
+    .inno-toast.seed-proposal {
+      border-left: 3px solid rgba(180,140,255,0.8);
+      box-shadow: 0 4px 24px rgba(180,140,255,0.1);
+    }
+    .inno-toast.seed-proposal .inno-toast-title { color: rgba(200,170,255,0.95); }
+
     /* ── Reflection banner ────────────────────────────────────────── */
     .reflect-banner {
       border-radius: 12px; padding: 14px 18px;
@@ -712,6 +725,7 @@
     personalityLoaded: false,
     promotionQueue: {},         // Phase 73 — seed_id → {status, operator_id}
     graduatedSeeds: {},         // Phase 72 — seed_id → {expansion_score, epoch_id, lane}
+    seedProposals: {},          // Phase 74 — seed_id → {cycle_id, strategy_id}
   };
 
   const VEC_LABELS = ["intent", "explore", "risk", "speed"];
@@ -1294,16 +1308,43 @@
             const actions = h("div", {class: "promo-actions"});
             const approveBtn = h("button", {class: "promo-btn approve"}, "✅ Approve");
             const rejectBtn  = h("button", {class: "promo-btn reject"},  "🚫 Reject");
-
             approveBtn.addEventListener("click", async () => {
-              await submitReview(entry.seed_id, "approved", row, statusBadge);
+              await submitReview(entry.seed_id, "approved", row, statusBadge, actions);
             });
             rejectBtn.addEventListener("click", async () => {
-              await submitReview(entry.seed_id, "rejected", row, statusBadge);
+              await submitReview(entry.seed_id, "rejected", row, statusBadge, actions);
             });
             actions.appendChild(approveBtn);
             actions.appendChild(rejectBtn);
             row.appendChild(actions);
+          } else if (currentStatus === "approved") {
+            // Phase 74: show Generate Proposal button for approved seeds
+            const alreadyProposed = innState.seedProposals && innState.seedProposals[entry.seed_id];
+            const propActions = h("div", {class: "promo-actions"});
+            const propBtn = h("button", {class: "promo-btn propose"});
+            propBtn.textContent = alreadyProposed ? "📋 Proposed" : "📋 Propose";
+            if (alreadyProposed) propBtn.disabled = true;
+            propBtn.addEventListener("click", async () => {
+              propBtn.textContent = "…";
+              propBtn.disabled = true;
+              try {
+                const resp = await apiFetch(
+                  `/innovations/seeds/promoted/${encodeURIComponent(entry.seed_id)}/propose`,
+                  { method: "POST", body: JSON.stringify({ epoch_id: "" }) }
+                );
+                propBtn.textContent = "📋 Proposed";
+                if (!innState.seedProposals) innState.seedProposals = {};
+                innState.seedProposals[entry.seed_id] = {
+                  cycle_id: resp.cycle_id,
+                  strategy_id: resp.strategy_id,
+                };
+              } catch(_) {
+                propBtn.textContent = "📋 Propose";
+                propBtn.disabled = false;
+              }
+            });
+            propActions.appendChild(propBtn);
+            row.appendChild(propActions);
           }
           promoList.appendChild(row);
         });
@@ -1313,8 +1354,8 @@
       }
     })();
 
-    async function submitReview(seedId, status, rowEl, badgeEl) {
-      const opId = "operator";  // In production: prompt or session operator id
+    async function submitReview(seedId, status, rowEl, badgeEl, actionsEl) {
+      const opId = "operator";
       try {
         await apiFetch(`/innovations/seeds/promoted/${encodeURIComponent(seedId)}/review`, {
           method: "POST",
@@ -1325,6 +1366,22 @@
         badgeEl.textContent = status;
         if (!innState.promotionQueue) innState.promotionQueue = {};
         innState.promotionQueue[seedId] = { status, operator_id: opId };
+        // Replace approve/reject with propose button if approved
+        if (status === "approved" && actionsEl) {
+          actionsEl.innerHTML = "";
+          const propBtn = h("button", {class: "promo-btn propose"}, "📋 Propose");
+          propBtn.addEventListener("click", async () => {
+            propBtn.textContent = "…"; propBtn.disabled = true;
+            try {
+              await apiFetch(
+                `/innovations/seeds/promoted/${encodeURIComponent(seedId)}/propose`,
+                { method: "POST", body: JSON.stringify({ epoch_id: "" }) }
+              );
+              propBtn.textContent = "📋 Proposed";
+            } catch(_) { propBtn.textContent = "📋 Propose"; propBtn.disabled = false; }
+          });
+          actionsEl.appendChild(propBtn);
+        }
       } catch(e) {
         badgeEl.textContent = "error";
       }
@@ -1854,9 +1911,10 @@
         case "reflection":    this._onReflection(frame); break;
         case "seed_planted":  this._onSeed(frame);             break;
         case "seed_graduated": this._onSeedGraduated(frame);   break;
-        case "seed_promotion_approved": this._onSeedReview(frame, true);  break;
-        case "seed_promotion_rejected": this._onSeedReview(frame, false); break;
-        case "gplugin":       this._onGPlugin(frame);          break;
+        case "seed_promotion_approved": this._onSeedReview(frame, true);         break;
+        case "seed_promotion_rejected": this._onSeedReview(frame, false);        break;
+        case "seed_proposal_generated": this._onSeedProposal(frame);             break;
+        case "gplugin":       this._onGPlugin(frame);                            break;
       }
     },
 
@@ -1980,7 +2038,6 @@
     },
 
     _onSeedReview(f, approved) {
-      // Phase 73 — promotion review decision toast
       const icon  = approved ? "✅" : "🚫";
       const verb  = approved ? "Approved" : "Rejected";
       const cls   = approved ? "seed-approved" : "seed-rejected";
@@ -1988,7 +2045,6 @@
         `Seed ${verb}  ·  ${f.seed_id}`,
         `operator: ${f.operator_id || "—"}  ·  epoch: ${f.epoch_id || "—"}`
       );
-      // Update promoted queue display if panel visible
       if (!innState.promotionQueue) innState.promotionQueue = {};
       innState.promotionQueue[f.seed_id] = {
         status: approved ? "approved" : "rejected",
@@ -1996,13 +2052,40 @@
       };
       const qList = document.querySelector(".promo-queue-list");
       if (qList) {
-        const rows = qList.querySelectorAll(".promo-row");
-        rows.forEach(row => {
+        qList.querySelectorAll(".promo-row").forEach(row => {
           if (row.dataset.seedId === f.seed_id) {
             row.classList.remove("pending");
             row.classList.add(approved ? "promo-approved" : "promo-rejected");
             const badge = row.querySelector(".promo-status-badge");
             if (badge) badge.textContent = verb;
+          }
+        });
+      }
+    },
+
+    _onSeedProposal(f) {
+      // Phase 74 — proposal generated toast
+      this._toast("seed-proposal", "📋",
+        `Proposal Generated  ·  ${f.seed_id}`,
+        `strategy: ${f.strategy_id}\ncycle: ${f.cycle_id || "—"}  ·  ritual: seed_to_proposal`
+      );
+      if (!innState.seedProposals) innState.seedProposals = {};
+      innState.seedProposals[f.seed_id] = {
+        cycle_id: f.cycle_id,
+        strategy_id: f.strategy_id,
+        epoch_id: f.epoch_id,
+      };
+      // Update propose button in promo queue row
+      const qList = document.querySelector(".promo-queue-list");
+      if (qList) {
+        qList.querySelectorAll(".promo-row").forEach(row => {
+          if (row.dataset.seedId === f.seed_id) {
+            const propBtn = row.querySelector(".promo-btn.propose");
+            if (propBtn) {
+              propBtn.textContent = "📋 Proposed";
+              propBtn.disabled = true;
+              propBtn.style.opacity = "0.5";
+            }
           }
         });
       }
