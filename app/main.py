@@ -74,6 +74,7 @@ from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
 from adaad.orchestrator.status import build_status_report, render_human_table, report_as_json
 from runtime.preflight import validate_agent_contract_preflight
+from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
 from security import cryovant
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
@@ -116,6 +117,13 @@ def _apply_governance_ci_mode_defaults() -> None:
     os.environ.setdefault("ADAAD_RESOURCE_MEMORY_MB", "2048")
     os.environ.setdefault("ADAAD_RESOURCE_CPU_SECONDS", "30")
     os.environ.setdefault("ADAAD_RESOURCE_WALL_SECONDS", "60")
+
+
+def _replay_env_flags() -> Dict[str, str]:
+    keys = [key for key in os.environ if key.startswith("ADAAD_") or key.startswith("CRYOVANT_")]
+    if "PYTHONPATH" in os.environ:
+        keys.append("PYTHONPATH")
+    return {key: os.environ.get(key, "") for key in sorted(set(keys))}
 
 
 class Orchestrator:
@@ -394,8 +402,35 @@ class Orchestrator:
                 payload={"error": str(exc), "mode": outcome["mode"], "target": outcome.get("target")},
                 level="WARN",
             )
+        if has_divergence:
+            replay_command = f"python -m app.main --verify-replay --replay {mode.value}"
+            if self.replay_epoch:
+                replay_command += f" --replay-epoch {self.replay_epoch}"
+            try:
+                bundle = build_replay_divergence_artifacts(
+                    preflight=preflight,
+                    replay_command=replay_command,
+                    replay_env_flags=_replay_env_flags(),
+                    ledger=self.evolution_runtime.ledger,
+                    artifacts_root=APP_ROOT.parent / "security" / "replay_artifacts",
+                )
+                outcome["divergence_artifacts"] = {
+                    "artifact_dir": bundle.artifact_dir,
+                    "machine_report": bundle.machine_report_path,
+                    "human_report": bundle.human_report_path,
+                }
+                self._v("Replay divergence artifacts:")
+                self._v(f"  Dir: {bundle.artifact_dir}")
+                self._v(f"  JSON: {bundle.machine_report_path}")
+                self._v(f"  MD: {bundle.human_report_path}")
+            except Exception as exc:
+                metrics.log(
+                    event_type="replay_divergence_artifact_failed",
+                    payload={"error": str(exc), "mode": outcome["mode"], "target": outcome.get("target")},
+                    level="WARN",
+                )
         if has_divergence and mode.fail_closed:
-            self._fail("replay_divergence")
+            self._fail("replay_divergence", payload={"artifacts": outcome.get("divergence_artifacts") or {}})
         self._v("Replay Summary:")
         self._v(f"  Mode: {mode.value}")
         self._v(f"  Target: {preflight.get('verify_target')}")
