@@ -416,6 +416,7 @@
     <div id="kbdHelpBox">
       <h3>Keyboard Shortcuts</h3>
       <div class="kbd-row"><kbd>1</kbd>–<kbd>6</kbd><span class="kbd-desc">Switch tabs (Overview → Logs)</span></div>
+      <div class="kbd-row"><kbd>7</kbd><span class="kbd-desc">Innovations panel (Oracle, Story Mode, Galaxy, Seeds)</span></div>
       <div class="kbd-row"><kbd>R</kbd><span class="kbd-desc">Refresh all data now</span></div>
       <div class="kbd-row"><kbd>/</kbd><span class="kbd-desc">Focus log filter (Logs tab)</span></div>
       <div class="kbd-row"><kbd>?</kbd><span class="kbd-desc">Toggle this help overlay</span></div>
@@ -457,6 +458,7 @@
       <div class="tab" data-tab="governance" role="tab">Governance</div>
       <div class="tab" data-tab="memory" role="tab">Memory</div>
       <div class="tab" data-tab="logs" role="tab">Logs</div>
+      <div class="tab" data-tab="innovations" role="tab" style="color:rgba(0,229,255,0.75);position:relative;">✦ Innovations</div>
     </div>
 
     <div id="view"></div>
@@ -837,6 +839,11 @@
     if (state.tab === "governance") v.appendChild(viewGovernance());
     if (state.tab === "memory") v.appendChild(viewMemory());
     if (state.tab === "logs") v.appendChild(viewLogs());
+    if (state.tab === "innovations" && window._innovationsPanel) {
+      // Expose state for innovations panel API calls
+      window._adaadState = { baseUrl: state.baseUrl };
+      v.appendChild(window._innovationsPanel.view());
+    }
   }
 
   function viewOverview(){
@@ -1574,5 +1581,6 @@
   setInterval(tickClock, 500);
 })();
 </script>
+<script src="innovations_panel.js"></script>
 </body>
 </html>
