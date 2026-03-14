@@ -247,7 +247,34 @@ class OrchestratorReplayModeTest(unittest.TestCase):
                 "results": [{"baseline_epoch": "epoch-1", "expected_digest": "a", "actual_digest": "b", "decision": "diverge", "passed": False}],
             })
             orch.boot()
-            fail.assert_called_once_with("replay_divergence")
+            fail.assert_called_once()
+            self.assertEqual(fail.call_args.args[0], "replay_divergence")
+            self.assertIn("artifacts", fail.call_args.kwargs.get("payload", {}))
+
+    @mock.patch("app.main.build_replay_divergence_artifacts")
+    @mock.patch.object(Orchestrator, "_fail")
+    def test_replay_strict_records_divergence_artifact_paths(self, fail: mock.Mock, build_artifacts: mock.Mock) -> None:
+        build_artifacts.return_value = mock.Mock(
+            artifact_dir="security/replay_artifacts/replay_divergence_1",
+            machine_report_path="security/replay_artifacts/replay_divergence_1/replay_divergence_report.json",
+            human_report_path="security/replay_artifacts/replay_divergence_1/replay_divergence_report.md",
+        )
+        with self._boot_context():
+            orch = Orchestrator(replay_mode="strict", replay_epoch="epoch-1")
+            orch.evolution_runtime.replay_preflight = mock.Mock(return_value={
+                "mode": "strict",
+                "verify_target": "single_epoch",
+                "has_divergence": True,
+                "decision": "fail_closed",
+                "results": [{"epoch_id": "epoch-1", "expected_digest": "a", "actual_digest": "b", "decision": "diverge", "passed": False}],
+            })
+            orch.boot()
+
+            build_artifacts.assert_called_once()
+            self.assertEqual(build_artifacts.call_args.kwargs["replay_command"], "python -m app.main --verify-replay --replay strict --replay-epoch epoch-1")
+            fail.assert_called_once()
+            payload = fail.call_args.kwargs.get("payload", {})
+            self.assertEqual(payload["artifacts"]["machine_report"], "security/replay_artifacts/replay_divergence_1/replay_divergence_report.json")
 
     def test_verify_replay_only_exits_after_preflight(self) -> None:
         with self._boot_context() as dump:
