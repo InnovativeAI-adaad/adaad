@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">ADAAD Agent Role Mapping</title>
+  <desc id="desc">Composite visual mapping agent responsibilities to distinct governance, exploration, and execution roles.</desc>
+  <rect width="1200" height="520" rx="20" fill="#0b1020"/>
+  <text x="600" y="62" text-anchor="middle" fill="#f3f4f6" font-size="34" font-family="Segoe UI, Arial, sans-serif">Agent Role Mapping</text>
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#e5e7eb">
+    <rect x="80" y="110" width="1040" height="92" rx="14" fill="#12203a" stroke="#34d399"/>
+    <text x="110" y="152" font-size="26" fill="#34d399">Architect</text>
+    <text x="320" y="152" font-size="20">Governance strategy • Constitutional boundaries • System design review</text>
+
+    <rect x="80" y="220" width="1040" height="92" rx="14" fill="#12203a" stroke="#60a5fa"/>
+    <text x="110" y="262" font-size="26" fill="#60a5fa">Dream</text>
+    <text x="320" y="262" font-size="20">Simulation variants • Scenario ideation • Exploratory mutation candidates</text>
+
+    <rect x="80" y="330" width="1040" height="92" rx="14" fill="#12203a" stroke="#f97316"/>
+    <text x="110" y="372" font-size="26" fill="#f97316">Beast</text>
+    <text x="320" y="372" font-size="20">Implementation pressure-testing • Runtime execution • Delivery hardening</text>
+  </g>
+  <text x="600" y="476" text-anchor="middle" fill="#9ca3af" font-size="18" font-family="Segoe UI, Arial, sans-serif">Selection and promotion still require GovernanceGate approval and deterministic replay integrity.</text>
+</svg>
