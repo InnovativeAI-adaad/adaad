@@ -1,35 +1,72 @@
-<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Traditional AI coding tools create human bottlenecks</title>
-  <desc id="desc">Three disconnected AI suggestions flow into a single overloaded human reviewer, highlighting missing governance, replay proof, and durable memory.</desc>
-  <defs>
-    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#020a18"/>
-      <stop offset="100%" stop-color="#031328"/>
-    </linearGradient>
-  </defs>
-  <rect width="420" height="220" rx="18" fill="url(#bg1)"/>
-  <rect x="1" y="1" width="418" height="218" rx="17" fill="none" stroke="#00d4ff" opacity="0.28"/>
-
-  <text x="24" y="34" fill="#f5c842" font-family="'Courier New',monospace" font-size="14" font-weight="700" letter-spacing="1.1">PANEL 1 · PROBLEM</text>
-  <text x="24" y="56" fill="#c6d8ea" font-family="'Courier New',monospace" font-size="11">Traditional AI coding tools</text>
-
-  <rect x="28" y="76" width="98" height="28" rx="7" fill="#0b2035" stroke="#00d4ff" opacity="0.95"/>
-  <text x="77" y="94" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="10">Suggestion A</text>
-
-  <rect x="28" y="114" width="98" height="28" rx="7" fill="#0f1f29" stroke="#00ff88" opacity="0.95"/>
-  <text x="77" y="132" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="10">Suggestion B</text>
-
-  <rect x="28" y="152" width="98" height="28" rx="7" fill="#221126" stroke="#ff4466" opacity="0.95"/>
-  <text x="77" y="170" text-anchor="middle" fill="#ff9aae" font-family="'Courier New',monospace" font-size="10">Suggestion C</text>
-
-  <path d="M138 90 L212 110" stroke="#6ba8d1" stroke-width="2"/>
-  <path d="M138 128 L212 120" stroke="#6ba8d1" stroke-width="2"/>
-  <path d="M138 166 L212 130" stroke="#6ba8d1" stroke-width="2"/>
-
-  <rect x="220" y="96" width="172" height="64" rx="9" fill="#140f1a" stroke="#f5c842"/>
-  <text x="306" y="118" text-anchor="middle" fill="#ffd96f" font-family="'Courier New',monospace" font-size="11" font-weight="700">Human is last defense</text>
-  <text x="306" y="136" text-anchor="middle" fill="#d8cfc1" font-family="'Courier New',monospace" font-size="9">Manual judgment for every patch</text>
-  <text x="306" y="151" text-anchor="middle" fill="#d8cfc1" font-family="'Courier New',monospace" font-size="9">No invariant gate before apply</text>
-
-  <text x="24" y="198" fill="#9ab0c6" font-family="'Courier New',monospace" font-size="10">No constitutional guardrail · No replay proof · No durable lineage memory</text>
+<svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="s1-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#060d18"/>
+    <stop offset="100%" stop-color="#0a1220"/>
+  </linearGradient>
+  <filter id="s1-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="s1-red"><feGaussianBlur stdDeviation="8"/></filter>
+  <style>
+    @keyframes s1-flash{0%,100%{opacity:.5}50%{opacity:1}}
+    @keyframes s1-overload{0%,100%{stroke-opacity:.3}50%{stroke-opacity:.8}}
+    .s1-warn{animation:s1-flash 1.5s ease-in-out infinite}
+    .s1-line{animation:s1-overload 2s ease-in-out infinite}
+  </style>
+</defs>
+<rect width="500" height="280" fill="url(#s1-bg)" rx="8"/>
+<!-- Red danger glow -->
+<circle cx="250" cy="140" r="80" fill="#ff4466" opacity="0.04" filter="url(#s1-red)"/>
+<!-- Title area -->
+<rect x="0" y="0" width="500" height="42" fill="#0d0118" rx="8"/>
+<rect x="0" y="32" width="500" height="10" fill="#0d0118"/>
+<text x="250" y="18" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#ff4466" letter-spacing="3" opacity="0.9">STATUS QUO</text>
+<text x="250" y="33" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#1e2a3a" letter-spacing="2" opacity="0.8">HUMAN IS THE ONLY SAFETY LAYER</text>
+<!-- Three AI suggestion boxes on left -->
+<g>
+  <rect x="30" y="60" width="110" height="38" rx="4" fill="#0a1825" stroke="#00d4ff" stroke-width="1" opacity="0.7"/>
+  <text x="85" y="77" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#00d4ff" opacity="0.8">AI AGENT 1</text>
+  <text x="85" y="90" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#1a3a50" opacity="0.7">suggestion only</text>
+  <rect x="30" y="116" width="110" height="38" rx="4" fill="#0a1825" stroke="#00d4ff" stroke-width="1" opacity="0.7"/>
+  <text x="85" y="133" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#00d4ff" opacity="0.8">AI AGENT 2</text>
+  <text x="85" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#1a3a50" opacity="0.7">suggestion only</text>
+  <rect x="30" y="172" width="110" height="38" rx="4" fill="#0a1825" stroke="#00d4ff" stroke-width="1" opacity="0.7"/>
+  <text x="85" y="189" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#00d4ff" opacity="0.8">AI AGENT 3</text>
+  <text x="85" y="202" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#1a3a50" opacity="0.7">suggestion only</text>
+</g>
+<!-- Arrows pointing to human -->
+<g stroke="#1e3a50" stroke-width="1.2" fill="none" opacity="0.6">
+  <line x1="140" y1="79" x2="200" y2="135"/>
+  <line x1="140" y1="135" x2="200" y2="140"/>
+  <line x1="140" y1="191" x2="200" y2="145"/>
+  <polygon points="196,130 204,136 196,140" fill="#1e3a50" opacity="0.5"/>
+  <polygon points="196,136 204,141 196,146" fill="#1e3a50" opacity="0.5"/>
+  <polygon points="196,142 204,147 196,151" fill="#1e3a50" opacity="0.5"/>
+</g>
+<!-- Overwhelmed human -->
+<rect x="200" y="110" width="100" height="60" rx="6" fill="#200a0a" stroke="#ff4466" stroke-width="2" opacity="0.9" class="s1-warn"/>
+<text x="250" y="133" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#ff4466" opacity="0.9" class="s1-warn">⚠ HUMAN</text>
+<text x="250" y="147" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#ff4466" opacity="0.8">SOLE REVIEWER</text>
+<text x="250" y="161" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#cc2233" opacity="0.7">bottleneck · failure point</text>
+<!-- Arrow to codebase -->
+<line x1="300" y1="140" x2="355" y2="140" stroke="#ff4466" stroke-width="1.5" opacity="0.5"/>
+<polygon points="350,136 360,140 350,144" fill="#ff4466" opacity="0.5"/>
+<!-- Codebase box -->
+<rect x="355" y="110" width="110" height="60" rx="4" fill="#0d1825" stroke="#1e3a50" stroke-width="1" opacity="0.7"/>
+<text x="410" y="135" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#1e4060" opacity="0.9">CODEBASE</text>
+<text x="410" y="150" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#1a2a3a" opacity="0.7">no trail</text>
+<text x="410" y="163" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#1a2a3a" opacity="0.7">no governance</text>
+<!-- Overload warning lines on human -->
+<g stroke="#ff4466" stroke-width="0.8" class="s1-line">
+  <line x1="200" y1="120" x2="190" y2="120"/>
+  <line x1="200" y1="130" x2="185" y2="130"/>
+  <line x1="200" y1="140" x2="190" y2="140"/>
+  <line x1="200" y1="150" x2="185" y2="150"/>
+  <line x1="200" y1="160" x2="190" y2="160"/>
+</g>
+<!-- Bottom caption -->
+<rect x="0" y="236" width="500" height="44" fill="#0a0010" rx="0"/>
+<rect x="0" y="236" width="500" height="4" fill="#0a0010"/>
+<text x="250" y="258" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#ff4466" opacity="0.7">Every AI tool makes the human the</text>
+<text x="250" y="272" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#ff4466" opacity="0.7">only safety layer. No audit. No rollback.</text>
+<rect width="500" height="280" fill="none" stroke="#1e2a3a" stroke-width="1" rx="8"/>
 </svg>

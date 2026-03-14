@@ -1,36 +1,85 @@
-<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Autonomous evolution is proven by ledger evidence and replay</title>
-  <desc id="desc">A governed mutation completes, its hash is chained into evidence, and reproducible replay confirms autonomous evolution as verifiable fact rather than marketing claim.</desc>
-  <defs>
-    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#020a18"/>
-      <stop offset="100%" stop-color="#031328"/>
-    </linearGradient>
-  </defs>
-  <rect width="420" height="220" rx="18" fill="url(#bg3)"/>
-  <rect x="1" y="1" width="418" height="218" rx="17" fill="none" stroke="#00d4ff" opacity="0.28"/>
-
-  <text x="24" y="34" fill="#f5c842" font-family="'Courier New',monospace" font-size="14" font-weight="700" letter-spacing="1.1">PANEL 3 · PROOF</text>
-  <text x="24" y="56" fill="#c6d8ea" font-family="'Courier New',monospace" font-size="11">Autonomous evolution, evidenced</text>
-
-  <circle cx="78" cy="112" r="34" fill="#0d1f17" stroke="#00ff88" stroke-width="2"/>
-  <text x="78" y="106" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="10" font-weight="700">Epoch</text>
-  <text x="78" y="121" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="10">Applied</text>
-
-  <path d="M114 112 L178 112" stroke="#00ff88" stroke-width="2.4"/>
-  <polygon points="178,112 170,107 170,117" fill="#00ff88"/>
-
-  <rect x="184" y="84" width="110" height="56" rx="9" fill="#111522" stroke="#a855f7"/>
-  <text x="239" y="106" text-anchor="middle" fill="#d6b4ff" font-family="'Courier New',monospace" font-size="10" font-weight="700">Lineage Ledger</text>
-  <text x="239" y="122" text-anchor="middle" fill="#d6b4ff" font-family="'Courier New',monospace" font-size="9">hash-chained proof</text>
-
-  <path d="M296 112 L332 112" stroke="#a855f7" stroke-width="2.2"/>
-  <polygon points="332,112 324,107 324,117" fill="#a855f7"/>
-
-  <rect x="336" y="84" width="60" height="56" rx="9" fill="#0b2035" stroke="#00d4ff"/>
-  <text x="366" y="106" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="9" font-weight="700">Replay</text>
-  <text x="366" y="121" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="9">zero diff</text>
-
-  <rect x="24" y="160" width="372" height="36" rx="8" fill="#0b141f" stroke="#f5c842" opacity="0.9"/>
-  <text x="210" y="180" text-anchor="middle" fill="#ffe9a8" font-family="'Courier New',monospace" font-size="10">Result: ADAAD can improve itself with cryptographic evidence you can independently verify.</text>
+<svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="s3-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#010a08"/>
+    <stop offset="100%" stop-color="#040f12"/>
+  </linearGradient>
+  <filter id="s3-glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="s3-soft"><feGaussianBlur stdDeviation="12"/></filter>
+  <style>
+    @keyframes s3-chain{0%{fill-opacity:.4}50%{fill-opacity:1}100%{fill-opacity:.4}}
+    @keyframes s3-verify{0%,100%{opacity:.7}50%{opacity:1}}
+    .s3-link1{animation:s3-chain 2s ease-in-out infinite}
+    .s3-link2{animation:s3-chain 2s ease-in-out infinite .4s}
+    .s3-link3{animation:s3-chain 2s ease-in-out infinite .8s}
+    .s3-link4{animation:s3-chain 2s ease-in-out infinite 1.2s}
+    .s3-link5{animation:s3-chain 2s ease-in-out infinite 1.6s}
+    .s3-seal{animation:s3-verify 2.5s ease-in-out infinite}
+  </style>
+</defs>
+<rect width="500" height="280" fill="url(#s3-bg)" rx="8"/>
+<circle cx="250" cy="140" r="100" fill="#00ff88" opacity="0.04" filter="url(#s3-soft)"/>
+<!-- Title -->
+<rect x="0" y="0" width="500" height="42" fill="#000a06" rx="8"/>
+<rect x="0" y="32" width="500" height="10" fill="#000a06"/>
+<text x="250" y="18" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#00ff88" letter-spacing="3" opacity="0.9">PROOF OF GOVERNANCE</text>
+<text x="250" y="33" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#1e3a28" letter-spacing="2" opacity="0.8">EVERY MUTATION HASH-CHAINED · REPLAY-VERIFIED</text>
+<!-- Chain blocks -->
+<g>
+  <!-- Block 1 -->
+  <rect x="20" y="85" width="78" height="80" rx="4" fill="#001810" stroke="#00ff88" stroke-width="1.2" opacity="0.8"/>
+  <text x="59" y="106" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00ff88" opacity="0.9" class="s3-link1">EPOCH N-4</text>
+  <text x="59" y="120" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.9">SHA:a3f8e9</text>
+  <text x="59" y="133" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.9">prev:000000</text>
+  <text x="59" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.8">APPROVED</text>
+  <text x="59" y="158" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#006a2a" opacity="0.8">✓ 23 rules</text>
+  <!-- Link -->
+  <line x1="98" y1="125" x2="116" y2="125" stroke="#00ff88" stroke-width="2" opacity="0.6" class="s3-link1"/>
+  <polygon points="112,121 122,125 112,129" fill="#00ff88" opacity="0.6" class="s3-link1"/>
+  <!-- Block 2 -->
+  <rect x="116" y="85" width="78" height="80" rx="4" fill="#001810" stroke="#00ff88" stroke-width="1.2" opacity="0.8"/>
+  <text x="155" y="106" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00ff88" opacity="0.9" class="s3-link2">EPOCH N-3</text>
+  <text x="155" y="120" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.9">SHA:b7d2c1</text>
+  <text x="155" y="133" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.9">prev:a3f8e9</text>
+  <text x="155" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.8">APPROVED</text>
+  <text x="155" y="158" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#006a2a" opacity="0.8">✓ replay ok</text>
+  <!-- Link -->
+  <line x1="194" y1="125" x2="212" y2="125" stroke="#00ff88" stroke-width="2" opacity="0.6" class="s3-link2"/>
+  <polygon points="208,121 218,125 208,129" fill="#00ff88" opacity="0.6" class="s3-link2"/>
+  <!-- Block 3 -->
+  <rect x="212" y="85" width="78" height="80" rx="4" fill="#001810" stroke="#00ff88" stroke-width="1.2" opacity="0.8"/>
+  <text x="251" y="106" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00ff88" opacity="0.9" class="s3-link3">EPOCH N-2</text>
+  <text x="251" y="120" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.9">SHA:c9a4f5</text>
+  <text x="251" y="133" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.9">prev:b7d2c1</text>
+  <text x="251" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#003a18" opacity="0.8">APPROVED</text>
+  <text x="251" y="158" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#006a2a" opacity="0.8">✓ 0 diverg</text>
+  <!-- Link -->
+  <line x1="290" y1="125" x2="308" y2="125" stroke="#00ff88" stroke-width="2" opacity="0.6" class="s3-link3"/>
+  <polygon points="304,121 314,125 304,129" fill="#00ff88" opacity="0.6" class="s3-link3"/>
+  <!-- Block 4 SEALED -->
+  <rect x="308" y="75" width="90" height="100" rx="4" fill="#001e12" stroke="#f5c842" stroke-width="2.5" opacity="0.95" class="s3-seal" filter="url(#s3-glow)"/>
+  <text x="353" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#f5c842" opacity="0.95" class="s3-link4">EPOCH N</text>
+  <text x="353" y="113" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#f5c842" opacity="0.9">SHA:e1b8a3</text>
+  <text x="353" y="126" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#004a18" opacity="0.9">prev:c9a4f5</text>
+  <text x="353" y="139" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00ff88" opacity="0.95">APPROVED</text>
+  <text x="353" y="152" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#006a2a" opacity="0.9">ALL 23 PASS</text>
+  <text x="353" y="165" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#f5c842" opacity="0.8">⛓ SEALED</text>
+  <!-- Replay indicator -->
+  <rect x="405" y="100" width="78" height="55" rx="4" fill="#000d0a" stroke="#00d4ff" stroke-width="1" opacity="0.8"/>
+  <text x="444" y="118" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00d4ff" opacity="0.9">REPLAY</text>
+  <text x="444" y="131" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00d4ff" opacity="0.9">VERIFIER</text>
+  <text x="444" y="144" text-anchor="middle" font-family="'Courier New',monospace" font-size="5.5" fill="#004a60" opacity="0.9">divergence</text>
+  <text x="444" y="156" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#00ff88" opacity="0.9">0</text>
+  <!-- Connection line -->
+  <line x1="398" y1="125" x2="406" y2="125" stroke="#00d4ff" stroke-width="1" opacity="0.5" stroke-dasharray="3 3"/>
+</g>
+<!-- Bottom text -->
+<text x="250" y="208" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#00ff88" opacity="0.55">append-only · tamper-evident · immutable after seal</text>
+<!-- Bottom caption -->
+<rect x="0" y="218" width="500" height="62" fill="#000a06" rx="0"/>
+<rect x="0" y="218" width="500" height="4" fill="#000a06"/>
+<text x="250" y="240" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00ff88" opacity="0.7">Every approved mutation is SHA-256 hash-chained,</text>
+<text x="250" y="254" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00ff88" opacity="0.7">deterministically replayable, and evidenced.</text>
+<text x="250" y="270" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#f5c842" opacity="0.6">Phase 65 · March 13 2026 · hash in the ledger.</text>
+<rect width="500" height="280" fill="none" stroke="#1e3a28" stroke-width="1" rx="8"/>
 </svg>

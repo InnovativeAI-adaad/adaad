@@ -1,74 +1,79 @@
-<svg viewBox="0 0 1440 130" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1440 140" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <linearGradient id="scbg" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#020a18"/>
-    <stop offset="50%" stop-color="#030e20"/>
-    <stop offset="100%" stop-color="#020a18"/>
+  <linearGradient id="sc-bg" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#010810"/>
+    <stop offset="50%" stop-color="#020e1c"/>
+    <stop offset="100%" stop-color="#010810"/>
   </linearGradient>
-  <filter id="scg">
-    <feGaussianBlur stdDeviation="3" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
-  <pattern id="scdots" width="20" height="20" patternUnits="userSpaceOnUse">
-    <circle cx="10" cy="10" r="0.8" fill="#00d4ff" opacity="0.15"/>
+  <filter id="sc-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="sc-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="11" cy="11" r="0.7" fill="#00d4ff" opacity="0.1"/>
   </pattern>
+  <style>
+    @keyframes sc-glow{0%,100%{opacity:.7}50%{opacity:1}}
+    .sc-v{animation:sc-glow 2.5s ease-in-out infinite}
+    .sc-t{animation:sc-glow 2.5s ease-in-out infinite .5s}
+    .sc-c{animation:sc-glow 2.5s ease-in-out infinite 1s}
+    .sc-p{animation:sc-glow 2.5s ease-in-out infinite 1.5s}
+    .sc-e{animation:sc-glow 2.5s ease-in-out infinite 2s}
+    .sc-i{animation:sc-glow 2.5s ease-in-out infinite .25s}
+    .sc-d{animation:sc-glow 2.5s ease-in-out infinite .75s}
+    .sc-a{animation:sc-glow 2.5s ease-in-out infinite 1.25s}
+    .sc-f{animation:sc-glow 2.5s ease-in-out infinite 1.75s}
+  </style>
 </defs>
-<rect width="1440" height="130" fill="url(#scbg)" rx="0"/>
-<rect width="1440" height="130" fill="url(#scdots)"/>
-<!-- Top + bottom border -->
-<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.3"/>
-<rect x="0" y="128.5" width="1440" height="1.5" fill="#f5c842" opacity="0.25"/>
-
-<!-- 8 stat blocks evenly spaced -->
+<rect width="1440" height="140" fill="url(#sc-bg)"/>
+<rect width="1440" height="140" fill="url(#sc-dots)"/>
+<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.4"/>
+<rect x="0" y="138.5" width="1440" height="1.5" fill="#f5c842" opacity="0.35"/>
 <g font-family="'Courier New',monospace" text-anchor="middle">
-  <!-- 1: v9.1.0 -->
-  <text x="90" y="50" fill="#f5c842" font-size="24" font-weight="700" filter="url(#scg)">v9.1.0</text>
-  <text x="90" y="72" fill="#1e4460" font-size="9" letter-spacing="2.5">CURRENT VERSION</text>
-  <line x1="90" y1="82" x2="90" y2="120" stroke="#f5c842" stroke-width="0.5" opacity="0.2"/>
+  <!-- 1: Version -->
+  <text x="80" y="48" fill="#f5c842" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-v">v9.1.0</text>
+  <text x="80" y="68" fill="#f5c842" font-size="7" letter-spacing="2" opacity="0.65">CURRENT VERSION</text>
+  <text x="80" y="82" fill="#2a1a00" font-size="7" letter-spacing="1.5" opacity="0.7">Phase 66 Alpha</text>
+  <line x1="80" y1="92" x2="80" y2="128" stroke="#f5c842" stroke-width="0.5" opacity="0.2"/>
+  <line x1="160" y1="18" x2="160" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <line x1="180" y1="15" x2="180" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
+  <!-- 2: Tests -->
+  <text x="250" y="48" fill="#00ff88" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-t">4,466</text>
+  <text x="250" y="68" fill="#00ff88" font-size="7" letter-spacing="2" opacity="0.65">TESTS PASSING</text>
+  <text x="250" y="82" fill="#004a18" font-size="7" letter-spacing="1.5" opacity="0.7">zero regressions</text>
+  <line x1="340" y1="18" x2="340" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <!-- 2: 4,441 -->
-  <text x="270" y="50" fill="#00ff88" font-size="24" font-weight="700" filter="url(#scg)">4,441</text>
-  <text x="270" y="72" fill="#1a3a28" font-size="9" letter-spacing="2.5">TESTS PASSING</text>
+  <!-- 3: Rules -->
+  <text x="430" y="48" fill="#00d4ff" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-c">23</text>
+  <text x="430" y="68" fill="#00d4ff" font-size="7" letter-spacing="2" opacity="0.65">CONST. RULES</text>
+  <text x="430" y="82" fill="#0a2a40" font-size="7" letter-spacing="1.5" opacity="0.7">v0.9.0 · non-bypassable</text>
+  <line x1="520" y1="18" x2="520" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <line x1="360" y1="15" x2="360" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
+  <!-- 4: CEL Steps -->
+  <text x="610" y="48" fill="#f5c842" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-p">14</text>
+  <text x="610" y="68" fill="#f5c842" font-size="7" letter-spacing="2" opacity="0.65">CEL STEPS</text>
+  <text x="610" y="82" fill="#2a1a00" font-size="7" letter-spacing="1.5" opacity="0.7">ordered · CEL-ORDER-0</text>
+  <line x1="700" y1="18" x2="700" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <!-- 3: 23 -->
-  <text x="450" y="50" fill="#00d4ff" font-size="24" font-weight="700" filter="url(#scg)">23</text>
-  <text x="450" y="72" fill="#0a2a40" font-size="9" letter-spacing="2.5">CONST. RULES</text>
+  <!-- 5: Phases -->
+  <text x="790" y="48" fill="#a855f7" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-e">66</text>
+  <text x="790" y="68" fill="#a855f7" font-size="7" letter-spacing="2" opacity="0.65">PHASES COMPLETE</text>
+  <text x="790" y="82" fill="#2a0a50" font-size="7" letter-spacing="1.5" opacity="0.7">v1.0 → v9.1.0</text>
+  <line x1="880" y1="18" x2="880" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <line x1="540" y1="15" x2="540" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
+  <!-- 6: Invariants -->
+  <text x="970" y="48" fill="#ff4466" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-i">8</text>
+  <text x="970" y="68" fill="#ff4466" font-size="7" letter-spacing="2" opacity="0.65">INVARIANTS</text>
+  <text x="970" y="82" fill="#400010" font-size="7" letter-spacing="1.5" opacity="0.7">code-level · unoverridable</text>
+  <line x1="1060" y1="18" x2="1060" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <!-- 4: 14 -->
-  <text x="630" y="50" fill="#f5c842" font-size="24" font-weight="700" filter="url(#scg)">14</text>
-  <text x="630" y="72" fill="#2a2010" font-size="9" letter-spacing="2.5">CEL STEPS</text>
+  <!-- 7: Divergence -->
+  <text x="1150" y="48" fill="#00ff88" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-d">0</text>
+  <text x="1150" y="68" fill="#00ff88" font-size="7" letter-spacing="2" opacity="0.65">REPLAY DIVERGENCE</text>
+  <text x="1150" y="82" fill="#004a18" font-size="7" letter-spacing="1.5" opacity="0.7">DET-ALL-0 · always</text>
+  <line x1="1240" y1="18" x2="1240" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
 
-  <line x1="720" y1="15" x2="720" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
-
-  <!-- 5: 66 -->
-  <text x="810" y="50" fill="#a855f7" font-size="24" font-weight="700" filter="url(#scg)">66</text>
-  <text x="810" y="72" fill="#1e0a40" font-size="9" letter-spacing="2.5">PHASES DONE</text>
-
-  <line x1="900" y1="15" x2="900" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
-
-  <!-- 6: 8 -->
-  <text x="990" y="50" fill="#ff4466" font-size="24" font-weight="700" filter="url(#scg)">8</text>
-  <text x="990" y="72" fill="#2a0010" font-size="9" letter-spacing="2.5">INVARIANTS</text>
-
-  <line x1="1080" y1="15" x2="1080" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
-
-  <!-- 7: 329 -->
-  <text x="1170" y="50" fill="#00d4ff" font-size="24" font-weight="700" filter="url(#scg)">329</text>
-  <text x="1170" y="72" fill="#0a2030" font-size="9" letter-spacing="2.5">RUNTIME FILES</text>
-
-  <line x1="1260" y1="15" x2="1260" y2="115" stroke="#1a2a3a" stroke-width="0.8"/>
-
-  <!-- 8: Phase 65 -->
-  <text x="1350" y="44" fill="#00ff88" font-size="16" font-weight="700" filter="url(#scg)">PHASE 65</text>
-  <text x="1350" y="62" fill="#00ff88" font-size="11" letter-spacing="1">SELF-EVOLVED</text>
-  <circle cx="1350" cy="82" r="5" fill="#00ff88" opacity="0.8" filter="url(#scg)">
-    <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite"/>
-  </circle>
+  <!-- 8: Self-evolved -->
+  <text x="1360" y="44" fill="#f5c842" font-size="18" font-weight="700" filter="url(#sc-glow)" class="sc-a">⛓ EVOLVED</text>
+  <text x="1360" y="62" fill="#f5c842" font-size="7" letter-spacing="1.5" opacity="0.8">PHASE 65</text>
+  <text x="1360" y="76" fill="#2a1a00" font-size="7" letter-spacing="1" opacity="0.7">Mar 13 2026</text>
+  <text x="1360" y="89" fill="#2a1a00" font-size="6" letter-spacing="1" opacity="0.6">hash in ledger</text>
 </g>
 </svg>

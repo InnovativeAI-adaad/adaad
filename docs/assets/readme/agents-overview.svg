@@ -1,35 +1,116 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
-  <title id="title">ADAAD Agents Overview</title>
-  <desc id="desc">Composite overview of Architect, Dream, and Beast as coordinated mutation agents in ADAAD.</desc>
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0d1117"/>
-      <stop offset="100%" stop-color="#111827"/>
-    </linearGradient>
-  </defs>
-  <rect width="1200" height="420" rx="20" fill="url(#bg)"/>
-  <text x="600" y="68" font-size="36" fill="#e5e7eb" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">ADAAD Three-Agent Overview</text>
-  <g font-family="Segoe UI, Arial, sans-serif" text-anchor="middle">
-    <rect x="90" y="120" width="300" height="220" rx="16" fill="#1f2937" stroke="#34d399"/>
-    <text x="240" y="170" font-size="30" fill="#34d399">Architect</text>
-    <text x="240" y="210" font-size="18" fill="#d1d5db">Governance strategy</text>
-    <text x="240" y="238" font-size="18" fill="#d1d5db">Constitutional planning</text>
-
-    <rect x="450" y="120" width="300" height="220" rx="16" fill="#1f2937" stroke="#60a5fa"/>
-    <text x="600" y="170" font-size="30" fill="#60a5fa">Dream</text>
-    <text x="600" y="210" font-size="18" fill="#d1d5db">Scenario exploration</text>
-    <text x="600" y="238" font-size="18" fill="#d1d5db">Innovation modeling</text>
-
-    <rect x="810" y="120" width="300" height="220" rx="16" fill="#1f2937" stroke="#f97316"/>
-    <text x="960" y="170" font-size="30" fill="#f97316">Beast</text>
-    <text x="960" y="210" font-size="18" fill="#d1d5db">Execution pressure tests</text>
-    <text x="960" y="238" font-size="18" fill="#d1d5db">Mutation delivery</text>
-  </g>
-  <path d="M390 230 L450 230" stroke="#9ca3af" stroke-width="3" marker-end="url(#arrow)"/>
-  <path d="M750 230 L810 230" stroke="#9ca3af" stroke-width="3" marker-end="url(#arrow)"/>
-  <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af"/>
-    </marker>
-  </defs>
+<svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="ao-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#040c18"/>
+    <stop offset="100%" stop-color="#080f1c"/>
+  </linearGradient>
+  <filter id="ao-glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="ao-soft"><feGaussianBlur stdDeviation="15"/></filter>
+  <style>
+    @keyframes ao-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+    @keyframes ao-flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-30}}
+    @keyframes ao-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .ao-a{animation:ao-pulse 2.5s ease-in-out infinite}
+    .ao-d{animation:ao-pulse 2.5s ease-in-out infinite .8s}
+    .ao-b{animation:ao-pulse 2.5s ease-in-out infinite 1.6s}
+    .ao-flow{stroke-dasharray:6 4;animation:ao-flow 2s linear infinite}
+    .ao-spin{transform-origin:600px 200px;animation:ao-spin 20s linear infinite}
+  </style>
+</defs>
+<rect width="1200" height="400" fill="url(#ao-bg)" rx="10"/>
+<!-- Glow blobs -->
+<circle cx="200" cy="200" r="100" fill="#00d4ff" opacity="0.04" filter="url(#ao-soft)"/>
+<circle cx="600" cy="200" r="120" fill="#f5c842" opacity="0.04" filter="url(#ao-soft)"/>
+<circle cx="1000" cy="200" r="100" fill="#ff4466" opacity="0.04" filter="url(#ao-soft)"/>
+<!-- Header -->
+<rect x="0" y="0" width="1200" height="50" fill="#020810" rx="10"/>
+<rect x="0" y="40" width="1200" height="10" fill="#020810"/>
+<text x="600" y="22" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" fill="#f5c842" letter-spacing="4" opacity="0.9">THREE COMPETING MUTATION AGENTS</text>
+<text x="600" y="40" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#1a2a3a" letter-spacing="3" opacity="0.8">UCB1 BANDIT → THOMPSON SAMPLING  ·  12 CANDIDATES/EPOCH  ·  BLX-α CROSSOVER</text>
+<!-- ARCHITECT card -->
+<rect x="30" y="70" width="320" height="290" rx="8" fill="#001828" stroke="#00d4ff" stroke-width="1.5" opacity="0.9"/>
+<rect x="38" y="78" width="304" height="52" rx="5" fill="#001020" opacity="0.8"/>
+<text x="190" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="12" fill="#00d4ff" letter-spacing="3" opacity="0.95" class="ao-a">ARCHITECT</text>
+<text x="190" y="118" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#0a4060" letter-spacing="1">UCB1 arm α · governance-first</text>
+<!-- Architect icon - blueprint tower -->
+<g transform="translate(130,145)">
+  <rect x="47" y="-30" width="18" height="60" rx="1" fill="none" stroke="#00d4ff" stroke-width="1.2" opacity="0.7"/>
+  <rect x="51" y="-26" width="10" height="52" rx="1" fill="#001020" opacity="0.9"/>
+  <rect x="47" y="-15" width="18" height="1" fill="#00d4ff" opacity="0.6"/>
+  <rect x="47" y="0" width="18" height="1" fill="#00d4ff" opacity="0.6"/>
+  <rect x="25" y="-5" width="22" height="11" rx="1" fill="none" stroke="#00d4ff" stroke-width="0.8" opacity="0.5"/>
+  <rect x="65" y="-5" width="22" height="11" rx="1" fill="none" stroke="#00d4ff" stroke-width="0.8" opacity="0.5"/>
+  <polygon points="56,-38 65,-30 47,-30" fill="none" stroke="#f5c842" stroke-width="1.2" opacity="0.8"/>
+  <circle cx="56" cy="-40" r="3" fill="#f5c842" opacity="0.9" class="ao-a" filter="url(#ao-glow)"/>
+</g>
+<!-- Stats -->
+<g font-family="'Courier New',monospace" font-size="7.5" text-anchor="middle">
+  <text x="190" y="215" fill="#1e4060" opacity="0.9">risk score  ·  0.1 – 0.4</text>
+  <text x="190" y="230" fill="#1e4060" opacity="0.8">expected gain  ·  moderate</text>
+  <text x="190" y="245" fill="#00d4ff" opacity="0.7">owns Tier-0 guard decisions</text>
+  <text x="190" y="260" fill="#00d4ff" opacity="0.7">constitutional compliance</text>
+  <text x="190" y="280" fill="#1a3a50" opacity="0.6">AST validity · banned token check</text>
+  <text x="190" y="293" fill="#1a3a50" opacity="0.6">signature verification · scope</text>
+  <text x="190" y="311" fill="#0a5060" opacity="0.5">safe for Tier-1 auto-application</text>
+  <text x="190" y="323" fill="#0a5060" opacity="0.5">lineage continuity enforced</text>
+  <text x="190" y="342" fill="#f5c842" opacity="0.6">ROLE: CONSTITUTIONAL GUARDIAN</text>
+</g>
+<!-- DREAM card -->
+<rect x="440" y="70" width="320" height="290" rx="8" fill="#0d0820" stroke="#a855f7" stroke-width="1.5" opacity="0.9"/>
+<rect x="448" y="78" width="304" height="52" rx="5" fill="#08051a" opacity="0.8"/>
+<text x="600" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="12" fill="#a855f7" letter-spacing="3" opacity="0.95" class="ao-d">DREAM</text>
+<text x="600" y="118" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#4a1870" letter-spacing="1">UCB1 arm β · high-novelty explorer</text>
+<!-- Dream icon - eye -->
+<g transform="translate(544,145)">
+  <ellipse cx="56" cy="0" rx="38" ry="24" fill="none" stroke="#a855f7" stroke-width="1" opacity="0.5"/>
+  <circle cx="56" cy="0" r="16" fill="#0d0820" stroke="#a855f7" stroke-width="0.8" opacity="0.5"/>
+  <circle cx="56" cy="0" r="10" fill="#a855f7" opacity="0.2" filter="url(#ao-glow)"/>
+  <circle cx="56" cy="0" r="6" fill="#a855f7" opacity="0.5" filter="url(#ao-glow)"/>
+  <circle cx="56" cy="0" r="3" fill="#a855f7" opacity="0.9" filter="url(#ao-glow)" class="ao-d"/>
+  <circle cx="50" cy="-5" r="2" fill="white" opacity="0.2"/>
+</g>
+<g font-family="'Courier New',monospace" font-size="7.5" text-anchor="middle">
+  <text x="600" y="215" fill="#4a1870" opacity="0.9">expected gain  ·  0.5 – 0.9</text>
+  <text x="600" y="230" fill="#4a1870" opacity="0.8">risk score  ·  high</text>
+  <text x="600" y="245" fill="#a855f7" opacity="0.7">200-epoch lookahead horizon</text>
+  <text x="600" y="260" fill="#a855f7" opacity="0.7">experimental &amp; behavioral mutations</text>
+  <text x="600" y="280" fill="#4a1870" opacity="0.6">capability graph exploration</text>
+  <text x="600" y="293" fill="#4a1870" opacity="0.6">scenario generation</text>
+  <text x="600" y="311" fill="#2a0a50" opacity="0.5">pushes novelty within constitution</text>
+  <text x="600" y="323" fill="#2a0a50" opacity="0.5">gate always evaluates output</text>
+  <text x="600" y="342" fill="#f5c842" opacity="0.6">ROLE: EXPLORATION ENGINE</text>
+</g>
+<!-- BEAST card -->
+<rect x="850" y="70" width="320" height="290" rx="8" fill="#1a0404" stroke="#ff4466" stroke-width="1.5" opacity="0.9"/>
+<rect x="858" y="78" width="304" height="52" rx="5" fill="#100202" opacity="0.8"/>
+<text x="1010" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="12" fill="#ff4466" letter-spacing="4" opacity="0.95" class="ao-b">BEAST</text>
+<text x="1010" y="118" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#601020" letter-spacing="1">UCB1 arm γ · max-pressure mutator</text>
+<!-- Beast icon - core -->
+<g transform="translate(954,130)">
+  <circle cx="56" cy="15" r="25" fill="#1a0404" stroke="#ff4466" stroke-width="1.5" opacity="0.8" class="ao-b"/>
+  <circle cx="56" cy="15" r="15" fill="#200a0a" stroke="#ff4466" stroke-width="0.8" opacity="0.6"/>
+  <circle cx="56" cy="15" r="8" fill="#ff4466" opacity="0.2" filter="url(#ao-glow)"/>
+  <circle cx="56" cy="15" r="5" fill="#ff4466" opacity="0.7" filter="url(#ao-glow)" class="ao-b"/>
+  <line x1="56" y1="-10" x2="56" y2="-2" stroke="#ff4466" stroke-width="1.5" opacity="0.6" filter="url(#ao-glow)"/>
+  <line x1="56" y1="32" x2="56" y2="40" stroke="#ff4466" stroke-width="1.5" opacity="0.6" filter="url(#ao-glow)"/>
+  <line x1="31" y1="0" x2="37" y2="6" stroke="#ff4466" stroke-width="1.2" opacity="0.5" filter="url(#ao-glow)"/>
+  <line x1="81" y1="0" x2="75" y2="6" stroke="#ff4466" stroke-width="1.2" opacity="0.5" filter="url(#ao-glow)"/>
+</g>
+<g font-family="'Courier New',monospace" font-size="7.5" text-anchor="middle">
+  <text x="1010" y="215" fill="#601020" opacity="0.9">risk score  ·  MAXIMUM</text>
+  <text x="1010" y="230" fill="#601020" opacity="0.8">mutation velocity  ·  HIGHEST</text>
+  <text x="1010" y="245" fill="#ff4466" opacity="0.7">constitutional edge pressure</text>
+  <text x="1010" y="260" fill="#ff4466" opacity="0.7">fitness regression target driver</text>
+  <text x="1010" y="280" fill="#601020" opacity="0.6">maximum throughput attempts</text>
+  <text x="1010" y="293" fill="#601020" opacity="0.6">gate filters aggressively</text>
+  <text x="1010" y="311" fill="#400010" opacity="0.5">Tier-2 sandbox paths only</text>
+  <text x="1010" y="323" fill="#400010" opacity="0.5">constitution is the only limit</text>
+  <text x="1010" y="342" fill="#f5c842" opacity="0.6">ROLE: VELOCITY PRESSURE TEST</text>
+</g>
+<!-- Flow arrows between agents toward center GovernanceGate concept -->
+<line x1="350" y1="215" x2="440" y2="215" stroke="#00d4ff" stroke-width="1.5" opacity="0.4" class="ao-flow"/>
+<line x1="760" y1="215" x2="850" y2="215" stroke="#ff4466" stroke-width="1.5" opacity="0.4" class="ao-flow"/>
+<polygon points="436,211 446,215 436,219" fill="#00d4ff" opacity="0.4"/>
+<polygon points="846,211 856,215 846,219" fill="#ff4466" opacity="0.4"/>
+<rect width="1200" height="400" fill="none" stroke="#1a2a3a" stroke-width="0.8" rx="10"/>
 </svg>

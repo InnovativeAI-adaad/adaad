@@ -1,50 +1,65 @@
-<svg viewBox="0 0 1440 180" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1440 190" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <linearGradient id="tbg" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#010204"/>
-    <stop offset="50%" stop-color="#030c18"/>
-    <stop offset="100%" stop-color="#010204"/>
+  <linearGradient id="ts-bg" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#010810"/>
+    <stop offset="50%"  stop-color="#020d1c"/>
+    <stop offset="100%" stop-color="#010810"/>
   </linearGradient>
-  <pattern id="tdots" width="18" height="18" patternUnits="userSpaceOnUse">
-    <circle cx="9" cy="9" r="0.75" fill="#00d4ff" opacity="0.12"/>
+  <filter id="ts-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="ts-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="10" cy="10" r="0.7" fill="#00d4ff" opacity="0.08"/>
   </pattern>
-  <filter id="tg">
-    <feGaussianBlur stdDeviation="3" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
+  <style>
+    @keyframes ts-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+    .ts-t0{animation:ts-pulse 2s ease-in-out infinite}
+    .ts-t1{animation:ts-pulse 2s ease-in-out infinite .6s}
+    .ts-t2{animation:ts-pulse 2s ease-in-out infinite 1.2s}
+  </style>
 </defs>
-<rect width="1440" height="180" fill="url(#tbg)"/>
-<rect width="1440" height="180" fill="url(#tdots)"/>
-<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.25"/>
-<rect x="0" y="178.5" width="1440" height="1.5" fill="#00d4ff" opacity="0.15"/>
-
-<!-- TIER 0 -->
-<rect x="40" y="20" width="420" height="140" rx="8" fill="#0d0204" stroke="#ff4466" stroke-width="1.2" stroke-opacity="0.7"/>
-<rect x="40" y="20" width="420" height="4" rx="2" fill="#ff4466" opacity="0.9"/>
-<text x="60" y="56" font-family="'Courier New',monospace" font-size="13" fill="#ff4466" font-weight="700" letter-spacing="1.5">🔴  TIER 0 — PRODUCTION</text>
-<text x="60" y="80" font-family="'Courier New',monospace" font-size="10.5" fill="#4a2028">Paths: runtime/ · security/ · app/main.py</text>
-<text x="60" y="98" font-family="'Courier New',monospace" font-size="10.5" fill="#4a2028">Autonomous authority: ❌ NEVER</text>
-<text x="60" y="116" font-family="'Courier New',monospace" font-size="10.5" fill="#4a2028">Human sign-off required before any merge</text>
-<rect x="60" y="132" width="200" height="20" rx="3" fill="#ff4466" opacity="0.08" stroke="#ff4466" stroke-width="0.7" stroke-opacity="0.6"/>
-<text x="160" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#ff4466" letter-spacing="1.5">TIER0-SELF-0 ENFORCED</text>
-
-<!-- TIER 1 -->
-<rect x="510" y="20" width="420" height="140" rx="8" fill="#0a0d04" stroke="#f5c842" stroke-width="1" stroke-opacity="0.6"/>
-<rect x="510" y="20" width="420" height="4" rx="2" fill="#f5c842" opacity="0.8"/>
-<text x="530" y="56" font-family="'Courier New',monospace" font-size="13" fill="#f5c842" font-weight="700" letter-spacing="1.5">🟡  TIER 1 — STABLE</text>
-<text x="530" y="80" font-family="'Courier New',monospace" font-size="10.5" fill="#4a3818">Paths: tests/ · docs/ · most agents</text>
-<text x="530" y="98" font-family="'Courier New',monospace" font-size="10.5" fill="#4a3818">Auto-approved + full audit trail</text>
-<text x="530" y="116" font-family="'Courier New',monospace" font-size="10.5" fill="#4a3818">Human reviews ledger within 24h</text>
-<rect x="530" y="132" width="200" height="20" rx="3" fill="#f5c842" opacity="0.06" stroke="#f5c842" stroke-width="0.7" stroke-opacity="0.5"/>
-<text x="630" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#f5c842" letter-spacing="1.5">EVIDENCE TRAIL REQUIRED</text>
-
-<!-- TIER 2 -->
-<rect x="980" y="20" width="420" height="140" rx="8" fill="#020d04" stroke="#00ff88" stroke-width="1" stroke-opacity="0.5"/>
-<rect x="980" y="20" width="420" height="4" rx="2" fill="#00ff88" opacity="0.7"/>
-<text x="1000" y="56" font-family="'Courier New',monospace" font-size="13" fill="#00ff88" font-weight="700" letter-spacing="1.5">🟢  TIER 2 — SANDBOX</text>
-<text x="1000" y="80" font-family="'Courier New',monospace" font-size="10.5" fill="#184028">Paths: app/agents/test_subject/</text>
-<text x="1000" y="98" font-family="'Courier New',monospace" font-size="10.5" fill="#184028">Fully autonomous — zero blast radius</text>
-<text x="1000" y="116" font-family="'Courier New',monospace" font-size="10.5" fill="#184028">No cross-tier contamination possible</text>
-<rect x="1000" y="132" width="200" height="20" rx="3" fill="#00ff88" opacity="0.06" stroke="#00ff88" stroke-width="0.7" stroke-opacity="0.4"/>
-<text x="1100" y="146" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#00ff88" letter-spacing="1.5">FULL AUTONOMY GRANTED</text>
+<rect width="1440" height="190" fill="url(#ts-bg)"/>
+<rect width="1440" height="190" fill="url(#ts-dots)"/>
+<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.35"/>
+<rect x="0" y="188.5" width="1440" height="1.5" fill="#f5c842" opacity="0.3"/>
+<!-- Header -->
+<text x="720" y="30" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#1e3a4a" letter-spacing="5" opacity="0.8">MUTATION TIER SYSTEM · TIER0-SELF-0 · STRUCTURAL · PERMANENT</text>
+<line x1="60" y1="40" x2="1380" y2="40" stroke="#1a2a3a" stroke-width="0.6" opacity="0.6"/>
+<!-- Tier 0 -->
+<g>
+  <rect x="50" y="52" width="406" height="118" rx="6" fill="#140010" stroke="#ff4466" stroke-width="2" opacity="0.9" class="ts-t0"/>
+  <rect x="57" y="59" width="392" height="104" rx="4" fill="#0d0008" opacity="0.9"/>
+  <text x="253" y="82" text-anchor="middle" font-family="'Courier New',monospace" font-size="22" font-weight="900" fill="#ff4466" opacity="0.95">TIER 0</text>
+  <text x="253" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#ff4466" opacity="0.8" letter-spacing="2">PRODUCTION RUNTIME</text>
+  <line x1="80" y1="108" x2="426" y2="108" stroke="#ff4466" stroke-width="0.5" opacity="0.3"/>
+  <text x="253" y="122" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#601020" opacity="0.9">runtime/ · security/ · app/main.py</text>
+  <text x="253" y="136" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#601020" opacity="0.9">❌ Never auto-applied · Human required</text>
+  <text x="253" y="150" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#400010" opacity="0.8">TIER0-SELF-0 — structurally impossible to mutate</text>
+  <text x="253" y="162" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#300008" opacity="0.7">not via config · not via exception token · not ever</text>
+</g>
+<!-- Tier 1 -->
+<g>
+  <rect x="517" y="52" width="406" height="118" rx="6" fill="#001028" stroke="#00d4ff" stroke-width="1.5" opacity="0.9" class="ts-t1"/>
+  <rect x="524" y="59" width="392" height="104" rx="4" fill="#000d1e" opacity="0.9"/>
+  <text x="720" y="82" text-anchor="middle" font-family="'Courier New',monospace" font-size="22" font-weight="900" fill="#00d4ff" opacity="0.95">TIER 1</text>
+  <text x="720" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00d4ff" opacity="0.8" letter-spacing="2">STABLE · AUDITED</text>
+  <line x1="547" y1="108" x2="893" y2="108" stroke="#00d4ff" stroke-width="0.5" opacity="0.3"/>
+  <text x="720" y="122" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#1e4060" opacity="0.9">tests/ · docs/ · most agents</text>
+  <text x="720" y="136" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#1e4060" opacity="0.9">✅ Auto-execute · Human reviews within 24h</text>
+  <text x="720" y="150" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#0a3050" opacity="0.8">full audit trail · auto-rollback on divergence</text>
+  <text x="720" y="162" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#061a30" opacity="0.7">SHA-256 hash-chained · deterministically replayable</text>
+</g>
+<!-- Tier 2 -->
+<g>
+  <rect x="984" y="52" width="406" height="118" rx="6" fill="#001408" stroke="#00ff88" stroke-width="1.5" opacity="0.9" class="ts-t2"/>
+  <rect x="991" y="59" width="392" height="104" rx="4" fill="#000e06" opacity="0.9"/>
+  <text x="1187" y="82" text-anchor="middle" font-family="'Courier New',monospace" font-size="22" font-weight="900" fill="#00ff88" opacity="0.95">TIER 2</text>
+  <text x="1187" y="100" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00ff88" opacity="0.8" letter-spacing="2">SANDBOX · EXPERIMENTAL</text>
+  <line x1="1014" y1="108" x2="1360" y2="108" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+  <text x="1187" y="122" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#1a4a28" opacity="0.9">app/agents/test_subject/</text>
+  <text x="1187" y="136" text-anchor="middle" font-family="'Courier New',monospace" font-size="7.5" fill="#1a4a28" opacity="0.9">✅ Fully autonomous · Logs monitored</text>
+  <text x="1187" y="150" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#0a3018" opacity="0.8">ephemeral · zero blast radius · SANDBOX-DIV-0</text>
+  <text x="1187" y="162" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#061a0c" opacity="0.7">any divergence = auto-rollback + blocking ledger entry</text>
+</g>
+<!-- Separator lines between tiers -->
+<line x1="456" y1="52" x2="517" y2="52" stroke="#1a2a3a" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.5"/>
+<line x1="923" y1="52" x2="984" y2="52" stroke="#1a2a3a" stroke-width="0.8" stroke-dasharray="4 4" opacity="0.5"/>
 </svg>
