@@ -20,6 +20,7 @@ This module is adapter-only and must not depend on app/ or adaad/orchestrator/.
 
 from adaad.core.root import ROOT_DIR, get_root_dir
 from runtime.import_guard import install_runtime_import_guard
+from runtime.innovations import ADAADInnovationEngine
 
 ELEMENT_ID = "Earth"
 
@@ -28,4 +29,4 @@ REPO_ROOT = ROOT_DIR
 
 install_runtime_import_guard()
 
-__all__ = ["ROOT_DIR", "REPO_ROOT", "ELEMENT_ID", "get_root_dir"]
+__all__ = ["ROOT_DIR", "REPO_ROOT", "ELEMENT_ID", "get_root_dir", "ADAADInnovationEngine"]

@@ -19,4 +19,6 @@ from pathlib import Path
 
 SECURITY_ROOT = Path(__file__).resolve().parent
 
-__all__ = ["SECURITY_ROOT"]
+from security.identity_rings import IdentityRingToken, build_ring_token
+
+__all__ = ["SECURITY_ROOT", "IdentityRingToken", "build_ring_token"]
