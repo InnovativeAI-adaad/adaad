@@ -156,6 +156,13 @@ def build_checks(include_tests: bool) -> list[Check]:
             "import boundary lint",
             lint_check_request(tool_id="tier0-import-boundary-lint", command=(sys.executable, "tools/lint_import_paths.py")),
         ),
+        Check(
+            "governance doc consistency",
+            lint_check_request(
+                tool_id="tier0-governance-doc-consistency",
+                command=(sys.executable, "scripts/validate_governance_doc_consistency.py"),
+            ),
+        ),
     ]
     if include_tests:
         checks.append(
