@@ -52,6 +52,13 @@ from runtime.evolution.promotion_state_machine import PromotionState
 from runtime.governance.exception_tokens import ExceptionTokenLedger
 from runtime.governance.gate import GovernanceGate, GateAxisResult
 from runtime.governance.gate_v2 import GovernanceGateV2
+from runtime.innovations import ADAADInnovationEngine, GovernancePlugin
+from runtime.innovations_wiring import (
+    run_gplugins,
+    run_self_reflection,
+    run_vision_forecast,
+    select_agent_personality,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +102,10 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
         wiring_config: Optional[WiringConfig] = None,
         timestamp_provider: Optional[Any] = None,
         promotion_ledger_path: Optional[Path] = None,
+        # Phase 67 — Innovations wiring (all optional; no-ops when absent)
+        innovations_engine: Optional[ADAADInnovationEngine] = None,
+        gplugins: Optional[List[GovernancePlugin]] = None,
+        epoch_seq: int = 0,
     ) -> None:
         super().__init__(
             run_mode=run_mode,
@@ -112,6 +123,10 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
         self._promo_ledger_path = promotion_ledger_path or Path(
             os.getenv("ADAAD_PROMOTION_LEDGER", "data/promotion_events.jsonl")
         )
+        # Phase 67 — stored for injection into step overrides
+        self._innovations_engine: Optional[ADAADInnovationEngine] = innovations_engine
+        self._gplugins: List[GovernancePlugin] = list(gplugins or [])
+        self._epoch_seq: int = epoch_seq
 
     # ------------------------------------------------------------------ #
     # Step 4 — PROPOSAL-GENERATE (wired to ProposalEngine)
@@ -122,6 +137,10 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     ) -> CELStepResult:
         """CEL-WIRE-PROP-0: generate proposals via ProposalEngine.generate().
 
+        Phase 67 additions (all fail-safe per CEL-WIRE-FAIL-0):
+        - INNOV-VISION-0: Vision Mode forecast injected into proposal context.
+        - INNOV-PERSONA-0: Deterministic personality selection injected into context.
+
         Noop proposals are recorded but flagged; they will not be promoted.
         Fail-closed: any ProposalEngine exception → BLOCKED (CEL-WIRE-FAIL-0).
         """
@@ -130,6 +149,38 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             context = state.get("context", {})
             strategy_id = context.get("strategy_id", self._wiring_cfg.noop_strategy_id)
 
+            # ---- Phase 67: Vision Mode (INNOV-VISION-0) ------------------
+            vision_detail: Dict[str, Any] = {}
+            if self._innovations_engine is not None:
+                projection = run_vision_forecast(self._innovations_engine, state)
+                if projection is not None:
+                    state["vision_projection"] = {
+                        "horizon_epochs": projection.horizon_epochs,
+                        "trajectory_score": projection.trajectory_score,
+                        "projected_capabilities": list(projection.projected_capabilities),
+                        "dead_end_paths": list(projection.dead_end_paths),
+                    }
+                    vision_detail = state["vision_projection"]
+
+            # ---- Phase 67: Personality selection (INNOV-PERSONA-0) -------
+            personality_detail: Dict[str, Any] = {}
+            if self._innovations_engine is not None:
+                personality = select_agent_personality(
+                    self._innovations_engine, epoch_id
+                )
+                if personality is not None:
+                    state["active_personality"] = {
+                        "agent_id": personality.agent_id,
+                        "philosophy": personality.philosophy,
+                        "vector": list(personality.vector),
+                    }
+                    personality_detail = state["active_personality"]
+                    # Inject philosophy into proposal context so ProposalEngine
+                    # may surface it in strategy metadata.
+                    context = dict(context)
+                    context["mutation_philosophy"] = personality.philosophy
+                    context["active_personality_agent"] = personality.agent_id
+
             request = ProposalRequest(
                 cycle_id=epoch_id,
                 strategy_id=strategy_id,
@@ -137,11 +188,12 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     "mutation_score": context.get("baseline_fitness_score", 0.5),
                     "governance_debt_score": context.get("governance_debt_score", 0.0),
                     "epoch_id": epoch_id,
+                    "mutation_philosophy": context.get("mutation_philosophy", ""),
+                    "active_personality_agent": context.get("active_personality_agent", ""),
                 },
             )
             proposal = self._proposal_engine.generate(request)
 
-            # Wrap in a proposal dict compatible with CEL step state schema
             proposal_dict: Dict[str, Any] = {
                 "mutation_id": proposal.proposal_id,
                 "after_source": context.get(
@@ -166,6 +218,8 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     "is_noop": proposal_dict["is_noop"],
                     "strategy_id": strategy_id,
                     "proposal_id": proposal.proposal_id,
+                    "vision_projection": vision_detail,
+                    "active_personality": personality_detail,
                 },
             )
         except Exception as exc:  # noqa: BLE001 — CEL-WIRE-FAIL-0
@@ -306,12 +360,56 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     reason="governance_gate_rejection",
                     detail={"rejected": rejected, "gate_v2_existing_0_compliant": True},
                 )
+
+            # ---- Phase 67: Governance Plugins (GPLUGIN-BLOCK-0) ---------
+            gplugin_outcomes: List[Dict[str, Any]] = []
+            gplugin_blocked: List[str] = []
+            if self._innovations_engine is not None and self._gplugins:
+                approved_mutations = list(state.get("mutations_succeeded", ()))
+                proposals_by_id = {
+                    p["mutation_id"]: p
+                    for p in state.get("proposals", [])
+                }
+                for mid in approved_mutations:
+                    mutation_payload = proposals_by_id.get(mid, {"mutation_id": mid})
+                    plugin_results = run_gplugins(
+                        self._innovations_engine,
+                        mutation_payload,
+                        self._gplugins,
+                    )
+                    gplugin_outcomes.append({"mutation_id": mid, "results": plugin_results})
+                    failed_plugins = [r for r in plugin_results if not r["passed"]]
+                    if failed_plugins:
+                        gplugin_blocked.append(mid)
+                        logger.warning(
+                            "CEL Step 10 G-plugin block mutation=%s plugins=%s",
+                            mid,
+                            [r["plugin_id"] for r in failed_plugins],
+                        )
+
+                state["gplugin_outcomes"] = gplugin_outcomes
+                if gplugin_blocked:
+                    state["mutations_succeeded"] = tuple(
+                        mid for mid in state["mutations_succeeded"]
+                        if mid not in gplugin_blocked
+                    )
+                    return CELStepResult(
+                        step_number=n, step_name=name, outcome=StepOutcome.BLOCKED,
+                        reason="gplugin_rejection",
+                        detail={
+                            "blocked_by_gplugin": gplugin_blocked,
+                            "gplugin_outcomes": gplugin_outcomes,
+                            "gate_v2_existing_0_compliant": True,
+                        },
+                    )
+
             return CELStepResult(
                 step_number=n, step_name=name, outcome=StepOutcome.PASS,
                 detail={
                     "approved_count": len(gate_outcomes),
                     "gate_v2_existing_0_compliant": True,
                     "gate_outcomes": gate_outcomes,
+                    "gplugin_outcomes": gplugin_outcomes,
                 },
             )
         except Exception as exc:  # noqa: BLE001 — CEL-WIRE-FAIL-0
@@ -387,6 +485,45 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                 reason="promotion_event_failure",
                 detail={"exception": str(exc)},
             )
+
+
+    # ------------------------------------------------------------------ #
+    # Step 14 — STATE-ADVANCE (extended with self-reflection)
+    # ------------------------------------------------------------------ #
+
+    def _step_14_state_advance(
+        self, n: int, name: str, state: Dict[str, Any]
+    ) -> CELStepResult:
+        """Phase 67 extension of STATE-ADVANCE: run self-reflection on cadence.
+
+        INNOV-REFLECT-0: self-reflection is deterministic, additive, and
+        fail-safe (CEL-WIRE-FAIL-0).  Base step result is always returned.
+        """
+        base_result = super()._step_14_state_advance(n, name, state)
+
+        # Self-reflection (INNOV-REFLECT-0) — fail-safe
+        self._epoch_seq += 1
+        if self._innovations_engine is not None:
+            run_self_reflection(
+                self._innovations_engine,
+                epoch_id=state.get("epoch_id", ""),
+                epoch_seq=self._epoch_seq,
+                state=state,
+            )
+
+        # Merge reflection_report into step detail if produced
+        reflection = state.get("reflection_report")
+        if reflection is not None:
+            merged_detail = dict(base_result.detail or {})
+            merged_detail["reflection_report"] = reflection
+            return CELStepResult(
+                step_number=base_result.step_number,
+                step_name=base_result.step_name,
+                outcome=base_result.outcome,
+                reason=base_result.reason,
+                detail=merged_detail,
+            )
+        return base_result
 
 
 # ---------------------------------------------------------------------------

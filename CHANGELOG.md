@@ -1,3 +1,20 @@
+## [9.2.0] — 2026-03-13 — Phase 67: Innovations Wiring
+
+### feat(phase-67): Wire ADAADInnovationEngine into the CEL Lifecycle
+
+| Item | Detail |
+|---|---|
+| `runtime/innovations_wiring.py` | New adapter module bridging ADAADInnovationEngine substrate into CEL; fail-safe helpers for Vision Mode, Personality selection, G-plugin execution, Self-reflection |
+| `runtime/evolution/cel_wiring.py` | `LiveWiredCEL` extended: `innovations_engine`, `gplugins`, `epoch_seq` params; Step 4 injects vision forecast + personality; Step 10 runs G-plugins post-gate (GPLUGIN-BLOCK-0); Step 14 runs self-reflection on cadence |
+| `runtime/__init__.py` | Wiring helpers exported at package level |
+| `tests/test_innovations_wiring.py` | 21 tests: T67-VIS-01..04, T67-PER-01..05, T67-PLG-01..05, T67-REF-01..05, T67-INT-01..02 |
+| `docs/INNOVATIONS_WIRING.md` | Full phase documentation with invariant index and upgrade examples |
+
+### Constitutional invariants added
+`INNOV-VISION-0`, `INNOV-PERSONA-0`, `GPLUGIN-BLOCK-0`, `GPLUGIN-POST-0`, `INNOV-REFLECT-0`, `INNOV-DETERM-0`
+
+---
+
 ## [9.1.0] — 2026-03-13 — Phase 66: Foundation Hardening
 
 ### feat(phase-66): Audit Gap Closure & Performance Hardening
