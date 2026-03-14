@@ -586,6 +586,40 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 > [!CAUTION]
 > `DEVADAAD` grants merge authority. First word must be `DEVADAAD` exactly. All governance constraints apply identically — the only additional capability is merge execution.
 
+
+### CLI status aggregator (`--adaad-status`)
+
+Use the orchestrator status command when you need machine-readable + human-readable orientation without performing any mutation or merge action:
+
+```bash
+python -m app.main --adaad-status --trigger-mode ADAAD --status-format both
+```
+
+Example table output:
+
+```text
+ADAAD Status Summary
+====================
+Trigger mode         : ADAAD
+Next PR              : PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)
+Dependency readiness : READY
+
+Gate tiers
+----------
+Tier 0: pass
+Tier 1: pass
+Tier 2: pass
+Tier 3: pass
+Tier M: unknown
+
+Pending evidence rows: none
+```
+
+Interpretation:
+- `Dependency readiness: BLOCKED` means next PR dependencies or `blocked_reason` state require remediation.
+- Any tier shown as `fail` indicates the latest recorded gate result is non-passing.
+- `Pending evidence rows` lists claims in `docs/comms/claims_evidence_matrix.md` that are not `Complete`.
+
 <br/>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>

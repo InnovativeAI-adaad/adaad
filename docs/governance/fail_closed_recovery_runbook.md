@@ -86,3 +86,16 @@ Rehearse fail-closed incidents using the dedicated scenario narratives:
 - [Mutation rejection](incident_playbooks/scenario_narratives.md#3-mutation-rejection-narrative)
 - [Instability spike](incident_playbooks/scenario_narratives.md#4-instability-spike-narrative)
 - [Ledger corruption recovery](incident_playbooks/scenario_narratives.md#5-ledger-corruption-recovery-narrative)
+
+## 8) ADAAD orientation status command
+
+Before triage, collect a deterministic orientation snapshot:
+
+```bash
+python -m app.main --adaad-status --trigger-mode ADAAD --status-format both
+```
+
+Interpretation guide:
+- `Dependency readiness : BLOCKED` means sequence dependencies or `.adaad_agent_state.json` `blocked_reason` are unresolved.
+- Tier lines (`Tier 0` through `Tier M`) reflect latest recorded gate pass/fail state for escalation routing.
+- `Pending evidence rows` lists non-`Complete` claims from `docs/comms/claims_evidence_matrix.md`; these block Tier 3 completeness.
