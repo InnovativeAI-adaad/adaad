@@ -138,6 +138,36 @@ class TestGovernanceHealthAggregatorAuthorityInvariants:
                    return_value=snap):
             from runtime.governance.health_service import governance_health_service
             result = governance_health_service(epoch_id="floor-test")
-            for key in ("health_score", "status", "signal_breakdown", "degraded",
-                        "weight_snapshot_digest", "constitution_version"):
+            for key in (
+                "health_score",
+                "status",
+                "signal_breakdown",
+                "degraded",
+                "weight_snapshot_digest",
+                "constitution_version",
+                "routing_health",
+                "review_pressure",
+            ):
                 assert key in result, f"Missing required field: {key}"
+
+    def test_T8_02_16_runtime_services_wrapper_delegates_to_canonical_service(self):
+        from runtime.api.runtime_services import governance_health_service as wrapped
+        from runtime.governance.health_service import governance_health_service as canonical
+
+        with patch("runtime.governance.health_aggregator.GovernanceHealthAggregator.compute", return_value=_make_snapshot(0.73)):
+            wrapped_result = wrapped(epoch_id="single-schema")
+            canonical_result = canonical(epoch_id="single-schema")
+
+        assert wrapped_result == canonical_result
+        assert set(wrapped_result.keys()) == {
+            "epoch_id",
+            "health_score",
+            "status",
+            "signal_breakdown",
+            "weight_snapshot_digest",
+            "constitution_version",
+            "scoring_algorithm_version",
+            "degraded",
+            "routing_health",
+            "review_pressure",
+        }

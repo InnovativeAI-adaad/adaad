@@ -1,5 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Runtime facade exposing orchestrator-safe runtime services."""
+"""Runtime facade exposing orchestrator-safe runtime services.
+
+Canonical governance health logic lives in ``runtime.governance.health_service``.
+Duplication is forbidden: this module must keep a thin delegation wrapper only.
+"""
 
 from typing import Any, Iterable
 
@@ -153,114 +157,10 @@ __all__ = [
 
 
 def governance_health_service(*, epoch_id: str) -> dict[str, Any]:
-    """Compute governance health snapshot for the requested epoch.
+    """Delegation wrapper for backwards-compatible imports.
 
-    Returns a dict suitable for direct JSON serialisation in the
-    ``GET /governance/health`` endpoint.  Read-only; no mutation authority.
+    Canonical implementation lives in ``runtime.governance.health_service``.
     """
-    from runtime.governance.health_aggregator import (
-        HEALTH_DEGRADED_THRESHOLD,
-        GovernanceHealthAggregator,
-    )
+    from runtime.governance.health_service import governance_health_service as _canonical_governance_health_service
 
-    # Wire Phase 5–7 dependencies from the active runtime (best-effort).
-    # Any missing dependency degrades gracefully per GovernanceHealthAggregator.
-    reviewer_reputation_ledger = None
-    amendment_engine = None
-    evidence_matrix = None
-    epoch_telemetry = None
-
-    try:
-        from runtime.governance.reviewer_reputation_ledger import ReviewerReputationLedger
-        reviewer_reputation_ledger = ReviewerReputationLedger()
-        reviewer_reputation_ledger.load()
-    except Exception:
-        pass
-
-    try:
-        from runtime.autonomy.roadmap_amendment_engine import RoadmapAmendmentEngine
-        amendment_engine = RoadmapAmendmentEngine()
-    except Exception:
-        pass
-
-    try:
-        from runtime.governance.federation.federated_evidence_matrix import FederatedEvidenceMatrix
-        evidence_matrix = FederatedEvidenceMatrix()
-    except Exception:
-        pass
-
-    try:
-        from runtime.autonomy.epoch_telemetry import EpochTelemetry
-        epoch_telemetry = EpochTelemetry.load_from_disk()
-    except Exception:
-        pass
-
-    # Phase 23: wire routing analytics engine (best-effort, from active telemetry sink)
-    routing_analytics_engine = None
-    try:
-        from server import _telemetry_sink_ref
-        from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
-        from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
-        if isinstance(_telemetry_sink_ref, FileTelemetrySink):
-            reader = TelemetryLedgerReader(_telemetry_sink_ref._path)
-            routing_analytics_engine = StrategyAnalyticsEngine(reader)
-    except Exception:
-        pass
-
-    agg = GovernanceHealthAggregator(
-        reviewer_reputation_ledger=reviewer_reputation_ledger,
-        roadmap_amendment_engine=amendment_engine,
-        federated_evidence_matrix=evidence_matrix,
-        epoch_telemetry=epoch_telemetry,
-        routing_analytics_engine=routing_analytics_engine,
-    )
-
-    snapshot = agg.compute(epoch_id)
-
-    h = snapshot.health_score
-    if h >= 0.80:
-        status = "green"
-    elif h >= HEALTH_DEGRADED_THRESHOLD:
-        status = "amber"
-    else:
-        status = "red"
-
-    # Phase 23: routing_health summary field
-    routing_health_summary: dict[str, Any] = {"available": False, "status": "green",
-                                               "health_score": 1.0, "dominant_strategy": None,
-                                               "report_digest": None, "analytics_version": "22.0"}
-    if snapshot.routing_health_report is not None:
-        routing_health_summary = {
-            "available": snapshot.routing_health_report.get("available", True),
-            "status": snapshot.routing_health_report.get("status", "green"),
-            "health_score": snapshot.routing_health_report.get("health_score", 1.0),
-            "dominant_strategy": snapshot.routing_health_report.get("dominant_strategy"),
-            "report_digest": snapshot.routing_health_report.get("report_digest"),
-            "analytics_version": "22.0",
-        }
-
-    # Phase 24: compute advisory review pressure from health snapshot
-    from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
-    pressure_adaptor = HealthPressureAdaptor()
-    pressure_adj = pressure_adaptor.compute(snapshot.health_score)
-
-    review_pressure_summary = {
-        "pressure_tier": pressure_adj.pressure_tier,
-        "health_band": pressure_adj.health_band,
-        "adjusted_tiers": list(pressure_adj.adjusted_tiers),
-        "advisory_only": pressure_adj.advisory_only,
-        "adjustment_digest": pressure_adj.adjustment_digest,
-    }
-
-    return {
-        "epoch_id":                  snapshot.epoch_id,
-        "health_score":              snapshot.health_score,
-        "status":                    status,
-        "signal_breakdown":          snapshot.signal_breakdown,
-        "weight_snapshot_digest":    snapshot.weight_snapshot_digest,
-        "constitution_version":      snapshot.constitution_version,
-        "scoring_algorithm_version": snapshot.scoring_algorithm_version,
-        "degraded":                  snapshot.degraded,
-        "routing_health":            routing_health_summary,  # Phase 23
-        "review_pressure":           review_pressure_summary,  # Phase 24
-    }
+    return _canonical_governance_health_service(epoch_id=epoch_id)

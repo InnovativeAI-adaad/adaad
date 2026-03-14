@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Governance Health Service — standalone facade for GET /governance/health.
+"""Canonical governance health domain service.
 
-Kept separate from runtime.api.runtime_services to avoid circular imports
-with the FastAPI server layer.
+This module is the single source of truth for ``governance_health_service``.
+Do not duplicate logic in API facades; wrappers must delegate here to keep one
+response schema across callsites.
 """
 
 from __future__ import annotations
@@ -51,11 +52,25 @@ def governance_health_service(*, epoch_id: str) -> Dict[str, Any]:
     except Exception:
         pass
 
+    # Wire routing analytics engine from active telemetry sink (best-effort).
+    routing_analytics_engine = None
+    try:
+        from server import _telemetry_sink_ref
+        from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
+        from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
+
+        if isinstance(_telemetry_sink_ref, FileTelemetrySink):
+            reader = TelemetryLedgerReader(_telemetry_sink_ref._path)
+            routing_analytics_engine = StrategyAnalyticsEngine(reader)
+    except Exception:
+        pass
+
     agg = GovernanceHealthAggregator(
         reviewer_reputation_ledger=reviewer_reputation_ledger,
         roadmap_amendment_engine=amendment_engine,
         federated_evidence_matrix=evidence_matrix,
         epoch_telemetry=epoch_telemetry,
+        routing_analytics_engine=routing_analytics_engine,
     )
 
     snapshot = agg.compute(epoch_id)
@@ -68,13 +83,44 @@ def governance_health_service(*, epoch_id: str) -> Dict[str, Any]:
     else:
         status = "red"
 
+    routing_health_summary: Dict[str, Any] = {
+        "available": False,
+        "status": "green",
+        "health_score": 1.0,
+        "dominant_strategy": None,
+        "report_digest": None,
+        "analytics_version": "22.0",
+    }
+    if snapshot.routing_health_report is not None:
+        routing_health_summary = {
+            "available": snapshot.routing_health_report.get("available", True),
+            "status": snapshot.routing_health_report.get("status", "green"),
+            "health_score": snapshot.routing_health_report.get("health_score", 1.0),
+            "dominant_strategy": snapshot.routing_health_report.get("dominant_strategy"),
+            "report_digest": snapshot.routing_health_report.get("report_digest"),
+            "analytics_version": "22.0",
+        }
+
+    from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
+
+    pressure_adj = HealthPressureAdaptor().compute(snapshot.health_score)
+    review_pressure_summary = {
+        "pressure_tier": pressure_adj.pressure_tier,
+        "health_band": pressure_adj.health_band,
+        "adjusted_tiers": list(pressure_adj.adjusted_tiers),
+        "advisory_only": pressure_adj.advisory_only,
+        "adjustment_digest": pressure_adj.adjustment_digest,
+    }
+
     return {
-        "epoch_id":                  snapshot.epoch_id,
-        "health_score":              snapshot.health_score,
-        "status":                    status,
-        "signal_breakdown":          snapshot.signal_breakdown,
-        "weight_snapshot_digest":    snapshot.weight_snapshot_digest,
-        "constitution_version":      snapshot.constitution_version,
+        "epoch_id": snapshot.epoch_id,
+        "health_score": snapshot.health_score,
+        "status": status,
+        "signal_breakdown": snapshot.signal_breakdown,
+        "weight_snapshot_digest": snapshot.weight_snapshot_digest,
+        "constitution_version": snapshot.constitution_version,
         "scoring_algorithm_version": snapshot.scoring_algorithm_version,
-        "degraded":                  snapshot.degraded,
+        "degraded": snapshot.degraded,
+        "routing_health": routing_health_summary,
+        "review_pressure": review_pressure_summary,
     }
