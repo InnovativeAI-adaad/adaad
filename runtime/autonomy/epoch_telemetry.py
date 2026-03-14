@@ -64,6 +64,7 @@ class EpochRecord:
     bandit_total_pulls: int
     bandit_scores:      Dict[str, float]
     is_plateau:         bool
+    prediction_accuracy: Optional[float] = None  # WeightAdaptor EMA value at record time
     recorded_at:        float = field(default_factory=time.time)
 
     @property
@@ -88,6 +89,7 @@ class EpochRecord:
             "bandit_total_pulls": self.bandit_total_pulls,
             "bandit_scores":      self.bandit_scores,
             "is_plateau":         self.is_plateau,
+            "prediction_accuracy": self.prediction_accuracy,
             "recorded_at":        self.recorded_at,
         }
 
@@ -137,11 +139,13 @@ class EpochTelemetry:
 
         # Weight state
         gain_w = coverage_w = None
+        prediction_acc = None
         if weight_adaptor is not None:
             try:
                 snap = weight_adaptor.weight_snapshot()
                 gain_w     = snap.get("gain_weight")
                 coverage_w = snap.get("coverage_weight")
+                prediction_acc = weight_adaptor.prediction_accuracy
             except Exception:
                 pass
 
@@ -181,6 +185,7 @@ class EpochTelemetry:
             bandit_total_pulls=bandit_total_pulls,
             bandit_scores=bandit_scores,
             is_plateau=is_plateau,
+            prediction_accuracy=prediction_acc,
         )
         self.append(record)
         return record
