@@ -34,9 +34,9 @@ The projection is written to `state["vision_projection"]` and surfaced in the St
 
 **Invariant:** INNOV-PERSONA-0
 
-Immediately after Vision Mode, `select_personality()` deterministically selects one of three default personality profiles (Architect, Dream, Beast) for the epoch.  The selected philosophy (`minimalist` / `exploratory` / `aggressive`) is injected into the `ProposalRequest` context so the proposal engine may reflect it in strategy metadata.
+Immediately after Vision Mode, `select_personality()` deterministically selects one of three persisted personality profiles (Architect, Dream, Beast) for the epoch. Profiles are loaded from `data/personality_profiles.json` via `PersonalityProfileStore`, with deterministic defaults used only when no persisted file exists. The selected philosophy (`minimalist` / `exploratory` / `aggressive`) is injected into the `ProposalRequest` context so the proposal engine may reflect it in strategy metadata.
 
-The active personality is written to `state["active_personality"]` and the Step 4 detail block.
+The active personality is written to `state["active_personality"]` and the Step 4 detail block. A deterministic epoch usage record is also upserted in `data/persona_epoch_records.jsonl`.
 
 **Default profiles:**
 
@@ -49,6 +49,20 @@ The active personality is written to `state["active_personality"]` and the Step 
 **Fail-safe:** if `select_personality` raises, the step continues with `active_personality: {}`.
 
 ---
+
+
+### 2b. Personality Impact Persistence — Step 10 (GOVERNANCE-GATE)
+
+After GovernanceGate/G-Plugin outcomes are known, `record_personality_impact()` writes deterministic epoch-level persona impact records. Impact data includes:
+
+- selected persona and philosophy
+- strategy id for the epoch
+- win/loss outcome tied to promotion result
+- aggregate epoch impact score from `fitness_summary`
+- vector delta (`vector_before` → `vector_after`)
+- revision/win/loss counters in `data/personality_profiles.json`
+
+The calculated impact is stored in `state["personality_impact"]` and included in Step 10 detail output.
 
 ### 3. Governance Plugins — Step 10 (GOVERNANCE-GATE)
 
@@ -95,8 +109,9 @@ Between cadence ticks, no report is produced and Step 14 runs identically to the
 
 | File | Purpose |
 |------|---------|
-| `runtime/innovations_wiring.py` | Adapter module: four wiring helpers + DEFAULT_PERSONALITIES |
-| `tests/test_innovations_wiring.py` | 21 tests covering all injection points (T67-*) |
+| `runtime/innovations_wiring.py` | Adapter module: vision/persona/plugin/reflection + impact persistence |
+| `tests/test_innovations_wiring.py` | 21+ tests covering injection points + persisted personality regressions |
+| `runtime/personality_profiles.py` | Deterministic profile store (`data/personality_profiles.json`, `data/persona_epoch_records.jsonl`) |
 | `docs/INNOVATIONS_WIRING.md` | This document |
 
 ## Modified Files

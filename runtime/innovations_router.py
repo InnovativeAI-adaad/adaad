@@ -30,6 +30,7 @@ from fastapi import APIRouter, Body, Header
 from runtime.capability.capability_registry import CapabilityRegistry
 from runtime.capability.seed_registry_adapter import register_seeds_bulk
 from runtime.innovations import ADAADInnovationEngine, CapabilitySeed
+from runtime.personality_profiles import PersonalityProfileStore
 from runtime.audit_auth import require_audit_read_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
 
@@ -42,6 +43,7 @@ _engine = ADAADInnovationEngine()
 
 # Shared in-process capability registry for seed registration
 _seed_registry = CapabilityRegistry()
+_profile_store = PersonalityProfileStore()
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +221,32 @@ def register_seeds(
         "results": results,
         "parse_errors": parse_errors,
         "registry_size": len(_seed_registry.list_ids()),
+    }
+
+
+@router.get("/personality-profiles")
+def personality_profiles(
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """Return persisted personality profiles + deterministic epoch impact history."""
+    _require_audit_read(authorization)
+    snapshot = _profile_store.snapshot()
+    history = list(snapshot.get("history", []))
+    per_agent: Dict[str, Dict[str, int]] = {}
+    for row in history:
+        aid = str(row.get("agent_id", ""))
+        if not aid:
+            continue
+        bucket = per_agent.setdefault(aid, {"wins": 0, "losses": 0})
+        if row.get("outcome") == "win":
+            bucket["wins"] += 1
+        elif row.get("outcome") == "loss":
+            bucket["losses"] += 1
+    return {
+        "schema_version": snapshot.get("schema_version", "v1"),
+        "profiles": snapshot.get("profiles", []),
+        "history": history[-120:],
+        "agent_totals": per_agent,
     }
 
 

@@ -25,7 +25,13 @@ Full-screen animated HTML5 canvas constellation. Repositories as glowing cyan st
 Bio-green registration form: seed_id, lane, intent, scaffold, author. Seeds appear as living list items with glow filter. Idempotent — re-registration shows existing state. Wired to `POST /innovations/seeds/register` and `GET /innovations/seeds`.
 
 ### 5. Agents (Mutation Personalities)
-Three agent identity cards — Architect, Dream, Beast — each with animated vector bars that fill on mount (cubic-bezier spring), philosophy tag, and active epoch indicator. Cards lift on hover with colored shadows.
+Three agent identity cards — Architect, Dream, Beast — each with animated vector bars, active epoch indicator, and persisted profile metadata loaded from `GET /innovations/personality-profiles`.
+
+Each card now surfaces:
+- current persisted philosophy + vector state
+- deterministic vector delta from latest epoch (`vector_before` → `vector_after`)
+- win/loss counters and recent epoch outcomes tied to persona choices
+- live badge updates from the innovations websocket `personality` frame
 
 ---
 

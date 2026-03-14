@@ -44,6 +44,10 @@ from runtime.innovations import (
     ReflectionReport,
     VisionProjection,
 )
+from runtime.personality_profiles import (
+    DEFAULT_PERSONALITY_PROFILES,
+    PersonalityProfileStore,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -59,23 +63,8 @@ REFLECTION_CADENCE: int = 100
 VISION_HORIZON: int = 100
 
 # Default personality profiles for Architect, Dream, and Beast agents.
-DEFAULT_PERSONALITIES: List[MutationPersonality] = [
-    MutationPersonality(
-        agent_id="architect",
-        vector=(0.9, 0.2, 0.3, 0.1),
-        philosophy="minimalist",
-    ),
-    MutationPersonality(
-        agent_id="dream",
-        vector=(0.6, 0.8, 0.4, 0.2),
-        philosophy="exploratory",
-    ),
-    MutationPersonality(
-        agent_id="beast",
-        vector=(0.5, 0.5, 0.9, 0.8),
-        philosophy="aggressive",
-    ),
-]
+DEFAULT_PERSONALITIES: List[MutationPersonality] = list(DEFAULT_PERSONALITY_PROFILES)
+_PROFILE_STORE = PersonalityProfileStore()
 
 
 # ---------------------------------------------------------------------------
@@ -105,6 +94,7 @@ def select_agent_personality(
     engine: ADAADInnovationEngine,
     epoch_id: str,
     profiles: Optional[List[MutationPersonality]] = None,
+    strategy_id: str = "",
 ) -> Optional[MutationPersonality]:
     """Deterministically select a personality profile for this epoch.
 
@@ -112,8 +102,9 @@ def select_agent_personality(
     Emits personality frame to innovations bus (IBUS-FAILSAFE-0).
     """
     try:
-        chosen_profiles = profiles or DEFAULT_PERSONALITIES
+        chosen_profiles = profiles or _PROFILE_STORE.load_profiles() or DEFAULT_PERSONALITIES
         p = engine.select_personality(chosen_profiles, epoch_id=epoch_id)
+        _PROFILE_STORE.record_selection(epoch_id=epoch_id, profile=p, strategy_id=strategy_id)
         try:
             from runtime.innovations_bus import emit_personality  # noqa: PLC0415
             emit_personality(p.agent_id, p.philosophy, list(p.vector), epoch_id)
@@ -123,6 +114,31 @@ def select_agent_personality(
     except Exception as exc:  # noqa: BLE001
         logger.warning("innovations_wiring: personality_select failed — %s", exc)
         return None
+
+
+def record_personality_impact(
+    *,
+    epoch_id: str,
+    state: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Persist deterministic epoch-level personality usage impact and vector deltas."""
+    try:
+        active = dict(state.get("active_personality", {}))
+        if not active:
+            return {}
+        active.setdefault("strategy_id", state.get("context", {}).get("strategy_id", ""))
+        impact = _PROFILE_STORE.record_impact(
+            epoch_id=epoch_id,
+            active_personality=active,
+            fitness_summary=state.get("fitness_summary", ()),
+            mutations_succeeded=state.get("mutations_succeeded", ()),
+        )
+        if impact:
+            state["personality_impact"] = impact
+        return impact
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("innovations_wiring: personality_impact failed — %s", exc)
+        return {}
 
 
 def run_gplugins(
@@ -213,6 +229,7 @@ __all__ = [
     "REFLECTION_CADENCE",
     "VISION_HORIZON",
     "run_gplugins",
+    "record_personality_impact",
     "run_self_reflection",
     "run_vision_forecast",
     "select_agent_personality",

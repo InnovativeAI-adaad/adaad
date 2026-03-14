@@ -54,6 +54,7 @@ from runtime.governance.gate import GovernanceGate, GateAxisResult
 from runtime.governance.gate_v2 import GovernanceGateV2
 from runtime.innovations import ADAADInnovationEngine, GovernancePlugin
 from runtime.innovations_wiring import (
+    record_personality_impact,
     run_gplugins,
     run_self_reflection,
     run_vision_forecast,
@@ -200,7 +201,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             personality_detail: Dict[str, Any] = {}
             if self._innovations_engine is not None:
                 personality = select_agent_personality(
-                    self._innovations_engine, epoch_id
+                    self._innovations_engine, epoch_id, strategy_id=strategy_id
                 )
                 if personality is not None:
                     state["active_personality"] = {
@@ -389,10 +390,15 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             )
 
             if rejected:
+                personality_impact = record_personality_impact(epoch_id=state["epoch_id"], state=state)
                 return CELStepResult(
                     step_number=n, step_name=name, outcome=StepOutcome.BLOCKED,
                     reason="governance_gate_rejection",
-                    detail={"rejected": rejected, "gate_v2_existing_0_compliant": True},
+                    detail={
+                        "rejected": rejected,
+                        "gate_v2_existing_0_compliant": True,
+                        "personality_impact": personality_impact,
+                    },
                 )
 
             # ---- Phase 67: Governance Plugins (GPLUGIN-BLOCK-0) ---------
@@ -427,6 +433,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                         mid for mid in state["mutations_succeeded"]
                         if mid not in gplugin_blocked
                     )
+                    personality_impact = record_personality_impact(epoch_id=state["epoch_id"], state=state)
                     return CELStepResult(
                         step_number=n, step_name=name, outcome=StepOutcome.BLOCKED,
                         reason="gplugin_rejection",
@@ -434,9 +441,11 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                             "blocked_by_gplugin": gplugin_blocked,
                             "gplugin_outcomes": gplugin_outcomes,
                             "gate_v2_existing_0_compliant": True,
+                            "personality_impact": personality_impact,
                         },
                     )
 
+            personality_impact = record_personality_impact(epoch_id=state["epoch_id"], state=state)
             return CELStepResult(
                 step_number=n, step_name=name, outcome=StepOutcome.PASS,
                 detail={
@@ -444,6 +453,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     "gate_v2_existing_0_compliant": True,
                     "gate_outcomes": gate_outcomes,
                     "gplugin_outcomes": gplugin_outcomes,
+                    "personality_impact": personality_impact,
                 },
             )
         except Exception as exc:  # noqa: BLE001 — CEL-WIRE-FAIL-0
