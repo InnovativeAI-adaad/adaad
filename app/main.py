@@ -72,6 +72,7 @@ from runtime.api.runtime_services import (
 )
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
+from adaad.orchestrator.status import build_status_report, render_human_table, report_as_json
 from runtime.preflight import validate_agent_contract_preflight
 from security import cryovant
 from security.ledger import journal
@@ -958,6 +959,23 @@ def main() -> None:
         action="store_true",
         help="Export a signed replay proof bundle for --epoch and exit.",
     )
+    parser.add_argument(
+        "--adaad-status",
+        action="store_true",
+        help="Print ADAAD/DEVADAAD governance status summary and exit.",
+    )
+    parser.add_argument(
+        "--trigger-mode",
+        choices=("ADAAD", "DEVADAAD"),
+        default="ADAAD",
+        help="Trigger mode context for --adaad-status output.",
+    )
+    parser.add_argument(
+        "--status-format",
+        choices=("table", "json", "both"),
+        default="both",
+        help="Output format for --adaad-status.",
+    )
     args = parser.parse_args()
 
     dry_run_env = os.getenv("ADAAD_DRY_RUN", "").lower() in {"1", "true", "yes", "on"}
@@ -978,6 +996,16 @@ def main() -> None:
             parser.error("--export-replay-proof requires --epoch <id>")
         proof_path = ReplayProofBuilder().write_bundle(selected_epoch)
         print(proof_path.as_posix())
+        return
+
+    if args.adaad_status:
+        report = build_status_report(repo_root=APP_ROOT.parent, trigger_mode=args.trigger_mode)
+        if args.status_format in {"table", "both"}:
+            print(render_human_table(report))
+        if args.status_format in {"json", "both"}:
+            if args.status_format == "both":
+                print()
+            print(report_as_json(report))
         return
 
     orchestrator = Orchestrator(

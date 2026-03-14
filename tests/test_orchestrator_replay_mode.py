@@ -435,5 +435,22 @@ class ReplayProofExportCliTest(unittest.TestCase):
                 main()
 
 
+class AdaadStatusCliTest(unittest.TestCase):
+    def test_adaad_status_prints_table_and_json_and_skips_boot(self) -> None:
+        report = mock.Mock()
+        with mock.patch("app.main.build_status_report", return_value=report) as build:
+            with mock.patch("app.main.render_human_table", return_value="TABLE") as table:
+                with mock.patch("app.main.report_as_json", return_value='{"status":"ok"}') as as_json:
+                    with mock.patch("app.main.Orchestrator") as orchestrator_cls:
+                        with mock.patch("sys.argv", ["app.main", "--adaad-status", "--status-format", "both", "--trigger-mode", "DEVADAAD"]):
+                            with mock.patch("builtins.print") as printer:
+                                main()
+        build.assert_called_once()
+        table.assert_called_once_with(report)
+        as_json.assert_called_once_with(report)
+        orchestrator_cls.assert_not_called()
+        printer.assert_has_calls([mock.call("TABLE"), mock.call(), mock.call('{"status":"ok"}')])
+
+
 if __name__ == "__main__":
     unittest.main()
