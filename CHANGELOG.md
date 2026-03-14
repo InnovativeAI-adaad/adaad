@@ -1,3 +1,25 @@
+## [9.6.0] — 2026-03-13 — Phase 71: Agent Character Art
+
+### feat(phase-71): Cinematic character art roster replaces abstract personality cards
+
+| Item | Detail |
+|---|---|
+| `ui/aponi/agent_architect.png` | Architect character art — golden-robed constitutional guardian with Law-Book |
+| `ui/aponi/agent_noah.png` | Architect detailed portrait (Noah) — featured spotlight |
+| `ui/aponi/agent_dream.png` | Dream character art — galaxy-hair explorer with Dream Orb |
+| `ui/aponi/agent_beast.png` | Beast character art — dark armor mutation engine with cyan spines |
+| `ui/aponi/agent_trio.png` | Trinity group portrait — all three agents together |
+| `ui/aponi/innovations_panel.js` | Personalities panel completely redesigned as cinematic hero-select roster |
+
+### Roster design
+- **Featured Spotlight** — Architect/Noah full-width cinematic card with 36px name, stat bars, character description, detail pills. Hover scales portrait up
+- **Trio Cards** — individual agent cards with character portraits, animated stat bars, detail tags. `is-active` pulse dot for current epoch agent
+- **Trinity Banner** — full-width group portrait at bottom with overlay text
+- **Persona Badge** — now shows character portrait thumbnail + name + philosophy in Aponi header on WS personality frame
+- All portrait loads fail-gracefully with emoji fallback
+
+---
+
 ## [9.5.0] — 2026-03-13 — Phase 70: WebSocket Live Epoch Feed
 
 ### feat(phase-70): Real-time innovations event bus + persistent WS stream
