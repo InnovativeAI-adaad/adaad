@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from security.ledger import journal
 
@@ -20,16 +20,14 @@ def _steps_for_gate(gate: str) -> list[str]:
 
 
 def explain_rejection(mutation_id: str) -> Dict[str, Any]:
-    entries: List[Dict[str, Any]] = [
-        e
-        for e in journal.read_entries(limit=5000)
-        if isinstance(e, dict)
-        and str(e.get("action") or "") == "mutation_lifecycle_rejected"
-        and str((e.get("payload") or {}).get("mutation_id") or "") == mutation_id
-    ]
-    if not entries:
+    entry = journal.read_latest_entry_by_action_and_mutation_id(
+        action="mutation_lifecycle_rejected",
+        mutation_id=mutation_id,
+        limit=5000,
+    )
+    if entry is None:
         raise KeyError("mutation_not_found")
-    payload = entries[-1].get("payload") if isinstance(entries[-1].get("payload"), dict) else {}
+    payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
     guard = payload.get("guard_report") if isinstance(payload.get("guard_report"), dict) else {}
 
     failures = []

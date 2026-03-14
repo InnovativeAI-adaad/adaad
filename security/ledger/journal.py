@@ -22,7 +22,8 @@ import os
 import threading
 from pathlib import Path
 from contextlib import contextmanager
-from typing import Dict, List, Optional, Protocol
+from collections import deque
+from typing import Any, Dict, List, Optional, Protocol
 
 from runtime import metrics
 from runtime.governance.event_taxonomy import validate_event_type_for_agm_step
@@ -96,6 +97,36 @@ def read_entries(limit: int = 50) -> List[Dict[str, str]]:
         except json.JSONDecodeError:
             continue
     return entries
+
+
+def read_latest_entry_by_action_and_mutation_id(
+    *,
+    action: str,
+    mutation_id: str,
+    limit: int = 5000,
+) -> Dict[str, Any] | None:
+    """Return the latest matching lineage entry within the most-recent ``limit`` rows."""
+    ensure_ledger()
+    recent_lines: deque[str] = deque(maxlen=max(limit, 1))
+    with LEDGER_FILE.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            recent_lines.append(line)
+
+    latest_match: Dict[str, Any] | None = None
+    for line in recent_lines:
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entry, dict):
+            continue
+        if str(entry.get("action") or "") != action:
+            continue
+        payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+        if str(payload.get("mutation_id") or "") != mutation_id:
+            continue
+        latest_match = entry
+    return latest_match
 
 
 def _hash_line(prev_hash: str, payload: Dict[str, object]) -> str:
@@ -332,6 +363,7 @@ def record_rotation_failure(action: str, payload: Dict[str, object]) -> None:
 __all__ = [
     "write_entry",
     "read_entries",
+    "read_latest_entry_by_action_and_mutation_id",
     "append_tx",
     "ensure_ledger",
     "ensure_journal",
