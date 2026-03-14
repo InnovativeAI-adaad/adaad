@@ -4,7 +4,7 @@
 
 > Deterministic, governance-first documentation presentation standard — applied consistently across all ADAAD docs.
 
-**Last reviewed:** 2026-03-05
+**Last reviewed:** 2026-03-14
 
 ---
 
@@ -115,7 +115,72 @@ Place the primary image near the top (after the summary blockquote). Avoid repea
 
 ---
 
-## 6 · Alt text — Alt-text requirements
+## 6 · Low-weight imagery policy (human-facing surfaces)
+
+"Low-weight imagery" means visual assets are intentionally softened so technical text and policy claims remain primary.
+
+**Approved low-weight ranges:**
+
+| Property | Allowed range (`img-low-weight`) |
+|---|---|
+| Opacity | `0.40` to `0.68` |
+| Filter saturation | `0.55` to `0.85` |
+| Filter contrast | `0.82` to `0.95` |
+| Glow / shadow alpha | up to `0.22` |
+
+**Where this applies by default:**
+- `README.md` and root/module markdown docs
+- Docs HTML pages and markdown that embeds `<img ...>` blocks
+- Human-facing UI panels where imagery is decorative or supportive
+
+**Exception (full-contrast allowed):**
+- Critical diagrams that carry decision-significant meaning (for example constitutional flow or security boundary diagrams) may use full contrast.
+- These must be explicitly marked with `img-critical` (or `data-img-weight="critical"`) and reviewed for necessity.
+
+### Embed examples
+
+**Markdown/HTML embed for README/docs (preferred):**
+
+```html
+<p align="center">
+  <img class="img-low-weight" data-img-weight="low"
+    src="docs/assets/governance-flow.svg"
+    width="760"
+    alt="Governance flow from proposal through replay verification and evidence archival">
+</p>
+```
+
+**Critical diagram exception:**
+
+```html
+<img class="img-critical" data-img-weight="critical"
+  src="docs/assets/security-boundary-map.svg"
+  alt="Security boundary map used for critical governance review">
+```
+
+**Frontend CSS example:**
+
+```css
+.img-low-weight {
+  opacity: 0.58;
+  filter: saturate(0.72) contrast(0.9);
+}
+
+.img-critical {
+  opacity: 1;
+  filter: none;
+}
+```
+
+### Do / Don't matrix (representative selectors)
+
+| Selector | Do | Don't |
+|---|---|---|
+| `.agent-portrait` | Apply low-weight treatment when portrait is supportive/decorative in panels. | Use full-contrast glow by default for non-critical portrait cards. |
+| `.trio-banner-img` | Use `.img-low-weight` baseline in docs/human-facing banner use. | Present as dominant full-contrast hero unless the image is critical evidence. |
+| `.img-critical` | Restrict to diagrams where reduced contrast harms interpretation. | Use for aesthetic preference only. |
+
+## 7 · Alt text — Alt-text requirements
 
 All images must include explicit alt text.
 
@@ -130,13 +195,13 @@ All images must include explicit alt text.
 
 ---
 
-## 7 · Tables
+## 8 · Tables
 
 Prefer tables over nested bullet lists for structured comparisons. Use consistent column alignment. Table headers should be title-case or all-lowercase — not mixed.
 
 ---
 
-## 8 · `Last reviewed` policy
+## 9 · `Last reviewed` policy
 
 - `Last reviewed` is owner-attested metadata — update it on every substantive documentation change.
 - Currently policy-enforced in review, not auto-validated in CI.

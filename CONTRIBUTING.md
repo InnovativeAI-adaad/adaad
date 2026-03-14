@@ -156,6 +156,23 @@ Phase 6 — Autonomous Roadmap Self-Amendment is active (target v3.1.0). New PRs
 
 ---
 
+
+## Human-facing image-weight rule
+
+New human-facing imagery in `README.md`, docs pages, and user-facing UI panels must follow the low-weight imagery policy in `docs/DOCS_VISUAL_STYLE_GUIDE.md`.
+
+- Use `img-low-weight` (or `data-img-weight="low"`) by default.
+- Use `img-critical` (or `data-img-weight="critical"`) only for critical diagrams where full contrast is required for interpretation.
+- Keep required alt text on all image embeds.
+
+Optional validation command:
+
+```bash
+python scripts/validate_docs_integrity.py --format json --enforce-image-weight-markers
+```
+
+---
+
 ## Security and telemetry hygiene
 
 - Do **not** log secrets, credentials, tokens, or sensitive command lines.
