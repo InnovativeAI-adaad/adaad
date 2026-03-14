@@ -1451,8 +1451,14 @@ End-to-end ADAAD Oracle API endpoint (`GET /innovations/oracle`); Aponi Story Mo
 
 **Key invariants:** ORACLE-AUTH-0, ORACLE-DETERM-0, STORY-LEDGER-0, FED-MAP-READONLY-0, SEED-REG-0, SEED-IDEM-0, SEED-HASH-0
 
-### Phase 69 — Innovations UI Integration
+### Phase 69 — Aponi Innovations UI
 
-**Target:** v9.4.0 · **Dependency:** Phase 68 merged at main
+**Status:** ✅ shipped (v9.4.0) · **Dependency:** Phase 68 merged at main
 
-Aponi dashboard panels wired to Phase 68 endpoints: Oracle query panel, Story Mode timeline renderer, Federation Map galaxy visualizer, Seed management panel. WebSocket push for real-time story arc updates. Personality profile display per epoch in CEL console.
+Innovations tab (✦, key `7`) added to Aponi dashboard. Five sub-panels: Oracle (gold Q&A terminal), Story Mode (living arc timeline), Galaxy (animated constellation canvas), Seeds (bio-green registry), Agent Personalities (vector identity cards). Neuro-cosmic luxury aesthetic — Syne + JetBrains Mono, three-color agent identity system, full offline fallback.
+
+### Phase 70 — WebSocket Story Arc Push + Epoch Live Feed
+
+**Target:** v9.5.0 · **Dependency:** Phase 69 merged at main
+
+Real-time story arc push via `/ws/events` WebSocket into Aponi Story Mode panel. Live epoch progress bar during CEL execution. Agent personality badge shown in header during active epoch. Reflection report toast notification on cadence tick.

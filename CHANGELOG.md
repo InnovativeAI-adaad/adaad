@@ -1,3 +1,23 @@
+## [9.4.0] — 2026-03-13 — Phase 69: Aponi Innovations UI
+
+### feat(phase-69): Neuro-cosmic Innovations panel wired into Aponi dashboard
+
+| Item | Detail |
+|---|---|
+| `ui/aponi/innovations_panel.js` | 1118-line self-contained panel: Oracle, Story Mode, Galaxy canvas, Seeds, Agent Personalities |
+| `ui/aponi/index.html` | Innovations tab (✦, key `7`); script include; `render()` hook; keyboard shortcut documented |
+| `docs/INNOVATIONS_UI.md` | Phase doc, design system token table, architecture notes |
+
+### Design highlights
+- **Fonts:** Syne 800 display + JetBrains Mono for all data
+- **Agent identity:** Architect (ice cyan `#00e5ff`) · Dream (aurora `#e040fb`) · Beast (ember `#ff6d00`)
+- **Galaxy:** animated HTML5 canvas — glowing stars, gradient beam paths, orange divergence flares, 120-particle background field
+- **Story Mode:** epoch arc timeline with agent-colored connector nodes and staggered `arc-enter` animation
+- **Oracle:** gold-glowing Q&A terminal with pre-set chips; graceful offline fallback
+- **Seeds:** bio-green (`#69ff47`) registration form with living list
+
+---
+
 ## [9.3.0] — 2026-03-13 — Phase 68: Full Innovations Orchestration
 
 ### feat(phase-68): Oracle API, Story Mode, Federation Map, Capability Seed Registration
