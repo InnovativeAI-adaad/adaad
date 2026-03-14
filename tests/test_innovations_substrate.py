@@ -23,14 +23,18 @@ def test_capability_seed_digest_is_deterministic() -> None:
 
 def test_vision_mode_and_plugins_are_deterministic() -> None:
     engine = ADAADInnovationEngine()
-    projection = engine.run_vision_mode(
-        [
-            {"capability": "oracle", "fitness_delta": 0.2},
-            {"capability": "story_mode", "fitness_delta": 0.1, "dead_end": True, "path": "path-1"},
-        ],
-        horizon_epochs=150,
-    )
+    events = [
+        {"epoch_id": "e-1", "capability": "oracle", "fitness_delta": 0.2, "path": "path-0"},
+        {"epoch_id": "e-2", "capability": "story_mode", "fitness_delta": 0.1, "dead_end": True, "path": "path-1", "blocking_cause": "policy_gate"},
+    ]
+    p1 = engine.run_vision_mode(events, horizon_epochs=150, seed_input="fixed-seed")
+    p2 = engine.run_vision_mode(events, horizon_epochs=150, seed_input="fixed-seed")
+    assert p1 == p2
+    projection = p1
     assert projection.horizon_epochs == 150
+    assert projection.trajectory_bands is not None
+    assert projection.confidence_metadata is not None
+    assert projection.dead_end_diagnostics[0]["path_id"] == "path-1"
     results = engine.run_plugins(
         {"new_dependencies": [], "missing_docstrings": 0},
         [NoNewDependenciesPlugin(), DocstringRequiredPlugin()],
