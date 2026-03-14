@@ -1,3 +1,27 @@
+## [9.5.0] — 2026-03-13 — Phase 70: WebSocket Live Epoch Feed
+
+### feat(phase-70): Real-time innovations event bus + persistent WS stream
+
+| Item | Detail |
+|---|---|
+| `runtime/innovations_bus.py` | New async fan-out event bus: `InnovationsEventBus` singleton, 8 typed emit helpers, `emit_sync` for non-async callers. Invariants: IBUS-FANOUT-0, IBUS-FAILSAFE-0, IBUS-DETERM-0, IBUS-THREAD-0 |
+| `runtime/evolution/cel_wiring.py` | `run_epoch` override emits `epoch_start`/`epoch_end`; `_step_14` emits `story_arc` + `cel_step` frames |
+| `runtime/innovations_wiring.py` | `select_agent_personality` emits `personality` frame; `run_self_reflection` emits `reflection` frame |
+| `runtime/innovations_router.py` | `POST /seeds/register` emits `seed_planted` frame per new seed |
+| `server.py` | `/ws/events` upgraded to persistent stream: relays innovations bus frames, 30s keepalive ping, IBUS-FAILSAFE-0 on disconnect |
+| `ui/aponi/innovations_panel.js` | `wsManager` added: epoch progress bar (tri-color shimmer), active personality badge in header, live story arc prepend with `arc-live` animation, reflection/seed/G-plugin toasts, WS status dot, 5s auto-reconnect |
+| `tests/test_innovations_bus.py` | 17 tests: T70-BUS-01..06, T70-EMT-01..06, T70-WIR-01..03, T70-CEL-01..02 |
+
+### Live UI features (Phase 70)
+- **Epoch progress bar** — tri-color shimmer fills 0→100% over 14 CEL steps
+- **Personality badge** — agent identity shown in Aponi header during active epoch; auto-hides after 12s
+- **Live story arcs** — new arcs prepend to Story Mode timeline with `arc-live` spring animation
+- **Reflection toasts** — self-reflection reports surfaced as centered toasts at cadence ticks
+- **Seed planted toasts** — bio-green toast on every successful seed registration
+- **WS status dot** — cyan glow = connected, dark = idle, red = error
+
+---
+
 ## [9.4.0] — 2026-03-13 — Phase 69: Aponi Innovations UI
 
 ### feat(phase-69): Neuro-cosmic Innovations panel wired into Aponi dashboard

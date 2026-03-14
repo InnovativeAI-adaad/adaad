@@ -2938,22 +2938,29 @@ def _resolve_ui_paths(create_placeholder: bool = False):
 
 @app.websocket("/ws/events")
 async def ws_events(websocket: WebSocket) -> None:
-    """Real-time event stream: hello frame then a single event_batch.
+    """Real-time event stream — Phase 70: persistent innovations bus relay.
 
     Channels:
-    - "metrics"  — recent entries from runtime.metrics.tail()
-    - "journal"  — recent entries from security.ledger.journal.read_entries()
+    - "metrics"      — recent entries from runtime.metrics.tail()
+    - "journal"      — recent entries from security.ledger.journal.read_entries()
+    - "innovations"  — live CEL step / epoch / story_arc / personality / reflection frames
 
-    Each event in the batch has keys: channel, kind, timestamp, event.
+    Each event has keys: channel, kind, timestamp, event.
+    After the initial batch, the connection stays open and pushes innovations
+    bus frames as they arrive (one JSON message per frame).
+
+    IBUS-FAILSAFE-0: disconnect from the bus on any send failure.
     """
+    from runtime.innovations_bus import get_bus  # noqa: PLC0415 — avoid import-time cycle
+
     await websocket.accept()
     # Hello frame
     await websocket.send_json({
         "type": "hello",
-        "channels": ["metrics", "journal"],
+        "channels": ["metrics", "journal", "innovations"],
         "status": "live",
     })
-    # Collect events from both channels
+    # Historical batch
     events = []
     for entry in metrics.tail(limit=200):
         events.append({
@@ -2970,7 +2977,26 @@ async def ws_events(websocket: WebSocket) -> None:
             "event": entry,
         })
     await websocket.send_json({"type": "event_batch", "events": events})
-    await websocket.close()
+
+    # Subscribe to innovations bus and relay frames until disconnect
+    bus = get_bus()
+    queue = await bus.subscribe()
+    try:
+        while True:
+            try:
+                frame = await asyncio.wait_for(queue.get(), timeout=30.0)
+                await websocket.send_json({"type": "innovations", "channel": "innovations", **frame})
+            except asyncio.TimeoutError:
+                # Keepalive ping
+                await websocket.send_json({"type": "ping", "ts": __import__("datetime").datetime.utcnow().isoformat()})
+    except Exception:  # noqa: BLE001 — client disconnected
+        pass
+    finally:
+        await bus.unsubscribe(queue)
+        try:
+            await websocket.close()
+        except Exception:  # noqa: BLE001
+            pass
 
 
 # /ui/aponi/{asset_path} — explicit asset route so monkeypatching APONI_DIR in tests works.

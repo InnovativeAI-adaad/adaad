@@ -62,6 +62,40 @@ from runtime.innovations_wiring import (
 
 logger = logging.getLogger(__name__)
 
+# Lazy bus import — avoids circular dependency at module load time
+def _emit_epoch_start(epoch_id: str, run_mode: str) -> None:
+    try:
+        from runtime.innovations_bus import emit_epoch_start as _e  # noqa: PLC0415
+        _e(epoch_id, run_mode)
+    except Exception:  # noqa: BLE001
+        pass
+
+def _emit_epoch_end(epoch_id: str, outcome: str, succeeded: int, attempted: int) -> None:
+    try:
+        from runtime.innovations_bus import emit_epoch_end as _e  # noqa: PLC0415
+        _e(epoch_id, outcome, succeeded, attempted)
+    except Exception:  # noqa: BLE001
+        pass
+
+def _emit_cel_step(epoch_id: str, step_number: int, step_name: str, outcome: str, detail: dict) -> None:
+    try:
+        from runtime.innovations_bus import emit_cel_step as _e  # noqa: PLC0415
+        _e(epoch_id, step_number, step_name, outcome, detail)
+    except Exception:  # noqa: BLE001
+        pass
+
+def _emit_story_arc_from_state(state: dict) -> None:
+    try:
+        from runtime.innovations_bus import emit_story_arc as _e  # noqa: PLC0415
+        epoch_id = state.get("epoch_id", "")
+        personality = state.get("active_personality", {})
+        agent = personality.get("agent_id", "system")
+        succeeded = state.get("mutations_succeeded", ())
+        result = "promoted" if succeeded else "blocked"
+        _e(epoch_id, agent, result, title=f"Epoch {epoch_id}")
+    except Exception:  # noqa: BLE001
+        pass
+
 # ---------------------------------------------------------------------------
 # WiringConfig
 # ---------------------------------------------------------------------------
@@ -494,14 +528,14 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     def _step_14_state_advance(
         self, n: int, name: str, state: Dict[str, Any]
     ) -> CELStepResult:
-        """Phase 67 extension of STATE-ADVANCE: run self-reflection on cadence.
+        """Phase 67/70 extension of STATE-ADVANCE.
 
-        INNOV-REFLECT-0: self-reflection is deterministic, additive, and
-        fail-safe (CEL-WIRE-FAIL-0).  Base step result is always returned.
+        Phase 67: self-reflection on cadence (INNOV-REFLECT-0).
+        Phase 70: emit story_arc + cel_step frames to innovations bus.
         """
         base_result = super()._step_14_state_advance(n, name, state)
 
-        # Self-reflection (INNOV-REFLECT-0) — fail-safe
+        # Phase 67 — Self-reflection (INNOV-REFLECT-0) — fail-safe
         self._epoch_seq += 1
         if self._innovations_engine is not None:
             run_self_reflection(
@@ -510,6 +544,16 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                 epoch_seq=self._epoch_seq,
                 state=state,
             )
+
+        # Phase 70 — Emit story arc for this epoch
+        _emit_story_arc_from_state(state)
+        # Phase 70 — Emit cel_step frame for step 14
+        _emit_cel_step(
+            state.get("epoch_id", ""),
+            n, name,
+            base_result.outcome.value if hasattr(base_result.outcome, "value") else str(base_result.outcome),
+            dict(base_result.detail or {}),
+        )
 
         # Merge reflection_report into step detail if produced
         reflection = state.get("reflection_report")
@@ -524,6 +568,24 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                 detail=merged_detail,
             )
         return base_result
+
+    def run_epoch(
+        self,
+        *,
+        epoch_id: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
+    ):
+        """Phase 70: emit epoch_start/end frames around the base run_epoch."""
+        import uuid  # noqa: PLC0415
+        eid = epoch_id or str(uuid.uuid4())
+        run_mode_str = self._run_mode.value if hasattr(self._run_mode, "value") else str(self._run_mode)
+        _emit_epoch_start(eid, run_mode_str)
+        result = super().run_epoch(epoch_id=eid, context=context)
+        attempted = len(getattr(result, "mutations_attempted", ()) or ())
+        succeeded = len(getattr(result, "mutations_succeeded", ()) or ())
+        outcome = "pass" if getattr(result, "all_passed", False) else "blocked"
+        _emit_epoch_end(eid, outcome, succeeded, attempted)
+        return result
 
 
 # ---------------------------------------------------------------------------

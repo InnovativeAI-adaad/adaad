@@ -47,6 +47,11 @@ from runtime.innovations import (
 
 logger = logging.getLogger(__name__)
 
+# Lazy import to avoid circular dependency — bus imported on first use
+def _bus():
+    from runtime.innovations_bus import get_bus  # noqa: PLC0415
+    return get_bus()
+
 # Self-reflection fires every N epochs.  Approved by Phase 67 spec.
 REFLECTION_CADENCE: int = 100
 
@@ -104,10 +109,17 @@ def select_agent_personality(
     """Deterministically select a personality profile for this epoch.
 
     Fail-safe: returns None on any error (CEL-WIRE-FAIL-0).
+    Emits personality frame to innovations bus (IBUS-FAILSAFE-0).
     """
     try:
         chosen_profiles = profiles or DEFAULT_PERSONALITIES
-        return engine.select_personality(chosen_profiles, epoch_id=epoch_id)
+        p = engine.select_personality(chosen_profiles, epoch_id=epoch_id)
+        try:
+            from runtime.innovations_bus import emit_personality  # noqa: PLC0415
+            emit_personality(p.agent_id, p.philosophy, list(p.vector), epoch_id)
+        except Exception:  # noqa: BLE001
+            pass
+        return p
     except Exception as exc:  # noqa: BLE001
         logger.warning("innovations_wiring: personality_select failed — %s", exc)
         return None
@@ -175,6 +187,11 @@ def run_self_reflection(
             report.dominant_agent,
             report.rebalance_hint,
         )
+        try:
+            from runtime.innovations_bus import emit_reflection  # noqa: PLC0415
+            emit_reflection(epoch_id, report.dominant_agent, report.underperforming_agent, report.rebalance_hint)
+        except Exception:  # noqa: BLE001
+            pass
         return report
     except Exception as exc:  # noqa: BLE001
         logger.warning("innovations_wiring: self_reflect failed — %s", exc)

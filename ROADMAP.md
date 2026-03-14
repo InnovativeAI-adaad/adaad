@@ -1457,8 +1457,16 @@ End-to-end ADAAD Oracle API endpoint (`GET /innovations/oracle`); Aponi Story Mo
 
 Innovations tab (✦, key `7`) added to Aponi dashboard. Five sub-panels: Oracle (gold Q&A terminal), Story Mode (living arc timeline), Galaxy (animated constellation canvas), Seeds (bio-green registry), Agent Personalities (vector identity cards). Neuro-cosmic luxury aesthetic — Syne + JetBrains Mono, three-color agent identity system, full offline fallback.
 
-### Phase 70 — WebSocket Story Arc Push + Epoch Live Feed
+### Phase 70 — WebSocket Live Epoch Feed
 
-**Target:** v9.5.0 · **Dependency:** Phase 69 merged at main
+**Status:** ✅ shipped (v9.5.0) · **Dependency:** Phase 69 merged at main · **Tests:** T70-BUS-01..06, T70-EMT-01..06, T70-WIR-01..03, T70-CEL-01..02
 
-Real-time story arc push via `/ws/events` WebSocket into Aponi Story Mode panel. Live epoch progress bar during CEL execution. Agent personality badge shown in header during active epoch. Reflection report toast notification on cadence tick.
+Async innovations event bus (`InnovationsEventBus`) with 8 typed emit helpers. `LiveWiredCEL.run_epoch` emits `epoch_start`/`epoch_end`; step 14 emits `story_arc` + `cel_step`. Personality and reflection wiring emits frames. `/ws/events` upgraded to persistent stream. Aponi panel gains: tri-color epoch progress bar, personality header badge, live arc prepend, reflection/seed/G-plugin toasts, WS status dot.
+
+**Key invariants:** IBUS-FANOUT-0, IBUS-FAILSAFE-0, IBUS-DETERM-0, IBUS-THREAD-0
+
+### Phase 71 — Oracle Persistence + Capability Seed Evolution
+
+**Target:** v9.6.0 · **Dependency:** Phase 70 merged at main
+
+Oracle answers cached to JSONL ledger for replay. Capability Seeds evolve through `ADAADInnovationEngine.evolve_seed()` via scheduled epoch hook; evolution scores written to lineage ledger. Seed graduation ceremony when expansion_score ≥ 0.85: emits `seed_graduated` bus frame, Aponi toast, and `capability_graduation` ritual event.
