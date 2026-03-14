@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 ADAADchat GitHub App — Webhook Handler
 App ID: 3013088  |  Client ID: Iv23liYNPdEjUgXwiT8Y
@@ -10,7 +11,6 @@ from __future__ import annotations
 import datetime
 import hashlib
 import hmac
-import importlib
 import json
 import logging
 import os
@@ -203,10 +203,9 @@ def _handle_slash_command(body: str, issue: dict, comment: dict, payload: dict) 
 def _emit_governance_event(event_name: str, data: dict) -> None:
     """Forward a GitHub App event into ADAAD's governance ledger (or JSONL fallback)."""
     try:
-        m = importlib.import_module("runtime.governance.ledger")
-        if hasattr(m, "record_external_event"):
-            m.record_external_event(f"github_app.{event_name}", data)
-            return
+        from runtime.governance import external_event_bridge  # type: ignore[import]
+        external_event_bridge.record(f"github_app.{event_name}", data)
+        return
     except (ImportError, AttributeError):
         pass
 

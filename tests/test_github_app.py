@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """
 Tests for ADAADchat GitHub App webhook handler.
 App ID: 3013088
