@@ -340,3 +340,81 @@ class TestAppendFromResult:
         assert record.recommended_agent == "architect"
         assert record.bandit_active is True
         assert record.bandit_total_pulls == 15
+
+
+# ---------------------------------------------------------------------------
+# WORK-66-A: prediction_accuracy telemetry — FINDING-66-002
+# ---------------------------------------------------------------------------
+
+class TestPredictionAccuracyTelemetry:
+    """Gate tests for FINDING-66-002: WeightAdaptor prediction_accuracy in EpochRecord."""
+
+    def test_epoch_record_to_dict_contains_prediction_accuracy_key(self):
+        """to_dict() must always emit 'prediction_accuracy' key."""
+        r = _make_record()
+        assert "prediction_accuracy" in r.to_dict()
+
+    def test_epoch_record_prediction_accuracy_default_is_none(self):
+        """Backward compat: records constructed without the field default to None."""
+        r = _make_record()
+        assert r.prediction_accuracy is None
+        assert r.to_dict()["prediction_accuracy"] is None
+
+    def test_epoch_record_prediction_accuracy_value_round_trips(self):
+        """Explicit value survives to_dict()."""
+        r = EpochRecord(
+            epoch_id="e1", epoch_index=0,
+            total_candidates=5, accepted_count=2, rejected_count=3,
+            duration_seconds=1.0, gain_weight=0.5, coverage_weight=0.3,
+            recommended_agent="beast", bandit_active=False,
+            bandit_total_pulls=0, bandit_scores={}, is_plateau=False,
+            prediction_accuracy=0.8125,
+        )
+        assert r.to_dict()["prediction_accuracy"] == 0.8125
+
+    def test_append_from_result_captures_adaptor_prediction_accuracy(self):
+        """append_from_result() must capture adaptor.prediction_accuracy."""
+        t = EpochTelemetry()
+
+        result = MagicMock()
+        result.epoch_id = "epoch-pa"
+        result.total_candidates = 4
+        result.accepted_count = 2
+        result.duration_seconds = 0.5
+
+        adaptor = MagicMock()
+        adaptor.weight_snapshot.return_value = {"gain_weight": 0.4, "coverage_weight": 0.3}
+        adaptor.prediction_accuracy = 0.6732
+
+        record = t.append_from_result(result, weight_adaptor=adaptor)
+        assert record.prediction_accuracy == 0.6732
+        assert record.to_dict()["prediction_accuracy"] == 0.6732
+
+    def test_append_from_result_no_adaptor_yields_none_prediction_accuracy(self):
+        """Without a weight_adaptor, prediction_accuracy must be None."""
+        t = EpochTelemetry()
+
+        result = MagicMock()
+        result.epoch_id = "epoch-noadaptor"
+        result.total_candidates = 3
+        result.accepted_count = 1
+        result.duration_seconds = 0.3
+
+        record = t.append_from_result(result)
+        assert record.prediction_accuracy is None
+
+    def test_append_from_result_adaptor_exception_yields_none(self):
+        """If adaptor raises, prediction_accuracy must be None (fail-safe)."""
+        t = EpochTelemetry()
+
+        result = MagicMock()
+        result.epoch_id = "epoch-err"
+        result.total_candidates = 2
+        result.accepted_count = 1
+        result.duration_seconds = 0.2
+
+        adaptor = MagicMock()
+        adaptor.weight_snapshot.side_effect = RuntimeError("boom")
+
+        record = t.append_from_result(result, weight_adaptor=adaptor)
+        assert record.prediction_accuracy is None
