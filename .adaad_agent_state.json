@@ -1,10 +1,10 @@
 {
-    "active_phase": "v9.1.0 \u2014 Phase 66: Hardening Tier Alpha (complete)",
+    "active_phase": "v9.6.0 \u2014 Phase 71: Oracle Persistence + Capability Seed Evolution (complete)",
     "blocked_at_gate": null,
     "blocked_at_tier": null,
     "blocked_reason": null,
-    "last_completed_phase": "Phase 66 \u2014 Hardening Tier Alpha",
-    "last_completed_pr": "release/v9.1.0",
+    "last_completed_phase": "Phase 71 \u2014 Oracle Persistence + Capability Seed Evolution",
+    "last_completed_pr": "feature/phase-71-oracle-persist-seed-evolution",
     "last_gate_results": {
         "tier_0": "pass",
         "tier_1": "pass",
@@ -13,7 +13,7 @@
     },
     "last_invocation": "2026-03-14",
     "last_sync_sha": "899617a",
-    "next_pr": "PR-67-PLAN (Phase 67 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
+    "next_pr": "PR-72-PLAN (Phase 72 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
     "open_findings": [
         {
             "id": "FINDING-66-001",
@@ -215,15 +215,29 @@
         "phase65_first_autonomous_capability_evolution",
         "phase66-doc-alignment-ci-pin-pr",
         "phase66-constitution-v0.9.0-rule-count-reconciled",
-        "phase66-deep-dive-p0-findings-resolved"
+        "phase66-deep-dive-p0-findings-resolved",
+        "phase71-oracle-persist-ledger",
+        "phase71-oracle-replay-endpoint",
+        "phase71-oracle-determ-hash",
+        "phase71-seed-evol-epoch-hook",
+        "phase71-seed-grad-ceremony",
+        "phase71-seed-grad-bus-frame",
+        "phase71-seed-grad-lineage-event",
+        "phase71-seed-evol-failsafe",
+        "v9.6.0-released"
     ],
-    "current_version": "9.1.0",
+    "current_version": "9.6.0",
     "completed_milestones": [
         "phase66-plan",
         "phase66-weight-adaptor-telemetry",
         "phase66-lineage-stream-invariants",
         "phase66-llm-failover-contract",
         "phase66-key-ceremony-runbook",
-        "v9.1.0-released"
+        "v9.1.0-released",
+        "phase71-plan",
+        "phase71-oracle-ledger",
+        "phase71-seed-evolution",
+        "phase71-graduation-ceremony",
+        "v9.6.0-released"
     ]
 }

@@ -1,4 +1,40 @@
+## [9.6.0] — 2026-03-14 — Phase 71: Oracle Persistence + Capability Seed Evolution
+
+### feat(phase-71): Append-only oracle ledger + epoch-hooked seed graduation ceremony
+
+| Item | Detail |
+|---|---|
+| `runtime/oracle_ledger.py` | New `OracleLedger` — append-only JSONL ledger for every oracle answer. Schema v71.1. Deterministic `event_window_hash` per query+events (ORACLE-DETERM-0). Fail-safe on IO failure (ORACLE-PERSIST-0). |
+| `runtime/innovations_router.py` | `GET /innovations/oracle` now appends one record to `OracleLedger` per call (ORACLE-PERSIST-0). New `GET /innovations/oracle/history` endpoint replays ledger JSONL oldest-first (ORACLE-REPLAY-0). |
+| `runtime/seed_evolution.py` | New `run_seed_evolution()` epoch hook: calls `evolve_seed()` per active seed on configurable cadence; writes `SeedEvolutionEvent` to `LineageLedgerV2` (SEED-EVOL-0). Graduation ceremony fires when `expansion_score >= 0.85`: emits `seed_graduated` bus frame, writes `SeedGraduationEvent` + `capability_graduation` ritual to lineage ledger (SEED-GRAD-0). Per-seed fail-safe (SEED-EVOL-FAIL-0). |
+| `runtime/innovations_bus.py` | Added `seed_graduated` frame type + `emit_seed_graduated()` typed helper. Updated `__all__`. |
+| `runtime/innovations_wiring.py` | Imports `run_seed_evolution` from `runtime.seed_evolution`; exported via `__all__` for CEL post-epoch hook consumers. |
+
+### New constitutional invariants (Phase 71)
+
+| Invariant | Enforcement |
+|---|---|
+| `ORACLE-PERSIST-0` | Every oracle query appends exactly one JSONL record before HTTP response returns |
+| `ORACLE-REPLAY-0` | `GET /oracle/history` is read-only; append-only file never modified after write |
+| `SEED-EVOL-0` | `evolve_seed` called per seed per cadence tick; result written to lineage ledger |
+| `SEED-GRAD-0` | Graduation ceremony fires when and only when `expansion_score >= 0.85`; idempotent per epoch |
+| `SEED-EVOL-FAIL-0` | Per-seed failures are caught + logged; other seeds continue (CEL-WIRE-FAIL-0 extension) |
+
+### Tests added (Phase 71)
+
+`tests/test_phase71_oracle_persist_seed_evolution.py` — 16 tests · **16/16 passing**
+
+| Range | Coverage |
+|---|---|
+| T71-ORC-01..05 | Oracle ledger append, replay, hash determinism, fail-safe, history endpoint auth |
+| T71-EVO-01..05 | Cadence gating, per-seed results, expansion_score bounds, lineage write, per-seed fail-safe |
+| T71-GRAD-01..03 | Bus frame emission, lineage graduation event, idempotency |
+| T71-BUS-01..02 | Frame schema validation, `__all__` export check |
+
+---
+
 ## [9.1.0] — 2026-03-14 — Phase 66: Hardening Tier Alpha
+
 
 ### Summary
 Closes all P1/P2 open findings from Phase 65 deep dive. No new architecture.

@@ -1467,6 +1467,8 @@ Async innovations event bus (`InnovationsEventBus`) with 8 typed emit helpers. `
 
 ### Phase 71 — Oracle Persistence + Capability Seed Evolution
 
-**Target:** v9.6.0 · **Dependency:** Phase 70 merged at main
+**Status:** ✅ shipped (v9.6.0) · **Dependency:** Phase 70 merged at main · **Tests:** T71-ORC-01..05, T71-EVO-01..05, T71-GRAD-01..03, T71-BUS-01..02
 
-Oracle answers cached to JSONL ledger for replay. Capability Seeds evolve through `ADAADInnovationEngine.evolve_seed()` via scheduled epoch hook; evolution scores written to lineage ledger. Seed graduation ceremony when expansion_score ≥ 0.85: emits `seed_graduated` bus frame, Aponi toast, and `capability_graduation` ritual event.
+Oracle answers cached to append-only JSONL ledger (`OracleLedger`) for deterministic replay. New `GET /innovations/oracle/history` endpoint replays records oldest-first. Capability Seeds evolve through `ADAADInnovationEngine.evolve_seed()` via `run_seed_evolution()` scheduled epoch hook; evolution scores written to `LineageLedgerV2` as `SeedEvolutionEvent`. Seed graduation ceremony when `expansion_score >= 0.85`: emits `seed_graduated` bus frame, writes `SeedGraduationEvent` + `capability_graduation` ritual to lineage ledger.
+
+**Key invariants:** ORACLE-PERSIST-0, ORACLE-REPLAY-0, SEED-EVOL-0, SEED-GRAD-0, SEED-EVOL-FAIL-0
