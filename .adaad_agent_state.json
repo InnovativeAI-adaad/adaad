@@ -1,10 +1,10 @@
 {
-    "active_phase": "v9.8.0 \u2014 Phase 73: Seed Review Decision + Governance Wire (complete)",
+    "active_phase": "v9.9.0 \u2014 Phase 74: Seed-to-Proposal Bridge (complete)",
     "blocked_at_gate": null,
     "blocked_at_tier": null,
     "blocked_reason": null,
-    "last_completed_phase": "Phase 73 \u2014 Seed Review Decision + Governance Wire",
-    "last_completed_pr": "feature/phase-73-promotion-governance-wire",
+    "last_completed_phase": "Phase 74 \u2014 Seed-to-Proposal Bridge",
+    "last_completed_pr": "feature/phase-74-seed-proposal-bridge",
     "last_gate_results": {
         "tier_0": "pass",
         "tier_1": "pass",
@@ -13,7 +13,7 @@
     },
     "last_invocation": "2026-03-14",
     "last_sync_sha": "899617a",
-    "next_pr": "PR-74-PLAN (Phase 74 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
+    "next_pr": "PR-75-PLAN (Phase 75 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
     "open_findings": [
         {
             "id": "FINDING-66-001",
@@ -243,9 +243,19 @@
         "phase73-audit-write-scope",
         "phase73-review-endpoint",
         "phase73-promo-review-aponi-panel",
-        "v9.8.0-released"
+        "v9.8.0-released",
+        "phase74-seed-proposal-bridge",
+        "phase74-seed-prop-0-approved-only",
+        "phase74-seed-prop-human-0",
+        "phase74-seed-prop-ledger-0",
+        "phase74-seed-prop-determ-0",
+        "phase74-seed-prop-bus-0",
+        "phase74-lane-strategy-routing",
+        "phase74-propose-endpoint",
+        "phase74-aponi-propose-button",
+        "v9.9.0-released"
     ],
-    "current_version": "9.8.0",
+    "current_version": "9.9.0",
     "completed_milestones": [
         "phase66-plan",
         "phase66-weight-adaptor-telemetry",
@@ -267,6 +277,10 @@
         "phase73-seed-review",
         "phase73-governance-wire",
         "phase73-aponi-review-panel",
-        "v9.8.0-released"
+        "v9.8.0-released",
+        "phase74-plan",
+        "phase74-bridge",
+        "phase74-aponi-propose",
+        "v9.9.0-released"
     ]
 }

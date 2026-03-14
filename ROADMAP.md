@@ -1488,3 +1488,11 @@ Graduated Capability Seeds (expansion_score ≥ 0.85) enter an advisory FIFO pro
 Governed human-approval workflow for promoted seeds. `record_review()` enforces non-empty `operator_id` (SEED-REVIEW-HUMAN-0), writes `SeedReviewDecisionEvent` to `LineageLedgerV2` before any status mutation (SEED-REVIEW-0), carries deterministic `decision_digest` (SEED-REVIEW-AUDIT-0), and is idempotent on terminal status (SEED-REVIEW-IDEM-0). `require_audit_write_scope()` added to `audit_auth` for elevated write gating. `POST /innovations/seeds/promoted/{seed_id}/review` endpoint. Aponi: `_onSeedReview()` WS handler with green/red toasts; **Promotion Review** card in Seeds panel with live Approve/Reject buttons and real-time status reflection on bus frames.
 
 **Key invariants:** SEED-REVIEW-0, SEED-REVIEW-HUMAN-0, SEED-REVIEW-IDEM-0, SEED-REVIEW-AUDIT-0, SEED-REVIEW-BUS-0, SEED-REVIEW-AUTH-0
+
+### Phase 74 — Seed-to-Proposal Bridge
+
+**Status:** ✅ shipped (v9.9.0) · **Dependency:** Phase 73 merged at main · **Tests:** T74-BRG-01..06, T74-LANE-01..06, T74-BUS-01, T74-API-01..03
+
+`build_proposal_request()` converts an approved promotion queue entry into a `ProposalRequest` for `ProposalEngine`. Enforces approved-only gate (SEED-PROP-0), deterministic `cycle_id` via SHA-256 (SEED-PROP-DETERM-0), writes `SeedProposalEvent` to lineage ledger before returning (SEED-PROP-LEDGER-0), emits `seed_proposal_generated` bus frame (SEED-PROP-BUS-0). Lane → strategy_id routing: governance/performance/correctness/security/general. `POST /innovations/seeds/promoted/{seed_id}/propose` audit:write-gated. Aponi: `_onSeedProposal()` WS handler with purple proposal toast; **📋 Propose** button on approved promo rows transitions to "Proposed" on success.
+
+**Key invariants:** SEED-PROP-0, SEED-PROP-HUMAN-0, SEED-PROP-DETERM-0, SEED-PROP-LEDGER-0, SEED-PROP-BUS-0

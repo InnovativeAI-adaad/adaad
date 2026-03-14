@@ -1,4 +1,38 @@
+## [9.9.0] — 2026-03-14 — Phase 74: Seed-to-Proposal Bridge
+
+### feat(phase-74): Approved seeds enter ProposalEngine advisory pipeline via governed bridge
+
+| Item | Detail |
+|---|---|
+| `runtime/seed_proposal_bridge.py` | New `build_proposal_request()` — converts an approved promotion queue entry into a `ProposalRequest`. Enforces approved-only gate (SEED-PROP-0), deterministic `cycle_id` via SHA-256 of seed_id + epoch_id + lineage_digest (SEED-PROP-DETERM-0), writes `SeedProposalEvent` to lineage ledger before returning (SEED-PROP-LEDGER-0), emits `seed_proposal_generated` bus frame (SEED-PROP-BUS-0). Deterministic `lane → strategy_id` routing table (governance/performance/correctness/security/general). |
+| `runtime/innovations_router.py` | Added `POST /innovations/seeds/promoted/{seed_id}/propose` — audit:write gated; returns `cycle_id`, `strategy_id`, context, and `SEED-PROP-HUMAN-0` advisory notice. |
+| `ui/aponi/innovations_panel.js` | `_onSeedProposal()` WS handler: purple proposal toast, live **Generate Proposal** button state update. Promotion Review rows now show **📋 Propose** button for approved seeds; transitions to "📋 Proposed" on success. `submitReview()` replaces Approve/Reject with Propose button on approval. `innState.seedProposals` initialised at boot. Phase 74 CSS: `.promo-btn.propose`, `.inno-toast.seed-proposal`. |
+
+### New constitutional invariants (Phase 74)
+
+| Invariant | Enforcement |
+|---|---|
+| `SEED-PROP-0` | Only `approved` seeds may enter the proposal pipeline |
+| `SEED-PROP-HUMAN-0` | `ProposalRequest` advisory only — no mutation without GovernanceGate + HUMAN-0 |
+| `SEED-PROP-DETERM-0` | Deterministic `cycle_id` for equal (seed_id, epoch_id, lineage_digest) |
+| `SEED-PROP-LEDGER-0` | `SeedProposalEvent` written to lineage ledger before request returned; failure aborts |
+| `SEED-PROP-BUS-0` | `seed_proposal_generated` frame emitted after ledger write (IBUS-FAILSAFE-0) |
+
+### Tests added (Phase 74)
+
+`tests/test_phase74_seed_proposal_bridge.py` — 16 tests · **16/16 passing**
+
+| Range | Coverage |
+|---|---|
+| T74-BRG-01..06 | KeyError/SeedNotApprovedError, approved request fields, cycle_id determinism, ledger write, ledger failure |
+| T74-LANE-01..06 | Lane → strategy_id routing for all 4 known lanes + fallback + export |
+| T74-BUS-01 | `seed_proposal_generated` bus frame schema |
+| T74-API-01..03 | 404/422 error paths, advisory notice in response |
+
+---
+
 ## [9.8.0] — 2026-03-14 — Phase 73: Seed Review Decision + Governance Wire
+
 
 ### feat(phase-73): Human-governed seed review decisions with audit:write scope + Aponi review panel
 
