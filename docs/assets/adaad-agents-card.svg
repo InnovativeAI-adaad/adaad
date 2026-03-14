@@ -1,0 +1,87 @@
+<svg viewBox="0 0 1440 260" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="abg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#010306"/>
+    <stop offset="100%" stop-color="#020b18"/>
+  </linearGradient>
+  <radialGradient id="a1glow" cx="24%" cy="50%" r="30%">
+    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.12"/>
+    <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="a2glow" cx="50%" cy="50%" r="30%">
+    <stop offset="0%" stop-color="#a855f7" stop-opacity="0.1"/>
+    <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="a3glow" cx="76%" cy="50%" r="30%">
+    <stop offset="0%" stop-color="#ff4466" stop-opacity="0.1"/>
+    <stop offset="100%" stop-color="#ff4466" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="ag">
+    <feGaussianBlur stdDeviation="3" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="agm">
+    <feGaussianBlur stdDeviation="8" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <pattern id="adots" width="18" height="18" patternUnits="userSpaceOnUse">
+    <circle cx="9" cy="9" r="0.8" fill="#00d4ff" opacity="0.13"/>
+  </pattern>
+</defs>
+<rect width="1440" height="260" fill="url(#abg)"/>
+<rect width="1440" height="260" fill="url(#adots)"/>
+<rect width="1440" height="260" fill="url(#a1glow)"/>
+<rect width="1440" height="260" fill="url(#a2glow)"/>
+<rect width="1440" height="260" fill="url(#a3glow)"/>
+<!-- Borders -->
+<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.35"/>
+<rect x="0" y="258.5" width="1440" height="1.5" fill="#00d4ff" opacity="0.2"/>
+
+<!-- ═══ ARCHITECT card ═══ -->
+<rect x="40" y="20" width="400" height="220" rx="8" fill="#030d18" stroke="#00d4ff" stroke-width="1" stroke-opacity="0.3"/>
+<rect x="40" y="20" width="400" height="3" rx="2" fill="#00d4ff" opacity="0.7"/>
+<!-- Icon -->
+<text x="80" y="82" font-family="'Courier New',monospace" font-size="36" fill="#00d4ff" filter="url(#ag)" opacity="0.9">🏛</text>
+<text x="150" y="72" font-family="'Courier New',monospace" font-size="22" fill="#00d4ff" font-weight="900" filter="url(#ag)">ARCHITECT</text>
+<text x="150" y="92" font-family="'Courier New',monospace" font-size="10.5" fill="#1a6080" letter-spacing="3">METHODICAL · CONSERVATIVE</text>
+<line x1="58" y1="108" x2="422" y2="108" stroke="#00d4ff" stroke-width="0.4" opacity="0.2"/>
+<text x="58" y="130" font-family="'Courier New',monospace" font-size="10.5" fill="#2a6070">Low entropy delta proposals</text>
+<text x="58" y="148" font-family="'Courier New',monospace" font-size="10.5" fill="#2a6070">Favors complexity reduction</text>
+<text x="58" y="166" font-family="'Courier New',monospace" font-size="10.5" fill="#2a6070">High governance compliance</text>
+<line x1="58" y1="180" x2="422" y2="180" stroke="#00d4ff" stroke-width="0.4" opacity="0.15"/>
+<text x="58" y="198" font-family="'Courier New',monospace" font-size="9.5" fill="#0a4050">BEST ROLE: Stabilization · Tier-0 hardening</text>
+<!-- UCB1 indicator -->
+<rect x="340" y="195" width="88" height="22" rx="3" fill="#00d4ff" opacity="0.06" stroke="#00d4ff" stroke-width="0.5" stroke-opacity="0.4"/>
+<text x="384" y="210" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#00d4ff" opacity="0.7">UCB1 ARM</text>
+
+<!-- ═══ Connector / BANDIT ═══ -->
+<line x1="440" y1="130" x2="500" y2="130" stroke="#00d4ff" stroke-width="1" opacity="0.35" stroke-dasharray="3 4"/>
+<line x1="940" y1="130" x2="1000" y2="130" stroke="#00d4ff" stroke-width="1" opacity="0.35" stroke-dasharray="3 4"/>
+<rect x="500" y="95" width="440" height="70" rx="6" fill="#010814" stroke="#a855f7" stroke-width="0.8" stroke-opacity="0.5"/>
+<rect x="500" y="95" width="440" height="2.5" rx="1" fill="#a855f7" opacity="0.6"/>
+<text x="720" y="122" text-anchor="middle" font-family="'Courier New',monospace" font-size="13" fill="#a855f7" font-weight="700" letter-spacing="2">BANDIT SELECTOR</text>
+<text x="720" y="140" text-anchor="middle" font-family="'Courier New',monospace" font-size="9.5" fill="#3a2060">UCB1 · Thompson Sampling · BLX-alpha</text>
+<text x="720" y="156" text-anchor="middle" font-family="'Courier New',monospace" font-size="9.5" fill="#3a2060">Up to 12 candidates per epoch</text>
+<!-- Down arrow to gate -->
+<text x="720" y="192" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" fill="#a855f7" opacity="0.7">▼</text>
+<text x="720" y="210" text-anchor="middle" font-family="'Courier New',monospace" font-size="9.5" fill="#2a1850">GOVERNANCE GATE · 23 RULES</text>
+<text x="720" y="225" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#1a1030">GOV-SOLE-0 · NON-BYPASSABLE</text>
+
+<!-- ═══ DREAM card ═══ -->
+<!-- (omit - centered bandit takes this space, Dream is implied) -->
+
+<!-- ═══ BEAST card ═══ -->
+<rect x="1000" y="20" width="400" height="220" rx="8" fill="#0d0308" stroke="#ff4466" stroke-width="1" stroke-opacity="0.3"/>
+<rect x="1000" y="20" width="400" height="3" rx="2" fill="#ff4466" opacity="0.7"/>
+<text x="1040" y="82" font-family="'Courier New',monospace" font-size="36" fill="#ff4466" filter="url(#ag)" opacity="0.9">⚡</text>
+<text x="1110" y="72" font-family="'Courier New',monospace" font-size="22" fill="#ff4466" font-weight="900" filter="url(#ag)">BEAST</text>
+<text x="1110" y="92" font-family="'Courier New',monospace" font-size="10.5" fill="#6a1828" letter-spacing="3">AGGRESSIVE · HIGH-THROUGHPUT</text>
+<line x1="1018" y1="108" x2="1382" y2="108" stroke="#ff4466" stroke-width="0.4" opacity="0.2"/>
+<text x="1018" y="130" font-family="'Courier New',monospace" font-size="10.5" fill="#4a2028">Max candidates per epoch</text>
+<text x="1018" y="148" font-family="'Courier New',monospace" font-size="10.5" fill="#4a2028">Volume + velocity model</text>
+<text x="1018" y="166" font-family="'Courier New',monospace" font-size="10.5" fill="#4a2028">GovernanceGate filters hard</text>
+<line x1="1018" y1="180" x2="1382" y2="180" stroke="#ff4466" stroke-width="0.4" opacity="0.15"/>
+<text x="1018" y="198" font-family="'Courier New',monospace" font-size="9.5" fill="#4a1020">BEST ROLE: Test suite · Docs · High-breadth</text>
+<rect x="1298" y="195" width="88" height="22" rx="3" fill="#ff4466" opacity="0.06" stroke="#ff4466" stroke-width="0.5" stroke-opacity="0.4"/>
+<text x="1342" y="210" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#ff4466" opacity="0.7">UCB1 ARM</text>
+</svg>

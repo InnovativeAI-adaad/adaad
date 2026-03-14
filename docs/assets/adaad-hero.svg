@@ -1,344 +1,398 @@
-<svg viewBox="0 0 1400 500" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1440 540" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <style>
-    @keyframes scan { 0%{transform:translateY(-200px)} 100%{transform:translateY(700px)} }
-    @keyframes flicker { 0%,100%{opacity:.9} 48%{opacity:.45} 52%{opacity:.7} }
-    @keyframes breathe { 0%,100%{opacity:.06} 50%{opacity:.18} }
-    @keyframes beacon { 0%,100%{r:5;opacity:1} 50%{r:8;opacity:.5} }
-    @keyframes beacon2 { 0%,100%{r:4;opacity:1} 50%{r:7;opacity:.4} }
-    @keyframes goldpulse { 0%,100%{opacity:.9} 50%{opacity:.35} }
-    @keyframes cyanpulse { 0%,100%{opacity:.85} 50%{opacity:.3} }
-    @keyframes greenpulse { 0%,100%{opacity:.95} 50%{opacity:.5} }
-    @keyframes shimmer { 0%{stroke-dashoffset:0} 100%{stroke-dashoffset:-40} }
+    @keyframes scan{0%{transform:translateY(-220px)}100%{transform:translateY(760px)}}
+    @keyframes orb{0%,100%{opacity:.08}50%{opacity:.22}}
+    @keyframes orb2{0%,100%{opacity:.05}50%{opacity:.15}}
+    @keyframes beacon{0%,100%{r:5;opacity:1}50%{r:9;opacity:.4}}
+    @keyframes trailpulse{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-120}}
+    @keyframes celpulse{0%,100%{opacity:.9}50%{opacity:.3}}
+    @keyframes celpulse2{0%,100%{opacity:.85}50%{opacity:.28}}
+    @keyframes celpulse3{0%,100%{opacity:.8}50%{opacity:.2}}
+    @keyframes titlehaze{0%,100%{opacity:.18}50%{opacity:.38}}
+    @keyframes hexgrid{0%,100%{opacity:.07}50%{opacity:.14}}
+    @keyframes statusblink{0%,100%{opacity:1}48%{opacity:.2}52%{opacity:.9}}
   </style>
 
-  <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
-    <circle cx="14" cy="14" r="1.1" fill="#00d4ff" opacity="0.2"/>
-  </pattern>
-  <pattern id="finegrid" width="70" height="70" patternUnits="userSpaceOnUse">
-    <path d="M70 0L0 0 0 70" fill="none" stroke="#00d4ff" stroke-width="0.3" opacity="0.11"/>
+  <!-- Hex grid pattern -->
+  <pattern id="hexes" x="0" y="0" width="52" height="60" patternUnits="userSpaceOnUse">
+    <polygon points="26,2 48,14 48,38 26,50 4,38 4,14" fill="none" stroke="#00d4ff" stroke-width="0.4" opacity="0.14"/>
   </pattern>
 
-  <filter id="gs">
-    <feGaussianBlur stdDeviation="3.5" result="b"/>
+  <!-- Fine circuit dots -->
+  <pattern id="cdots" x="0" y="0" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="11" cy="11" r="0.9" fill="#00d4ff" opacity="0.18"/>
+  </pattern>
+
+  <!-- Circuit trace pattern -->
+  <pattern id="traces" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
+    <path d="M0 40 L20 40 L20 20 L40 20" fill="none" stroke="#00d4ff" stroke-width="0.4" opacity="0.08"/>
+    <path d="M80 40 L60 40 L60 60 L40 60" fill="none" stroke="#00d4ff" stroke-width="0.4" opacity="0.08"/>
+    <circle cx="20" cy="40" r="1.5" fill="#00d4ff" opacity="0.1"/>
+    <circle cx="60" cy="40" r="1.5" fill="#00d4ff" opacity="0.1"/>
+  </pattern>
+
+  <!-- Deep glow filters -->
+  <filter id="gs" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="4" result="b"/>
     <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
-  <filter id="gm">
-    <feGaussianBlur stdDeviation="9" result="b"/>
+  <filter id="gm" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur stdDeviation="10" result="b"/>
     <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
-  <filter id="gxl">
-    <feGaussianBlur stdDeviation="20" result="b"/>
+  <filter id="gxl" x="-150%" y="-150%" width="400%" height="400%">
+    <feGaussianBlur stdDeviation="24" result="b"/>
     <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="gxxl" x="-200%" y="-200%" width="500%" height="500%">
+    <feGaussianBlur stdDeviation="40" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
   <filter id="gred">
     <feGaussianBlur stdDeviation="5" result="b"/>
     <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
 
+  <!-- Gradients -->
   <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#010306"/>
-    <stop offset="30%" stop-color="#030d1c"/>
-    <stop offset="65%" stop-color="#020a12"/>
-    <stop offset="100%" stop-color="#010306"/>
+    <stop offset="0%" stop-color="#010204"/>
+    <stop offset="25%" stop-color="#020c1c"/>
+    <stop offset="55%" stop-color="#030e16"/>
+    <stop offset="80%" stop-color="#020810"/>
+    <stop offset="100%" stop-color="#010204"/>
   </linearGradient>
-  <radialGradient id="cglow" cx="50%" cy="50%" r="42%">
-    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.1">
-      <animate attributeName="stop-opacity" values="0.1;0.2;0.1" dur="5s" repeatCount="indefinite"/>
+  <radialGradient id="bloom1" cx="50%" cy="52%" r="48%">
+    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.12">
+      <animate attributeName="stop-opacity" values="0.12;0.28;0.12" dur="6s" repeatCount="indefinite"/>
     </stop>
+    <stop offset="55%" stop-color="#00d4ff" stop-opacity="0.02"/>
     <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
   </radialGradient>
-  <radialGradient id="lglow" cx="15%" cy="50%" r="35%">
-    <stop offset="0%" stop-color="#f5c842" stop-opacity="0.09"/>
+  <radialGradient id="bloom2" cx="12%" cy="50%" r="38%">
+    <stop offset="0%" stop-color="#f5c842" stop-opacity="0.1">
+      <animate attributeName="stop-opacity" values="0.1;0.2;0.1" dur="7s" begin="1s" repeatCount="indefinite"/>
+    </stop>
     <stop offset="100%" stop-color="#f5c842" stop-opacity="0"/>
   </radialGradient>
-  <radialGradient id="rglow" cx="88%" cy="50%" r="32%">
-    <stop offset="0%" stop-color="#ff4466" stop-opacity="0.07"/>
+  <radialGradient id="bloom3" cx="90%" cy="50%" r="35%">
+    <stop offset="0%" stop-color="#ff4466" stop-opacity="0.08">
+      <animate attributeName="stop-opacity" values="0.08;0.16;0.08" dur="8s" begin="2s" repeatCount="indefinite"/>
+    </stop>
     <stop offset="100%" stop-color="#ff4466" stop-opacity="0"/>
   </radialGradient>
-  <linearGradient id="cyang" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#006688"/>
-    <stop offset="40%" stop-color="#00e8ff"/>
-    <stop offset="60%" stop-color="#00e8ff"/>
-    <stop offset="100%" stop-color="#006688"/>
+  <radialGradient id="bloom4" cx="50%" cy="10%" r="30%">
+    <stop offset="0%" stop-color="#7b61ff" stop-opacity="0.06"/>
+    <stop offset="100%" stop-color="#7b61ff" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="topedge" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#010204" stop-opacity="1"/>
+    <stop offset="12%" stop-color="#00d4ff" stop-opacity="0.7"/>
+    <stop offset="48%" stop-color="#7b61ff" stop-opacity="0.5"/>
+    <stop offset="52%" stop-color="#f5c842" stop-opacity="0.6"/>
+    <stop offset="88%" stop-color="#00d4ff" stop-opacity="0.7"/>
+    <stop offset="100%" stop-color="#010204" stop-opacity="1"/>
   </linearGradient>
-  <linearGradient id="goldg" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#5a3a00"/>
-    <stop offset="40%" stop-color="#f5c842"/>
-    <stop offset="60%" stop-color="#f5c842"/>
-    <stop offset="100%" stop-color="#5a3a00"/>
+  <linearGradient id="botedge" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#010204" stop-opacity="1"/>
+    <stop offset="15%" stop-color="#f5c842" stop-opacity="0.5"/>
+    <stop offset="50%" stop-color="#00d4ff" stop-opacity="0.4"/>
+    <stop offset="85%" stop-color="#f5c842" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#010204" stop-opacity="1"/>
   </linearGradient>
   <linearGradient id="titleg" x1="0%" y1="0%" x2="0%" y2="100%">
-    <stop offset="0%" stop-color="#00f0ff"/>
-    <stop offset="55%" stop-color="#00c8f0"/>
-    <stop offset="100%" stop-color="#007aaa"/>
+    <stop offset="0%" stop-color="#20f0ff"/>
+    <stop offset="40%" stop-color="#00d8ff"/>
+    <stop offset="100%" stop-color="#0088bb"/>
   </linearGradient>
   <linearGradient id="scanfade" x1="0%" y1="0%" x2="0%" y2="100%">
     <stop offset="0%" stop-color="#00d4ff" stop-opacity="0"/>
-    <stop offset="50%" stop-color="#00d4ff" stop-opacity="0.05"/>
+    <stop offset="50%" stop-color="#00d4ff" stop-opacity="0.04"/>
     <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
   </linearGradient>
   <linearGradient id="vlr" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#010306" stop-opacity="0.92"/>
-    <stop offset="11%" stop-color="#010306" stop-opacity="0"/>
-    <stop offset="89%" stop-color="#010306" stop-opacity="0"/>
-    <stop offset="100%" stop-color="#010306" stop-opacity="0.92"/>
+    <stop offset="0%" stop-color="#010204" stop-opacity="0.95"/>
+    <stop offset="9%" stop-color="#010204" stop-opacity="0"/>
+    <stop offset="91%" stop-color="#010204" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#010204" stop-opacity="0.95"/>
   </linearGradient>
   <linearGradient id="vtb" x1="0%" y1="0%" x2="0%" y2="100%">
-    <stop offset="0%" stop-color="#010306" stop-opacity="0.7"/>
-    <stop offset="14%" stop-color="#010306" stop-opacity="0"/>
-    <stop offset="86%" stop-color="#010306" stop-opacity="0"/>
-    <stop offset="100%" stop-color="#010306" stop-opacity="0.75"/>
+    <stop offset="0%" stop-color="#010204" stop-opacity="0.7"/>
+    <stop offset="13%" stop-color="#010204" stop-opacity="0"/>
+    <stop offset="87%" stop-color="#010204" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#010204" stop-opacity="0.8"/>
   </linearGradient>
 
-  <clipPath id="clip">
-    <rect width="1400" height="500"/>
+  <clipPath id="mainclip">
+    <rect width="1440" height="540"/>
   </clipPath>
 </defs>
 
-<!-- BG -->
-<rect width="1400" height="500" fill="url(#bg)"/>
-<rect width="1400" height="500" fill="url(#dots)"/>
-<rect width="1400" height="500" fill="url(#finegrid)" opacity="0.55"/>
-<rect width="1400" height="500" fill="url(#cglow)"/>
-<rect width="1400" height="500" fill="url(#lglow)"/>
-<rect width="1400" height="500" fill="url(#rglow)"/>
+<!-- ══════════ BACKGROUND STACK ══════════ -->
+<rect width="1440" height="540" fill="url(#bg)"/>
+<rect width="1440" height="540" fill="url(#hexes)" opacity="0.6"/>
+<rect width="1440" height="540" fill="url(#cdots)"/>
+<rect width="1440" height="540" fill="url(#traces)"/>
+
+<!-- Atmospheric blooms -->
+<rect width="1440" height="540" fill="url(#bloom1)"/>
+<rect width="1440" height="540" fill="url(#bloom2)"/>
+<rect width="1440" height="540" fill="url(#bloom3)"/>
+<rect width="1440" height="540" fill="url(#bloom4)"/>
 
 <!-- Scan line -->
-<g clip-path="url(#clip)">
-  <rect x="0" y="0" width="1400" height="200" fill="url(#scanfade)">
-    <animateTransform attributeName="transform" type="translate" values="0,-200;0,700" dur="7s" repeatCount="indefinite"/>
+<g clip-path="url(#mainclip)">
+  <rect x="0" y="0" width="1440" height="200" fill="url(#scanfade)">
+    <animateTransform attributeName="transform" type="translate" values="0,-220;0,760" dur="8s" repeatCount="indefinite"/>
   </rect>
 </g>
 
 <!-- Vignette -->
-<rect width="1400" height="500" fill="url(#vlr)"/>
-<rect width="1400" height="500" fill="url(#vtb)"/>
+<rect width="1440" height="540" fill="url(#vlr)"/>
+<rect width="1440" height="540" fill="url(#vtb)"/>
 
-<!-- Borders -->
-<rect x="0" y="0" width="1400" height="2" fill="url(#cyang)" opacity="0.7"/>
-<rect x="0" y="498" width="1400" height="2" fill="url(#goldg)" opacity="0.6"/>
+<!-- ══════════ BORDER GLOW STRIPS ══════════ -->
+<rect x="0" y="0" width="1440" height="2.5" fill="url(#topedge)"/>
+<rect x="0" y="537.5" width="1440" height="2.5" fill="url(#botedge)"/>
 
-<!-- Top ornament -->
-<line x1="70" y1="26" x2="600" y2="26" stroke="#00d4ff" stroke-width="0.6" opacity="0.3"/>
-<line x1="70" y1="30" x2="400" y2="30" stroke="#00d4ff" stroke-width="0.3" opacity="0.15"/>
-<polygon points="700,16 712,26 700,36 688,26" fill="none" stroke="#f5c842" stroke-width="1.5" opacity="0.9" filter="url(#gs)">
-  <animate attributeName="stroke-opacity" values="0.9;0.35;0.9" dur="3.5s" repeatCount="indefinite"/>
+<!-- Inner border subtle -->
+<rect x="0" y="2.5" width="1440" height="0.8" fill="url(#topedge)" opacity="0.3"/>
+
+<!-- ══════════ CORNER CHROME ══════════ -->
+<g filter="url(#gs)">
+  <!-- TL bracket + inner diagonal -->
+  <line x1="24" y1="24" x2="78" y2="24" stroke="#00d4ff" stroke-width="2.2" opacity="0.85"/>
+  <line x1="24" y1="24" x2="24" y2="78" stroke="#00d4ff" stroke-width="2.2" opacity="0.85"/>
+  <line x1="24" y1="24" x2="38" y2="38" stroke="#f5c842" stroke-width="1.3" opacity="0.6"/>
+  <circle cx="24" cy="24" r="3" fill="#00d4ff" opacity="0.7"/>
+  <!-- TR -->
+  <line x1="1416" y1="24" x2="1362" y2="24" stroke="#00d4ff" stroke-width="2.2" opacity="0.85"/>
+  <line x1="1416" y1="24" x2="1416" y2="78" stroke="#00d4ff" stroke-width="2.2" opacity="0.85"/>
+  <line x1="1416" y1="24" x2="1402" y2="38" stroke="#f5c842" stroke-width="1.3" opacity="0.6"/>
+  <circle cx="1416" cy="24" r="3" fill="#00d4ff" opacity="0.7"/>
+  <!-- BL -->
+  <line x1="24" y1="516" x2="78" y2="516" stroke="#00d4ff" stroke-width="2.2" opacity="0.75"/>
+  <line x1="24" y1="516" x2="24" y2="462" stroke="#00d4ff" stroke-width="2.2" opacity="0.75"/>
+  <circle cx="24" cy="516" r="3" fill="#f5c842" opacity="0.6"/>
+  <!-- BR -->
+  <line x1="1416" y1="516" x2="1362" y2="516" stroke="#00d4ff" stroke-width="2.2" opacity="0.75"/>
+  <line x1="1416" y1="516" x2="1416" y2="462" stroke="#00d4ff" stroke-width="2.2" opacity="0.75"/>
+  <circle cx="1416" cy="516" r="3" fill="#f5c842" opacity="0.6"/>
+</g>
+
+<!-- ══════════ CIRCUIT TRACES: DECORATIVE LEFT ══════════ -->
+<g opacity="0.22" stroke="#00d4ff" fill="none" stroke-width="0.8">
+  <path d="M42 140 L90 140 L90 200 L120 200"/>
+  <path d="M42 180 L70 180 L70 260 L100 260"/>
+  <path d="M42 320 L80 320 L80 300 L110 300"/>
+  <path d="M42 380 L85 380 L85 420 L115 420"/>
+  <circle cx="90" cy="140" r="2.5" fill="#00d4ff" opacity="0.6"/>
+  <circle cx="70" cy="180" r="2.5" fill="#00d4ff" opacity="0.6"/>
+  <circle cx="80" cy="320" r="2.5" fill="#f5c842" opacity="0.6"/>
+  <circle cx="85" cy="380" r="2.5" fill="#00d4ff" opacity="0.6"/>
+</g>
+
+<!-- Circuit traces right -->
+<g opacity="0.2" stroke="#f5c842" fill="none" stroke-width="0.8">
+  <path d="M1398 160 L1350 160 L1350 200 L1320 200"/>
+  <path d="M1398 240 L1360 240 L1360 300 L1330 300"/>
+  <path d="M1398 360 L1355 360 L1355 400 L1325 400"/>
+  <circle cx="1350" cy="160" r="2.5" fill="#f5c842" opacity="0.5"/>
+  <circle cx="1360" cy="240" r="2.5" fill="#00d4ff" opacity="0.5"/>
+  <circle cx="1355" cy="360" r="2.5" fill="#f5c842" opacity="0.5"/>
+</g>
+
+<!-- ══════════ TOP ORNAMENT ══════════ -->
+<line x1="80" y1="30" x2="640" y2="30" stroke="#00d4ff" stroke-width="0.6" opacity="0.3"/>
+<line x1="80" y1="34" x2="420" y2="34" stroke="#00d4ff" stroke-width="0.3" opacity="0.14"/>
+<!-- Center diamond -->
+<polygon points="720,19 734,30 720,41 706,30" fill="none" stroke="#f5c842" stroke-width="1.8" opacity="0.9" filter="url(#gs)">
+  <animate attributeName="stroke-opacity" values="0.9;0.3;0.9" dur="4s" repeatCount="indefinite"/>
 </polygon>
-<polygon points="700,19 710,26 700,33 690,26" fill="#f5c842" opacity="0.55"/>
-<line x1="800" y1="26" x2="1330" y2="26" stroke="#00d4ff" stroke-width="0.6" opacity="0.3"/>
-<line x1="1000" y1="30" x2="1330" y2="30" stroke="#00d4ff" stroke-width="0.3" opacity="0.15"/>
+<polygon points="720,23 732,30 720,37 708,30" fill="#f5c842" opacity="0.55" filter="url(#gs)"/>
+<line x1="800" y1="30" x2="1360" y2="30" stroke="#00d4ff" stroke-width="0.6" opacity="0.3"/>
+<line x1="1020" y1="34" x2="1360" y2="34" stroke="#00d4ff" stroke-width="0.3" opacity="0.14"/>
 
 <!-- Bottom ornament -->
-<line x1="70" y1="474" x2="600" y2="474" stroke="#00d4ff" stroke-width="0.6" opacity="0.28"/>
-<polygon points="700,464 712,474 700,484 688,474" fill="none" stroke="#f5c842" stroke-width="1.5" opacity="0.75" filter="url(#gs)"/>
-<polygon points="700,467 710,474 700,481 690,474" fill="#f5c842" opacity="0.4"/>
-<line x1="800" y1="474" x2="1330" y2="474" stroke="#00d4ff" stroke-width="0.6" opacity="0.28"/>
+<line x1="80" y1="510" x2="640" y2="510" stroke="#f5c842" stroke-width="0.6" opacity="0.25"/>
+<polygon points="720,499 734,510 720,521 706,510" fill="none" stroke="#f5c842" stroke-width="1.8" opacity="0.7" filter="url(#gs)"/>
+<polygon points="720,503 732,510 720,517 708,510" fill="#f5c842" opacity="0.4"/>
+<line x1="800" y1="510" x2="1360" y2="510" stroke="#f5c842" stroke-width="0.6" opacity="0.25"/>
 
-<!-- Corner chrome -->
-<g filter="url(#gs)" opacity="0.8">
-  <line x1="22" y1="22" x2="65" y2="22" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="22" y1="22" x2="22" y2="65" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="22" y1="22" x2="32" y2="32" stroke="#f5c842" stroke-width="1" opacity="0.6"/>
-  <line x1="1378" y1="22" x2="1335" y2="22" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="1378" y1="22" x2="1378" y2="65" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="1378" y1="22" x2="1368" y2="32" stroke="#f5c842" stroke-width="1" opacity="0.6"/>
-  <line x1="22" y1="478" x2="65" y2="478" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="22" y1="478" x2="22" y2="435" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="1378" y1="478" x2="1335" y2="478" stroke="#00d4ff" stroke-width="2"/>
-  <line x1="1378" y1="478" x2="1378" y2="435" stroke="#00d4ff" stroke-width="2"/>
-</g>
+<!-- ══════════ LEFT PANEL: CEL PIPELINE ══════════ -->
+<g transform="translate(50,58)">
+  <text font-family="'Courier New',monospace" x="28" y="0" fill="#00d4ff" font-size="10.5" letter-spacing="4.5" opacity="0.85">CONSTITUTIONAL EVOLUTION LOOP</text>
+  <line x1="0" y1="10" x2="270" y2="10" stroke="#00d4ff" stroke-width="0.5" opacity="0.2"/>
 
-<!-- ══════════ LEFT: CEL PIPELINE ══════════ -->
-<g transform="translate(50, 52)">
-  <text font-family="'Courier New',monospace" x="26" y="0" fill="#00d4ff" font-size="11" letter-spacing="4" opacity="0.85">CONSTITUTIONAL EVOLUTION LOOP</text>
-  <line x1="0" y1="10" x2="260" y2="10" stroke="#00d4ff" stroke-width="0.5" opacity="0.22"/>
+  <!-- Spine -->
+  <line x1="14" y1="26" x2="14" y2="436" stroke="#00d4ff" stroke-width="1.3" opacity="0.2" stroke-dasharray="3 5">
+    <animate attributeName="stroke-dashoffset" values="0;-16" dur="2s" repeatCount="indefinite"/>
+  </line>
 
-  <!-- Timeline spine -->
-  <line x1="12" y1="28" x2="12" y2="392" stroke="#00d4ff" stroke-width="1.2" opacity="0.2"/>
+  <g font-family="'Courier New',monospace" font-size="10">
+    <!-- Each dot with staggered animation -->
+    <circle cx="14" cy="34" r="5.5" fill="#00d4ff" filter="url(#gs)"><animate attributeName="opacity" values=".9;.3;.9" dur="3.1s" begin="0s" repeatCount="indefinite"/></circle>
+    <text x="32" y="30" fill="#5abcd8" letter-spacing=".5">01</text><text x="32" y="42" fill="#2a7a95" letter-spacing=".3">DRIFT CHECK</text>
 
-  <g font-family="'Courier New',monospace">
-    <!-- 01 -->
-    <circle cx="12" cy="36" r="5.5" fill="#00d4ff" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.9;0.35;0.9" dur="3.2s" begin="0s" repeatCount="indefinite"/>
+    <circle cx="14" cy="78" r="5.5" fill="#00d4ff" filter="url(#gs)"><animate attributeName="opacity" values=".85;.28;.85" dur="2.8s" begin=".35s" repeatCount="indefinite"/></circle>
+    <text x="32" y="74" fill="#5abcd8" letter-spacing=".5">02</text><text x="32" y="86" fill="#2a7a95" letter-spacing=".3">LINEAGE SNAPSHOT</text>
+
+    <circle cx="14" cy="122" r="5.5" fill="#00d4ff" filter="url(#gs)"><animate attributeName="opacity" values=".8;.25;.8" dur="3.6s" begin=".7s" repeatCount="indefinite"/></circle>
+    <text x="32" y="118" fill="#5abcd8" letter-spacing=".5">03</text><text x="32" y="130" fill="#2a7a95" letter-spacing=".3">FITNESS BASELINE</text>
+
+    <circle cx="14" cy="166" r="6.5" fill="#f5c842" filter="url(#gs)"><animate attributeName="opacity" values=".95;.4;.95" dur="2.0s" begin="0s" repeatCount="indefinite"/></circle>
+    <text x="32" y="162" fill="#f5c842" letter-spacing=".5" font-weight="bold">04</text><text x="32" y="174" fill="#c49830" letter-spacing=".3" font-weight="bold">PROPOSAL GENERATE</text>
+
+    <circle cx="14" cy="210" r="5.5" fill="#00d4ff" filter="url(#gs)"><animate attributeName="opacity" values=".75;.22;.75" dur="4.2s" begin="1.1s" repeatCount="indefinite"/></circle>
+    <text x="32" y="206" fill="#5abcd8" letter-spacing=".5">05</text><text x="32" y="218" fill="#2a7a95" letter-spacing=".3">AST SCAN</text>
+
+    <circle cx="14" cy="254" r="5.5" fill="#00d4ff" filter="url(#gs)"><animate attributeName="opacity" values=".75;.25;.75" dur="3.4s" begin="1.5s" repeatCount="indefinite"/></circle>
+    <text x="32" y="250" fill="#5abcd8" letter-spacing=".5">06</text><text x="32" y="262" fill="#2a7a95" letter-spacing=".3">SANDBOX EXECUTE</text>
+
+    <circle cx="14" cy="298" r="6.5" fill="#f5c842" filter="url(#gs)"><animate attributeName="opacity" values=".9;.35;.9" dur="2.3s" begin=".5s" repeatCount="indefinite"/></circle>
+    <text x="32" y="294" fill="#f5c842" letter-spacing=".5" font-weight="bold">07</text><text x="32" y="306" fill="#c49830" letter-spacing=".3" font-weight="bold">REPLAY VERIFY</text>
+
+    <circle cx="14" cy="330" r="5" fill="#00d4ff" opacity=".6"/><text x="32" y="334" fill="#2a6a80">08  FITNESS SCORE</text>
+    <circle cx="14" cy="354" r="6" fill="#f5c842" filter="url(#gs)" opacity=".85"/><text x="32" y="358" fill="#b88020" font-weight="bold">09  GOVERNANCE GATE V2</text>
+    <circle cx="14" cy="378" r="6" fill="#f5c842" filter="url(#gs)" opacity=".8"/><text x="32" y="382" fill="#b88020" font-weight="bold">10  GOVERNANCE GATE</text>
+    <circle cx="14" cy="402" r="5" fill="#00d4ff" opacity=".55"/><text x="32" y="406" fill="#2a6a80">11  LINEAGE REGISTER</text>
+    <circle cx="14" cy="426" r="5.5" fill="#f5c842" opacity=".7"/><text x="32" y="430" fill="#a07020">12  PROMOTION DECISION</text>
+
+    <!-- 14 STATE ADVANCE beacon -->
+    <circle cx="14" cy="456" r="5" fill="#00ff88" filter="url(#gm)">
+      <animate attributeName="r" values="5;8.5;5" dur="2.1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="1;0.4;1" dur="2.1s" repeatCount="indefinite"/>
     </circle>
-    <text x="30" y="31" fill="#5ab8d8" font-size="9.5" letter-spacing="0.8">01</text>
-    <text x="30" y="43" fill="#3d8aaa" font-size="9.5" letter-spacing="0.5">DRIFT CHECK</text>
-
-    <!-- 02 -->
-    <circle cx="12" cy="84" r="5.5" fill="#00d4ff" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.8;0.28;0.8" dur="2.9s" begin="0.4s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="79" fill="#5ab8d8" font-size="9.5" letter-spacing="0.8">02</text>
-    <text x="30" y="91" fill="#3d8aaa" font-size="9.5" letter-spacing="0.5">LINEAGE SNAPSHOT</text>
-
-    <!-- 03 -->
-    <circle cx="12" cy="132" r="5.5" fill="#00d4ff" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.75;0.3;0.75" dur="3.7s" begin="0.8s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="127" fill="#5ab8d8" font-size="9.5" letter-spacing="0.8">03</text>
-    <text x="30" y="139" fill="#3d8aaa" font-size="9.5" letter-spacing="0.5">FITNESS BASELINE</text>
-
-    <!-- 04 GOLD -->
-    <circle cx="12" cy="180" r="6.5" fill="#f5c842" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.95;0.42;0.95" dur="2.1s" begin="0s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="175" fill="#f5c842" font-size="9.5" letter-spacing="0.8">04</text>
-    <text x="30" y="187" fill="#d4a030" font-size="9.5" letter-spacing="0.5" font-weight="bold">PROPOSAL GENERATE</text>
-
-    <!-- 05 -->
-    <circle cx="12" cy="228" r="5.5" fill="#00d4ff" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.7;0.25;0.7" dur="4.1s" begin="1.2s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="223" fill="#5ab8d8" font-size="9.5" letter-spacing="0.8">05</text>
-    <text x="30" y="235" fill="#3d8aaa" font-size="9.5" letter-spacing="0.5">AST SCAN</text>
-
-    <!-- 06 -->
-    <circle cx="12" cy="276" r="5.5" fill="#00d4ff" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.7;0.28;0.7" dur="3.5s" begin="1.6s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="271" fill="#5ab8d8" font-size="9.5" letter-spacing="0.8">06</text>
-    <text x="30" y="283" fill="#3d8aaa" font-size="9.5" letter-spacing="0.5">SANDBOX EXECUTE</text>
-
-    <!-- 07 GOLD -->
-    <circle cx="12" cy="324" r="6.5" fill="#f5c842" filter="url(#gs)">
-      <animate attributeName="opacity" values="0.9;0.38;0.9" dur="2.4s" begin="0.5s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="319" fill="#f5c842" font-size="9.5" letter-spacing="0.8">07</text>
-    <text x="30" y="331" fill="#d4a030" font-size="9.5" letter-spacing="0.5" font-weight="bold">REPLAY VERIFY</text>
-
-    <!-- 08-14 condensed -->
-    <circle cx="12" cy="360" r="5" fill="#00d4ff" opacity="0.6"/>
-    <text x="30" y="356" fill="#3d7a8a" font-size="9.5">08  FITNESS SCORE</text>
-    <circle cx="12" cy="380" r="6" fill="#f5c842" opacity="0.85" filter="url(#gs)"/>
-    <text x="30" y="376" fill="#c49020" font-size="9.5" font-weight="bold">09  GOVERNANCE GATE V2</text>
-    <circle cx="12" cy="400" r="6" fill="#f5c842" opacity="0.8" filter="url(#gs)"/>
-    <text x="30" y="396" fill="#c49020" font-size="9.5" font-weight="bold">10  GOVERNANCE GATE</text>
-    <circle cx="12" cy="420" r="5" fill="#00d4ff" opacity="0.6"/>
-    <text x="30" y="416" fill="#3d7a8a" font-size="9.5">11  LINEAGE REGISTER</text>
-    <circle cx="12" cy="440" r="6" fill="#f5c842" opacity="0.8" filter="url(#gs)"/>
-    <text x="30" y="436" fill="#c49020" font-size="9.5" font-weight="bold">12  PROMOTION DECISION</text>
-
-    <!-- 14 GREEN BEACON -->
-    <circle cx="12" cy="460" r="4" fill="#00ff88" filter="url(#gm)">
-      <animate attributeName="r" values="5;8;5" dur="2.2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="1;0.45;1" dur="2.2s" repeatCount="indefinite"/>
-    </circle>
-    <text x="30" y="456" fill="#00ff88" font-size="10" letter-spacing="0.8" font-weight="bold">14  STATE ADVANCE ✓</text>
+    <text x="32" y="452" fill="#00ff88" font-weight="bold">14  STATE ADVANCE ✓</text>
   </g>
 </g>
 
-<!-- Panel dividers -->
-<line x1="340" y1="48" x2="340" y2="452" stroke="#00d4ff" stroke-width="0.5" opacity="0.12" stroke-dasharray="4 6"/>
-<line x1="1060" y1="48" x2="1060" y2="452" stroke="#f5c842" stroke-width="0.5" opacity="0.1" stroke-dasharray="4 6"/>
+<!-- Panel divider dashed -->
+<line x1="345" y1="50" x2="345" y2="490" stroke="#00d4ff" stroke-width="0.5" opacity="0.1" stroke-dasharray="3 8"/>
 
-<!-- ══════════ CENTER ══════════ -->
+<!-- ══════════ CENTER: WORDMARK ══════════ -->
 <g text-anchor="middle">
-  <!-- Version tag -->
-  <rect x="572" y="54" width="156" height="24" rx="3" fill="#0a0f1a" stroke="#00d4ff" stroke-width="0.7" stroke-opacity="0.4"/>
-  <text x="650" y="71" font-family="'Courier New',monospace" font-size="11" fill="#3a8aaa" letter-spacing="3">v9.1.0  ·  PHASE 66</text>
 
-  <!-- ADAAD — deep glow stack -->
-  <text x="700" y="222" fill="#001e2e" font-family="'Courier New',monospace" font-size="172" font-weight="900" letter-spacing="-5">ADAAD</text>
-  <text x="700" y="222" fill="#00d4ff" font-family="'Courier New',monospace" font-size="172" font-weight="900" letter-spacing="-5" opacity="0.08" filter="url(#gxl)">ADAAD</text>
-  <text x="700" y="222" fill="#00d4ff" font-family="'Courier New',monospace" font-size="172" font-weight="900" letter-spacing="-5" opacity="0.18" filter="url(#gm)">ADAAD</text>
-  <text x="700" y="222" fill="url(#titleg)" font-family="'Courier New',monospace" font-size="172" font-weight="900" letter-spacing="-5" filter="url(#gs)">ADAAD</text>
+  <!-- Version pill -->
+  <rect x="634" y="54" width="172" height="26" rx="4" fill="#050c18" stroke="#00d4ff" stroke-width="0.8" stroke-opacity="0.4"/>
+  <text x="720" y="71" font-family="'Courier New',monospace" font-size="11.5" fill="#2a7a99" letter-spacing="3.5">v9.1.0  ·  PHASE 66</text>
+
+  <!-- ADAAD — four layer glow stack -->
+  <!-- Shadow base -->
+  <text x="720" y="238" fill="#001824" font-family="'Courier New',monospace" font-size="186" font-weight="900" letter-spacing="-6">ADAAD</text>
+  <!-- Mega bloom -->
+  <text x="720" y="238" fill="#00d4ff" font-family="'Courier New',monospace" font-size="186" font-weight="900" letter-spacing="-6" opacity="0.06" filter="url(#gxxl)">
+    ADAAD
+    <animate attributeName="opacity" values="0.06;0.14;0.06" dur="5s" repeatCount="indefinite"/>
+  </text>
+  <!-- XL glow -->
+  <text x="720" y="238" fill="#00d4ff" font-family="'Courier New',monospace" font-size="186" font-weight="900" letter-spacing="-6" opacity="0.12" filter="url(#gxl)">ADAAD</text>
+  <!-- Med glow -->
+  <text x="720" y="238" fill="#00d4ff" font-family="'Courier New',monospace" font-size="186" font-weight="900" letter-spacing="-6" opacity="0.22" filter="url(#gm)">ADAAD</text>
+  <!-- Crisp surface -->
+  <text x="720" y="238" fill="url(#titleg)" font-family="'Courier New',monospace" font-size="186" font-weight="900" letter-spacing="-6" filter="url(#gs)">ADAAD</text>
 
   <!-- Subtitle -->
-  <text x="700" y="263" fill="#3a6a88" font-family="'Courier New',monospace" font-size="13.5" letter-spacing="6">AUTONOMOUS DEVICE-ANCHORED ADAPTIVE DEVELOPMENT</text>
+  <text x="720" y="284" fill="#2e6680" font-family="'Courier New',monospace" font-size="13" letter-spacing="7">AUTONOMOUS DEVICE-ANCHORED ADAPTIVE DEVELOPMENT</text>
 
-  <!-- Tagline -->
-  <line x1="360" y1="287" x2="1040" y2="287" stroke="#00d4ff" stroke-width="0.6" opacity="0.22"/>
-  <text x="700" y="316" fill="#00d4ff" font-family="'Courier New',monospace" font-size="17.5" letter-spacing="1.5" opacity="0.95" font-style="italic" filter="url(#gs)">Your codebase. Under constitutional law. Evolving itself.</text>
-  <line x1="360" y1="332" x2="1040" y2="332" stroke="#00d4ff" stroke-width="0.6" opacity="0.22"/>
+  <!-- Tagline with flanking rules -->
+  <line x1="365" y1="305" x2="545" y2="305" stroke="#00d4ff" stroke-width="0.6" opacity="0.22"/>
+  <line x1="895" y1="305" x2="1075" y2="305" stroke="#00d4ff" stroke-width="0.6" opacity="0.22"/>
+  <text x="720" y="332" fill="#00d4ff" font-family="'Courier New',monospace" font-size="18" letter-spacing="1.5" font-style="italic" filter="url(#gs)" opacity=".95">Your codebase. Under constitutional law. Evolving itself.</text>
+  <line x1="365" y1="349" x2="1075" y2="349" stroke="#00d4ff" stroke-width="0.5" opacity="0.18"/>
 
-  <!-- Stats -->
-  <g transform="translate(700,378)" font-family="'Courier New',monospace">
-    <!-- v9.1.0 -->
-    <rect x="-330" y="-18" width="112" height="46" rx="4" fill="#050d18" stroke="#00d4ff" stroke-width="0.8" stroke-opacity="0.35"/>
-    <text x="-274" y="2" text-anchor="middle" fill="#f5c842" font-size="16" font-weight="700">v9.1.0</text>
-    <text x="-274" y="18" text-anchor="middle" fill="#2a5570" font-size="9.5" letter-spacing="2">VERSION</text>
+  <!-- Stats strip -->
+  <g transform="translate(720, 400)" font-family="'Courier New',monospace">
+    <rect x="-340" y="-20" width="118" height="50" rx="5" fill="#040d18" stroke="#00d4ff" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="-281" y="2" text-anchor="middle" fill="#f5c842" font-size="17" font-weight="700">v9.1.0</text>
+    <text x="-281" y="20" text-anchor="middle" fill="#1a4a62" font-size="9.5" letter-spacing="2.5">VERSION</text>
 
-    <!-- 4441 -->
-    <rect x="-205" y="-18" width="128" height="46" rx="4" fill="#050d18" stroke="#00ff88" stroke-width="0.8" stroke-opacity="0.35"/>
-    <text x="-141" y="2" text-anchor="middle" fill="#00ff88" font-size="16" font-weight="700">4,441</text>
-    <text x="-141" y="18" text-anchor="middle" fill="#1a5535" font-size="9.5" letter-spacing="2">TESTS PASS</text>
+    <rect x="-208" y="-20" width="132" height="50" rx="5" fill="#040d18" stroke="#00ff88" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="-142" y="2" text-anchor="middle" fill="#00ff88" font-size="17" font-weight="700">4,441</text>
+    <text x="-142" y="20" text-anchor="middle" fill="#0a3e20" font-size="9.5" letter-spacing="2.5">TESTS PASS</text>
 
-    <!-- 23 RULES -->
-    <rect x="-62" y="-18" width="124" height="46" rx="4" fill="#050d18" stroke="#00d4ff" stroke-width="0.8" stroke-opacity="0.35"/>
-    <text x="0" y="2" text-anchor="middle" fill="#00d4ff" font-size="16" font-weight="700">23 RULES</text>
-    <text x="0" y="18" text-anchor="middle" fill="#1a4a60" font-size="9.5" letter-spacing="2">CONSTITUTION</text>
+    <rect x="-62" y="-20" width="124" height="50" rx="5" fill="#040d18" stroke="#00d4ff" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="0" y="2" text-anchor="middle" fill="#00d4ff" font-size="17" font-weight="700">23 RULES</text>
+    <text x="0" y="20" text-anchor="middle" fill="#0a3050" font-size="9.5" letter-spacing="2.5">CONSTITUTION</text>
 
-    <!-- 14 STEPS -->
-    <rect x="76" y="-18" width="120" height="46" rx="4" fill="#050d18" stroke="#f5c842" stroke-width="0.8" stroke-opacity="0.35"/>
-    <text x="136" y="2" text-anchor="middle" fill="#f5c842" font-size="16" font-weight="700">14 STEPS</text>
-    <text x="136" y="18" text-anchor="middle" fill="#4a3a10" font-size="9.5" letter-spacing="2">CEL PIPELINE</text>
+    <rect x="76" y="-20" width="122" height="50" rx="5" fill="#040d18" stroke="#f5c842" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="137" y="2" text-anchor="middle" fill="#f5c842" font-size="17" font-weight="700">14 STEPS</text>
+    <text x="137" y="20" text-anchor="middle" fill="#3a2a08" font-size="9.5" letter-spacing="2.5">CEL PIPELINE</text>
 
-    <!-- APACHE -->
-    <rect x="210" y="-18" width="130" height="46" rx="4" fill="#050d18" stroke="#00ff88" stroke-width="0.8" stroke-opacity="0.3"/>
-    <text x="275" y="2" text-anchor="middle" fill="#00ff88" font-size="16" font-weight="700">APACHE 2.0</text>
-    <text x="275" y="18" text-anchor="middle" fill="#1a5535" font-size="9.5" letter-spacing="2">FREE / OPEN</text>
+    <rect x="212" y="-20" width="136" height="50" rx="5" fill="#040d18" stroke="#a855f7" stroke-width="1" stroke-opacity="0.4"/>
+    <text x="280" y="2" text-anchor="middle" fill="#a855f7" font-size="17" font-weight="700">66 PHASES</text>
+    <text x="280" y="20" text-anchor="middle" fill="#2a0a50" font-size="9.5" letter-spacing="2.5">COMPLETE</text>
   </g>
 
-  <!-- Status beacon -->
-  <circle cx="436" cy="450" r="5" fill="#00ff88" filter="url(#gs)">
-    <animate attributeName="opacity" values="1;0.25;1" dur="1.9s" repeatCount="indefinite"/>
+  <!-- Status row -->
+  <circle cx="444" cy="468" r="5.5" fill="#00ff88" filter="url(#gs)">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.8s" repeatCount="indefinite"/>
   </circle>
-  <text x="700" y="456" font-family="'Courier New',monospace" font-size="10.5" fill="#00ff88" letter-spacing="3.5" opacity="0.88">SELF-EVOLUTION ACTIVE  ·  PHASE 66  ·  HASH IN LEDGER  ·  GOV-SOLE-0 ENFORCED</text>
+  <text x="720" y="474" font-family="'Courier New',monospace" font-size="11" fill="#00ff88" letter-spacing="3.5" opacity="0.88">SELF-EVOLUTION ACTIVE  ·  PHASE 66  ·  HASH IN LEDGER  ·  GOV-SOLE-0 ENFORCED</text>
+
+  <!-- Apache badge -->
+  <rect x="600" y="490" width="240" height="22" rx="3" fill="#040d18" stroke="#00ff88" stroke-width="0.7" stroke-opacity="0.4"/>
+  <text x="720" y="505" font-family="'Courier New',monospace" font-size="10" fill="#00ff88" letter-spacing="3" opacity="0.75">APACHE 2.0  ·  FREE FOREVER</text>
 </g>
 
-<!-- ══════════ RIGHT: CONSTITUTION ══════════ -->
-<g transform="translate(1082, 52)">
-  <text font-family="'Courier New',monospace" x="0" y="0" fill="#f5c842" font-size="11" letter-spacing="4" opacity="0.85">CONSTITUTIONAL RULES</text>
-  <line x1="0" y1="10" x2="270" y2="10" stroke="#f5c842" stroke-width="0.5" opacity="0.2"/>
+<!-- Panel divider right -->
+<line x1="1095" y1="50" x2="1095" y2="490" stroke="#f5c842" stroke-width="0.5" opacity="0.1" stroke-dasharray="3 8"/>
 
-  <g transform="translate(0, 26)" font-family="'Courier New',monospace">
-    <!-- BLOCKING -->
-    <rect x="-5" y="-2" width="5" height="90" rx="1.5" fill="#ff4466" opacity="0.75" filter="url(#gred)"/>
-    <text x="10" y="12" fill="#ff4466" font-size="11" letter-spacing="2" font-weight="700">BLOCKING  ×9</text>
-    <text x="10" y="30" fill="#3a4855" font-size="9.5">single_file_scope</text>
-    <text x="10" y="44" fill="#3a4855" font-size="9.5">ast_validity</text>
-    <text x="10" y="58" fill="#3a4855" font-size="9.5">no_banned_tokens</text>
-    <text x="10" y="72" fill="#3a4855" font-size="9.5">signature_required</text>
-    <text x="10" y="86" fill="#3a4855" font-size="9.5">+ 5 more rules</text>
+<!-- ══════════ RIGHT PANEL: CONSTITUTION ══════════ -->
+<g transform="translate(1116, 58)">
+  <text font-family="'Courier New',monospace" x="0" y="0" fill="#f5c842" font-size="10.5" letter-spacing="4.5" opacity="0.85">CONSTITUTIONAL RULES</text>
+  <line x1="0" y1="10" x2="288" y2="10" stroke="#f5c842" stroke-width="0.5" opacity="0.2"/>
 
-    <line x1="0" y1="100" x2="270" y2="100" stroke="#1a2530" stroke-width="0.5"/>
+  <g transform="translate(0,24)" font-family="'Courier New',monospace">
+    <!-- BLOCKING accent bar -->
+    <rect x="-6" y="0" width="6" height="106" rx="2" fill="#ff4466" opacity="0.75" filter="url(#gred)"/>
+    <text x="12" y="14" fill="#ff4466" font-size="11.5" letter-spacing="2.5" font-weight="700">BLOCKING  ×9</text>
+    <text x="12" y="32" fill="#324050" font-size="10">single_file_scope</text>
+    <text x="12" y="46" fill="#324050" font-size="10">ast_validity</text>
+    <text x="12" y="60" fill="#324050" font-size="10">no_banned_tokens</text>
+    <text x="12" y="74" fill="#324050" font-size="10">signature_required</text>
+    <text x="12" y="88" fill="#324050" font-size="10">lineage_continuity</text>
+    <text x="12" y="102" fill="#324050" font-size="10">+ 4 more rules</text>
+
+    <line x1="0" y1="116" x2="286" y2="116" stroke="#1a2530" stroke-width="0.5"/>
 
     <!-- WARNING -->
-    <rect x="-5" y="108" width="5" height="75" rx="1.5" fill="#f5c842" opacity="0.65"/>
-    <text x="10" y="122" fill="#f5c842" font-size="11" letter-spacing="2" font-weight="700">WARNING  ×5</text>
-    <text x="10" y="140" fill="#3a4855" font-size="9.5">max_complexity_delta</text>
-    <text x="10" y="154" fill="#3a4855" font-size="9.5">test_coverage_maintained</text>
-    <text x="10" y="168" fill="#3a4855" font-size="9.5">max_mutation_rate  + 2 more</text>
+    <rect x="-6" y="124" width="6" height="90" rx="2" fill="#f5c842" opacity="0.65"/>
+    <text x="12" y="138" fill="#f5c842" font-size="11.5" letter-spacing="2.5" font-weight="700">WARNING  ×5</text>
+    <text x="12" y="156" fill="#324050" font-size="10">max_complexity_delta</text>
+    <text x="12" y="170" fill="#324050" font-size="10">test_coverage_maintained</text>
+    <text x="12" y="184" fill="#324050" font-size="10">max_mutation_rate</text>
+    <text x="12" y="198" fill="#324050" font-size="10">import_smoke_test + 1 more</text>
 
-    <line x1="0" y1="184" x2="270" y2="184" stroke="#1a2530" stroke-width="0.5"/>
+    <line x1="0" y1="212" x2="286" y2="212" stroke="#1a2530" stroke-width="0.5"/>
 
     <!-- ADVISORY -->
-    <rect x="-5" y="192" width="5" height="75" rx="1.5" fill="#00d4ff" opacity="0.55"/>
-    <text x="10" y="206" fill="#00d4ff" font-size="11" letter-spacing="2" font-weight="700">ADVISORY  ×9</text>
-    <text x="10" y="224" fill="#3a4855" font-size="9.5">deployment_authority_tier</text>
-    <text x="10" y="238" fill="#3a4855" font-size="9.5">reviewer_calibration</text>
-    <text x="10" y="252" fill="#3a4855" font-size="9.5">bandit_arm_integrity  + 6 more</text>
+    <rect x="-6" y="220" width="6" height="90" rx="2" fill="#00d4ff" opacity="0.5"/>
+    <text x="12" y="234" fill="#00d4ff" font-size="11.5" letter-spacing="2.5" font-weight="700">ADVISORY  ×9</text>
+    <text x="12" y="252" fill="#324050" font-size="10">deployment_authority_tier</text>
+    <text x="12" y="266" fill="#324050" font-size="10">reviewer_calibration</text>
+    <text x="12" y="280" fill="#324050" font-size="10">bandit_arm_integrity</text>
+    <text x="12" y="294" fill="#324050" font-size="10">+ 6 more rules</text>
 
-    <line x1="0" y1="278" x2="270" y2="278" stroke="#1a2530" stroke-width="0.5"/>
+    <line x1="0" y1="308" x2="286" y2="308" stroke="#1a2530" stroke-width="0.5"/>
 
     <!-- INVARIANTS -->
-    <text x="10" y="300" fill="#4a7080" font-size="11" letter-spacing="2" font-weight="700">INVARIANTS  ×8</text>
-    <text x="10" y="318" fill="#2a3a45" font-size="9.5">GOV-SOLE-0   ·   CEL-ORDER-0</text>
-    <text x="10" y="332" fill="#2a3a45" font-size="9.5">SANDBOX-DIV-0   ·   TIER0-SELF-0</text>
-    <text x="10" y="346" fill="#2a3a45" font-size="9.5">PATCH-SIZE-0   ·   DET-ALL-0  + 2</text>
+    <text x="12" y="328" fill="#4a7080" font-size="11.5" letter-spacing="2.5" font-weight="700">INVARIANTS  ×8</text>
+    <text x="12" y="346" fill="#1e3040" font-size="10">GOV-SOLE-0  ·  CEL-ORDER-0</text>
+    <text x="12" y="360" fill="#1e3040" font-size="10">SANDBOX-DIV-0  ·  DET-ALL-0</text>
+    <text x="12" y="374" fill="#1e3040" font-size="10">TIER0-SELF-0  ·  PATCH-SIZE-0</text>
+    <text x="12" y="388" fill="#1e3040" font-size="10">LINEAGE-STAB-0  ·  SIM-BLOCK-0</text>
 
-    <!-- Badge -->
-    <rect x="0" y="368" width="260" height="28" rx="4" fill="#0a0010" stroke="#ff4466" stroke-width="1" stroke-opacity="0.65"/>
-    <text x="130" y="386" text-anchor="middle" fill="#ff4466" font-size="9.5" letter-spacing="2.5" font-weight="700">NON-BYPASSABLE · GOV-SOLE-0</text>
+    <!-- Non-bypassable badge -->
+    <rect x="0" y="404" width="278" height="28" rx="4" fill="#0a0010" stroke="#ff4466" stroke-width="1.2" stroke-opacity="0.7"/>
+    <text x="139" y="422" text-anchor="middle" fill="#ff4466" font-size="10" letter-spacing="2.5" font-weight="700">NON-BYPASSABLE · GOV-SOLE-0</text>
 
-    <!-- Phase 65 proof -->
-    <rect x="0" y="408" width="260" height="28" rx="4" fill="#001a00" stroke="#00ff88" stroke-width="1" stroke-opacity="0.55"/>
-    <circle cx="16" cy="422" r="4" fill="#00ff88" filter="url(#gs)">
-      <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+    <!-- Phase 65 badge -->
+    <rect x="0" y="442" width="278" height="28" rx="4" fill="#001800" stroke="#00ff88" stroke-width="1.2" stroke-opacity="0.6"/>
+    <circle cx="16" cy="456" r="5" fill="#00ff88" filter="url(#gs)">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite"/>
     </circle>
-    <text x="140" y="427" text-anchor="middle" fill="#00ff88" font-size="9.5" letter-spacing="2">PHASE 65 · SELF-EVOLVED ✓</text>
+    <text x="148" y="461" text-anchor="middle" fill="#00ff88" font-size="10" letter-spacing="2">PHASE 65 · SELF-EVOLVED ✓</text>
   </g>
 </g>
-
 </svg>
