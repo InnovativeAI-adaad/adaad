@@ -313,7 +313,7 @@ Must cover:
 | Release notes | `docs/releases/4.7.0.md` | Validated guarantees vs. roadmap rule |
 | CHANGELOG entry | `CHANGELOG.md` | Phase 22 section |
 | Evidence rows | `docs/comms/claims_evidence_matrix.md` | `strategy-analytics-engine`, `routing-health-report`, `aponi-analytics-endpoints` |
-| Agent state | `.adaad_agent_state.json` | `schema_version: 1.3.0`, `last_completed_pr: PR-22-REL`, `next_pr: PR-23-PLAN (Phase 23 — TBD)`, `active_phase: Phase 22 COMPLETE · v4.7.0` |
+| Agent state | `.adaad_agent_state.json` | `schema_version: 1.3.0`, `last_completed_pr: PR-22-REL`, `next_pr: PR-23-PLAN (Phase 23 — Routing Health Signal Integration)`, `active_phase: Phase 22 COMPLETE · v4.7.0` |
 
 Evidence validator must pass: `python scripts/validate_release_evidence.py --require-complete`
 

@@ -36,7 +36,7 @@
 
 | Check | Artifact | Status |
 |---|---|---|
-| ROADMAP complete through Phase 51 | `ROADMAP.md` — Next pointer = Phase 52 TBD | ✅ |
+| ROADMAP complete through Phase 51 | `ROADMAP.md` — Phase 52 shipped (`v7.6.0`), roadmap currently points to Phase 68 | ✅ |
 | Procession doc v2 authored and committed | `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` | ✅ |
 | Agent state synced to Phase 51 / v7.5.0 | `.adaad_agent_state.json` | ⏳ (done at Phase 51 commit) |
 | Claims/evidence matrix — all rows `Complete` | `docs/comms/claims_evidence_matrix.md` | ✅ (verified at v7.4.0) |
@@ -50,7 +50,7 @@
 | Check | Notes | Status |
 |---|---|---|
 | F-Droid MR submitted | Submit at `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **MANUAL — Dustin** |
-| F-Droid MR URL recorded | Update `android/fdroid/com.innovativeai.adaad.yml` placeholder | ⏳ blocked on above |
+| F-Droid MR URL recorded | `android/fdroid/com.innovativeai.adaad.yml` has no embedded MR URL field; canonical MR submission endpoint is `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` (explicit N/A for in-file URL) | ⏳ blocked on above |
 | APK build pipeline green | `.github/workflows/android-free-release.yml` passes | ⏳ |
 | `INSTALL_ANDROID.md` links valid | No broken install links | ✅ |
 | Obtainium config valid | `android/obtainium.json` references correct release URL | ✅ |
@@ -73,9 +73,9 @@
 
 | Check | Notes | Status |
 |---|---|---|
-| Phase 52 candidate selected | Human selects from candidates in procession doc v2 § 4 | ⏳ |
-| Direction recorded in procession doc | Update `ADAAD_PR_PROCESSION_2026-03-v2.md` § 4 active row | ⏳ |
-| Phase 52 branch created from v7.5.0 HEAD | `git checkout -b feat/phase52-<direction> main` | ⏳ |
+| Phase 52 candidate selected | Selected: Governed Cross-Epoch Memory & Learning Store (recorded in `ROADMAP.md` Phase 52 section) | ✅ |
+| Direction recorded in procession doc | `ADAAD_PR_PROCESSION_2026-03-v2.md` § 4 now records Phase 52 as ratified + shipped (`v7.6.0`) | ✅ |
+| Phase 52 branch created from v7.5.0 HEAD | Historical closure recorded via shipped Phase 52 release state in roadmap/changelog (branch command N/A post-release) | ✅ (N/A — already shipped) |
 
 ---
 
@@ -111,7 +111,7 @@ The governance strict release gate workflow fires on tag push and performs termi
 | 2 | Governance Documentation | ⏳ (Phase 51 closes most items) |
 | 3 | Android / F-Droid Distribution | ⏳ **F-Droid MR is hard block** |
 | 4 | Human Sign-off (Founder Gate) | ⏳ **Hard block — cannot be automated** |
-| 5 | Phase 52 Direction Ratified | ⏳ |
+| 5 | Phase 52 Direction Ratified | ✅ |
 | 6 | Governance Strict Release Gate | ⏳ (unblocked after Gates 1–5) |
 
-**Current blocker:** Gates 3 and 4 require manual action from Dustin (F-Droid MR submission + GPG sign-off). Everything else is automatable once Phase 51 merges.
+**Current blocker:** Gates 3 and 4 require manual action from Dustin (F-Droid MR submission + GPG sign-off). Phase 52 ratification is already closed and evidenced; remaining automation proceeds after manual gates clear.
