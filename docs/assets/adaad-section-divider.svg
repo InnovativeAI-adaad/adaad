@@ -1,38 +1,56 @@
-<svg viewBox="0 0 1440 48" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg">
 <defs>
-  <linearGradient id="dl" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#010204" stop-opacity="1"/>
-    <stop offset="18%" stop-color="#00d4ff" stop-opacity="0.5"/>
-    <stop offset="48%" stop-color="#f5c842" stop-opacity="0.6"/>
-    <stop offset="52%" stop-color="#f5c842" stop-opacity="0.6"/>
-    <stop offset="82%" stop-color="#00d4ff" stop-opacity="0.5"/>
-    <stop offset="100%" stop-color="#010204" stop-opacity="1"/>
+  <linearGradient id="div-l" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#010508" stop-opacity="1"/>
+    <stop offset="20%"  stop-color="#00d4ff" stop-opacity="0.45"/>
+    <stop offset="46%"  stop-color="#f5c842" stop-opacity="0.55"/>
+    <stop offset="50%"  stop-color="#f5c842" stop-opacity="0.7"/>
+    <stop offset="54%"  stop-color="#f5c842" stop-opacity="0.55"/>
+    <stop offset="80%"  stop-color="#00d4ff" stop-opacity="0.45"/>
+    <stop offset="100%" stop-color="#010508" stop-opacity="1"/>
   </linearGradient>
-  <linearGradient id="dl2" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#010204" stop-opacity="1"/>
-    <stop offset="25%" stop-color="#00d4ff" stop-opacity="0.2"/>
-    <stop offset="50%" stop-color="#00d4ff" stop-opacity="0.35"/>
-    <stop offset="75%" stop-color="#00d4ff" stop-opacity="0.2"/>
-    <stop offset="100%" stop-color="#010204" stop-opacity="1"/>
+  <linearGradient id="div-l2" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%"   stop-color="#010508" stop-opacity="1"/>
+    <stop offset="25%"  stop-color="#00d4ff" stop-opacity="0.18"/>
+    <stop offset="50%"  stop-color="#00d4ff" stop-opacity="0.3"/>
+    <stop offset="75%"  stop-color="#00d4ff" stop-opacity="0.18"/>
+    <stop offset="100%" stop-color="#010508" stop-opacity="1"/>
   </linearGradient>
-  <filter id="gd">
-    <feGaussianBlur stdDeviation="2" result="b"/>
-    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-  </filter>
+  <filter id="div-glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <style>
+    @keyframes div-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    @keyframes div-pulse{0%,100%{opacity:.7}50%{opacity:1}}
+    .div-diamond{transform-origin:720px 28px;animation:div-spin 12s linear infinite}
+    .div-pulse{animation:div-pulse 2s ease-in-out infinite}
+  </style>
 </defs>
-<rect width="1440" height="48" fill="#010204"/>
-<rect x="0" y="23" width="1440" height="1" fill="url(#dl2)"/>
-<rect x="0" y="22" width="1440" height="0.5" fill="url(#dl)"/>
-<rect x="0" y="25" width="1440" height="0.5" fill="url(#dl)" opacity="0.4"/>
-<!-- Center ornament -->
-<polygon points="720,12 732,24 720,36 708,24" fill="none" stroke="#f5c842" stroke-width="1.5" opacity="0.8" filter="url(#gd)"/>
-<polygon points="720,16 730,24 720,32 710,24" fill="#f5c842" opacity="0.5"/>
-<!-- Small flanking diamonds -->
-<polygon points="620,20 626,24 620,28 614,24" fill="#00d4ff" opacity="0.3"/>
-<polygon points="820,20 826,24 820,28 814,24" fill="#00d4ff" opacity="0.3"/>
+<rect width="1440" height="56" fill="#010508"/>
+<!-- Centre line layers -->
+<rect x="0" y="26.5" width="1440" height="0.8" fill="url(#div-l2)"/>
+<rect x="0" y="25.5" width="1440" height="0.6" fill="url(#div-l)"/>
+<rect x="0" y="28.2" width="1440" height="0.5" fill="url(#div-l)" opacity="0.4"/>
+<!-- Flanking micro-dashes -->
+<g stroke="#00d4ff" stroke-width="0.5" opacity="0.2">
+  <line x1="0" y1="20" x2="1440" y2="20" stroke-dasharray="2 18"/>
+  <line x1="0" y1="36" x2="1440" y2="36" stroke-dasharray="2 18"/>
+</g>
+<!-- Spinning centre diamond -->
+<g class="div-diamond" filter="url(#div-glow)">
+  <polygon points="720,14 732,27 720,40 708,27" fill="none" stroke="#f5c842" stroke-width="1.8" opacity="0.9" class="div-pulse"/>
+  <polygon points="720,18 730,27 720,36 710,27" fill="#f5c842" opacity="0.45"/>
+</g>
+<!-- Flanking small diamonds -->
+<polygon points="660,22 668,28 660,34 652,28" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+<polygon points="780,22 788,28 780,34 772,28" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
+<polygon points="600,24 606,28 600,32 594,28" fill="none" stroke="#00d4ff" stroke-width="0.7" opacity="0.25"/>
+<polygon points="840,24 846,28 840,32 834,28" fill="none" stroke="#00d4ff" stroke-width="0.7" opacity="0.25"/>
 <!-- Tick marks -->
-<line x1="560" y1="20" x2="560" y2="28" stroke="#00d4ff" stroke-width="0.6" opacity="0.3"/>
-<line x1="880" y1="20" x2="880" y2="28" stroke="#00d4ff" stroke-width="0.6" opacity="0.3"/>
-<line x1="440" y1="22" x2="440" y2="26" stroke="#00d4ff" stroke-width="0.5" opacity="0.2"/>
-<line x1="1000" y1="22" x2="1000" y2="26" stroke="#00d4ff" stroke-width="0.5" opacity="0.2"/>
+<g stroke="#00d4ff" stroke-width="0.8" opacity="0.25">
+  <line x1="540" y1="23" x2="540" y2="33"/>
+  <line x1="900" y1="23" x2="900" y2="33"/>
+  <line x1="480" y1="25" x2="480" y2="31"/>
+  <line x1="960" y1="25" x2="960" y2="31"/>
+  <line x1="420" y1="26" x2="420" y2="30"/>
+  <line x1="1020" y1="26" x2="1020" y2="30"/>
+</g>
 </svg>

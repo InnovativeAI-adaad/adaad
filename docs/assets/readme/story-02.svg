@@ -1,37 +1,62 @@
-<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">GovernanceGate plus deterministic replay blocks unsafe mutations</title>
-  <desc id="desc">A proposed mutation is admitted only after constitutional checks and deterministic replay verification, showing fail-closed governance before any code change.</desc>
-  <defs>
-    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#020a18"/>
-      <stop offset="100%" stop-color="#031328"/>
-    </linearGradient>
-  </defs>
-  <rect width="420" height="220" rx="18" fill="url(#bg2)"/>
-  <rect x="1" y="1" width="418" height="218" rx="17" fill="none" stroke="#00d4ff" opacity="0.28"/>
-
-  <text x="24" y="34" fill="#f5c842" font-family="'Courier New',monospace" font-size="14" font-weight="700" letter-spacing="1.1">PANEL 2 · GATE + REPLAY</text>
-  <text x="24" y="56" fill="#c6d8ea" font-family="'Courier New',monospace" font-size="11">Govern before mutate</text>
-
-  <rect x="24" y="84" width="112" height="50" rx="9" fill="#0b2035" stroke="#00d4ff"/>
-  <text x="80" y="108" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="10">Proposed patch</text>
-  <text x="80" y="123" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="10">(epoch candidate)</text>
-
-  <path d="M138 109 L190 109" stroke="#7fc4ff" stroke-width="2.5"/>
-  <polygon points="190,109 182,104 182,114" fill="#7fc4ff"/>
-
-  <rect x="196" y="76" width="118" height="68" rx="9" fill="#111522" stroke="#f5c842"/>
-  <text x="255" y="99" text-anchor="middle" fill="#ffd96f" font-family="'Courier New',monospace" font-size="10" font-weight="700">GovernanceGate</text>
-  <text x="255" y="115" text-anchor="middle" fill="#e2d9bf" font-family="'Courier New',monospace" font-size="9">23 constitutional</text>
-  <text x="255" y="129" text-anchor="middle" fill="#e2d9bf" font-family="'Courier New',monospace" font-size="9">rules pass or halt</text>
-
-  <rect x="324" y="76" width="72" height="68" rx="9" fill="#0d1f17" stroke="#00ff88"/>
-  <text x="360" y="102" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="9" font-weight="700">Replay</text>
-  <text x="360" y="117" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="9">digest</text>
-  <text x="360" y="132" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="9">must match</text>
-
-  <path d="M314 109 L322 109" stroke="#ffd96f" stroke-width="2"/>
-
-  <rect x="24" y="160" width="372" height="36" rx="8" fill="#0b141f" stroke="#00d4ff" opacity="0.9"/>
-  <text x="210" y="181" text-anchor="middle" fill="#d4e8ff" font-family="'Courier New',monospace" font-size="10">Fail-closed sequence: any gate miss → mutation rejected, repo remains unchanged.</text>
+<svg viewBox="0 0 500 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="s2-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#020d18"/>
+    <stop offset="100%" stop-color="#061220"/>
+  </linearGradient>
+  <filter id="s2-glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="s2-soft"><feGaussianBlur stdDeviation="10"/></filter>
+  <style>
+    @keyframes s2-flow{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-40}}
+    @keyframes s2-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+    .s2-flow{stroke-dasharray:8 4;animation:s2-flow 2s linear infinite}
+    .s2-gate{animation:s2-pulse 1.8s ease-in-out infinite}
+  </style>
+</defs>
+<rect width="500" height="280" fill="url(#s2-bg)" rx="8"/>
+<circle cx="250" cy="140" r="90" fill="#00d4ff" opacity="0.04" filter="url(#s2-soft)"/>
+<!-- Title -->
+<rect x="0" y="0" width="500" height="42" fill="#00060f" rx="8"/>
+<rect x="0" y="32" width="500" height="10" fill="#00060f"/>
+<text x="250" y="18" text-anchor="middle" font-family="'Courier New',monospace" font-size="9" fill="#00d4ff" letter-spacing="3" opacity="0.9">ADAAD MODEL</text>
+<text x="250" y="33" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#1e3a4a" letter-spacing="2" opacity="0.8">GOVERNANCEGATE IS THE SOLE APPROVAL SURFACE</text>
+<!-- Proposal engine left -->
+<rect x="25" y="95" width="95" height="90" rx="5" fill="#0a1828" stroke="#00d4ff" stroke-width="1" opacity="0.75"/>
+<text x="72" y="120" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#00d4ff" opacity="0.9">PROPOSAL</text>
+<text x="72" y="133" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#00d4ff" opacity="0.9">ENGINE</text>
+<text x="72" y="150" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#0a4060" opacity="0.8">Architect</text>
+<text x="72" y="163" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#0a4060" opacity="0.8">Dream</text>
+<text x="72" y="176" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#0a4060" opacity="0.8">Beast</text>
+<!-- Flow arrow to gate -->
+<line x1="120" y1="140" x2="175" y2="140" stroke="#00d4ff" stroke-width="1.5" opacity="0.6" class="s2-flow"/>
+<polygon points="171,136 181,140 171,144" fill="#00d4ff" opacity="0.6"/>
+<!-- GovernanceGate - center, prominent -->
+<rect x="175" y="78" width="150" height="124" rx="8" fill="#001828" stroke="#f5c842" stroke-width="2.5" opacity="0.95" class="s2-gate"/>
+<rect x="182" y="85" width="136" height="110" rx="5" fill="#00111f" opacity="0.9"/>
+<text x="250" y="110" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#f5c842" letter-spacing="2" opacity="0.95">GOVERNANCE</text>
+<text x="250" y="124" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#f5c842" letter-spacing="2" opacity="0.95">GATE</text>
+<line x1="195" y1="131" x2="305" y2="131" stroke="#f5c842" stroke-width="0.6" opacity="0.4"/>
+<text x="250" y="147" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#00d4ff" opacity="0.8">23 constitutional rules</text>
+<text x="250" y="160" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#00d4ff" opacity="0.7">GOV-SOLE-0</text>
+<text x="250" y="173" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#00ff88" opacity="0.8">NON-BYPASSABLE</text>
+<text x="250" y="186" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#0a4060" opacity="0.7">deterministic · fail-closed</text>
+<!-- Flow arrow out -->
+<line x1="325" y1="140" x2="378" y2="140" stroke="#00ff88" stroke-width="1.5" opacity="0.7" class="s2-flow"/>
+<polygon points="374,136 384,140 374,144" fill="#00ff88" opacity="0.7"/>
+<!-- Ledger right -->
+<rect x="378" y="95" width="97" height="90" rx="5" fill="#001825" stroke="#00ff88" stroke-width="1" opacity="0.75"/>
+<text x="426" y="125" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#00ff88" opacity="0.9">EVIDENCE</text>
+<text x="426" y="138" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#00ff88" opacity="0.9">LEDGER</text>
+<text x="426" y="155" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#004a28" opacity="0.8">SHA-256</text>
+<text x="426" y="168" text-anchor="middle" font-family="'Courier New',monospace" font-size="6" fill="#004a28" opacity="0.8">hash-chained</text>
+<!-- REJECTED path (below) -->
+<line x1="250" y1="202" x2="250" y2="225" stroke="#ff4466" stroke-width="1.2" opacity="0.5" stroke-dasharray="4 4"/>
+<polygon points="246,221 250,231 254,221" fill="#ff4466" opacity="0.5"/>
+<text x="250" y="245" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#ff4466" opacity="0.7">REJECTED → DISCARDED → ZERO WRITES</text>
+<!-- Bottom caption -->
+<rect x="0" y="249" width="500" height="31" fill="#00060f" rx="0"/>
+<rect x="0" y="249" width="500" height="4" fill="#00060f"/>
+<text x="250" y="265" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00d4ff" opacity="0.7">GovernanceGate cannot be bypassed — not by config,</text>
+<text x="250" y="276" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00d4ff" opacity="0.7">not by flag, not by exception token.</text>
+<rect width="500" height="280" fill="none" stroke="#1e3a4a" stroke-width="1" rx="8"/>
 </svg>
