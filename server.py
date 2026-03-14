@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 
 from contextlib import asynccontextmanager
 
@@ -88,12 +88,40 @@ app = FastAPI(title="InnovativeAI-adaad Unified Server", lifespan=_lifespan)
 # ── CORS ────────────────────────────────────────────────────────────────────
 import os as _os
 
-_CORS_ORIGINS: list[str] = [
-    o.strip()
-    for o in _os.environ.get("ADAAD_CORS_ORIGINS", "http://localhost,http://127.0.0.1").split(",")
-    if o.strip()
-]
-_CORS_ORIGIN_REGEX = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+_DEV_CORS_ORIGINS = ["http://localhost", "http://127.0.0.1"]
+_DEV_CORS_ORIGIN_REGEX = r"http://(localhost|127\.0\.0\.1)(:\d+)?"
+
+
+def _resolve_cors_settings(env: Mapping[str, str] | None = None) -> tuple[list[str], str | None]:
+    """Resolve CORS origins/regex from env with explicit, fail-closed precedence.
+
+    Precedence:
+      1) `ADAAD_CORS_ORIGINS` (if present): use only explicit allowlist values.
+      2) `ADAAD_CORS_ORIGIN_REGEX` (if present): optional regex augmentation.
+      3) If neither env var is set: safe dev defaults (localhost/127.0.0.1 + localhost regex).
+
+    If a variable is present but blank, it is treated as intentionally empty.
+    """
+    scope = env if env is not None else _os.environ
+    origins_raw = scope.get("ADAAD_CORS_ORIGINS")
+    regex_raw = scope.get("ADAAD_CORS_ORIGIN_REGEX")
+
+    if origins_raw is None and regex_raw is None:
+        return list(_DEV_CORS_ORIGINS), _DEV_CORS_ORIGIN_REGEX
+
+    origins: list[str] = []
+    if origins_raw is not None:
+        origins = [o.strip() for o in origins_raw.split(",") if o.strip()]
+
+    regex: str | None = None
+    if regex_raw is not None:
+        candidate = regex_raw.strip()
+        regex = candidate or None
+
+    return origins, regex
+
+
+_CORS_ORIGINS, _CORS_ORIGIN_REGEX = _resolve_cors_settings()
 
 app.add_middleware(
     CORSMiddleware,

@@ -17,6 +17,17 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 - Boolean flags in ADAAD generally treat `1/true/yes/on` as enabled; any other value is treated as disabled unless code documents a stricter parser.
 
 
+
+## API server CORS precedence (`server.py`)
+
+CORS resolution is explicit and fail-closed outside local defaults:
+
+1. If **both** `ADAAD_CORS_ORIGINS` and `ADAAD_CORS_ORIGIN_REGEX` are unset, ADAAD enables a safe dev default: allowlist `http://localhost,http://127.0.0.1` plus localhost regex.
+2. If `ADAAD_CORS_ORIGINS` is set (including empty), that value fully controls allowlist behavior; ADAAD does **not** inject localhost fallback.
+3. `ADAAD_CORS_ORIGIN_REGEX` is optional and only active when explicitly set to a non-empty regex.
+
+This ordering ensures production operators can disable regex behavior by omission and avoid implicit wildcard expansion when an explicit allowlist is configured.
+
 ## Scope legend
 
 - **application orchestration (app)**: boot orchestration, dream/beast cycles, runtime gates.
@@ -52,6 +63,8 @@ This page catalogs `ADAAD_*` environment variables currently read by executable 
 | `ADAAD_BLOCKED_IMPORT_ROOTS` | `'core,engines,adad_core,ADAAD22'` | comma-separated import root list | runtime/governance engine | `runtime/import_guard.py` |
 | `ADAAD_CONSTITUTION_VERSION` | `'', '0.2.0'` | string/JSON per caller contract | application orchestration (app) | `app/main.py` |
 | `ADAAD_CONTAINER_HASH` | `'unavailable'` | string/JSON per caller contract | runtime/governance engine | `runtime/evolution/evidence_bundle.py` |
+| `ADAAD_CORS_ORIGINS` | `unset` | comma-separated origin allowlist (`scheme://host[:port]`). If set, only listed origins are allowed; no implicit localhost fallback is added. | API server surface | `server.py` |
+| `ADAAD_CORS_ORIGIN_REGEX` | `unset` | optional regex string for additional origin matching. Applied only when explicitly set; blank value is treated as disabled. | API server surface | `server.py` |
 | `ADAAD_DEBUG_SIMULATION_INVARIANTS` | `''` | string/JSON per caller contract | application orchestration (app) | `app/main.py` |
 | `ADAAD_DETERMINISTIC_LOCK` | `''` | boolean-like: `1|true|yes|on` enables | runtime/governance engine | `runtime/governance_surface.py` |
 | `ADAAD_DETERMINISTIC_SEED` | `'adaad'` | string/JSON per caller contract | runtime/governance engine | `runtime/governance/foundation/determinism.py` |
