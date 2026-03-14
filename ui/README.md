@@ -2,8 +2,12 @@
 
 The Aponi dashboard provides HTTP endpoints for orchestrator state, metrics tailing, lineage entries, and mutation history. It should be started after core checks succeed and must surface health signals without external dependencies.
 
+> [!NOTE]
+> **Docs image styling convention (GitHub-safe):** Decorative/non-essential artwork should use inline low-weight styling (`style="opacity:0.72; box-shadow:none;"`) for consistent visual prominence without external CSS.
+> **Exception:** Keep core technical diagrams at normal clarity when they are required for comprehension.
+
 <p align="center">
-  <img src="../docs/assets/brand/aponi-context.svg" width="820" alt="Aponi context showing proposal authoring and analysis feeding into ADAAD governance and approved runtime execution">
+  <img src="../docs/assets/brand/aponi-context.svg" width="820" style="opacity:0.72; box-shadow:none;" alt="Aponi context showing proposal authoring and analysis feeding into ADAAD governance and approved runtime execution">
 </p>
 <p align="center"><em>Aponi context: operator-facing proposal tooling that remains bounded by ADAAD governance authority.</em></p>
 
