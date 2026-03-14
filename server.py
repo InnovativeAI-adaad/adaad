@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
+from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
 from runtime.innovations_router import router as innovations_router
 
 # ── Module-level runtime imports ─────────────────────────────────────────────
@@ -3073,6 +3074,39 @@ async def get_epoch_memory(
 
 
 # Must be last so it can handle deep-link fallbacks after API routes
+
+
+# ── ADAADchat GitHub App — Webhook Receiver ──────────────────────────────────
+# [ADAADchat] github_app webhook — DO NOT EDIT THIS LINE
+
+@app.post("/webhook/github")
+async def github_webhook(request: Request) -> dict[str, Any]:
+    """ADAADchat GitHub App webhook endpoint (App ID: 3013088).
+
+    Verifies HMAC-SHA256 signature and dispatches to the ADAAD governance
+    audit trail.  Endpoint: POST /webhook/github
+    """
+    body = await request.body()
+
+    sig = request.headers.get("x-hub-signature-256", "")
+    if not verify_webhook_signature(body, sig):
+        raise HTTPException(status_code=401, detail="invalid_webhook_signature")
+
+    event_type  = request.headers.get("x-github-event", "unknown")
+    delivery_id = request.headers.get("x-github-delivery", "")
+
+    try:
+        payload: dict[str, Any] = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="invalid_json_payload")
+
+    logger.info(
+        "GitHub webhook event=%s delivery=%s", event_type, delivery_id
+    )
+
+    result = dispatch_event(event_type, payload)
+    return result
+
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
 
 
