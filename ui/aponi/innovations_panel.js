@@ -30,6 +30,12 @@
       --inno-border: rgba(0,229,255,0.09);
       --inno-border-bright: rgba(0,229,255,0.25);
       --inno-glow: 0 0 40px rgba(0,229,255,0.07);
+      --img-low-weight-opacity: 0.9;
+      --img-low-weight-saturation: 0.9;
+      --img-low-weight-max-glow: 6px;
+      --img-low-weight-hover-opacity: 0.98;
+      --img-low-weight-hover-saturation: 1;
+      --img-low-weight-hover-glow-alpha: 0.18;
     }
 
     /* ── Innovations wrapper ──────────────────────────────────────── */
@@ -374,12 +380,19 @@
     }
     .agent-portrait {
       height: 100%; max-height: 195px; object-fit: contain;
-      transition: transform 0.35s ease;
+      transition: transform 0.35s ease, filter 0.35s ease, opacity 0.35s ease;
     }
-    .agent-card.architect .agent-portrait { filter: drop-shadow(0 0 18px rgba(255,180,0,0.3)); }
-    .agent-card.dream     .agent-portrait { filter: drop-shadow(0 0 18px rgba(160,100,255,0.35)); }
-    .agent-card.beast     .agent-portrait { filter: drop-shadow(0 0 18px rgba(0,229,255,0.3)); }
-    .agent-card:hover .agent-portrait { transform: scale(1.06) translateY(-4px); }
+    .img-low-weight {
+      opacity: var(--img-low-weight-opacity);
+      filter: saturate(var(--img-low-weight-saturation));
+    }
+    .agent-card:hover .agent-portrait.img-low-weight {
+      transform: scale(1.06) translateY(-4px);
+      opacity: var(--img-low-weight-hover-opacity);
+      filter:
+        saturate(var(--img-low-weight-hover-saturation))
+        drop-shadow(0 0 var(--img-low-weight-max-glow) rgba(255,255,255,var(--img-low-weight-hover-glow-alpha)));
+    }
     .agent-info { padding: 12px 15px 16px; border-top: 1px solid rgba(255,255,255,0.05); }
     .agent-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
     .agent-name {
@@ -426,7 +439,10 @@
       border-radius: 18px; overflow: hidden; position: relative;
       border: 1px solid rgba(255,255,255,0.06);
     }
-    .trio-banner-img { width: 100%; display: block; border-radius: 18px; }
+    .trio-banner-img {
+      width: 100%; display: block; border-radius: 18px;
+      transition: filter 0.3s ease, opacity 0.3s ease;
+    }
     .trio-banner-overlay {
       position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 22px;
       background: linear-gradient(0deg, rgba(2,6,18,0.95) 0%, transparent 100%);
@@ -1155,7 +1171,7 @@
 
       // Portrait
       const pw = h("div", {class: "agent-portrait-wrap"});
-      const portrait = h("img", {class: "agent-portrait", src: a.img, alt: a.id});
+      const portrait = h("img", {class: "agent-portrait img-low-weight", src: a.img, alt: a.id});
       portrait.onerror = () => { pw.innerHTML = `<div style="font-size:44px;opacity:0.3;align-self:center;">${["⚖️","✨","⚡"][ai]}</div>`; };
       pw.appendChild(portrait);
       card.appendChild(pw);
@@ -1192,7 +1208,7 @@
 
     // ── Trio banner ───────────────────────────────────────────────────
     const banner = h("div", {class: "roster-trio-banner"});
-    const bannerImg = h("img", {class: "trio-banner-img", src: "agent_trio.png", alt: "ADAAD Agents"});
+    const bannerImg = h("img", {class: "trio-banner-img img-low-weight", src: "agent_trio.png", alt: "ADAAD Agents"});
     bannerImg.onerror = () => { banner.style.display = "none"; };
     banner.appendChild(bannerImg);
     const overlay = h("div", {class: "trio-banner-overlay"});
