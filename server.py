@@ -36,6 +36,7 @@ from runtime.governance.foundation.determinism import default_provider    # noqa
 from runtime.intelligence.router import IntelligenceRouter                # noqa: E402
 from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa: E402
 from runtime.governance.rate_limiter import get_limiter as _get_proposal_limiter  # noqa: E402
+from runtime.audit_auth import load_audit_tokens, require_audit_read_scope  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parent
@@ -206,39 +207,11 @@ def _read_gate_state() -> Dict[str, Any]:
 
 
 def _load_audit_tokens() -> dict[str, list[str]]:
-    raw = os.environ.get("ADAAD_AUDIT_TOKENS", "")
-    if not raw:
-        return {}
-    try:
-        decoded = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    if not isinstance(decoded, dict):
-        return {}
-    normalized: dict[str, list[str]] = {}
-    for token, scopes in decoded.items():
-        if not isinstance(token, str):
-            continue
-        if isinstance(scopes, list):
-            normalized[token] = [str(scope) for scope in scopes]
-    return normalized
+    return load_audit_tokens()
 
 
 def _require_audit_read_scope(authorization: str | None) -> dict[str, str]:
-    if not authorization:
-        raise HTTPException(status_code=401, detail="missing_authentication")
-
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=401, detail="missing_authentication")
-
-    token_scopes = _load_audit_tokens().get(token)
-    if token_scopes is None:
-        raise HTTPException(status_code=401, detail="invalid_token")
-    if "audit:read" not in token_scopes:
-        raise HTTPException(status_code=403, detail="insufficient_scope")
-
-    return {"scheme": "bearer", "scope": "audit:read", "redaction": "sensitive"}
+    return require_audit_read_scope(authorization)
 
 def _assert_gate_open() -> Dict[str, Any]:
     gate = _read_gate_state()

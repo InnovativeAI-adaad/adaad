@@ -25,11 +25,12 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Header, HTTPException
+from fastapi import APIRouter, Body, Header
 
 from runtime.capability.capability_registry import CapabilityRegistry
 from runtime.capability.seed_registry_adapter import register_seeds_bulk
 from runtime.innovations import ADAADInnovationEngine, CapabilitySeed
+from runtime.audit_auth import require_audit_read_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
 
 logger = logging.getLogger(__name__)
@@ -52,16 +53,7 @@ def _require_audit_read(authorization: Optional[str]) -> None:
 
     ORACLE-AUTH-0: all innovations endpoints require audit:read scope.
     """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header required")
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Bearer token required")
-    token = parts[1]
-    # Read allowed tokens from env (same pattern as server.py audit gate)
-    allowed = set(filter(None, os.getenv("ADAAD_AUDIT_TOKENS", "").split(",")))
-    if allowed and token not in allowed:
-        raise HTTPException(status_code=403, detail="audit:read scope required")
+    require_audit_read_scope(authorization)
 
 
 # ---------------------------------------------------------------------------
