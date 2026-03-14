@@ -40,6 +40,14 @@ TIER0_GATES: tuple[tuple[str, ToolExecutionRequest], ...] = (
     ),
     ("import_boundary_lint", lint_check_request(tool_id="tier0-import-boundary-lint", command=(sys.executable, "tools/lint_import_paths.py"), working_directory=str(REPO_ROOT))),
     (
+        "governance_doc_consistency",
+        lint_check_request(
+            tool_id="tier0-governance-doc-consistency",
+            command=(sys.executable, "scripts/validate_governance_doc_consistency.py"),
+            working_directory=str(REPO_ROOT),
+        ),
+    ),
+    (
         "fast_confidence_tests",
         test_check_request(
             tool_id="tier0-fast-confidence-tests",
