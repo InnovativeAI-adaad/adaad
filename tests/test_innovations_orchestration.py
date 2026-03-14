@@ -132,8 +132,9 @@ class TestSeedRegistrationEndpoint:
 
     @staticmethod
     def _client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
-        token = "innovations-seed-token"
-        monkeypatch.setenv("ADAAD_AUDIT_TOKENS", token)
+        import runtime.innovations_router as ir
+
+        monkeypatch.setattr(ir, "_require_audit_read", lambda _authorization: None)
         app = FastAPI()
         app.include_router(router)
         return TestClient(app, raise_server_exceptions=True)
@@ -286,3 +287,27 @@ class TestServerRouterIntegration:
         assert "/innovations/federation-map" in paths
         assert "/innovations/seeds/register" in paths
         assert "/innovations/seeds" in paths
+        assert "/innovations/personality-profiles" in paths
+
+
+
+def test_personality_profiles_endpoint_returns_snapshot(monkeypatch):
+    """T68-ORC-05: personality profiles endpoint returns deterministic snapshot fields."""
+    from fastapi.testclient import TestClient
+    import runtime.innovations_router as ir
+
+    class _Allow:
+        def __call__(self, auth):
+            return None
+
+    monkeypatch.setattr(ir, "_require_audit_read", _Allow())
+    from fastapi import FastAPI
+    app = FastAPI()
+    app.include_router(ir.router)
+    client = TestClient(app)
+    response = client.get("/innovations/personality-profiles")
+    assert response.status_code == 200
+    body = response.json()
+    assert "profiles" in body
+    assert "history" in body
+    assert isinstance(body["profiles"], list)

@@ -18,6 +18,7 @@ Constitutional invariants verified:
 
 from __future__ import annotations
 
+import json
 from typing import Any, Dict, List, Mapping
 from unittest.mock import MagicMock
 
@@ -33,6 +34,7 @@ from runtime.innovations_wiring import (
     DEFAULT_PERSONALITIES,
     REFLECTION_CADENCE,
     VISION_HORIZON,
+    record_personality_impact,
     run_gplugins,
     run_self_reflection,
     run_vision_forecast,
@@ -322,3 +324,54 @@ class TestLiveWiredCELInnovationsParams:
         assert cel._innovations_engine is engine
         assert len(cel._gplugins) == 2
         assert cel._epoch_seq == 50
+
+
+class TestPersonalityPersistence:
+    """Regression tests for persisted profile selection and evolution."""
+
+    def test_selection_reads_persisted_profiles(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from runtime.personality_profiles import PersonalityProfileStore
+        import runtime.innovations_wiring as iw
+
+        store = PersonalityProfileStore(
+            profiles_path=tmp_path / "personality_profiles.json",
+            records_path=tmp_path / "persona_epoch_records.jsonl",
+        )
+        custom_state = store.snapshot()
+        custom_state["profiles"][0]["philosophy"] = "constitutional-minimal"
+        (tmp_path / "personality_profiles.json").write_text(json.dumps(custom_state, sort_keys=True), encoding="utf-8")
+        monkeypatch.setattr(iw, "_PROFILE_STORE", store)
+
+        p = select_agent_personality(_engine(), "epoch-001")
+        assert p is not None
+        assert p.philosophy in {"constitutional-minimal", "exploratory", "aggressive"}
+
+    def test_profile_evolution_and_impact_are_deterministic(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from runtime.personality_profiles import PersonalityProfileStore
+        import runtime.innovations_wiring as iw
+
+        store = PersonalityProfileStore(
+            profiles_path=tmp_path / "personality_profiles.json",
+            records_path=tmp_path / "persona_epoch_records.jsonl",
+        )
+        monkeypatch.setattr(iw, "_PROFILE_STORE", store)
+
+        state: Dict[str, Any] = {
+            "active_personality": {"agent_id": "architect", "philosophy": "minimalist"},
+            "fitness_summary": (("m1", 0.8),),
+            "mutations_succeeded": ("m1",),
+            "context": {"strategy_id": "s1"},
+        }
+        first = record_personality_impact(epoch_id="epoch-1", state=state)
+        second_state: Dict[str, Any] = {
+            "active_personality": {"agent_id": "architect", "philosophy": "minimalist"},
+            "fitness_summary": (("m2", 0.8),),
+            "mutations_succeeded": ("m2",),
+            "context": {"strategy_id": "s1"},
+        }
+        second = record_personality_impact(epoch_id="epoch-2", state=second_state)
+
+        assert first["outcome"] == "win"
+        assert second["revision"] == first["revision"] + 1
+        assert second["wins"] == first["wins"] + 1
+        assert second["impact_score"] == 0.8

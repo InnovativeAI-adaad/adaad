@@ -579,6 +579,9 @@
       { id: "beast",     philosophy: "aggressive",  vector: [0.5, 0.5, 0.9, 0.8], active: false },
     ],
     activePersonality: null,
+    personalityProfiles: [],
+    personalityHistory: [],
+    personalityLoaded: false,
   };
 
   const VEC_LABELS = ["intent", "explore", "risk", "speed"];
@@ -1085,6 +1088,24 @@
     return wrap;
   }
 
+  function summarizePersonaHistory(agentId) {
+    const rows = (innState.personalityHistory || []).filter(r => r.agent_id === agentId);
+    const wins = rows.filter(r => r.outcome === "win").length;
+    const losses = rows.filter(r => r.outcome === "loss").length;
+    const recent = rows.slice(-4).reverse();
+    const latest = rows.length ? rows[rows.length - 1] : null;
+    return { wins, losses, recent, latest };
+  }
+
+  async function loadPersonalityProfiles() {
+    try {
+      const data = await apiFetch("/innovations/personality-profiles");
+      innState.personalityProfiles = data.profiles || [];
+      innState.personalityHistory = data.history || [];
+      innState.personalityLoaded = true;
+    } catch (_) {}
+  }
+
   // ── Personalities — Cinematic character art roster ──────────────────
   function renderPersonalities() {
     const wrap = h("div", {class: "roster-wrap"});
@@ -1166,6 +1187,8 @@
     const trio = h("div", {class: "roster-trio"});
     AGENT_DATA.forEach((a, ai) => {
       const card = h("div", {class: `agent-card ${a.id}`});
+      const profile = (innState.personalityProfiles || []).find(p => p.agent_id === a.id) || {};
+      const history = summarizePersonaHistory(a.id);
       const isActive = innState.activePersonality?.agent_id === a.id;
       if (isActive) card.classList.add("is-active");
 
@@ -1181,10 +1204,11 @@
       nameRow.appendChild(h("div", {class: "agent-name"}, a.id));
       nameRow.appendChild(h("div", {class: "agent-active-dot"}));
       info2.appendChild(nameRow);
-      info2.appendChild(h("div", {class: "agent-philosophy"}, a.philosophy));
+      info2.appendChild(h("div", {class: "agent-philosophy"}, profile.philosophy || a.philosophy));
 
       const bars = h("div", {class: "agent-bars"});
-      a.vector.forEach((val, i) => {
+      const sourceVector = (profile.vector && profile.vector.length === 4) ? profile.vector : a.vector;
+      sourceVector.forEach((val, i) => {
         const row = h("div", {class: "agent-bar-row"});
         row.appendChild(h("div", {class: "agent-bar-label"}, VEC_LABELS[i]));
         const track = h("div", {class: "agent-bar-track"});
@@ -1198,8 +1222,20 @@
       info2.appendChild(bars);
 
       const tags = h("div", {class: "agent-detail-tags"});
-      a.tags.slice(0, 3).forEach(t => tags.appendChild(h("div", {class: "agent-tag"}, t)));
+      a.tags.slice(0, 2).forEach(t => tags.appendChild(h("div", {class: "agent-tag"}, t)));
+      const delta = history.latest && history.latest.vector_before && history.latest.vector_after
+        ? history.latest.vector_after.map((v, i) => (v - history.latest.vector_before[i]).toFixed(2)).join("/")
+        : "0.00/0.00/0.00/0.00";
+      tags.appendChild(h("div", {class: "agent-tag"}, `Δ ${delta}`));
+      tags.appendChild(h("div", {class: "agent-tag"}, `W:${history.wins} L:${history.losses}`));
       info2.appendChild(tags);
+
+      const recent = h("div", {class: "agent-philosophy", style: "margin-top:6px; font-size:10px;"},
+        history.recent.length
+          ? `Recent: ${history.recent.map(r => `${r.epoch_id}:${r.outcome}`).join(" · ")}`
+          : "Recent: no persona outcomes yet"
+      );
+      info2.appendChild(recent);
 
       card.appendChild(info2);
       trio.appendChild(card);
@@ -1285,7 +1321,10 @@
       if (innState.subpanel === "story")         content.appendChild(renderStory());
       if (innState.subpanel === "galaxy")        content.appendChild(renderGalaxy());
       if (innState.subpanel === "seeds")         content.appendChild(renderSeeds());
-      if (innState.subpanel === "personalities") content.appendChild(renderPersonalities());
+      if (innState.subpanel === "personalities") {
+        if (!innState.personalityLoaded) loadPersonalityProfiles();
+        content.appendChild(renderPersonalities());
+      }
     }
     re();
     root.appendChild(content);
@@ -1555,6 +1594,7 @@
 
     _onPersonality(f) {
       innState.activePersonality = { agent_id: f.agent_id, philosophy: f.philosophy };
+      loadPersonalityProfiles();
       const badge = document.getElementById("innoPersonaBadge");
       const label = document.getElementById("innoPersonaLabel");
       if (!badge || !label) return;
