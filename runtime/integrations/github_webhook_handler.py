@@ -2,9 +2,9 @@
 import hashlib, hmac, json, logging, os, time
 from typing import Any
 
+from runtime.integrations.github_identity_config import require_github_identity
+
 logger = logging.getLogger('adaad.github_webhook')
-INSTALLATION_ID = '114166410'
-APP_ID = '3013088'
 HANDLED_EVENTS = {
     'push', 'pull_request', 'pull_request_review',
     'check_run', 'check_suite', 'workflow_run',
@@ -16,6 +16,10 @@ def _ts():
 
 def emit_ledger_event(event):
     logger.info('LEDGER_EVENT %s', json.dumps(event))
+
+
+def _github_identity():
+    return require_github_identity()
 
 def verify_webhook_signature(payload_bytes, sig_header):
     secret = os.environ.get('GITHUB_WEBHOOK_SECRET', '')
@@ -29,7 +33,8 @@ def verify_webhook_signature(payload_bytes, sig_header):
     return hmac.compare_digest(expected, sig_header)
 
 def handle_push(p):
-    emit_ledger_event({'event_type': 'github_push', 'installation_id': INSTALLATION_ID,
+    identity = _github_identity()
+    emit_ledger_event({'event_type': 'github_push', 'installation_id': identity['installation_id'],
         'repository': p.get('repository', {}).get('full_name'),
         'branch': p.get('ref', '').replace('refs/heads/', ''),
         'pusher': p.get('pusher', {}).get('name'),
@@ -37,8 +42,9 @@ def handle_push(p):
     return {'status': 'accepted', 'ledger_event': 'github_push'}
 
 def handle_pull_request(p):
+    identity = _github_identity()
     pr = p.get('pull_request', {})
-    emit_ledger_event({'event_type': 'github_pull_request', 'installation_id': INSTALLATION_ID,
+    emit_ledger_event({'event_type': 'github_pull_request', 'installation_id': identity['installation_id'],
         'action': p.get('action'), 'pr_number': pr.get('number'),
         'pr_title': pr.get('title'), 'author': pr.get('user', {}).get('login'),
         'base_branch': pr.get('base', {}).get('ref'),
@@ -46,35 +52,38 @@ def handle_pull_request(p):
         'repository': p.get('repository', {}).get('full_name'), 'timestamp': _ts()})
     if p.get('action') == 'closed' and pr.get('merged') and pr.get('base', {}).get('ref') in ('main', 'master'):
         emit_ledger_event({'event_type': 'governance_gate_trigger',
-            'trigger': 'pr_merged_to_main', 'installation_id': INSTALLATION_ID,
+            'trigger': 'pr_merged_to_main', 'installation_id': identity['installation_id'],
             'pr_number': pr.get('number'), 'timestamp': _ts()})
     return {'status': 'accepted', 'ledger_event': 'github_pull_request'}
 
 def handle_check_run(p):
+    identity = _github_identity()
     cr = p.get('check_run', {})
-    emit_ledger_event({'event_type': 'github_check_run', 'installation_id': INSTALLATION_ID,
+    emit_ledger_event({'event_type': 'github_check_run', 'installation_id': identity['installation_id'],
         'action': p.get('action'), 'check_name': cr.get('name'),
         'conclusion': cr.get('conclusion'), 'status': cr.get('status'),
         'repository': p.get('repository', {}).get('full_name'), 'timestamp': _ts()})
     if cr.get('conclusion') in ('failure', 'timed_out', 'cancelled') and 'governance' in (cr.get('name') or '').lower():
         emit_ledger_event({'event_type': 'governance_gate_blocked',
             'reason': 'check_run_failed:' + str(cr.get('name')),
-            'installation_id': INSTALLATION_ID, 'timestamp': _ts()})
+            'installation_id': identity['installation_id'], 'timestamp': _ts()})
     return {'status': 'accepted', 'ledger_event': 'github_check_run'}
 
 def handle_workflow_run(p):
+    identity = _github_identity()
     wf = p.get('workflow_run', {})
-    emit_ledger_event({'event_type': 'github_workflow_run', 'installation_id': INSTALLATION_ID,
+    emit_ledger_event({'event_type': 'github_workflow_run', 'installation_id': identity['installation_id'],
         'workflow_name': wf.get('name'), 'conclusion': wf.get('conclusion'),
         'status': wf.get('status'), 'run_number': wf.get('run_number'),
         'repository': p.get('repository', {}).get('full_name'), 'timestamp': _ts()})
     return {'status': 'accepted', 'ledger_event': 'github_workflow_run'}
 
 def handle_installation(p):
+    identity = _github_identity()
     action = p.get('action', 'unknown')
     emit_ledger_event({'event_type': 'github_app_' + action,
-        'installation_id': str(p.get('installation', {}).get('id', INSTALLATION_ID)),
-        'app_id': APP_ID,
+        'installation_id': str(p.get('installation', {}).get('id', identity['installation_id'])),
+        'app_id': identity['app_id'],
         'account': p.get('installation', {}).get('account', {}).get('login'),
         'action': action, 'timestamp': _ts()})
     return {'status': 'accepted', 'ledger_event': 'github_app_' + action}
@@ -99,7 +108,8 @@ def handle_webhook(payload_bytes, event_type, signature, delivery_id=None):
         return 200, {'status': 'ignored', 'event': event_type}
     handler = EVENT_HANDLERS.get(event_type)
     if handler is None:
+        identity = _github_identity()
         emit_ledger_event({'event_type': 'github_' + event_type,
-            'installation_id': INSTALLATION_ID, 'timestamp': _ts()})
+            'installation_id': identity['installation_id'], 'timestamp': _ts()})
         return 200, {'status': 'logged', 'event': event_type}
     return 200, handler(payload)
