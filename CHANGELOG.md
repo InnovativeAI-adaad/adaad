@@ -1,4 +1,40 @@
+## [9.8.0] — 2026-03-14 — Phase 73: Seed Review Decision + Governance Wire
+
+### feat(phase-73): Human-governed seed review decisions with audit:write scope + Aponi review panel
+
+| Item | Detail |
+|---|---|
+| `runtime/seed_review.py` | New `record_review()` — governed human-approval workflow for promoted seeds. Enforces non-empty `operator_id` (SEED-REVIEW-HUMAN-0), writes `SeedReviewDecisionEvent` to lineage ledger before any status mutation (SEED-REVIEW-0), idempotent on terminal status (SEED-REVIEW-IDEM-0), deterministic `decision_digest` SHA-256 (SEED-REVIEW-AUDIT-0), emits `seed_promotion_approved`/`seed_promotion_rejected` bus frames (SEED-REVIEW-BUS-0). |
+| `runtime/audit_auth.py` | Added `require_audit_write_scope()` — Phase 73 review decisions require elevated `audit:write` bearer scope (SEED-REVIEW-AUTH-0). |
+| `runtime/innovations_router.py` | Wired `record_review` + `require_audit_write_scope`; added `POST /innovations/seeds/promoted/{seed_id}/review` endpoint with 422/404/500 error mapping. |
+| `ui/aponi/innovations_panel.js` | `_onSeedReview()` WS handler: green/red approval/rejection toasts, live badge update on promo queue rows. **Promotion Review** card added to Seeds panel — loads `/seeds/promoted`, renders FIFO queue with Approve/Reject buttons per pending entry, live status reflection on review bus frames. Phase 73 CSS: `.promo-row`, `.promo-btn`, `.promo-status-badge`, `.inno-toast.seed-approved/rejected`. `innState.promotionQueue` + `innState.graduatedSeeds` initialised at boot. |
+
+### New constitutional invariants (Phase 73)
+
+| Invariant | Enforcement |
+|---|---|
+| `SEED-REVIEW-0` | `SeedReviewDecisionEvent` written to lineage ledger before status mutation — ledger failure aborts decision |
+| `SEED-REVIEW-HUMAN-0` | `operator_id` must be non-empty; no system process may self-approve a seed |
+| `SEED-REVIEW-IDEM-0` | Re-reviewing a terminal seed returns existing entry unchanged |
+| `SEED-REVIEW-AUDIT-0` | Every decision carries a deterministic SHA-256 `decision_digest` |
+| `SEED-REVIEW-BUS-0` | Approval/rejection bus frame emitted after ledger write (IBUS-FAILSAFE-0) |
+| `SEED-REVIEW-AUTH-0` | Review endpoint requires `audit:write` scope |
+
+### Tests added (Phase 73)
+
+`tests/test_phase73_seed_review_governance_wire.py` — 16 tests · **16/16 passing**
+
+| Range | Coverage |
+|---|---|
+| T73-REV-01..09 | Blank operator, unknown seed, invalid status, ledger-first write (approve + reject), digest determinism, idempotency, status mutation |
+| T73-BUS-01..02 | `seed_promotion_approved` / `seed_promotion_rejected` bus frames |
+| T73-AUTH-01..02 | `require_audit_write_scope` 401/403 |
+| T73-API-01..03 | Review endpoint 422/404/422 error paths |
+
+---
+
 ## [9.7.0] — 2026-03-14 — Phase 72: Seed Promotion Queue + Graduation UI
+
 
 ### feat(phase-72): Graduated seed advisory promotion pipeline + Aponi graduation UX
 

@@ -1,10 +1,10 @@
 {
-    "active_phase": "v9.7.0 \u2014 Phase 72: Seed Promotion Queue + Graduation UI (complete)",
+    "active_phase": "v9.8.0 \u2014 Phase 73: Seed Review Decision + Governance Wire (complete)",
     "blocked_at_gate": null,
     "blocked_at_tier": null,
     "blocked_reason": null,
-    "last_completed_phase": "Phase 72 \u2014 Seed Promotion Queue + Graduation UI",
-    "last_completed_pr": "feature/phase-72-seed-promotion-graduation-ui",
+    "last_completed_phase": "Phase 73 \u2014 Seed Review Decision + Governance Wire",
+    "last_completed_pr": "feature/phase-73-promotion-governance-wire",
     "last_gate_results": {
         "tier_0": "pass",
         "tier_1": "pass",
@@ -13,7 +13,7 @@
     },
     "last_invocation": "2026-03-14",
     "last_sync_sha": "899617a",
-    "next_pr": "PR-73-PLAN (Phase 73 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
+    "next_pr": "PR-74-PLAN (Phase 74 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
     "open_findings": [
         {
             "id": "FINDING-66-001",
@@ -233,9 +233,19 @@
         "phase72-seed-graduated-ws-handler",
         "phase72-oracle-history-panel",
         "phase72-graduation-css-toast",
-        "v9.7.0-released"
+        "v9.7.0-released",
+        "phase73-seed-review-decision",
+        "phase73-seed-review-human-0",
+        "phase73-seed-review-0-ledger-first",
+        "phase73-seed-review-audit-0-digest",
+        "phase73-seed-review-idem-0",
+        "phase73-seed-review-bus-0",
+        "phase73-audit-write-scope",
+        "phase73-review-endpoint",
+        "phase73-promo-review-aponi-panel",
+        "v9.8.0-released"
     ],
-    "current_version": "9.7.0",
+    "current_version": "9.8.0",
     "completed_milestones": [
         "phase66-plan",
         "phase66-weight-adaptor-telemetry",
@@ -252,6 +262,11 @@
         "phase72-promotion-queue",
         "phase72-graduation-ui",
         "phase72-oracle-history",
-        "v9.7.0-released"
+        "v9.7.0-released",
+        "phase73-plan",
+        "phase73-seed-review",
+        "phase73-governance-wire",
+        "phase73-aponi-review-panel",
+        "v9.8.0-released"
     ]
 }
