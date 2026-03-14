@@ -1496,3 +1496,11 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 `build_proposal_request()` converts an approved promotion queue entry into a `ProposalRequest` for `ProposalEngine`. Enforces approved-only gate (SEED-PROP-0), deterministic `cycle_id` via SHA-256 (SEED-PROP-DETERM-0), writes `SeedProposalEvent` to lineage ledger before returning (SEED-PROP-LEDGER-0), emits `seed_proposal_generated` bus frame (SEED-PROP-BUS-0). Lane → strategy_id routing: governance/performance/correctness/security/general. `POST /innovations/seeds/promoted/{seed_id}/propose` audit:write-gated. Aponi: `_onSeedProposal()` WS handler with purple proposal toast; **📋 Propose** button on approved promo rows transitions to "Proposed" on success.
 
 **Key invariants:** SEED-PROP-0, SEED-PROP-HUMAN-0, SEED-PROP-DETERM-0, SEED-PROP-LEDGER-0, SEED-PROP-BUS-0
+
+### Phase 75 — Seed Proposal CEL Injection
+
+**Status:** ✅ shipped (v9.10.0) · **Dependency:** Phase 74 merged at main · **Tests:** T75-INJ-01..06, T75-RES-01..03, T75-CEL-01..02, T75-API-01..03
+
+`inject_seed_proposal_into_context()` merges a seed-derived `ProposalRequest` into a CEL epoch context dict; `SeedCELInjectionEvent` written to lineage ledger before return (SEED-CEL-AUDIT-0). `resolve_step4_request()` reads `seed_proposal_request` key in state context or falls back to default (SEED-CEL-HUMAN-0). CEL Step 4 wired to call `resolve_step4_request()` with try/except fallback (CEL-WIRE-FAIL-0) — CEL-ORDER-0 preserved. `POST /seeds/promoted/{seed_id}/inject` endpoint returns ready `epoch_context`. Completes the full seed lifecycle pipeline (Phases 71–75).
+
+**Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0

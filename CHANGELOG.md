@@ -1,4 +1,37 @@
+## [9.10.0] — 2026-03-14 — Phase 75: Seed Proposal CEL Injection
+
+### feat(phase-75): Approved seed ProposalRequest wired into CEL Step 4 as advisory signal
+
+| Item | Detail |
+|---|---|
+| `runtime/seed_cel_injector.py` | New `inject_seed_proposal_into_context()` — merges seed-derived `ProposalRequest` into CEL epoch context dict; writes `SeedCELInjectionEvent` to lineage ledger (SEED-CEL-AUDIT-0); deterministic (SEED-CEL-DETERM-0). New `resolve_step4_request()` — reads `seed_proposal_request` from context if present, else returns default ProposalRequest (SEED-CEL-HUMAN-0). |
+| `runtime/evolution/cel_wiring.py` | Step 4 (`_step_04_proposal_generate`) now calls `resolve_step4_request()` with try/except fallback — seed-derived request used when present, default request used if resolve raises (CEL-WIRE-FAIL-0). CEL-ORDER-0 preserved; no step skipped. |
+| `runtime/innovations_router.py` | Added `POST /innovations/seeds/promoted/{seed_id}/inject` — builds ProposalRequest and injects into epoch context in a single audit:write-gated call; returns ready `epoch_context` for `run_epoch(context=)`. |
+
+### New constitutional invariants (Phase 75)
+
+| Invariant | Enforcement |
+|---|---|
+| `SEED-CEL-0` | `inject_seed_proposal_into_context()` is the only supported injection mechanism |
+| `SEED-CEL-HUMAN-0` | Injected context is advisory; Step 4 falls back to default if key absent |
+| `SEED-CEL-DETERM-0` | Equal inputs produce identical injected context (deterministic merge) |
+| `SEED-CEL-AUDIT-0` | `SeedCELInjectionEvent` written to lineage ledger before context returned; failure aborts |
+
+### Tests added (Phase 75)
+
+`tests/test_phase75_seed_proposal_cel_injection.py` — 14 tests · **14/14 passing**
+
+| Range | Coverage |
+|---|---|
+| T75-INJ-01..06 | context key set, determinism, base_context preserved, seed fields promoted, ledger write, ledger failure |
+| T75-RES-01..03 | seed request used when present, default fallback when absent, pure/no side effects |
+| T75-CEL-01..02 | CEL Step 4 uses seed request, fallback on import error (CEL-WIRE-FAIL-0) |
+| T75-API-01..03 | 404/422 error paths, response shape with advisory_notice |
+
+---
+
 ## [9.9.0] — 2026-03-14 — Phase 74: Seed-to-Proposal Bridge
+
 
 ### feat(phase-74): Approved seeds enter ProposalEngine advisory pipeline via governed bridge
 
