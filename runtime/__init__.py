@@ -21,6 +21,12 @@ This module is adapter-only and must not depend on app/ or adaad/orchestrator/.
 from adaad.core.root import ROOT_DIR, get_root_dir
 from runtime.import_guard import install_runtime_import_guard
 from runtime.innovations import ADAADInnovationEngine
+from runtime.innovations_wiring import (
+    run_gplugins,
+    run_self_reflection,
+    run_vision_forecast,
+    select_agent_personality,
+)
 
 ELEMENT_ID = "Earth"
 
@@ -29,4 +35,11 @@ REPO_ROOT = ROOT_DIR
 
 install_runtime_import_guard()
 
-__all__ = ["ROOT_DIR", "REPO_ROOT", "ELEMENT_ID", "get_root_dir", "ADAADInnovationEngine"]
+__all__ = [
+    "ROOT_DIR", "REPO_ROOT", "ELEMENT_ID", "get_root_dir",
+    "ADAADInnovationEngine",
+    "run_gplugins",
+    "run_self_reflection",
+    "run_vision_forecast",
+    "select_agent_personality",
+]

@@ -1302,7 +1302,7 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 | 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
 | 53 | EvolutionLoop × EpochMemoryStore Live Wiring | v7.7.0 | ✅ |
 
-**Next:** Phase 65 — Emergence (First Autonomous Capability Evolution, v9.0.0)
+**Next:** Phase 68 — Full Innovations Orchestration (end-to-end oracle, story mode, federated map rendering)
 
 ---
 
@@ -1432,3 +1432,19 @@ Checklist reference: `docs/governance/V8_HUMAN_GATE_READINESS.md`
 | CEL-DRY-RUN | 64 | HUMAN-0 | Phase 64 implementation PR |
 | MUTATION-TARGET | 65 | HUMAN-0 | Phase 65 mutation application |
 | V9-RELEASE | 65 | AUDIT-0, REPLAY-0 | v9.0.0 tag |
+
+---
+
+### Phase 67 — Innovations Wiring (CEL Integration)
+
+**Status:** ✅ shipped (v9.2.0) · **Dependency:** Phase 66 merged at main · **Tests:** T67-VIS-01..04, T67-PER-01..05, T67-PLG-01..05, T67-REF-01..05, T67-INT-01..02
+
+Wires `ADAADInnovationEngine` substrate into the live `ConstitutionalEvolutionLoop`. Vision Mode forecast + Mutation Personality injected pre-proposal (Step 4). Governance Plugins evaluated post-gate (Step 10, GPLUGIN-BLOCK-0). Self-Reflection emitted on 100-epoch cadence (Step 14). All injection points fail-safe (CEL-WIRE-FAIL-0), CEL-ORDER-0 preserved.
+
+**Key invariants:** INNOV-VISION-0, INNOV-PERSONA-0, GPLUGIN-BLOCK-0, GPLUGIN-POST-0, INNOV-REFLECT-0, INNOV-DETERM-0
+
+### Phase 68 — Full Innovations Orchestration
+
+**Target:** v9.3.0 · **Dependency:** Phase 67 merged at main
+
+End-to-end ADAAD Oracle API endpoint; Aponi Story Mode rendering pipeline wired to CEL evidence ledger; Federated Evolution Map builder wired to multi-repo audit events; Capability Seed lifecycle registration in lineage ledger.

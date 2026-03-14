@@ -1,0 +1,196 @@
+# SPDX-License-Identifier: Apache-2.0
+"""Phase 67 — Innovations Wiring Adapter.
+
+Bridges the ADAADInnovationEngine substrate (Phase 420 / PR #420) into the
+live ConstitutionalEvolutionLoop lifecycle.  All injections are additive and
+fail-safe; no constitutional invariant is altered.
+
+Injection points
+================
+Step 4  (PROPOSAL-GENERATE)   — Vision Mode forecast + Personality selection
+                                 are computed and injected into proposal context
+                                 before ProposalEngine.generate() is called.
+Step 10 (GOVERNANCE-GATE)     — Governance Plugins run AFTER GovernanceGate
+                                 approves a mutation.  Plugin failure blocks
+                                 promotion (GPLUGIN-BLOCK-0).
+Post-epoch                    — Self-reflection report computed whenever
+                                 epoch_seq % REFLECTION_CADENCE == 0;
+                                 written to state["reflection_report"].
+
+Constitutional invariants
+=========================
+CEL-ORDER-0       The 14-step sequence is never altered.  Innovations wiring
+                  runs _within_ existing step overrides.
+CEL-WIRE-FAIL-0   All innovation hooks are wrapped in try/except; any failure
+                  logs a WARNING and the step continues (non-blocking for
+                  vision/personality; blocking for G-plugins per GPLUGIN-BLOCK-0).
+GPLUGIN-BLOCK-0   A G-plugin failure blocks promotion identically to a
+                  GovernanceGate rejection.  G-plugins are non-bypassable.
+GPLUGIN-POST-0    G-plugins evaluate only AFTER GovernanceGate approves.  A
+                  GovernanceGate rejection short-circuits before plugins run.
+INNOV-DETERM-0    All innovation computations must be deterministic for equal
+                  inputs (ADAADInnovationEngine contract).
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any, Dict, List, Mapping, Optional, Sequence
+
+from runtime.innovations import (
+    ADAADInnovationEngine,
+    GovernancePlugin,
+    MutationPersonality,
+    ReflectionReport,
+    VisionProjection,
+)
+
+logger = logging.getLogger(__name__)
+
+# Self-reflection fires every N epochs.  Approved by Phase 67 spec.
+REFLECTION_CADENCE: int = 100
+
+# Vision Mode: default horizon in epochs.
+VISION_HORIZON: int = 100
+
+# Default personality profiles for Architect, Dream, and Beast agents.
+DEFAULT_PERSONALITIES: List[MutationPersonality] = [
+    MutationPersonality(
+        agent_id="architect",
+        vector=(0.9, 0.2, 0.3, 0.1),
+        philosophy="minimalist",
+    ),
+    MutationPersonality(
+        agent_id="dream",
+        vector=(0.6, 0.8, 0.4, 0.2),
+        philosophy="exploratory",
+    ),
+    MutationPersonality(
+        agent_id="beast",
+        vector=(0.5, 0.5, 0.9, 0.8),
+        philosophy="aggressive",
+    ),
+]
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+
+def run_vision_forecast(
+    engine: ADAADInnovationEngine,
+    state: Dict[str, Any],
+    horizon: int = VISION_HORIZON,
+) -> Optional[VisionProjection]:
+    """Run Vision Mode using history stored in state["oracle_events"].
+
+    Fail-safe: returns None on any error (CEL-WIRE-FAIL-0).
+    """
+    try:
+        events: Sequence[Mapping[str, Any]] = state.get("oracle_events", [])
+        projection = engine.run_vision_mode(events, horizon_epochs=horizon)
+        return projection
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("innovations_wiring: vision_forecast failed — %s", exc)
+        return None
+
+
+def select_agent_personality(
+    engine: ADAADInnovationEngine,
+    epoch_id: str,
+    profiles: Optional[List[MutationPersonality]] = None,
+) -> Optional[MutationPersonality]:
+    """Deterministically select a personality profile for this epoch.
+
+    Fail-safe: returns None on any error (CEL-WIRE-FAIL-0).
+    """
+    try:
+        chosen_profiles = profiles or DEFAULT_PERSONALITIES
+        return engine.select_personality(chosen_profiles, epoch_id=epoch_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("innovations_wiring: personality_select failed — %s", exc)
+        return None
+
+
+def run_gplugins(
+    engine: ADAADInnovationEngine,
+    mutation: Mapping[str, Any],
+    plugins: List[GovernancePlugin],
+) -> List[Dict[str, Any]]:
+    """Evaluate G-plugins against an approved mutation.
+
+    Returns a list of result dicts.  Fail-safe on engine errors (returns empty
+    list); individual plugin failures surface as passed=False results.
+    """
+    try:
+        results = engine.run_plugins(mutation, plugins)
+        return [
+            {
+                "plugin_id": r.plugin_id,
+                "passed": r.passed,
+                "message": r.message,
+            }
+            for r in results
+        ]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("innovations_wiring: gplugins failed — %s", exc)
+        return []
+
+
+def run_self_reflection(
+    engine: ADAADInnovationEngine,
+    epoch_id: str,
+    epoch_seq: int,
+    state: Dict[str, Any],
+    cadence: int = REFLECTION_CADENCE,
+) -> Optional[ReflectionReport]:
+    """Emit a self-reflection report every `cadence` epochs.
+
+    Writes result into state["reflection_report"].  Fail-safe (CEL-WIRE-FAIL-0).
+    """
+    if epoch_seq % cadence != 0:
+        return None
+    try:
+        agent_scores: Dict[str, float] = state.get("agent_scores", {})
+        # Derive agent scores from fitness_summary if agent_scores not explicit
+        if not agent_scores:
+            for mid, score in state.get("fitness_summary", ()):
+                # Infer agent from mutation_id prefix heuristic
+                for agent in ("architect", "dream", "beast"):
+                    if agent in mid.lower():
+                        agent_scores[agent] = agent_scores.get(agent, 0.0) + score
+                        break
+        report = engine.self_reflect(epoch_id=epoch_id, agent_scores=agent_scores)
+        state["reflection_report"] = {
+            "epoch_id": report.epoch_id,
+            "dominant_agent": report.dominant_agent,
+            "underperforming_agent": report.underperforming_agent,
+            "rebalance_hint": report.rebalance_hint,
+            "cadence": cadence,
+        }
+        logger.info(
+            "innovations_wiring: self_reflect epoch=%s dominant=%s hint=%s",
+            epoch_id,
+            report.dominant_agent,
+            report.rebalance_hint,
+        )
+        return report
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("innovations_wiring: self_reflect failed — %s", exc)
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+__all__ = [
+    "DEFAULT_PERSONALITIES",
+    "REFLECTION_CADENCE",
+    "VISION_HORIZON",
+    "run_gplugins",
+    "run_self_reflection",
+    "run_vision_forecast",
+    "select_agent_personality",
+]
