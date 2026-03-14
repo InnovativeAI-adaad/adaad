@@ -12,6 +12,9 @@
 **Version:** 2.0.0
 **Last reviewed:** 2026-03-07
 
+> [!IMPORTANT]
+> **Automation source-of-truth:** `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` is the controlling source for active sequencing and closure state. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
+
 ---
 
 ## Trigger Contract
@@ -267,6 +270,8 @@ Open findings:           <list>
 Pending evidence rows:   <list>
 ```
 
+`Next PR` must be resolved from `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` using its active identifier format (for example: `PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)`).
+
 Stop if any dependency is unsatisfied or `blocked_reason` is set.
 
 ### Step 2 — Preflight
@@ -305,6 +310,8 @@ Tier 3 completeness:  evidence ✓ | template ✓ | docs ✓ | prerequisites ✓
 Next PR in sequence:  <PR-ID> (awaiting human review and merge first)
 Awaiting:             human review before merge
 ```
+
+`Next PR in sequence` is sourced from the v2 procession contract (`docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`, `state_alignment.expected_next_pr`) and must preserve the same identifier format.
 
 **Under `DEVADAAD`:** Run Tier M. If all gates pass → write attestation → merge.
 ```
@@ -346,19 +353,25 @@ Awaiting:             human review before merge
 | PR-PHASE5-06 | Federated evidence bundle release gate extension | ✅ Merged |
 | PR-PHASE5-07 | Federation Determinism CI + HMAC key rotation runbook | ✅ Merged |
 
-### Phase 6 · Autonomous Roadmap Self-Amendment (complete — v3.1.0 released)
+### Active Constitutional Sequence · Phase 57–65 (`v8.0.0` → `v9.0.0`)
 
 > **Canonical spec:** `docs/governance/ARCHITECT_SPEC_v3.1.0.md`
-> **Canonical PR sequence:** `docs/governance/ADAAD_PR_PROCESSION_2026-03.md`
+> **Canonical PR sequence (active automation source):** `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`
+> **Supersession:** This sequence control supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
-| PR | Title | CI tier | Deps | Status |
-|---|---|---|---|---|
-| PR-PHASE6-01 | Phase 6 governance foundations | critical | Phase 5 ✅ | ✅ Merged |
-| PR-PHASE6-02 | M6-03: Wire RoadmapAmendmentEngine into EvolutionLoop | critical | PR-PHASE6-01 ✅ | ✅ Merged |
-| PR-PHASE6-03 | M6-04: Federated roadmap propagation | critical | PR-PHASE6-02 ✅ | ✅ Merged |
-| PR-PHASE6-04 | M6-05: Free Android distribution pipeline close | standard | android CI ✅ | ✅ Merged |
+| Phase | Version | Depends on | Status |
+|---|---|---|---|
+| 57 | v8.0.0 | Phase 53 complete | shipped |
+| 58 | v8.1.0 | Phase 57 | shipped |
+| 59 | v8.2.0 | Phase 58 | shipped |
+| 60 | v8.3.0 | Phase 59 | shipped |
+| 61 | v8.4.0 | Phase 60 | shipped |
+| 62 | v8.5.0 | Phase 61 | shipped |
+| 63 | v8.6.0 | Phase 62 | shipped |
+| 64 | v8.7.0 | Phase 63 | shipped |
+| 65 | v9.0.0 | Phase 64 | next |
 
-**Key invariants governing all Phase 6 PRs:**
+**Key invariants governing amendment/governance PRs:**
 - `INVARIANT PHASE6-AUTH-0` — `authority_level` immutable on amendment proposals
 - `INVARIANT PHASE6-STORM-0` — at most 1 pending amendment per node at any time
 - `INVARIANT PHASE6-HUMAN-0` — human governor sign-off non-delegatable for amendments

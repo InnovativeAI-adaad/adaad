@@ -1,11 +1,19 @@
 # ADAAD PR Procession Plan — 2026-03
 
 > [!IMPORTANT]
-> **Canonical source (automation sequence control):** This document is the controlling source for **Phase 6 PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation.
+> **Superseded source:** This document records the archived Phase 6 procession. Active automation sequence control is `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`, which supersedes this file (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document  
-**Last reviewed:** 2026-03-08  
-**Milestone:** `v3.1.0` (Phase 6 complete)
+**Last reviewed:** 2026-03-14  
+**Milestone:** `v3.1.0` (Phase 6 complete — archived automation source)
+
+---
+
+## Archive Status
+
+- **Automation status:** Archived (non-active).
+- **Active automation source:** `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`.
+- **Supersession note:** Superseded by v2 procession control ("supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived)").
 
 ---
 
@@ -105,11 +113,13 @@ The following historical planning blocks are intentionally archived and **must n
 - Legacy Phase 5 split/merge planning variants
 - Earlier additive Phase 6 addendum formatting that allowed dual interpretation
 
-Historical details remain available via git history; this file now contains only the active canonical sequence and machine-checkable contract.
+Historical details remain available via git history; this file is retained as an archived Phase 6 record and machine-checkable historical contract.
 
 ---
 
 ## Changelog
+
+- **2026-03-14:** Marked this Phase 6 procession document as archived/non-active for automation; pointed active sequence control to `ADAAD_PR_PROCESSION_2026-03-v2.md` and added explicit supersession wording.
 
 - **2026-03-08:** Updated Phase 6 sequence status to complete (`PR-PHASE6-04` merged, `v3.1.0` released) and aligned machine-checkable contract expectations with `.adaad_agent_state.json`.
 - **2026-03-08:** Canonicalized this document to Phase 6 active sequence only; archived superseded Phase 4/5 planning sections; added machine-checkable procession contract for `.adaad_agent_state.json` preflight alignment.
