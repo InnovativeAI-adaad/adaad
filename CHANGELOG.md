@@ -1,3 +1,23 @@
+## [9.3.0] — 2026-03-13 — Phase 68: Full Innovations Orchestration
+
+### feat(phase-68): Oracle API, Story Mode, Federation Map, Capability Seed Registration
+
+| Item | Detail |
+|---|---|
+| `runtime/capability/seed_registry_adapter.py` | Tier-2 CapabilitySeed → CapabilityNode adapter; `register_seed`, `register_seeds_bulk`, `seed_to_capability_node`; SEED-REG-0, SEED-IDEM-0, SEED-HASH-0 |
+| `runtime/innovations_router.py` | FastAPI router at `/innovations/*`; four bearer-auth-gated endpoints: Oracle, Story Mode, Federation Map, Seed Register/List |
+| `server.py` | `innovations_router` imported and registered |
+| `tests/test_innovations_orchestration.py` | 20 tests: T68-SEED-01..08, T68-ORC-01..04, T68-STR-01..03, T68-FED-01..03, T68-SRV-01..02 |
+| `docs/INNOVATIONS_ORCHESTRATION.md` | Full phase doc with endpoint reference, invariant index, config table |
+
+### Constitutional invariants added
+`ORACLE-AUTH-0`, `ORACLE-DETERM-0`, `STORY-LEDGER-0`, `FED-MAP-READONLY-0`, `SEED-REG-0`, `SEED-IDEM-0`, `SEED-HASH-0`, `SEED-DEP-0`
+
+### Innovations stack complete (Phases 420 → 67 → 68)
+46 tests passing across all three phases.
+
+---
+
 ## [9.2.0] — 2026-03-13 — Phase 67: Innovations Wiring
 
 ### feat(phase-67): Wire ADAADInnovationEngine into the CEL Lifecycle

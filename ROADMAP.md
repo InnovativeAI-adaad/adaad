@@ -1445,6 +1445,14 @@ Wires `ADAADInnovationEngine` substrate into the live `ConstitutionalEvolutionLo
 
 ### Phase 68 — Full Innovations Orchestration
 
-**Target:** v9.3.0 · **Dependency:** Phase 67 merged at main
+**Status:** ✅ shipped (v9.3.0) · **Dependency:** Phase 67 merged at main · **Tests:** T68-SEED-01..08, T68-ORC-01..04, T68-STR-01..03, T68-FED-01..03, T68-SRV-01..02
 
-End-to-end ADAAD Oracle API endpoint; Aponi Story Mode rendering pipeline wired to CEL evidence ledger; Federated Evolution Map builder wired to multi-repo audit events; Capability Seed lifecycle registration in lineage ledger.
+End-to-end ADAAD Oracle API endpoint (`GET /innovations/oracle`); Aponi Story Mode rendering pipeline wired to CEL evidence ledger (`GET /innovations/story-mode`); Federated Evolution Map builder (`GET /innovations/federation-map`); Capability Seed lifecycle registration in lineage ledger (`POST /innovations/seeds/register`). All endpoints bearer-auth-gated (ORACLE-AUTH-0). Full innovations stack (Phases 420 → 67 → 68): 46 tests passing.
+
+**Key invariants:** ORACLE-AUTH-0, ORACLE-DETERM-0, STORY-LEDGER-0, FED-MAP-READONLY-0, SEED-REG-0, SEED-IDEM-0, SEED-HASH-0
+
+### Phase 69 — Innovations UI Integration
+
+**Target:** v9.4.0 · **Dependency:** Phase 68 merged at main
+
+Aponi dashboard panels wired to Phase 68 endpoints: Oracle query panel, Story Mode timeline renderer, Federation Map galaxy visualizer, Seed management panel. WebSocket push for real-time story arc updates. Personality profile display per epoch in CEL console.
