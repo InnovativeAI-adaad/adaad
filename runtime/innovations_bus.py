@@ -26,6 +26,7 @@ Defined frame types:
   reflection     — self-reflection report (dominant, underperforming, hint)
   gplugin        — G-plugin result        (plugin_id, passed, message)
   seed_planted   — capability seed registered (seed_id, lane, intent)
+  seed_graduated — capability seed graduated   (seed_id, lane, expansion_score, epoch_id)
 """
 
 from __future__ import annotations
@@ -219,6 +220,27 @@ def emit_seed_planted(seed_id: str, lane: str, intent: str, author: str = "") ->
     })
 
 
+def emit_seed_graduated(
+    seed_id: str,
+    lane: str,
+    expansion_score: float,
+    epoch_id: str = "",
+) -> None:
+    """Emit seed_graduated frame when a Capability Seed reaches graduation threshold.
+
+    SEED-GRAD-0: emitted once per seed per epoch; payload includes expansion_score.
+    IBUS-FAILSAFE-0: bus delivery is best-effort; caller must not rely on receipt.
+    """
+    get_bus().emit_sync({
+        "type": "seed_graduated",
+        "seed_id": seed_id,
+        "lane": lane,
+        "expansion_score": expansion_score,
+        "epoch_id": epoch_id,
+        "ritual": "capability_graduation",
+    })
+
+
 __all__ = [
     "InnovationsEventBus",
     "get_bus",
@@ -230,4 +252,5 @@ __all__ = [
     "emit_reflection",
     "emit_gplugin",
     "emit_seed_planted",
+    "emit_seed_graduated",
 ]

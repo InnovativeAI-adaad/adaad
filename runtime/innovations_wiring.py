@@ -48,6 +48,7 @@ from runtime.personality_profiles import (
     DEFAULT_PERSONALITY_PROFILES,
     PersonalityProfileStore,
 )
+from runtime.seed_evolution import run_seed_evolution  # Phase 71
 
 logger = logging.getLogger(__name__)
 
@@ -231,6 +232,7 @@ __all__ = [
     "run_gplugins",
     "record_personality_impact",
     "run_self_reflection",
+    "run_seed_evolution",
     "run_vision_forecast",
     "select_agent_personality",
 ]

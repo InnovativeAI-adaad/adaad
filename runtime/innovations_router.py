@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Phase 68 — Innovations API Router.
 
-Exposes three bearer-auth-gated endpoints backed by ADAADInnovationEngine:
+Exposes bearer-auth-gated endpoints backed by ADAADInnovationEngine:
 
   GET  /innovations/oracle          — ADAAD Oracle: query evolutionary history
+  GET  /innovations/oracle/history  — Replay past oracle answers from ledger
   GET  /innovations/story-mode      — Aponi Story Mode: CEL evidence as narrative arcs
   GET  /innovations/federation-map  — Federated Evolution Map galaxy data
   POST /innovations/seeds/register  — Capability Seed lineage registration
@@ -12,6 +13,9 @@ Constitutional invariants
 =========================
 ORACLE-AUTH-0       All endpoints require `audit:read` bearer token scope.
 ORACLE-DETERM-0     Oracle answers are deterministic for equal query + events.
+ORACLE-PERSIST-0    Every oracle query writes one record to OracleLedger before
+                    the response is returned (Phase 71).
+ORACLE-REPLAY-0     GET /oracle/history replays ledger JSONL (read-only).
 STORY-LEDGER-0      Story Mode reads CEL evidence ledger; no writes performed.
 FED-MAP-READONLY-0  Federation Map is read-only; no side effects.
 SEED-REG-0          Seeds registered via POST /innovations/seeds/register are
@@ -30,6 +34,7 @@ from fastapi import APIRouter, Body, Header
 from runtime.capability.capability_registry import CapabilityRegistry
 from runtime.capability.seed_registry_adapter import register_seeds_bulk
 from runtime.innovations import ADAADInnovationEngine, CapabilitySeed
+from runtime.oracle_ledger import OracleLedger
 from runtime.personality_profiles import PersonalityProfileStore
 from runtime.audit_auth import require_audit_read_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
@@ -44,6 +49,9 @@ _engine = ADAADInnovationEngine()
 # Shared in-process capability registry for seed registration
 _seed_registry = CapabilityRegistry()
 _profile_store = PersonalityProfileStore()
+
+# Phase 71 — Oracle persistence ledger (ORACLE-PERSIST-0, ORACLE-REPLAY-0)
+_oracle_ledger = OracleLedger()
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +112,7 @@ def oracle_query(
 
     ORACLE-AUTH-0: requires audit:read bearer token.
     ORACLE-DETERM-0: equal q + ledger state → equal answer.
+    ORACLE-PERSIST-0: every query appends one record to OracleLedger.
 
     Query examples:
       ?q=divergence          — last 10 divergence events
@@ -114,11 +123,47 @@ def oracle_query(
     events = _load_oracle_events(limit=limit)
     answer = _engine.answer_oracle(q, events)
     projection = _engine.run_vision_mode(events, horizon_epochs=horizon, seed_input=seed_input)
+    trajectory_score: Optional[float] = None
+    try:
+        trajectory_score = float(projection.trajectory_score)
+    except Exception:  # noqa: BLE001
+        pass
+
+    # ORACLE-PERSIST-0: append answer to replay ledger before returning.
+    _oracle_ledger.append(
+        query=q,
+        answer=answer,
+        events=events,
+        vision_trajectory_score=trajectory_score,
+    )
+
     return {
         "query": q,
         "event_window": len(events),
         "answer": answer,
         "vision_projection": _engine.as_serializable(projection),
+    }
+
+
+@router.get("/oracle/history")
+def oracle_history(
+    limit: int = 100,
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """Replay past oracle answers from the persistence ledger.
+
+    ORACLE-REPLAY-0: read-only; returns JSONL records in append order.
+    ORACLE-AUTH-0: requires audit:read bearer token.
+
+    Returns the last *limit* oracle records sorted oldest-first so callers
+    can verify determinism of repeated queries.
+    """
+    _require_audit_read(authorization)
+    records = _oracle_ledger.replay(limit=limit)
+    return {
+        "record_count": len(records),
+        "ledger_path": str(_oracle_ledger.path),
+        "records": records,
     }
 
 
