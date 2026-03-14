@@ -35,6 +35,7 @@ from runtime.capability.capability_registry import CapabilityRegistry
 from runtime.capability.seed_registry_adapter import register_seeds_bulk
 from runtime.innovations import ADAADInnovationEngine, CapabilitySeed
 from runtime.oracle_ledger import OracleLedger
+from runtime.seed_promotion import SeedPromotionQueue, get_promotion_queue
 from runtime.personality_profiles import PersonalityProfileStore
 from runtime.audit_auth import require_audit_read_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
@@ -52,6 +53,9 @@ _profile_store = PersonalityProfileStore()
 
 # Phase 71 — Oracle persistence ledger (ORACLE-PERSIST-0, ORACLE-REPLAY-0)
 _oracle_ledger = OracleLedger()
+
+# Phase 72 — Seed promotion queue singleton (SEED-PROMO-0, SEED-PROMO-HUMAN-0)
+_promotion_queue: SeedPromotionQueue = get_promotion_queue()
 
 
 # ---------------------------------------------------------------------------
@@ -320,6 +324,30 @@ def list_seeds(
     return {
         "seed_count": len(seed_nodes),
         "seeds": seed_nodes,
+    }
+
+
+@router.get("/seeds/promoted")
+def list_promoted_seeds(
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """List Capability Seeds in the promotion queue (Phase 72).
+
+    SEED-PROMO-HUMAN-0: all entries have status=pending_human_review.
+                        This endpoint is advisory only; no action is taken.
+    SEED-PROMO-ORDER-0: entries returned oldest-first (FIFO enqueue order).
+    ORACLE-AUTH-0:      requires audit:read bearer token.
+    """
+    _require_audit_read(authorization)
+    entries = _promotion_queue.list()
+    return {
+        "queue_depth": len(entries),
+        "threshold": _promotion_queue.threshold,
+        "entries": entries,
+        "advisory_notice": (
+            "SEED-PROMO-HUMAN-0: this queue is advisory only. "
+            "No mutation is created or applied without explicit human approval."
+        ),
     }
 
 

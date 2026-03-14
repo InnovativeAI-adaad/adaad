@@ -536,6 +536,54 @@
     .oracle-result::-webkit-scrollbar-thumb,
     .seed-list::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.15); border-radius: 2px; }
 
+    /* ── Phase 72: Seed Graduation ────────────────────────────────── */
+    .seed-item.seed-graduated {
+      border-color: rgba(255,215,0,0.28);
+      background: linear-gradient(135deg, rgba(255,215,0,0.04), rgba(105,255,71,0.03));
+      box-shadow: 0 0 18px rgba(255,215,0,0.06);
+    }
+    .seed-item.seed-graduated .seed-item-icon { filter: drop-shadow(0 0 6px rgba(255,215,0,0.5)); }
+    .seed-grad-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+      padding: 2px 8px; border-radius: 8px; white-space: nowrap;
+      background: rgba(255,215,0,0.12); color: #ffd700;
+      border: 1px solid rgba(255,215,0,0.25);
+      box-shadow: 0 0 10px rgba(255,215,0,0.08);
+      flex-shrink: 0; align-self: center;
+    }
+
+    /* ── Phase 72: Oracle History ─────────────────────────────────── */
+    .oracle-history-list {
+      display: flex; flex-direction: column; gap: 4px;
+      max-height: 220px; overflow-y: auto;
+    }
+    .oracle-hist-row {
+      display: grid; grid-template-columns: 1fr auto auto;
+      gap: 10px; align-items: center;
+      padding: 7px 12px; border-radius: 8px;
+      background: rgba(255,229,127,0.03);
+      border: 1px solid rgba(255,229,127,0.08);
+      font-size: 11px; transition: background .15s;
+    }
+    .oracle-hist-row:hover { background: rgba(255,229,127,0.06); }
+    .oracle-hist-q    { font-weight: 600; color: rgba(255,229,127,0.85); font-family: 'JetBrains Mono', monospace; }
+    .oracle-hist-meta { color: rgba(0,229,255,0.5); font-size: 10px; }
+    .oracle-hist-ts   { color: rgba(255,255,255,0.2); font-size: 10px; text-align: right; }
+    .oracle-hist-empty {
+      text-align: center; padding: 20px; color: rgba(255,255,255,0.2);
+      font-size: 12px; font-style: italic;
+    }
+    .oracle-history-list::-webkit-scrollbar { width: 3px; }
+    .oracle-history-list::-webkit-scrollbar-thumb { background: rgba(255,229,127,0.12); border-radius: 2px; }
+
+    /* ── Phase 72: Graduation toast variant ───────────────────────── */
+    .inno-toast.seed-grad {
+      background: linear-gradient(135deg, rgba(10,14,40,0.97), rgba(20,16,6,0.97));
+      border-left: 3px solid #ffd700;
+      box-shadow: 0 4px 32px rgba(255,215,0,0.14);
+    }
+    .inno-toast.seed-grad .inno-toast-title { color: #ffd700; }
+
     /* ── Reflection banner ────────────────────────────────────────── */
     .reflect-banner {
       border-radius: 12px; padding: 14px 18px;
@@ -841,6 +889,52 @@
     body.appendChild(resultEl);
     if (innState.oracleVision) body.appendChild(renderVisionSummary(innState.oracleVision));
     card.appendChild(body);
+
+    // ── Phase 72: Oracle History (ORACLE-REPLAY-0) ──────────────────
+    const histCard = h("div", {class: "inno-card", style:"margin-top:12px;"});
+    const histHdr  = h("div", {class: "inno-card-header"});
+    histHdr.appendChild(h("div", {class: "inno-card-title"},
+      h("div", {class: "inno-card-icon", style:"background:rgba(255,229,127,0.06);"}, "📜"),
+      "Query History"
+    ));
+    const histStatus = h("span", {class: "inno-status"}, "loading…");
+    histHdr.appendChild(histStatus);
+    histCard.appendChild(histHdr);
+
+    const histBody = h("div", {class: "inno-card-body"});
+    const histList = h("div", {class: "oracle-history-list"});
+    histBody.appendChild(histList);
+    histCard.appendChild(histBody);
+    wrap.appendChild(histCard);
+
+    (async () => {
+      try {
+        const data = await apiFetch("/innovations/oracle/history?limit=20");
+        const records = (data.records || []).slice().reverse(); // newest first
+        histStatus.textContent = `${records.length} records`;
+        histList.innerHTML = "";
+        if (!records.length) {
+          histList.innerHTML = `<div class="oracle-hist-empty">No history yet — run a query above.</div>`;
+          return;
+        }
+        records.forEach(rec => {
+          const row = h("div", {class: "oracle-hist-row"});
+          const ts  = rec.ts ? rec.ts.slice(0, 19).replace("T", " ") : "—";
+          const qType = rec.answer && rec.answer.query_type ? rec.answer.query_type : "generic";
+          const score = rec.vision_trajectory_score != null
+            ? `  ·  traj: ${(rec.vision_trajectory_score * 100).toFixed(1)}%`
+            : "";
+          row.innerHTML =
+            `<span class="oracle-hist-q">${escHtml(rec.query || "—")}</span>` +
+            `<span class="oracle-hist-meta">${escHtml(qType)}${escHtml(score)}</span>` +
+            `<span class="oracle-hist-ts">${escHtml(ts)}</span>`;
+          histList.appendChild(row);
+        });
+      } catch (_) {
+        histStatus.textContent = "unavailable";
+        histList.innerHTML = `<div class="oracle-hist-empty">History endpoint not reachable.</div>`;
+      }
+    })();
     wrap.appendChild(card);
 
     async function runOracle() {
@@ -1033,7 +1127,11 @@
       h("div", {class: "inno-card-icon", style:"background:rgba(105,255,71,0.07);"}, "🌱"),
       "Capability Seeds"
     ));
-    hdr.appendChild(h("span", {class: "inno-status live"}, `${innState.seeds.length} registered`));
+    const gradCount = innState.graduatedSeeds ? Object.keys(innState.graduatedSeeds).length : 0;
+    const statusLabel = gradCount > 0
+      ? `${innState.seeds.length} registered · ${gradCount} graduated`
+      : `${innState.seeds.length} registered`;
+    hdr.appendChild(h("span", {class: "inno-status live"}, statusLabel));
     card.appendChild(hdr);
 
     const body = h("div", {class: "inno-card-body"});
@@ -1073,13 +1171,23 @@
         return;
       }
       seeds.forEach(seed => {
-        const item = h("div", {class: "seed-item"});
-        item.appendChild(h("div", {class: "seed-item-icon"}, "🌱"));
+        const seedId = seed.seed_id || seed.capability_id || "—";
+        const isGrad = innState.graduatedSeeds && innState.graduatedSeeds[seedId];
+        const score  = isGrad
+          ? (innState.graduatedSeeds[seedId].expansion_score * 100).toFixed(1) + "%"
+          : null;
+
+        const item = h("div", {class: `seed-item${isGrad ? " seed-graduated" : ""}`});
+        item.appendChild(h("div", {class: "seed-item-icon"}, isGrad ? "🎓" : "🌱"));
         const bd = h("div", {class: "seed-item-body"});
-        bd.appendChild(h("div", {class: "seed-item-id"}, seed.seed_id || seed.capability_id || "—"));
+        bd.appendChild(h("div", {class: "seed-item-id"}, seedId));
         bd.appendChild(h("div", {class: "seed-item-intent"}, seed.intent || seed.description || "—"));
         item.appendChild(bd);
         item.appendChild(h("div", {class: "seed-item-lane"}, seed.lane || "experimental"));
+        if (isGrad) {
+          const gradBadge = h("div", {class: "seed-grad-badge"}, `🎓 ${score}`);
+          item.appendChild(gradBadge);
+        }
         listWrap.appendChild(item);
       });
     }
@@ -1575,8 +1683,9 @@
         case "story_arc":     this._onStoryArc(frame);   break;
         case "personality":   this._onPersonality(frame);break;
         case "reflection":    this._onReflection(frame); break;
-        case "seed_planted":  this._onSeed(frame);       break;
-        case "gplugin":       this._onGPlugin(frame);    break;
+        case "seed_planted":  this._onSeed(frame);             break;
+        case "seed_graduated": this._onSeedGraduated(frame);   break;
+        case "gplugin":       this._onGPlugin(frame);          break;
       }
     },
 
@@ -1662,6 +1771,41 @@
         `Seed Planted`,
         `${f.seed_id}  ·  lane: ${f.lane}\n${f.intent}`
       );
+    },
+
+    _onSeedGraduated(f) {
+      // Phase 72 — elaborate graduation toast with gold/green styling
+      const score = typeof f.expansion_score === "number"
+        ? (f.expansion_score * 100).toFixed(1) + "%"
+        : "—";
+      this._toast("seed-grad", "🎓",
+        `Seed Graduated  ·  ${score}`,
+        `${f.seed_id}  ·  lane: ${f.lane}\nepoch: ${f.epoch_id || "—"}  ·  ritual: capability_graduation`
+      );
+      // Track graduated seeds for badge rendering in seeds panel
+      if (!innState.graduatedSeeds) innState.graduatedSeeds = {};
+      innState.graduatedSeeds[f.seed_id] = {
+        expansion_score: f.expansion_score,
+        epoch_id: f.epoch_id,
+        lane: f.lane,
+      };
+      // Refresh seeds panel badge if currently visible
+      const seedList = document.querySelector(".seed-list");
+      if (seedList) {
+        const items = seedList.querySelectorAll(".seed-item");
+        items.forEach(item => {
+          const idEl = item.querySelector(".seed-item-id");
+          if (idEl && idEl.textContent.trim() === f.seed_id) {
+            item.classList.add("seed-graduated");
+            if (!item.querySelector(".seed-grad-badge")) {
+              const badge = document.createElement("div");
+              badge.className = "seed-grad-badge";
+              badge.textContent = `🎓 ${score}`;
+              item.appendChild(badge);
+            }
+          }
+        });
+      }
     },
 
     _onGPlugin(f) {

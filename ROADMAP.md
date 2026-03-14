@@ -1472,3 +1472,11 @@ Async innovations event bus (`InnovationsEventBus`) with 8 typed emit helpers. `
 Oracle answers cached to append-only JSONL ledger (`OracleLedger`) for deterministic replay. New `GET /innovations/oracle/history` endpoint replays records oldest-first. Capability Seeds evolve through `ADAADInnovationEngine.evolve_seed()` via `run_seed_evolution()` scheduled epoch hook; evolution scores written to `LineageLedgerV2` as `SeedEvolutionEvent`. Seed graduation ceremony when `expansion_score >= 0.85`: emits `seed_graduated` bus frame, writes `SeedGraduationEvent` + `capability_graduation` ritual to lineage ledger.
 
 **Key invariants:** ORACLE-PERSIST-0, ORACLE-REPLAY-0, SEED-EVOL-0, SEED-GRAD-0, SEED-EVOL-FAIL-0
+
+### Phase 72 — Seed Promotion Queue + Graduation UI
+
+**Status:** ✅ shipped (v9.7.0) · **Dependency:** Phase 71 merged at main · **Tests:** T72-PRQ-01..06, T72-API-01..03, T72-BUS-01..02, T72-INT-01..02
+
+Graduated Capability Seeds (expansion_score ≥ 0.85) enter an advisory FIFO promotion queue (`SeedPromotionQueue`) — never automatically acted upon without human review. New `GET /innovations/seeds/promoted` endpoint exposes queue depth, entries, and `SEED-PROMO-HUMAN-0` advisory notice. Aponi: `_onSeedGraduated()` WS handler renders gold graduation toast and live badge on seeds list; seeds panel header shows graduated count; Oracle panel gains **Query History** card rendering last 20 oracle ledger records (Phase 71 `OracleLedger`) newest-first with query type, trajectory score, and timestamp.
+
+**Key invariants:** SEED-PROMO-0, SEED-PROMO-IDEM-0, SEED-PROMO-HUMAN-0, SEED-PROMO-ORDER-0

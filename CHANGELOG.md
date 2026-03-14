@@ -1,4 +1,37 @@
+## [9.7.0] — 2026-03-14 — Phase 72: Seed Promotion Queue + Graduation UI
+
+### feat(phase-72): Graduated seed advisory promotion pipeline + Aponi graduation UX
+
+| Item | Detail |
+|---|---|
+| `runtime/seed_promotion.py` | New `SeedPromotionQueue` — FIFO advisory queue for graduated seeds. Enforces `expansion_score >= 0.85` (SEED-PROMO-0), idempotent re-enqueue (SEED-PROMO-IDEM-0), `pending_human_review` status on all entries (SEED-PROMO-HUMAN-0), FIFO list order (SEED-PROMO-ORDER-0). Process-wide singleton via `get_promotion_queue()`. |
+| `runtime/innovations_router.py` | Wired `SeedPromotionQueue` singleton; added `GET /innovations/seeds/promoted` endpoint returning queue depth, entries, threshold, and `SEED-PROMO-HUMAN-0` advisory notice. |
+| `ui/aponi/innovations_panel.js` | `_onSeedGraduated()` WS handler: gold graduation toast (`seed-grad` class), live badge injection into seeds list. Seeds panel header shows `N graduated` count. Oracle panel gains **Query History** card (Phase 72) calling `GET /oracle/history`, renders last 20 records newest-first with query type, trajectory score, and timestamp. Phase 72 CSS: graduated seed item glow, `seed-grad-badge`, `oracle-hist-row` history list, `inno-toast.seed-grad` gold variant. |
+
+### New constitutional invariants (Phase 72)
+
+| Invariant | Enforcement |
+|---|---|
+| `SEED-PROMO-0` | Only seeds with `expansion_score >= 0.85` may enter the promotion queue |
+| `SEED-PROMO-IDEM-0` | Re-enqueueing an existing `seed_id` is idempotent; existing entry returned |
+| `SEED-PROMO-HUMAN-0` | Promotion queue is advisory only — no mutation created without human approval |
+| `SEED-PROMO-ORDER-0` | Queue entries returned in FIFO enqueue order |
+
+### Tests added (Phase 72)
+
+`tests/test_phase72_seed_promotion_graduation_ui.py` — 13 tests · **13/13 passing**
+
+| Range | Coverage |
+|---|---|
+| T72-PRQ-01..06 | Threshold rejection, schema, idempotency, FIFO order, human-review status, singleton |
+| T72-API-01..03 | `/seeds/promoted` depth+entries, advisory notice, auth gate |
+| T72-BUS-01..02 | `seed_graduated` frame schema, ritual field |
+| T72-INT-01..02 | End-to-end graduated → queue, sub-threshold → rejected |
+
+---
+
 ## [9.6.0] — 2026-03-14 — Phase 71: Oracle Persistence + Capability Seed Evolution
+
 
 ### feat(phase-71): Append-only oracle ledger + epoch-hooked seed graduation ceremony
 
