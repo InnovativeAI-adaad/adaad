@@ -27,6 +27,7 @@ def test_no_tests_requires_check_only(monkeypatch, capsys) -> None:
     out = capsys.readouterr().out
     assert code != 0
     assert "[ADAAD BLOCKED]" in out
+    assert "Action required:" in out
 
 
 def test_summary_diagnostic_not_full_green(capsys) -> None:
@@ -86,4 +87,6 @@ def test_main_blocks_when_test_mode_missing_extras(monkeypatch, capsys) -> None:
     out = capsys.readouterr().out
 
     assert code == 2
-    assert "[ADAAD BLOCKED] missing test-mode extras" in out
+    assert "[ADAAD BLOCKED]" in out
+    assert "missing test-mode extras" in out
+    assert "Action required:" in out
