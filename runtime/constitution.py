@@ -134,7 +134,7 @@ CONSTITUTION_VERSION = "0.7.0"
 ELEMENT_ID = "Earth"
 POLICY_PATH = Path("runtime/governance/constitution.yaml")
 RULE_APPLICABILITY_PATH = Path("governance/rule_applicability.yaml")
-_DETERMINISTIC_ENVELOPE_STATE: ContextVar[Dict[str, Any]] = ContextVar("deterministic_envelope_state", default={})
+_DETERMINISTIC_ENVELOPE_STATE: ContextVar[Dict[str, Any] | None] = ContextVar("deterministic_envelope_state", default=None)
 
 RULE_DEPENDENCY_GRAPH: Dict[str, List[str]] = {
     "max_mutation_rate": ["lineage_continuity"],
@@ -1307,12 +1307,21 @@ def _evaluate_rule_applicability(rule: Rule, request: MutationRequest, tier: Tie
     }
 
 
-def set_deterministic_envelope_state(state: Mapping[str, Any] | None) -> Token[Dict[str, Any]]:
+def _get_envelope_state() -> Dict[str, Any]:
+    """Return active deterministic envelope state, initializing context-local storage when absent."""
+    state = _DETERMINISTIC_ENVELOPE_STATE.get()
+    if state is None:
+        state = {}
+        _DETERMINISTIC_ENVELOPE_STATE.set(state)
+    return state
+
+
+def set_deterministic_envelope_state(state: Mapping[str, Any] | None) -> Token[Dict[str, Any] | None]:
     """Set request-scoped deterministic envelope context for validators."""
     return _DETERMINISTIC_ENVELOPE_STATE.set(dict(state or {}))
 
 
-def reset_deterministic_envelope_state(token: Token[Dict[str, Any]]) -> None:
+def reset_deterministic_envelope_state(token: Token[Dict[str, Any] | None]) -> None:
     """Reset deterministic envelope state to a previously captured context token."""
     _DETERMINISTIC_ENVELOPE_STATE.reset(token)
 
@@ -1329,7 +1338,7 @@ def deterministic_envelope_scope(state: Mapping[str, Any] | None):
 
 def get_deterministic_envelope_state() -> Dict[str, Any]:
     """Get request-scoped deterministic envelope context for validators."""
-    return dict(_DETERMINISTIC_ENVELOPE_STATE.get() or {})
+    return dict(_get_envelope_state())
 
 
 def _parse_entropy_limit(value: str, *, field: str) -> tuple[bool, int, str | None]:
