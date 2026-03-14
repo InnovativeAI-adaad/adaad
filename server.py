@@ -418,7 +418,7 @@ def governance_health(
     degraded              bool  — h < 0.60
     constitutional_floor  str   — always 'enforced'
     """
-    from runtime.api.runtime_services import governance_health_service
+    from runtime.governance.health_service import governance_health_service
 
     authn = _require_audit_read_scope(authorization)
     resolved_epoch = epoch_id or "current"
@@ -795,7 +795,7 @@ def governance_review_pressure(
     authn = _require_audit_read_scope(authorization)
 
     from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
-    from runtime.api.runtime_services import governance_health_service
+    from runtime.governance.health_service import governance_health_service
 
     # Derive health score from current epoch health (best-effort)
     try:
@@ -957,7 +957,7 @@ def governance_admission_status(
     authn = _require_audit_read_scope(authorization)
 
     from runtime.governance.mutation_admission import MutationAdmissionController
-    from runtime.api.runtime_services import governance_health_service
+    from runtime.governance.health_service import governance_health_service
 
     try:
         health_data = governance_health_service(epoch_id="current")
@@ -1135,7 +1135,7 @@ def governance_admission_enforcement(
     authn = _require_audit_read_scope(authorization)
 
     from runtime.governance.admission_band_enforcer import AdmissionBandEnforcer
-    from runtime.api.runtime_services import governance_health_service
+    from runtime.governance.health_service import governance_health_service
 
     try:
         health_data = governance_health_service(epoch_id="current")
@@ -1861,7 +1861,7 @@ def governance_aponi_panel(
     # Review pressure
     try:
         from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
-        from runtime.api.runtime_services import governance_health_service
+        from runtime.governance.health_service import governance_health_service
         health_data = governance_health_service(epoch_id="current")
         h = float(health_data.get("health_score", 1.0))
         adj = HealthPressureAdaptor().compute(h)
