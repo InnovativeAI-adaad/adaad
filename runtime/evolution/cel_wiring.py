@@ -176,6 +176,11 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
         - INNOV-VISION-0: Vision Mode forecast injected into proposal context.
         - INNOV-PERSONA-0: Deterministic personality selection injected into context.
 
+        Phase 75 addition (SEED-CEL-HUMAN-0):
+        - If state["context"]["seed_proposal_request"] is present, the
+          seed-derived ProposalRequest is used in place of the default
+          auto-generated request.  Falls back to default if absent.
+
         Noop proposals are recorded but flagged; they will not be promoted.
         Fail-closed: any ProposalEngine exception → BLOCKED (CEL-WIRE-FAIL-0).
         """
@@ -216,17 +221,27 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     context["mutation_philosophy"] = personality.philosophy
                     context["active_personality_agent"] = personality.agent_id
 
-            request = ProposalRequest(
-                cycle_id=epoch_id,
-                strategy_id=strategy_id,
-                context={
-                    "mutation_score": context.get("baseline_fitness_score", 0.5),
-                    "governance_debt_score": context.get("governance_debt_score", 0.0),
-                    "epoch_id": epoch_id,
-                    "mutation_philosophy": context.get("mutation_philosophy", ""),
-                    "active_personality_agent": context.get("active_personality_agent", ""),
-                },
-            )
+            # Phase 75 — SEED-CEL-HUMAN-0: prefer seed-derived request if present
+            try:
+                from runtime.seed_cel_injector import resolve_step4_request  # noqa: PLC0415
+                request = resolve_step4_request(
+                    state={**state, "context": context},
+                    default_cycle_id=epoch_id,
+                    default_strategy_id=strategy_id,
+                )
+            except Exception:  # noqa: BLE001 — CEL-WIRE-FAIL-0: fall back to default
+                request = ProposalRequest(
+                    cycle_id=epoch_id,
+                    strategy_id=strategy_id,
+                    context={
+                        "mutation_score": context.get("baseline_fitness_score", 0.5),
+                        "governance_debt_score": context.get("governance_debt_score", 0.0),
+                        "epoch_id": epoch_id,
+                        "mutation_philosophy": context.get("mutation_philosophy", ""),
+                        "active_personality_agent": context.get("active_personality_agent", ""),
+                    },
+                )
+
             proposal = self._proposal_engine.generate(request)
 
             proposal_dict: Dict[str, Any] = {

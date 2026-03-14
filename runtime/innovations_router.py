@@ -38,6 +38,7 @@ from runtime.oracle_ledger import OracleLedger
 from runtime.seed_promotion import SeedPromotionQueue, get_promotion_queue
 from runtime.seed_review import ReviewAuthorityError, SeedNotFoundError, record_review
 from runtime.seed_proposal_bridge import SeedNotApprovedError, build_proposal_request
+from runtime.seed_cel_injector import inject_seed_proposal_into_context
 from runtime.personality_profiles import PersonalityProfileStore
 from runtime.audit_auth import require_audit_read_scope, require_audit_write_scope
 from ui.features.story_mode import build_federated_evolution_map, build_story_arcs
@@ -466,6 +467,62 @@ def generate_seed_proposal(
         "advisory_notice": (
             "SEED-PROP-HUMAN-0: this ProposalRequest is advisory only. "
             "No mutation is applied without GovernanceGate approval and human sign-off."
+        ),
+    }
+
+
+@router.post("/seeds/promoted/{seed_id}/inject")
+def inject_seed_into_epoch(
+    seed_id: str,
+    body: Dict[str, Any] = Body(default_factory=dict),
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """Prepare an epoch context dict with an approved seed's ProposalRequest (Phase 75).
+
+    SEED-REVIEW-AUTH-0: requires audit:write bearer token scope.
+    SEED-CEL-0:         canonical injection via inject_seed_proposal_into_context().
+    SEED-CEL-AUDIT-0:   SeedCELInjectionEvent written to lineage ledger.
+    SEED-CEL-HUMAN-0:   returned context is advisory — pass to run_epoch(context=).
+
+    Request body (optional)::
+
+        {
+          "epoch_id":     "ep-156",
+          "base_context": { ...optional existing epoch context... }
+        }
+
+    Returns the context dict ready for ``LiveWiredCEL.run_epoch(context=ctx)``.
+    """
+    _require_audit_write(authorization)
+
+    epoch_id    = str(body.get("epoch_id", "")).strip()
+    base_ctx    = dict(body.get("base_context") or {})
+
+    try:
+        request = build_proposal_request(
+            seed_id, epoch_id=epoch_id, queue=_promotion_queue
+        )
+    except KeyError:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=404, detail=f"seed_id {seed_id!r} not in promotion queue")
+    except SeedNotApprovedError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    try:
+        ctx = inject_seed_proposal_into_context(request, base_context=base_ctx)
+    except RuntimeError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return {
+        "seed_id":   seed_id,
+        "cycle_id":  request.cycle_id,
+        "strategy_id": request.strategy_id,
+        "epoch_context": ctx,
+        "advisory_notice": (
+            "SEED-CEL-HUMAN-0: pass epoch_context to LiveWiredCEL.run_epoch(context=). "
+            "No mutation is applied without GovernanceGate + HUMAN-0."
         ),
     }
 

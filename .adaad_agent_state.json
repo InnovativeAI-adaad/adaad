@@ -1,10 +1,10 @@
 {
-    "active_phase": "v9.9.0 \u2014 Phase 74: Seed-to-Proposal Bridge (complete)",
+    "active_phase": "v9.10.0 \u2014 Phase 75: Seed Proposal CEL Injection (complete)",
     "blocked_at_gate": null,
     "blocked_at_tier": null,
     "blocked_reason": null,
-    "last_completed_phase": "Phase 74 \u2014 Seed-to-Proposal Bridge",
-    "last_completed_pr": "feature/phase-74-seed-proposal-bridge",
+    "last_completed_phase": "Phase 75 \u2014 Seed Proposal CEL Injection",
+    "last_completed_pr": "feature/phase-75-seed-proposal-cel-injection",
     "last_gate_results": {
         "tier_0": "pass",
         "tier_1": "pass",
@@ -13,7 +13,7 @@
     },
     "last_invocation": "2026-03-14",
     "last_sync_sha": "899617a",
-    "next_pr": "PR-75-PLAN (Phase 75 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
+    "next_pr": "PR-76-PLAN (Phase 76 \u2014 direction to be proposed by ArchitectAgent and human-approved)",
     "open_findings": [
         {
             "id": "FINDING-66-001",
@@ -253,9 +253,18 @@
         "phase74-lane-strategy-routing",
         "phase74-propose-endpoint",
         "phase74-aponi-propose-button",
-        "v9.9.0-released"
+        "v9.9.0-released",
+        "phase75-seed-cel-injector",
+        "phase75-seed-cel-0-canonical-key",
+        "phase75-seed-cel-human-0-advisory",
+        "phase75-seed-cel-determ-0",
+        "phase75-seed-cel-audit-0-ledger",
+        "phase75-resolve-step4-request",
+        "phase75-cel-step4-wired",
+        "phase75-inject-endpoint",
+        "v9.10.0-released"
     ],
-    "current_version": "9.9.0",
+    "current_version": "9.10.0",
     "completed_milestones": [
         "phase66-plan",
         "phase66-weight-adaptor-telemetry",
@@ -281,6 +290,10 @@
         "phase74-plan",
         "phase74-bridge",
         "phase74-aponi-propose",
-        "v9.9.0-released"
+        "v9.9.0-released",
+        "phase75-plan",
+        "phase75-cel-injector",
+        "phase75-step4-wire",
+        "v9.10.0-released"
     ]
 }
