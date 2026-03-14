@@ -12,6 +12,7 @@
 
 <br/>
 
+<img src="docs/assets/readme/agents-overview.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD agent overview panel showing Architect, Dream, and Beast as coordinated mutation agents."/>
 <img src="docs/assets/readme/agent_trio.svg" width="70%" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating in the ADAAD hero banner."/>
 
 <br/>
@@ -236,6 +237,10 @@ SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitnes
 
 <img src="docs/assets/adaad-agents-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Agent Competition"/>
 
+<img src="docs/assets/readme/agents-roles.svg" width="100%" alt="Role mapping of ADAAD agents to governance strategy, scenario exploration, and execution pressure testing."/>
+
+The visual above maps role boundaries: **Architect** owns governance-safe design, **Dream** owns exploratory scenario generation, and **Beast** owns implementation pressure-testing. This complements (not duplicates) the identity portraits below.
+
 <div align="center">
 <table>
 <tr>
@@ -395,6 +400,7 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 
 <img src="docs/assets/adaad-tier-system.svg" width="100%" alt="ADAAD Mutation Tier System"/>
 
+Execution flow context: Tier constraints determine what the **Beast execution lane** may attempt, while final promotion still requires full gate passage and replay integrity.
 <div align="center">
 <img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/>
 </div>
@@ -438,6 +444,7 @@ EvolutionLedger                                        EvolutionLedger
 
 **Aponi** is the ADAAD observability and governance console — the human oversight surface.
 
+Overview context: Aponi tracks the same three agents from the overview visual above; this section focuses on live telemetry and governance-state interpretation.
 <div align="center">
 <img src="docs/assets/readme/agent_trio.svg" width="60%" style="opacity:0.72; box-shadow:none;" alt="Aponi dashboard team overview showing Architect, Dream, and Beast together."/>
 </div>
