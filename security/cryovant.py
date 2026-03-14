@@ -22,12 +22,14 @@ import os
 import time
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id
 from runtime import metrics
 from security import SECURITY_ROOT
+from security.identity_rings import build_ring_token
 from security.ledger import journal
+from security.ring_claims import ALLOWED_RINGS
 
 ELEMENT_ID = "Water"
 
@@ -364,6 +366,149 @@ class TokenExpiredError(ValueError):
     """Raised when a governance token's wall-clock expiry has passed."""
 
 
+def _emit_ring_verification_outcome(
+    *,
+    operation: str,
+    ring: str,
+    verified: bool,
+    reason: str,
+    subject_id: str,
+    claims: Mapping[str, Any] | None = None,
+) -> None:
+    payload = {
+        "operation": operation,
+        "ring": ring,
+        "verified": bool(verified),
+        "reason": reason,
+        "subject_id": subject_id,
+        "claim_keys": sorted((str(key) for key in (claims or {}).keys())),
+    }
+    journal.write_entry(
+        agent_id=subject_id or "unknown",
+        action="identity_ring_verified" if verified else "identity_ring_verification_failed",
+        payload=payload,
+    )
+    metrics.log(
+        event_type="cryovant_ring_verification_result",
+        payload=payload,
+        level="INFO" if verified else "ERROR",
+        element_id=ELEMENT_ID,
+    )
+
+
+def verify_identity_rings(
+    ring_claims: Mapping[str, Mapping[str, Any]],
+    *,
+    operation: str,
+    expected_federation_origin: str | None = None,
+) -> bool:
+    """Fail-closed validation for one or more identity rings tied to an operation."""
+
+    if not isinstance(ring_claims, Mapping):
+        _emit_ring_verification_outcome(
+            operation=operation,
+            ring="unknown",
+            verified=False,
+            reason="ring_payload_not_mapping",
+            subject_id="unknown",
+        )
+        return False
+
+    for ring_name, ring_payload in ring_claims.items():
+        ring = str(ring_name or "").strip().lower()
+        if ring not in ALLOWED_RINGS:
+            _emit_ring_verification_outcome(
+                operation=operation,
+                ring=ring,
+                verified=False,
+                reason="ring_unknown",
+                subject_id="unknown",
+            )
+            return False
+        if not isinstance(ring_payload, Mapping):
+            _emit_ring_verification_outcome(
+                operation=operation,
+                ring=ring,
+                verified=False,
+                reason="ring_payload_not_mapping",
+                subject_id="unknown",
+            )
+            return False
+
+        subject_id = str(ring_payload.get("subject_id") or "").strip()
+        claims = ring_payload.get("claims")
+        expected_digest = str(ring_payload.get("digest") or "").strip().lower()
+
+        if not subject_id:
+            _emit_ring_verification_outcome(
+                operation=operation,
+                ring=ring,
+                verified=False,
+                reason="subject_id_missing",
+                subject_id="unknown",
+                claims=claims if isinstance(claims, Mapping) else None,
+            )
+            return False
+
+        if not isinstance(claims, Mapping):
+            _emit_ring_verification_outcome(
+                operation=operation,
+                ring=ring,
+                verified=False,
+                reason="claims_not_mapping",
+                subject_id=subject_id,
+            )
+            return False
+
+        try:
+            token = build_ring_token(ring=ring, subject_id=subject_id, claims=claims)
+        except ValueError as exc:
+            _emit_ring_verification_outcome(
+                operation=operation,
+                ring=ring,
+                verified=False,
+                reason=f"malformed_claims:{exc}",
+                subject_id=subject_id,
+                claims=claims,
+            )
+            return False
+
+        if expected_digest and not hmac.compare_digest(expected_digest, token.digest):
+            _emit_ring_verification_outcome(
+                operation=operation,
+                ring=ring,
+                verified=False,
+                reason="digest_mismatch",
+                subject_id=subject_id,
+                claims=claims,
+            )
+            return False
+
+        if ring == "federation" and expected_federation_origin:
+            source_repo = str(claims.get("source_repo") or "").strip()
+            if source_repo != expected_federation_origin:
+                _emit_ring_verification_outcome(
+                    operation=operation,
+                    ring=ring,
+                    verified=False,
+                    reason="federation_origin_mismatch",
+                    subject_id=subject_id,
+                    claims=claims,
+                )
+                return False
+
+        _emit_ring_verification_outcome(
+            operation=operation,
+            ring=ring,
+            verified=True,
+            reason="verified",
+            subject_id=subject_id,
+            claims=claims,
+        )
+
+    return True
+
+
 def verify_session(token: str) -> bool:
     """Deprecated session verification path.
 
@@ -470,6 +615,9 @@ def verify_governance_token(
     specific_env_prefix: str = "ADAAD_GOVERNANCE_SESSION_KEY_",
     generic_env_var: str = "ADAAD_GOVERNANCE_SESSION_SIGNING_KEY",
     fallback_namespace: str = "adaad-governance-session-dev-secret",
+    ring_claims: Mapping[str, Mapping[str, Any]] | None = None,
+    operation: str = "governance_token",
+    expected_federation_origin: str | None = None,
 ) -> bool:
     """Verify production governance token with explicit dev-mode fallback.
 
@@ -506,7 +654,7 @@ def verify_governance_token(
     signature = f"{sig_prefix}:{digest}"
     signed_digest = f"sha256:{key_id}:{expires_at}:{nonce}"
     try:
-        return verify_hmac_digest_signature(
+        token_valid = verify_hmac_digest_signature(
             key_id=key_id,
             signed_digest=signed_digest,
             signature=signature,
@@ -514,6 +662,15 @@ def verify_governance_token(
             generic_env_var=generic_env_var,
             fallback_namespace=fallback_namespace,
         )
+        if not token_valid:
+            return False
+        if ring_claims is not None:
+            return verify_identity_rings(
+                ring_claims,
+                operation=operation,
+                expected_federation_origin=expected_federation_origin,
+            )
+        return True
     except MissingSigningKeyError:
         raise
 
