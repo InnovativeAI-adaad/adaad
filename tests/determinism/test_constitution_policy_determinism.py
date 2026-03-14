@@ -3,6 +3,7 @@
 # ADAAD-LANE: determinism-replay
 
 from pathlib import Path
+from contextvars import copy_context
 import pytest
 from adaad.agents.mutation_request import MutationRequest, MutationTarget
 from runtime import constitution
@@ -189,3 +190,16 @@ def test_cross_environment_digest_stability_with_equivalent_envelope_state() -> 
         android_digest = constitution.evaluate_mutation(request, constitution.Tier.SANDBOX)["governance_envelope"]["digest"]
 
     assert linux_digest == android_digest
+
+
+def test_deterministic_envelope_state_isolated_across_contexts() -> None:
+    def _context_value() -> dict[str, object]:
+        state = constitution.get_deterministic_envelope_state()
+        state["context_marker"] = id(state)
+        return state
+
+    first = copy_context().run(_context_value)
+    second = copy_context().run(_context_value)
+
+    assert first is not second
+    assert first["context_marker"] != second["context_marker"]
