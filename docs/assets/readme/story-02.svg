@@ -1,0 +1,37 @@
+<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">GovernanceGate plus deterministic replay blocks unsafe mutations</title>
+  <desc id="desc">A proposed mutation is admitted only after constitutional checks and deterministic replay verification, showing fail-closed governance before any code change.</desc>
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020a18"/>
+      <stop offset="100%" stop-color="#031328"/>
+    </linearGradient>
+  </defs>
+  <rect width="420" height="220" rx="18" fill="url(#bg2)"/>
+  <rect x="1" y="1" width="418" height="218" rx="17" fill="none" stroke="#00d4ff" opacity="0.28"/>
+
+  <text x="24" y="34" fill="#f5c842" font-family="'Courier New',monospace" font-size="14" font-weight="700" letter-spacing="1.1">PANEL 2 · GATE + REPLAY</text>
+  <text x="24" y="56" fill="#c6d8ea" font-family="'Courier New',monospace" font-size="11">Govern before mutate</text>
+
+  <rect x="24" y="84" width="112" height="50" rx="9" fill="#0b2035" stroke="#00d4ff"/>
+  <text x="80" y="108" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="10">Proposed patch</text>
+  <text x="80" y="123" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="10">(epoch candidate)</text>
+
+  <path d="M138 109 L190 109" stroke="#7fc4ff" stroke-width="2.5"/>
+  <polygon points="190,109 182,104 182,114" fill="#7fc4ff"/>
+
+  <rect x="196" y="76" width="118" height="68" rx="9" fill="#111522" stroke="#f5c842"/>
+  <text x="255" y="99" text-anchor="middle" fill="#ffd96f" font-family="'Courier New',monospace" font-size="10" font-weight="700">GovernanceGate</text>
+  <text x="255" y="115" text-anchor="middle" fill="#e2d9bf" font-family="'Courier New',monospace" font-size="9">23 constitutional</text>
+  <text x="255" y="129" text-anchor="middle" fill="#e2d9bf" font-family="'Courier New',monospace" font-size="9">rules pass or halt</text>
+
+  <rect x="324" y="76" width="72" height="68" rx="9" fill="#0d1f17" stroke="#00ff88"/>
+  <text x="360" y="102" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="9" font-weight="700">Replay</text>
+  <text x="360" y="117" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="9">digest</text>
+  <text x="360" y="132" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="9">must match</text>
+
+  <path d="M314 109 L322 109" stroke="#ffd96f" stroke-width="2"/>
+
+  <rect x="24" y="160" width="372" height="36" rx="8" fill="#0b141f" stroke="#00d4ff" opacity="0.9"/>
+  <text x="210" y="181" text-anchor="middle" fill="#d4e8ff" font-family="'Courier New',monospace" font-size="10">Fail-closed sequence: any gate miss → mutation rejected, repo remains unchanged.</text>
+</svg>

@@ -36,6 +36,22 @@
 
 *It has already evolved itself. The hash is in the ledger.*
 
+## Why ADAAD Feels Different
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="docs/assets/readme/story-01.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel one shows three disconnected AI suggestions converging on a single overloaded human reviewer, emphasizing that traditional coding assistants leave governance and safety burden on the user."/>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/story-02.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel two shows a proposed patch moving through GovernanceGate and deterministic replay checks, illustrating fail-closed constitutional enforcement before any mutation can land."/>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/story-03.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel three shows a successful epoch chained into the lineage ledger and verified by replay, conveying proven autonomous evolution backed by cryptographic evidence."/>
+</td>
+</tr>
+</table>
+
 <br/>
 
 <img src="docs/assets/adaad-stats-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Stats"/>

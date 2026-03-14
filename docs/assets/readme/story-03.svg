@@ -1,0 +1,36 @@
+<svg viewBox="0 0 420 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Autonomous evolution is proven by ledger evidence and replay</title>
+  <desc id="desc">A governed mutation completes, its hash is chained into evidence, and reproducible replay confirms autonomous evolution as verifiable fact rather than marketing claim.</desc>
+  <defs>
+    <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#020a18"/>
+      <stop offset="100%" stop-color="#031328"/>
+    </linearGradient>
+  </defs>
+  <rect width="420" height="220" rx="18" fill="url(#bg3)"/>
+  <rect x="1" y="1" width="418" height="218" rx="17" fill="none" stroke="#00d4ff" opacity="0.28"/>
+
+  <text x="24" y="34" fill="#f5c842" font-family="'Courier New',monospace" font-size="14" font-weight="700" letter-spacing="1.1">PANEL 3 · PROOF</text>
+  <text x="24" y="56" fill="#c6d8ea" font-family="'Courier New',monospace" font-size="11">Autonomous evolution, evidenced</text>
+
+  <circle cx="78" cy="112" r="34" fill="#0d1f17" stroke="#00ff88" stroke-width="2"/>
+  <text x="78" y="106" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="10" font-weight="700">Epoch</text>
+  <text x="78" y="121" text-anchor="middle" fill="#8cffc8" font-family="'Courier New',monospace" font-size="10">Applied</text>
+
+  <path d="M114 112 L178 112" stroke="#00ff88" stroke-width="2.4"/>
+  <polygon points="178,112 170,107 170,117" fill="#00ff88"/>
+
+  <rect x="184" y="84" width="110" height="56" rx="9" fill="#111522" stroke="#a855f7"/>
+  <text x="239" y="106" text-anchor="middle" fill="#d6b4ff" font-family="'Courier New',monospace" font-size="10" font-weight="700">Lineage Ledger</text>
+  <text x="239" y="122" text-anchor="middle" fill="#d6b4ff" font-family="'Courier New',monospace" font-size="9">hash-chained proof</text>
+
+  <path d="M296 112 L332 112" stroke="#a855f7" stroke-width="2.2"/>
+  <polygon points="332,112 324,107 324,117" fill="#a855f7"/>
+
+  <rect x="336" y="84" width="60" height="56" rx="9" fill="#0b2035" stroke="#00d4ff"/>
+  <text x="366" y="106" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="9" font-weight="700">Replay</text>
+  <text x="366" y="121" text-anchor="middle" fill="#8fdfff" font-family="'Courier New',monospace" font-size="9">zero diff</text>
+
+  <rect x="24" y="160" width="372" height="36" rx="8" fill="#0b141f" stroke="#f5c842" opacity="0.9"/>
+  <text x="210" y="180" text-anchor="middle" fill="#ffe9a8" font-family="'Courier New',monospace" font-size="10">Result: ADAAD can improve itself with cryptographic evidence you can independently verify.</text>
+</svg>
