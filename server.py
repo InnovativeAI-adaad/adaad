@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
+from runtime.innovations_router import router as innovations_router
 
 # ── Module-level runtime imports ─────────────────────────────────────────────
 # These are imported at module scope (not inside function bodies) so that
@@ -152,6 +153,7 @@ async def cryovant_gate_middleware(request: Request, call_next):
 
 
 app.include_router(mutate_router)
+app.include_router(innovations_router)
 
 
 def _load_mock(name: str) -> Any:
