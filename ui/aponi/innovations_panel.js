@@ -262,93 +262,184 @@
       width: 8px; height: 8px; border-radius: 50%;
     }
 
-    /* ── Personality cards ────────────────────────────────────────── */
-    .persona-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+    /* ── Character Roster (replaces simple persona-grid) ─────────────── */
+    .roster-wrap { display: flex; flex-direction: column; gap: 20px; }
+    .roster-spotlight {
+      border-radius: 20px; overflow: hidden; position: relative;
+      border: 1px solid rgba(255,215,0,0.2);
+      background: linear-gradient(135deg, rgba(4,8,24,0.98), rgba(10,14,40,0.95));
+      box-shadow: 0 0 60px rgba(255,180,0,0.07), 0 24px 64px rgba(0,0,0,0.7);
+      display: flex; min-height: 260px;
+      animation: roster-enter 0.5s cubic-bezier(.22,1,.36,1) both;
     }
-    .persona-card {
-      border-radius: 16px; padding: 22px 20px;
-      position: relative; overflow: hidden;
-      border: 1px solid transparent;
-      transition: transform .2s ease, box-shadow .2s ease;
+    @keyframes roster-enter {
+      from { opacity:0; transform: scale(0.97) translateY(12px); }
+      to   { opacity:1; transform: scale(1)    translateY(0); }
     }
-    .persona-card:hover { transform: translateY(-3px); }
-    .persona-card.architect {
-      background: linear-gradient(145deg, rgba(0,229,255,0.07), rgba(0,20,40,0.9));
-      border-color: rgba(0,229,255,0.2);
-      box-shadow: 0 8px 32px rgba(0,229,255,0.08);
+    .roster-spotlight::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      background: radial-gradient(ellipse 60% 80% at 75% 50%, rgba(255,180,0,0.12), transparent 65%),
+                  radial-gradient(ellipse 40% 60% at 25% 30%, rgba(30,60,140,0.25), transparent 60%);
     }
-    .persona-card.dream {
-      background: linear-gradient(145deg, rgba(224,64,251,0.07), rgba(20,0,40,0.9));
-      border-color: rgba(224,64,251,0.2);
-      box-shadow: 0 8px 32px rgba(224,64,251,0.08);
+    .spotlight-img-wrap {
+      flex: 0 0 240px; display: flex; align-items: flex-end;
+      justify-content: center; overflow: hidden; position: relative;
     }
-    .persona-card.beast {
-      background: linear-gradient(145deg, rgba(255,109,0,0.07), rgba(40,8,0,0.9));
-      border-color: rgba(255,109,0,0.2);
-      box-shadow: 0 8px 32px rgba(255,109,0,0.08);
+    .spotlight-img {
+      height: 255px; object-fit: contain;
+      filter: drop-shadow(0 0 32px rgba(255,180,0,0.4));
+      transform: scale(1.05); transition: transform 0.4s ease;
     }
-    .persona-card::before {
-      content: ''; position: absolute; top: -40px; right: -40px;
-      width: 120px; height: 120px; border-radius: 50%;
-      opacity: 0.08; filter: blur(30px);
+    .roster-spotlight:hover .spotlight-img { transform: scale(1.12) translateY(-6px); }
+    .spotlight-info {
+      flex: 1; padding: 28px 28px 24px; display: flex;
+      flex-direction: column; justify-content: center; gap: 12px;
     }
-    .persona-card.architect::before { background: var(--arch); }
-    .persona-card.dream::before     { background: var(--dream); }
-    .persona-card.beast::before     { background: var(--beast); }
-    .persona-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 16px; font-weight: 800;
+    .spotlight-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      letter-spacing: .15em; text-transform: uppercase; padding: 4px 12px;
+      border-radius: 6px; background: rgba(255,215,0,0.1); color: rgba(255,215,0,0.8);
+      border: 1px solid rgba(255,215,0,0.25); width: fit-content;
+    }
+    .spotlight-name {
+      font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800;
+      line-height: 1; letter-spacing: .06em; text-transform: uppercase;
+      background: linear-gradient(135deg, #ffd700, #ffe566, #ffaa00);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .spotlight-philosophy {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px;
+      color: rgba(255,255,255,0.35); letter-spacing: .1em; text-transform: uppercase;
+    }
+    .spotlight-description {
+      font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65; max-width: 360px;
+    }
+    .spotlight-stats { display: flex; flex-direction: column; gap: 7px; margin-top: 4px; }
+    .spotlight-stat-row { display: flex; align-items: center; gap: 10px; }
+    .spotlight-stat-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
       letter-spacing: .08em; text-transform: uppercase;
-      margin-bottom: 4px;
+      color: rgba(255,255,255,0.28); width: 62px; flex-shrink: 0;
     }
-    .persona-card.architect .persona-name { color: var(--arch); }
-    .persona-card.dream     .persona-name { color: var(--dream); }
-    .persona-card.beast     .persona-name { color: var(--beast); }
-    .persona-philosophy {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
-      color: rgba(255,255,255,0.35); margin-bottom: 18px;
-    }
-    .persona-vector {
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .persona-vec-row {
-      display: flex; align-items: center; gap: 10px;
-    }
-    .persona-vec-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
-      color: rgba(255,255,255,0.3); width: 72px; flex-shrink: 0;
-    }
-    .persona-vec-track {
+    .spotlight-stat-track {
       flex: 1; height: 4px; border-radius: 2px;
-      background: rgba(255,255,255,0.07); overflow: hidden;
+      background: rgba(255,255,255,0.06); overflow: hidden;
     }
-    .persona-vec-fill {
+    .spotlight-stat-fill {
       height: 100%; border-radius: 2px;
-      transition: width 1.1s cubic-bezier(.22,1,.36,1);
+      background: linear-gradient(90deg, rgba(255,150,0,0.6), #ffd700);
+      transition: width 1.2s cubic-bezier(.22,1,.36,1);
     }
-    .persona-card.architect .persona-vec-fill { background: linear-gradient(90deg, rgba(0,229,255,0.5), var(--arch)); }
-    .persona-card.dream     .persona-vec-fill { background: linear-gradient(90deg, rgba(224,64,251,0.5), var(--dream)); }
-    .persona-card.beast     .persona-vec-fill { background: linear-gradient(90deg, rgba(255,109,0,0.5), var(--beast)); }
-    .persona-vec-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px; color: rgba(255,255,255,0.4); width: 24px; text-align: right;
+    .spotlight-stat-val {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      color: rgba(255,215,0,0.55); width: 26px; text-align: right;
     }
-    .persona-epoch-label {
-      margin-top: 14px; padding-top: 12px;
-      border-top: 1px solid rgba(255,255,255,0.06);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px; color: rgba(255,255,255,0.25);
+    .spotlight-detail-pills { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 4px; }
+    .spotlight-detail-pill {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 9px;
+      border-radius: 5px; background: rgba(255,215,0,0.06); color: rgba(255,215,0,0.55);
+      border: 1px solid rgba(255,215,0,0.16); letter-spacing: .06em;
     }
-    .persona-epoch-active {
-      display: inline-block; margin-left: 6px;
-      font-size: 10px; padding: 2px 8px; border-radius: 4px;
+    /* Agent trio cards */
+    .roster-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .agent-card {
+      border-radius: 18px; overflow: hidden; position: relative;
+      border: 1px solid transparent; transition: transform .25s ease, box-shadow .25s ease;
+      cursor: pointer;
     }
-    .persona-card.architect .persona-epoch-active { background: rgba(0,229,255,0.1); color: var(--arch); }
-    .persona-card.dream     .persona-epoch-active { background: rgba(224,64,251,0.1); color: var(--dream); }
-    .persona-card.beast     .persona-epoch-active { background: rgba(255,109,0,0.1); color: var(--beast); }
+    .agent-card:hover { transform: translateY(-5px) scale(1.01); }
+    .agent-card.architect {
+      background: linear-gradient(160deg, rgba(6,12,36,0.97), rgba(8,16,48,0.95));
+      border-color: rgba(255,215,0,0.2); box-shadow: 0 8px 36px rgba(255,180,0,0.08);
+    }
+    .agent-card.dream {
+      background: linear-gradient(160deg, rgba(8,6,28,0.97), rgba(16,8,44,0.95));
+      border-color: rgba(147,112,219,0.25); box-shadow: 0 8px 36px rgba(130,80,255,0.1);
+    }
+    .agent-card.beast {
+      background: linear-gradient(160deg, rgba(4,10,20,0.97), rgba(6,14,28,0.95));
+      border-color: rgba(0,229,255,0.2); box-shadow: 0 8px 36px rgba(0,229,255,0.07);
+    }
+    .agent-card::before {
+      content:''; position:absolute; inset:0; pointer-events:none;
+      opacity:0; transition: opacity .3s ease;
+    }
+    .agent-card.architect::before { background: radial-gradient(ellipse 70% 70% at 50% 0%, rgba(255,180,0,0.12), transparent); }
+    .agent-card.dream::before     { background: radial-gradient(ellipse 70% 70% at 50% 0%, rgba(180,120,255,0.14), transparent); }
+    .agent-card.beast::before     { background: radial-gradient(ellipse 70% 70% at 50% 0%, rgba(0,229,255,0.1), transparent); }
+    .agent-card:hover::before { opacity: 1; }
+    .agent-portrait-wrap {
+      width: 100%; aspect-ratio: 4/3;
+      display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+    }
+    .agent-portrait {
+      height: 100%; max-height: 195px; object-fit: contain;
+      transition: transform 0.35s ease;
+    }
+    .agent-card.architect .agent-portrait { filter: drop-shadow(0 0 18px rgba(255,180,0,0.3)); }
+    .agent-card.dream     .agent-portrait { filter: drop-shadow(0 0 18px rgba(160,100,255,0.35)); }
+    .agent-card.beast     .agent-portrait { filter: drop-shadow(0 0 18px rgba(0,229,255,0.3)); }
+    .agent-card:hover .agent-portrait { transform: scale(1.06) translateY(-4px); }
+    .agent-info { padding: 12px 15px 16px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .agent-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .agent-name {
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .agent-card.architect .agent-name { color: #ffd700; }
+    .agent-card.dream     .agent-name { color: #b388ff; }
+    .agent-card.beast     .agent-name { color: var(--arch); }
+    .agent-active-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      opacity: 0; transition: opacity .3s;
+    }
+    .agent-card.architect .agent-active-dot { background: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.8); }
+    .agent-card.dream     .agent-active-dot { background: #b388ff; box-shadow: 0 0 8px rgba(179,136,255,0.8); }
+    .agent-card.beast     .agent-active-dot { background: var(--arch); box-shadow: 0 0 8px rgba(0,229,255,0.8); }
+    .agent-card.is-active .agent-active-dot { opacity: 1; animation: pulse-ring 1.4s ease-out infinite; }
+    .agent-philosophy {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.28); margin-bottom: 10px;
+    }
+    .agent-bars { display: flex; flex-direction: column; gap: 5px; }
+    .agent-bar-row { display: flex; align-items: center; gap: 7px; }
+    .agent-bar-label {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: rgba(255,255,255,0.22); width: 48px; flex-shrink: 0;
+    }
+    .agent-bar-track { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.05); overflow: hidden; }
+    .agent-bar-fill { height: 100%; border-radius: 2px; transition: width 1.3s cubic-bezier(.22,1,.36,1); }
+    .agent-card.architect .agent-bar-fill { background: linear-gradient(90deg, rgba(255,150,0,0.5), #ffd700); }
+    .agent-card.dream     .agent-bar-fill { background: linear-gradient(90deg, rgba(120,60,255,0.5), #b388ff); }
+    .agent-card.beast     .agent-bar-fill { background: linear-gradient(90deg, rgba(0,180,220,0.5), var(--arch)); }
+    .agent-detail-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 9px; }
+    .agent-tag {
+      font-family: 'JetBrains Mono', monospace; font-size: 8px; padding: 2px 7px;
+      border-radius: 4px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .agent-card.architect .agent-tag { background: rgba(255,215,0,0.07); color: rgba(255,215,0,0.55); border: 1px solid rgba(255,215,0,0.16); }
+    .agent-card.dream     .agent-tag { background: rgba(179,136,255,0.07); color: rgba(179,136,255,0.6); border: 1px solid rgba(179,136,255,0.18); }
+    .agent-card.beast     .agent-tag { background: rgba(0,229,255,0.06); color: rgba(0,229,255,0.55); border: 1px solid rgba(0,229,255,0.16); }
+    .roster-trio-banner {
+      border-radius: 18px; overflow: hidden; position: relative;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .trio-banner-img { width: 100%; display: block; border-radius: 18px; }
+    .trio-banner-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 22px;
+      background: linear-gradient(0deg, rgba(2,6,18,0.95) 0%, transparent 100%);
+    }
+    .trio-banner-title {
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,0.55); margin-bottom: 3px;
+    }
+    .trio-banner-sub {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      color: rgba(255,255,255,0.22); letter-spacing: .08em;
+    }
 
     /* ── Seed registry ────────────────────────────────────────────── */
     .seed-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
@@ -978,47 +1069,142 @@
     return wrap;
   }
 
-  // ── Personalities ───────────────────────────────────────────────────
+  // ── Personalities — Cinematic character art roster ──────────────────
   function renderPersonalities() {
-    const wrap = h("div", {class: "inno-wrap"});
-    const grid = h("div", {class: "persona-grid"});
+    const wrap = h("div", {class: "roster-wrap"});
 
-    innState.personalities.forEach(p => {
-      const card = h("div", {class: `persona-card ${p.id}`});
+    const AGENT_DATA = [
+      {
+        id: "architect",
+        img: "agent_architect.png",
+        noahImg: "agent_noah.png",
+        color: "#ffd700",
+        philosophy: "minimalist",
+        description: "The constitutional guardian. Architect enforces governance law with precision, bearing the Law-Book of invariants and the Justice Emblem. Every epoch begins with her approval.",
+        vector: [0.9, 0.2, 0.3, 0.1],
+        tags: ["Justice Emblem", "Law-Book", "Tier-0 Guard", "Constitutional"],
+      },
+      {
+        id: "dream",
+        img: "agent_dream.png",
+        color: "#b388ff",
+        philosophy: "exploratory",
+        description: "Vision made manifest. Dream navigates the possibility space with Galaxy Eyes that see 200 epochs ahead, guided by the Dream Orb that pulses with future capability paths.",
+        vector: [0.6, 0.8, 0.4, 0.2],
+        tags: ["Galaxy Eyes", "Dream Orb", "Vision Mode", "Explorer"],
+      },
+      {
+        id: "beast",
+        img: "agent_beast.png",
+        color: "#00e5ff",
+        philosophy: "aggressive",
+        description: "Raw evolutionary pressure. Beast drives mutation velocity to the constitutional edge — Mutation Spines crackling with entropy, Faceplate locked on fitness regression targets.",
+        vector: [0.5, 0.5, 0.9, 0.8],
+        tags: ["Mutation Spines", "Faceplate", "Beast Mode", "High-Risk"],
+      },
+    ];
 
-      card.appendChild(h("div", {class: "persona-name"}, p.id));
-      card.appendChild(h("div", {class: "persona-philosophy"}, p.philosophy));
+    const VEC_LABELS = ["intent", "explore", "risk", "speed"];
 
-      const vec = h("div", {class: "persona-vector"});
-      p.vector.forEach((val, i) => {
-        const row = h("div", {class: "persona-vec-row"});
-        row.appendChild(h("div", {class: "persona-vec-label"}, VEC_LABELS[i]));
-        const track = h("div", {class: "persona-vec-track"});
-        const fill  = h("div", {class: "persona-vec-fill"});
+    // ── Featured spotlight (Architect / Noah) ────────────────────────
+    const archData = AGENT_DATA[0];
+    const spotlight = h("div", {class: "roster-spotlight"});
+    const imgWrap = h("div", {class: "spotlight-img-wrap"});
+    const img = h("img", {
+      class: "spotlight-img",
+      src: archData.noahImg || archData.img,
+      alt: "Architect",
+    });
+    img.onerror = () => { img.src = archData.img; };
+    imgWrap.appendChild(img);
+    spotlight.appendChild(imgWrap);
+
+    const info = h("div", {class: "spotlight-info"});
+    info.appendChild(h("div", {class: "spotlight-badge"}, "✦  Featured Agent"));
+    info.appendChild(h("div", {class: "spotlight-name"}, "Architect"));
+    info.appendChild(h("div", {class: "spotlight-philosophy"}, archData.philosophy));
+    info.appendChild(h("div", {class: "spotlight-description"}, archData.description));
+
+    const stats = h("div", {class: "spotlight-stats"});
+    archData.vector.forEach((val, i) => {
+      const row = h("div", {class: "spotlight-stat-row"});
+      row.appendChild(h("div", {class: "spotlight-stat-label"}, VEC_LABELS[i]));
+      const track = h("div", {class: "spotlight-stat-track"});
+      const fill  = h("div", {class: "spotlight-stat-fill"});
+      fill.style.width = "0%";
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(h("div", {class: "spotlight-stat-val"}, (val * 100).toFixed(0)));
+      stats.appendChild(row);
+      requestAnimationFrame(() => setTimeout(() => { fill.style.width = `${val * 100}%`; }, 100 + i * 80));
+    });
+    info.appendChild(stats);
+
+    const pills = h("div", {class: "spotlight-detail-pills"});
+    archData.tags.forEach(t => pills.appendChild(h("div", {class: "spotlight-detail-pill"}, t)));
+    info.appendChild(pills);
+    spotlight.appendChild(info);
+    wrap.appendChild(spotlight);
+
+    // ── Agent trio cards ─────────────────────────────────────────────
+    const trio = h("div", {class: "roster-trio"});
+    AGENT_DATA.forEach((a, ai) => {
+      const card = h("div", {class: `agent-card ${a.id}`});
+      const isActive = innState.activePersonality?.agent_id === a.id;
+      if (isActive) card.classList.add("is-active");
+
+      // Portrait
+      const pw = h("div", {class: "agent-portrait-wrap"});
+      const portrait = h("img", {class: "agent-portrait", src: a.img, alt: a.id});
+      portrait.onerror = () => { pw.innerHTML = `<div style="font-size:44px;opacity:0.3;align-self:center;">${["⚖️","✨","⚡"][ai]}</div>`; };
+      pw.appendChild(portrait);
+      card.appendChild(pw);
+
+      const info2 = h("div", {class: "agent-info"});
+      const nameRow = h("div", {class: "agent-name-row"});
+      nameRow.appendChild(h("div", {class: "agent-name"}, a.id));
+      nameRow.appendChild(h("div", {class: "agent-active-dot"}));
+      info2.appendChild(nameRow);
+      info2.appendChild(h("div", {class: "agent-philosophy"}, a.philosophy));
+
+      const bars = h("div", {class: "agent-bars"});
+      a.vector.forEach((val, i) => {
+        const row = h("div", {class: "agent-bar-row"});
+        row.appendChild(h("div", {class: "agent-bar-label"}, VEC_LABELS[i]));
+        const track = h("div", {class: "agent-bar-track"});
+        const fill  = h("div", {class: "agent-bar-fill"});
         fill.style.width = "0%";
         track.appendChild(fill);
         row.appendChild(track);
-        row.appendChild(h("div", {class: "persona-vec-val"}, (val * 100).toFixed(0)));
-        vec.appendChild(row);
-        requestAnimationFrame(() => setTimeout(() => { fill.style.width = `${val * 100}%`; }, 80 + i * 60));
+        bars.appendChild(row);
+        requestAnimationFrame(() => setTimeout(() => { fill.style.width = `${val * 100}%`; }, 200 + ai * 80 + i * 50));
       });
-      card.appendChild(vec);
+      info2.appendChild(bars);
 
-      const epochLabel = h("div", {class: "persona-epoch-label"});
-      epochLabel.appendChild(document.createTextNode("Active epoch: "));
-      epochLabel.appendChild(h("span", {class: "persona-epoch-active"},
-        innState.activePersonality?.agent_id === p.id ? "✓ selected" : "standby"
-      ));
-      card.appendChild(epochLabel);
+      const tags = h("div", {class: "agent-detail-tags"});
+      a.tags.slice(0, 3).forEach(t => tags.appendChild(h("div", {class: "agent-tag"}, t)));
+      info2.appendChild(tags);
 
-      grid.appendChild(card);
+      card.appendChild(info2);
+      trio.appendChild(card);
     });
+    wrap.appendChild(trio);
 
-    wrap.appendChild(grid);
+    // ── Trio banner ───────────────────────────────────────────────────
+    const banner = h("div", {class: "roster-trio-banner"});
+    const bannerImg = h("img", {class: "trio-banner-img", src: "agent_trio.png", alt: "ADAAD Agents"});
+    bannerImg.onerror = () => { banner.style.display = "none"; };
+    banner.appendChild(bannerImg);
+    const overlay = h("div", {class: "trio-banner-overlay"});
+    overlay.appendChild(h("div", {class: "trio-banner-title"}, "The ADAAD Trinity"));
+    overlay.appendChild(h("div", {class: "trio-banner-sub"}, "Architect  ·  Dream  ·  Beast  —  Constitutional Evolution Agents"));
+    banner.appendChild(overlay);
+    wrap.appendChild(banner);
+
     return wrap;
   }
 
-  /* ══════════════════════════════════════════════════════════════════════
+    /* ══════════════════════════════════════════════════════════════════════
      DEMO DATA (shown when server not connected)
   ══════════════════════════════════════════════════════════════════════ */
   const DEMO_ARCS = [
@@ -1356,10 +1542,22 @@
       const badge = document.getElementById("innoPersonaBadge");
       const label = document.getElementById("innoPersonaLabel");
       if (!badge || !label) return;
+
+      // Update portrait in badge
+      let portrait = badge.querySelector(".badge-portrait");
+      if (!portrait) {
+        portrait = document.createElement("img");
+        portrait.className = "badge-portrait";
+        portrait.style.cssText = "width:22px;height:22px;object-fit:contain;border-radius:4px;flex-shrink:0;";
+        badge.insertBefore(portrait, badge.firstChild);
+      }
+      const imgMap = { architect: "agent_architect.png", dream: "agent_dream.png", beast: "agent_beast.png" };
+      portrait.src = imgMap[f.agent_id] || "";
+      portrait.onerror = () => { portrait.style.display = "none"; };
+
       badge.className = f.agent_id; // arch | dream | beast
       label.textContent = `${f.agent_id} · ${f.philosophy}`;
       badge.style.display = "flex";
-      // Auto-hide after 12s
       clearTimeout(badge._hideTimer);
       badge._hideTimer = setTimeout(() => { badge.style.display = "none"; }, 12000);
     },
