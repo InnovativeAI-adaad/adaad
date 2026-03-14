@@ -1092,6 +1092,333 @@
   }
 
   /* ══════════════════════════════════════════════════════════════════════
+     WEBSOCKET LIVE FEED MANAGER (Phase 70)
+  ══════════════════════════════════════════════════════════════════════ */
+
+  const WS_CSS = `
+    /* ── Epoch progress bar ───────────────────────────────────────── */
+    #innoEpochBar {
+      position: fixed; top: 0; left: 0; right: 0; height: 2px;
+      z-index: 10000; pointer-events: none; overflow: hidden;
+      background: transparent;
+    }
+    #innoEpochFill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--arch), var(--dream), var(--beast));
+      background-size: 200% 100%;
+      animation: inno-shimmer 1.4s linear infinite;
+      transition: width 0.6s cubic-bezier(.22,1,.36,1);
+      border-radius: 0 2px 2px 0;
+    }
+    @keyframes inno-shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    #innoEpochBar.idle #innoEpochFill { transition: width 0.3s ease; }
+
+    /* ── Active personality badge in header ───────────────────────── */
+    #innoPersonaBadge {
+      display: none; align-items: center; gap: 7px;
+      padding: 5px 12px; border-radius: 999px;
+      font-family: 'Syne', sans-serif;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      border: 1px solid; cursor: default;
+      animation: persona-in 0.3s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes persona-in {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    #innoPersonaBadge.arch  { color: var(--arch);  border-color: rgba(0,229,255,0.4);  background: rgba(0,229,255,0.07); }
+    #innoPersonaBadge.dream { color: var(--dream); border-color: rgba(224,64,251,0.4); background: rgba(224,64,251,0.07); }
+    #innoPersonaBadge.beast { color: var(--beast); border-color: rgba(255,109,0,0.4);  background: rgba(255,109,0,0.07); }
+    #innoPersonaBadge .persona-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      animation: pulse-ring 1.4s ease-out infinite;
+    }
+    #innoPersonaBadge.arch  .persona-dot { background: var(--arch); }
+    #innoPersonaBadge.dream .persona-dot { background: var(--dream); }
+    #innoPersonaBadge.beast .persona-dot { background: var(--beast); }
+
+    /* ── Live arc entry ───────────────────────────────────────────── */
+    .story-arc.live-new {
+      animation: arc-live 0.45s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes arc-live {
+      from { opacity: 0; transform: translateX(-12px) scale(0.97); background: rgba(0,229,255,0.04); }
+      to   { opacity: 1; transform: translateX(0)    scale(1);    background: transparent; }
+    }
+
+    /* ── Reflection toast ─────────────────────────────────────────── */
+    .inno-toast {
+      position: fixed; bottom: 80px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 9998;
+      min-width: 320px; max-width: 480px;
+      padding: 14px 20px; border-radius: 14px;
+      background: rgba(8,18,38,0.95);
+      border: 1px solid rgba(0,229,255,0.2);
+      box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,229,255,0.06);
+      backdrop-filter: blur(20px);
+      display: flex; align-items: flex-start; gap: 14px;
+      animation: inno-toast-in 0.35s cubic-bezier(.22,1,.36,1) both;
+      pointer-events: none;
+    }
+    @keyframes inno-toast-in {
+      from { opacity: 0; transform: translateX(-50%) translateY(16px) scale(0.94); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1); }
+    }
+    @keyframes inno-toast-out {
+      from { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1); }
+      to   { opacity: 0; transform: translateX(-50%) translateY(8px)  scale(0.95); }
+    }
+    .inno-toast-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .inno-toast-body { flex: 1; min-width: 0; }
+    .inno-toast-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 12px; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: rgba(0,229,255,0.9); margin-bottom: 4px;
+    }
+    .inno-toast-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.55;
+    }
+    .inno-toast.seed   { border-color: rgba(105,255,71,0.25); }
+    .inno-toast.seed   .inno-toast-title { color: var(--seed-glow); }
+    .inno-toast.reflect{ border-color: rgba(224,64,251,0.2); }
+    .inno-toast.reflect .inno-toast-title { color: var(--dream); }
+
+    /* ── WS status indicator ──────────────────────────────────────── */
+    #innoWsStatus {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+      flex-shrink: 0;
+    }
+    #innoWsStatus.connected {
+      background: var(--arch);
+      box-shadow: 0 0 8px rgba(0,229,255,0.6);
+    }
+    #innoWsStatus.error { background: rgba(255,70,70,0.8); }
+  `;
+
+  // CEL step names in order — used to drive progress bar
+  const CEL_STEPS_TOTAL = 14;
+
+  const wsManager = {
+    ws: null,
+    reconnectTimer: null,
+    epochProgress: 0,
+
+    init() {
+      // Inject WS-specific CSS
+      if (!document.getElementById("innovations-ws-css")) {
+        const s = document.createElement("style");
+        s.id = "innovations-ws-css";
+        s.textContent = WS_CSS;
+        document.head.appendChild(s);
+      }
+      // Epoch progress bar
+      if (!document.getElementById("innoEpochBar")) {
+        const bar  = document.createElement("div"); bar.id  = "innoEpochBar";
+        const fill = document.createElement("div"); fill.id = "innoEpochFill";
+        bar.appendChild(fill); document.body.appendChild(bar);
+      }
+      // Persona badge — inject into Aponi header if present
+      if (!document.getElementById("innoPersonaBadge")) {
+        const badge = document.createElement("div");
+        badge.id = "innoPersonaBadge";
+        badge.innerHTML = `<span class="persona-dot"></span><span id="innoPersonaLabel">—</span>`;
+        // Try to append to .hdr-right; fall back to body float
+        const hdr = document.querySelector(".hdr-right");
+        if (hdr) hdr.insertBefore(badge, hdr.firstChild);
+        else {
+          badge.style.cssText = "position:fixed;top:14px;right:80px;z-index:9999;";
+          document.body.appendChild(badge);
+        }
+      }
+      // WS status dot in header
+      if (!document.getElementById("innoWsStatus")) {
+        const dot = document.createElement("div");
+        dot.id = "innoWsStatus"; dot.title = "Innovations live feed";
+        const hdr = document.querySelector(".hdr-right");
+        if (hdr) hdr.appendChild(dot);
+      }
+      this.connect();
+    },
+
+    connect() {
+      const base = (global._adaadState?.baseUrl || "http://127.0.0.1:8000")
+        .replace(/^https?/, (s) => s === "https" ? "wss" : "ws");
+      try {
+        this.ws = new WebSocket(`${base}/ws/events`);
+        this.ws.onopen    = () => this._setStatus("connected");
+        this.ws.onclose   = () => { this._setStatus(""); this._scheduleReconnect(); };
+        this.ws.onerror   = () => this._setStatus("error");
+        this.ws.onmessage = (e) => this._onMessage(JSON.parse(e.data));
+      } catch(_) { this._scheduleReconnect(); }
+    },
+
+    _setStatus(cls) {
+      const dot = document.getElementById("innoWsStatus");
+      if (dot) dot.className = cls;
+    },
+
+    _scheduleReconnect() {
+      if (this.reconnectTimer) return;
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.connect();
+      }, 5000);
+    },
+
+    _onMessage(msg) {
+      if (msg.type !== "innovations") return;
+      const frame = msg;
+      switch (frame.type === "innovations" ? frame.channel : frame.type) {
+        case "innovations":
+          this._dispatch(frame);
+          break;
+      }
+    },
+
+    _dispatch(frame) {
+      const t = frame.type || frame.innovations_type;
+      if (frame.type === "innovations") {
+        const inner = {...frame};
+        delete inner.type; delete inner.channel;
+        this._handle(inner);
+      } else {
+        this._handle(frame);
+      }
+    },
+
+    _handle(frame) {
+      switch (frame.type) {
+        case "epoch_start":   this._onEpochStart(frame); break;
+        case "epoch_end":     this._onEpochEnd(frame);   break;
+        case "cel_step":      this._onCelStep(frame);    break;
+        case "story_arc":     this._onStoryArc(frame);   break;
+        case "personality":   this._onPersonality(frame);break;
+        case "reflection":    this._onReflection(frame); break;
+        case "seed_planted":  this._onSeed(frame);       break;
+        case "gplugin":       this._onGPlugin(frame);    break;
+      }
+    },
+
+    _onEpochStart(f) {
+      this.epochProgress = 0;
+      this._setProgress(2);
+      innState.activeEpochId = f.epoch_id;
+    },
+
+    _onEpochEnd(f) {
+      this._setProgress(100);
+      setTimeout(() => this._setProgress(0), 900);
+      innState.activeEpochId = null;
+    },
+
+    _onCelStep(f) {
+      const pct = Math.round((f.step_number / CEL_STEPS_TOTAL) * 96) + 2;
+      this._setProgress(pct);
+    },
+
+    _onStoryArc(f) {
+      // Prepend to live story timeline if visible
+      const timeline = document.querySelector(".story-timeline");
+      if (!timeline) return;
+      const agentClass = ["architect","dream","beast"].includes(f.agent) ? f.agent : "";
+      const resultClass = f.result === "promoted" ? "promoted" : f.result === "rejected" ? "rejected" : agentClass;
+      const row = document.createElement("div");
+      row.className = "story-arc live-new";
+      row.innerHTML = `
+        <div class="story-arc-line">
+          <div class="story-arc-dot ${resultClass}"></div>
+          <div class="story-arc-connector"></div>
+        </div>
+        <div class="story-arc-content">
+          <div class="story-arc-epoch">${escHtml(f.epoch || "—")}</div>
+          <div class="story-arc-title">${escHtml(f.title || "Governance event")}</div>
+          <div class="story-arc-meta">
+            ${f.agent ? `<span class="story-arc-badge agent">${escHtml(f.agent)}</span>` : ""}
+            ${f.result ? `<span class="story-arc-badge ${escHtml(f.result)}">${escHtml(f.result)}</span>` : ""}
+            <span class="story-arc-badge" style="background:rgba(0,229,255,0.07);color:rgba(0,229,255,0.5);border:1px solid rgba(0,229,255,0.15);">live</span>
+          </div>
+        </div>`;
+      timeline.insertBefore(row, timeline.firstChild);
+      // Cap to 60 arcs in view
+      while (timeline.children.length > 60) timeline.removeChild(timeline.lastChild);
+    },
+
+    _onPersonality(f) {
+      innState.activePersonality = { agent_id: f.agent_id, philosophy: f.philosophy };
+      const badge = document.getElementById("innoPersonaBadge");
+      const label = document.getElementById("innoPersonaLabel");
+      if (!badge || !label) return;
+      badge.className = f.agent_id; // arch | dream | beast
+      label.textContent = `${f.agent_id} · ${f.philosophy}`;
+      badge.style.display = "flex";
+      // Auto-hide after 12s
+      clearTimeout(badge._hideTimer);
+      badge._hideTimer = setTimeout(() => { badge.style.display = "none"; }, 12000);
+    },
+
+    _onReflection(f) {
+      this._toast("reflect", "🧠",
+        `Self-Reflection · ${f.epoch_id}`,
+        `Dominant: ${f.dominant_agent}  ·  Underperforming: ${f.underperforming_agent}\n${f.rebalance_hint}`
+      );
+    },
+
+    _onSeed(f) {
+      this._toast("seed", "🌱",
+        `Seed Planted`,
+        `${f.seed_id}  ·  lane: ${f.lane}\n${f.intent}`
+      );
+    },
+
+    _onGPlugin(f) {
+      if (!f.passed) {
+        this._toast("", "🔒",
+          `G-Plugin Blocked`,
+          `${f.plugin_id}\n${f.message}`
+        );
+      }
+    },
+
+    _setProgress(pct) {
+      const fill = document.getElementById("innoEpochFill");
+      const bar  = document.getElementById("innoEpochBar");
+      if (!fill || !bar) return;
+      fill.style.width = `${pct}%`;
+      if (pct === 0) bar.classList.add("idle");
+      else           bar.classList.remove("idle");
+    },
+
+    _toast(cls, icon, title, text) {
+      const t = document.createElement("div");
+      t.className = `inno-toast ${cls}`;
+      t.innerHTML = `
+        <div class="inno-toast-icon">${icon}</div>
+        <div class="inno-toast-body">
+          <div class="inno-toast-title">${escHtml(title)}</div>
+          <div class="inno-toast-text">${escHtml(text)}</div>
+        </div>`;
+      document.body.appendChild(t);
+      setTimeout(() => {
+        t.style.animation = "inno-toast-out 0.28s ease forwards";
+        setTimeout(() => t.remove(), 300);
+      }, 5500);
+    },
+
+    destroy() {
+      if (this.ws) { try { this.ws.close(); } catch(_) {} this.ws = null; }
+      if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
+    },
+  };
+
+  /* ══════════════════════════════════════════════════════════════════════
      BOOT: inject CSS, register with Aponi render loop
   ══════════════════════════════════════════════════════════════════════ */
   function boot() {
@@ -1102,10 +1429,14 @@
       document.head.appendChild(style);
     }
 
+    // Start live feed
+    wsManager.init();
+
     // Expose to Aponi
     global._innovationsPanel = {
       view: viewInnovations,
       state: innState,
+      ws: wsManager,
     };
   }
 

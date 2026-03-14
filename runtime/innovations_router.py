@@ -202,6 +202,16 @@ def register_seeds(
 
     results = register_seeds_bulk(_seed_registry, seed_objects)
     registered = [r for r in results if r["registered"]]
+
+    # Phase 70 — emit seed_planted frame for each new seed
+    for seed in seed_objects:
+        if any(r["seed_id"] == seed.seed_id and r["registered"] for r in results):
+            try:
+                from runtime.innovations_bus import emit_seed_planted  # noqa: PLC0415
+                emit_seed_planted(seed.seed_id, seed.lane, seed.intent, seed.author)
+            except Exception:  # noqa: BLE001
+                pass
+
     return {
         "submitted": len(seeds),
         "registered": len(registered),
