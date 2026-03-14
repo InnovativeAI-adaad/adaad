@@ -12,6 +12,10 @@
 
 <br/>
 
+<img src="ui/aponi/agent_trio.png" width="70%" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating in the ADAAD hero banner."/>
+
+<br/>
+
 **[⚡ 5-Min Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 The 23 Rules](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Full Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agent Spec](AGENTS.md)** &nbsp;·&nbsp; **[📱 Android Setup](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[🔬 Examples](examples/)** &nbsp;·&nbsp; **[📊 Aponi Dashboard](ui/)**
 
 </div>
@@ -216,6 +220,16 @@ SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitnes
 
 <img src="docs/assets/adaad-agents-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Agent Competition"/>
 
+<div align="center">
+<table>
+<tr>
+<td align="center"><img src="ui/aponi/agent_architect.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/></td>
+<td align="center"><img src="ui/aponi/agent_dream.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/></td>
+<td align="center"><img src="ui/aponi/agent_beast.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/></td>
+</tr>
+</table>
+</div>
+
 <br/>
 
 All three compete via **UCB1 multi-armed bandit** — switches to Thompson Sampling after ≥30 epochs of non-stationary reward. Up to **12 candidates per epoch** via BLX-alpha genetic crossover. The GovernanceGate decides. The bandit learns.
@@ -365,6 +379,10 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 
 <img src="docs/assets/adaad-tier-system.svg" width="100%" alt="ADAAD Mutation Tier System"/>
 
+<div align="center">
+<img src="ui/aponi/agent_beast.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/>
+</div>
+
 <br/>
 
 `TIER0-SELF-0` is a permanent architectural invariant. Tier-0 modules cannot be mutation targets under any conditions — not via configuration, not via exception token, not via governance override. It is structural.
@@ -403,6 +421,10 @@ EvolutionLedger                                        EvolutionLedger
 ## The Aponi Dashboard
 
 **Aponi** is the ADAAD observability and governance console — the human oversight surface.
+
+<div align="center">
+<img src="ui/aponi/agent_trio.png" width="60%" style="opacity:0.72; box-shadow:none;" alt="Aponi dashboard team overview showing Architect, Dream, and Beast together."/>
+</div>
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -570,6 +592,10 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 
 ## Phase Timeline — 66 Phases Complete
 
+<div align="center">
+<img src="ui/aponi/agent_dream.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/>
+</div>
+
 <details>
 <summary><strong>View complete phase history (v1.0 → v9.1.0)</strong></summary>
 
@@ -629,6 +655,10 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Governance Authority Chain
+
+<div align="center">
+<img src="ui/aponi/agent_architect.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/>
+</div>
 
 ```
 docs/CONSTITUTION.md                         ← 23 rules · v0.9.0
@@ -750,6 +780,17 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 <div align="center">
 
 **[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agent Spec](AGENTS.md)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/InnovativeAI-adaad/ADAAD/issues)** &nbsp;·&nbsp; **[🤝 Contributing](CONTRIBUTING.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📊 Aponi](ui/)**
+
+<br/>
+
+<table align="center">
+<tr>
+<td align="center"><img src="ui/aponi/agent_architect.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/><br/><sub>Governance</sub></td>
+<td align="center"><img src="ui/aponi/agent_dream.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/><br/><sub>Innovation</sub></td>
+<td align="center"><img src="ui/aponi/agent_beast.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/><br/><sub>Execution</sub></td>
+<td align="center"><img src="ui/aponi/agent_trio.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating."/><br/><sub>Aponi Team</sub></td>
+</tr>
+</table>
 
 <br/>
 
