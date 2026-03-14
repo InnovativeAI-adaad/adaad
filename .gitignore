@@ -82,3 +82,7 @@ security/replay_proof_keyring.local.json
 /_inbox/proposals/*.tmp.html
 !/_inbox/proposals/captures/.gitkeep
 !/_inbox/proposals/exports/.gitkeep
+
+# Packaging/build outputs (ephemeral; CI/release only)
+/build/
+*.egg-info/

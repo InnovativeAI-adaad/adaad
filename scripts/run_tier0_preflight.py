@@ -168,6 +168,13 @@ def build_checks(include_tests: bool) -> list[Check]:
             lint_check_request(tool_id="tier0-import-boundary-lint", command=(sys.executable, "tools/lint_import_paths.py")),
         ),
         Check(
+            "generated build/lib source guard",
+            lint_check_request(
+                tool_id="tier0-generated-build-lib-source-guard",
+                command=(sys.executable, "scripts/validate_no_build_lib_sources.py"),
+            ),
+        ),
+        Check(
             "governance doc consistency",
             lint_check_request(
                 tool_id="tier0-governance-doc-consistency",

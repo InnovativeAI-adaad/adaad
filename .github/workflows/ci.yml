@@ -283,6 +283,9 @@ jobs:
       - name: Run import boundary lint
         # No pip install required — lint_import_paths.py uses stdlib only.
         run: python tools/lint_import_paths.py
+      - name: Guard generated build/lib sources
+        # No pip install required — validate_no_build_lib_sources.py uses stdlib only.
+        run: python scripts/validate_no_build_lib_sources.py
 
   spdx-header-lint:
     runs-on: ubuntu-latest
