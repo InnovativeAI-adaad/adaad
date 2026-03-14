@@ -1,19 +1,14 @@
 <div align="center">
 
-<img src="docs/assets/adaad-hero.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD — Autonomous Device-Anchored Adaptive Development"/>
+<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Device-Anchored Adaptive Development"/>
 
 <br/>
 
 [![Version](https://img.shields.io/badge/ADAAD-v9.1.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-ACTIVE-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
-[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C441_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/66_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![GovernanceGate](https://img.shields.io/badge/GovernanceGate-Non--Bypassable-f5c842?style=flat-square&labelColor=0d1117)&nbsp;![Replay](https://img.shields.io/badge/Replay-Zero_Divergence-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Platform](https://img.shields.io/badge/Android_%7C_Linux_%7C_macOS-Supported-9966ff?style=flat-square&labelColor=0d1117)
+[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C466_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/66_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![GovernanceGate](https://img.shields.io/badge/GovernanceGate-Non--Bypassable-f5c842?style=flat-square&labelColor=0d1117)&nbsp;![Replay](https://img.shields.io/badge/Replay-Zero_Divergence-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Platform](https://img.shields.io/badge/Android_%7C_Linux_%7C_macOS-Supported-9966ff?style=flat-square&labelColor=0d1117)
 
 ![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13%2C_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
-
-<br/>
-
-<img src="docs/assets/readme/agents-overview.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD agent overview panel showing Architect, Dream, and Beast as coordinated mutation agents."/>
-<img src="docs/assets/readme/agent_trio.svg" width="70%" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating in the ADAAD hero banner."/>
 
 <br/>
 
@@ -21,34 +16,37 @@
 
 </div>
 
-> [!NOTE]
-> **Docs image styling convention (GitHub-safe):** Non-essential decorative artwork (hero images, section dividers, cards, banners) should use inline low-weight styling with `style="opacity:0.72; box-shadow:none;"` so visuals stay present but subdued.
-> **Exception:** Core technical diagrams that carry architectural or operational meaning should remain at normal clarity (no low-weight style) for readability.
-
 <br/>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
-<br/>
-
 ## In One Sentence
 
-> **ADAAD is a governed code evolution engine that improves your codebase epoch by epoch — every mutation cryptographically signed, hash-chained into a tamper-evident ledger, deterministically replayable, and subject to 23 constitutional rules before a single byte changes.**
+> **ADAAD is a constitutionally governed code evolution engine — every mutation cryptographically signed, hash-chained into a tamper-evident ledger, deterministically replayable, and gated through 23 constitutional rules before a single byte changes.**
 
-*It has already evolved itself. The hash is in the ledger.*
+*It has already evolved itself. March 13, 2026. The hash is in the ledger.*
 
-## Why ADAAD Feels Different
+<br/>
+
+## Why ADAAD Is Different
+
+Every AI code tool works the same way: **suggest → you apply.** No memory of what worked. No fitness score. No audit trail. No rollback. No constitutional constraint on what it can touch. **You are always the last line of defense.**
+
+ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you. You author the constitution. The system enforces it, epoch by epoch, with cryptographic proof at every step. It doesn't assist. It proposes, evaluates, gates, and applies — 14 steps, 7 fitness signals, one immutable ledger.
 
 <table>
 <tr>
 <td align="center" width="33%">
-<img src="docs/assets/readme/story-01.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel one shows three disconnected AI suggestions converging on a single overloaded human reviewer, emphasizing that traditional coding assistants leave governance and safety burden on the user."/>
+<img src="docs/assets/readme/story-01.svg" width="100%" alt="Three disconnected AI suggestions overloading a single human reviewer — no governance, no trail."/>
+<sub><strong>Status quo:</strong> Every tool puts the human in the critical path as the only safety layer.</sub>
 </td>
 <td align="center" width="33%">
-<img src="docs/assets/readme/story-02.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel two shows a proposed patch moving through GovernanceGate and deterministic replay checks, illustrating fail-closed constitutional enforcement before any mutation can land."/>
+<img src="docs/assets/readme/story-02.svg" width="100%" alt="A proposed patch moving through GovernanceGate and deterministic replay checks."/>
+<sub><strong>ADAAD:</strong> GovernanceGate is the sole approval surface. Constitutional. Non-bypassable.</sub>
 </td>
 <td align="center" width="33%">
-<img src="docs/assets/readme/story-03.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel three shows a successful epoch chained into the lineage ledger and verified by replay, conveying proven autonomous evolution backed by cryptographic evidence."/>
+<img src="docs/assets/readme/story-03.svg" width="100%" alt="A successful epoch chained into the lineage ledger and verified by replay."/>
+<sub><strong>Proof:</strong> Every approved mutation is hash-chained, replay-verified, and evidenced.</sub>
 </td>
 </tr>
 </table>
@@ -56,21 +54,6 @@
 <br/>
 
 <img src="docs/assets/adaad-stats-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Stats"/>
-
-<br/>
-
-<img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
-
-## Why This Exists
-
-Every AI code tool does the same thing: **suggest → you apply.**
-
-No memory of what worked. No fitness score. No audit trail. No rollback. No constitutional constraint on what it can touch. **You are always the last line of defense.**
-
-ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you. You set the constitution. The system enforces it, epoch by epoch, with cryptographic proof at every step.
-
-> [!IMPORTANT]
-> **Different in kind, not degree.** ADAAD does not assist. It does not suggest. It proposes, evaluates, gates, and applies. It runs a 14-step governed loop. It scores mutations against 7 fitness signals. It produces a hash-chained evidence ledger you can replay byte-for-byte. It runs on a $200 Android phone. Apache 2.0. Free forever.
 
 <br/>
 
@@ -98,16 +81,16 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 <td>Safety architecture</td>
 <td align="center">Human reviews</td>
 <td align="center">Human reviews</td>
-<td align="center">✅ <code>GovernanceGate</code> — constitutional, non-bypassable</td>
+<td align="center">✅ <code>GovernanceGate</code> — 23 constitutional rules, non-bypassable</td>
 </tr>
 <tr>
 <td>Audit trail</td>
 <td align="center">Git history only</td>
 <td align="center">PR descriptions</td>
-<td align="center">✅ SHA-256 hash-chained ledger, tamper-evident</td>
+<td align="center">✅ SHA-256 hash-chained ledger — tamper-evident, append-only</td>
 </tr>
 <tr>
-<td>Replay proof</td>
+<td>Deterministic replay</td>
 <td align="center">❌</td>
 <td align="center">❌</td>
 <td align="center">✅ <code>replay_verifier.py</code> — byte-identical, zero-divergence</td>
@@ -116,7 +99,7 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 <td>Fitness scoring</td>
 <td align="center">❌</td>
 <td align="center">❌</td>
-<td align="center">✅ 7-signal engine — adaptive weights from telemetry</td>
+<td align="center">✅ 7-signal engine — adaptive weights from post-merge telemetry</td>
 </tr>
 <tr>
 <td>Proven self-evolution</td>
@@ -131,22 +114,22 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 <td align="center">✅ Full Android support — Termux + Pydroid3</td>
 </tr>
 <tr>
-<td>Price</td>
-<td align="center">$10–19/mo</td>
-<td align="center">$500+/mo</td>
-<td align="center">✅ Apache 2.0 — free forever</td>
-</tr>
-<tr>
 <td>Cross-repo mutation</td>
 <td align="center">❌</td>
 <td align="center">Limited</td>
-<td align="center">✅ Federation — HMAC-gated, dual-gate governed</td>
+<td align="center">✅ Federation — HMAC-gated, dual-gate constitutional enforcement</td>
 </tr>
 <tr>
 <td>Memory between epochs</td>
 <td align="center">❌</td>
 <td align="center">Limited</td>
-<td align="center">✅ Full lineage ledger — SHA-256 hash-chained</td>
+<td align="center">✅ Full lineage DAG — SHA-256 hash-chained, replayable</td>
+</tr>
+<tr>
+<td>Price</td>
+<td align="center">$10–19/mo</td>
+<td align="center">$500+/mo</td>
+<td align="center">✅ Apache 2.0 — free forever</td>
 </tr>
 </tbody>
 </table>
@@ -159,18 +142,18 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 
 <div align="center">
 
-| System | Status | Invariant | Introduced |
+| System | Status | Invariant | Since |
 |:---:|:---:|:---:|:---:|
 | 🟢 GovernanceGate | **ACTIVE · NON-BYPASSABLE** | `GOV-SOLE-0` | Phase 1 |
-| 🟢 Constitutional Evolution Loop | **14-STEP** | `CEL-ORDER-0` | Phase 64 |
-| 🟢 Evidence Ledger | **HASH-CHAINED** | `CEL-EVIDENCE-0` | Phase 1 |
-| 🟢 FitnessEngine v2 | **7 SIGNALS LIVE** | `FIT-BOUND-0` | Phase 62 |
-| 🟢 SandboxTournament | **OPERATIONAL** | `SANDBOX-DIV-0` | Phase 60 |
+| 🟢 Constitutional Evolution Loop | **14-STEP · ORDERED** | `CEL-ORDER-0` | Phase 64 |
+| 🟢 Evidence Ledger | **HASH-CHAINED · APPEND-ONLY** | `CEL-EVIDENCE-0` | Phase 1 |
+| 🟢 FitnessEngine v2 | **7 SIGNALS · ADAPTIVE WEIGHTS** | `FIT-BOUND-0` | Phase 62 |
+| 🟢 SandboxTournament | **OPERATIONAL · EPHEMERAL** | `SANDBOX-DIV-0` | Phase 60 |
 | 🟢 Deterministic Replay | **ZERO DIVERGENCE** | `DET-ALL-0` | Phase 1 |
-| 🟢 AdaptiveWeights | **EMA DESCENDING** | `FIT-DIV-0` | Phase 3 |
-| 🟢 Federation | **HMAC-GATED** | `federation_dual_gate` | Phase 5 |
-| 🟢 CodeIntelModel | **SCANNING** | `INTEL-DET-0` | Phase 58 |
-| 🟢 Autonomous Self-Evolution | **PHASE 65 PROVEN** | `MUTATION-TARGET` | Phase 65 |
+| 🟢 WeightAdaptor | **EMA DESCENT · TELEMETRY LIVE** | `FIT-DIV-0` | Phase 3 |
+| 🟢 Federation | **HMAC-GATED · DUAL-GATE** | `federation_dual_gate` | Phase 5 |
+| 🟢 CodeIntelModel | **SCANNING · DETERMINISM-VERIFIED** | `INTEL-DET-0` | Phase 58 |
+| 🟢 Autonomous Self-Evolution | **PHASE 65 PROVEN · LEDGER SEALED** | `MUTATION-TARGET` | Phase 65 |
 
 </div>
 
@@ -196,38 +179,38 @@ Three LLM-backed agents — **Architect**, **Dream**, **Beast** — compete for 
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
-## The Constitutional Evolution Loop
+## The 14-Step Constitutional Evolution Loop
 
-All 14 steps execute in strict sequence. One failure → clean halt. Zero silent errors. Architectural invariant: **`CEL-ORDER-0`**.
+All 14 steps execute in strict sequence. One failure → clean halt. Zero silent errors. Architectural invariant: **`CEL-ORDER-0`** — the order is structural, not configurable.
 
 <div align="center">
 
 | Step | Name | Type | Failure Behavior |
 |:---:|:---|:---:|:---|
-| `01` | `MODEL-DRIFT-CHECK` | Guard | Blocks epoch if determinism is stale |
+| `01` | `MODEL-DRIFT-CHECK` | Guard | Blocks epoch if determinism state is stale |
 | `02` | `LINEAGE-SNAPSHOT` | Capture | Records `capability_graph_before` hash |
 | `03` | `FITNESS-BASELINE` | Measure | Pre-epoch 7-signal composite recorded |
-| `04` | `PROPOSAL-GENERATE` | Generate | LLM mutations — Architect / Dream / Beast |
+| `04` | `PROPOSAL-GENERATE` | Generate | LLM proposals — Architect / Dream / Beast in parallel |
 | `05` | `AST-SCAN` | Preflight | StaticSafetyScanner — 4 hard AST rules |
-| `06` | `SANDBOX-EXECUTE` | Test | Ephemeral clone — respects `SANDBOX_ONLY` |
-| `07` | `REPLAY-VERIFY` | Verify | Hash match — any divergence = auto-rollback |
-| `08` | `FITNESS-SCORE` | Score | 7 signals — determinism veto unconditional |
+| `06` | `SANDBOX-EXECUTE` | Test | Ephemeral clone — `SANDBOX_ONLY` respected |
+| `07` | `REPLAY-VERIFY` | Verify | Hash match against baseline — divergence = auto-rollback |
+| `08` | `FITNESS-SCORE` | Score | 7 signals — determinism veto is unconditional |
 | `09` | `GOVERNANCE-GATE-V2` | Gate | 5 diff-aware AST rules (Phase 63) |
 | `10` | `GOVERNANCE-GATE` | Gate | **23 constitutional rules — ALL must pass** |
-| `11` | `LINEAGE-REGISTER` | Register | Survivors chained into lineage record |
-| `12` | `PROMOTION-DECISION` | Promote | `CapabilityGraph` + `PromotionEvent` |
-| `13` | `EPOCH-EVIDENCE` | Seal | SHA-256 hash-chained ledger entry |
-| `14` | `STATE-ADVANCE` | Advance | Epoch counter + `epoch_complete.v1` emit |
+| `11` | `LINEAGE-REGISTER` | Register | Survivors chained into lineage DAG |
+| `12` | `PROMOTION-DECISION` | Promote | `CapabilityGraph` + `PromotionEvent` recorded |
+| `13` | `EPOCH-EVIDENCE` | Seal | SHA-256 hash-chained ledger entry — immutable |
+| `14` | `STATE-ADVANCE` | Advance | Epoch counter + `epoch_complete.v1` event emitted |
 
 </div>
 
 ```
-SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitness scored
-                        gate checked · NO patch applied · zero risk · full audit trail
+ADAAD_SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitness scored
+                              gate checked · NO patch applied · zero risk · full audit trail
 ```
 
 > [!TIP]
-> Always start with `ADAAD_SANDBOX_ONLY=true`. Full visibility, zero exposure.
+> Always start with `ADAAD_SANDBOX_ONLY=true`. Full pipeline visibility with zero blast radius.
 
 <br/>
 
@@ -235,25 +218,33 @@ SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitnes
 
 ## Three Competing Mutation Agents
 
-<img src="docs/assets/adaad-agents-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Agent Competition"/>
+<img src="docs/assets/adaad-agents-card.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD Agent Competition — UCB1 bandit drives selection across Architect, Dream, and Beast"/>
 
-<img src="docs/assets/readme/agents-roles.svg" width="100%" alt="Role mapping of ADAAD agents to governance strategy, scenario exploration, and execution pressure testing."/>
-
-The visual above maps role boundaries: **Architect** owns governance-safe design, **Dream** owns exploratory scenario generation, and **Beast** owns implementation pressure-testing. This complements (not duplicates) the identity portraits below.
+<img src="docs/assets/readme/agents-overview.svg" width="100%" alt="ADAAD agent overview — Architect, Dream, and Beast as coordinated mutation agents with role boundaries."/>
 
 <div align="center">
 <table>
 <tr>
-<td align="center"><img src="docs/assets/readme/agent_architect.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/></td>
-<td align="center"><img src="docs/assets/readme/agent_dream.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/></td>
-<td align="center"><img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/></td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/agent_architect.svg" width="200" alt="Architect — constitutional guardian and governance-safe structural designer."/>
+<br/><strong>Architect</strong><br/>
+<sub>Governance-safe structural design. Low risk (0.1–0.4). Owns Tier-0 guard decisions and constitutional compliance.</sub>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/agent_dream.svg" width="200" alt="Dream — high-novelty explorer and scenario generator."/>
+<br/><strong>Dream</strong><br/>
+<sub>High-novelty exploration. High expected gain (0.5–0.9). Sees 200 epochs ahead. Experimental and behavioral mutations.</sub>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/agent_beast.svg" width="200" alt="Beast — mutation velocity and execution pressure testing."/>
+<br/><strong>Beast</strong><br/>
+<sub>Mutation velocity at the constitutional edge. Highest risk, highest pressure. Drives fitness regression targets hard.</sub>
+</td>
 </tr>
 </table>
 </div>
 
-<br/>
-
-All three compete via **UCB1 multi-armed bandit** — switches to Thompson Sampling after ≥30 epochs of non-stationary reward. Up to **12 candidates per epoch** via BLX-alpha genetic crossover. The GovernanceGate decides. The bandit learns.
+All three compete via **UCB1 multi-armed bandit** — switches to Thompson Sampling after ≥30 non-stationary epochs. Up to **12 candidates per epoch** via BLX-alpha genetic crossover. The GovernanceGate decides. The bandit learns. Weights adapt via EMA momentum descent after every merge.
 
 <br/>
 
@@ -266,7 +257,7 @@ All three compete via **UCB1 multi-armed bandit** — switches to Thompson Sampl
 
 <br/>
 
-A single blocking violation discards the entire proposal and halts the epoch. No partial application. No retry without a clean re-proposal.
+A single blocking violation discards the entire proposal and halts the epoch. No partial application. No retry without a clean re-proposal from scratch.
 
 | Rule | Enforcement |
 |:---|:---|
@@ -274,7 +265,7 @@ A single blocking violation discards the entire proposal and halts the epoch. No
 | `ast_validity` | Resulting AST must parse cleanly — no syntax errors |
 | `no_banned_tokens` | No `exec`, `eval`, `os.system`, subprocess shell equivalents |
 | `signature_required` | Every mutation must carry a valid cryptographic signature |
-| `lineage_continuity` | Mutation must chain to an existing, valid lineage record |
+| `lineage_continuity` | Mutation must chain to an existing, verified lineage record |
 | `resource_bounds` | Memory and compute bounds enforced per mutation tier |
 | `federation_dual_gate` | Cross-repo: `GovernanceGate` approval required in both repos |
 | `federation_hmac_required` | HMAC key validation on all federation channel operations |
@@ -283,14 +274,14 @@ A single blocking violation discards the entire proposal and halts the epoch. No
 </details>
 
 <details>
-<summary><strong>🟡 5 Warning Rules — Flag in Tier 1/2. Blocking in Tier 0 (Production).</strong></summary>
+<summary><strong>🟡 5 Warning Rules — Flagged in Tier 1/2. Blocking in Tier 0 (Production).</strong></summary>
 
 <br/>
 
 | Rule | Threshold |
 |:---|:---|
 | `max_complexity_delta` | Cyclomatic complexity delta ≤ +2 |
-| `test_coverage_maintained` | Coverage delta ≥ 0 — must not decrease |
+| `test_coverage_maintained` | Coverage delta ≥ 0 — must never decrease |
 | `max_mutation_rate` | Epoch mutation density within anti-flood rate |
 | `import_smoke_test` | All new imports resolve at import time |
 | `entropy_budget_limit` | Proposal entropy within deterministic bounds |
@@ -298,13 +289,13 @@ A single blocking violation discards the entire proposal and halts the epoch. No
 </details>
 
 <details>
-<summary><strong>🔵 9 Advisory Rules — Captured in every audit trail and evidence bundle.</strong></summary>
+<summary><strong>🔵 9 Advisory Rules — Recorded in every audit trail and evidence bundle.</strong></summary>
 
 <br/>
 
 | Rule | Tracks |
 |:---|:---|
-| `deployment_authority_tier` | Tier-based deployment authority verification |
+| `deployment_authority_tier` | Tier-based deployment authority for governance audit trails |
 | `revenue_credit_floor` | Credit floor for contributor attribution |
 | `reviewer_calibration` | Historical reviewer calibration score |
 | `bandit_arm_integrity_invariant` | UCB1 / Thompson Sampling state consistency |
@@ -322,7 +313,7 @@ A single blocking violation discards the entire proposal and halts the epoch. No
 
 ## 8 Permanent Architectural Invariants
 
-Enforced at the **code level**. No mutation, configuration, runtime flag, or environment variable can override these. Structural — not advisory.
+Enforced at the **code level**. No mutation, configuration, runtime flag, or environment variable can override these. They are structural — not configurable, not advisory.
 
 ```yaml
 # ─── ADAAD ARCHITECTURAL INVARIANTS  ·  v9.1.0  ────────────────────────────
@@ -340,18 +331,17 @@ DET-ALL-0:       All governance decisions are deterministic.
 SIM-BLOCK-0:     simulation=True blocks ALL live side-effects.
                  Zero bleed to production. Structural, not advisory.
 
-SANDBOX-DIV-0:   AST hash must match post-apply.
-                 Any divergence = auto-rollback + blocking ledger entry.
-                 Not a threshold. Zero. Always.
+SANDBOX-DIV-0:   AST hash must match post-apply. Any divergence = auto-rollback
+                 + blocking ledger entry. Not a threshold. Zero. Always.
 
-PATCH-SIZE-0:    Maximum 40 delta AST nodes.
-                 Maximum 2 files per patch. Hard ceiling.
+PATCH-SIZE-0:    Maximum 40 delta AST nodes. Maximum 2 files per patch.
+                 Hard ceiling — not a soft limit.
 
 TIER0-SELF-0:    Tier-0 modules cannot self-mutate.
                  Ever. Under any condition. Regardless of gate outcome.
 
 LINEAGE-STAB-0:  Lineage stable iff ≥ 2/5 last epochs passed.
-                 Unstable lineage = promotion blocked.
+                 Unstable lineage = promotion blocked unconditionally.
 
 CEL-ORDER-0:     All 14 CEL steps in strict declared sequence.
                  No skip. No reorder. Single failure = clean halt.
@@ -363,7 +353,7 @@ CEL-ORDER-0:     All 14 CEL steps in strict declared sequence.
 
 ## Fitness Engine — 7 Signals
 
-Every mutation is scored across 7 independent signals before the `GovernanceGate` sees it. **Determinism divergence (`FIT-DIV-0`) is an unconditional veto** — it cannot be overridden by any weight adjustment.
+Every mutation is scored across 7 independent signals before `GovernanceGate` sees it. **Determinism divergence (`FIT-DIV-0`) is an unconditional veto** — it cannot be overridden by any weight, configuration, or governance exception.
 
 <div align="center">
 
@@ -383,14 +373,14 @@ Every mutation is scored across 7 independent signals before the `GovernanceGate
 # Composite scoring logic (simplified)
 score = sum(signal_value[i] * adaptive_weight[i] for i in range(7))
 
-if determinism_divergence > 0:   raise VetoError("FIT-DIV-0")   # unconditional
+if determinism_divergence > 0:   raise VetoError("FIT-DIV-0")      # unconditional
 if score < baseline_composite:   raise RejectError("below baseline")
 if not gate_v2.approve(patch):   raise RejectError("GovernanceGateV2")
 if not gate.approve(patch):      raise RejectError("GovernanceGate")
 # → APPROVED — proceed to PROMOTION-DECISION
 ```
 
-**`AdaptiveWeights`:** EMA momentum descent (LR=0.05) adjusts weights from post-merge telemetry. Bounded `[0.05, 0.70]` — no signal dominates. `NonStationarityDetector` (Page-Hinkley) switches to Thompson Sampling after ≥30 non-stationary epochs.
+**`AdaptiveWeights`:** EMA momentum descent (LR=0.05) adjusts signal weights from post-merge telemetry. Bounded `[0.05, 0.70]` — no single signal dominates. `NonStationarityDetector` (Page-Hinkley) switches to Thompson Sampling after ≥30 non-stationary epochs. `prediction_accuracy` progression is published to epoch telemetry every cycle (v9.1.0).
 
 <br/>
 
@@ -398,16 +388,15 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 
 ## Mutation Tier System
 
-<img src="docs/assets/adaad-tier-system.svg" width="100%" alt="ADAAD Mutation Tier System"/>
+<img src="docs/assets/adaad-tier-system.svg" width="100%" alt="ADAAD Mutation Tier System — Tier 0 Production, Tier 1 Stable, Tier 2 Sandbox"/>
 
-Execution flow context: Tier constraints determine what the **Beast execution lane** may attempt, while final promotion still requires full gate passage and replay integrity.
-<div align="center">
-<img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/>
-</div>
+| Tier | Paths | Mutations | Review | Rationale |
+|:---:|:---|:---:|:---:|:---|
+| **0** | `runtime/`, `security/`, `app/main.py` | ❌ Never auto-applied | Human required | Core infrastructure — human verified |
+| **1** | `tests/`, `docs/`, most agents | ✅ Auto-execute | Human reviews within 24h | Low-risk with audit trail + auto-rollback |
+| **2** | `app/agents/test_subject/` | ✅ Fully autonomous | Logs monitored | Experimental — zero blast radius |
 
-<br/>
-
-`TIER0-SELF-0` is a permanent architectural invariant. Tier-0 modules cannot be mutation targets under any conditions — not via configuration, not via exception token, not via governance override. It is structural.
+`TIER0-SELF-0` is permanent and structural. Tier-0 modules cannot be mutation targets under any condition — not via configuration, not via exception token, not via governance override.
 
 <br/>
 
@@ -415,18 +404,13 @@ Execution flow context: Tier constraints determine what the **Beast execution la
 
 ## Federation — Cross-Repo Governed Evolution
 
-ADAAD mutations can propagate across repositories via the **FederationMutationBroker** (Phase 5). Every federated mutation requires:
-
-1. `GovernanceGate` approval in the **source** repository
-2. `GovernanceGate` approval in the **destination** repository
-3. HMAC key validation on the federation channel — `federation_hmac_required` (blocking rule)
-4. `FederatedEvidenceMatrix` — zero cross-repo divergence count before promotion
+ADAAD mutations can propagate across repositories via the **FederationMutationBroker** (Phase 5). Every federated mutation requires `GovernanceGate` approval in both source and destination repos, HMAC key validation, and zero cross-repo divergence in the `FederatedEvidenceMatrix`.
 
 ```
 Source Repo                 Federation Channel          Destination Repo
 ───────────                 ─────────────────           ────────────────
 ProposalEngine              HMAC-validated              ProposalTransport
-     ↓                      encrypted tunnel                   ↓
+     ↓                      encrypted envelope                 ↓
 GovernanceGate ─────────────────────────────────────► GovernanceGate
      ↓                                                         ↓
 EvidenceMatrix ◄──── cross-repo divergence check ────► EvidenceMatrix
@@ -434,7 +418,7 @@ EvidenceMatrix ◄──── cross-repo divergence check ────► Evide
 EvolutionLedger                                        EvolutionLedger
 ```
 
-`federation_dual_gate` is a **blocking** constitutional rule. Cross-repo mutations that bypass either gate are structurally impossible.
+`federation_dual_gate` is a **blocking** constitutional rule. A mutation that bypasses either gate is structurally impossible — not just policy-prohibited.
 
 <br/>
 
@@ -442,12 +426,7 @@ EvolutionLedger                                        EvolutionLedger
 
 ## The Aponi Dashboard
 
-**Aponi** is the ADAAD observability and governance console — the human oversight surface.
-
-Overview context: Aponi tracks the same three agents from the overview visual above; this section focuses on live telemetry and governance-state interpretation.
-<div align="center">
-<img src="docs/assets/readme/agent_trio.svg" width="60%" style="opacity:0.72; box-shadow:none;" alt="Aponi dashboard team overview showing Architect, Dream, and Beast together."/>
-</div>
+**Aponi** is the human oversight surface — the governance console where epoch evidence is reviewed, lineage health is monitored, and `HUMAN-0` gates are exercised.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -456,15 +435,14 @@ Overview context: Aponi tracks the same three agents from the overview visual ab
 │  Evolution Loop    ● ACTIVE     Epoch 847               │
 │  GovernanceGate    ● ENFORCING  23 rules / 0 bypasses   │
 │  Evidence Ledger   ● LIVE       12,441 entries          │
-│  Active Agents     ● 3/3        Architect Dream Beast   │
+│  Active Agents     ● 3/3        Architect  Dream  Beast  │
 │─────────────────────────────────────────────────────────│
 │  Last Epoch:   APPROVED  ·  Class A  ·  Δ+2 tests       │
 │  Fitness:      0.74  ·  above baseline ✓                │
 │  Replay Hash:  a3f8e9...  ·  divergences: 0             │
+│  WeightAdaptor: pred_accuracy 0.71  ·  EMA trending ↑  │
 └─────────────────────────────────────────────────────────┘
 ```
-
-Aponi is where `HUMAN-0` gates are exercised. For Phase 65, the full 12-step audit trail was reviewed here before the acknowledgement hash was committed.
 
 ```bash
 PYTHONPATH=. python -m ui.aponi --port 8080
@@ -477,11 +455,9 @@ PYTHONPATH=. python -m ui.aponi --port 8080
 
 ## ⛓ Phase 65 — First Autonomous Self-Evolution
 
-<img src="docs/assets/adaad-phase65-banner.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Phase 65 — First Autonomous Self-Evolution"/>
+<img src="docs/assets/adaad-phase65-banner.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Phase 65 — First Autonomous Self-Evolution — March 13, 2026"/>
 
-<br/>
-
-*March 13, 2026. Zero human intervention in the execution path. Full human oversight of the constitutional framework.*
+*March 13, 2026. Zero human intervention in the execution path. Full human oversight of the constitutional framework. The hash is in the ledger.*
 
 <details>
 <summary><strong>View full evidence ledger entry</strong></summary>
@@ -549,7 +525,7 @@ pip install -r requirements.server.txt
 PYTHONPATH=. python -m pytest \
   tests/test_boot_preflight.py -q
 
-# Full 4,441-test suite
+# Full 4,466-test suite
 PYTHONPATH=. python -m pytest tests/ -q
 
 # Safe dry-run — zero writes, full CEL
@@ -609,49 +585,31 @@ Use `ADAAD` or `DEVADAAD` as trigger tokens when working with Claude or any LLM 
 > [!CAUTION]
 > `DEVADAAD` grants merge authority. First word must be `DEVADAAD` exactly. All governance constraints apply identically — the only additional capability is merge execution.
 
-
-### CLI status aggregator (`--adaad-status`)
-
-Use the orchestrator status command when you need machine-readable + human-readable orientation without performing any mutation or merge action:
+### CLI Status Aggregator
 
 ```bash
 python -m app.main --adaad-status --trigger-mode ADAAD --status-format both
 ```
 
-Example table output:
-
-```text
+```
 ADAAD Status Summary
 ====================
 Trigger mode         : ADAAD
-Next PR              : PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)
+Next PR              : PR-67-PLAN
 Dependency readiness : READY
 
 Gate tiers
 ----------
-Tier 0: pass
-Tier 1: pass
-Tier 2: pass
-Tier 3: pass
-Tier M: unknown
+Tier 0: pass  |  Tier 1: pass  |  Tier 2: pass  |  Tier 3: pass
 
 Pending evidence rows: none
 ```
-
-Interpretation:
-- `Dependency readiness: BLOCKED` means next PR dependencies or `blocked_reason` state require remediation.
-- Any tier shown as `fail` indicates the latest recorded gate result is non-passing.
-- `Pending evidence rows` lists claims in `docs/comms/claims_evidence_matrix.md` that are not `Complete`.
 
 <br/>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Phase Timeline — 66 Phases Complete
-
-<div align="center">
-<img src="docs/assets/readme/agent_dream.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/>
-</div>
 
 <details>
 <summary><strong>View complete phase history (v1.0 → v9.1.0)</strong></summary>
@@ -678,7 +636,7 @@ Interpretation:
 | **63** | Judgment | GovernanceGate v2 + Exception Tokens | v8.6 |
 | **64** | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7 |
 | **65** | **Emergence** ⛓ | **First Autonomous Self-Evolution — March 13, 2026** | **v9.0** |
-| **66** | Foundation Hardening | Audit gap closure, boot validation, API hardening | **v9.1** |
+| **66** | **Hardening Tier Alpha** | Telemetry completeness, lineage invariants, governance contracts | **v9.1** |
 
 </details>
 
@@ -692,18 +650,18 @@ Interpretation:
 
 | Metric | Value |
 |:---|:---|
-| **Version** | `9.1.0` — Phase 66: Foundation Hardening |
+| **Version** | `9.1.0` — Phase 66: Hardening Tier Alpha |
 | **Runtime Python files** | 329 |
 | **Test files** | 267 |
 | **Total test lines** | ~37,000 |
-| **Passing tests** | **4,441** |
+| **Passing tests** | **4,466** |
 | **Constitutional rules** | **23** — Constitution v0.9.0 |
 | **Architectural invariants** | **8** — code-level, non-overridable |
 | **Development phases** | **66** complete |
 | **Android support** | Full — Termux + Pydroid3 |
 | **Federation** | Multi-repo HMAC-gated (Phase 5) |
 | **First self-evolution** | ✅ Phase 65 — March 13, 2026 |
-| **Self-evolution proof** | SHA-256 hash-chained, replay-verifiable |
+| **Self-evolution proof** | SHA-256 hash-chained, deterministically replayable |
 
 </div>
 
@@ -713,29 +671,24 @@ Interpretation:
 
 ## Governance Authority Chain
 
-<div align="center">
-<img src="docs/assets/readme/agent_architect.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/>
-</div>
-
 ```
 docs/CONSTITUTION.md                         ← 23 rules · v0.9.0
     └─► docs/ARCHITECTURE_CONTRACT.md        ← structural constraints
-            └─► ARCHITECT_SPEC_v9.x.md       ← implementation spec
-                    └─► ADAAD_PR_PROCESSION_2026-03-v2.md
-                                │
-                                ▼
-                    ╔═══════════════════════════╗
-                    ║     GovernanceGate         ║
-                    ║  23 rules · GOV-SOLE-0     ║
-                    ║  Non-bypassable            ║
-                    ║  Every mutation            ║
-                    ║  Every epoch               ║
-                    ╚═══════════════════════════╝
-                                │
-              ┌─────────────────┼─────────────────┐
-              ▼                 ▼                 ▼
-        Evidence Ledger   CapabilityGraph    LineageLedger
-        (SHA-256 chain)   (version graph)    (stability)
+            └─► docs/governance/ARCHITECT_SPEC_v*.md  ← implementation spec
+                        │
+                        ▼
+            ╔═══════════════════════════╗
+            ║     GovernanceGate         ║
+            ║  23 rules · GOV-SOLE-0     ║
+            ║  Non-bypassable            ║
+            ║  Every mutation            ║
+            ║  Every epoch               ║
+            ╚═══════════════════════════╝
+                        │
+      ┌─────────────────┼─────────────────┐
+      ▼                 ▼                 ▼
+Evidence Ledger   CapabilityGraph    LineageLedger
+(SHA-256 chain)   (version graph)    (stability DAG)
 ```
 
 <br/>
@@ -755,14 +708,14 @@ ADAAD/
 │   ├── mutation/          # AST substrate · SandboxTournament · CodeIntelModel
 │   └── sandbox/           # Ephemeral container execution · preflight checks
 ├── security/              # Cryovant — auth · key management · session governance
-├── tests/                 # 267 test files · 4,441 passing
-├── docs/assets/           # All SVG banners and diagrams
+├── tests/                 # 267 test files · 4,466 passing
+├── docs/assets/           # All SVG banners and architecture diagrams
 ├── governance/            # Constitutional rules · federation keys · attestations
 ├── artifacts/             # Per-phase evidence artifacts (immutable after close)
-├── ui/                    # Aponi dashboard — governance console
+├── ui/                    # Aponi governance console
 ├── android/               # Android build · F-Droid · Play Store
 ├── QUICKSTART.md          # 5-minute setup guide
-├── AGENTS.md              # Build agent protocol spec (ADAAD / DEVADAAD)
+├── AGENTS.md              # Build agent protocol (ADAAD / DEVADAAD)
 ├── ROADMAP.md             # Full phase roadmap through Q2 2027
 └── docs/CONSTITUTION.md   # The 23 rules — root of all authority
 ```
@@ -776,31 +729,37 @@ ADAAD/
 <details>
 <summary><strong>Is ADAAD safe to run on a production codebase?</strong></summary>
 <br/>
-Start with <code>ADAAD_SANDBOX_ONLY=true ADAAD_ENV=dev</code>. Full 14-step CEL executes with zero writes. When ready: use Tier 2 (sandbox paths) for first live runs. Tier 0 (production runtime) requires human sign-off. <code>TIER0-SELF-0</code> means core modules cannot be self-mutated under any conditions.
+Start with <code>ADAAD_SANDBOX_ONLY=true ADAAD_ENV=dev</code>. The full 14-step CEL executes with zero writes. When ready, use Tier 2 (sandbox paths) for first live runs. Tier 0 (production runtime) requires human sign-off. <code>TIER0-SELF-0</code> means core modules cannot be self-mutated under any condition.
 </details>
 
 <details>
 <summary><strong>What does "deterministically replayable" mean in practice?</strong></summary>
 <br/>
-Every governance decision is byte-identical given identical inputs. <code>replay_verifier.py</code> re-executes the full 14-step CEL with the original inputs and verifies the output hash. Zero divergence is the only acceptable result — <code>SANDBOX-DIV-0</code> mandates this. Any divergence = automatic rollback. The ledger is a replayable proof, not just a log.
+Every governance decision is byte-identical given identical inputs. <code>replay_verifier.py</code> re-executes the full 14-step CEL with the original inputs and verifies the output hash. Zero divergence is the only acceptable result — <code>SANDBOX-DIV-0</code> mandates this. Any divergence triggers automatic rollback. The ledger is a replayable proof, not just a log.
 </details>
 
 <details>
 <summary><strong>What is a "Class A" vs "Class B" mutation?</strong></summary>
 <br/>
-GovernanceGateV2 classifies by AST complexity delta. <strong>Class A</strong> (delta ≤ +2): approved automatically if all other rules pass. <strong>Class B</strong> (delta > +2): requires an exception token AND a <code>HUMAN-0</code> co-sign. Complex mutations escalate to human judgment — they don't get blocked, they get governed.
+GovernanceGateV2 classifies by AST complexity delta. <strong>Class A</strong> (delta ≤ +2): approved automatically if all other rules pass. <strong>Class B</strong> (delta > +2): requires an exception token AND a <code>HUMAN-0</code> co-sign. Complex mutations escalate to human judgment — they don't get blocked, they get governed with extra scrutiny.
 </details>
 
 <details>
 <summary><strong>Can ADAAD run without Android? Without a server?</strong></summary>
 <br/>
-Yes. Any Python 3.10+ environment works — Linux, macOS, Windows (WSL), Android (Termux / Pydroid3), CI/CD pipelines, bare metal. The Android path is first-class, not a demo — <code>requirements.phone.txt</code> keeps the dependency footprint phone-compatible.
+Yes. Any Python 3.10+ environment — Linux, macOS, Windows (WSL), Android (Termux / Pydroid3), CI/CD pipelines, bare metal. The Android path is first-class, not a demo — <code>requirements.phone.txt</code> keeps the dependency footprint phone-compatible.
 </details>
 
 <details>
 <summary><strong>What is the difference between ADAAD and DEVADAAD?</strong></summary>
 <br/>
-Both are trigger tokens for the governed build agent in <code>AGENTS.md</code>. <code>ADAAD</code> builds and stages for human review — no merge. <code>DEVADAAD</code> adds operator-authorized merge execution. All governance constraints apply identically. The first word of the prompt must be <code>DEVADAAD</code> exactly to unlock merge.
+Both are trigger tokens for the governed build agent in <code>AGENTS.md</code>. <code>ADAAD</code> builds and stages for human review — no merge. <code>DEVADAAD</code> adds operator-authorized merge execution. All governance constraints apply identically. The first word of the prompt must be <code>DEVADAAD</code> exactly.
+</details>
+
+<details>
+<summary><strong>What changed in v9.1.0?</strong></summary>
+<br/>
+Phase 66 (Hardening Tier Alpha) closed five governance audit gaps: (1) <code>WeightAdaptor.prediction_accuracy</code> is now published to epoch telemetry every cycle; (2) <code>LineageLedgerV2</code> streaming verification invariants are test-locked — partial scan cannot poison the integrity cache; (3) a formal LLM failover governance contract is published at <code>docs/governance/LLM_FAILOVER_CONTRACT.md</code>; (4) the 2-of-3 Ed25519 key ceremony runbook is published at <code>docs/governance/KEY_CEREMONY_RUNBOOK_v1.md</code>. 25 new gate tests. Zero regressions.
 </details>
 
 <br/>
@@ -840,14 +799,7 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 
 <br/>
 
-<table align="center">
-<tr>
-<td align="center"><img src="docs/assets/readme/agent_architect.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/><br/><sub>Governance</sub></td>
-<td align="center"><img src="docs/assets/readme/agent_dream.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/><br/><sub>Innovation</sub></td>
-<td align="center"><img src="docs/assets/readme/agent_beast.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/><br/><sub>Execution</sub></td>
-<td align="center"><img src="docs/assets/readme/agent_trio.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating."/><br/><sub>Aponi Team</sub></td>
-</tr>
-</table>
+<img src="docs/assets/readme/agent_trio.svg" width="55%" style="opacity:0.72; box-shadow:none;" alt="Architect, Dream, and Beast — ADAAD's three constitutional mutation agents."/>
 
 <br/>
 
