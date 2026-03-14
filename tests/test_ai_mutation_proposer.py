@@ -266,3 +266,132 @@ def test_propose_all_agents_applies_operator_registry_metadata() -> None:
         for candidate in proposals
     ]
     assert all(candidate.operator_key != "static" for candidate in all_candidates)
+
+
+# ---------------------------------------------------------------------------
+# WORK-66-C: LLM failover governance contract — FINDING-66-001
+# ---------------------------------------------------------------------------
+
+class TestLLMFailoverContract:
+    """Gate tests asserting the LLM failover governance contract is upheld.
+
+    Contract: docs/governance/LLM_FAILOVER_CONTRACT.md
+    """
+
+    def test_single_agent_failure_produces_structured_payload(self):
+        """A failed agent must produce a structured failure payload with required keys."""
+        ctx = _make_context()
+
+        def _raise_for_arch(agent, *args, **kwargs):
+            if agent == "architect":
+                raise TimeoutError("simulated timeout")
+            return []
+
+        with patch(
+            "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+            side_effect=_raise_for_arch,
+        ), patch(
+            "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+            return_value={},
+        ):
+            result = propose_from_all_agents(ctx, api_key="test-key", retries=0)
+
+        assert "architect" in result.failures_by_agent
+        payload = result.failures_by_agent["architect"]
+        # Required keys per contract §4.2 (failure_payload fields)
+        for key in ("agent", "code", "attempts", "timeout_seconds", "detail"):
+            assert key in payload, f"Failure payload missing required key: {key!r}"
+
+    def test_single_agent_failure_code_is_agent_timeout_for_timeout_error(self):
+        """TimeoutError must produce code='agent_timeout' per contract §3.1."""
+        ctx = _make_context()
+
+        def _raise(agent, *args, **kwargs):
+            raise TimeoutError("timeout")
+
+        with patch(
+            "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+            side_effect=_raise,
+        ), patch(
+            "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+            return_value={},
+        ):
+            result = propose_from_all_agents(ctx, api_key="test-key", retries=0)
+
+        for agent in ("architect", "dream", "beast"):
+            assert result.failures_by_agent[agent]["code"] == "agent_timeout", (
+                f"Expected code='agent_timeout' for {agent}, "
+                f"got {result.failures_by_agent[agent]['code']!r}"
+            )
+
+    def test_all_agents_failed_produces_zero_total_proposals(self):
+        """Zero-proposal epoch: all agents fail → total proposal count is 0."""
+        ctx = _make_context()
+
+        with patch(
+            "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+            side_effect=Exception("api_error"),
+        ), patch(
+            "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+            return_value={},
+        ):
+            result = propose_from_all_agents(ctx, api_key="test-key", retries=0)
+
+        total = sum(len(p) for p in result.proposals_by_agent.values())
+        assert total == 0, (
+            f"Zero-proposal epoch must have 0 total proposals, got {total}. "
+            "Contract §5: no mutation may proceed in a zero-proposal epoch."
+        )
+
+    def test_all_agents_failed_is_detectable_without_logs(self):
+        """Zero-proposal epoch must be detectable from AgentProposalBatch alone."""
+        ctx = _make_context()
+
+        with patch(
+            "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+            side_effect=Exception("api_error"),
+        ), patch(
+            "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+            return_value={},
+        ):
+            result = propose_from_all_agents(ctx, api_key="test-key", retries=0)
+
+        all_proposals_empty = all(
+            len(p) == 0 for p in result.proposals_by_agent.values()
+        )
+        all_agents_failed = len(result.failures_by_agent) == len(("architect", "dream", "beast"))
+        assert all_proposals_empty and all_agents_failed, (
+            "Zero-proposal epoch must be deterministically detectable from "
+            "AgentProposalBatch.proposals_by_agent and .failures_by_agent. "
+            "Contract §4.4: no log inspection required."
+        )
+
+    def test_successful_agent_is_absent_from_failures(self):
+        """Successful agents must not appear in failures_by_agent. Contract §3."""
+        ctx = _make_context()
+
+        def _succeed_arch_fail_others(agent, *args, **kwargs):
+            if agent == "architect":
+                return [
+                    MutationCandidate(
+                        mutation_id="arch-m-1",
+                        expected_gain=0.5, risk_score=0.2,
+                        complexity=0.2, coverage_delta=0.1,
+                        agent_origin="architect",
+                    )
+                ]
+            raise Exception("fail")
+
+        with patch(
+            "runtime.autonomy.ai_mutation_proposer.propose_mutations",
+            side_effect=_succeed_arch_fail_others,
+        ), patch(
+            "runtime.autonomy.ai_mutation_proposer._load_operator_outcome_history",
+            return_value={},
+        ):
+            result = propose_from_all_agents(ctx, api_key="test-key", retries=0)
+
+        assert "architect" not in result.failures_by_agent, (
+            "Successful agents must not appear in failures_by_agent."
+        )
+        assert len(result.proposals_by_agent["architect"]) >= 1

@@ -15,8 +15,17 @@ Design decisions:
 - Model: claude-sonnet-4-20250514  (best instruction-following + JSON fidelity)
 - max_tokens: 2048  (3-6 proposals × ~300 tokens + JSON overhead)
 - temperature: default (1.0) for proposal diversity
-- Error propagation: urllib.error.HTTPError and json.JSONDecodeError both
-  propagate to the caller (EvolutionLoop handles retry/logging).
+- Error propagation: failures are normalised into structured AgentProposalBatch
+  payloads; silent failure is forbidden (see failover contract below).
+
+Failover governance:
+- Policy contract: docs/governance/LLM_FAILOVER_CONTRACT.md
+- per_call_timeout_s: 30  (floor — never reduce without constitutional amendment)
+- max_retries_per_agent: 1  (total attempts = 2)
+- global_timeout_budget_s: 90  (wall-clock across all 3 concurrent agents)
+- Zero-proposal epoch: epoch SKIPPED, no mutation applied, evidence required.
+- All failure outcomes captured in AgentProposalBatch.failures as structured
+  payloads. Silent swallowing of LLM exceptions is a BLOCKING violation.
 """
 
 from __future__ import annotations
