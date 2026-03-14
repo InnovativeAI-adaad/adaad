@@ -76,3 +76,12 @@ app/agents/
 
 # Local replay signing keyring override (never commit)
 security/replay_proof_keyring.local.json
+
+# _inbox transient ingestion outputs
+/_inbox/proposals/captures/*
+/_inbox/proposals/exports/*
+/_inbox/proposals/*_capture.html
+/_inbox/proposals/*_snapshot.html
+/_inbox/proposals/*.tmp.html
+!/_inbox/proposals/captures/.gitkeep
+!/_inbox/proposals/exports/.gitkeep
