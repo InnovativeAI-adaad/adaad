@@ -22,6 +22,8 @@ from dataclasses import asdict, dataclass
 import hashlib
 from typing import Any, Iterable, Mapping, Sequence
 
+from runtime.governance.simulation.epoch_simulator import build_innovation_forecast
+
 
 @dataclass(frozen=True)
 class CapabilitySeed:
@@ -53,6 +55,10 @@ class VisionProjection:
     projected_capabilities: tuple[str, ...]
     trajectory_score: float
     dead_end_paths: tuple[str, ...]
+    capability_graph_deltas: tuple[dict[str, Any], ...] = ()
+    trajectory_bands: dict[str, float] | None = None
+    dead_end_diagnostics: tuple[dict[str, str], ...] = ()
+    confidence_metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -142,18 +148,25 @@ class ADAADInnovationEngine:
             "status": "ready_for_governance_gate",
         }
 
-    def run_vision_mode(self, events: Sequence[Mapping[str, Any]], horizon_epochs: int) -> VisionProjection:
-        horizon = max(50, min(int(horizon_epochs), 200))
-        capabilities = sorted({str(e.get("capability", "")).strip() for e in events if e.get("capability")})
-        rejected_paths = sorted({str(e.get("path", "")) for e in events if e.get("dead_end", False)})
-        momentum = sum(float(e.get("fitness_delta", 0.0)) for e in events)
-        denominator = max(1, len(events))
-        score = round((momentum / denominator), 6)
+    def run_vision_mode(
+        self,
+        events: Sequence[Mapping[str, Any]],
+        horizon_epochs: int,
+        seed_input: str = "vision-default",
+    ) -> VisionProjection:
+        forecast = build_innovation_forecast(events, horizon_epochs=horizon_epochs, seed_input=seed_input)
+        capabilities = [row["capability"] for row in forecast["capability_graph_deltas"] if row.get("capability")]
+        dead_end_paths = [row["path_id"] for row in forecast["dead_end_paths"] if row.get("path_id")]
+        bands = forecast["trajectory_bands"]
         return VisionProjection(
-            horizon_epochs=horizon,
+            horizon_epochs=forecast["horizon_epochs"],
             projected_capabilities=tuple(capabilities[:64]),
-            trajectory_score=score,
-            dead_end_paths=tuple(rejected_paths[:32]),
+            trajectory_score=float(bands.get("base", 0.0)),
+            dead_end_paths=tuple(dead_end_paths[:32]),
+            capability_graph_deltas=tuple(forecast["capability_graph_deltas"]),
+            trajectory_bands=dict(bands),
+            dead_end_diagnostics=tuple(forecast["dead_end_paths"]),
+            confidence_metadata=dict(forecast["confidence_metadata"]),
         )
 
     def select_personality(self, profiles: Sequence[MutationPersonality], epoch_id: str) -> MutationPersonality:

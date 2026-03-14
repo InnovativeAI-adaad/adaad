@@ -266,6 +266,43 @@ class TestFederationMap:
         assert all(evts[i]["epoch_id"] == original[i]["epoch_id"] for i in range(3))
 
 
+class TestOracleAndStoryVisionForecast:
+    """Vision forecast wiring through router responses."""
+
+    @staticmethod
+    def _client(monkeypatch: pytest.MonkeyPatch) -> TestClient:
+        token = "innovations-oracle-token"
+        monkeypatch.setenv("ADAAD_AUDIT_TOKENS", "{\"innovations-oracle-token\": [\"audit:read\"]}")
+        app = FastAPI()
+        app.include_router(router)
+        return TestClient(app, raise_server_exceptions=True)
+
+    def test_oracle_includes_deterministic_vision_projection(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = self._client(monkeypatch)
+        events = _events(8)
+        with patch("runtime.innovations_router._load_oracle_events", return_value=events):
+            r1 = client.get("/innovations/oracle?q=divergence&limit=8&horizon=120&seed_input=fixed-window", headers={"Authorization": "Bearer innovations-oracle-token"})
+            r2 = client.get("/innovations/oracle?q=divergence&limit=8&horizon=120&seed_input=fixed-window", headers={"Authorization": "Bearer innovations-oracle-token"})
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        p1 = r1.json()["vision_projection"]
+        p2 = r2.json()["vision_projection"]
+        assert p1 == p2
+        assert "trajectory_bands" in p1
+        assert "capability_graph_deltas" in p1
+
+    def test_story_mode_includes_dead_end_diagnostics(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = self._client(monkeypatch)
+        events = _events(6) + [{"epoch_id": "epoch-z", "path": "p-z", "dead_end": True, "blocking_cause": "lineage_depth", "fitness_delta": -0.1, "capability": "oracle"}]
+        with patch("runtime.innovations_router._load_oracle_events", return_value=events):
+            response = client.get("/innovations/story-mode?limit=7&horizon=140&seed_input=fixed-window", headers={"Authorization": "Bearer innovations-oracle-token"})
+        assert response.status_code == 200
+        payload = response.json()
+        assert "vision_projection" in payload
+        vision = payload["vision_projection"]
+        assert any(row["path_id"] == "p-z" for row in vision["dead_end_diagnostics"])
+
+
 # ---------------------------------------------------------------------------
 # T68-SRV: Server router integration
 # ---------------------------------------------------------------------------

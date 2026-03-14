@@ -96,6 +96,8 @@ def _load_oracle_events(limit: int = 500) -> List[Dict[str, Any]]:
 def oracle_query(
     q: str = "divergence",
     limit: int = 100,
+    horizon: int = 120,
+    seed_input: str = "oracle-vision",
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
     """ADAAD Oracle: deterministic Q&A over evolutionary history.
@@ -111,16 +113,20 @@ def oracle_query(
     _require_audit_read(authorization)
     events = _load_oracle_events(limit=limit)
     answer = _engine.answer_oracle(q, events)
+    projection = _engine.run_vision_mode(events, horizon_epochs=horizon, seed_input=seed_input)
     return {
         "query": q,
         "event_window": len(events),
         "answer": answer,
+        "vision_projection": _engine.as_serializable(projection),
     }
 
 
 @router.get("/story-mode")
 def story_mode(
     limit: int = 200,
+    horizon: int = 120,
+    seed_input: str = "story-vision",
     authorization: Optional[str] = Header(default=None),
 ) -> Dict[str, Any]:
     """Aponi Story Mode: CEL evidence ledger as narrative arc timeline.
@@ -132,11 +138,13 @@ def story_mode(
     events = _load_oracle_events(limit=limit)
     arcs = build_story_arcs(events)
     engine_arcs = _engine.story_mode(events)
+    projection = _engine.run_vision_mode(events, horizon_epochs=horizon, seed_input=seed_input)
     return {
         "arc_count": len(arcs),
         "arcs": arcs,
         "engine_timeline": engine_arcs,
         "event_window": len(events),
+        "vision_projection": _engine.as_serializable(projection),
     }
 
 

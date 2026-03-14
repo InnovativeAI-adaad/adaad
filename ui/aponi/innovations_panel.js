@@ -565,8 +565,10 @@
     oracleQuery: "",
     oracleResult: null,
     oracleLoading: false,
+    oracleVision: null,
     storyArcs: [],
     storyLoaded: false,
+    storyVision: null,
     galaxy: null,
     galaxyLoaded: false,
     seeds: [],
@@ -759,6 +761,31 @@
      PANEL RENDERERS
   ══════════════════════════════════════════════════════════════════════ */
 
+  function renderVisionSummary(vision) {
+    const box = h("div", {class: "reflect-banner", style:"margin-top:14px;"});
+    const body = h("div", {class: "reflect-body"});
+    const bands = vision?.trajectory_bands || {};
+    const deadEnds = vision?.dead_end_diagnostics || [];
+    const deltas = vision?.capability_graph_deltas || [];
+    const meta = vision?.confidence_metadata || {};
+    body.appendChild(h("div", {class: "reflect-title"}, `Vision Forecast · ${vision?.horizon_epochs || 0} epochs`));
+    body.appendChild(h("div", {class: "reflect-text"},
+      `Trajectory cues  best:${(bands.best ?? 0).toFixed ? bands.best.toFixed(4) : bands.best}  base:${(bands.base ?? 0).toFixed ? bands.base.toFixed(4) : bands.base}  worst:${(bands.worst ?? 0).toFixed ? bands.worst.toFixed(4) : bands.worst}`
+    ));
+    body.appendChild(h("div", {class: "reflect-text"},
+      `Coverage ${(meta.coverage_ratio ?? 0)} · Confidence ${(meta.confidence_score ?? 0)} · Replayable ${meta.replayable ? "yes" : "no"}`
+    ));
+    if (deltas.length) {
+      body.appendChild(h("div", {class: "reflect-text"}, `Path cards: ${deltas.map(d => `${d.capability} (${d.fitness_delta_sum})`).join(" · ")}`));
+    }
+    if (deadEnds.length) {
+      body.appendChild(h("div", {class: "reflect-text"}, `Dead-ends: ${deadEnds.map(d => `${d.path_id}:${d.blocking_cause}`).join(" · ")}`));
+    }
+    box.appendChild(h("div", {class: "reflect-icon"}, "📈"));
+    box.appendChild(body);
+    return box;
+  }
+
   // ── Oracle ──────────────────────────────────────────────────────────
   function renderOracle() {
     const wrap = h("div", {class: "inno-wrap"});
@@ -812,6 +839,7 @@
       resultEl.textContent = JSON.stringify(innState.oracleResult, null, 2);
     }
     body.appendChild(resultEl);
+    if (innState.oracleVision) body.appendChild(renderVisionSummary(innState.oracleVision));
     card.appendChild(body);
     wrap.appendChild(card);
 
@@ -821,12 +849,14 @@
       innState.oracleLoading = true;
       resultEl.innerHTML = `<div class="oracle-loading"><div class="oracle-spinner"></div>Consulting the oracle…</div>`;
       try {
-        const data = await apiFetch(`/innovations/oracle?q=${encodeURIComponent(q)}&limit=100`);
+        const data = await apiFetch(`/innovations/oracle?q=${encodeURIComponent(q)}&limit=100&horizon=120&seed_input=aponi-oracle`);
         innState.oracleResult = data.answer;
+        innState.oracleVision = data.vision_projection || null;
         resultEl.textContent = JSON.stringify(data.answer, null, 2);
       } catch(e) {
         // Fallback demo data
         innState.oracleResult = { query_type: "demo", message: "Oracle endpoint not reachable. Start the ADAAD server to connect.", query: q };
+        innState.oracleVision = null;
         resultEl.textContent = JSON.stringify(innState.oracleResult, null, 2);
       }
       innState.oracleLoading = false;
@@ -900,6 +930,7 @@
     });
 
     body.appendChild(timeline);
+    if (innState.storyVision) body.appendChild(renderVisionSummary(innState.storyVision));
     card.appendChild(body);
     wrap.appendChild(card);
 
@@ -907,8 +938,9 @@
 
     async function loadStory() {
       try {
-        const data = await apiFetch("/innovations/story-mode?limit=80");
+        const data = await apiFetch("/innovations/story-mode?limit=80&horizon=120&seed_input=aponi-story");
         innState.storyArcs = data.arcs || [];
+        innState.storyVision = data.vision_projection || null;
         innState.storyLoaded = true;
         // Re-render
         timeline.innerHTML = "";

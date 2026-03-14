@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Any, Mapping
+
+from security.ring_claims import canonicalize_ring_claims
 
 
 @dataclass(frozen=True)
@@ -22,14 +24,10 @@ class IdentityRingToken:
     digest: str
 
 
-def build_ring_token(ring: str, subject_id: str, claims: Mapping[str, str]) -> IdentityRingToken:
-    payload = {
-        "claims": sorted((str(k), str(v)) for k, v in claims.items()),
-        "ring": str(ring),
-        "subject_id": str(subject_id),
-    }
-    digest = hashlib.sha256(str(payload).encode("utf-8")).hexdigest()
-    return IdentityRingToken(ring=str(ring), subject_id=str(subject_id), digest=digest)
+def build_ring_token(ring: str, subject_id: str, claims: Mapping[str, Any]) -> IdentityRingToken:
+    canonical_claims = canonicalize_ring_claims(ring=ring, subject_id=subject_id, claims=claims)
+    digest = hashlib.sha256(canonical_claims.encode("utf-8")).hexdigest()
+    return IdentityRingToken(ring=str(ring).strip().lower(), subject_id=str(subject_id).strip(), digest=digest)
 
 
 __all__ = ["IdentityRingToken", "build_ring_token"]
