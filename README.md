@@ -13,6 +13,7 @@
 <br/>
 
 <img src="docs/assets/readme/agents-overview.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="ADAAD agent overview panel showing Architect, Dream, and Beast as coordinated mutation agents."/>
+<img src="docs/assets/readme/agent_trio.svg" width="70%" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating in the ADAAD hero banner."/>
 
 <br/>
 
@@ -35,6 +36,22 @@
 > **ADAAD is a governed code evolution engine that improves your codebase epoch by epoch — every mutation cryptographically signed, hash-chained into a tamper-evident ledger, deterministically replayable, and subject to 23 constitutional rules before a single byte changes.**
 
 *It has already evolved itself. The hash is in the ledger.*
+
+## Why ADAAD Feels Different
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="docs/assets/readme/story-01.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel one shows three disconnected AI suggestions converging on a single overloaded human reviewer, emphasizing that traditional coding assistants leave governance and safety burden on the user."/>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/story-02.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel two shows a proposed patch moving through GovernanceGate and deterministic replay checks, illustrating fail-closed constitutional enforcement before any mutation can land."/>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/story-03.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt="Panel three shows a successful epoch chained into the lineage ledger and verified by replay, conveying proven autonomous evolution backed by cryptographic evidence."/>
+</td>
+</tr>
+</table>
 
 <br/>
 
@@ -227,9 +244,9 @@ The visual above maps role boundaries: **Architect** owns governance-safe design
 <div align="center">
 <table>
 <tr>
-<td align="center"><img src="ui/aponi/agent_architect.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/></td>
-<td align="center"><img src="ui/aponi/agent_dream.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/></td>
-<td align="center"><img src="ui/aponi/agent_beast.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/></td>
+<td align="center"><img src="docs/assets/readme/agent_architect.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/></td>
+<td align="center"><img src="docs/assets/readme/agent_dream.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/></td>
+<td align="center"><img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/></td>
 </tr>
 </table>
 </div>
@@ -384,6 +401,9 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 <img src="docs/assets/adaad-tier-system.svg" width="100%" alt="ADAAD Mutation Tier System"/>
 
 Execution flow context: Tier constraints determine what the **Beast execution lane** may attempt, while final promotion still requires full gate passage and replay integrity.
+<div align="center">
+<img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/>
+</div>
 
 <br/>
 
@@ -425,6 +445,9 @@ EvolutionLedger                                        EvolutionLedger
 **Aponi** is the ADAAD observability and governance console — the human oversight surface.
 
 Overview context: Aponi tracks the same three agents from the overview visual above; this section focuses on live telemetry and governance-state interpretation.
+<div align="center">
+<img src="docs/assets/readme/agent_trio.svg" width="60%" style="opacity:0.72; box-shadow:none;" alt="Aponi dashboard team overview showing Architect, Dream, and Beast together."/>
+</div>
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -626,6 +649,10 @@ Interpretation:
 
 ## Phase Timeline — 66 Phases Complete
 
+<div align="center">
+<img src="docs/assets/readme/agent_dream.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/>
+</div>
+
 <details>
 <summary><strong>View complete phase history (v1.0 → v9.1.0)</strong></summary>
 
@@ -685,6 +712,10 @@ Interpretation:
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
 
 ## Governance Authority Chain
+
+<div align="center">
+<img src="docs/assets/readme/agent_architect.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/>
+</div>
 
 ```
 docs/CONSTITUTION.md                         ← 23 rules · v0.9.0
@@ -806,6 +837,17 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 <div align="center">
 
 **[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agent Spec](AGENTS.md)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/InnovativeAI-adaad/ADAAD/issues)** &nbsp;·&nbsp; **[🤝 Contributing](CONTRIBUTING.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📊 Aponi](ui/)**
+
+<br/>
+
+<table align="center">
+<tr>
+<td align="center"><img src="docs/assets/readme/agent_architect.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/><br/><sub>Governance</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_dream.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/><br/><sub>Innovation</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_beast.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/><br/><sub>Execution</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_trio.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating."/><br/><sub>Aponi Team</sub></td>
+</tr>
+</table>
 
 <br/>
 
