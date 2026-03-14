@@ -190,6 +190,15 @@ The terminal `release-gate` job is fail-closed and requires each upstream job re
 
 - The strict release rule-activation assertion uses the runtime constitution policy loader (`runtime.constitution.load_constitution_policy`) to avoid parser drift between CI checks and runtime governance evaluation.
 
+
+## Maintainer note: import-boundary fixer command
+
+Use a single canonical entrypoint for import-boundary autofixes:
+
+- `python fix_import_boundaries.py ...`
+
+`tools/fix_import_boundaries.py` remains a deprecated compatibility wrapper and should not be used in new CI or documentation references.
+
 ## Generated artifact validation workflow
 
 A dedicated workflow, `.github/workflows/ci-generated.yml`, validates deterministic outputs from `examples/single-agent-loop/run.py`.

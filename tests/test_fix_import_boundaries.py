@@ -10,11 +10,14 @@ import sys
 from pathlib import Path
 
 
+CANONICAL_FIX_IMPORT_BOUNDARIES_CLI = "fix_import_boundaries.py"
+
+
 def _run_tool(tmp_path: Path, source: str, *, mode: str = "auto") -> tuple[dict, str]:
     target = tmp_path / "sample.py"
     target.write_text(source, encoding="utf-8")
     proc = subprocess.run(
-        [sys.executable, "fix_import_boundaries.py", str(target), "--mode", mode, "--format", "json"],
+        [sys.executable, CANONICAL_FIX_IMPORT_BOUNDARIES_CLI, str(target), "--mode", mode, "--format", "json"],
         check=True,
         capture_output=True,
         text=True,
