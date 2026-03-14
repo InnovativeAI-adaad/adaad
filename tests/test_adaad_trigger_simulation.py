@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: MIT
+
+from __future__ import annotations
+
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from app.orchestration.adaad_trigger import AdaadTriggerOrchestrator, LedgerSchemaError, VirtualLedgerWriter, parse_trigger
+
+pytestmark = pytest.mark.regression_standard
+
+
+def test_parse_trigger_supports_simulation_action() -> None:
+    request = parse_trigger("ADAAD simulate")
+
+    assert request.principal == "ADAAD"
+    assert request.action == "simulate"
+    assert request.simulation is True
+    assert request.merge_authority is False
+
+
+def test_virtual_ledger_writer_validates_required_schema_keys() -> None:
+    ledger = VirtualLedgerWriter()
+
+    with pytest.raises(LedgerSchemaError, match="ledger_schema_missing"):
+        ledger.write_event({"event_type": "x"})
+
+
+def test_simulation_mode_preserves_formatting_and_disables_mutations(tmp_path: Path) -> None:
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path)
+
+    envelope = orchestrator.run("ADAAD simulate", scenario="dependency_blocked")
+
+    assert envelope["simulation"] is True
+    assert envelope["stage_result"]["status"] == "skipped"
+    assert envelope["merge_result"]["status"] == "skipped"
+    assert "simulation=true" in envelope["output"]
+    assert "tier_0:" in envelope["output"]
+
+
+def test_non_simulation_mode_can_execute_stage_operation(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True, text=True)
+    (tmp_path / "demo.txt").write_text("data\n", encoding="utf-8")
+
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path)
+    envelope = orchestrator.run("ADAAD", scenario="merge_ready")
+
+    assert envelope["simulation"] is False
+    assert envelope["stage_result"]["status"] == "executed"
+
+
+def test_end_to_end_simulation_never_mutates_git_state(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "tests@example.com"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "config", "user.name", "Tests"], cwd=tmp_path, check=True)
+    (tmp_path / "seed.txt").write_text("seed\n", encoding="utf-8")
+    subprocess.run(["git", "add", "seed.txt"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "commit", "-m", "seed"], cwd=tmp_path, check=True, capture_output=True, text=True)
+
+    pre_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()
+    pre_status = subprocess.run(["git", "status", "--porcelain"], cwd=tmp_path, check=True, capture_output=True, text=True).stdout
+
+    script = Path(__file__).resolve().parents[1] / "scripts" / "run_adaad_trigger.py"
+    subprocess.run(
+        ["python", str(script), "ADAAD simulate", "--scenario", "tier1_failure"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    post_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=tmp_path, check=True, capture_output=True, text=True).stdout.strip()
+    post_status = subprocess.run(["git", "status", "--porcelain"], cwd=tmp_path, check=True, capture_output=True, text=True).stdout
+
+    assert pre_head == post_head
+    assert pre_status == post_status == ""
