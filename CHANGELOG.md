@@ -1,3 +1,41 @@
+## [9.1.0] — 2026-03-14 — Phase 66: Hardening Tier Alpha
+
+### Summary
+Closes all P1/P2 open findings from Phase 65 deep dive. No new architecture.
+All changes reduce risk or close governance audit gaps.
+
+### fix(telemetry): WeightAdaptor prediction_accuracy in EpochRecord (FINDING-66-002)
+- `EpochRecord` gains `prediction_accuracy: Optional[float]` field
+- `EpochTelemetry.append_from_result()` captures adaptor EMA value post-adapt
+- `EpochRecord.to_dict()` emits `"prediction_accuracy"` key; None for legacy records
+- 6 gate tests in `TestPredictionAccuracyTelemetry`; 38/38 pass
+
+### test(lineage): LineageLedgerV2 streaming verification invariants (FINDING-66-005)
+- 14 gate tests locking in INV-LINEAGE-STREAM-1/2/3
+- INV-1: `_verified_tail_hash` is None on fresh instantiation (reload-safe)
+- INV-2: `verify_integrity(max_lines=k < total)` does NOT set cache (no poison)
+- INV-3: warm-cache `append_event()` never re-scans ledger (O(n) preserved)
+
+### docs(governance): LLM failover governance contract (FINDING-66-001)
+- New: `docs/governance/LLM_FAILOVER_CONTRACT.md`
+- Formalises provider sequence, timeout policy (30s/2 retries/90s budget),
+  failure classification, evidence obligation, zero-proposal epoch rule
+- `ai_mutation_proposer.py` docstring updated to reference contract
+- 5 gate tests in `TestLLMFailoverContract`; 17/17 pass
+
+### docs(governance): Key ceremony runbook v1 (FINDING-66-004)
+- New: `docs/governance/KEY_CEREMONY_RUNBOOK_v1.md`
+- Specifies Ed25519 2-of-3 threshold key generation, registry commit,
+  genesis ledger event, threshold signing procedure, revocation/rotation
+- Runbook published; ceremony execution deferred to Innovadaad
+
+### Human-gate items
+- FINDING-66-003 (patent filing): `docs/IP_PATENT_FILING_ARTIFACT.md` ready;
+  awaiting Innovadaad transmission to IP counsel and provisional number
+- FINDING-66-004 ceremony execution: runbook delivered; scheduling to Innovadaad
+
+---
+
 ## [9.6.0] — 2026-03-13 — Phase 71: Agent Character Art
 
 ### feat(phase-71): Cinematic character art roster replaces abstract personality cards
