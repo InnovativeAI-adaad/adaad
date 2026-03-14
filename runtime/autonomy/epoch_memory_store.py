@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import tempfile
 from dataclasses import dataclass, field, asdict
@@ -72,6 +73,11 @@ MEMORY_WINDOW_SIZE: int = 100
 GENESIS_DIGEST: str = "0" * 64
 STORE_DEFAULT_PATH: Path = Path("runtime/state/epoch_memory.jsonl")
 _ENTRY_VERSION: str = "52.0"
+_INTEGRITY_REASON_CODE: str = "epoch_memory_integrity_broken"
+_LOAD_PARSE_REASON_CODE: str = "epoch_memory_load_parse_error"
+_LOAD_IO_REASON_CODE: str = "epoch_memory_load_io_error"
+
+_LOG = logging.getLogger(__name__)
 
 _CANON_ENTRY_FIELDS: tuple[str, ...] = (
     "seq",
@@ -420,23 +426,52 @@ class EpochMemoryStore:
             lines = self._path.read_text(encoding="utf-8").splitlines()
             entries: List[EpochMemoryEntry] = []
             anchor = GENESIS_DIGEST
+            previous_digest = anchor
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
                 if line.startswith("#anchor:"):
                     anchor = line[len("#anchor:"):]
+                    previous_digest = anchor
                     continue
                 raw = json.loads(line)
                 entry = EpochMemoryEntry.from_dict(raw)
+                if not entry.verify_integrity():
+                    raise EpochMemoryIntegrityError(
+                        f"{_INTEGRITY_REASON_CODE}:entry_digest_mismatch"
+                    )
+                if entry.prev_digest != previous_digest:
+                    raise EpochMemoryIntegrityError(
+                        f"{_INTEGRITY_REASON_CODE}:prev_digest_mismatch"
+                    )
                 entries.append(entry)
+                previous_digest = entry.entry_digest
             self._anchor_digest = anchor
             self._entries = entries[-self._window_size:]
             self._next_seq = (self._entries[-1].seq + 1) if self._entries else 0
-        except Exception:  # noqa: BLE001 — degrade gracefully
-            self._entries = []
-            self._anchor_digest = GENESIS_DIGEST
-            self._next_seq = 0
+        except EpochMemoryIntegrityError as exc:
+            self._degrade_to_empty(reason_code=_INTEGRITY_REASON_CODE, detail=str(exc))
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+            self._degrade_to_empty(reason_code=_LOAD_PARSE_REASON_CODE, detail=str(exc))
+        except (OSError, UnicodeDecodeError) as exc:
+            self._degrade_to_empty(reason_code=_LOAD_IO_REASON_CODE, detail=str(exc))
+
+    def _degrade_to_empty(self, *, reason_code: str, detail: str) -> None:
+        """Reset to empty state and emit a structured warning event."""
+        self._entries = []
+        self._anchor_digest = GENESIS_DIGEST
+        self._next_seq = 0
+        payload = {
+            "event_type": "epoch_memory_store_load_degraded.v1",
+            "reason_code": reason_code,
+            "path": str(self._path),
+            "detail": detail,
+        }
+        _LOG.warning(
+            "EpochMemoryStore load degraded: %s",
+            json.dumps(payload, sort_keys=True, separators=(",", ":")),
+        )
 
     def _persist(self) -> None:
         """Atomically write all current window entries to disk."""

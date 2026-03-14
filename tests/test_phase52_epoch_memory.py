@@ -8,6 +8,7 @@ Test IDs: T52-M01..M15 (memory store), T52-L01..L10 (learning signal)
 from __future__ import annotations
 
 import hashlib
+import logging
 import json
 import tempfile
 import os
@@ -246,6 +247,76 @@ class TestEpochMemoryStoreT52M:
         d1 = EpochMemoryEntry.compute_digest(**kwargs)
         d2 = EpochMemoryEntry.compute_digest(**kwargs)
         assert d1 == d2
+
+
+    def test_T52_M16_reload_tampered_entry_digest_degrades_with_signal(self, caplog):
+        """T52-M16: tampered entry_digest triggers deterministic reset + warning event."""
+        fd, path = tempfile.mkstemp(suffix=".jsonl")
+        os.close(fd)
+        os.unlink(path)
+        path = Path(path)
+
+        store1 = EpochMemoryStore(path=path, window_size=10)
+        _emit_n(store1, 2)
+
+        lines = path.read_text(encoding="utf-8").splitlines()
+        entry = json.loads(lines[2])
+        entry["entry_digest"] = "f" * 64
+        lines[2] = json.dumps(entry, separators=(",", ":"))
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+        with caplog.at_level(logging.WARNING):
+            store2 = EpochMemoryStore(path=path, window_size=10)
+
+        assert store2.window() == []
+        assert store2.head() is None
+        assert any("epoch_memory_store_load_degraded.v1" in r.message for r in caplog.records)
+        assert any("epoch_memory_integrity_broken" in r.message for r in caplog.records)
+
+    def test_T52_M17_reload_broken_prev_digest_degrades_with_signal(self, caplog):
+        """T52-M17: broken prev_digest linkage triggers deterministic reset + warning event."""
+        fd, path = tempfile.mkstemp(suffix=".jsonl")
+        os.close(fd)
+        os.unlink(path)
+        path = Path(path)
+
+        store1 = EpochMemoryStore(path=path, window_size=10)
+        _emit_n(store1, 2)
+
+        lines = path.read_text(encoding="utf-8").splitlines()
+        entry = json.loads(lines[2])
+        entry["prev_digest"] = "1" * 64
+        lines[2] = json.dumps(entry, separators=(",", ":"))
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+        with caplog.at_level(logging.WARNING):
+            store2 = EpochMemoryStore(path=path, window_size=10)
+
+        assert store2.window() == []
+        assert store2.head() is None
+        assert any("epoch_memory_store_load_degraded.v1" in r.message for r in caplog.records)
+        assert any("epoch_memory_integrity_broken" in r.message for r in caplog.records)
+
+    def test_T52_M18_reload_malformed_json_degrades_with_parse_signal(self, caplog):
+        """T52-M18: malformed JSON line triggers deterministic reset + parse warning event."""
+        fd, path = tempfile.mkstemp(suffix=".jsonl")
+        os.close(fd)
+        os.unlink(path)
+        path = Path(path)
+
+        store1 = EpochMemoryStore(path=path, window_size=10)
+        _emit_n(store1, 1)
+
+        content = path.read_text(encoding="utf-8") + "{not-json}\n"
+        path.write_text(content, encoding="utf-8")
+
+        with caplog.at_level(logging.WARNING):
+            store2 = EpochMemoryStore(path=path, window_size=10)
+
+        assert store2.window() == []
+        assert store2.head() is None
+        assert any("epoch_memory_store_load_degraded.v1" in r.message for r in caplog.records)
+        assert any("epoch_memory_load_parse_error" in r.message for r in caplog.records)
 
 
 # ===========================================================================
