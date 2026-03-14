@@ -285,7 +285,7 @@ Required deliverables:
 | Release notes | `docs/releases/4.6.0.md` | Validated guarantees vs. roadmap rule |
 | CHANGELOG entry | `CHANGELOG.md` | Phase 21 section |
 | Evidence rows | `docs/comms/claims_evidence_matrix.md` | `file-telemetry-sink`, `telemetry-ledger-reader`, `aponi-telemetry-endpoint` |
-| Agent state | `.adaad_agent_state.json` | `schema_version: 1.2.0`, `last_completed_pr: PR-21-REL`, `next_pr: PR-22-PLAN (Phase 22 — TBD)`, `active_phase: Phase 21 COMPLETE · v4.6.0` |
+| Agent state | `.adaad_agent_state.json` | `schema_version: 1.2.0`, `last_completed_pr: PR-21-REL`, `next_pr: PR-22-PLAN (Phase 22 — Strategy Analytics & Routing Health)`, `active_phase: Phase 21 COMPLETE · v4.6.0` |
 
 Evidence validator must pass: `python scripts/validate_release_evidence.py --require-complete`
 
