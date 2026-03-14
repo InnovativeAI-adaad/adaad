@@ -12,7 +12,7 @@
 
 <br/>
 
-<img src="ui/aponi/agent_trio.png" width="70%" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating in the ADAAD hero banner."/>
+<img src="docs/assets/readme/agent_trio.svg" width="70%" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating in the ADAAD hero banner."/>
 
 <br/>
 
@@ -223,9 +223,9 @@ SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · fitnes
 <div align="center">
 <table>
 <tr>
-<td align="center"><img src="ui/aponi/agent_architect.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/></td>
-<td align="center"><img src="ui/aponi/agent_dream.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/></td>
-<td align="center"><img src="ui/aponi/agent_beast.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/></td>
+<td align="center"><img src="docs/assets/readme/agent_architect.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/></td>
+<td align="center"><img src="docs/assets/readme/agent_dream.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/></td>
+<td align="center"><img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/></td>
 </tr>
 </table>
 </div>
@@ -380,7 +380,7 @@ if not gate.approve(patch):      raise RejectError("GovernanceGate")
 <img src="docs/assets/adaad-tier-system.svg" width="100%" alt="ADAAD Mutation Tier System"/>
 
 <div align="center">
-<img src="ui/aponi/agent_beast.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/>
+<img src="docs/assets/readme/agent_beast.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/>
 </div>
 
 <br/>
@@ -423,7 +423,7 @@ EvolutionLedger                                        EvolutionLedger
 **Aponi** is the ADAAD observability and governance console — the human oversight surface.
 
 <div align="center">
-<img src="ui/aponi/agent_trio.png" width="60%" style="opacity:0.72; box-shadow:none;" alt="Aponi dashboard team overview showing Architect, Dream, and Beast together."/>
+<img src="docs/assets/readme/agent_trio.svg" width="60%" style="opacity:0.72; box-shadow:none;" alt="Aponi dashboard team overview showing Architect, Dream, and Beast together."/>
 </div>
 
 ```
@@ -627,7 +627,7 @@ Interpretation:
 ## Phase Timeline — 66 Phases Complete
 
 <div align="center">
-<img src="ui/aponi/agent_dream.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/>
+<img src="docs/assets/readme/agent_dream.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/>
 </div>
 
 <details>
@@ -691,7 +691,7 @@ Interpretation:
 ## Governance Authority Chain
 
 <div align="center">
-<img src="ui/aponi/agent_architect.png" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/>
+<img src="docs/assets/readme/agent_architect.svg" width="220" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/>
 </div>
 
 ```
@@ -819,10 +819,10 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 
 <table align="center">
 <tr>
-<td align="center"><img src="ui/aponi/agent_architect.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/><br/><sub>Governance</sub></td>
-<td align="center"><img src="ui/aponi/agent_dream.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/><br/><sub>Innovation</sub></td>
-<td align="center"><img src="ui/aponi/agent_beast.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/><br/><sub>Execution</sub></td>
-<td align="center"><img src="ui/aponi/agent_trio.png" width="140" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating."/><br/><sub>Aponi Team</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_architect.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Architect agent focused on governance strategy, constitutional planning, and system design decisions."/><br/><sub>Governance</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_dream.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Dream agent focused on simulation-driven visioning, scenario modeling, and exploratory innovation concepts."/><br/><sub>Innovation</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_beast.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Beast agent focused on mutation execution, high-intensity implementation, and runtime delivery pressure tests."/><br/><sub>Execution</sub></td>
+<td align="center"><img src="docs/assets/readme/agent_trio.svg" width="140" style="opacity:0.72; box-shadow:none;" alt="Aponi team overview featuring Architect, Dream, and Beast collaborating."/><br/><sub>Aponi Team</sub></td>
 </tr>
 </table>
 
