@@ -720,6 +720,12 @@ ADAAD/
 └── docs/CONSTITUTION.md   # The 23 rules — root of all authority
 ```
 
+### Packaging Artifact Hygiene
+
+- `runtime/` is the canonical source tree for runtime Python modules.
+- `build/lib/` is ephemeral packaging output and must never be committed as source.
+- Generate package build artifacts only in CI/release jobs (or local throwaway builds), not in versioned source paths.
+
 <br/>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" style="opacity:0.72; box-shadow:none;" alt=""/>
