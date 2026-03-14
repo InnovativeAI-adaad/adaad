@@ -24,7 +24,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from runtime.governance.simulation.constraint_interpreter import (
     SimulationPolicy,
@@ -363,4 +363,78 @@ __all__ = [
     "SimulationRunResult",
     "SimulationIsolationError",
     "EpochReplaySimulator",
+    "build_innovation_forecast",
 ]
+
+
+def build_innovation_forecast(
+    events: Sequence[Mapping[str, Any]],
+    horizon_epochs: int,
+    seed_input: str = "vision-default",
+) -> Dict[str, Any]:
+    """Build deterministic innovation forecast envelopes over a bounded horizon.
+
+    This helper is intentionally pure and replayable so Vision Mode can consume
+    scenario trajectories without touching live governance state.
+    """
+    horizon = max(50, min(int(horizon_epochs), 200))
+    ordered_events = sorted(
+        [dict(e) for e in events],
+        key=lambda row: (
+            str(row.get("epoch_id", "")),
+            str(row.get("path", "")),
+            str(row.get("capability", "")),
+            str(row.get("agent_id", "")),
+        ),
+    )
+    capability_deltas: Dict[str, float] = {}
+    dead_end_causes: Dict[str, str] = {}
+    total_delta = 0.0
+    for row in ordered_events:
+        capability = str(row.get("capability", "")).strip()
+        delta = float(row.get("fitness_delta", 0.0))
+        if capability:
+            capability_deltas[capability] = round(capability_deltas.get(capability, 0.0) + delta, 6)
+        total_delta += delta
+        if bool(row.get("dead_end", False)):
+            path_id = str(row.get("path", "unknown"))
+            dead_end_causes[path_id] = str(row.get("blocking_cause", row.get("status_reason", "unknown_cause")))
+
+    base_score = total_delta / max(1, len(ordered_events))
+    bands = {
+        "best": round(base_score * 1.2, 6),
+        "base": round(base_score, 6),
+        "worst": round(base_score * 0.8, 6),
+    }
+    digest_payload = json.dumps(
+        {
+            "seed_input": seed_input,
+            "horizon_epochs": horizon,
+            "ordered_events": ordered_events,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    input_digest = "sha256:" + hashlib.sha256(digest_payload.encode("utf-8")).hexdigest()
+    coverage = round(min(1.0, len(ordered_events) / max(1, horizon)), 6)
+    confidence = round(min(1.0, 0.35 + (coverage * 0.65)), 6)
+    return {
+        "horizon_epochs": horizon,
+        "capability_graph_deltas": [
+            {"capability": key, "fitness_delta_sum": capability_deltas[key]}
+            for key in sorted(capability_deltas)
+        ],
+        "trajectory_bands": bands,
+        "dead_end_paths": [
+            {"path_id": key, "blocking_cause": dead_end_causes[key]}
+            for key in sorted(dead_end_causes)
+        ],
+        "confidence_metadata": {
+            "input_digest": input_digest,
+            "event_window": len(ordered_events),
+            "seed_input": seed_input,
+            "coverage_ratio": coverage,
+            "confidence_score": confidence,
+            "replayable": True,
+        },
+    }
