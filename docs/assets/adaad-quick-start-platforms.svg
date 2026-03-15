@@ -1,0 +1,53 @@
+<svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New',monospace">
+<defs>
+  <linearGradient id="qs-bg" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#010810"/>
+    <stop offset="50%" stop-color="#020d1c"/>
+    <stop offset="100%" stop-color="#010810"/>
+  </linearGradient>
+  <filter id="qs-glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <style>
+    @keyframes qs-scan{0%{transform:translateX(-200px)}100%{transform:translateX(1640px)}}
+    @keyframes qs-pulse{0%,100%{opacity:.8}50%{opacity:1}}
+    .qs-scan{animation:qs-scan 6s linear infinite;opacity:.035}
+    .qs-p1{animation:qs-pulse 2.5s ease-in-out infinite}
+    .qs-p2{animation:qs-pulse 2.5s ease-in-out infinite .7s}
+    .qs-p3{animation:qs-pulse 2.5s ease-in-out infinite 1.4s}
+  </style>
+</defs>
+<rect width="1440" height="80" fill="url(#qs-bg)"/>
+<rect x="0" y="0" width="1440" height="1" fill="#00d4ff" opacity="0.25"/>
+<rect x="0" y="79" width="1440" height="1" fill="#00d4ff" opacity="0.1"/>
+
+<!-- Scan line animation -->
+<rect x="-200" y="0" width="200" height="80" fill="url(#qs-bg)" class="qs-scan" opacity=".035"/>
+<rect x="-200" y="0" width="200" height="80" fill="#00d4ff" class="qs-scan"/>
+
+<!-- Column dividers -->
+<line x1="576" y1="0" x2="576" y2="80" stroke="#0d2035" stroke-width="1"/>
+<line x1="1008" y1="0" x2="1008" y2="80" stroke="#0d2035" stroke-width="1"/>
+
+<!-- Top accent bars -->
+<rect x="0" y="0" width="576" height="3" fill="#00d4ff" opacity="0.7"/>
+<rect x="576" y="0" width="432" height="3" fill="#00ff88" opacity="0.7"/>
+<rect x="1008" y="0" width="432" height="3" fill="#f5c842" opacity="0.7"/>
+<!-- Active underlines -->
+<rect x="0" y="77" width="576" height="2" fill="#00d4ff" opacity="0.5"/>
+<rect x="576" y="77" width="432" height="2" fill="#00ff88" opacity="0.5"/>
+<rect x="1008" y="77" width="432" height="2" fill="#f5c842" opacity="0.5"/>
+
+<!-- Desktop/Linux/macOS/CI -->
+<text x="288" y="32" fill="#00d4ff" font-size="14" font-weight="700" text-anchor="middle" filter="url(#qs-glow)" class="qs-p1">Desktop · Linux · macOS · CI/CD</text>
+<text x="288" y="52" fill="#1a4a6a" font-size="9" letter-spacing="2" text-anchor="middle">Python 3.10+  ·  venv  ·  pip</text>
+<text x="288" y="68" fill="#0d2a3a" font-size="8" letter-spacing="1" text-anchor="middle">requirements.server.txt</text>
+
+<!-- Android -->
+<text x="792" y="32" fill="#00ff88" font-size="14" font-weight="700" text-anchor="middle" filter="url(#qs-glow)" class="qs-p2">Android · Termux · Pydroid3</text>
+<text x="792" y="52" fill="#1a4a28" font-size="9" letter-spacing="2" text-anchor="middle">requirements.phone.txt  ·  no server needed</text>
+<text x="792" y="68" fill="#0d2a18" font-size="8" letter-spacing="1" text-anchor="middle">CRYOVANT_DEV_MODE=1  ADAAD_ENV=dev</text>
+
+<!-- Aponi Dashboard -->
+<text x="1224" y="32" fill="#f5c842" font-size="14" font-weight="700" text-anchor="middle" filter="url(#qs-glow)" class="qs-p3">Aponi Dashboard</text>
+<text x="1224" y="52" fill="#4a3a0a" font-size="9" letter-spacing="2" text-anchor="middle">Governance console  ·  port 8080</text>
+<text x="1224" y="68" fill="#2a2208" font-size="8" letter-spacing="1" text-anchor="middle">PYTHONPATH=. python -m ui.aponi</text>
+</svg>

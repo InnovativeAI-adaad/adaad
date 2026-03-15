@@ -1,0 +1,71 @@
+<svg viewBox="0 0 1440 210" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New',monospace">
+<defs>
+  <linearGradient id="ip-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#010810"/>
+    <stop offset="100%" stop-color="#020d1c"/>
+  </linearGradient>
+  <filter id="ip-glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="ip-glow-sm"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="ip-dots" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="11" cy="11" r="0.65" fill="#00d4ff" opacity="0.06"/>
+  </pattern>
+  <style>
+    @keyframes ip-pulse{0%,100%{opacity:.7}50%{opacity:1}}
+    .ip-p{animation:ip-pulse 2.5s ease-in-out infinite}
+    .ip-p2{animation:ip-pulse 2.5s ease-in-out infinite .5s}
+    .ip-p3{animation:ip-pulse 2.5s ease-in-out infinite 1s}
+    .ip-p4{animation:ip-pulse 2.5s ease-in-out infinite 1.5s}
+  </style>
+</defs>
+<rect width="1440" height="210" fill="url(#ip-bg)"/>
+<rect width="1440" height="210" fill="url(#ip-dots)"/>
+<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.25"/>
+<rect x="0" y="208.5" width="1440" height="1.5" fill="#00d4ff" opacity="0.1"/>
+
+<!-- Header -->
+<text x="720" y="28" fill="#1a3a5a" font-size="9" letter-spacing="5" text-anchor="middle" font-weight="700">INSTALL ON ANY PLATFORM</text>
+<line x1="200" y1="35" x2="1240" y2="35" stroke="#0d2035" stroke-width="0.5"/>
+
+<!-- Column dividers -->
+<line x1="360" y1="35" x2="360" y2="195" stroke="#0d2035" stroke-width="0.8"/>
+<line x1="720" y1="35" x2="720" y2="195" stroke="#0d2035" stroke-width="0.8"/>
+<line x1="1080" y1="35" x2="1080" y2="195" stroke="#0d2035" stroke-width="0.8"/>
+
+<!-- Top accent bars per platform -->
+<rect x="0" y="35" width="360" height="3" fill="#22c55e" opacity="0.8"/>
+<rect x="360" y="35" width="360" height="3" fill="#a855f7" opacity="0.8"/>
+<rect x="720" y="35" width="360" height="3" fill="#00d4ff" opacity="0.8"/>
+<rect x="1080" y="35" width="360" height="3" fill="#f5c842" opacity="0.8"/>
+
+<!-- F-DROID -->
+<text x="180" y="70" fill="#22c55e" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p">F-Droid</text>
+<text x="180" y="86" fill="#1a4a28" font-size="9" letter-spacing="2" text-anchor="middle">ANDROID · VERIFIED</text>
+<rect x="148" y="96" width="64" height="64" rx="4" fill="#0a1a10" stroke="#1a4a28" stroke-width="1"/>
+<image href="docs/assets/qr/fdroid.svg" x="152" y="100" width="56" height="56"/>
+<text x="180" y="177" fill="#0d3020" font-size="9" text-anchor="middle">Open source · No tracking</text>
+<text x="180" y="192" fill="#0d3020" font-size="9" text-anchor="middle">Automatic updates</text>
+
+<!-- OBTAINIUM -->
+<text x="540" y="70" fill="#a855f7" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p2">Obtainium</text>
+<text x="540" y="86" fill="#3a1a5a" font-size="9" letter-spacing="2" text-anchor="middle">ANDROID · AUTO-UPDATE</text>
+<rect x="508" y="96" width="64" height="64" rx="4" fill="#0d0a1a" stroke="#2a1a4a" stroke-width="1"/>
+<image href="docs/assets/qr/obtainium.svg" x="512" y="100" width="56" height="56"/>
+<text x="540" y="177" fill="#2a1240" font-size="9" text-anchor="middle">Direct from GitHub Releases</text>
+<text x="540" y="192" fill="#2a1240" font-size="9" text-anchor="middle">Full version control</text>
+
+<!-- GITHUB RELEASES -->
+<text x="900" y="70" fill="#00d4ff" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p3">GitHub Releases</text>
+<text x="900" y="86" fill="#0a2a3a" font-size="9" letter-spacing="2" text-anchor="middle">ALL PLATFORMS</text>
+<rect x="868" y="96" width="64" height="64" rx="4" fill="#0a0f1a" stroke="#0d3050" stroke-width="1"/>
+<image href="docs/assets/qr/releases.svg" x="872" y="100" width="56" height="56"/>
+<text x="900" y="177" fill="#0a2535" font-size="9" text-anchor="middle">Android · Linux · macOS</text>
+<text x="900" y="192" fill="#0a2535" font-size="9" text-anchor="middle">Windows WSL · CI/CD</text>
+
+<!-- PWA -->
+<text x="1260" y="70" fill="#f5c842" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p4">PWA</text>
+<text x="1260" y="86" fill="#4a3a0a" font-size="9" letter-spacing="2" text-anchor="middle">BROWSER · INSTALL-FREE</text>
+<rect x="1228" y="96" width="64" height="64" rx="4" fill="#0e0c0a" stroke="#2a2a0d" stroke-width="1"/>
+<image href="docs/assets/qr/pwa.svg" x="1232" y="100" width="56" height="56"/>
+<text x="1260" y="177" fill="#3a2f08" font-size="9" text-anchor="middle">No install required</text>
+<text x="1260" y="192" fill="#3a2f08" font-size="9" text-anchor="middle">Works on any device</text>
+</svg>

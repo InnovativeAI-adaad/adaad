@@ -1,0 +1,115 @@
+<svg viewBox="0 0 1440 380" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New',monospace">
+<defs>
+  <linearGradient id="inv-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#010810"/>
+    <stop offset="100%" stop-color="#020d1c"/>
+  </linearGradient>
+  <filter id="inv-glow"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="inv-glow-sm"><feGaussianBlur stdDeviation="1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="inv-hex" x="0" y="0" width="40" height="46" patternUnits="userSpaceOnUse">
+    <polygon points="20,1 38,11 38,31 20,41 2,31 2,11" fill="none" stroke="#00d4ff" stroke-width="0.3" opacity="0.055"/>
+  </pattern>
+  <style>
+    @keyframes inv-pulse{0%,100%{opacity:.75}50%{opacity:1}}
+    .iv-p{animation:inv-pulse 3s ease-in-out infinite}
+  </style>
+</defs>
+<rect width="1440" height="380" fill="url(#inv-bg)"/>
+<rect width="1440" height="380" fill="url(#inv-hex)"/>
+<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.2"/>
+<rect x="0" y="378.5" width="1440" height="1.5" fill="#00d4ff" opacity="0.1"/>
+
+<!-- 4-column × 2-row card grid. Card W=330, gap=12, outer pad=24 -->
+<!-- Row 1: y=24..194  Row 2: y=206..376 -->
+<!-- Cols: x=24,366,708,1050  w=330 -->
+
+<!-- CARD 1: GOV-SOLE-0 -->
+<rect x="24" y="24" width="330" height="170" rx="6" fill="#080f1c" stroke="#1a3a5a" stroke-width="1"/>
+<rect x="24" y="24" width="330" height="3" fill="#00d4ff" rx="1"/>
+<text x="44" y="52" fill="#00d4ff" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">GOV-SOLE-0</text>
+<text x="44" y="70" fill="#2a5a7a" font-size="9" letter-spacing="2">SOLE APPROVAL SURFACE</text>
+<line x1="44" y1="80" x2="334" y2="80" stroke="#0d2035" stroke-width="0.5"/>
+<text x="44" y="100" fill="#3a6a8a" font-size="10">GovernanceGate is the sole</text>
+<text x="44" y="116" fill="#3a6a8a" font-size="10">mutation approval surface.</text>
+<text x="44" y="138" fill="#2a4a5a" font-size="10">No bypass path. No config flag.</text>
+<text x="44" y="154" fill="#2a4a5a" font-size="10">No env override. Period.</text>
+
+<!-- CARD 2: DET-ALL-0 -->
+<rect x="366" y="24" width="330" height="170" rx="6" fill="#090f1c" stroke="#1a3a5a" stroke-width="1"/>
+<rect x="366" y="24" width="330" height="3" fill="#00d4ff" rx="1"/>
+<text x="386" y="52" fill="#00d4ff" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">DET-ALL-0</text>
+<text x="386" y="70" fill="#2a5a7a" font-size="9" letter-spacing="2">DETERMINISM ABSOLUTE</text>
+<line x1="386" y1="80" x2="676" y2="80" stroke="#0d2035" stroke-width="0.5"/>
+<text x="386" y="100" fill="#3a6a8a" font-size="10">All governance decisions are</text>
+<text x="386" y="116" fill="#3a6a8a" font-size="10">deterministic. Identical inputs</text>
+<text x="386" y="138" fill="#2a4a5a" font-size="10">→ byte-identical output, always.</text>
+<text x="386" y="154" fill="#2a4a5a" font-size="10">Divergence = epoch halt.</text>
+
+<!-- CARD 3: SIM-BLOCK-0 -->
+<rect x="708" y="24" width="330" height="170" rx="6" fill="#0a0d1c" stroke="#2a1a4a" stroke-width="1"/>
+<rect x="708" y="24" width="330" height="3" fill="#a855f7" rx="1"/>
+<text x="728" y="52" fill="#a855f7" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">SIM-BLOCK-0</text>
+<text x="728" y="70" fill="#4a2a7a" font-size="9" letter-spacing="2">SIMULATION CONTAINMENT</text>
+<line x1="728" y1="80" x2="1018" y2="80" stroke="#1a0d35" stroke-width="0.5"/>
+<text x="728" y="100" fill="#6a3a9a" font-size="10">simulation=True blocks ALL</text>
+<text x="728" y="116" fill="#6a3a9a" font-size="10">live side-effects. Zero bleed</text>
+<text x="728" y="138" fill="#4a2a6a" font-size="10">to production. Structural,</text>
+<text x="728" y="154" fill="#4a2a6a" font-size="10">not advisory.</text>
+
+<!-- CARD 4: SANDBOX-DIV-0 -->
+<rect x="1050" y="24" width="330" height="170" rx="6" fill="#0a0d1c" stroke="#2a1a4a" stroke-width="1"/>
+<rect x="1050" y="24" width="330" height="3" fill="#a855f7" rx="1"/>
+<text x="1070" y="52" fill="#a855f7" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">SANDBOX-DIV-0</text>
+<text x="1070" y="70" fill="#4a2a7a" font-size="9" letter-spacing="2">ZERO DIVERGENCE</text>
+<line x1="1070" y1="80" x2="1360" y2="80" stroke="#1a0d35" stroke-width="0.5"/>
+<text x="1070" y="100" fill="#6a3a9a" font-size="10">AST hash must match post-apply.</text>
+<text x="1070" y="116" fill="#6a3a9a" font-size="10">Any divergence = auto-rollback</text>
+<text x="1070" y="138" fill="#4a2a6a" font-size="10">+ blocking ledger entry.</text>
+<text x="1070" y="154" fill="#4a2a6a" font-size="10">Not a threshold. Zero. Always.</text>
+
+<!-- CARD 5: PATCH-SIZE-0 -->
+<rect x="24" y="206" width="330" height="170" rx="6" fill="#0c0e10" stroke="#2a2a1a" stroke-width="1"/>
+<rect x="24" y="206" width="330" height="3" fill="#f5c842" rx="1"/>
+<text x="44" y="234" fill="#f5c842" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">PATCH-SIZE-0</text>
+<text x="44" y="252" fill="#5a5a1a" font-size="9" letter-spacing="2">HARD CEILING</text>
+<line x1="44" y1="262" x2="334" y2="262" stroke="#1a1a0d" stroke-width="0.5"/>
+<text x="44" y="282" fill="#7a7a2a" font-size="10">Max 40 delta AST nodes.</text>
+<text x="44" y="298" fill="#7a7a2a" font-size="10">Max 2 files per patch.</text>
+<text x="44" y="320" fill="#5a5a1a" font-size="10">Hard ceiling — not a soft limit.</text>
+
+<!-- CARD 6: TIER0-SELF-0 -->
+<rect x="366" y="206" width="330" height="170" rx="6" fill="#0f0a0a" stroke="#3a1a1a" stroke-width="1"/>
+<rect x="366" y="206" width="330" height="3" fill="#ff4466" rx="1"/>
+<text x="386" y="234" fill="#ff4466" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">TIER0-SELF-0</text>
+<text x="386" y="252" fill="#6a1a2a" font-size="9" letter-spacing="2">SELF-MUTATION BANNED</text>
+<line x1="386" y1="262" x2="676" y2="262" stroke="#2a0d0d" stroke-width="0.5"/>
+<text x="386" y="282" fill="#8a2a3a" font-size="10">Tier-0 modules cannot</text>
+<text x="386" y="298" fill="#8a2a3a" font-size="10">self-mutate. Ever.</text>
+<text x="386" y="320" fill="#5a1a25" font-size="10">Under any condition. Regardless</text>
+<text x="386" y="336" fill="#5a1a25" font-size="10">of gate outcome.</text>
+
+<!-- CARD 7: LINEAGE-STAB-0 -->
+<rect x="708" y="206" width="330" height="170" rx="6" fill="#0c0e10" stroke="#2a2a1a" stroke-width="1"/>
+<rect x="708" y="206" width="330" height="3" fill="#f5c842" rx="1"/>
+<text x="728" y="234" fill="#f5c842" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">LINEAGE-STAB-0</text>
+<text x="728" y="252" fill="#5a5a1a" font-size="9" letter-spacing="2">LINEAGE STABILITY</text>
+<line x1="728" y1="262" x2="1018" y2="262" stroke="#1a1a0d" stroke-width="0.5"/>
+<text x="728" y="282" fill="#7a7a2a" font-size="10">Lineage stable iff ≥ 2/5 last</text>
+<text x="728" y="298" fill="#7a7a2a" font-size="10">epochs passed. Unstable lineage</text>
+<text x="728" y="320" fill="#5a5a1a" font-size="10">= promotion blocked</text>
+<text x="728" y="336" fill="#5a5a1a" font-size="10">unconditionally.</text>
+
+<!-- CARD 8: CEL-ORDER-0 -->
+<rect x="1050" y="206" width="330" height="170" rx="6" fill="#0c0e10" stroke="#2a2a1a" stroke-width="1"/>
+<rect x="1050" y="206" width="330" height="3" fill="#f5c842" rx="1"/>
+<text x="1070" y="234" fill="#f5c842" font-size="13" font-weight="700" filter="url(#inv-glow)" class="iv-p">CEL-ORDER-0</text>
+<text x="1070" y="252" fill="#5a5a1a" font-size="9" letter-spacing="2">STRICT SEQUENCE</text>
+<line x1="1070" y1="262" x2="1360" y2="262" stroke="#1a1a0d" stroke-width="0.5"/>
+<text x="1070" y="282" fill="#7a7a2a" font-size="10">All 14 CEL steps in strict</text>
+<text x="1070" y="298" fill="#7a7a2a" font-size="10">declared sequence. No skip.</text>
+<text x="1070" y="320" fill="#5a5a1a" font-size="10">No reorder. Single failure</text>
+<text x="1070" y="336" fill="#5a5a1a" font-size="10">= clean halt.</text>
+
+<!-- Footer label -->
+<text x="720" y="368" fill="#1a2a3a" font-size="8" letter-spacing="3" text-anchor="middle">ALL 8 ENFORCED AT THE CODE LEVEL  ·  OVERRIDE: STRUCTURALLY IMPOSSIBLE</text>
+</svg>

@@ -1,0 +1,126 @@
+<svg viewBox="0 0 1440 340" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New',monospace">
+<defs>
+  <linearGradient id="cmp-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#010810"/>
+    <stop offset="100%" stop-color="#020d1c"/>
+  </linearGradient>
+  <linearGradient id="cmp-left" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.8"/>
+    <stop offset="100%" stop-color="#00d4ff" stop-opacity="0.1"/>
+  </linearGradient>
+  <radialGradient id="cmp-check-glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#00ff88" stop-opacity="0.35"/>
+    <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="cmp-glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="cmp-glow-sm"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="cmp-dots" width="24" height="24" patternUnits="userSpaceOnUse">
+    <circle cx="12" cy="12" r="0.7" fill="#00d4ff" opacity="0.07"/>
+  </pattern>
+  <style>
+    @keyframes cmp-fade{0%{opacity:0;transform:translateX(-4px)}100%{opacity:1;transform:translateX(0)}}
+    @keyframes cmp-pulse{0%,100%{opacity:.7}50%{opacity:1}}
+    .r1{animation:cmp-fade .4s ease-out .1s both}
+    .r2{animation:cmp-fade .4s ease-out .2s both}
+    .r3{animation:cmp-fade .4s ease-out .3s both}
+    .r4{animation:cmp-fade .4s ease-out .4s both}
+    .r5{animation:cmp-fade .4s ease-out .5s both}
+    .r6{animation:cmp-fade .4s ease-out .6s both}
+    .r7{animation:cmp-fade .4s ease-out .7s both}
+    .r8{animation:cmp-fade .4s ease-out .8s both}
+    .r9{animation:cmp-fade .4s ease-out .9s both}
+    .r10{animation:cmp-fade .4s ease-out 1.0s both}
+    .cmp-hdr{animation:cmp-pulse 3s ease-in-out infinite}
+  </style>
+</defs>
+<rect width="1440" height="340" fill="url(#cmp-bg)"/>
+<rect width="1440" height="340" fill="url(#cmp-dots)"/>
+<rect x="0" y="0" width="3" height="340" fill="url(#cmp-left)"/>
+<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.3"/>
+<rect x="0" y="338.5" width="1440" height="1.5" fill="#00d4ff" opacity="0.15"/>
+
+<!-- Column dividers -->
+<line x1="440" y1="0" x2="440" y2="340" stroke="#0d2035" stroke-width="1"/>
+<line x1="870" y1="0" x2="870" y2="340" stroke="#0d2035" stroke-width="1"/>
+<line x1="871" y1="0" x2="871" y2="340" stroke="#001a10" stroke-width="0.5" opacity="0.5"/>
+
+<!-- Header row -->
+<rect x="0" y="0" width="1440" height="38" fill="#020f1e"/>
+<rect x="0" y="37.5" width="1440" height="0.5" fill="#00d4ff" opacity="0.4"/>
+<text x="220" y="24" fill="#2a4a6a" font-size="11" letter-spacing="3" text-anchor="middle" font-weight="700">CAPABILITY</text>
+<text x="655" y="24" fill="#3a5a7a" font-size="11" letter-spacing="2" text-anchor="middle" font-weight="700">COPILOT / CURSOR  ·  DEVIN</text>
+<text x="1155" y="24" fill="#00d4ff" font-size="12" letter-spacing="3" text-anchor="middle" font-weight="700" filter="url(#cmp-glow)" class="cmp-hdr">ADAAD</text>
+<text x="1141" y="24" fill="#00d4ff" font-size="12" letter-spacing="3" text-anchor="middle" font-weight="700" opacity="0.15">ADAAD</text>
+
+<!-- Row data: [y, bg, capability, competitor_val, competitor_dim, adaad_val, class] -->
+<!-- Row 1 -->
+<g class="r1"><rect x="3" y="38" width="1437" height="30" fill="#0a1828" opacity="0.7"/>
+<text x="30" y="58" fill="#4a7a9a" font-size="10">Mutation model</text>
+<text x="655" y="58" fill="#2a4a5a" font-size="10" text-anchor="middle">Suggest → human applies</text>
+<circle cx="920" cy="53" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="58" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="58" fill="#b0e8cc" font-size="10">Propose → Gate → Apply atomically</text></g>
+<!-- Row 2 -->
+<g class="r2"><rect x="3" y="68" width="1437" height="30" fill="#060f1a" opacity="0.7"/>
+<text x="30" y="88" fill="#4a7a9a" font-size="10">Safety architecture</text>
+<text x="655" y="88" fill="#2a4a5a" font-size="10" text-anchor="middle">Human reviews</text>
+<circle cx="920" cy="83" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="88" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="88" fill="#b0e8cc" font-size="10">GovernanceGate — 23 rules, non-bypassable</text></g>
+<!-- Row 3 -->
+<g class="r3"><rect x="3" y="98" width="1437" height="30" fill="#0a1828" opacity="0.7"/>
+<text x="30" y="118" fill="#4a7a9a" font-size="10">Audit trail</text>
+<text x="655" y="118" fill="#2a4a5a" font-size="10" text-anchor="middle">Git history / PR descriptions</text>
+<circle cx="920" cy="113" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="118" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="118" fill="#b0e8cc" font-size="10">SHA-256 hash-chained ledger — tamper-evident</text></g>
+<!-- Row 4 -->
+<g class="r4"><rect x="3" y="128" width="1437" height="30" fill="#060f1a" opacity="0.7"/>
+<text x="30" y="148" fill="#4a7a9a" font-size="10">Deterministic replay</text>
+<text x="655" y="148" fill="#1a3040" font-size="18" text-anchor="middle">✕</text>
+<circle cx="920" cy="143" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="148" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="148" fill="#b0e8cc" font-size="10">replay_verifier.py — byte-identical, zero-divergence</text></g>
+<!-- Row 5 -->
+<g class="r5"><rect x="3" y="158" width="1437" height="30" fill="#0a1828" opacity="0.7"/>
+<text x="30" y="178" fill="#4a7a9a" font-size="10">Fitness scoring</text>
+<text x="655" y="178" fill="#1a3040" font-size="18" text-anchor="middle">✕</text>
+<circle cx="920" cy="173" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="178" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="178" fill="#b0e8cc" font-size="10">7-signal engine — adaptive weights from telemetry</text></g>
+<!-- Row 6 -->
+<g class="r6"><rect x="3" y="188" width="1437" height="30" fill="#060f1a" opacity="0.7"/>
+<text x="30" y="208" fill="#4a7a9a" font-size="10">Proven self-evolution</text>
+<text x="655" y="208" fill="#1a3040" font-size="18" text-anchor="middle">✕</text>
+<circle cx="920" cy="203" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="208" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="208" fill="#b0e8cc" font-size="10">Phase 65 — hash in ledger, March 13 2026</text></g>
+<!-- Row 7 -->
+<g class="r7"><rect x="3" y="218" width="1437" height="30" fill="#0a1828" opacity="0.7"/>
+<text x="30" y="238" fill="#4a7a9a" font-size="10">Runs on $200 phone</text>
+<text x="655" y="238" fill="#1a3040" font-size="18" text-anchor="middle">✕</text>
+<circle cx="920" cy="233" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="238" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="238" fill="#b0e8cc" font-size="10">Full Android — Termux + Pydroid3</text></g>
+<!-- Row 8 -->
+<g class="r8"><rect x="3" y="248" width="1437" height="30" fill="#060f1a" opacity="0.7"/>
+<text x="30" y="268" fill="#4a7a9a" font-size="10">Cross-repo mutation</text>
+<text x="655" y="268" fill="#1a3040" font-size="18" text-anchor="middle">✕</text>
+<circle cx="920" cy="263" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="268" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="268" fill="#b0e8cc" font-size="10">Federation — HMAC-gated, dual-gate enforced</text></g>
+<!-- Row 9 -->
+<g class="r9"><rect x="3" y="278" width="1437" height="30" fill="#0a1828" opacity="0.7"/>
+<text x="30" y="298" fill="#4a7a9a" font-size="10">Memory between epochs</text>
+<text x="655" y="298" fill="#1a3040" font-size="18" text-anchor="middle">✕</text>
+<circle cx="920" cy="293" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="298" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="298" fill="#b0e8cc" font-size="10">Full lineage DAG — SHA-256 chained, replayable</text></g>
+<!-- Row 10 -->
+<g class="r10"><rect x="3" y="308" width="1437" height="32" fill="#060f1a" opacity="0.7"/>
+<text x="30" y="329" fill="#4a7a9a" font-size="10">Price</text>
+<text x="655" y="329" fill="#2a4a5a" font-size="10" text-anchor="middle">$10–19 / $500+/mo</text>
+<circle cx="920" cy="324" r="10" fill="url(#cmp-check-glow)"/>
+<text x="920" y="329" fill="#00ff88" font-size="14" text-anchor="middle" filter="url(#cmp-glow-sm)">✓</text>
+<text x="950" y="329" fill="#b0e8cc" font-size="10">Apache 2.0 — free forever</text></g>
+</svg>

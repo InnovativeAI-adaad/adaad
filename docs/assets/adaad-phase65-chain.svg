@@ -1,0 +1,100 @@
+<svg viewBox="0 0 1440 200" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New',monospace">
+<defs>
+  <linearGradient id="c65-bg" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#010810"/>
+    <stop offset="25%" stop-color="#001508"/>
+    <stop offset="75%" stop-color="#001508"/>
+    <stop offset="100%" stop-color="#010810"/>
+  </linearGradient>
+  <radialGradient id="c65-glow-b3" cx="50%" cy="50%" r="60%">
+    <stop offset="0%" stop-color="#00ff88" stop-opacity="0.18"/>
+    <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="c65-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="c65-glow-sm"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="c65-soft"><feGaussianBlur stdDeviation="20"/></filter>
+  <pattern id="c65-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+    <circle cx="10" cy="10" r="0.6" fill="#00ff88" opacity="0.06"/>
+  </pattern>
+  <style>
+    @keyframes c65-chain{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-45}}
+    @keyframes c65-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+    @keyframes c65-sealed{0%,100%{opacity:.8}50%{opacity:1}}
+    @keyframes c65-scan{0%{transform:translateY(-60px)}100%{transform:translateY(260px)}}
+    .c65-chain{stroke-dasharray:12 6;animation:c65-chain 2.5s linear infinite}
+    .c65-pulse{animation:c65-pulse 2s ease-in-out infinite}
+    .c65-sealed{animation:c65-sealed 1.8s ease-in-out infinite}
+    .c65-scan{animation:c65-scan 4s linear infinite;opacity:.04}
+  </style>
+</defs>
+<rect width="1440" height="200" fill="url(#c65-bg)"/>
+<rect width="1440" height="200" fill="url(#c65-dots)"/>
+<rect x="0" y="0" width="1440" height="1.5" fill="#00ff88" opacity="0.2"/>
+<rect x="0" y="198.5" width="1440" height="1.5" fill="#00ff88" opacity="0.1"/>
+
+<!-- Soft glow behind block 3 -->
+<ellipse cx="1060" cy="95" rx="220" ry="80" fill="url(#c65-glow-b3)" filter="url(#c65-soft)"/>
+
+<!-- Scan line on block 3 -->
+<clipPath id="c65-clip3"><rect x="870" y="20" width="300" height="120" rx="6"/></clipPath>
+<rect x="870" y="-60" width="300" height="30" fill="#00ff88" clip-path="url(#c65-clip3)" class="c65-scan"/>
+
+<!-- Block 1: Phase 63 -->
+<rect x="100" y="22" width="290" height="116" rx="6" fill="#050e1a" stroke="#00d4ff" stroke-width="1" stroke-opacity="0.5"/>
+<rect x="100" y="22" width="290" height="3" rx="1" fill="#00d4ff" opacity="0.6"/>
+<text x="245" y="47" fill="#1a4a6a" font-size="8" letter-spacing="3" text-anchor="middle">PHASE</text>
+<text x="245" y="64" fill="#00d4ff" font-size="22" font-weight="700" text-anchor="middle" filter="url(#c65-glow-sm)" opacity="0.7">63</text>
+<line x1="115" y1="78" x2="375" y2="78" stroke="#0d2035" stroke-width="0.5"/>
+<text x="120" y="94" fill="#1e3a50" font-size="9" letter-spacing="1">hash</text>
+<text x="165" y="94" fill="#2a6a8a" font-size="9" font-weight="700">a3f8e9</text>
+<text x="120" y="110" fill="#1e3a50" font-size="9" letter-spacing="1">agent</text>
+<text x="165" y="110" fill="#2a5a7a" font-size="9">Architect</text>
+<text x="120" y="126" fill="#1e3a50" font-size="9" letter-spacing="1">rules</text>
+<text x="165" y="126" fill="#2a6040" font-size="9">23/23 ✓</text>
+
+<!-- Animated chain link 1→2 -->
+<line x1="390" y1="80" x2="530" y2="80" stroke="#00d4ff" stroke-width="1.5" stroke-opacity="0.3" class="c65-chain"/>
+<polygon points="525,75 535,80 525,85" fill="#00d4ff" opacity="0.5"/>
+<text x="460" y="73" fill="#0d3a5a" font-size="8" letter-spacing="1" text-anchor="middle">SHA-256</text>
+
+<!-- Block 2: Phase 64 -->
+<rect x="540" y="22" width="290" height="116" rx="6" fill="#050e1a" stroke="#a855f7" stroke-width="1" stroke-opacity="0.5"/>
+<rect x="540" y="22" width="290" height="3" rx="1" fill="#a855f7" opacity="0.6"/>
+<text x="685" y="47" fill="#3a1a6a" font-size="8" letter-spacing="3" text-anchor="middle">PHASE</text>
+<text x="685" y="64" fill="#a855f7" font-size="22" font-weight="700" text-anchor="middle" filter="url(#c65-glow-sm)" opacity="0.7">64</text>
+<line x1="555" y1="78" x2="815" y2="78" stroke="#1a0d35" stroke-width="0.5"/>
+<text x="560" y="94" fill="#2a1a4a" font-size="9" letter-spacing="1">hash</text>
+<text x="605" y="94" fill="#6a3a9a" font-size="9" font-weight="700">7b2c41</text>
+<text x="560" y="110" fill="#2a1a4a" font-size="9" letter-spacing="1">agent</text>
+<text x="605" y="110" fill="#5a3a8a" font-size="9">Dream</text>
+<text x="560" y="126" fill="#2a1a4a" font-size="9" letter-spacing="1">rules</text>
+<text x="605" y="126" fill="#2a6040" font-size="9">23/23 ✓</text>
+
+<!-- Animated chain link 2→3 -->
+<line x1="830" y1="80" x2="865" y2="80" stroke="#a855f7" stroke-width="1.5" stroke-opacity="0.3" class="c65-chain"/>
+<polygon points="860,75 870,80 860,85" fill="#a855f7" opacity="0.5"/>
+<text x="847" y="73" fill="#3a1a5a" font-size="8" letter-spacing="1" text-anchor="middle">SHA-256</text>
+
+<!-- Block 3: Phase 65 — glowing, prominent -->
+<rect x="875" y="14" width="310" height="132" rx="7" fill="#020f08" stroke="#00ff88" stroke-width="1.5" stroke-opacity="0.85"/>
+<rect x="875" y="14" width="310" height="4" rx="1" fill="#00ff88" opacity="0.9" filter="url(#c65-glow-sm)"/>
+<text x="1030" y="41" fill="#00ff88" font-size="8" letter-spacing="3" text-anchor="middle" filter="url(#c65-glow-sm)" class="c65-pulse">PHASE</text>
+<text x="1030" y="61" fill="#00ff88" font-size="26" font-weight="700" text-anchor="middle" filter="url(#c65-glow)">65</text>
+<line x1="892" y1="76" x2="1168" y2="76" stroke="#003a15" stroke-width="0.5"/>
+<text x="898" y="92" fill="#1a4a25" font-size="9" letter-spacing="1">hash</text>
+<text x="943" y="92" fill="#00cc66" font-size="9" font-weight="700" filter="url(#c65-glow-sm)">9f1d83</text>
+<text x="898" y="108" fill="#1a4a25" font-size="9" letter-spacing="1">agent</text>
+<text x="943" y="108" fill="#00aa55" font-size="9">Beast</text>
+<text x="898" y="124" fill="#1a4a25" font-size="9" letter-spacing="1">rules</text>
+<text x="943" y="124" fill="#00ff88" font-size="9" font-weight="700" filter="url(#c65-glow-sm)">23/23 ✓</text>
+<text x="1060" y="92" fill="#006633" font-size="8" letter-spacing="1">CLASS A</text>
+<text x="1060" y="106" fill="#005522" font-size="8" letter-spacing="1">APPROVED</text>
+<text x="1060" y="120" fill="#004a1a" font-size="8" letter-spacing="1">LEDGER SEALED</text>
+
+<!-- Sealed annotation below block 3 -->
+<text x="1030" y="168" fill="#00ff88" font-size="11" letter-spacing="3" text-anchor="middle" font-weight="700" filter="url(#c65-glow)" class="c65-sealed">SEALED · IMMUTABLE</text>
+<text x="1030" y="185" fill="#005522" font-size="9" letter-spacing="2" text-anchor="middle">March 13, 2026  ·  First Autonomous Self-Evolution</text>
+
+<!-- Vertical drop line from block 3 to annotations -->
+<line x1="1030" y1="146" x2="1030" y2="158" stroke="#00ff88" stroke-width="0.8" stroke-opacity="0.4"/>
+</svg>
