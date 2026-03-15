@@ -4,8 +4,8 @@
 > **Canonical source (automation sequence control):** This document is the controlling source for **Phase 51+ PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
-**Last reviewed:** 2026-03-13
-**Milestone:** `v9.0.0` (Phase 65 complete — Emergence)
+**Last reviewed:** 2026-03-15
+**Milestone:** `v9.11.0` (Phase 76 complete — Seed CEL Outcome Recorder)
 
 ---
 
@@ -110,18 +110,27 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 
 ```yaml
 adaad_pr_procession_contract:
-  schema_version: "2.0"
+  schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  # ── Updated by state-align-phase76-77 (2026-03-15) ─────────────────────────
   active_phase: "phase76_complete"
   milestone: "v9.11.0"
+  last_state_align: "2026-03-15"
+  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-15"
   ordered_phase_ids:
     - phase47
     - phase48
     - phase49
     - phase50
     - phase51
+    - phase57
+    - phase58
+    - phase59
+    - phase60
+    - phase61
+    - phase62
+    - phase63
+    - phase64
     - phase65
     - phase66
     - phase67
@@ -160,117 +169,145 @@ adaad_pr_procession_contract:
       depends_on: ["phase50"]
       status: merged
       version: "v7.5.0"
-    # ── Phases 65–76 registered 2026-03-15 (state-align-phase76-77) ──────────
+    phase57:
+      ci_tier: constitutional
+      depends_on: ["phase51"]
+      status: merged
+      version: "v8.0.0"
+    phase58:
+      ci_tier: constitutional
+      depends_on: ["phase57"]
+      status: merged
+      version: "v8.1.0"
+    phase59:
+      ci_tier: constitutional
+      depends_on: ["phase58"]
+      status: merged
+      version: "v8.2.0"
+    phase60:
+      ci_tier: constitutional
+      depends_on: ["phase59"]
+      status: merged
+      version: "v8.3.0"
+    phase61:
+      ci_tier: constitutional
+      depends_on: ["phase60"]
+      status: merged
+      version: "v8.4.0"
+    phase62:
+      ci_tier: constitutional
+      depends_on: ["phase61"]
+      status: merged
+      version: "v8.5.0"
+    phase63:
+      ci_tier: constitutional
+      depends_on: ["phase62"]
+      status: merged
+      version: "v8.6.0"
+    phase64:
+      ci_tier: constitutional
+      depends_on: ["phase63"]
+      status: merged
+      version: "v8.7.0"
     phase65:
-      ci_tier: standard
-      depends_on: ["v8.7.0"]
+      ci_tier: constitutional
+      depends_on: ["phase64"]
       status: merged
       version: "v9.0.0"
-      name: "First Autonomous Capability Evolution"
-      pr: "PR-PHASE65-01 + PR-PHASE65-02"
+      title: "Emergence — First Autonomous Capability Evolution"
     phase66:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase65"]
       status: merged
       version: "v9.1.0"
-      name: "Doc Alignment + Deep Dive Hardening"
-      pr: "release/v9.1.0"
+      title: "Doc Alignment + Deep Dive"
     phase67:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase66"]
       status: merged
       version: "v9.2.0"
-      name: "Innovations Wiring (CEL)"
-      pr: "feature/phase-67-innovations-wiring-cel"
+      title: "Innovations Wiring (CEL)"
     phase68:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase67"]
       status: merged
       version: "v9.3.0"
-      name: "Full Innovations Orchestration"
-      pr: "feature/phase-68-full-innovations-orchestration"
+      title: "Full Innovations Orchestration"
     phase69:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase68"]
       status: merged
       version: "v9.4.0"
-      name: "Aponi Innovations UI"
-      pr: "feature/phase-69-aponi-innovations-ui"
+      title: "Aponi Innovations UI"
     phase70:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase69"]
       status: merged
       version: "v9.5.0"
-      name: "WebSocket Live Epoch Feed"
-      pr: "feature/phase-70-websocket-live-epoch-feed"
+      title: "WebSocket Live Epoch Feed"
     phase71:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase70"]
       status: merged
       version: "v9.6.0"
-      name: "Oracle Persistence + Seed Evolution"
-      pr: "feature/phase-71-oracle-persist-seed-evolution"
+      title: "Oracle Persistence + Seed Evolution"
     phase72:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase71"]
       status: merged
       version: "v9.7.0"
-      name: "Seed Promotion Queue + Graduation UI"
-      pr: "feature/phase-72-seed-promotion-graduation-ui"
-      merge_sha: "0fab652219cd6ca4e7832d81fb512f298d0812a6"
+      title: "Seed Promotion Queue + Graduation UI"
     phase73:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase72"]
       status: merged
       version: "v9.8.0"
-      name: "Seed Review Decision + Governance Wire"
-      pr: "feature/phase-73-promotion-governance-wire"
-      merge_sha: "93911830513d41422b7d676829c15ea59fec7c9c"
+      title: "Seed Review Decision + Governance Wire"
     phase74:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase73"]
       status: merged
       version: "v9.9.0"
-      name: "Seed-to-Proposal Bridge"
-      pr: "feature/phase-74-seed-proposal-bridge"
-      merge_sha: "b783a4a0f14a1eddc0a133f81e8d31c07e76ea68"
+      title: "Seed-to-Proposal Bridge"
     phase75:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase74"]
       status: merged
       version: "v9.10.0"
-      name: "Seed Proposal CEL Injection"
-      pr: "feature/phase-75-seed-proposal-cel-injection"
-      merge_sha: "4abfe5fc1611d49e5386dd803ee8bf656e1bdb06"
+      title: "Seed Proposal CEL Injection"
     phase76:
-      ci_tier: standard
+      ci_tier: constitutional
       depends_on: ["phase75"]
       status: merged
       version: "v9.11.0"
-      name: "Seed CEL Outcome Recorder"
-      pr: "feat/phase76-seed-cel-outcome-recorder"
-      merge_sha: "ece4e52a6110f5b365490fd7fb6a375d4ec517b1"
-      note: "Closes full Seed Lifecycle Pipeline (Phases 71-76). PyPI adaad 9.11.0 published."
+      title: "Seed CEL Outcome Recorder"
   state_alignment:
     expected_active_phase: "Phase 76 COMPLETE · v9.11.0"
-    expected_last_completed_pr: "feat/phase76-seed-cel-outcome-recorder"
-    expected_next_pr: "PR-77-PLAN (Phase 77 — direction TBD)"
+    expected_last_completed_pr: "feature/phase-76-seed-cel-outcome-recorder"
+    expected_next_pr: "PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)"
     blocked_reason_must_be_null: true
+  open_findings:
+    - id: FINDING-C03-GITHUB-APP
+      severity: P0
+      status: open
+      phase_target: "77"
+    - id: FINDING-H04-GA-VERSIONING
+      severity: P1
+      status: open
+      phase_target: "77"
+    - id: FINDING-66-003
+      severity: P1
+      status: open
+      note: "patent filing — pre-v1.1-GA deadline; Dustin legal action required"
   v1_ga_gate:
     status: "in_progress"
-    canonical_ga_tag: "v1.1-GA"
-    note: "v1.0.0-GA was never applied — see FINDING-AUDIT-H04 in agent state open_findings. Dustin must clarify GA versioning decision."
+    canonical_ga_tag: "v1.1-GA (v1.0.0-GA versioning to be clarified — FINDING-H04-GA-VERSIONING)"
     blocking_items:
       - fdroid_submission_recorded
-      - founder_gpg_signoff
+      - founder_gpg_signoff_confirmed
       - ga_versioning_decision_documented
-  open_governance_items:
-    - id: FINDING-AUDIT-C02
-      summary: "Tags v9.7.0–v9.10.0 missing — Dustin must run local GPG tag ceremony"
-    - id: FINDING-AUDIT-C03
-      summary: "GitHub App (ADAADchat) ungoverned — assign to Phase 77 scope"
-    - id: FINDING-66-003
-      summary: "Patent filing (P1) — engage counsel immediately"
+  missing_tags:
+    note: "v9.7.0, v9.8.0, v9.9.0, v9.10.0 GPG-signed tag ceremonies required — Dustin local action C-02"
 ```
 
 ### 3.1 Preflight alignment rules
@@ -278,12 +315,10 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feat/phase76-seed-cel-outcome-recorder`
+2. `last_completed_pr` is not `feature/phase-76-seed-cel-outcome-recorder`
 3. Any `phase_nodes.*.status` diverges from this contract
-4. `blocked_reason` is non-null (nothing should be blocked)
-5. `next_pr` is not `PR-77-PLAN (Phase 77 — direction TBD)`
-
-> _Last updated: 2026-03-15 · state-align-phase76-77 · Phase 76 COMPLETE · v9.11.0_
+4. `blocked_reason` is non-null
+5. `next_pr` is not `PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)`
 
 ---
 
