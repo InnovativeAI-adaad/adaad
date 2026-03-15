@@ -35,13 +35,13 @@
   <g class="c1" transform="translate(0,0)">
     <rect x="1" y="3" width="170" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
     <rect x="1" y="3" width="3" height="114" fill="#22c55e"/>
-    <text x="86" y="52" class="s-num" text-anchor="middle">4,624</text>
+    <text x="86" y="52" class="s-num" text-anchor="middle">4,649</text>
     <text x="86" y="68" class="s-lbl" text-anchor="middle">TESTS PASSING</text>
     <g transform="translate(60,78)">
       <rect width="52" height="16" rx="3" fill="#0f1a0f" stroke="#22c55e" stroke-width=".6"/>
       <text x="26" y="12" class="s-tag" fill="#22c55e" text-anchor="middle">100% ✓</text>
     </g>
-    <text x="86" y="108" class="s-sub" text-anchor="middle">451 test files</text>
+    <text x="86" y="108" class="s-sub" text-anchor="middle">452 test files</text>
   </g>
 
   <!-- 2: Phases -->
@@ -52,9 +52,9 @@
     <text x="85" y="68" class="s-lbl" text-anchor="middle">PHASES COMPLETE</text>
     <g transform="translate(46,78)">
       <rect width="78" height="16" rx="3" fill="#0d1520" stroke="#3b82f6" stroke-width=".6"/>
-      <text x="39" y="12" class="s-tag" fill="#3b82f6" text-anchor="middle">v9.10.0</text>
+      <text x="39" y="12" class="s-tag" fill="#3b82f6" text-anchor="middle">v9.11.0</text>
     </g>
-    <text x="85" y="108" class="s-sub" text-anchor="middle">Phase 75 · Seed CEL Injection</text>
+    <text x="85" y="108" class="s-sub" text-anchor="middle">Phase 76 · Seed CEL Outcome Recorder</text>
   </g>
 
   <!-- 3: Constitutional Rules -->
@@ -111,16 +111,17 @@
     <text x="85" y="110" class="s-sub" text-anchor="middle">hash in ledger · proven</text>
   </g>
 
-  <!-- 7: Replay -->
+  <!-- 7: PyPI -->
   <g class="c7" transform="translate(1026,0)">
     <rect x="0" y="3" width="173" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#22c55e"/>
-    <text x="86" y="52" class="s-num" text-anchor="middle">0</text>
-    <text x="86" y="68" class="s-lbl" text-anchor="middle">REPLAY DIVERGENCES</text>
-    <g transform="translate(42,78)">
-      <rect width="88" height="16" rx="3" fill="#0f1a0f" stroke="#22c55e" stroke-width=".6"/>
-      <text x="44" y="12" class="s-tag" fill="#22c55e" text-anchor="middle">DET-ALL-0 ✓</text>
+    <rect x="0" y="3" width="3" height="114" fill="#3775a9"/>
+    <text x="86" y="42" class="s-num" text-anchor="middle" style="font-size:22px">PyPI</text>
+    <text x="86" y="58" class="s-lbl" text-anchor="middle">FIRST RELEASE</text>
+    <g transform="translate(27,68)">
+      <rect width="118" height="16" rx="3" fill="#09111a" stroke="#3775a9" stroke-width=".6"/>
+      <text x="59" y="12" class="s-tag" fill="#3775a9" text-anchor="middle">pip install adaad</text>
     </g>
-    <text x="86" y="108" class="s-sub" text-anchor="middle">deterministically replayable</text>
+    <text x="86" y="98" class="s-sub" text-anchor="middle">adaad 9.11.0 · pypi.org</text>
+    <text x="86" y="109" class="s-sub" text-anchor="middle">Python ≥ 3.11 · Apache-2.0</text>
   </g>
 </svg>

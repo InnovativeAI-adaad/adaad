@@ -128,17 +128,17 @@
   <!-- Phase + version pills -->
   <g transform="translate(56,236)" class="pill">
     <rect width="104" height="22" rx="4" fill="#16181d" stroke="#3b82f6" stroke-width=".8"/>
-    <text x="52" y="15" class="pill-text" fill="#3b82f6" text-anchor="middle">PHASE 75</text>
+    <text x="52" y="15" class="pill-text" fill="#3b82f6" text-anchor="middle">PHASE 76</text>
   </g>
   <g transform="translate(167,236)">
     <rect width="110" height="22" rx="4" fill="#16181d" stroke="#8b5cf6" stroke-width=".8"/>
-    <text x="55" y="15" class="pill-text" fill="#8b5cf6" text-anchor="middle">v9.10.0</text>
+    <text x="55" y="15" class="pill-text" fill="#8b5cf6" text-anchor="middle">v9.11.0</text>
   </g>
 
   <!-- Stats cards -->
   <g transform="translate(54,275)">
     <rect width="72" height="46" rx="4" fill="#16181d" stroke="#2b2f36" stroke-width=".8"/>
-    <text x="36" y="18" class="stat-num" text-anchor="middle">4,624</text>
+    <text x="36" y="18" class="stat-num" text-anchor="middle">4,649</text>
     <text x="36" y="30" class="stat-lbl" text-anchor="middle">TESTS</text>
     <text x="36" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#22c55e;text-anchor:middle;letter-spacing:1px">PASSING</text>
 
@@ -148,7 +148,7 @@
     <text x="110" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#eab308;text-anchor:middle;letter-spacing:1px">CONST.</text>
 
     <rect x="148" y="0" width="64" height="46" rx="4" fill="#16181d" stroke="#2b2f36" stroke-width=".8"/>
-    <text x="180" y="18" class="stat-num" text-anchor="middle">75</text>
+    <text x="180" y="18" class="stat-num" text-anchor="middle">76</text>
     <text x="180" y="30" class="stat-lbl" text-anchor="middle">PHASES</text>
     <text x="180" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#3b82f6;text-anchor:middle;letter-spacing:1px">COMPLETE</text>
 
@@ -278,7 +278,7 @@
   <g class="led3" transform="translate(718,192)">
     <rect width="456" height="38" rx="3" fill="#0f1014" stroke="#2b2f36" stroke-width=".6"/>
     <rect width="4"   height="38" rx="2" fill="#f97316"/>
-    <text x="14" y="16" class="hash-live">SEED_CEL_INJECT · phase=75 · SEED-CEL-AUDIT-0 · v9.10.0</text>
+    <text x="14" y="16" class="hash-live">SEED_CEL_OUTCOME · phase=76 · SEED-OUTCOME-AUDIT-0 · v9.11.0</text>
     <text x="14" y="28" class="hash-text">sha256: c1f4a7e0d3b6c9f2a5d8e1b4c7f0a3d6e9b2c5f8a1d4e7b0c3f6a9d2e5b8c1f4</text>
     <circle cx="440" cy="19" r="4" fill="#22c55e"/>
   </g>
