@@ -1,34 +1,43 @@
-# ADAAD v1.0.0-GA Readiness Checklist
+# ADAAD v1.1-GA Readiness Checklist
 
-> **Authority:** This document is the canonical gate checklist for the `v1.0.0-GA` public-readiness tag.
-> It is referenced by `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` § 2.2.
-> **Last updated:** 2026-03-12 · **Status:** IN PROGRESS
+> **Authority:** Canonical gate checklist for the `v1.1-GA` public-readiness tag.
+> Supersedes v1.0.0-GA baseline (Phase 51 / v7.5.0). Refreshed to v9.11.0.
+> Referenced by `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` § 2.2.
+> **Last updated:** 2026-03-15 · **Baseline:** v9.11.0 · **Phase:** 76 complete
+> **Status:** IN PROGRESS — Gates 3 and 4 are hard blocks pending Dustin action
 
 ---
 
-## What v1.0.0-GA Is
+## GA Tag Versioning Note (FINDING-H04-GA-VERSIONING)
 
-`v1.0.0-GA` (General Availability) is the governed public-readiness milestone for ADAAD. It does **not** change the version series (currently `v7.x.x`) — it is a governance tag applied to a specific commit that has cleared every gate below. Once tagged, ADAAD is cleared for:
+> `v1.1-GA` exists. `v1.0.0-GA` was never applied. This checklist treats `v1.1-GA` as canonical
+> pending formal documentation of that decision in procession doc § 2.3 by Dustin L. Reid.
 
-- Public announcement and community launch
-- F-Droid listing activation
-- External operator onboarding
-- Claims/evidence matrix publication
+---
+
+## What v1.1-GA Enables
+
+Public announcement · F-Droid listing · External operator onboarding ·
+Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 ---
 
 ## Gate 1 — CI Quality (Automated)
 
-| Check | Command / Artifact | Status |
+| Check | Artifact | Status |
 |---|---|---|
-| All CI required checks green on release commit | `.github/workflows/ci.yml` — all jobs pass | ⏳ |
-| Determinism test suite passes | `pytest tests/determinism/ -q` → 0 failures | ⏳ |
-| Governance inviolability suite passes | `pytest tests/governance/inviolability/ -q` → 0 failures | ⏳ |
-| CodeQL analysis green | `.github/workflows/codeql.yml` — no high/critical findings | ⏳ |
-| SPDX header enforcement passes | `python scripts/check_spdx_headers.py` → 0 violations | ⏳ |
-| Architecture snapshot valid | `python scripts/validate_architecture_snapshot.py` → pass | ⏳ |
-| Release evidence complete | `python scripts/validate_release_evidence.py --require-complete` → pass | ⏳ |
-| Release hardening claims valid | `python scripts/validate_release_hardening_claims.py` → pass | ⏳ |
+| All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,649 tests — v9.11.0 |
+| Determinism suite | `pytest tests/determinism/ -q` → 0 failures | ✅ |
+| Governance inviolability suite | `pytest tests/governance/inviolability/ -q` → 0 failures | ✅ |
+| CodeQL analysis | `.github/workflows/codeql.yml` — no high/critical | ✅ |
+| SPDX header enforcement | `python scripts/check_spdx_headers.py` → 0 violations | ✅ |
+| Architecture snapshot valid | `python scripts/validate_architecture_snapshot.py` | ✅ |
+| Release evidence complete | `python scripts/validate_release_evidence.py --require-complete` | ✅ |
+| Release hardening claims valid | `python scripts/validate_release_hardening_claims.py` | ✅ |
+| Phase 76 seed outcome suite | `pytest tests/test_phase76_seed_cel_outcome.py` → 25/25 | ✅ |
+| PyPI package published | `pip install adaad==9.11.0` resolves | ✅ |
+
+**Gate 1: ✅ CLEARED**
 
 ---
 
@@ -36,12 +45,17 @@
 
 | Check | Artifact | Status |
 |---|---|---|
-| ROADMAP complete through Phase 51 | `ROADMAP.md` — Phase 52 shipped (`v7.6.0`), roadmap currently points to Phase 68 | ✅ |
-| Procession doc v2 authored and committed | `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` | ✅ |
-| Agent state synced to Phase 51 / v7.5.0 | `.adaad_agent_state.json` | ⏳ (done at Phase 51 commit) |
-| Claims/evidence matrix — all rows `Complete` | `docs/comms/claims_evidence_matrix.md` | ✅ (verified at v7.4.0) |
-| Constitution version correct throughout docs | `CONSTITUTION_VERSION = "0.7.0"` propagated | ✅ |
-| Release notes exist for v7.0.0–v7.5.0 | `docs/releases/7.x.x.md` | ⏳ (7.5.0 needed) |
+| ROADMAP complete through Phase 76 | `ROADMAP.md` | ✅ |
+| Procession doc Phase 76 complete | `ADAAD_PR_PROCESSION_2026-03-v2.md` schema v2.1; `phase76_complete` | ✅ PR-1 |
+| Agent state synced to v9.11.0 | `last_sync_sha: aa04bd6`; phases 67–70 milestones present | ✅ PR-1 |
+| Claims/evidence matrix complete | `docs/comms/claims_evidence_matrix.md` | ✅ |
+| CONSTITUTION.md header v0.9.0 | `docs/CONSTITUTION.md` | ✅ PR-1 |
+| Release notes v7.0.0–v9.11.0 | `docs/releases/` — all versions | ✅ PR-2 |
+| GitHub App surface governed | `app/github_app.py` — `GITHUB-APP-GOV-0` wired | ✅ PR-3 |
+| Seed Lifecycle (Phases 71–76) documented | ROADMAP + release notes + invariant tables | ✅ |
+| GA versioning decision in procession doc § 2.3 | v1.0.0-GA vs v1.1-GA | ⏳ **FINDING-H04 — Dustin** |
+
+**Gate 2: ⏳ — 1 item pending (H-04 Dustin-owned)**
 
 ---
 
@@ -49,11 +63,13 @@
 
 | Check | Notes | Status |
 |---|---|---|
-| F-Droid MR submitted | Submit at `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **MANUAL — Dustin** |
-| F-Droid MR URL recorded | `android/fdroid/com.innovativeai.adaad.yml` has no embedded MR URL field; canonical MR submission endpoint is `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` (explicit N/A for in-file URL) | ⏳ blocked on above |
-| APK build pipeline green | `.github/workflows/android-free-release.yml` passes | ⏳ |
-| `INSTALL_ANDROID.md` links valid | No broken install links | ✅ |
-| Obtainium config valid | `android/obtainium.json` references correct release URL | ✅ |
+| F-Droid MR submitted | `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **Dustin** |
+| F-Droid MR URL recorded | `android/fdroid/com.innovativeai.adaad.yml` | ⏳ blocked on above |
+| APK pipeline triggered | `git tag free-v9.10.0 && git push origin free-v9.10.0` (M-02) | ⏳ **Dustin** |
+| `INSTALL_ANDROID.md` links valid | | ✅ |
+| Obtainium config valid | `android/obtainium.json` | ✅ |
+
+**Gate 3: ⏳ — F-Droid MR and free-v9.10.0 tag are hard blocks**
 
 ---
 
@@ -61,21 +77,31 @@
 
 | Check | Notes | Status |
 |---|---|---|
-| Founder reviews this checklist | All gates above inspected by Dustin | ⏳ |
-| Founder GPG-signed commit to ledger | Commit message: `governance: v1.0.0-GA human sign-off — [DATE]` | ⏳ |
-| Sign-off SHA recorded in procession doc v2 | Update § 2.3 of `ADAAD_PR_PROCESSION_2026-03-v2.md` | ⏳ |
+| Founder reviews this checklist | All gates inspected by Dustin L. Reid | ⏳ |
+| Founder GPG-signed commit to ledger | `governance: v1.1-GA human sign-off — [DATE]` | ⏳ |
+| Sign-off SHA recorded in procession doc § 2.3 | | ⏳ |
+| v1.1-GA canonical declaration committed | | ⏳ |
 
-> **Constitutional invariant HUMAN-0:** No governance milestone may be tagged without explicit human sign-off. This gate cannot be automated, delegated to an agent, or skipped.
+> **HUMAN-0:** This gate cannot be automated, delegated to an agent, or skipped.
+
+**Gate 4: ⏳ — Hard block — Dustin GPG sign-off required**
 
 ---
 
-## Gate 5 — Phase 52 Direction Ratified
+## Gate 5 — Phase Roadmap Completeness
 
-| Check | Notes | Status |
+| Phases | Versions | Status |
 |---|---|---|
-| Phase 52 candidate selected | Selected: Governed Cross-Epoch Memory & Learning Store (recorded in `ROADMAP.md` Phase 52 section) | ✅ |
-| Direction recorded in procession doc | `ADAAD_PR_PROCESSION_2026-03-v2.md` § 4 now records Phase 52 as ratified + shipped (`v7.6.0`) | ✅ |
-| Phase 52 branch created from v7.5.0 HEAD | Historical closure recorded via shipped Phase 52 release state in roadmap/changelog (branch command N/A post-release) | ✅ (N/A — already shipped) |
+| 47–51 (Gap closure + alignment) | v7.1.0–v7.5.0 | ✅ |
+| 52–56 (Cross-epoch memory, integrations) | v7.6.0–v7.x | ✅ |
+| 57–64 (v8 Constitutional Sequence) | v8.0.0–v8.7.0 | ✅ |
+| 65 — First Autonomous Self-Evolution | v9.0.0 | ✅ AUDIT-0 · REPLAY-0 · MUTATION-TARGET |
+| 66–70 (Innovations Pipeline) | v9.1.0–v9.5.0 | ✅ |
+| 71–75 (Seed Lifecycle Pipeline) | v9.6.0–v9.10.0 | ✅ full lifecycle end-to-end |
+| 76 — Seed CEL Outcome Recorder | v9.11.0 | ✅ feedback loop closed |
+| 77 (TBD) | pending | ⏳ PR-77-PLAN (non-blocking for GA) |
+
+**Gate 5: ✅ CLEARED**
 
 ---
 
@@ -83,35 +109,45 @@
 
 | Check | Artifact | Status |
 |---|---|---|
-| `.github/workflows/governance_strict_release_gate.yml` terminal `release-gate` job passes | Must run on the GA tag commit | ⏳ |
+| `governance_strict_release_gate.yml` terminal `release-gate` job passes | Fires on `v1.1-GA` tag push | ⏳ unblocked after Gates 1–5 |
 
-> This gate runs automatically on tag push. All prior gates must be satisfied before pushing the `v1.0.0-GA` tag.
+**Gate 6: ⏳ — Automated; fires on tag push after Gates 1–5 clear**
+
+---
+
+## Dustin-Owned Hard Blocks
+
+| Finding | Action | Severity |
+|---|---|---|
+| **C-02** | `git tag -s v9.7.0 v9.8.0 v9.9.0 v9.10.0 && git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0` | CRITICAL |
+| **H-04** | Declare v1.1-GA canonical in procession doc § 2.3; confirm Gate 4 GPG sign-off executed | HIGH |
+| **M-02** | `git tag free-v9.10.0 && git push origin free-v9.10.0` | MEDIUM |
+| **H-03** | Patent counsel — provisional application for constitutional mutation governance method | HIGH — time-sensitive |
+| **Gate 3** | F-Droid MR at `gitlab.com/fdroid/fdroid-data/-/merge_requests` | HIGH |
+| **Gate 4** | Founder GPG-signed commit: `governance: v1.1-GA human sign-off — $(date)` | HARD BLOCK |
 
 ---
 
 ## Tagging Procedure (Final Step)
 
-Once all 6 gates are cleared:
+Once all 6 gates cleared:
 
 ```bash
-# On main at the GA-ready commit
-git tag -a v1.0.0-GA -m "v1.0.0-GA — All governance gates cleared — Phase 51 complete — [DATE]"
-git push origin v1.0.0-GA
+git tag -s v1.1-GA -m "v1.1-GA — All governance gates cleared — Phase 76 complete — v9.11.0 — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+git push origin v1.1-GA
 ```
 
-The governance strict release gate workflow fires on tag push and performs terminal verification.
+The governance strict release gate fires automatically on push.
 
 ---
 
-## Summary Status
+## Summary
 
 | Gate | Description | Status |
 |---|---|---|
-| 1 | CI Quality (automated) | ⏳ |
-| 2 | Governance Documentation | ⏳ (Phase 51 closes most items) |
-| 3 | Android / F-Droid Distribution | ⏳ **F-Droid MR is hard block** |
-| 4 | Human Sign-off (Founder Gate) | ⏳ **Hard block — cannot be automated** |
-| 5 | Phase 52 Direction Ratified | ✅ |
-| 6 | Governance Strict Release Gate | ⏳ (unblocked after Gates 1–5) |
-
-**Current blocker:** Gates 3 and 4 require manual action from Dustin (F-Droid MR submission + GPG sign-off). Phase 52 ratification is already closed and evidenced; remaining automation proceeds after manual gates clear.
+| 1 | CI Quality | ✅ **CLEARED** |
+| 2 | Governance Documentation | ⏳ H-04 versioning (Dustin) |
+| 3 | Android / F-Droid | ⏳ F-Droid MR + free tag (Dustin) |
+| 4 | Human Sign-off | ⏳ **Hard block — HUMAN-0** |
+| 5 | Phase Roadmap | ✅ **CLEARED** |
+| 6 | Strict Release Gate | ⏳ fires on tag push |
