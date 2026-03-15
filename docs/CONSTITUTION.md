@@ -1,4 +1,4 @@
-# ADAAD Constitutional Framework v0.7.0
+# ADAAD Constitutional Framework v0.9.0
 
 ## Philosophy
 
