@@ -4,7 +4,7 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.1.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](../CHANGELOG.md)&nbsp;[![Phase](https://img.shields.io/badge/Phase_66-Hardening_Tier_Alpha-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](../ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_%C2%B7_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](CONSTITUTION.md)&nbsp;[![Tests](https://img.shields.io/badge/4%2C466_Tests-Passing-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](../tests/)
+[![Version](https://img.shields.io/badge/ADAAD-v9.10.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](../CHANGELOG.md)&nbsp;[![Phase](https://img.shields.io/badge/Phase_75-Seed_CEL_Injection-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](../ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_%C2%B7_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](CONSTITUTION.md)&nbsp;[![Tests](https://img.shields.io/badge/4%2C624_Tests-Passing-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](../tests/)
 
 <br/>
 
@@ -14,7 +14,7 @@
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-> Internal architecture, API contracts, configuration, evidence artifacts, and test coverage for **ADAAD v9.1.0 · Phase 66**. For user-facing setup see [QUICKSTART.md](../QUICKSTART.md). For the 23 rules see [CONSTITUTION.md](CONSTITUTION.md). For build-agent protocol see [AGENTS.md](../AGENTS.md).
+> Internal architecture, API contracts, configuration, evidence artifacts, and test coverage for **ADAAD v9.10.0 · Phase 75**. For user-facing setup see [QUICKSTART.md](../QUICKSTART.md). For the 23 rules see [CONSTITUTION.md](CONSTITUTION.md). For build-agent protocol see [AGENTS.md](../AGENTS.md).
 
 <br/>
 
@@ -31,8 +31,8 @@
 | [ARCHITECTURE_CONTRACT.md](ARCHITECTURE_CONTRACT.md) | Structural constraints, 8 invariants, module ownership | 🟢 Live |
 | [governance/ARCHITECT_SPEC_v3.1.0.md](governance/ARCHITECT_SPEC_v3.1.0.md) | Canonical implementation spec — all organ contracts | 🟢 Current |
 | [governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md](governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) | Invariant enforcement matrix with test bindings | 🟢 Live |
-| [governance/LLM_FAILOVER_CONTRACT.md](governance/LLM_FAILOVER_CONTRACT.md) | LLM provider failover governance (Phase 66) | 🟢 v9.1 |
-| [governance/KEY_CEREMONY_RUNBOOK_v1.md](governance/KEY_CEREMONY_RUNBOOK_v1.md) | 2-of-3 Ed25519 key ceremony procedure (Phase 66) | 🟢 v9.1 |
+| [governance/LLM_FAILOVER_CONTRACT.md](governance/LLM_FAILOVER_CONTRACT.md) | LLM provider failover governance (Phase 75) | 🟢 v9.1 |
+| [governance/KEY_CEREMONY_RUNBOOK_v1.md](governance/KEY_CEREMONY_RUNBOOK_v1.md) | 2-of-3 Ed25519 key ceremony procedure (Phase 75) | 🟢 v9.1 |
 | [SECURITY.md](SECURITY.md) | Security posture, threat model summary | 🟢 Live |
 | [THREAT_MODEL.md](THREAT_MODEL.md) | Full threat model — attack surface analysis | 🟢 Live |
 
@@ -94,7 +94,7 @@
 
 | Release | Theme | Notes |
 |:---:|:---|:---|
-| [9.1.0](releases/9.0.0.md) | Hardening Tier Alpha | Phase 66 — telemetry, lineage invariants, governance contracts |
+| [9.1.0](releases/9.0.0.md) | Hardening Tier Alpha | Phase 75 — telemetry, lineage invariants, governance contracts |
 | [9.0.0](releases/9.0.0.md) | Emergence | Phase 65 — First Autonomous Self-Evolution |
 | [8.4.0](releases/8.4.0.md) | Lineage | Phase 61 — Lineage Engine + CompatibilityGraph |
 | [7.x](releases/) | Scale & Resilience | Phases 31–50 — Cryovant, Aponi, federation hardening |
@@ -127,7 +127,7 @@ ADAAD is organized into five independently testable subsystems, each with formal
 
 ```
   ┌─────────────────────────────────────────────────────────────────────────┐
-  │                        ADAAD v9.1.0 Runtime                             │
+  │                        ADAAD v9.10.0 Runtime                             │
   │                                                                         │
   │   ┌──────────┐                                                          │
   │   │ Architect│──┐                    ┌─────────────────┐                │
@@ -420,7 +420,7 @@ class AdaptiveWeights:
     """
     Adjusts FitnessEngine signal weights from post-merge telemetry.
     EMA descent (LR=0.05). Bounded [0.05, 0.70] (FIT-BOUND-0).
-    prediction_accuracy published to epoch telemetry every cycle (v9.1.0).
+    prediction_accuracy published to epoch telemetry every cycle (v9.10.0).
     """
 ```
 
@@ -615,10 +615,10 @@ ADAAD/
 
 <br/>
 
-![version](https://img.shields.io/badge/ADAAD-v9.1.0-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![phase](https://img.shields.io/badge/Phase_66-Hardening_Tier_Alpha-0d1117?style=flat-square&labelColor=0d1117&color=f5c842)&nbsp;![constitution](https://img.shields.io/badge/Constitution-v0.9.0_%C2%B7_23_Rules-0d1117?style=flat-square&labelColor=0d1117&color=ff4466)&nbsp;![license](https://img.shields.io/badge/Apache_2.0-Free_Forever-0d1117?style=flat-square&labelColor=0d1117&color=00ff88)
+![version](https://img.shields.io/badge/ADAAD-v9.10.0-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![phase](https://img.shields.io/badge/Phase_75-Seed_CEL_Injection-0d1117?style=flat-square&labelColor=0d1117&color=f5c842)&nbsp;![constitution](https://img.shields.io/badge/Constitution-v0.9.0_%C2%B7_23_Rules-0d1117?style=flat-square&labelColor=0d1117&color=ff4466)&nbsp;![license](https://img.shields.io/badge/Apache_2.0-Free_Forever-0d1117?style=flat-square&labelColor=0d1117&color=00ff88)
 
 <br/>
 
-<sub><code>ADAAD v9.1.0</code> &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
+<sub><code>ADAAD v9.10.0</code> &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
 
 </div>

@@ -1,177 +1,315 @@
-<svg viewBox="0 0 1440 560" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <linearGradient id="h-bg" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#010810"/>
-    <stop offset="50%" stop-color="#020d1c"/>
-    <stop offset="100%" stop-color="#010810"/>
-  </linearGradient>
-  <radialGradient id="h-glow1" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.12"/>
-    <stop offset="100%" stop-color="#00d4ff" stop-opacity="0"/>
-  </radialGradient>
-  <radialGradient id="h-glow2" cx="30%" cy="60%" r="40%">
-    <stop offset="0%" stop-color="#a855f7" stop-opacity="0.08"/>
-    <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
-  </radialGradient>
-  <radialGradient id="h-glow3" cx="70%" cy="40%" r="35%">
-    <stop offset="0%" stop-color="#f5c842" stop-opacity="0.07"/>
-    <stop offset="100%" stop-color="#f5c842" stop-opacity="0"/>
-  </radialGradient>
-  <filter id="h-blur"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <filter id="h-title"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <filter id="h-soft"><feGaussianBlur stdDeviation="20"/></filter>
-  <filter id="h-xsoft"><feGaussianBlur stdDeviation="50"/></filter>
-  <pattern id="h-hex" x="0" y="0" width="52" height="60" patternUnits="userSpaceOnUse">
-    <polygon points="26,2 48,14 48,46 26,58 4,46 4,14" fill="none" stroke="#00d4ff" stroke-width="0.35" opacity="0.1"/>
-  </pattern>
-  <pattern id="h-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-    <circle cx="12" cy="12" r="0.8" fill="#00d4ff" opacity="0.14"/>
-  </pattern>
-  <style>
-    @keyframes h-scan{0%{transform:translateY(-160px)}100%{transform:translateY(720px)}}
-    @keyframes h-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-    @keyframes h-orbit2{from{transform:rotate(360deg)}to{transform:rotate(0deg)}}
-    @keyframes h-pulse{0%,100%{opacity:.5}50%{opacity:1}}
-    @keyframes h-blink{0%,100%{opacity:1}48%{opacity:.15}52%{opacity:.9}}
-    @keyframes h-trail{0%{stroke-dashoffset:0}100%{stroke-dashoffset:-80}}
-    @keyframes h-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-    .h-scan-line{animation:h-scan 6s linear infinite}
-    .h-orbit1{transform-origin:720px 280px;animation:h-orbit 18s linear infinite}
-    .h-orbit2{transform-origin:720px 280px;animation:h-orbit2 12s linear infinite}
-    .h-orbit3{transform-origin:720px 280px;animation:h-orbit 28s linear infinite}
-    .h-beacon{animation:h-pulse 2.5s ease-in-out infinite}
-    .h-blink{animation:h-blink 1.2s ease-in-out infinite}
-    .h-trail{stroke-dasharray:20 10;animation:h-trail 3s linear infinite}
-    .h-float{animation:h-float 4s ease-in-out infinite}
-    .h-pulse2{animation:h-pulse 3s ease-in-out infinite 1s}
-    .h-pulse3{animation:h-pulse 3.5s ease-in-out infinite 2s}
-  </style>
-</defs>
-<!-- Base -->
-<rect width="1440" height="560" fill="url(#h-bg)"/>
-<rect width="1440" height="560" fill="url(#h-glow1)"/>
-<rect width="1440" height="560" fill="url(#h-glow2)"/>
-<rect width="1440" height="560" fill="url(#h-glow3)"/>
-<rect width="1440" height="560" fill="url(#h-hex)"/>
-<rect width="1440" height="560" fill="url(#h-dots)" opacity="0.5"/>
-<!-- Deep background orbs -->
-<circle cx="720" cy="280" r="300" fill="#00d4ff" opacity="0.04" filter="url(#h-xsoft)"/>
-<circle cx="300" cy="400" r="200" fill="#a855f7" opacity="0.04" filter="url(#h-xsoft)"/>
-<circle cx="1100" cy="160" r="180" fill="#f5c842" opacity="0.04" filter="url(#h-xsoft)"/>
-<!-- Scanning line -->
-<rect x="0" y="0" width="1440" height="2" fill="url(#h-glow1)" opacity="0.3" class="h-scan-line"/>
-<!-- Orbit rings -->
-<g class="h-orbit1">
-  <ellipse cx="720" cy="280" rx="320" ry="95" fill="none" stroke="#00d4ff" stroke-width="0.8" opacity="0.12" transform="rotate(-15,720,280)"/>
-  <circle cx="1040" cy="280" r="7" fill="#00d4ff" opacity="0.75" filter="url(#h-blur)" class="h-beacon"/>
-</g>
-<g class="h-orbit2">
-  <ellipse cx="720" cy="280" rx="260" ry="78" fill="none" stroke="#a855f7" stroke-width="0.7" opacity="0.1" transform="rotate(25,720,280)"/>
-  <circle cx="720" cy="202" r="5" fill="#a855f7" opacity="0.7" filter="url(#h-blur)" class="h-pulse2"/>
-</g>
-<g class="h-orbit3">
-  <ellipse cx="720" cy="280" rx="200" ry="60" fill="none" stroke="#f5c842" stroke-width="0.6" opacity="0.08" transform="rotate(-40,720,280)"/>
-  <circle cx="520" cy="280" r="4" fill="#f5c842" opacity="0.65" filter="url(#h-blur)" class="h-pulse3"/>
-</g>
-<!-- Central circuit / governance node -->
-<circle cx="720" cy="280" r="48" fill="#001828" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
-<circle cx="720" cy="280" r="38" fill="#000d1a" stroke="#f5c842" stroke-width="1" opacity="0.5"/>
-<circle cx="720" cy="280" r="26" fill="#f5c842" opacity="0.08" filter="url(#h-blur)"/>
-<circle cx="720" cy="280" r="16" fill="#f5c842" opacity="0.25" filter="url(#h-blur)" class="h-beacon"/>
-<text x="720" y="276" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#f5c842" opacity="0.9" letter-spacing="1">GOV</text>
-<text x="720" y="287" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#f5c842" opacity="0.9" letter-spacing="1">GATE</text>
-<!-- Spoke lines from center to agents -->
-<line x1="720" y1="280" x2="310" y2="180" stroke="#00d4ff" stroke-width="0.8" opacity="0.2" class="h-trail"/>
-<line x1="720" y1="280" x2="1130" y2="180" stroke="#a855f7" stroke-width="0.8" opacity="0.2" class="h-trail"/>
-<line x1="720" y1="280" x2="310" y2="380" stroke="#ff4466" stroke-width="0.8" opacity="0.15" class="h-trail"/>
-<line x1="720" y1="280" x2="1130" y2="380" stroke="#00ff88" stroke-width="0.8" opacity="0.15" class="h-trail"/>
-<!-- Blueprint structure lines -->
-<g stroke="#00d4ff" stroke-width="0.4" opacity="0.08">
-  <line x1="0" y1="140" x2="1440" y2="140"/>
-  <line x1="0" y1="280" x2="1440" y2="280"/>
-  <line x1="0" y1="420" x2="1440" y2="420"/>
-  <line x1="240" y1="0" x2="240" y2="560"/>
-  <line x1="720" y1="0" x2="720" y2="560"/>
-  <line x1="1200" y1="0" x2="1200" y2="560"/>
-</g>
-<!-- Left agent node (Architect) -->
-<g class="h-float" style="transform-origin:280px 165px">
-  <circle cx="280" cy="165" r="28" fill="#001828" stroke="#00d4ff" stroke-width="1.5" opacity="0.8"/>
-  <circle cx="280" cy="165" r="20" fill="#000d1a" opacity="0.9"/>
-  <rect x="271" y="150" width="18" height="30" rx="1" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.6"/>
-  <polygon points="280,140 288,150 272,150" fill="none" stroke="#f5c842" stroke-width="1" opacity="0.75"/>
-  <circle cx="280" cy="140" r="3" fill="#f5c842" opacity="0.9" filter="url(#h-blur)" class="h-beacon"/>
-  <text x="280" y="213" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00d4ff" opacity="0.8" letter-spacing="2">ARCHITECT</text>
-</g>
-<!-- Right agent node (Dream) -->
-<g class="h-float" style="transform-origin:1160px 165px;animation-delay:1.3s">
-  <circle cx="1160" cy="165" r="28" fill="#0d0820" stroke="#a855f7" stroke-width="1.5" opacity="0.8"/>
-  <circle cx="1160" cy="165" r="20" fill="#080515" opacity="0.9"/>
-  <ellipse cx="1160" cy="165" rx="18" ry="11" fill="none" stroke="#a855f7" stroke-width="0.8" opacity="0.5"/>
-  <circle cx="1160" cy="165" r="7" fill="#a855f7" opacity="0.3" filter="url(#h-blur)"/>
-  <circle cx="1160" cy="165" r="4" fill="#a855f7" opacity="0.7" filter="url(#h-blur)" class="h-pulse2"/>
-  <text x="1160" y="213" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#a855f7" opacity="0.8" letter-spacing="2">DREAM</text>
-</g>
-<!-- Bottom-left agent (Beast) -->
-<g class="h-float" style="transform-origin:280px 395px;animation-delay:2.1s">
-  <circle cx="280" cy="395" r="28" fill="#1a0404" stroke="#ff4466" stroke-width="1.5" opacity="0.8"/>
-  <circle cx="280" cy="395" r="20" fill="#100202" opacity="0.9"/>
-  <circle cx="280" cy="395" r="12" fill="#ff4466" opacity="0.1" filter="url(#h-blur)"/>
-  <circle cx="280" cy="395" r="7" fill="#ff4466" opacity="0.4" filter="url(#h-blur)" class="h-pulse3"/>
-  <circle cx="280" cy="395" r="4" fill="#ff4466" opacity="0.85" filter="url(#h-blur)" class="h-blink"/>
-  <text x="280" y="443" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#ff4466" opacity="0.8" letter-spacing="4">BEAST</text>
-</g>
-<!-- Main title block -->
-<text x="720" y="90" text-anchor="middle" font-family="'Courier New',monospace" font-size="11" fill="#1e3a4a" letter-spacing="8" opacity="0.6">CONSTITUTIONALLY GOVERNED CODE EVOLUTION</text>
-<!-- ADAAD lettering -->
-<text x="720" y="162" text-anchor="middle" font-family="'Courier New',monospace" font-size="86" font-weight="900" fill="#00d4ff" letter-spacing="16" opacity="0.06">ADAAD</text>
-<text x="722" y="160" text-anchor="middle" font-family="'Courier New',monospace" font-size="82" font-weight="900" fill="none" stroke="#00d4ff" stroke-width="0.8" letter-spacing="16" opacity="0.25" filter="url(#h-title)">ADAAD</text>
-<text x="720" y="158" text-anchor="middle" font-family="'Courier New',monospace" font-size="80" font-weight="900" fill="#00d4ff" letter-spacing="16" opacity="0.9" filter="url(#h-title)">ADAAD</text>
-<!-- Subtitle -->
-<text x="720" y="195" text-anchor="middle" font-family="'Courier New',monospace" font-size="13" fill="#f5c842" letter-spacing="3" opacity="0.85">Autonomous Development &amp; Adaptation Architecture</text>
-<!-- Tag line -->
-<text x="720" y="230" text-anchor="middle" font-family="'Courier New',monospace" font-size="10" fill="#00d4ff" letter-spacing="2" opacity="0.55">GovernanceGate · 23 Rules · SHA-256 Hash-Chain · Deterministic Replay</text>
-<!-- Status bar bottom -->
-<rect x="0" y="490" width="1440" height="70" fill="#000810" opacity="0.9"/>
-<line x1="0" y1="490" x2="1440" y2="490" stroke="#00d4ff" stroke-width="0.8" opacity="0.3"/>
-<!-- Status items -->
-<g font-family="'Courier New',monospace" font-size="8.5">
-  <circle cx="70" cy="525" r="5" fill="#00ff88" opacity="0.9" class="h-beacon"/>
-  <text x="85" y="521" fill="#00ff88" opacity="0.85" letter-spacing="1">EVOLUTION LOOP</text>
-  <text x="85" y="535" fill="#1a4a28" opacity="0.8">14-STEP · CEL-ORDER-0</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <style>
+      .logo-text { font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:72px;letter-spacing:-2px; }
+      .logo-sub  { font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:15px;letter-spacing:3px; }
+      .pill-text { font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:8px;letter-spacing:1.5px; }
+      .node-lbl  { font-family:'Inter',Arial,sans-serif;font-weight:600;font-size:9px;fill:#8c919b;letter-spacing:1px; }
+      .gate-lbl  { font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:10px;fill:#f5f7fa;letter-spacing:1px; }
+      .gate-sub  { font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:7.5px;fill:#8c919b; }
+      .stat-num  { font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:14px;fill:#f5f7fa; }
+      .stat-lbl  { font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:8px;fill:#8c919b;letter-spacing:1px; }
+      .hash-text { font-family:'JetBrains Mono','Courier New',monospace;font-size:7.5px;fill:#2b2f36; }
+      .hash-live { font-family:'JetBrains Mono','Courier New',monospace;font-size:7.5px;fill:#14b8a6; }
+      .corner-tx { font-family:'JetBrains Mono','Courier New',monospace;font-size:7px;fill:#2b2f36; }
 
-  <circle cx="280" cy="525" r="5" fill="#00ff88" opacity="0.9" class="h-pulse2"/>
-  <text x="295" y="521" fill="#00ff88" opacity="0.85" letter-spacing="1">GOVERNANCEGATE</text>
-  <text x="295" y="535" fill="#1a4a28" opacity="0.8">NON-BYPASSABLE · GOV-SOLE-0</text>
+      @keyframes gridShimmer{0%{opacity:.04}50%{opacity:.09}100%{opacity:.04}}
+      .grid{animation:gridShimmer 8s ease-in-out infinite}
 
-  <circle cx="530" cy="525" r="5" fill="#00ff88" opacity="0.9" class="h-pulse3"/>
-  <text x="545" y="521" fill="#00ff88" opacity="0.85" letter-spacing="1">EVIDENCE LEDGER</text>
-  <text x="545" y="535" fill="#1a4a28" opacity="0.8">HASH-CHAINED · APPEND-ONLY</text>
+      @keyframes chainFlow{0%{stroke-dashoffset:60;opacity:.3}50%{opacity:.8}100%{stroke-dashoffset:0;opacity:.3}}
+      .chain-b{stroke:#3b82f6;stroke-width:1.5;fill:none;stroke-dasharray:6 4;animation:chainFlow 2.5s linear infinite}
+      .chain-v{stroke:#8b5cf6;stroke-width:1.5;fill:none;stroke-dasharray:4 5;animation:chainFlow 3s linear infinite reverse}
+      .chain-o{stroke:#f97316;stroke-width:1.5;fill:none;stroke-dasharray:5 4;animation:chainFlow 2.8s linear infinite}
+      .chain-g{stroke:#22c55e;stroke-width:1.2;fill:none;stroke-dasharray:4 4;animation:chainFlow 2s linear infinite}
 
-  <circle cx="780" cy="525" r="5" fill="#f5c842" opacity="0.9" class="h-beacon"/>
-  <text x="795" y="521" fill="#f5c842" opacity="0.85" letter-spacing="1">SELF-EVOLUTION</text>
-  <text x="795" y="535" fill="#4a3a00" opacity="0.8">PHASE 65 · MARCH 13 2026</text>
+      @keyframes orbB{0%,100%{r:36;opacity:.12}50%{r:48;opacity:.05}}
+      @keyframes orbV{0%,100%{r:36;opacity:.12}50%{r:48;opacity:.05}}
+      @keyframes orbO{0%,100%{r:36;opacity:.12}50%{r:48;opacity:.05}}
+      .glow-b{fill:#3b82f6;animation:orbB 3s ease-in-out infinite}
+      .glow-v{fill:#8b5cf6;animation:orbV 3.4s ease-in-out .5s infinite}
+      .glow-o{fill:#f97316;animation:orbO 2.8s ease-in-out 1s infinite}
 
-  <circle cx="1000" cy="525" r="5" fill="#00d4ff" opacity="0.9" class="h-pulse2"/>
-  <text x="1015" y="521" fill="#00d4ff" opacity="0.85" letter-spacing="1">REPLAY VERIFIER</text>
-  <text x="1015" y="535" fill="#0a2a40" opacity="0.8">ZERO DIVERGENCE · DET-ALL-0</text>
+      @keyframes gRing1{0%,100%{r:30;stroke-opacity:.7;stroke-width:1.5}50%{r:40;stroke-opacity:.1;stroke-width:.5}}
+      @keyframes gRing2{0%,100%{r:40;stroke-opacity:.35;stroke-width:1}50%{r:52;stroke-opacity:.05;stroke-width:.3}}
+      .gate-r1{fill:none;stroke:#22c55e;animation:gRing1 2s ease-in-out infinite}
+      .gate-r2{fill:none;stroke:#22c55e;animation:gRing2 2s ease-in-out .6s infinite}
 
-  <circle cx="1230" cy="525" r="5" fill="#a855f7" opacity="0.9" class="h-pulse3"/>
-  <text x="1245" y="521" fill="#a855f7" opacity="0.85" letter-spacing="1">AGENTS</text>
-  <text x="1245" y="535" fill="#2a0a50" opacity="0.8">3 ACTIVE · UCB1 BANDIT</text>
-</g>
-<!-- Top/bottom border glow -->
-<rect x="0" y="0" width="1440" height="2" fill="#00d4ff" opacity="0.4"/>
-<rect x="0" y="558" width="1440" height="2" fill="#f5c842" opacity="0.3"/>
-<!-- Corner markers -->
-<g stroke="#00d4ff" stroke-width="1.5" fill="none" opacity="0.4">
-  <path d="M20,20 L20,50 L50,50"/>
-  <path d="M1420,20 L1420,50 L1390,50"/>
-  <path d="M20,540 L20,510 L50,510"/>
-  <path d="M1420,540 L1420,510 L1390,510"/>
-</g>
-<!-- Version badge -->
-<rect x="1300" y="15" width="120" height="28" rx="14" fill="#001828" stroke="#00d4ff" stroke-width="1" opacity="0.85"/>
-<text x="1360" y="27" text-anchor="middle" font-family="'Courier New',monospace" font-size="8" fill="#00d4ff" letter-spacing="1" opacity="0.9">v9.1.0</text>
-<text x="1360" y="37" text-anchor="middle" font-family="'Courier New',monospace" font-size="6.5" fill="#0a3a5a" opacity="0.8">Phase 66 · Alpha</text>
+      @keyframes blink{0%,90%,100%{opacity:1}95%{opacity:.2}}
+      .blink{animation:blink 3s ease-in-out infinite}
+
+      @keyframes borderSweep{0%{stroke-dashoffset:1200}100%{stroke-dashoffset:0}}
+      .bsweep{fill:none;stroke:#3b82f6;stroke-width:1.5;stroke-dasharray:1200;animation:borderSweep 3s linear forwards}
+      .bsweepv{fill:none;stroke:#8b5cf6;stroke-width:.8;stroke-dasharray:600;animation:borderSweep 4s linear 1s forwards;opacity:.5}
+
+      @keyframes ledIn{0%{opacity:0;transform:translateX(-4px)}20%{opacity:1;transform:translateX(0)}80%{opacity:1}100%{opacity:.55}}
+      .led1{animation:ledIn 4s ease-in-out infinite}
+      .led2{animation:ledIn 4s ease-in-out 1.3s infinite}
+      .led3{animation:ledIn 4s ease-in-out 2.6s infinite}
+
+      @keyframes pillBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+      .pill{animation:pillBounce 3s ease-in-out infinite}
+
+      @keyframes pkt{0%{offset-distance:0%;opacity:0}10%{opacity:1}90%{opacity:1}100%{offset-distance:100%;opacity:0}}
+      .pktB{fill:#3b82f6;offset-path:path("M 500,175 L 540,200");animation:pkt 2.5s linear infinite}
+      .pktV{fill:#8b5cf6;offset-path:path("M 560,175 L 560,200");animation:pkt 3s linear .6s infinite}
+      .pktO{fill:#f97316;offset-path:path("M 620,175 L 580,200");animation:pkt 2.8s linear 1.2s infinite}
+    </style>
+    <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#0b0c0f"/>
+      <stop offset="60%"  stop-color="#0d0f14"/>
+      <stop offset="100%" stop-color="#0b0c0f"/>
+    </linearGradient>
+    <linearGradient id="hdrG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#3b82f6" stop-opacity=".12"/>
+      <stop offset="50%"  stop-color="#8b5cf6" stop-opacity=".06"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity=".10"/>
+    </linearGradient>
+    <linearGradient id="logoG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#f5f7fa"/>
+      <stop offset="75%"  stop-color="#c8cdd6"/>
+      <stop offset="100%" stop-color="#8c919b"/>
+    </linearGradient>
+    <linearGradient id="barG" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#3b82f6" stop-opacity=".7"/>
+      <stop offset="50%"  stop-color="#8b5cf6" stop-opacity=".6"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity=".5"/>
+    </linearGradient>
+    <radialGradient id="glowB" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity=".3"/><stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowV" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity=".3"/><stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowO" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f97316" stop-opacity=".3"/><stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowG" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity=".25"/><stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gateG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#1a2a1a"/><stop offset="100%" stop-color="#111811"/>
+    </linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="12" cy="12" r=".7" fill="#f5f7fa" opacity=".12"/>
+    </pattern>
+  </defs>
+
+  <!-- BG -->
+  <rect width="1200" height="400" fill="url(#bgG)"/>
+  <rect width="1200" height="400" fill="url(#hdrG)"/>
+  <rect width="1200" height="400" fill="url(#dots)" class="grid"/>
+
+  <!-- Border sweep -->
+  <line x1="0" y1="1.5" x2="1200" y2="1.5" class="bsweep"/>
+  <line x1="0" y1="3.5" x2="600"  y2="3.5" class="bsweepv"/>
+  <line x1="0" y1="398.5" x2="1200" y2="398.5" stroke="#2b2f36" stroke-width="1" fill="none"/>
+
+  <!-- Dividers -->
+  <line x1="370" y1="36" x2="370" y2="396" stroke="#2b2f36" stroke-width=".7"/>
+  <line x1="698" y1="36" x2="698" y2="396" stroke="#2b2f36" stroke-width=".7"/>
+
+  <!-- === LEFT PANEL === -->
+  <!-- Logo -->
+  <text x="54" y="118" class="logo-text" fill="url(#logoG)">ADAAD</text>
+  <rect x="54" y="124" width="280" height="2.5" fill="url(#barG)" rx="1"/>
+
+  <!-- Taglines -->
+  <text x="56" y="151" class="logo-sub" fill="#8c919b">AUTONOMOUS · GOVERNED · EVOLVED</text>
+  <text x="56" y="173" style="font-family:'Inter',Arial,sans-serif;font-size:12px;fill:#8c919b">Constitutionally governed code evolution engine</text>
+  <text x="56" y="189" style="font-family:'Inter',Arial,sans-serif;font-size:12px;fill:#8c919b">Every mutation hash-chained · 23 rules · zero bypass</text>
+
+  <!-- Self-evolved badge -->
+  <g transform="translate(56,206)">
+    <rect width="220" height="22" rx="4" fill="#0f1a0f" stroke="#22c55e" stroke-width=".8"/>
+    <circle cx="13" cy="11" r="4" fill="#22c55e" class="blink"/>
+    <text x="25" y="15" class="pill-text" fill="#22c55e">SELF-EVOLVED · MARCH 13 2026 · ⛓</text>
+  </g>
+
+  <!-- Phase + version pills -->
+  <g transform="translate(56,236)" class="pill">
+    <rect width="104" height="22" rx="4" fill="#16181d" stroke="#3b82f6" stroke-width=".8"/>
+    <text x="52" y="15" class="pill-text" fill="#3b82f6" text-anchor="middle">PHASE 75</text>
+  </g>
+  <g transform="translate(167,236)">
+    <rect width="110" height="22" rx="4" fill="#16181d" stroke="#8b5cf6" stroke-width=".8"/>
+    <text x="55" y="15" class="pill-text" fill="#8b5cf6" text-anchor="middle">v9.10.0</text>
+  </g>
+
+  <!-- Stats cards -->
+  <g transform="translate(54,275)">
+    <rect width="72" height="46" rx="4" fill="#16181d" stroke="#2b2f36" stroke-width=".8"/>
+    <text x="36" y="18" class="stat-num" text-anchor="middle">4,624</text>
+    <text x="36" y="30" class="stat-lbl" text-anchor="middle">TESTS</text>
+    <text x="36" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#22c55e;text-anchor:middle;letter-spacing:1px">PASSING</text>
+
+    <rect x="78" y="0" width="64" height="46" rx="4" fill="#16181d" stroke="#2b2f36" stroke-width=".8"/>
+    <text x="110" y="18" class="stat-num" text-anchor="middle">23</text>
+    <text x="110" y="30" class="stat-lbl" text-anchor="middle">RULES</text>
+    <text x="110" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#eab308;text-anchor:middle;letter-spacing:1px">CONST.</text>
+
+    <rect x="148" y="0" width="64" height="46" rx="4" fill="#16181d" stroke="#2b2f36" stroke-width=".8"/>
+    <text x="180" y="18" class="stat-num" text-anchor="middle">75</text>
+    <text x="180" y="30" class="stat-lbl" text-anchor="middle">PHASES</text>
+    <text x="180" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#3b82f6;text-anchor:middle;letter-spacing:1px">COMPLETE</text>
+
+    <rect x="218" y="0" width="64" height="46" rx="4" fill="#16181d" stroke="#2b2f36" stroke-width=".8"/>
+    <text x="250" y="18" class="stat-num" text-anchor="middle">8</text>
+    <text x="250" y="30" class="stat-lbl" text-anchor="middle">INVARIANTS</text>
+    <text x="250" y="40" style="font-family:'Inter',Arial,sans-serif;font-size:7px;fill:#a855f7;text-anchor:middle;letter-spacing:1px">ARCH.</text>
+  </g>
+
+  <!-- Corner credits -->
+  <text x="56" y="374" class="corner-tx">Built by Dustin L. Reid · InnovativeAI LLC · Blackwell, OK</text>
+  <text x="56" y="385" class="corner-tx">github.com/InnovativeAI-adaad/ADAAD · Apache 2.0</text>
+
+  <!-- === CENTER PANEL — PIPELINE === -->
+  <text x="534" y="45" class="node-lbl" text-anchor="middle">MUTATION PIPELINE · CONSTITUTIONAL EVOLUTION LOOP</text>
+  <line x1="400" y1="51" x2="668" y2="51" stroke="#2b2f36" stroke-width=".8"/>
+
+  <!-- Agent glows -->
+  <circle cx="470" cy="95" r="40" fill="url(#glowB)" class="glow-b"/>
+  <circle cx="560" cy="95" r="40" fill="url(#glowV)" class="glow-v"/>
+  <circle cx="650" cy="95" r="40" fill="url(#glowO)" class="glow-o"/>
+
+  <!-- Architect node -->
+  <circle cx="470" cy="95" r="22" fill="#16181d" stroke="#3b82f6" stroke-width="1.5"/>
+  <circle cx="470" cy="95" r="13" fill="#1a2535"/>
+  <path d="M463,91 L470,84 L477,91" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+  <line x1="463" y1="91" x2="463" y2="101" stroke="#3b82f6" stroke-width="1.2"/>
+  <line x1="477" y1="91" x2="477" y2="101" stroke="#3b82f6" stroke-width="1.2"/>
+  <line x1="460" y1="101" x2="480" y2="101" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="470" y="131" class="node-lbl" text-anchor="middle" fill="#3b82f6">ARCHITECT</text>
+
+  <!-- Dream node -->
+  <circle cx="560" cy="95" r="22" fill="#16181d" stroke="#8b5cf6" stroke-width="1.5"/>
+  <circle cx="560" cy="95" r="13" fill="#1e1a2e"/>
+  <path d="M560,84 L563,91.5 L572,91.5 L565,97 L568,105 L560,100 L552,105 L555,97 L548,91.5 L557,91.5 Z" fill="#8b5cf6" opacity=".9"/>
+  <text x="560" y="131" class="node-lbl" text-anchor="middle" fill="#8b5cf6">DREAM</text>
+
+  <!-- Beast node -->
+  <circle cx="650" cy="95" r="22" fill="#16181d" stroke="#f97316" stroke-width="1.5"/>
+  <circle cx="650" cy="95" r="13" fill="#1f1810"/>
+  <path d="M653,84 L646,95 L652,95 L647,106 L657,92 L651,92 Z" fill="#f97316"/>
+  <text x="650" y="131" class="node-lbl" text-anchor="middle" fill="#f97316">BEAST</text>
+
+  <!-- UCB1 label -->
+  <text x="560" y="148" class="node-lbl" text-anchor="middle" fill="#eab308">UCB1 BANDIT SELECTION</text>
+
+  <!-- Agent-to-funnel lines -->
+  <line x1="470" y1="117" x2="502" y2="168" class="chain-b"/>
+  <line x1="560" y1="117" x2="560" y2="168" class="chain-v"/>
+  <line x1="650" y1="117" x2="618" y2="168" class="chain-o"/>
+
+  <!-- Funnel -->
+  <path d="M 502,168 L 618,168 L 580,192 L 540,192 Z" fill="#16181d" stroke="#eab308" stroke-width="1"/>
+  <text x="560" y="185" class="node-lbl" text-anchor="middle" fill="#eab308">WINNING PROPOSAL</text>
+
+  <!-- Funnel to CEL -->
+  <line x1="560" y1="192" x2="560" y2="210" stroke="#eab308" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <polygon points="556,210 560,218 564,210" fill="#eab308"/>
+
+  <!-- CEL box -->
+  <rect x="482" y="218" width="156" height="28" rx="4" fill="#16181d" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="560" y="236" class="gate-lbl" text-anchor="middle">14-STEP CEL</text>
+
+  <!-- CEL to gate -->
+  <line x1="560" y1="246" x2="560" y2="262" stroke="#3b82f6" stroke-width="1.2"/>
+  <polygon points="556,262 560,270 564,262" fill="#3b82f6"/>
+
+  <!-- GovernanceGate glow -->
+  <circle cx="560" cy="310" r="60" fill="url(#glowG)"/>
+
+  <!-- Gate rings -->
+  <circle cx="560" cy="310" r="30" class="gate-r1"/>
+  <circle cx="560" cy="310" r="38" class="gate-r2"/>
+  <circle cx="560" cy="310" r="30" fill="url(#gateG)" stroke="#22c55e" stroke-width="1.5"/>
+  <path d="M560,294 L573.8,302 L573.8,318 L560,326 L546.2,318 L546.2,302 Z" fill="none" stroke="#22c55e" stroke-width=".8" opacity=".4"/>
+  <path d="M552,311 L558,317 L570,302" stroke="#22c55e" stroke-width="2.5" fill="none" stroke-linecap="round" class="blink"/>
+  <text x="560" y="346" class="gate-lbl" text-anchor="middle">GOVERNANCE</text>
+  <text x="560" y="358" class="gate-sub" text-anchor="middle">GATE · GOV-SOLE-0</text>
+  <text x="560" y="368" class="gate-sub" text-anchor="middle">23 rules · non-bypassable</text>
+
+  <!-- Approved arrow -->
+  <line x1="591" y1="310" x2="634" y2="310" stroke="#22c55e" stroke-width="1.2"/>
+  <polygon points="634,306 642,310 634,314" fill="#22c55e"/>
+  <text x="643" y="305" class="node-lbl" fill="#22c55e">APPROVED</text>
+
+  <!-- Blocked arrow -->
+  <line x1="560" y1="341" x2="560" y2="370" stroke="#ef4444" stroke-width="1.2"/>
+  <polygon points="556,370 560,378 564,370" fill="#ef4444"/>
+  <rect x="526" y="378" width="68" height="15" rx="3" fill="#180a0a" stroke="#ef4444" stroke-width=".8"/>
+  <text x="560" y="389" class="node-lbl" text-anchor="middle" fill="#ef4444">BLOCKED · HALT</text>
+
+  <!-- Data packets -->
+  <circle r="3.5" class="pktB"/>
+  <circle r="3.5" class="pktV"/>
+  <circle r="3.5" class="pktO"/>
+
+  <!-- === RIGHT PANEL — LEDGER === -->
+  <rect x="706" y="58" width="480" height="330" rx="6" fill="#16181d" stroke="#2b2f36" stroke-width="1"/>
+  <rect x="706" y="58" width="480" height="28" rx="6" fill="#1c1e25"/>
+  <rect x="706" y="78" width="480" height="8" fill="#1c1e25"/>
+  <text x="720" y="77" class="node-lbl" style="font-size:8.5px;letter-spacing:2px;fill:#8c919b">EVIDENCE LEDGER · SHA-256 HASH-CHAINED · APPEND-ONLY</text>
+  <circle cx="1148" cy="72" r="3.5" fill="#ef4444" opacity=".7"/>
+  <circle cx="1158" cy="72" r="3.5" fill="#eab308" opacity=".7"/>
+  <circle cx="1168" cy="72" r="3.5" fill="#22c55e" opacity=".7"/>
+
+  <!-- Ledger entries -->
+  <g class="led1" transform="translate(718,96)">
+    <rect width="456" height="38" rx="3" fill="#0f1014" stroke="#2b2f36" stroke-width=".6"/>
+    <rect width="4"   height="38" rx="2" fill="#3b82f6"/>
+    <text x="14" y="16" class="hash-live">EPOCH_COMPLETE · phase=65 · ✓ APPROVED · Class A</text>
+    <text x="14" y="28" class="hash-text">sha256: a3f8e912b47cd92f1e88d3a7f6c0b5e4d9281f7a3c6b0e5d2f9a1b8c4e7d0f3</text>
+    <circle cx="440" cy="19" r="4" fill="#22c55e"/>
+  </g>
+  <line x1="720" y1="136" x2="720" y2="143" stroke="#2b2f36" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="726" y="142" class="hash-text">⛓ hash-chained</text>
+
+  <g class="led2" transform="translate(718,144)">
+    <rect width="456" height="38" rx="3" fill="#0f1014" stroke="#2b2f36" stroke-width=".6"/>
+    <rect width="4"   height="38" rx="2" fill="#8b5cf6"/>
+    <text x="14" y="16" class="hash-live">MUTATION_APPLIED · phase=73 · SEED-REVIEW-0 · audit:write</text>
+    <text x="14" y="28" class="hash-text">sha256: 7f2a1c9e4b8d0f3a6e9c2b5f8a1d4e7b0c3f6a9d2e5b8c1f4a7e0d3b6c9f2a5</text>
+    <circle cx="440" cy="19" r="4" fill="#22c55e"/>
+  </g>
+  <line x1="720" y1="184" x2="720" y2="191" stroke="#2b2f36" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="726" y="190" class="hash-text">⛓ hash-chained</text>
+
+  <g class="led3" transform="translate(718,192)">
+    <rect width="456" height="38" rx="3" fill="#0f1014" stroke="#2b2f36" stroke-width=".6"/>
+    <rect width="4"   height="38" rx="2" fill="#f97316"/>
+    <text x="14" y="16" class="hash-live">SEED_CEL_INJECT · phase=75 · SEED-CEL-AUDIT-0 · v9.10.0</text>
+    <text x="14" y="28" class="hash-text">sha256: c1f4a7e0d3b6c9f2a5d8e1b4c7f0a3d6e9b2c5f8a1d4e7b0c3f6a9d2e5b8c1f4</text>
+    <circle cx="440" cy="19" r="4" fill="#22c55e"/>
+  </g>
+  <line x1="720" y1="232" x2="720" y2="239" stroke="#2b2f36" stroke-width="1" stroke-dasharray="2,2"/>
+  <text x="726" y="238" class="hash-text">⛓ chained → 12,441 entries · replay-verifiable · divergences: 0</text>
+
+  <!-- Live indicator -->
+  <g transform="translate(718,244)">
+    <rect width="456" height="26" rx="3" fill="#0b1a12" stroke="#22c55e" stroke-width=".6"/>
+    <circle cx="12" cy="13" r="4" fill="#22c55e" class="blink"/>
+    <text x="22" y="17" class="hash-live" style="font-size:8px">LIVE · append-only · deterministic · replay-verified · divergences: 0</text>
+  </g>
+
+  <line x1="718" y1="280" x2="1170" y2="280" stroke="#2b2f36" stroke-width=".6"/>
+
+  <!-- Proof badges -->
+  <g transform="translate(718,290)">
+    <rect width="98" height="20" rx="3" fill="#0d1520" stroke="#3b82f6" stroke-width=".6"/>
+    <text x="49" y="14" class="pill-text" fill="#3b82f6" text-anchor="middle">REPLAY: 0 DIV</text>
+    <rect x="104" y="0" width="108" height="20" rx="3" fill="#0f1a0f" stroke="#22c55e" stroke-width=".6"/>
+    <text x="158" y="14" class="pill-text" fill="#22c55e" text-anchor="middle">GOV: 0 BYPASS</text>
+    <rect x="218" y="0" width="86" height="20" rx="3" fill="#1a1208" stroke="#f97316" stroke-width=".6"/>
+    <text x="261" y="14" class="pill-text" fill="#f97316" text-anchor="middle">TIER-0: SAFE</text>
+    <rect x="310" y="0" width="126" height="20" rx="3" fill="#0b0f14" stroke="#14b8a6" stroke-width=".6"/>
+    <text x="373" y="14" class="pill-text" fill="#14b8a6" text-anchor="middle">DETERMINISTIC: ✓</text>
+  </g>
+
+  <!-- Section labels top -->
+  <text x="213" y="40" class="node-lbl" text-anchor="middle">InnovativeAI LLC · Blackwell, OK</text>
+  <text x="946" y="44" class="node-lbl" text-anchor="middle">TAMPER-EVIDENT · IMMUTABLE · HASH-CHAINED</text>
+
+  <!-- Bottom accent bar -->
+  <rect x="0" y="394" width="1200" height="6" fill="url(#barG)" opacity=".5"/>
 </svg>

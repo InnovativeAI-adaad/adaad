@@ -1,56 +1,36 @@
-<svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <linearGradient id="div-l" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%"   stop-color="#010508" stop-opacity="1"/>
-    <stop offset="20%"  stop-color="#00d4ff" stop-opacity="0.45"/>
-    <stop offset="46%"  stop-color="#f5c842" stop-opacity="0.55"/>
-    <stop offset="50%"  stop-color="#f5c842" stop-opacity="0.7"/>
-    <stop offset="54%"  stop-color="#f5c842" stop-opacity="0.55"/>
-    <stop offset="80%"  stop-color="#00d4ff" stop-opacity="0.45"/>
-    <stop offset="100%" stop-color="#010508" stop-opacity="1"/>
-  </linearGradient>
-  <linearGradient id="div-l2" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%"   stop-color="#010508" stop-opacity="1"/>
-    <stop offset="25%"  stop-color="#00d4ff" stop-opacity="0.18"/>
-    <stop offset="50%"  stop-color="#00d4ff" stop-opacity="0.3"/>
-    <stop offset="75%"  stop-color="#00d4ff" stop-opacity="0.18"/>
-    <stop offset="100%" stop-color="#010508" stop-opacity="1"/>
-  </linearGradient>
-  <filter id="div-glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <style>
-    @keyframes div-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-    @keyframes div-pulse{0%,100%{opacity:.7}50%{opacity:1}}
-    .div-diamond{transform-origin:720px 28px;animation:div-spin 12s linear infinite}
-    .div-pulse{animation:div-pulse 2s ease-in-out infinite}
-  </style>
-</defs>
-<rect width="1440" height="56" fill="#010508"/>
-<!-- Centre line layers -->
-<rect x="0" y="26.5" width="1440" height="0.8" fill="url(#div-l2)"/>
-<rect x="0" y="25.5" width="1440" height="0.6" fill="url(#div-l)"/>
-<rect x="0" y="28.2" width="1440" height="0.5" fill="url(#div-l)" opacity="0.4"/>
-<!-- Flanking micro-dashes -->
-<g stroke="#00d4ff" stroke-width="0.5" opacity="0.2">
-  <line x1="0" y1="20" x2="1440" y2="20" stroke-dasharray="2 18"/>
-  <line x1="0" y1="36" x2="1440" y2="36" stroke-dasharray="2 18"/>
-</g>
-<!-- Spinning centre diamond -->
-<g class="div-diamond" filter="url(#div-glow)">
-  <polygon points="720,14 732,27 720,40 708,27" fill="none" stroke="#f5c842" stroke-width="1.8" opacity="0.9" class="div-pulse"/>
-  <polygon points="720,18 730,27 720,36 710,27" fill="#f5c842" opacity="0.45"/>
-</g>
-<!-- Flanking small diamonds -->
-<polygon points="660,22 668,28 660,34 652,28" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
-<polygon points="780,22 788,28 780,34 772,28" fill="none" stroke="#00d4ff" stroke-width="1" opacity="0.4"/>
-<polygon points="600,24 606,28 600,32 594,28" fill="none" stroke="#00d4ff" stroke-width="0.7" opacity="0.25"/>
-<polygon points="840,24 846,28 840,32 834,28" fill="none" stroke="#00d4ff" stroke-width="0.7" opacity="0.25"/>
-<!-- Tick marks -->
-<g stroke="#00d4ff" stroke-width="0.8" opacity="0.25">
-  <line x1="540" y1="23" x2="540" y2="33"/>
-  <line x1="900" y1="23" x2="900" y2="33"/>
-  <line x1="480" y1="25" x2="480" y2="31"/>
-  <line x1="960" y1="25" x2="960" y2="31"/>
-  <line x1="420" y1="26" x2="420" y2="30"/>
-  <line x1="1020" y1="26" x2="1020" y2="30"/>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 28" width="1200" height="28">
+  <defs>
+    <style>
+      @keyframes flow{0%{stroke-dashoffset:80}100%{stroke-dashoffset:0}}
+      @keyframes flow2{0%{stroke-dashoffset:60}100%{stroke-dashoffset:0}}
+      @keyframes glow{0%,100%{opacity:.4}50%{opacity:.9}}
+      .fl1{stroke:#3b82f6;stroke-width:1;fill:none;stroke-dasharray:8 6;animation:flow 3s linear infinite;opacity:.5}
+      .fl2{stroke:#8b5cf6;stroke-width:.8;fill:none;stroke-dasharray:5 8;animation:flow2 4s linear infinite reverse;opacity:.4}
+      .fl3{stroke:#f97316;stroke-width:.6;fill:none;stroke-dasharray:4 10;animation:flow 5s linear infinite;opacity:.3}
+      .node{animation:glow 3s ease-in-out infinite}
+    </style>
+    <linearGradient id="dg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0b0c0f" stop-opacity="1"/>
+      <stop offset="10%" stop-color="#2b2f36" stop-opacity=".8"/>
+      <stop offset="50%" stop-color="#3b82f6" stop-opacity=".6"/>
+      <stop offset="90%" stop-color="#2b2f36" stop-opacity=".8"/>
+      <stop offset="100%" stop-color="#0b0c0f" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="28" fill="#0b0c0f"/>
+  <!-- Main center line -->
+  <line x1="0" y1="14" x2="1200" y2="14" stroke="url(#dg)" stroke-width="1"/>
+  <!-- Animated flow lines -->
+  <line x1="0" y1="10" x2="1200" y2="10" class="fl1"/>
+  <line x1="0" y1="14" x2="1200" y2="14" class="fl2"/>
+  <line x1="0" y1="18" x2="1200" y2="18" class="fl3"/>
+  <!-- Midpoint node -->
+  <circle cx="600" cy="14" r="4" fill="#16181d" stroke="#3b82f6" stroke-width="1" class="node"/>
+  <circle cx="600" cy="14" r="2" fill="#3b82f6" class="node"/>
+  <!-- Quarter nodes -->
+  <circle cx="300" cy="14" r="2.5" fill="#16181d" stroke="#8b5cf6" stroke-width=".8" class="node"/>
+  <circle cx="900" cy="14" r="2.5" fill="#16181d" stroke="#f97316" stroke-width=".8" class="node"/>
+  <!-- End caps -->
+  <circle cx="20"   cy="14" r="1.5" fill="#2b2f36"/>
+  <circle cx="1180" cy="14" r="1.5" fill="#2b2f36"/>
 </svg>

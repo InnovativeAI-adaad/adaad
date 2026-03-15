@@ -1,79 +1,126 @@
-<svg viewBox="0 0 1440 140" xmlns="http://www.w3.org/2000/svg">
-<defs>
-  <linearGradient id="sc-bg" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#010810"/>
-    <stop offset="50%" stop-color="#020e1c"/>
-    <stop offset="100%" stop-color="#010810"/>
-  </linearGradient>
-  <filter id="sc-glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <pattern id="sc-dots" width="22" height="22" patternUnits="userSpaceOnUse">
-    <circle cx="11" cy="11" r="0.7" fill="#00d4ff" opacity="0.1"/>
-  </pattern>
-  <style>
-    @keyframes sc-glow{0%,100%{opacity:.7}50%{opacity:1}}
-    .sc-v{animation:sc-glow 2.5s ease-in-out infinite}
-    .sc-t{animation:sc-glow 2.5s ease-in-out infinite .5s}
-    .sc-c{animation:sc-glow 2.5s ease-in-out infinite 1s}
-    .sc-p{animation:sc-glow 2.5s ease-in-out infinite 1.5s}
-    .sc-e{animation:sc-glow 2.5s ease-in-out infinite 2s}
-    .sc-i{animation:sc-glow 2.5s ease-in-out infinite .25s}
-    .sc-d{animation:sc-glow 2.5s ease-in-out infinite .75s}
-    .sc-a{animation:sc-glow 2.5s ease-in-out infinite 1.25s}
-    .sc-f{animation:sc-glow 2.5s ease-in-out infinite 1.75s}
-  </style>
-</defs>
-<rect width="1440" height="140" fill="url(#sc-bg)"/>
-<rect width="1440" height="140" fill="url(#sc-dots)"/>
-<rect x="0" y="0" width="1440" height="1.5" fill="#00d4ff" opacity="0.4"/>
-<rect x="0" y="138.5" width="1440" height="1.5" fill="#f5c842" opacity="0.35"/>
-<g font-family="'Courier New',monospace" text-anchor="middle">
-  <!-- 1: Version -->
-  <text x="80" y="48" fill="#f5c842" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-v">v9.1.0</text>
-  <text x="80" y="68" fill="#f5c842" font-size="7" letter-spacing="2" opacity="0.65">CURRENT VERSION</text>
-  <text x="80" y="82" fill="#2a1a00" font-size="7" letter-spacing="1.5" opacity="0.7">Phase 66 Alpha</text>
-  <line x1="80" y1="92" x2="80" y2="128" stroke="#f5c842" stroke-width="0.5" opacity="0.2"/>
-  <line x1="160" y1="18" x2="160" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" width="1200" height="120">
+  <defs>
+    <style>
+      .s-num{font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:28px;fill:#f5f7fa}
+      .s-lbl{font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:9px;fill:#8c919b;letter-spacing:2px}
+      .s-sub{font-family:'JetBrains Mono','Courier New',monospace;font-size:7.5px;fill:#2b2f36}
+      .s-tag{font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:8px;letter-spacing:1.5px}
+      @keyframes countUp{0%{opacity:0;transform:translateY(8px)}40%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}
+      .c1{animation:countUp .8s ease-out .1s both}
+      .c2{animation:countUp .8s ease-out .25s both}
+      .c3{animation:countUp .8s ease-out .40s both}
+      .c4{animation:countUp .8s ease-out .55s both}
+      .c5{animation:countUp .8s ease-out .70s both}
+      .c6{animation:countUp .8s ease-out .85s both}
+      .c7{animation:countUp .8s ease-out 1.0s both}
+      @keyframes blink{0%,90%,100%{opacity:1}95%{opacity:.2}}
+      .blink{animation:blink 3s ease-in-out infinite}
+      @keyframes barIn{0%{width:0}100%{width:100%}}
+    </style>
+    <linearGradient id="bgS" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0d0f14"/><stop offset="100%" stop-color="#0b0c0f"/>
+    </linearGradient>
+    <linearGradient id="barS" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity=".8"/>
+      <stop offset="50%" stop-color="#8b5cf6" stop-opacity=".7"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity=".6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="120" fill="url(#bgS)" rx="6"/>
+  <rect width="1200" height="120" fill="none" stroke="#2b2f36" stroke-width="1" rx="6"/>
+  <rect x="0" y="0" width="1200" height="3" fill="url(#barS)" rx="2"/>
 
-  <!-- 2: Tests -->
-  <text x="250" y="48" fill="#00ff88" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-t">4,466</text>
-  <text x="250" y="68" fill="#00ff88" font-size="7" letter-spacing="2" opacity="0.65">TESTS PASSING</text>
-  <text x="250" y="82" fill="#004a18" font-size="7" letter-spacing="1.5" opacity="0.7">zero regressions</text>
-  <line x1="340" y1="18" x2="340" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+  <!-- 7 stats columns — equal width ~171px each -->
+  <!-- 1: Tests -->
+  <g class="c1" transform="translate(0,0)">
+    <rect x="1" y="3" width="170" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="1" y="3" width="3" height="114" fill="#22c55e"/>
+    <text x="86" y="52" class="s-num" text-anchor="middle">4,624</text>
+    <text x="86" y="68" class="s-lbl" text-anchor="middle">TESTS PASSING</text>
+    <g transform="translate(60,78)">
+      <rect width="52" height="16" rx="3" fill="#0f1a0f" stroke="#22c55e" stroke-width=".6"/>
+      <text x="26" y="12" class="s-tag" fill="#22c55e" text-anchor="middle">100% ✓</text>
+    </g>
+    <text x="86" y="108" class="s-sub" text-anchor="middle">451 test files</text>
+  </g>
 
-  <!-- 3: Rules -->
-  <text x="430" y="48" fill="#00d4ff" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-c">23</text>
-  <text x="430" y="68" fill="#00d4ff" font-size="7" letter-spacing="2" opacity="0.65">CONST. RULES</text>
-  <text x="430" y="82" fill="#0a2a40" font-size="7" letter-spacing="1.5" opacity="0.7">v0.9.0 · non-bypassable</text>
-  <line x1="520" y1="18" x2="520" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+  <!-- 2: Phases -->
+  <g class="c2" transform="translate(171,0)">
+    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="0" y="3" width="3" height="114" fill="#3b82f6"/>
+    <text x="85" y="52" class="s-num" text-anchor="middle">75</text>
+    <text x="85" y="68" class="s-lbl" text-anchor="middle">PHASES COMPLETE</text>
+    <g transform="translate(46,78)">
+      <rect width="78" height="16" rx="3" fill="#0d1520" stroke="#3b82f6" stroke-width=".6"/>
+      <text x="39" y="12" class="s-tag" fill="#3b82f6" text-anchor="middle">v9.10.0</text>
+    </g>
+    <text x="85" y="108" class="s-sub" text-anchor="middle">Phase 75 · Seed CEL Injection</text>
+  </g>
 
-  <!-- 4: CEL Steps -->
-  <text x="610" y="48" fill="#f5c842" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-p">14</text>
-  <text x="610" y="68" fill="#f5c842" font-size="7" letter-spacing="2" opacity="0.65">CEL STEPS</text>
-  <text x="610" y="82" fill="#2a1a00" font-size="7" letter-spacing="1.5" opacity="0.7">ordered · CEL-ORDER-0</text>
-  <line x1="700" y1="18" x2="700" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+  <!-- 3: Constitutional Rules -->
+  <g class="c3" transform="translate(342,0)">
+    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="0" y="3" width="3" height="114" fill="#eab308"/>
+    <text x="85" y="52" class="s-num" text-anchor="middle">23</text>
+    <text x="85" y="68" class="s-lbl" text-anchor="middle">CONSTITUTIONAL RULES</text>
+    <g transform="translate(46,78)">
+      <rect width="78" height="16" rx="3" fill="#181400" stroke="#eab308" stroke-width=".6"/>
+      <text x="39" y="12" class="s-tag" fill="#eab308" text-anchor="middle">v0.9.0</text>
+    </g>
+    <text x="85" y="108" class="s-sub" text-anchor="middle">9 blocking · 5 warning · 9 advisory</text>
+  </g>
 
-  <!-- 5: Phases -->
-  <text x="790" y="48" fill="#a855f7" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-e">66</text>
-  <text x="790" y="68" fill="#a855f7" font-size="7" letter-spacing="2" opacity="0.65">PHASES COMPLETE</text>
-  <text x="790" y="82" fill="#2a0a50" font-size="7" letter-spacing="1.5" opacity="0.7">v1.0 → v9.1.0</text>
-  <line x1="880" y1="18" x2="880" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+  <!-- 4: Invariants -->
+  <g class="c4" transform="translate(513,0)">
+    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="0" y="3" width="3" height="114" fill="#a855f7"/>
+    <text x="85" y="52" class="s-num" text-anchor="middle">8</text>
+    <text x="85" y="68" class="s-lbl" text-anchor="middle">ARCH. INVARIANTS</text>
+    <g transform="translate(40,78)">
+      <rect width="90" height="16" rx="3" fill="#14091f" stroke="#a855f7" stroke-width=".6"/>
+      <text x="45" y="12" class="s-tag" fill="#a855f7" text-anchor="middle">NON-OVERRIDE</text>
+    </g>
+    <text x="85" y="108" class="s-sub" text-anchor="middle">code-level · structural</text>
+  </g>
 
-  <!-- 6: Invariants -->
-  <text x="970" y="48" fill="#ff4466" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-i">8</text>
-  <text x="970" y="68" fill="#ff4466" font-size="7" letter-spacing="2" opacity="0.65">INVARIANTS</text>
-  <text x="970" y="82" fill="#400010" font-size="7" letter-spacing="1.5" opacity="0.7">code-level · unoverridable</text>
-  <line x1="1060" y1="18" x2="1060" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+  <!-- 5: Ledger Entries -->
+  <g class="c5" transform="translate(684,0)">
+    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="0" y="3" width="3" height="114" fill="#14b8a6"/>
+    <text x="85" y="52" class="s-num" text-anchor="middle">12,441</text>
+    <text x="85" y="68" class="s-lbl" text-anchor="middle">LEDGER ENTRIES</text>
+    <g transform="translate(40,78)">
+      <rect width="90" height="16" rx="3" fill="#091514" stroke="#14b8a6" stroke-width=".6"/>
+      <circle cx="9" cy="8" r="3.5" fill="#14b8a6" class="blink"/>
+      <text x="54" y="12" class="s-tag" fill="#14b8a6" text-anchor="middle">LIVE</text>
+    </g>
+    <text x="85" y="108" class="s-sub" text-anchor="middle">SHA-256 · append-only · replay-verifiable</text>
+  </g>
 
-  <!-- 7: Divergence -->
-  <text x="1150" y="48" fill="#00ff88" font-size="26" font-weight="700" filter="url(#sc-glow)" class="sc-d">0</text>
-  <text x="1150" y="68" fill="#00ff88" font-size="7" letter-spacing="2" opacity="0.65">REPLAY DIVERGENCE</text>
-  <text x="1150" y="82" fill="#004a18" font-size="7" letter-spacing="1.5" opacity="0.7">DET-ALL-0 · always</text>
-  <line x1="1240" y1="18" x2="1240" y2="122" stroke="#1a2a3a" stroke-width="0.8" opacity="0.7"/>
+  <!-- 6: Self-Evolution -->
+  <g class="c6" transform="translate(855,0)">
+    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="0" y="3" width="3" height="114" fill="#ef4444"/>
+    <text x="85" y="44" class="s-num" text-anchor="middle" style="font-size:22px">⛓ Phase 65</text>
+    <text x="85" y="62" class="s-lbl" text-anchor="middle">FIRST SELF-EVOLUTION</text>
+    <g transform="translate(30,72)">
+      <rect width="110" height="16" rx="3" fill="#18080a" stroke="#ef4444" stroke-width=".6"/>
+      <text x="55" y="12" class="s-tag" fill="#ef4444" text-anchor="middle">MARCH 13 2026</text>
+    </g>
+    <text x="85" y="100" class="s-sub" text-anchor="middle">zero human intervention</text>
+    <text x="85" y="110" class="s-sub" text-anchor="middle">hash in ledger · proven</text>
+  </g>
 
-  <!-- 8: Self-evolved -->
-  <text x="1360" y="44" fill="#f5c842" font-size="18" font-weight="700" filter="url(#sc-glow)" class="sc-a">⛓ EVOLVED</text>
-  <text x="1360" y="62" fill="#f5c842" font-size="7" letter-spacing="1.5" opacity="0.8">PHASE 65</text>
-  <text x="1360" y="76" fill="#2a1a00" font-size="7" letter-spacing="1" opacity="0.7">Mar 13 2026</text>
-  <text x="1360" y="89" fill="#2a1a00" font-size="6" letter-spacing="1" opacity="0.6">hash in ledger</text>
-</g>
+  <!-- 7: Replay -->
+  <g class="c7" transform="translate(1026,0)">
+    <rect x="0" y="3" width="173" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
+    <rect x="0" y="3" width="3" height="114" fill="#22c55e"/>
+    <text x="86" y="52" class="s-num" text-anchor="middle">0</text>
+    <text x="86" y="68" class="s-lbl" text-anchor="middle">REPLAY DIVERGENCES</text>
+    <g transform="translate(42,78)">
+      <rect width="88" height="16" rx="3" fill="#0f1a0f" stroke="#22c55e" stroke-width=".6"/>
+      <text x="44" y="12" class="s-tag" fill="#22c55e" text-anchor="middle">DET-ALL-0 ✓</text>
+    </g>
+    <text x="86" y="108" class="s-sub" text-anchor="middle">deterministically replayable</text>
+  </g>
 </svg>
