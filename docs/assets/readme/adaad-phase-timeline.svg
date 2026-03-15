@@ -29,7 +29,7 @@
   <rect width="1200" height="160" fill="none" stroke="#2b2f36" stroke-width="1"/>
 
   <!-- Title -->
-  <text x="600" y="22" class="t-era" fill="#8c919b" text-anchor="middle">PHASE TIMELINE · 75 PHASES · CONSTITUTIONAL EVOLUTION</text>
+  <text x="600" y="22" class="t-era" fill="#8c919b" text-anchor="middle">PHASE TIMELINE · 76 PHASES · CONSTITUTIONAL EVOLUTION</text>
   <line x1="40" y1="28" x2="1160" y2="28" stroke="#2b2f36" stroke-width=".5"/>
 
   <!-- Main timeline bar -->
@@ -51,7 +51,7 @@
 
   <!-- Post-65 66-75 (~870-1160px) -->
   <rect x="884" y="45" width="316" height="80" rx="2" fill="#f97316" opacity=".03"/>
-  <text x="1042" y="42" class="t-era" fill="#f97316" text-anchor="middle" style="font-size:7px">HARDENING · SEED</text>
+  <text x="1060" y="42" class="t-era" fill="#f97316" text-anchor="middle" style="font-size:7px">HARDENING · SEED</text>
 
   <!-- Phase nodes — every 5th gets a label, every 10th gets a larger node -->
   <!-- Spacing: 1120/74 = ~15.1px per phase, phase N at x = 40 + (N-1)*15.1 -->
@@ -142,7 +142,7 @@
 
   <!-- Bottom metadata bar -->
   <rect x="0" y="150" width="1200" height="10" fill="#16181d"/>
-  <text x="40"  y="158" class="t-hash">ADAAD v9.10.0 · Phase 75 · 4,624 tests · 23 constitutional rules · first self-evolution: Phase 65, March 13 2026 · hash in ledger</text>
+  <text x="40"  y="158" class="t-hash">ADAAD v9.11.0 · Phase 76 · 4,649 tests · 23 constitutional rules · first self-evolution: Phase 65, March 13 2026 · pip install adaad</text>
   <circle cx="1170" cy="155" r="3" fill="#22c55e" opacity=".7"/>
   <text x="1155" y="158" class="t-hash" text-anchor="end">LIVE</text>
 </svg>
