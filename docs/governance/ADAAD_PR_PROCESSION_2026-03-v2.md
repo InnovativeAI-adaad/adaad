@@ -113,14 +113,27 @@ adaad_pr_procession_contract:
   schema_version: "2.0"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase64_complete"
-  milestone: "v8.7.0"
+  # ── Updated by state-align-phase76-77 (2026-03-15) ─────────────────────────
+  active_phase: "phase76_complete"
+  milestone: "v9.11.0"
   ordered_phase_ids:
     - phase47
     - phase48
     - phase49
     - phase50
     - phase51
+    - phase65
+    - phase66
+    - phase67
+    - phase68
+    - phase69
+    - phase70
+    - phase71
+    - phase72
+    - phase73
+    - phase74
+    - phase75
+    - phase76
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -147,16 +160,117 @@ adaad_pr_procession_contract:
       depends_on: ["phase50"]
       status: merged
       version: "v7.5.0"
+    # ── Phases 65–76 registered 2026-03-15 (state-align-phase76-77) ──────────
+    phase65:
+      ci_tier: standard
+      depends_on: ["v8.7.0"]
+      status: merged
+      version: "v9.0.0"
+      name: "First Autonomous Capability Evolution"
+      pr: "PR-PHASE65-01 + PR-PHASE65-02"
+    phase66:
+      ci_tier: standard
+      depends_on: ["phase65"]
+      status: merged
+      version: "v9.1.0"
+      name: "Doc Alignment + Deep Dive Hardening"
+      pr: "release/v9.1.0"
+    phase67:
+      ci_tier: standard
+      depends_on: ["phase66"]
+      status: merged
+      version: "v9.2.0"
+      name: "Innovations Wiring (CEL)"
+      pr: "feature/phase-67-innovations-wiring-cel"
+    phase68:
+      ci_tier: standard
+      depends_on: ["phase67"]
+      status: merged
+      version: "v9.3.0"
+      name: "Full Innovations Orchestration"
+      pr: "feature/phase-68-full-innovations-orchestration"
+    phase69:
+      ci_tier: standard
+      depends_on: ["phase68"]
+      status: merged
+      version: "v9.4.0"
+      name: "Aponi Innovations UI"
+      pr: "feature/phase-69-aponi-innovations-ui"
+    phase70:
+      ci_tier: standard
+      depends_on: ["phase69"]
+      status: merged
+      version: "v9.5.0"
+      name: "WebSocket Live Epoch Feed"
+      pr: "feature/phase-70-websocket-live-epoch-feed"
+    phase71:
+      ci_tier: standard
+      depends_on: ["phase70"]
+      status: merged
+      version: "v9.6.0"
+      name: "Oracle Persistence + Seed Evolution"
+      pr: "feature/phase-71-oracle-persist-seed-evolution"
+    phase72:
+      ci_tier: standard
+      depends_on: ["phase71"]
+      status: merged
+      version: "v9.7.0"
+      name: "Seed Promotion Queue + Graduation UI"
+      pr: "feature/phase-72-seed-promotion-graduation-ui"
+      merge_sha: "0fab652219cd6ca4e7832d81fb512f298d0812a6"
+    phase73:
+      ci_tier: standard
+      depends_on: ["phase72"]
+      status: merged
+      version: "v9.8.0"
+      name: "Seed Review Decision + Governance Wire"
+      pr: "feature/phase-73-promotion-governance-wire"
+      merge_sha: "93911830513d41422b7d676829c15ea59fec7c9c"
+    phase74:
+      ci_tier: standard
+      depends_on: ["phase73"]
+      status: merged
+      version: "v9.9.0"
+      name: "Seed-to-Proposal Bridge"
+      pr: "feature/phase-74-seed-proposal-bridge"
+      merge_sha: "b783a4a0f14a1eddc0a133f81e8d31c07e76ea68"
+    phase75:
+      ci_tier: standard
+      depends_on: ["phase74"]
+      status: merged
+      version: "v9.10.0"
+      name: "Seed Proposal CEL Injection"
+      pr: "feature/phase-75-seed-proposal-cel-injection"
+      merge_sha: "4abfe5fc1611d49e5386dd803ee8bf656e1bdb06"
+    phase76:
+      ci_tier: standard
+      depends_on: ["phase75"]
+      status: merged
+      version: "v9.11.0"
+      name: "Seed CEL Outcome Recorder"
+      pr: "feat/phase76-seed-cel-outcome-recorder"
+      merge_sha: "ece4e52a6110f5b365490fd7fb6a375d4ec517b1"
+      note: "Closes full Seed Lifecycle Pipeline (Phases 71-76). PyPI adaad 9.11.0 published."
   state_alignment:
-    expected_active_phase: "Phase 64 COMPLETE · v8.7.0"
-    expected_last_completed_pr: "feature/phase-64-constitutional-evolution-loop"
-    expected_next_pr: "PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)"
+    expected_active_phase: "Phase 76 COMPLETE · v9.11.0"
+    expected_last_completed_pr: "feat/phase76-seed-cel-outcome-recorder"
+    expected_next_pr: "PR-77-PLAN (Phase 77 — direction TBD)"
     blocked_reason_must_be_null: true
   v1_ga_gate:
     status: "in_progress"
+    canonical_ga_tag: "v1.1-GA"
+    note: "v1.0.0-GA was never applied — see FINDING-AUDIT-H04 in agent state open_findings. Dustin must clarify GA versioning decision."
     blocking_items:
       - fdroid_submission_recorded
       - founder_gpg_signoff
+      - ga_versioning_decision_documented
+  open_governance_items:
+    - id: FINDING-AUDIT-C02
+      summary: "Tags v9.7.0–v9.10.0 missing — Dustin must run local GPG tag ceremony"
+    - id: FINDING-AUDIT-C03
+      summary: "GitHub App (ADAADchat) ungoverned — assign to Phase 77 scope"
+    - id: FINDING-66-003
+      summary: "Patent filing (P1) — engage counsel immediately"
 ```
 
 ### 3.1 Preflight alignment rules
@@ -164,10 +278,12 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feature/phase-64-constitutional-evolution-loop`
+2. `last_completed_pr` is not `feat/phase76-seed-cel-outcome-recorder`
 3. Any `phase_nodes.*.status` diverges from this contract
-4. `blocked_reason` is non-null (nothing should be blocked post-Phase 51)
-5. `next_pr` is not `PR-PHASE65-01 (Phase 65 — First Autonomous Capability Evolution)`
+4. `blocked_reason` is non-null (nothing should be blocked)
+5. `next_pr` is not `PR-77-PLAN (Phase 77 — direction TBD)`
+
+> _Last updated: 2026-03-15 · state-align-phase76-77 · Phase 76 COMPLETE · v9.11.0_
 
 ---
 
