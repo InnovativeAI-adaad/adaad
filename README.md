@@ -4,7 +4,7 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.11.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phase](https://img.shields.io/badge/Phase_76-Seed_CEL_Outcome-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.11.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.11.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/9.11.0/)&nbsp;[![Phase](https://img.shields.io/badge/Phase_76-Seed_CEL_Outcome-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C624_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/75_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
@@ -140,6 +140,14 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 <img src="docs/assets/adaad-quick-start-platforms.svg" width="100%" alt="Quick Start — Desktop, Android, Aponi"/>
 
 **Desktop / Linux / macOS / CI**
+
+**Option A — Install from PyPI (recommended, Python ≥ 3.11)**
+
+```bash
+pip install adaad
+```
+
+**Option B — Run from source**
 
 ```bash
 git clone https://github.com/InnovativeAI-adaad/ADAAD.git && cd ADAAD
@@ -517,6 +525,7 @@ Pending evidence rows: none
 
 | Platform | Install | Notes |
 |:---:|:---|:---|
+| **PyPI** | `pip install adaad` | Python ≥ 3.11 · Linux · macOS · Windows |
 | **F-Droid** | [f-droid.org](https://f-droid.org) | Android · open source · no tracking |
 | **Obtainium** | [obtainium.imranr.dev](https://obtainium.imranr.dev) | Android · auto-update from GitHub |
 | **GitHub Releases** | [releases](https://github.com/InnovativeAI-adaad/ADAAD/releases) | All platforms · Linux · macOS · Windows WSL |
@@ -532,7 +541,7 @@ Pending evidence rows: none
 
 | Metric | Value |
 |:---|:---|
-| **Version** | `9.10.0` — Phase 76: Seed CEL Outcome Recorder |
+| **Version** | `9.11.0` — Phase 76: Seed CEL Outcome Recorder |
 | **Runtime Python** | 329+ files |
 | **Test files** | **451** · ~40,000+ lines |
 | **Passing tests** | **4,624** |

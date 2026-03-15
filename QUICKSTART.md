@@ -57,6 +57,10 @@ python onboard.py
 Use this if `python onboard.py` is unavailable.
 
 ```bash
+# Option A — Install from PyPI (Python ≥ 3.11, recommended)
+pip install adaad
+
+# Option B — Run from source
 # 1. Virtual environment
 python -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\Activate.ps1
