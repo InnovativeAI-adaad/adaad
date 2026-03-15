@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture · v9.10.0 · Phase 75"/>
+<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture · v9.11.0 · Phase 76"/>
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.10.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phase](https://img.shields.io/badge/Phase_75-Seed_CEL_Injection-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.11.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phase](https://img.shields.io/badge/Phase_76-Seed_CEL_Outcome-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C624_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/75_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
@@ -43,7 +43,7 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 </tr>
 </table>
 
-<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats — v9.10.0 · 4,624 tests · 75 phases · 23 rules · 12,441 ledger entries"/>
+<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats — v9.11.0 · 4,649 tests · 76 phases · 23 rules · 12,441 ledger entries"/>
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## ADAAD vs. Everything Else
@@ -131,6 +131,7 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 | 73 | Seed Governance | Human-governed seed review · `audit:write` scope · Aponi review panel | v9.8 |
 | 74 | Seed → Proposal | Seed-to-Proposal Bridge · deterministic `cycle_id` routing | v9.9 |
 | **75** | **Seed CEL Injection** | **Approved seeds wired into CEL Step 4 as advisory signal** | **v9.10.0** |
+| **76** | **Seed CEL Outcome Recorder** | **CEL epoch outcome recorded back to lineage ledger — full loop closed** | **v9.11.0** |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -233,13 +234,13 @@ ADAAD_SANDBOX_ONLY=true  →  all 14 steps run · zero writes · full audit trai
 ```
 
 <details>
-<summary><strong>Step 4 Seed Advisory (Phase 75)</strong></summary>
+<summary><strong>Step 4 Seed Advisory (Phase 76)</strong></summary>
 <br/>
 
-Since Phase 75, an approved seed `ProposalRequest` may be injected into CEL Step 4 via `inject_seed_proposal_into_context()`. The seed is **advisory only** — Step 4 falls back to the default ProposalRequest if the key is absent. `SEED-CEL-HUMAN-0`: injected context cannot trigger mutation without `GovernanceGate` + `HUMAN-0` sign-off.
+Since Phase 76, an approved seed `ProposalRequest` may be injected into CEL Step 4 via `inject_seed_proposal_into_context()`. The seed is **advisory only** — Step 4 falls back to the default ProposalRequest if the key is absent. `SEED-CEL-HUMAN-0`: injected context cannot trigger mutation without `GovernanceGate` + `HUMAN-0` sign-off.
 
 ```python
-# CEL Step 4 — Phase 75 seed advisory wire
+# CEL Step 4 — Phase 76 seed advisory wire
 context = inject_seed_proposal_into_context(context, seed_entry, ledger)
 request = resolve_step4_request(context)   # seed if present, default if absent
 ```
@@ -456,7 +457,7 @@ EvolutionLedger                                 EvolutionLedger
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  APONI  ·  Governance Console  ·  ADAAD v9.10.0  ·  Phase 75    │
+│  APONI  ·  Governance Console  ·  ADAAD v9.11.0  ·  Phase 76    │
 ├──────────────────────────────────────────────────────────────────┤
 │  Evolution Loop    ● ACTIVE       Epoch 1,247                    │
 │  GovernanceGate    ● ENFORCING    23 rules / 0 bypass            │
@@ -531,14 +532,14 @@ Pending evidence rows: none
 
 | Metric | Value |
 |:---|:---|
-| **Version** | `9.10.0` — Phase 75: Seed CEL Injection |
+| **Version** | `9.10.0` — Phase 76: Seed CEL Outcome Recorder |
 | **Runtime Python** | 329+ files |
 | **Test files** | **451** · ~40,000+ lines |
 | **Passing tests** | **4,624** |
 | **Constitutional rules** | **23** — Constitution v0.9.0 |
 | **Architectural invariants** | **8** — code-level, non-overridable |
 | **Seed invariants** | **6** — `SEED-CEL-0` through `SEED-REVIEW-0` |
-| **Development phases** | **75** complete |
+| **Development phases** | **76** complete |
 | **Evidence ledger entries** | **12,441** — SHA-256 hash-chained |
 | **Android support** | Full — Termux + Pydroid3 |
 | **Federation** | Multi-repo HMAC-gated (Phase 5) |
@@ -600,7 +601,7 @@ ADAAD/
 │   ├── autonomy/      # Bandit · AdaptiveWeights · NonStationarityDetector
 │   ├── mutation/      # AST substrate · SandboxTournament · CodeIntelModel
 │   ├── sandbox/       # Ephemeral container execution
-│   ├── seed_cel_injector.py    # Phase 75 — seed → CEL advisory wire
+│   ├── seed_cel_injector.py    # Phase 76 — seed → CEL advisory wire
 │   ├── seed_proposal_bridge.py # Phase 74 — seed → ProposalRequest bridge
 │   └── seed_review.py          # Phase 73 — human-governed seed review
 ├── security/          # Cryovant — auth · key management
@@ -639,9 +640,9 @@ Both are trigger tokens for the governed build agent in <code>AGENTS.md</code>. 
 </details>
 
 <details>
-<summary><strong>What changed in v9.10.0 (Phase 75)?</strong></summary>
+<summary><strong>What changed in v9.11.0 (Phase 76)?</strong></summary>
 <br/>
-Phase 75 wired approved seed <code>ProposalRequest</code> objects into CEL Step 4 as advisory signals. New: <code>runtime/seed_cel_injector.py</code> · <code>inject_seed_proposal_into_context()</code> · <code>resolve_step4_request()</code> · <code>POST /innovations/seeds/promoted/{id}/inject</code>. Four new invariants: <code>SEED-CEL-0</code>, <code>SEED-CEL-HUMAN-0</code>, <code>SEED-CEL-DETERM-0</code>, <code>SEED-CEL-AUDIT-0</code>. 14 new tests. Zero regressions. Seed remains advisory — no mutation without <code>GovernanceGate</code> + <code>HUMAN-0</code>.
+Phase 76 wired approved seed <code>ProposalRequest</code> objects into CEL Step 4 as advisory signals. New: <code>runtime/seed_cel_injector.py</code> · <code>inject_seed_proposal_into_context()</code> · <code>resolve_step4_request()</code> · <code>POST /innovations/seeds/promoted/{id}/inject</code>. Four new invariants: <code>SEED-CEL-0</code>, <code>SEED-CEL-HUMAN-0</code>, <code>SEED-CEL-DETERM-0</code>, <code>SEED-CEL-AUDIT-0</code>. 14 new tests. Zero regressions. Seed remains advisory — no mutation without <code>GovernanceGate</code> + <code>HUMAN-0</code>.
 </details>
 
 <details>
@@ -665,7 +666,7 @@ Phases 69–75 built a governed pathway for human-sourced ideas (seeds) to enter
 | v9.7.0 | 72 | Graduated seed tracking · promotion lifecycle ledger |
 | v9.8.0 | 73 | Human-governed seed review · `audit:write` scope · Aponi review panel |
 | v9.9.0 | 74 | Seed-to-Proposal Bridge · deterministic `cycle_id` · `SEED-PROP-0` |
-| v9.10.0 | 75 | Seed CEL injection · `resolve_step4_request()` · `SEED-CEL-AUDIT-0` |
+| v9.11.0 | 75 | Seed CEL injection · `resolve_step4_request()` · `SEED-CEL-AUDIT-0` |
 
 </details>
 
@@ -703,6 +704,6 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 
 <br/>
 
-<sub><code>ADAAD v9.10.0</code> &nbsp;·&nbsp; Phase 75 &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
+<sub><code>ADAAD v9.11.0</code> &nbsp;·&nbsp; Phase 76 &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
 
 </div>

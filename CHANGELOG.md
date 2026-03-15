@@ -1,3 +1,39 @@
+## [9.11.0] — 2026-03-15 — Phase 76: Seed CEL Outcome Recorder
+
+### feat(phase-76): CEL epoch outcome recorded back to lineage ledger — closes full seed lifecycle loop
+
+| Item | Detail |
+|---|---|
+| `runtime/seed_cel_outcome.py` | New `record_cel_outcome()` — records `SeedCELOutcomeEvent` to lineage ledger for any CEL epoch that ran with an injected seed proposal. Enforces non-empty link fields (SEED-OUTCOME-LINK-0), validates outcome_status vocabulary (success/partial/failed/skipped), deterministic `outcome_digest` SHA-256 (SEED-OUTCOME-DETERM-0), ledger write before bus emit (SEED-OUTCOME-AUDIT-0), idempotent on (seed_id, cycle_id) (SEED-OUTCOME-IDEM-0). `get_cel_outcome()` and `clear_outcome_registry()` utilities added. |
+| `runtime/innovations_router.py` | Added `POST /innovations/seeds/{seed_id}/cel-outcome` — audit:write-gated; accepts cycle_id, epoch_id, outcome_status, fitness_delta, mutation_count, notes; returns outcome record + advisory notice. |
+| `ui/aponi/innovations_panel.js` | WS dispatch for `seed_cel_injection` and `seed_cel_outcome` frames. `_onSeedCelInjection()` link toast. `_onSeedCelOutcome()` status-keyed icon toast, updates `.seed-outcome-badge`, persists to `innState.seedOutcomes`. |
+
+### New constitutional invariants (Phase 76)
+
+| Invariant | Enforcement |
+|---|---|
+| `SEED-OUTCOME-0` | `record_cel_outcome()` is the only mechanism to write a CEL epoch result to the lineage ledger for a seed-derived proposal |
+| `SEED-OUTCOME-LINK-0` | Every outcome record must carry non-empty seed_id, cycle_id, and epoch_id |
+| `SEED-OUTCOME-DETERM-0` | Equal inputs produce identical outcome_digest |
+| `SEED-OUTCOME-AUDIT-0` | SeedCELOutcomeEvent written before bus emit; failure aborts |
+| `SEED-OUTCOME-IDEM-0` | Duplicate (seed_id, cycle_id) returns existing record without second ledger write |
+| `CEL-OUTCOME-FAIL-0` | Outcome recording failure never blocks epoch completion |
+
+### Tests added (Phase 76)
+
+`tests/test_phase76_seed_cel_outcome.py` — 25 tests · **25/25 passing**
+
+| Range | Coverage |
+|---|---|
+| T76-OUT-01..08 | return shape, digest, timestamp, notes, all statuses, get_cel_outcome, missing key, defaults |
+| T76-LNK-01..04 | empty link fields raise SeedOutcomeLinkError; bad status raises SeedOutcomeStatusError |
+| T76-DET-01..03 | determinism, different status → different digest, manual SHA-256 verification |
+| T76-IDM-01..03 | duplicate returns first record, no second ledger write, different cycle_id is new record |
+| T76-AUD-01..03 | ledger event fields, ledger failure aborts + no registry entry, bus failure non-fatal |
+| T76-API-01..04 | happy path 200, empty field → 422, bad status → 422, no auth → 401 |
+
+---
+
 ## [9.10.0] — 2026-03-14 — Phase 75: Seed Proposal CEL Injection
 
 ### feat(phase-75): Approved seed ProposalRequest wired into CEL Step 4 as advisory signal

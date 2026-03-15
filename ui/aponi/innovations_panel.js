@@ -1914,6 +1914,8 @@
         case "seed_promotion_approved": this._onSeedReview(frame, true);         break;
         case "seed_promotion_rejected": this._onSeedReview(frame, false);        break;
         case "seed_proposal_generated": this._onSeedProposal(frame);             break;
+        case "seed_cel_injection":   this._onSeedCelInjection(frame);            break;
+        case "seed_cel_outcome":     this._onSeedCelOutcome(frame);              break;
         case "gplugin":       this._onGPlugin(frame);                            break;
       }
     },
@@ -2089,6 +2091,48 @@
           }
         });
       }
+    },
+
+    _onSeedCelInjection(f) {
+      // Phase 76 — seed proposal injected into CEL epoch context
+      this._toast("seed-cel", "🔗",
+        `Seed → CEL Injected  ·  ${f.seed_id || "—"}`,
+        `strategy: ${f.strategy_id}  ·  cycle: ${f.cycle_id || "—"}`
+      );
+    },
+
+    _onSeedCelOutcome(f) {
+      // Phase 76 — CEL epoch outcome recorded for seed
+      const icons = { success: "✅", partial: "🟡", failed: "❌", skipped: "⏭️" };
+      const icon  = icons[f.outcome_status] || "📊";
+      this._toast("seed-outcome", icon,
+        `CEL Outcome · ${f.outcome_status}  ·  ${f.seed_id || "—"}`,
+        `Δfitness: ${(f.fitness_delta >= 0 ? "+" : "") + Number(f.fitness_delta).toFixed(4)}  ·  mutations: ${f.mutation_count ?? 0}`
+      );
+      const seedsList = document.querySelector(".inno-seeds-list");
+      if (seedsList) {
+        seedsList.querySelectorAll(".seed-row").forEach(row => {
+          if (row.dataset.seedId === f.seed_id) {
+            let badge = row.querySelector(".seed-outcome-badge");
+            if (!badge) {
+              badge = document.createElement("span");
+              badge.className = "seed-outcome-badge";
+              row.appendChild(badge);
+            }
+            badge.textContent = icon + " " + f.outcome_status;
+            badge.dataset.status = f.outcome_status;
+          }
+        });
+      }
+      if (!innState.seedOutcomes) innState.seedOutcomes = {};
+      innState.seedOutcomes[f.seed_id] = {
+        cycle_id:       f.cycle_id,
+        epoch_id:       f.epoch_id,
+        outcome_status: f.outcome_status,
+        fitness_delta:  f.fitness_delta,
+        mutation_count: f.mutation_count,
+        outcome_digest: f.outcome_digest,
+      };
     },
 
     _onGPlugin(f) {

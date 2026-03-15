@@ -527,4 +527,72 @@ def inject_seed_into_epoch(
     }
 
 
+@router.post("/seeds/{seed_id}/cel-outcome")
+def record_seed_cel_outcome(
+    seed_id: str,
+    body: Dict[str, Any] = Body(default_factory=dict),
+    authorization: Optional[str] = Header(default=None),
+) -> Dict[str, Any]:
+    """Record the outcome of a CEL epoch that ran with an injected seed proposal (Phase 76).
+
+    SEED-REVIEW-AUTH-0:   requires audit:write bearer token scope.
+    SEED-OUTCOME-0:       canonical outcome recording via record_cel_outcome().
+    SEED-OUTCOME-LINK-0:  seed_id, cycle_id, epoch_id are all required.
+    SEED-OUTCOME-AUDIT-0: SeedCELOutcomeEvent written to lineage ledger before return.
+    SEED-OUTCOME-IDEM-0:  duplicate (seed_id, cycle_id) returns existing record.
+
+    Request body::
+
+        {
+          "cycle_id":       "sha256hex...",
+          "epoch_id":       "ep-157",
+          "outcome_status": "success" | "partial" | "failed" | "skipped",
+          "fitness_delta":  0.042,        (optional, default 0.0)
+          "mutation_count": 3,            (optional, default 0)
+          "notes":          "..."         (optional)
+        }
+    """
+    _require_audit_write(authorization)
+
+    from runtime.seed_cel_outcome import (  # noqa: PLC0415
+        record_cel_outcome,
+        SeedOutcomeLinkError,
+        SeedOutcomeStatusError,
+    )
+
+    cycle_id       = str(body.get("cycle_id",       "")).strip()
+    epoch_id       = str(body.get("epoch_id",       "")).strip()
+    outcome_status = str(body.get("outcome_status", "")).strip()
+    fitness_delta  = float(body.get("fitness_delta",  0.0))
+    mutation_count = int(body.get("mutation_count",   0))
+    notes          = str(body.get("notes",            ""))
+
+    try:
+        outcome = record_cel_outcome(
+            seed_id,
+            cycle_id,
+            epoch_id,
+            outcome_status,
+            fitness_delta=fitness_delta,
+            mutation_count=mutation_count,
+            notes=notes,
+        )
+    except (SeedOutcomeLinkError, SeedOutcomeStatusError) as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=422, detail=str(exc))
+    except RuntimeError as exc:
+        from fastapi import HTTPException  # noqa: PLC0415
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    return {
+        "seed_id":         seed_id,
+        "outcome":         outcome,
+        "advisory_notice": (
+            "SEED-OUTCOME-0: outcome recorded to lineage ledger. "
+            "Fitness delta and mutation data are informational; "
+            "no retroactive mutation is applied."
+        ),
+    }
+
+
 __all__ = ["router"]

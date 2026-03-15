@@ -1504,3 +1504,10 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 `inject_seed_proposal_into_context()` merges a seed-derived `ProposalRequest` into a CEL epoch context dict; `SeedCELInjectionEvent` written to lineage ledger before return (SEED-CEL-AUDIT-0). `resolve_step4_request()` reads `seed_proposal_request` key in state context or falls back to default (SEED-CEL-HUMAN-0). CEL Step 4 wired to call `resolve_step4_request()` with try/except fallback (CEL-WIRE-FAIL-0) — CEL-ORDER-0 preserved. `POST /seeds/promoted/{seed_id}/inject` endpoint returns ready `epoch_context`. Completes the full seed lifecycle pipeline (Phases 71–75).
 
 **Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0
+### Phase 76 — Seed CEL Outcome Recorder
+
+**Status:** ✅ shipped (v9.11.0) · **Dependency:** Phase 75 merged at main · **Tests:** T76-OUT-01..08, T76-LNK-01..04, T76-DET-01..03, T76-IDM-01..03, T76-AUD-01..03, T76-API-01..04
+
+Closes the full seed lifecycle feedback loop. `record_cel_outcome()` accepts outcome_status (success/partial/failed/skipped), fitness_delta, and mutation_count; writes `SeedCELOutcomeEvent` to `LineageLedgerV2` before emitting `seed_cel_outcome` bus frame. Idempotent on (seed_id, cycle_id). `POST /innovations/seeds/{seed_id}/cel-outcome` audit:write-gated endpoint. Aponi: `_onSeedCelOutcome()` renders status-keyed icon toast, updates seed row outcome badge, persists to `innState.seedOutcomes`; `_onSeedCelInjection()` link toast for Phase 75 injection events.
+
+**Key invariants:** SEED-OUTCOME-0, SEED-OUTCOME-LINK-0, SEED-OUTCOME-DETERM-0, SEED-OUTCOME-AUDIT-0, SEED-OUTCOME-IDEM-0, CEL-OUTCOME-FAIL-0
