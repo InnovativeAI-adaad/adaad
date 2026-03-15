@@ -1,10 +1,10 @@
 {
-  "active_phase": "v9.11.0 — Phase 76: Seed CEL Outcome Recorder (complete)",
+  "active_phase": "v9.11.0 — Phase 76 complete · Phase 77 plan authored · awaiting HUMAN-0 ratification",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 76 — Seed CEL Outcome Recorder",
-  "last_completed_pr": "feature/phase-76-seed-cel-outcome-recorder",
+  "last_completed_phase": "Phase 75 — Seed Proposal CEL Injection",
+  "last_completed_pr": "feature/phase-75-seed-proposal-cel-injection",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-15",
-  "last_sync_sha": "aa04bd6",
-  "next_pr": "PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)",
+  "last_sync_sha": "899617a",
+  "next_pr": "PR-77-01 (Phase 77 Track A — Governance Infrastructure Sprint — pending Dustin ratification)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -63,24 +63,6 @@
       "phase_target": "66",
       "resolved_phase": "66",
       "resolved_date": "2026-03-14"
-    },
-    {
-      "id": "FINDING-C03-GITHUB-APP",
-      "title": "ADAADchat GitHub App webhook handler committed outside phase procession — GovernanceGate coverage unverified for POST /webhook/github",
-      "severity": "P0",
-      "source": "Audit 2026-03-14 C-03",
-      "status": "open",
-      "phase_target": "77",
-      "note": "Commits b7afb89 and ef9116d introduced app/github_app.py outside PR procession. Retroactive phase assignment and GovernanceGate wiring required. Governer sign-off received 2026-03-15."
-    },
-    {
-      "id": "FINDING-H04-GA-VERSIONING",
-      "title": "v1.0.0-GA tag absent — v1.1-GA exists without documented predecessor; GA versioning decision and Gate 4 Founder GPG sign-off confirmation required",
-      "severity": "P1",
-      "source": "Audit 2026-03-14 H-04",
-      "status": "open",
-      "phase_target": "77",
-      "note": "Dustin must clarify canonical GA tag name. If v1.1-GA is canonical, confirm Gate 4 sign-off executed. If v1.0.0-GA should exist, apply retroactively."
     }
   ],
   "pending_evidence_rows": [],
@@ -280,18 +262,9 @@
     "phase75-resolve-step4-request",
     "phase75-cel-step4-wired",
     "phase75-inject-endpoint",
-    "v9.10.0-released",
-    "phase76-seed-outcome-0",
-    "phase76-seed-outcome-link-0",
-    "phase76-seed-outcome-determ-0",
-    "phase76-seed-outcome-audit-0",
-    "phase76-seed-outcome-idem-0",
-    "phase76-cel-outcome-fail-0",
-    "phase76-outcome-endpoint",
-    "phase76-aponi-outcome-badge",
-    "v9.11.0-released"
+    "v9.10.0-released"
   ],
-  "current_version": "9.11.0",
+  "current_version": "9.10.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -299,34 +272,6 @@
     "phase66-llm-failover-contract",
     "phase66-key-ceremony-runbook",
     "v9.1.0-released",
-    "phase67-plan",
-    "phase67-innovations-wiring",
-    "phase67-cel-vision-mode",
-    "phase67-mutation-personality",
-    "phase67-governance-plugins",
-    "phase67-self-reflection",
-    "v9.2.0-released",
-    "phase68-plan",
-    "phase68-orchestration",
-    "phase68-oracle-api",
-    "phase68-story-mode",
-    "phase68-federation-map",
-    "phase68-seed-registration",
-    "v9.3.0-released",
-    "phase69-plan",
-    "phase69-aponi-ui",
-    "phase69-innovations-tab",
-    "phase69-oracle-panel",
-    "phase69-galaxy-panel",
-    "phase69-agent-personalities",
-    "v9.4.0-released",
-    "phase70-plan",
-    "phase70-websocket-feed",
-    "phase70-innovations-event-bus",
-    "phase70-typed-emit-helpers",
-    "phase70-ws-events-stream",
-    "phase70-aponi-epoch-ui",
-    "v9.5.0-released",
     "phase71-plan",
     "phase71-oracle-ledger",
     "phase71-seed-evolution",
@@ -350,10 +295,6 @@
     "phase75-cel-injector",
     "phase75-step4-wire",
     "v9.10.0-released",
-    "phase76-plan",
-    "phase76-seed-cel-outcome",
-    "phase76-outcome-invariants",
-    "phase76-aponi-outcome-ui",
-    "v9.11.0-released"
+    "phase77-plan-authored"
   ]
 }
