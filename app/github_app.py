@@ -65,8 +65,9 @@ def dispatch_event(event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
     try:
         return handler(payload)
     except Exception as exc:
+        # Log full details on the server, but do not expose exception text to the caller.
         logger.exception("Handler error for event '%s': %s", event_type, exc)
-        return {"status": "error", "event": event_type, "detail": str(exc)}
+        return {"status": "error", "event": event_type}
 
 
 # ── Handlers ──────────────────────────────────────────────────────────────────
