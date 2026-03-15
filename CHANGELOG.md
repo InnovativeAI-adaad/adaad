@@ -1469,7 +1469,7 @@ Resolves three issues observed in the Termux session log.
 - Prints explicit recovery instructions when native deps fail:
   `pkg install libsodium python-cryptography -y`.
 
-**3 — `pip install adaad` fails (not on PyPI)**
+**3 — `pip install adaad` fails on Python < 3.11**
 - `INSTALL_ANDROID.md`: added dedicated **Termux** section with copy-paste
   install sequence, native dep table, and soulbound key setup.
 - `INSTALL_ANDROID.md`: added 5 new Termux-specific troubleshooting rows.

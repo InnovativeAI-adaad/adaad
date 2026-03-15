@@ -169,7 +169,7 @@ python3 server.py
 
 To persist the key across sessions, add the `export` line to `~/.bashrc`.
 
-> **Note:** `pip install adaad` is not available — ADAAD is not on PyPI.
+> **Note:** `pip install adaad` requires Python ≥ 3.11. Most Android environments (Termux, Pydroid3) run Python 3.10 — use the source install below for Android.
 > Install from source via `git clone` as shown above.
 
 ---
@@ -184,7 +184,7 @@ To persist the key across sessions, add the `export` line to `~/.bashrc`.
 | *Can't find APK in Obtainium* | Confirm you pasted the full URL: `https://github.com/InnovativeAI-adaad/ADAAD` |
 | *F-Droid repo not updating* | F-Droid → Repositories → tap the ADAAD repo → Refresh |
 | *PWA "Add to Home screen" not shown* | Must use Chrome (not Firefox or Samsung Browser) — visit the page, wait 30s |
-| *`pip install adaad` fails* | ADAAD is not on PyPI — use `git clone https://github.com/InnovativeAI-adaad/ADAAD.git` |
+| *`pip install adaad` fails on Android* | Android Python is typically 3.10; package requires ≥ 3.11 — use `git clone https://github.com/InnovativeAI-adaad/ADAAD.git` instead |
 | *`metadata-generation-failed` in Termux* | Run `pkg install libsodium python-cryptography -y` then `python3 onboard.py` |
 | *`on_event` deprecation warning* | Fixed in v7.0.0+ — update via `git pull` |
 | *Server exits immediately in Termux* | Ensure `ui/aponi` exists; run `python3 server.py` from the ADAAD directory |

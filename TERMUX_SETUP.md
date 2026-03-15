@@ -69,12 +69,13 @@ pkg install python git libsodium openssl -y
 ### Step 3 — Clone ADAAD
 
 ```bash
-# ADAAD is not on PyPI — install from source
+# adaad is on PyPI (pip install adaad) but requires Python ≥ 3.11
+# Termux ships Python 3.10 — install from source instead:
 git clone https://github.com/InnovativeAI-adaad/ADAAD.git
 cd ADAAD
 ```
 
-> **`pip install adaad` will fail** — ADAAD is not published to PyPI.
+> **`pip install adaad` requires Python ≥ 3.11.** Termux currently ships Python 3.10, so use the source install below. On desktop (Python 3.11+) `pip install adaad` works perfectly.
 > Always use `git clone`.
 
 ### Step 4 — Run the onboarder
@@ -158,7 +159,7 @@ python3 onboard.py   # re-runs dependency check
 
 | Problem | Fix |
 |---------|-----|
-| `pip install adaad` fails | ADAAD is not on PyPI — use `git clone` (see Step 3) |
+| `pip install adaad` fails | Termux Python is 3.10; package requires ≥ 3.11 — use `git clone` (see Step 3) |
 | `metadata-generation-failed` for PyNaCl | `pkg install python-cryptography -y` then retry |
 | `libsodium` not found at runtime | `pkg install libsodium -y` |
 | `fatal: destination path 'ADAAD' already exists` | `rm -rf ADAAD` then re-clone |
