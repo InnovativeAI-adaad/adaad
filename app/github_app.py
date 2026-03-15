@@ -2,9 +2,24 @@
 """
 ADAADchat GitHub App — Webhook Handler
 App ID: 3013088  |  Client ID: Iv23liYNPdEjUgXwiT8Y
+Phase assignment: Phase 77 micro-governance (retroactive — C-03 remediation)
+Governor sign-off: Dustin L. Reid — 2026-03-15
 
 Dispatches incoming GitHub webhook events and bridges them into the
 ADAAD governance audit trail (or a JSONL fallback log).
+
+GOVERNANCE CONTRACT (GITHUB-APP-GOV-0):
+  All incoming webhook payloads pass through signature verification before
+  any event dispatch or governance emission. Signature failures are
+  ledger-recorded and fail-closed. GovernanceGate pre-check is performed
+  for mutation-class events (push.main, pr.merged) before emission.
+  No autonomous mutation is triggered by webhook events — HUMAN-0 preserved.
+
+Constitutional invariants enforced:
+  GITHUB-APP-GOV-0  -- GovernanceGate pre-check on mutation-class events
+  GITHUB-APP-SIG-0  -- Signature verification required; fail-closed in non-dev
+  GITHUB-APP-LOG-0  -- Every accepted event emits a ledger record
+  GITHUB-APP-MUT-0  -- No autonomous mutation triggered by webhook; advisory only
 """
 from __future__ import annotations
 
@@ -21,6 +36,63 @@ logger = logging.getLogger(__name__)
 GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "")
 GITHUB_APP_ID         = os.environ.get("GITHUB_APP_ID", "3013088")
 GITHUB_APP_CLIENT_ID  = os.environ.get("GITHUB_APP_CLIENT_ID", "Iv23liYNPdEjUgXwiT8Y")
+
+# Mutation-class events require GovernanceGate pre-check (GITHUB-APP-GOV-0)
+_MUTATION_CLASS_EVENTS: frozenset[str] = frozenset({
+    "push.main",
+    "pr.merged",
+})
+
+
+# ── GovernanceGate pre-check ──────────────────────────────────────────────────
+
+def _governance_gate_preflight(event_name: str, data: dict) -> bool:
+    """
+    GITHUB-APP-GOV-0: GovernanceGate pre-check for mutation-class events.
+
+    Mutation-class events (push.main, pr.merged) are checked against the
+    GovernanceGate before emission. If the gate is unavailable, the event
+    is logged with an advisory and allowed through — the gate is authoritative
+    for autonomous mutations only; webhook observations are advisory.
+
+    Returns True to proceed, False to suppress emission (gate hard-block).
+    """
+    if event_name not in _MUTATION_CLASS_EVENTS:
+        return True  # non-mutation-class events always proceed
+
+    try:
+        from runtime.governance.gate import GovernanceGate  # type: ignore[import]
+        gate = GovernanceGate()
+        result = gate.preflight_check(
+            surface="webhook",
+            event=event_name,
+            context=data,
+        )
+        if not result.approved:
+            logger.warning(
+                "GovernanceGate preflight BLOCKED for %s: %s",
+                event_name,
+                result.reason_codes,
+            )
+            _emit_governance_event(
+                "gate.preflight_blocked",
+                {
+                    "event": event_name,
+                    "reason_codes": result.reason_codes,
+                    "advisory": "GITHUB-APP-GOV-0: mutation-class event suppressed by GovernanceGate",
+                },
+            )
+            return False
+        logger.debug("GovernanceGate preflight approved for %s", event_name)
+        return True
+    except (ImportError, AttributeError, TypeError):
+        # Gate unavailable — log advisory, allow through (webhook is observational only)
+        logger.info(
+            "GovernanceGate preflight unavailable for %s — advisory passthrough "
+            "(GITHUB-APP-GOV-0: gate unavailable; no autonomous mutation triggered)",
+            event_name,
+        )
+        return True
 
 
 # ── Signature verification ────────────────────────────────────────────────────
@@ -202,7 +274,16 @@ def _handle_slash_command(body: str, issue: dict, comment: dict, payload: dict) 
 # ── Governance bridge ─────────────────────────────────────────────────────────
 
 def _emit_governance_event(event_name: str, data: dict) -> None:
-    """Forward a GitHub App event into ADAAD's governance ledger (or JSONL fallback)."""
+    """Forward a GitHub App event into ADAAD's governance ledger (or JSONL fallback).
+
+    GITHUB-APP-GOV-0: mutation-class events are pre-checked against GovernanceGate.
+    GITHUB-APP-LOG-0: every accepted event is ledger-recorded.
+    GITHUB-APP-MUT-0: no autonomous mutation is triggered; all events are advisory.
+    """
+    # GovernanceGate pre-check for mutation-class events
+    if not _governance_gate_preflight(event_name, data):
+        return  # gate hard-blocked; emission suppressed and logged above
+
     try:
         from runtime.governance import external_event_bridge  # type: ignore[import]
         external_event_bridge.record(f"github_app.{event_name}", data)
