@@ -4,35 +4,21 @@
 
 <br/>
 
-# ADAAD Developer Reference
-
 [![Version](https://img.shields.io/badge/ADAAD-v9.1.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](../CHANGELOG.md)&nbsp;[![Phase](https://img.shields.io/badge/Phase_66-Hardening_Tier_Alpha-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](../ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_%C2%B7_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](CONSTITUTION.md)&nbsp;[![Tests](https://img.shields.io/badge/4%2C466_Tests-Passing-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](../tests/)
 
 <br/>
 
-<table>
-<tr>
-<td align="center"><a href="#-architecture-overview"><strong>🏗</strong><br/><sub>Architecture</sub></a></td>
-<td align="center"><a href="#-constitutional-evolution-loop"><strong>🔄</strong><br/><sub>CEL 14-Step</sub></a></td>
-<td align="center"><a href="#-module-api-reference"><strong>📦</strong><br/><sub>API Reference</sub></a></td>
-<td align="center"><a href="#-configuration-reference"><strong>⚙️</strong><br/><sub>Config</sub></a></td>
-<td align="center"><a href="#-evidence-artifacts"><strong>🔐</strong><br/><sub>Evidence</sub></a></td>
-<td align="center"><a href="#-test-coverage-matrix"><strong>🧪</strong><br/><sub>Tests</sub></a></td>
-<td align="center"><a href="#-documentation-index"><strong>📚</strong><br/><sub>Full Index</sub></a></td>
-</tr>
-</table>
+[Architecture](#architecture-overview) &nbsp;·&nbsp; [CEL 14-Step](#constitutional-evolution-loop) &nbsp;·&nbsp; [API Reference](#module-api-reference) &nbsp;·&nbsp; [Config](#configuration-reference) &nbsp;·&nbsp; [Evidence](#evidence-artifacts) &nbsp;·&nbsp; [Tests](#test-coverage-matrix) &nbsp;·&nbsp; [Index](#documentation-index)
 
 </div>
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-> [!NOTE]
-> This reference covers the internal architecture, API contracts, configuration, evidence artifacts, and test coverage for **ADAAD v9.1.0 · Phase 66**.
-> For user-facing setup see **[QUICKSTART.md](../QUICKSTART.md)**. For constitutional rules see **[CONSTITUTION.md](CONSTITUTION.md)**. For build-agent protocol see **[AGENTS.md](../AGENTS.md)**.
+> Internal architecture, API contracts, configuration, evidence artifacts, and test coverage for **ADAAD v9.1.0 · Phase 66**. For user-facing setup see [QUICKSTART.md](../QUICKSTART.md). For the 23 rules see [CONSTITUTION.md](CONSTITUTION.md). For build-agent protocol see [AGENTS.md](../AGENTS.md).
 
 <br/>
 
-## 📚 Documentation Index
+## Documentation Index
 
 <details open>
 <summary><strong>🏛 Governance &amp; Architecture</strong></summary>
@@ -119,7 +105,7 @@
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 🏗 Architecture Overview
+## Architecture Overview
 
 <div align="center">
 <img src="assets/adaad-architecture.svg" width="100%" alt="ADAAD System Architecture"/>
@@ -140,41 +126,42 @@ ADAAD is organized into five independently testable subsystems, each with formal
 ### Subsystem Interaction Map
 
 ```
- ┌──────────────────────────────────────────────────────────────────┐
- │                    ADAAD v9.1.0 Runtime                          │
- │                                                                  │
- │  ┌─────────┐   UCB1    ┌──────────┐   ┌──────────┐              │
- │  │Architect│──────────►│          │   │Fitness   │              │
- │  ├─────────┤  Bandit   │Proposal  │──►│Engine v2 │              │
- │  │  Dream  │──────────►│ Engine   │   │7 signals │              │
- │  ├─────────┤           │          │   └────┬─────┘              │
- │  │  Beast  │──────────►└────┬─────┘        │                    │
- │  └─────────┘                │              │                    │
- │                   AST patch │     score    │                    │
- │                             ▼              ▼                    │
- │                    ┌─────────────────────────────┐              │
- │                    │   Constitutional Evolution   │              │
- │                    │          Loop (CEL)          │              │
- │                    │     14 steps · ordered       │              │
- │                    └──────────────┬──────────────┘              │
- │                                   │                             │
- │                    ┌──────────────▼──────────────┐              │
- │                    │       GovernanceGate          │ GOV-SOLE-0 │
- │                    │   23 rules · non-bypassable   │            │
- │                    └──────────────┬──────────────┘              │
- │                                   │ APPROVED                    │
- │               ┌───────────────────┼───────────────────┐         │
- │               ▼                   ▼                   ▼         │
- │      EvolutionLedger     CapabilityGraph        LineageLedger    │
- │      (SHA-256 chain)     (version graph)        (stability DAG) │
- └──────────────────────────────────────────────────────────────────┘
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                        ADAAD v9.1.0 Runtime                             │
+  │                                                                         │
+  │   ┌──────────┐                                                          │
+  │   │ Architect│──┐                    ┌─────────────────┐                │
+  │   └──────────┘  │  UCB1 Bandit       │  FitnessEngine  │                │
+  │   ┌──────────┐  ├─► ProposalEngine ──►    v2 · 7 sig   │                │
+  │   │  Dream   │──┤    12 candidates   │  adaptive wts   │                │
+  │   └──────────┘  │    BLX-alpha       └────────┬────────┘                │
+  │   ┌──────────┐  │    crossover                │ score                   │
+  │   │  Beast   │──┘                             │                         │
+  │   └──────────┘          AST patch             │                         │
+  │                               ▼               ▼                         │
+  │               ┌───────────────────────────────────────────┐             │
+  │               │       Constitutional Evolution Loop        │             │
+  │               │       14 steps · strict order · CEL-ORDER-0│             │
+  │               └───────────────────┬───────────────────────┘             │
+  │                                   │                                     │
+  │               ┌───────────────────▼───────────────────────┐             │
+  │               │             GovernanceGate                 │◄ GOV-SOLE-0│
+  │               │    23 constitutional rules · non-bypassable│             │
+  │               └───────────────────┬───────────────────────┘             │
+  │                                   │ APPROVED                            │
+  │              ┌────────────────────┼────────────────────┐                │
+  │              ▼                    ▼                    ▼                │
+  │     EvolutionLedger       CapabilityGraph         LineageLedger         │
+  │     SHA-256 chain         version graph           stability DAG         │
+  │     append-only           INTEL-DET-0             LINEAGE-STAB-0        │
+  └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 <br/>
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 🔄 Constitutional Evolution Loop
+## Constitutional Evolution Loop
 
 All 14 steps execute in strict declared sequence. Invariant **`CEL-ORDER-0`**: the order is structural, not configurable. One failure → clean halt. Zero silent errors.
 
@@ -201,14 +188,13 @@ All 14 steps execute in strict declared sequence. Invariant **`CEL-ORDER-0`**: t
 | `13` | `EPOCH-EVIDENCE` | 🔐 Seal | SHA-256 hash-chained ledger entry — immutable |
 | `14` | `STATE-ADVANCE` | ⏭ Advance | Epoch counter + `epoch_complete.v1` event emitted |
 
-> [!TIP]
 > `ADAAD_SANDBOX_ONLY=true` runs all 14 steps — full evaluation, fitness scoring, gate checking — **with zero writes**. Always start here.
 
 <br/>
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 📦 Module API Reference
+## Module API Reference
 
 <details open>
 <summary><strong><code>runtime/evolution/evolution_loop.py</code> — Epoch orchestrator</strong></summary>
@@ -444,7 +430,7 @@ class AdaptiveWeights:
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## ⚙️ Configuration Reference
+## Configuration Reference
 
 All environment variables are read at startup. No hot-reload. Changing variables requires process restart.
 
@@ -460,8 +446,7 @@ All environment variables are read at startup. No hot-reload. Changing variables
 | `ADAAD_REPLAY_PROOF_PRIVATE_KEY_REPLAY_PROOF_ED25519_DEV` | — | Prod | Ed25519 private key for replay attestation |
 | `CRYOVANT_DEV_MODE` | `0` | — | `1` bypasses Cryovant auth for local dev (never in prod) |
 
-> [!CAUTION]
-> `ADAAD_ENV=prod` enforces all auth contracts. `CRYOVANT_DEV_MODE=1` in production is a critical security violation — detected and blocked by Cryovant middleware.
+> **Production:** `ADAAD_ENV=prod` enforces all auth contracts. `CRYOVANT_DEV_MODE=1` in production is a critical security violation — detected and blocked by Cryovant middleware.
 
 **Recommended dev startup:**
 
@@ -477,7 +462,7 @@ python app/main.py
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 🔐 Evidence Artifacts
+## Evidence Artifacts
 
 Evidence bundles are written by `EpochEvidence` at CEL step 13. Every bundle is SHA-256 hash-chained to the previous — tamper-evident and append-only. Stored under `artifacts/governance/`.
 
@@ -511,7 +496,7 @@ Evidence bundles are written by `EpochEvidence` at CEL step 13. Every bundle is 
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 🧪 Test Coverage Matrix
+## Test Coverage Matrix
 
 | Phase | Test Files | Tests | Domain |
 |:---:|:---|:---:|:---|
@@ -550,7 +535,7 @@ PYTHONPATH=. python -m pytest tests/test_boot_preflight.py -v
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 📅 Phase Evolution Timeline
+## Phase Evolution Timeline
 
 | Phase | Era | Key Milestone | Version |
 |:---:|:---|:---|:---:|
@@ -578,7 +563,7 @@ PYTHONPATH=. python -m pytest tests/test_boot_preflight.py -v
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ADAAD/
@@ -618,8 +603,7 @@ ADAAD/
 └── docs/CONSTITUTION.md        # The 23 rules — root of all authority
 ```
 
-> [!WARNING]
-> `runtime/` is the canonical source tree. `build/lib/` is ephemeral packaging output — **never commit as source**. Generate build artifacts only in CI/release jobs.
+> `runtime/` is the canonical source tree. `build/lib/` is ephemeral packaging output — never commit as source. Generate build artifacts only in CI/release jobs.
 
 <br/>
 
@@ -627,20 +611,7 @@ ADAAD/
 
 <div align="center">
 
-<table>
-<tr>
-<td align="center"><a href="../QUICKSTART.md"><strong>⚡ Quickstart</strong></a></td>
-<td align="center"><a href="CONSTITUTION.md"><strong>📜 Constitution</strong></a></td>
-<td align="center"><a href="../ROADMAP.md"><strong>🗺 Roadmap</strong></a></td>
-<td align="center"><a href="../AGENTS.md"><strong>🤖 Agent Spec</strong></a></td>
-</tr>
-<tr>
-<td align="center"><a href="../INSTALL_ANDROID.md"><strong>📱 Android</strong></a></td>
-<td align="center"><a href="governance/ARCHITECT_SPEC_v3.1.0.md"><strong>🏛 Arch Spec</strong></a></td>
-<td align="center"><a href="comms/claims_evidence_matrix.md"><strong>🔐 Evidence</strong></a></td>
-<td align="center"><a href="https://github.com/InnovativeAI-adaad/ADAAD/issues"><strong>🐛 Issues</strong></a></td>
-</tr>
-</table>
+[⚡ Quickstart](../QUICKSTART.md) &nbsp;·&nbsp; [📜 Constitution](CONSTITUTION.md) &nbsp;·&nbsp; [🗺 Roadmap](../ROADMAP.md) &nbsp;·&nbsp; [🤖 Agents](../AGENTS.md) &nbsp;·&nbsp; [📱 Android](../INSTALL_ANDROID.md) &nbsp;·&nbsp; [🏛 Arch Spec](governance/ARCHITECT_SPEC_v3.1.0.md) &nbsp;·&nbsp; [🔐 Evidence](comms/claims_evidence_matrix.md) &nbsp;·&nbsp; [🐛 Issues](https://github.com/InnovativeAI-adaad/ADAAD/issues)
 
 <br/>
 
