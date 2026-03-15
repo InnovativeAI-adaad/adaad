@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 160" width="1200" height="160">
+  <defs>
+    <style>
+      .t-lbl{font-family:'Inter',Arial,sans-serif;font-weight:600;font-size:8px;fill:#8c919b;letter-spacing:1px}
+      .t-num{font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:7px}
+      .t-era{font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:9px;letter-spacing:1.5px}
+      .t-sub{font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:7px;fill:#8c919b}
+      .t-hash{font-family:'JetBrains Mono','Courier New',monospace;font-size:6.5px;fill:#2b2f36}
+      @keyframes pulseNode{0%,100%{r:6;opacity:1}50%{r:8;opacity:.7}}
+      @keyframes lineGrow{0%{stroke-dashoffset:1200}100%{stroke-dashoffset:0}}
+      .timeline-line{stroke:#2b2f36;stroke-width:2;stroke-dasharray:1200;animation:lineGrow 2s ease-out forwards}
+      .node-65{animation:pulseNode 2s ease-in-out infinite}
+      @keyframes glow65{0%,100%{filter:drop-shadow(0 0 4px #22c55e)}50%{filter:drop-shadow(0 0 10px #22c55e)}}
+      .crown{animation:glow65 2s ease-in-out infinite}
+    </style>
+    <linearGradient id="tlBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0b0c0f"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <linearGradient id="tlBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#3b82f6" stop-opacity=".6"/>
+      <stop offset="60%"  stop-color="#8b5cf6" stop-opacity=".5"/>
+      <stop offset="86%"  stop-color="#22c55e" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity=".7"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="160" fill="url(#tlBg)"/>
+  <rect width="1200" height="160" fill="none" stroke="#2b2f36" stroke-width="1"/>
+
+  <!-- Title -->
+  <text x="600" y="22" class="t-era" fill="#8c919b" text-anchor="middle">PHASE TIMELINE · 75 PHASES · CONSTITUTIONAL EVOLUTION</text>
+  <line x1="40" y1="28" x2="1160" y2="28" stroke="#2b2f36" stroke-width=".5"/>
+
+  <!-- Main timeline bar -->
+  <rect x="40" y="68" width="1120" height="4" rx="2" fill="#1a1c22"/>
+  <rect x="40" y="68" width="1120" height="4" rx="2" fill="url(#tlBar)" class="timeline-line"/>
+
+  <!-- Era zones (background) -->
+  <!-- Foundation 1-8 (~0-120px) -->
+  <rect x="40" y="45" width="117" height="80" rx="2" fill="#3b82f6" opacity=".04"/>
+  <text x="98" y="42" class="t-era" fill="#3b82f6" text-anchor="middle" style="font-size:7px">FOUNDATION</text>
+
+  <!-- Build-out 9-56 (~120-670px) -->
+  <rect x="158" y="45" width="524" height="80" rx="2" fill="#8b5cf6" opacity=".03"/>
+  <text x="420" y="42" class="t-era" fill="#8b5cf6" text-anchor="middle" style="font-size:7px">CORE BUILD-OUT · 48 PHASES</text>
+
+  <!-- Emergence 57-65 (~670-870px) -->
+  <rect x="683" y="45" width="200" height="80" rx="2" fill="#22c55e" opacity=".04"/>
+  <text x="783" y="42" class="t-era" fill="#22c55e" text-anchor="middle" style="font-size:7px">EMERGENCE</text>
+
+  <!-- Post-65 66-75 (~870-1160px) -->
+  <rect x="884" y="45" width="316" height="80" rx="2" fill="#f97316" opacity=".03"/>
+  <text x="1042" y="42" class="t-era" fill="#f97316" text-anchor="middle" style="font-size:7px">HARDENING · SEED</text>
+
+  <!-- Phase nodes — every 5th gets a label, every 10th gets a larger node -->
+  <!-- Spacing: 1120/74 = ~15.1px per phase, phase N at x = 40 + (N-1)*15.1 -->
+
+  <!-- Key milestones as labeled nodes (every 10th + special) -->
+  <!-- Phase 1 -->
+  <circle cx="40"  cy="70" r="4" fill="#16181d" stroke="#3b82f6" stroke-width="1.2"/>
+  <text x="40"  y="90" class="t-num" fill="#3b82f6" text-anchor="middle">1</text>
+  <text x="40"  y="99" class="t-sub" text-anchor="middle">GovernanceGate</text>
+
+  <!-- Phase 5 -->
+  <circle cx="101" cy="70" r="3" fill="#16181d" stroke="#3b82f6" stroke-width="1"/>
+  <text x="101" y="90" class="t-num" fill="#3b82f6" text-anchor="middle">5</text>
+  <text x="101" y="99" class="t-sub" text-anchor="middle">Federation</text>
+
+  <!-- Phase 10 -->
+  <circle cx="173" cy="70" r="3.5" fill="#16181d" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="173" y="90" class="t-num" fill="#8b5cf6" text-anchor="middle">10</text>
+
+  <!-- Phase 20 -->
+  <circle cx="324" cy="70" r="3.5" fill="#16181d" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="324" y="90" class="t-num" fill="#8b5cf6" text-anchor="middle">20</text>
+
+  <!-- Phase 30 -->
+  <circle cx="475" cy="70" r="3.5" fill="#16181d" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="475" y="90" class="t-num" fill="#8b5cf6" text-anchor="middle">30</text>
+  <text x="475" y="99" class="t-sub" text-anchor="middle">AdmissionBand</text>
+
+  <!-- Phase 40 -->
+  <circle cx="626" cy="70" r="3.5" fill="#16181d" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="626" y="90" class="t-num" fill="#8b5cf6" text-anchor="middle">40</text>
+
+  <!-- Phase 57 -->
+  <circle cx="849" cy="70" r="4" fill="#16181d" stroke="#22c55e" stroke-width="1.2"/>
+  <text x="849" y="90" class="t-num" fill="#22c55e" text-anchor="middle">57</text>
+  <text x="849" y="99" class="t-sub" text-anchor="middle">ProposalEngine</text>
+
+  <!-- Phase 60 -->
+  <circle cx="894" cy="70" r="3.5" fill="#16181d" stroke="#22c55e" stroke-width="1"/>
+  <text x="894" y="90" class="t-num" fill="#22c55e" text-anchor="middle">60</text>
+  <text x="894" y="99" class="t-sub" text-anchor="middle">AST Substrate</text>
+
+  <!-- Phase 63 -->
+  <circle cx="939" cy="70" r="3.5" fill="#16181d" stroke="#22c55e" stroke-width="1"/>
+  <text x="939" y="90" class="t-num" fill="#22c55e" text-anchor="middle">63</text>
+  <text x="939" y="99" class="t-sub" text-anchor="middle">GateV2</text>
+
+  <!-- Phase 64 -->
+  <circle cx="954" cy="70" r="3.5" fill="#16181d" stroke="#22c55e" stroke-width="1"/>
+  <text x="954" y="90" class="t-num" fill="#22c55e" text-anchor="middle">64</text>
+  <text x="954" y="99" class="t-sub" text-anchor="middle">CEL</text>
+
+  <!-- PHASE 65 — CROWN JEWEL -->
+  <g class="crown">
+    <!-- Glow halo -->
+    <circle cx="969" cy="70" r="14" fill="#22c55e" opacity=".08"/>
+    <circle cx="969" cy="70" r="10" fill="#22c55e" opacity=".12"/>
+    <!-- Star marker above -->
+    <path d="M969,44 L971,50 L977,50 L972,54 L974,60 L969,56 L964,60 L966,54 L961,50 L967,50 Z" fill="#22c55e" opacity=".9"/>
+    <!-- Node -->
+    <circle cx="969" cy="70" r="7" fill="#0f1a0f" stroke="#22c55e" stroke-width="2" class="node-65"/>
+    <circle cx="969" cy="70" r="3" fill="#22c55e"/>
+  </g>
+  <text x="969" y="88" class="t-num" fill="#22c55e" text-anchor="middle" style="font-size:8px;font-weight:900">65</text>
+  <text x="969" y="97" class="t-sub" text-anchor="middle" style="fill:#22c55e;font-weight:700">SELF-EVOLVED ⛓</text>
+  <text x="969" y="106" class="t-sub" text-anchor="middle" style="fill:#22c55e">Mar 13 2026</text>
+
+  <!-- Phase 66 -->
+  <circle cx="984" cy="70" r="3.5" fill="#16181d" stroke="#f97316" stroke-width="1"/>
+  <text x="984" y="90" class="t-num" fill="#f97316" text-anchor="middle">66</text>
+
+  <!-- Phase 70 -->
+  <circle cx="1044" cy="70" r="3.5" fill="#16181d" stroke="#f97316" stroke-width="1"/>
+  <text x="1044" y="90" class="t-num" fill="#f97316" text-anchor="middle">70</text>
+  <text x="1044" y="99" class="t-sub" text-anchor="middle">Innovations</text>
+
+  <!-- Phase 73 -->
+  <circle cx="1089" cy="70" r="3.5" fill="#16181d" stroke="#f97316" stroke-width="1"/>
+  <text x="1089" y="90" class="t-num" fill="#f97316" text-anchor="middle">73</text>
+  <text x="1089" y="99" class="t-sub" text-anchor="middle">Seed Review</text>
+
+  <!-- Phase 75 — current -->
+  <circle cx="1159" cy="70" r="5" fill="#16181d" stroke="#f97316" stroke-width="1.5"/>
+  <circle cx="1159" cy="70" r="2.5" fill="#f97316"/>
+  <text x="1159" y="90" class="t-num" fill="#f97316" text-anchor="middle" style="font-weight:900">75</text>
+  <text x="1159" y="99" class="t-sub" text-anchor="middle" style="fill:#f97316;font-weight:700">CURRENT</text>
+  <text x="1159" y="108" class="t-sub" text-anchor="middle">Seed CEL Inject</text>
+
+  <!-- Bottom metadata bar -->
+  <rect x="0" y="150" width="1200" height="10" fill="#16181d"/>
+  <text x="40"  y="158" class="t-hash">ADAAD v9.10.0 · Phase 75 · 4,624 tests · 23 constitutional rules · first self-evolution: Phase 65, March 13 2026 · hash in ledger</text>
+  <circle cx="1170" cy="155" r="3" fill="#22c55e" opacity=".7"/>
+  <text x="1155" y="158" class="t-hash" text-anchor="end">LIVE</text>
+</svg>

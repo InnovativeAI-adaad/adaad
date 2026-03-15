@@ -1,16 +1,16 @@
 <div align="center">
 
-<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
+<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture · v9.10.0 · Phase 75"/>
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.1.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-ACTIVE-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.10.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phase](https://img.shields.io/badge/Phase_75-Seed_CEL_Injection-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
-[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)&nbsp;![Tests](https://img.shields.io/badge/4%2C466_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)
+[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C624_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/75_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
 <br/>
 
-**[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 The 23 Rules](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agents](AGENTS.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[🔬 Examples](examples/)** &nbsp;·&nbsp; **[📊 Aponi](ui/)**
+**[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 The 23 Rules](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agents](AGENTS.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[🔬 Examples](examples/)** &nbsp;·&nbsp; **[📊 Aponi](ui/)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
 
 </div>
 
@@ -43,7 +43,7 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 </tr>
 </table>
 
-<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats"/>
+<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats — v9.10.0 · 4,624 tests · 75 phases · 23 rules · 12,441 ledger entries"/>
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## ADAAD vs. Everything Else
@@ -104,6 +104,36 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
+## 📅 75-Phase Evolution Timeline
+
+<img src="docs/assets/readme/adaad-phase-timeline.svg" width="100%" alt="ADAAD Phase Timeline — Phase 1 through 75 · First self-evolution at Phase 65"/>
+
+| Phase | Era | Milestone | Version |
+|:---:|:---|:---|:---:|
+| 1–2 | Foundation | `GovernanceGate` · Evidence Ledger · SHA-256 hash-chaining | v1.0 |
+| 3–4 | Adaptive Intelligence | `AdaptiveWeights` EMA · `SemanticDiffEngine` AST analysis | v2.x |
+| 5–6 | Federation & Autonomy | Multi-repo federation · HMAC gating · roadmap self-amendment | v3.x |
+| 7–8 | Governance Calibration | Reviewer reputation · governance health dashboard | v3.2–3.3 |
+| 9–56 | Core Build-Out | 48 phases · Hardening · Evidence · Scale · Intelligence | v4.x–8.x |
+| 57 | Keystone | ProposalEngine auto-provisioning | v8.0 |
+| 58 | Perception | CodeIntelModel — code intelligence layer | v8.1 |
+| 59 | Identity | CapabilityGraph v2 + CapabilityTargetDiscovery | v8.2 |
+| 60 | Motor | AST Mutation Substrate + SandboxTournament | v8.3 |
+| 61 | Evolution | Lineage Engine + CompatibilityGraph | v8.4 |
+| 62 | Intelligence | MultiHorizon FitnessEngine v2 | v8.5 |
+| 63 | Judgment | GovernanceGate v2 + Exception Tokens | v8.6 |
+| 64 | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7 |
+| **65** | **Emergence ⛓** | **First Autonomous Self-Evolution — March 13, 2026** | **v9.0** |
+| 66 | Hardening Tier Alpha | Telemetry completeness · lineage invariants · governance contracts | v9.1 |
+| 67–68 | Operator Control | Operator-gated deployment · LLM failover governance | v9.2–9.3 |
+| 69–70 | Innovations Router | Seed ingestion pipeline · innovation scoring | v9.4–9.5 |
+| 71–72 | Seed Lifecycle | Seed promotion queue · graduated seed tracking | v9.6–9.7 |
+| 73 | Seed Governance | Human-governed seed review · `audit:write` scope · Aponi review panel | v9.8 |
+| 74 | Seed → Proposal | Seed-to-Proposal Bridge · deterministic `cycle_id` routing | v9.9 |
+| **75** | **Seed CEL Injection** | **Approved seeds wired into CEL Step 4 as advisory signal** | **v9.10.0** |
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
 ## Quick Start
 
 <img src="docs/assets/adaad-quick-start-platforms.svg" width="100%" alt="Quick Start — Desktop, Android, Aponi"/>
@@ -145,13 +175,14 @@ PYTHONPATH=. python -m ui.aponi --port 8080   # → http://localhost:8080
 |:---|:---|
 | 🟢 GovernanceGate | **ACTIVE · NON-BYPASSABLE** · `GOV-SOLE-0` |
 | 🟢 Constitutional Evolution Loop | **14-STEP · ORDERED** · `CEL-ORDER-0` |
-| 🟢 Evidence Ledger | **HASH-CHAINED · APPEND-ONLY** · `CEL-EVIDENCE-0` |
+| 🟢 Evidence Ledger | **HASH-CHAINED · APPEND-ONLY** · `CEL-EVIDENCE-0` · 12,441 entries |
 | 🟢 FitnessEngine v2 | **7 SIGNALS · ADAPTIVE WEIGHTS** · `FIT-BOUND-0` |
 | 🟢 SandboxTournament | **OPERATIONAL · EPHEMERAL** · `SANDBOX-DIV-0` |
 | 🟢 Deterministic Replay | **ZERO DIVERGENCE** · `DET-ALL-0` |
 | 🟢 WeightAdaptor | **EMA DESCENT · TELEMETRY LIVE** · `FIT-DIV-0` |
 | 🟢 Federation | **HMAC-GATED · DUAL-GATE** · `federation_dual_gate` |
 | 🟢 CodeIntelModel | **SCANNING · DETERMINISM-VERIFIED** · `INTEL-DET-0` |
+| 🟢 Innovations Pipeline | **SEED-CEL-AUDIT-0 · SEED-REVIEW-0 · SEED-PROP-0** |
 | 🟢 Autonomous Self-Evolution | **PHASE 65 PROVEN · LEDGER SEALED** · `MUTATION-TARGET` |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -183,7 +214,7 @@ All 14 steps execute in strict sequence. One failure → clean halt. Zero silent
 | `01` | `MODEL-DRIFT-CHECK` | Guard | Blocks epoch — determinism state stale |
 | `02` | `LINEAGE-SNAPSHOT` | Capture | Records `capability_graph_before` hash |
 | `03` | `FITNESS-BASELINE` | Measure | Pre-epoch 7-signal composite recorded |
-| `04` | `PROPOSAL-GENERATE` | Generate | Architect · Dream · Beast in parallel |
+| `04` | `PROPOSAL-GENERATE` | Generate | Architect · Dream · Beast in parallel · seed advisory if injected |
 | `05` | `AST-SCAN` | Preflight | StaticSafetyScanner — 4 hard AST rules |
 | `06` | `SANDBOX-EXECUTE` | Test | Ephemeral clone — `SANDBOX_ONLY` respected |
 | `07` | `REPLAY-VERIFY` | Verify | Hash mismatch → auto-rollback (`SANDBOX-DIV-0`) |
@@ -200,6 +231,20 @@ All 14 steps execute in strict sequence. One failure → clean halt. Zero silent
 ```
 ADAAD_SANDBOX_ONLY=true  →  all 14 steps run · zero writes · full audit trail
 ```
+
+<details>
+<summary><strong>Step 4 Seed Advisory (Phase 75)</strong></summary>
+<br/>
+
+Since Phase 75, an approved seed `ProposalRequest` may be injected into CEL Step 4 via `inject_seed_proposal_into_context()`. The seed is **advisory only** — Step 4 falls back to the default ProposalRequest if the key is absent. `SEED-CEL-HUMAN-0`: injected context cannot trigger mutation without `GovernanceGate` + `HUMAN-0` sign-off.
+
+```python
+# CEL Step 4 — Phase 75 seed advisory wire
+context = inject_seed_proposal_into_context(context, seed_entry, ledger)
+request = resolve_step4_request(context)   # seed if present, default if absent
+```
+
+</details>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -359,6 +404,35 @@ if not gate.approve(patch):     raise RejectError("GovernanceGate")
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
+## Innovations & Seed Pipeline (Phases 69–75)
+
+The **Innovations Pipeline** is ADAAD's governed pathway for human-sourced ideas to enter the constitutional evolution loop. Seeds are ingested, scored, promoted, reviewed by a human operator, converted to `ProposalRequest` objects, and injected as advisory signals into CEL Step 4.
+
+```
+Human Idea
+    │
+    ▼  POST /innovations/seeds
+SeedIngestion  ─── SEED-INGEST-0 ──►  LineageLedger
+    │
+    ▼  automatic scoring
+SeedPromotion  ─── SEED-PROMO-0 ──►  PromotionQueue
+    │
+    ▼  POST /seeds/promoted/{id}/review  (audit:write · HUMAN-0)
+SeedReview     ─── SEED-REVIEW-0 ──►  SeedReviewDecisionEvent
+    │  approved only
+    ▼  POST /seeds/promoted/{id}/propose
+SeedBridge     ─── SEED-PROP-0 ──►  ProposalRequest (advisory)
+    │
+    ▼  POST /seeds/promoted/{id}/inject
+CEL Step 4     ─── SEED-CEL-AUDIT-0 ──►  resolve_step4_request()
+    │                                         ↓ GovernanceGate
+    └─────────────────────────────────────►  Evidence Ledger
+```
+
+All 6 seed invariants (`SEED-CEL-0`, `SEED-CEL-HUMAN-0`, `SEED-CEL-DETERM-0`, `SEED-CEL-AUDIT-0`, `SEED-PROP-0`, `SEED-REVIEW-0`) are enforced at each stage. A seed **cannot** trigger a mutation without full `GovernanceGate` + `HUMAN-0` approval. No exceptions.
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
 ## Federation — Cross-Repo Governed Evolution
 
 Mutations propagate across repositories via **FederationMutationBroker** (Phase 5). Every federated mutation requires `GovernanceGate` approval in both repos, HMAC key validation, and zero cross-repo divergence in `FederatedEvidenceMatrix`.
@@ -378,22 +452,24 @@ EvolutionLedger                                 EvolutionLedger
 
 ## The Aponi Dashboard
 
-**Aponi** is the human oversight surface — epoch evidence review, lineage health monitoring, and `HUMAN-0` gate exercise.
+**Aponi** is the human oversight surface — epoch evidence review, lineage health monitoring, `HUMAN-0` gate exercise, and (Phase 73+) the Seed Review panel.
 
 ```
-┌──────────────────────────────────────────────────────┐
-│  APONI  ·  Governance Console  ·  ADAAD v9.1.0       │
-├──────────────────────────────────────────────────────┤
-│  Evolution Loop    ● ACTIVE     Epoch 847            │
-│  GovernanceGate    ● ENFORCING  23 rules / 0 bypass  │
-│  Evidence Ledger   ● LIVE       12,441 entries       │
-│  Active Agents     ● 3/3    Architect  Dream  Beast  │
-├──────────────────────────────────────────────────────┤
-│  Last Epoch    APPROVED  Class A  Δ+2 tests          │
-│  Fitness       0.74  above baseline ✓                │
-│  Replay Hash   a3f8e9…  divergences: 0               │
-│  WeightAdaptor pred_accuracy 0.71  EMA trending ↑   │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  APONI  ·  Governance Console  ·  ADAAD v9.10.0  ·  Phase 75    │
+├──────────────────────────────────────────────────────────────────┤
+│  Evolution Loop    ● ACTIVE       Epoch 1,247                    │
+│  GovernanceGate    ● ENFORCING    23 rules / 0 bypass            │
+│  Evidence Ledger   ● LIVE         12,441 entries                 │
+│  Active Agents     ● 3/3      Architect  Dream  Beast            │
+│  Innovations       ● ACTIVE       Seeds: 12 pending / 3 approved │
+├──────────────────────────────────────────────────────────────────┤
+│  Last Epoch    APPROVED  Class A  Δ+2 tests                      │
+│  Fitness       0.74  above baseline ✓                            │
+│  Replay Hash   a3f8e9…  divergences: 0                           │
+│  WeightAdaptor pred_accuracy 0.71  EMA trending ↑               │
+│  Seed CEL      advisory injected → Step 4 resolved ✓             │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ```bash
@@ -424,7 +500,7 @@ python -m app.main --adaad-status --trigger-mode ADAAD --status-format both
 
 ```
 Trigger mode         : ADAAD
-Next PR              : PR-67-PLAN
+Next PR              : PR-76-PLAN
 Dependency readiness : READY
 Tier 0: pass  |  Tier 1: pass  |  Tier 2: pass  |  Tier 3: pass
 Pending evidence rows: none
@@ -449,41 +525,21 @@ Pending evidence rows: none
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## Phase Timeline — 66 Phases Complete
-
-| Phase | Era | Milestone | Version |
-|:---:|:---|:---|:---:|
-| 1–2 | Foundation | `GovernanceGate` · Evidence Ledger · SHA-256 hash-chaining | v1.0 |
-| 3–4 | Adaptive Intelligence | `AdaptiveWeights` EMA · `SemanticDiffEngine` AST analysis | v2.x |
-| 5–6 | Federation & Autonomy | Multi-repo federation · HMAC gating · roadmap self-amendment | v3.x |
-| 7–8 | Governance Calibration | Reviewer reputation · governance health dashboard | v3.2–3.3 |
-| 9–56 | Core Build-Out | 48 phases · Hardening · Evidence · Scale · Intelligence | v4.x–8.x |
-| 57 | Keystone | ProposalEngine auto-provisioning | v8.0 |
-| 58 | Perception | CodeIntelModel — code intelligence layer | v8.1 |
-| 59 | Identity | CapabilityGraph v2 + CapabilityTargetDiscovery | v8.2 |
-| 60 | Motor | AST Mutation Substrate + SandboxTournament | v8.3 |
-| 61 | Evolution | Lineage Engine + CompatibilityGraph | v8.4 |
-| 62 | Intelligence | MultiHorizon FitnessEngine v2 | v8.5 |
-| 63 | Judgment | GovernanceGate v2 + Exception Tokens | v8.6 |
-| 64 | Selfhood | Constitutional Evolution Loop (CEL) + EpochEvidence | v8.7 |
-| **65** | **Emergence ⛓** | **First Autonomous Self-Evolution — March 13, 2026** | **v9.0** |
-| **66** | **Hardening Tier Alpha** | Telemetry completeness · lineage invariants · governance contracts | **v9.1** |
-
-<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
-
 ## Codebase at a Glance
 
 <div align="center">
 
 | Metric | Value |
 |:---|:---|
-| **Version** | `9.1.0` — Phase 66: Hardening Tier Alpha |
-| **Runtime Python** | 329 files |
-| **Test files** | 267 · ~37,000 lines |
-| **Passing tests** | **4,466** |
+| **Version** | `9.10.0` — Phase 75: Seed CEL Injection |
+| **Runtime Python** | 329+ files |
+| **Test files** | **451** · ~40,000+ lines |
+| **Passing tests** | **4,624** |
 | **Constitutional rules** | **23** — Constitution v0.9.0 |
 | **Architectural invariants** | **8** — code-level, non-overridable |
-| **Development phases** | **66** complete |
+| **Seed invariants** | **6** — `SEED-CEL-0` through `SEED-REVIEW-0` |
+| **Development phases** | **75** complete |
+| **Evidence ledger entries** | **12,441** — SHA-256 hash-chained |
 | **Android support** | Full — Termux + Pydroid3 |
 | **Federation** | Multi-repo HMAC-gated (Phase 5) |
 | **First self-evolution** | ✅ Phase 65 — March 13, 2026 |
@@ -543,12 +599,16 @@ ADAAD/
 │   ├── governance/    # GovernanceGate · federation · rate limiting
 │   ├── autonomy/      # Bandit · AdaptiveWeights · NonStationarityDetector
 │   ├── mutation/      # AST substrate · SandboxTournament · CodeIntelModel
-│   └── sandbox/       # Ephemeral container execution
+│   ├── sandbox/       # Ephemeral container execution
+│   ├── seed_cel_injector.py    # Phase 75 — seed → CEL advisory wire
+│   ├── seed_proposal_bridge.py # Phase 74 — seed → ProposalRequest bridge
+│   └── seed_review.py          # Phase 73 — human-governed seed review
 ├── security/          # Cryovant — auth · key management
-├── tests/             # 267 files · 4,466 passing
+├── tests/             # 451 files · 4,624 passing
 ├── governance/        # Constitutional rules · federation keys · attestations
 ├── artifacts/         # Per-phase evidence (immutable after close)
 ├── ui/                # Aponi governance console
+│   └── aponi/         # innovations_panel.js · Phase 73/74/75 seed UI
 ├── android/           # F-Droid · Obtainium · GitHub Releases · PWA
 ├── QUICKSTART.md
 ├── AGENTS.md          # ADAAD / DEVADAAD build agent protocol
@@ -579,9 +639,34 @@ Both are trigger tokens for the governed build agent in <code>AGENTS.md</code>. 
 </details>
 
 <details>
-<summary><strong>What changed in v9.1.0?</strong></summary>
+<summary><strong>What changed in v9.10.0 (Phase 75)?</strong></summary>
 <br/>
-Phase 66 closed five governance audit gaps: (1) <code>WeightAdaptor.prediction_accuracy</code> published to epoch telemetry every cycle; (2) <code>LineageLedgerV2</code> streaming verification invariants test-locked; (3) LLM failover governance contract published; (4) 2-of-3 Ed25519 key ceremony runbook published. 25 new gate tests. Zero regressions.
+Phase 75 wired approved seed <code>ProposalRequest</code> objects into CEL Step 4 as advisory signals. New: <code>runtime/seed_cel_injector.py</code> · <code>inject_seed_proposal_into_context()</code> · <code>resolve_step4_request()</code> · <code>POST /innovations/seeds/promoted/{id}/inject</code>. Four new invariants: <code>SEED-CEL-0</code>, <code>SEED-CEL-HUMAN-0</code>, <code>SEED-CEL-DETERM-0</code>, <code>SEED-CEL-AUDIT-0</code>. 14 new tests. Zero regressions. Seed remains advisory — no mutation without <code>GovernanceGate</code> + <code>HUMAN-0</code>.
+</details>
+
+<details>
+<summary><strong>What is the Innovations Pipeline?</strong></summary>
+<br/>
+Phases 69–75 built a governed pathway for human-sourced ideas (seeds) to enter the constitutional evolution loop. Seeds flow: ingest → score → promote → human review (<code>audit:write</code> scope) → proposal bridge → CEL Step 4 advisory injection. Every step writes to the lineage ledger before any state mutation. All seed invariants are enforced. A seed cannot become a mutation without full GovernanceGate + HUMAN-0 approval.
+</details>
+
+<details>
+<summary><strong>What changed in v9.1.0 through v9.9.0?</strong></summary>
+<br/>
+
+| Version | Phase | Key change |
+|:---|:---:|:---|
+| v9.1.0 | 66 | WeightAdaptor telemetry · LineageLedgerV2 invariants · LLM failover contract · Ed25519 key ceremony |
+| v9.2.0 | 67 | Operator-gated deployment scope · governance contracts |
+| v9.3.0 | 68 | LLM failover governance · provider health monitoring |
+| v9.4.0 | 69 | Innovations ingestion router · seed scoring framework |
+| v9.5.0 | 70 | Innovation scoring · `POST /innovations/seeds` pipeline |
+| v9.6.0 | 71 | Seed promotion queue · `SEED-PROMO-0` invariant |
+| v9.7.0 | 72 | Graduated seed tracking · promotion lifecycle ledger |
+| v9.8.0 | 73 | Human-governed seed review · `audit:write` scope · Aponi review panel |
+| v9.9.0 | 74 | Seed-to-Proposal Bridge · deterministic `cycle_id` · `SEED-PROP-0` |
+| v9.10.0 | 75 | Seed CEL injection · `resolve_step4_request()` · `SEED-CEL-AUDIT-0` |
+
 </details>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -610,14 +695,14 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 
 <br/>
 
-**[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agents](AGENTS.md)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/InnovativeAI-adaad/ADAAD/issues)** &nbsp;·&nbsp; **[🤝 Contributing](CONTRIBUTING.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)**
+**[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🤖 Agents](AGENTS.md)** &nbsp;·&nbsp; **[🐛 Issues](https://github.com/InnovativeAI-adaad/ADAAD/issues)** &nbsp;·&nbsp; **[🤝 Contributing](CONTRIBUTING.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
 
 <br/>
 
-![ledger](https://img.shields.io/badge/Evidence_Ledger-SHA--256_Hash--Chained-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-0d1117?style=flat-square&labelColor=0d1117&color=f5c842)&nbsp;![evolved](https://img.shields.io/badge/Self--Evolved-Phase_65_—_March_13_2026-0d1117?style=flat-square&labelColor=0d1117&color=ff4466)&nbsp;![invariants](https://img.shields.io/badge/8_Invariants-Code--Level-0d1117?style=flat-square&labelColor=0d1117&color=a855f7)&nbsp;![free](https://img.shields.io/badge/Apache_2.0-Free_Forever-0d1117?style=flat-square&labelColor=0d1117&color=00ff88)
+![ledger](https://img.shields.io/badge/Evidence_Ledger-SHA--256_Hash--Chained-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-0d1117?style=flat-square&labelColor=0d1117&color=f5c842)&nbsp;![evolved](https://img.shields.io/badge/Self--Evolved-Phase_65_—_March_13_2026-0d1117?style=flat-square&labelColor=0d1117&color=ff4466)&nbsp;![invariants](https://img.shields.io/badge/8_Invariants-Code--Level-0d1117?style=flat-square&labelColor=0d1117&color=a855f7)&nbsp;![tests](https://img.shields.io/badge/4%2C624_Tests-Passing-0d1117?style=flat-square&labelColor=0d1117&color=00ff88)&nbsp;![phases](https://img.shields.io/badge/75_Phases-Complete-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![free](https://img.shields.io/badge/Apache_2.0-Free_Forever-0d1117?style=flat-square&labelColor=0d1117&color=22c55e)
 
 <br/>
 
-<sub><code>ADAAD v9.1.0</code> &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
+<sub><code>ADAAD v9.10.0</code> &nbsp;·&nbsp; Phase 75 &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
 
 </div>
