@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C466_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/66_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![GovernanceGate](https://img.shields.io/badge/GovernanceGate-Non--Bypassable-f5c842?style=flat-square&labelColor=0d1117)&nbsp;![Replay](https://img.shields.io/badge/Replay-Zero_Divergence-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Platform](https://img.shields.io/badge/Android_%7C_Linux_%7C_macOS-Supported-9966ff?style=flat-square&labelColor=0d1117)
 
-![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13%2C_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
+![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13%2C_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
 <br/>
 
@@ -61,78 +61,18 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 
 ## ADAAD vs. Everything Else
 
-<table>
-<thead>
-<tr>
-<th align="left">Capability</th>
-<th align="center">Copilot / Cursor</th>
-<th align="center">Devin / SWE-agent</th>
-<th align="center">ADAAD</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Mutation model</td>
-<td align="center">Suggest → human applies</td>
-<td align="center">Autonomous PR creation</td>
-<td align="center">✅ Propose → Gate → Apply <strong>atomically</strong></td>
-</tr>
-<tr>
-<td>Safety architecture</td>
-<td align="center">Human reviews</td>
-<td align="center">Human reviews</td>
-<td align="center">✅ <code>GovernanceGate</code> — 23 constitutional rules, non-bypassable</td>
-</tr>
-<tr>
-<td>Audit trail</td>
-<td align="center">Git history only</td>
-<td align="center">PR descriptions</td>
-<td align="center">✅ SHA-256 hash-chained ledger — tamper-evident, append-only</td>
-</tr>
-<tr>
-<td>Deterministic replay</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅ <code>replay_verifier.py</code> — byte-identical, zero-divergence</td>
-</tr>
-<tr>
-<td>Fitness scoring</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅ 7-signal engine — adaptive weights from post-merge telemetry</td>
-</tr>
-<tr>
-<td>Proven self-evolution</td>
-<td align="center">❌</td>
-<td align="center">Partial</td>
-<td align="center">✅ Phase 65 — hash in ledger, March 13 2026</td>
-</tr>
-<tr>
-<td>Runs on $200 phone</td>
-<td align="center">❌</td>
-<td align="center">❌</td>
-<td align="center">✅ Full Android support — Termux + Pydroid3</td>
-</tr>
-<tr>
-<td>Cross-repo mutation</td>
-<td align="center">❌</td>
-<td align="center">Limited</td>
-<td align="center">✅ Federation — HMAC-gated, dual-gate constitutional enforcement</td>
-</tr>
-<tr>
-<td>Memory between epochs</td>
-<td align="center">❌</td>
-<td align="center">Limited</td>
-<td align="center">✅ Full lineage DAG — SHA-256 hash-chained, replayable</td>
-</tr>
-<tr>
-<td>Price</td>
-<td align="center">$10–19/mo</td>
-<td align="center">$500+/mo</td>
-<td align="center">✅ Apache 2.0 — free forever</td>
-</tr>
-</tbody>
-</table>
+| Capability | Copilot / Cursor · Devin | **ADAAD** |
+|:---|:---:|:---|
+| Mutation model | Suggest or auto-PR — human in loop | ✅ Propose → Gate → Apply **atomically** |
+| Safety architecture | Human reviews | ✅ `GovernanceGate` — 23 rules, non-bypassable |
+| Audit trail | Git history / PR descriptions | ✅ SHA-256 hash-chained ledger — append-only |
+| Deterministic replay | ❌ | ✅ `replay_verifier.py` — byte-identical, zero-divergence |
+| Fitness scoring | ❌ | ✅ 7-signal engine — adaptive weights from telemetry |
+| Proven self-evolution | ❌ / Partial | ✅ Phase 65 — hash in ledger, March 13 2026 |
+| Runs on $200 phone | ❌ | ✅ Full Android — Termux + Pydroid3 |
+| Cross-repo mutation | ❌ / Limited | ✅ Federation — HMAC-gated, dual-gate enforced |
+| Memory between epochs | ❌ / Limited | ✅ Full lineage DAG — SHA-256 chained, replayable |
+| Price | $10–19 / $500+/mo | ✅ Apache 2.0 — free forever |
 
 <br/>
 
@@ -140,22 +80,18 @@ ADAAD inverts this. The `GovernanceGate` is the last line of defense — not you
 
 ## Live System Status
 
-<div align="center">
-
-| System | Status | Invariant | Since |
-|:---:|:---:|:---:|:---:|
-| 🟢 GovernanceGate | **ACTIVE · NON-BYPASSABLE** | `GOV-SOLE-0` | Phase 1 |
-| 🟢 Constitutional Evolution Loop | **14-STEP · ORDERED** | `CEL-ORDER-0` | Phase 64 |
-| 🟢 Evidence Ledger | **HASH-CHAINED · APPEND-ONLY** | `CEL-EVIDENCE-0` | Phase 1 |
-| 🟢 FitnessEngine v2 | **7 SIGNALS · ADAPTIVE WEIGHTS** | `FIT-BOUND-0` | Phase 62 |
-| 🟢 SandboxTournament | **OPERATIONAL · EPHEMERAL** | `SANDBOX-DIV-0` | Phase 60 |
-| 🟢 Deterministic Replay | **ZERO DIVERGENCE** | `DET-ALL-0` | Phase 1 |
-| 🟢 WeightAdaptor | **EMA DESCENT · TELEMETRY LIVE** | `FIT-DIV-0` | Phase 3 |
-| 🟢 Federation | **HMAC-GATED · DUAL-GATE** | `federation_dual_gate` | Phase 5 |
-| 🟢 CodeIntelModel | **SCANNING · DETERMINISM-VERIFIED** | `INTEL-DET-0` | Phase 58 |
-| 🟢 Autonomous Self-Evolution | **PHASE 65 PROVEN · LEDGER SEALED** | `MUTATION-TARGET` | Phase 65 |
-
-</div>
+| System | Status |
+|:---|:---|
+| 🟢 GovernanceGate | **ACTIVE · NON-BYPASSABLE** · `GOV-SOLE-0` |
+| 🟢 Constitutional Evolution Loop | **14-STEP · ORDERED** · `CEL-ORDER-0` |
+| 🟢 Evidence Ledger | **HASH-CHAINED · APPEND-ONLY** · `CEL-EVIDENCE-0` |
+| 🟢 FitnessEngine v2 | **7 SIGNALS · ADAPTIVE WEIGHTS** · `FIT-BOUND-0` |
+| 🟢 SandboxTournament | **OPERATIONAL · EPHEMERAL** · `SANDBOX-DIV-0` |
+| 🟢 Deterministic Replay | **ZERO DIVERGENCE** · `DET-ALL-0` |
+| 🟢 WeightAdaptor | **EMA DESCENT · TELEMETRY LIVE** · `FIT-DIV-0` |
+| 🟢 Federation | **HMAC-GATED · DUAL-GATE** · `federation_dual_gate` |
+| 🟢 CodeIntelModel | **SCANNING · DETERMINISM-VERIFIED** · `INTEL-DET-0` |
+| 🟢 Autonomous Self-Evolution | **PHASE 65 PROVEN · LEDGER SEALED** · `MUTATION-TARGET` |
 
 <br/>
 
@@ -226,17 +162,17 @@ ADAAD_SANDBOX_ONLY=true  ─►  All 14 steps execute · proposals evaluated · 
 <table>
 <tr>
 <td align="center" width="33%">
-<img src="docs/assets/readme/agent_architect.svg" width="200" alt="Architect — constitutional guardian and governance-safe structural designer."/>
+<img src="docs/assets/readme/agent_architect.svg" width="160" alt="Architect — constitutional guardian and governance-safe structural designer."/>
 <br/><strong>Architect</strong><br/>
 <sub>Governance-safe structural design. Low risk (0.1–0.4). Owns Tier-0 guard decisions and constitutional compliance.</sub>
 </td>
 <td align="center" width="33%">
-<img src="docs/assets/readme/agent_dream.svg" width="200" alt="Dream — high-novelty explorer and scenario generator."/>
+<img src="docs/assets/readme/agent_dream.svg" width="160" alt="Dream — high-novelty explorer and scenario generator."/>
 <br/><strong>Dream</strong><br/>
 <sub>High-novelty exploration. High expected gain (0.5–0.9). Sees 200 epochs ahead. Experimental and behavioral mutations.</sub>
 </td>
 <td align="center" width="33%">
-<img src="docs/assets/readme/agent_beast.svg" width="200" alt="Beast — mutation velocity and execution pressure testing."/>
+<img src="docs/assets/readme/agent_beast.svg" width="160" alt="Beast — mutation velocity and execution pressure testing."/>
 <br/><strong>Beast</strong><br/>
 <sub>Mutation velocity at the constitutional edge. Highest risk, highest pressure. Drives fitness regression targets hard.</sub>
 </td>
@@ -508,10 +444,6 @@ PYTHONPATH=. python -m ui.aponi --port 8080
 
 ## Quick Start
 
-<table>
-<tr>
-<td width="50%">
-
 **Server / Desktop / CI**
 
 ```bash
@@ -535,9 +467,6 @@ ADAAD_ENV=dev \
 python app/main.py
 ```
 
-</td>
-<td width="50%">
-
 **Android — Termux / Pydroid3**
 
 ```bash
@@ -557,10 +486,6 @@ PYTHONPATH=. python -m ui.aponi \
   --port 8080
 # → http://localhost:8080
 ```
-
-</td>
-</tr>
-</table>
 
 > Full guides: **[QUICKSTART.md](QUICKSTART.md)** &nbsp;·&nbsp; **[INSTALL_ANDROID.md](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[PHONE_SETUP.md](PHONE_SETUP.md)** &nbsp;·&nbsp; **[TERMUX_SETUP.md](TERMUX_SETUP.md)**
 
