@@ -1,6 +1,6 @@
 # Source of truth for production/runtime dependency pins.
 fastapi==0.135.1
-uvicorn==0.41.0
+uvicorn==0.42.0
 anthropic==0.84.0
 libcst>=1.1.0,<2.0
 PyYAML==6.0.3

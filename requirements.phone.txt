@@ -27,7 +27,7 @@
 #                        Already optional in replay_attestation.py via _has_pynacl()
 
 fastapi==0.135.1
-uvicorn==0.41.0
+uvicorn==0.42.0
 starlette==0.52.1
 pydantic==1.10.26
 httpx==0.28.1
