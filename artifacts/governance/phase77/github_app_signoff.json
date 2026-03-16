@@ -1,0 +1,37 @@
+{
+  "artifact_type": "HUMAN-0_phase_signoff",
+  "schema_version": "1.0",
+  "phase": 77,
+  "phase_name": "GitHub App Governance + Constitution Version Alignment",
+  "version_from": "9.11.0",
+  "version_to": "9.12.0",
+  "branch": "feat/phase77-github-app-governance",
+  "authored_date": "2026-03-15",
+  "governor": "Dustin L. Reid",
+  "organization": "Innovative AI LLC",
+  "constitutional_authority": "CONSTITUTION.md v0.9.0",
+  "findings_closed": [
+    "FINDING-AUDIT-C03",
+    "M-01 (code side)"
+  ],
+  "deliverables": {
+    "A-01": "POST /webhook/github endpoint already registered in server.py — HMAC-verified, fail-closed",
+    "A-02": "runtime/governance/external_event_bridge.py — ExternalEventBridge + ExternalGovernanceSignal — SHA-256 hash-chained JSONL ledger",
+    "A-03": "app/github_app.py _emit_governance_event wired to external_event_bridge.record(); ExternalGovernanceSignal emitted for mutation-class events",
+    "A-04": "CONSTITUTION_VERSION updated 0.7.0 → 0.9.0 in runtime/constitution.py, runtime/autonomy/epoch_memory_store.py, runtime/evolution/evolution_loop.py",
+    "A-05": "This artifact (phase77/github_app_signoff.json)",
+    "A-06": "tests/governance/test_phase77_github_app_governance.py — ≥25 tests"
+  },
+  "constitutional_invariants": [
+    "GITHUB-AUDIT-0",
+    "GITHUB-GATE-OBS-0",
+    "GITHUB-SIG-CLOSED-0",
+    "GITHUB-DETERM-0",
+    "GITHUB-FAILSAFE-0",
+    "GITHUB-GATE-ISO-0",
+    "HUMAN-0",
+    "AUDIT-0"
+  ],
+  "human_gate_status": "RATIFIED",
+  "notes": "Direction A + C bundled per PR-77-PLAN.md §4 recommendation. GovernanceGate isolation preserved — external_event_bridge.py never imports GovernanceGate directly (GITHUB-GATE-ISO-0). No autonomous mutation triggered by webhook events (GITHUB-APP-MUT-0 / HUMAN-0)."
+}

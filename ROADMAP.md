@@ -1504,6 +1504,14 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 `inject_seed_proposal_into_context()` merges a seed-derived `ProposalRequest` into a CEL epoch context dict; `SeedCELInjectionEvent` written to lineage ledger before return (SEED-CEL-AUDIT-0). `resolve_step4_request()` reads `seed_proposal_request` key in state context or falls back to default (SEED-CEL-HUMAN-0). CEL Step 4 wired to call `resolve_step4_request()` with try/except fallback (CEL-WIRE-FAIL-0) — CEL-ORDER-0 preserved. `POST /seeds/promoted/{seed_id}/inject` endpoint returns ready `epoch_context`. Completes the full seed lifecycle pipeline (Phases 71–75).
 
 **Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0
+### Phase 77 — GitHub App Governance + Constitution Version Alignment
+
+**Status:** ✅ shipped (v9.12.0) · **Dependency:** Phase 76 merged at main · **Gate:** PR-77-PLAN.md (HUMAN-0 ratified) · **Tests:** T77-BRG-01..10, T77-SIG-01..06, T77-CHAIN-01..04, T77-WIRE-01..03, T77-CONST-01..03, T77-IDEM-01..02
+
+Closes FINDING-AUDIT-C03 governance gap: `app/github_app.py` and `runtime/integrations/github_webhook_handler.py` were committed outside the PR procession. `runtime/governance/external_event_bridge.py` — SHA-256 hash-chained JSONL audit ledger — provides the official governance audit trail. `ExternalGovernanceSignal` emitted for mutation-class events (`push.main`, `pr.merged`, `ci.failure`) and readable by `GovernanceHealthAggregator`. `app/github_app._emit_governance_event` wired to the bridge's keyword API. `CONSTITUTION_VERSION` constant updated `"0.7.0"` → `"0.9.0"` in three runtime files + `constitution.yaml` (M-01 code-side closure). All 31 tests passing.
+
+**Key invariants:** GITHUB-AUDIT-0, GITHUB-GATE-OBS-0, GITHUB-SIG-CLOSED-0, GITHUB-DETERM-0, GITHUB-FAILSAFE-0, GITHUB-GATE-ISO-0
+
 ### Phase 76 — Seed CEL Outcome Recorder
 
 **Status:** ✅ shipped (v9.11.0) · **Dependency:** Phase 75 merged at main · **Tests:** T76-OUT-01..08, T76-LNK-01..04, T76-DET-01..03, T76-IDM-01..03, T76-AUD-01..03, T76-API-01..04

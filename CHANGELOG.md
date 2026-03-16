@@ -1,3 +1,13 @@
+## [9.12.0] — 2026-03-15 — Phase 77: GitHub App Governance + Constitution Version Alignment
+
+### feat(phase-77): external_event_bridge — SHA-256 hash-chained JSONL ledger for GitHub App events (GITHUB-AUDIT-0)
+### feat(phase-77): ExternalGovernanceSignal emitted for mutation-class events push.main / pr.merged / ci.failure (GITHUB-GATE-OBS-0)
+### feat(phase-77): app/github_app._emit_governance_event wired to external_event_bridge.record() — closes FINDING-AUDIT-C03
+### fix(phase-77): CONSTITUTION_VERSION updated 0.7.0 → 0.9.0 in runtime/constitution.py, epoch_memory_store.py, evolution_loop.py (M-01 code-side closure)
+### fix(phase-77): runtime/governance/constitution.yaml version 0.7.0 → 0.9.0
+### test(phase-77): 31 tests — T77-BRG-01..10, T77-SIG-01..06, T77-CHAIN-01..04, T77-WIRE-01..03, T77-CONST-01..03, T77-IDEM-01..02 + contract tests
+### governance(phase-77): artifacts/governance/phase77/github_app_signoff.json — HUMAN-0 ratified
+
 ## [9.11.0] — 2026-03-15 — Phase 76: Seed CEL Outcome Recorder
 
 ### feat(phase-76): CEL epoch outcome recorded back to lineage ledger — closes full seed lifecycle loop

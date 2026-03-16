@@ -1005,7 +1005,7 @@ class EvolutionLoop:
                 proposal_count=total_candidates,
                 accepted_count=accepted_count,
                 context_hash=context.context_hash(),
-                constitution_version="0.7.0",
+                constitution_version="0.9.0",
             )
         except Exception:  # noqa: BLE001
             pass  # memory emit failure must never halt the epoch
