@@ -285,13 +285,27 @@ def _emit_governance_event(event_name: str, data: dict) -> None:
         return  # gate hard-blocked; emission suppressed and logged above
 
     try:
-        from runtime.governance import external_event_bridge  # type: ignore[import]
-        external_event_bridge.record(f"github_app.{event_name}", data)
+        from runtime.governance import external_event_bridge  # GITHUB-AUDIT-0
+        signal = external_event_bridge.record(
+            event_name=event_name,
+            action=str(data.get("action", "")),
+            delivery_id=str(data.get("delivery_id", "")),
+            installation_id=str(data.get("installation_id", GITHUB_APP_ID)),
+            repository=str(data.get("repo", data.get("repository", ""))),
+            sender=str(data.get("pusher", data.get("merged_by", data.get("sender", "")))),
+            status="accepted",
+            raw_payload_bytes=json.dumps(data, sort_keys=True).encode(),
+        )
+        if signal is not None:
+            logger.info(
+                "ExternalGovernanceSignal emitted event=%s seq=%d hash=%s",
+                event_name, signal.sequence, signal.record_hash[:16],
+            )
         return
-    except (ImportError, AttributeError):
-        pass
+    except Exception as _exc:  # noqa: BLE001  GITHUB-FAILSAFE-0
+        logger.warning("external_event_bridge.record failed: %s — JSONL fallback", _exc)
 
-    # Fallback: JSONL audit file
+    # Fallback: plain JSONL audit file (pre-Phase-77 compatibility)
     audit_path = os.environ.get("ADAAD_GITHUB_AUDIT_LOG", "data/github_app_events.jsonl")
     os.makedirs(os.path.dirname(os.path.abspath(audit_path)), exist_ok=True)
     entry = {
@@ -301,4 +315,4 @@ def _emit_governance_event(event_name: str, data: dict) -> None:
     }
     with open(audit_path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
-    logger.debug("Governance event logged: %s", event_name)
+    logger.debug("Governance event logged (fallback): %s", event_name)

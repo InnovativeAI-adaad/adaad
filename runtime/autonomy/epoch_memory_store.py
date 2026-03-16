@@ -237,7 +237,7 @@ class EpochMemoryEntry:
             proposal_count=int(d.get("proposal_count", 0)),
             accepted_count=int(d.get("accepted_count", 0)),
             context_hash=str(d.get("context_hash", "")),
-            constitution_version=str(d.get("constitution_version", "0.7.0")),
+            constitution_version=str(d.get("constitution_version", "0.9.0")),
             entry_version=str(d.get("entry_version", _ENTRY_VERSION)),
             entry_digest=str(d["entry_digest"]),
             prev_digest=str(d.get("prev_digest", GENESIS_DIGEST)),
@@ -265,7 +265,7 @@ class EpochMemoryStore:
             proposal_count=9,
             accepted_count=1,
             context_hash="a3f2b1c0",
-            constitution_version="0.7.0",
+            constitution_version="0.9.0",
         )
         entries = store.window()
     """
