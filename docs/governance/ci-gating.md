@@ -34,6 +34,24 @@ These jobs run for every CI execution:
 
 ## Escalated gated suites
 
+## Lane → workflow → required-check source-of-truth
+
+Use this table as the canonical mapping to prevent drift between lane ownership, workflow files, and required check names.
+
+| Lane | Workflow file | Required check name |
+|---|---|---|
+| Contract | `.github/workflows/ci.yml` | `schema-validation` |
+| Determinism | `.github/workflows/ci.yml` | `determinism-lint` |
+| Security | `.github/workflows/ci.yml` | `artifact-trust-verification` |
+| Secret-scanning | `.github/workflows/secret_scan.yml` | `Secret Scan / secret-scan` |
+| Evidence | `.github/workflows/ci.yml` | `release-evidence-readiness` |
+| Documentation | `.github/workflows/ci.yml` | `docs-validation` |
+| Replay (critical) | `.github/workflows/ci.yml` | `strict-replay` |
+| Promotion (critical) | `.github/workflows/ci.yml` | `promotion-suite` |
+| Shadow governance (policy) | `.github/workflows/ci.yml` | `shadow-governance-gate` |
+| Release strict gate | `.github/workflows/governance_strict_release_gate.yml` | `release-gate` |
+| Post-merge docs sync | `.github/workflows/post_merge_doc_sync.yml` | `post-merge-doc-sync-contract-gate` |
+
 These jobs run only when classifier gates evaluate to `true`:
 
 ### Conditional required-check mapping

@@ -78,14 +78,14 @@ Every lane has a named owner who responds when the gate fails.
 | `scripts/validate_governance_schemas.py` | Contract | Validate governance schema conformance | Present |
 | `scripts/validate_architecture_snapshot.py` | Contract / Documentation | Detect architecture-contract drift | Present |
 | `scripts/verify_core.py` / `scripts/verify_core.sh` | Determinism | Validate core deterministic/governance invariants | Present |
-| `tools/lint_determinism.py` | Determinism | AST lint for non-deterministic calls in `runtime/` | Present; **gap: `adaad/orchestrator/` not covered — Phase 1 fix** |
+| `tools/lint_determinism.py` | Determinism | AST lint for non-deterministic calls in `runtime/` and `adaad/orchestrator/` | Present |
 | `scripts/verify_critical_artifacts.py` | Security | Verify required critical artifacts exist | Present |
 | `scripts/validate_key_rotation_attestation.py` | Security | Enforce key rotation attestation integrity | Present |
 | `scripts/validate_release_evidence.py` | Evidence | Validate release evidence completeness | Present |
 | `scripts/validate_readme_alignment.py` | Documentation | Ensure README/docs align with implementation | Present |
 | `.github/workflows/determinism_lint.yml` | Determinism | Path-scoped determinism lint in CI | Present; **use as template for risk-tier routing in Phase 3** |
 | `.github/workflows/governance_strict_release_gate.yml` | Evidence / Release | Strict gate for governance/public-readiness tags | Present |
-| `.github/workflows/release_evidence_gate.yml` | Evidence / Release | Legacy gate scoped to `v0.70.0` tag only | Present (narrow); **rationalize in Phase 2** |
+| `.github/workflows/post_merge_doc_sync.yml` | Documentation / Evidence | Enforce post-merge roadmap/procession/release/evidence sync contract | Present |
 
 ---
 
