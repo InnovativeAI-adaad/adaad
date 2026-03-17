@@ -251,7 +251,7 @@ class OrchestratorReplayModeTest(unittest.TestCase):
             self.assertEqual(fail.call_args.args[0], "replay_divergence")
             self.assertIn("artifacts", fail.call_args.kwargs.get("payload", {}))
 
-    @mock.patch("app.main.build_replay_divergence_artifacts")
+    @mock.patch("app.orchestration.replay_preflight.build_replay_divergence_artifacts")
     @mock.patch.object(Orchestrator, "_fail")
     def test_replay_strict_records_divergence_artifact_paths(self, fail: mock.Mock, build_artifacts: mock.Mock) -> None:
         build_artifacts.return_value = mock.Mock(
@@ -449,7 +449,7 @@ class ReplayProofExportCliTest(unittest.TestCase):
     def test_export_replay_proof_uses_epoch_flag_and_deterministic_path(self) -> None:
         fake_builder = mock.Mock()
         fake_builder.write_bundle.return_value = mock.Mock(as_posix=mock.Mock(return_value="security/ledger/replay_proofs/epoch-42.replay_attestation.v1.json"))
-        with mock.patch("app.main.ReplayProofBuilder", return_value=fake_builder):
+        with mock.patch("app.orchestration.cli_handlers.ReplayProofBuilder", return_value=fake_builder):
             with mock.patch("sys.argv", ["app.main", "--export-replay-proof", "--epoch", "epoch-42"]):
                 with mock.patch("builtins.print") as printer:
                     main()
@@ -465,9 +465,9 @@ class ReplayProofExportCliTest(unittest.TestCase):
 class AdaadStatusCliTest(unittest.TestCase):
     def test_adaad_status_prints_table_and_json_and_skips_boot(self) -> None:
         report = mock.Mock()
-        with mock.patch("app.main.build_status_report", return_value=report) as build:
-            with mock.patch("app.main.render_human_table", return_value="TABLE") as table:
-                with mock.patch("app.main.report_as_json", return_value='{"status":"ok"}') as as_json:
+        with mock.patch("app.orchestration.cli_handlers.build_status_report", return_value=report) as build:
+            with mock.patch("app.orchestration.cli_handlers.render_human_table", return_value="TABLE") as table:
+                with mock.patch("app.orchestration.cli_handlers.report_as_json", return_value='{"status":"ok"}') as as_json:
                     with mock.patch("app.main.Orchestrator") as orchestrator_cls:
                         with mock.patch("sys.argv", ["app.main", "--adaad-status", "--status-format", "both", "--trigger-mode", "DEVADAAD"]):
                             with mock.patch("builtins.print") as printer:
