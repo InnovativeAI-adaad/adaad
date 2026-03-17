@@ -62,15 +62,26 @@ def reviewer_calibration_service(*, epoch_id: str, reviewer_ids: Iterable[str] |
     """Aggregate reviewer calibration telemetry for the requested epoch.
 
     Read-only: this function only reads from ledger-backed journal events.
-    """
-    events = journal.read_entries(limit=5_000)
-    normalized_reviewer_ids = [rid.strip() for rid in (reviewer_ids or []) if rid and rid.strip()]
 
-    if not normalized_reviewer_ids:
+    Performance contract:
+    - Uses an epoch-filtered ledger read instead of broad tail scans.
+    - Preserves deterministic ordering by consuming ledger append order.
+    - Keeps response shape stable for endpoint/schema compatibility.
+    """
+    normalized_reviewer_ids = sorted({rid.strip() for rid in (reviewer_ids or []) if rid and rid.strip()})
+
+    if normalized_reviewer_ids:
+        events = journal.read_entries_for_epoch(
+            epoch_id=epoch_id,
+            reviewer_ids=normalized_reviewer_ids,
+            limit=5_000,
+        )
+    else:
+        events = journal.read_entries_for_epoch(epoch_id=epoch_id, limit=5_000)
         inferred: set[str] = set()
         for entry in events:
             payload = entry.get("payload") if isinstance(entry, dict) else {}
-            if isinstance(payload, dict) and str(payload.get("epoch_id") or "") == epoch_id:
+            if isinstance(payload, dict):
                 reviewer_id = str(payload.get("reviewer_id") or "").strip()
                 if reviewer_id:
                     inferred.add(reviewer_id)

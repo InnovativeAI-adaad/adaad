@@ -11,8 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Ledger journaling utilities.
+"""Ledger journaling utilities.
+
+Performance contract for read APIs:
+
+- ``read_entries`` is an append-order tail read (O(N) in file length to split lines,
+  then O(limit) JSON decoding).
+- ``read_entries_for_epoch`` narrows reads to an epoch and optional reviewer set.
+  Without ``epoch_index`` it scans the decoded tail window once (O(limit)); with a
+  precomputed ``epoch_index`` it reuses epoch-partitioned rows and applies only
+  reviewer filtering (O(E_epoch)).
+
+All filtered read APIs preserve ledger append order for deterministic replay.
 """
 
 import json
@@ -23,7 +33,7 @@ import threading
 from pathlib import Path
 from contextlib import contextmanager
 from collections import deque
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Protocol
 
 from runtime import metrics
 from runtime.governance.event_taxonomy import validate_event_type_for_agm_step
@@ -97,6 +107,42 @@ def read_entries(limit: int = 50) -> List[Dict[str, str]]:
         except json.JSONDecodeError:
             continue
     return entries
+
+
+def read_entries_for_epoch(
+    *,
+    epoch_id: str,
+    reviewer_ids: Iterable[str] | None = None,
+    limit: int = 5_000,
+    epoch_index: Mapping[str, List[Dict[str, Any]]] | None = None,
+) -> List[Dict[str, Any]]:
+    """Return ledger rows for one epoch with optional reviewer selection.
+
+    Deterministic ordering is preserved from the underlying lineage ledger append
+    sequence. When ``epoch_index`` is provided, this function avoids full-tail
+    scans and filters only the pre-partitioned epoch rows.
+    """
+    normalized_epoch_id = str(epoch_id or "")
+    reviewer_selector = {str(rid).strip() for rid in (reviewer_ids or []) if str(rid).strip()}
+
+    if epoch_index is None:
+        candidate_entries: Iterable[Dict[str, Any]] = read_entries(limit=limit)
+    else:
+        candidate_entries = list(epoch_index.get(normalized_epoch_id, []))
+
+    selected: List[Dict[str, Any]] = []
+    for entry in candidate_entries:
+        if not isinstance(entry, dict):
+            continue
+        payload = entry.get("payload") if isinstance(entry.get("payload"), dict) else {}
+        if str(payload.get("epoch_id") or "") != normalized_epoch_id:
+            continue
+        if reviewer_selector:
+            reviewer_id = str(payload.get("reviewer_id") or "").strip()
+            if reviewer_id not in reviewer_selector:
+                continue
+        selected.append(entry)
+    return selected
 
 
 def read_latest_entry_by_action_and_mutation_id(
