@@ -30,6 +30,9 @@ jobs:
               docsValidation: [
                 'CI / docs-validation',
               ],
+              codeql: [
+                'CodeQL / Analyze (python)',
+              ],
             };
 
             const branchResp = await github.rest.repos.getBranch({ owner, repo, branch });
@@ -63,6 +66,14 @@ jobs:
             if (!hasDocsValidation) {
               core.setFailed(
                 `required_status_checks must include one of: ${REQUIRED_CONTEXTS.docsValidation.join(', ')}`
+              );
+              return;
+            }
+
+            const hasCodeQL = hasAnyRequiredContext(REQUIRED_CONTEXTS.codeql);
+            if (!hasCodeQL) {
+              core.setFailed(
+                `required_status_checks must include one of: ${REQUIRED_CONTEXTS.codeql.join(', ')}`
               );
               return;
             }

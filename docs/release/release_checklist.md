@@ -24,7 +24,7 @@ Use this checklist for any release candidate, with strict enforcement for govern
 
 - [ ] CI required checks are green for the release commit.
 - [ ] Determinism and governance test suites passed on the release commit.
-- [ ] CodeQL workflow is green for the release commit/PR.
+- [ ] `CodeQL / Analyze (python)` is green for the release commit/PR (`.github/workflows/codeql.yml`).
 - [ ] `python scripts/validate_no_build_lib_sources.py` passes (no git-tracked `build/lib/**/*.py` files).
 - [ ] Python packaging artifacts (`build/`, `dist/`, `*.egg-info/`) are treated as ephemeral CI/release outputs, not versioned source-of-truth.
 
