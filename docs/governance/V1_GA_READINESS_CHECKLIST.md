@@ -29,7 +29,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,649 tests — v9.11.0 |
 | Determinism suite | `pytest tests/determinism/ -q` → 0 failures | ✅ |
 | Governance inviolability suite | `pytest tests/governance/inviolability/ -q` → 0 failures | ✅ |
-| CodeQL analysis | `.github/workflows/codeql.yml` — no high/critical | ✅ |
+| CodeQL analysis (`CodeQL / Analyze (python)`) | `.github/workflows/codeql.yml` — no high/critical | ✅ |
 | SPDX header enforcement | `python scripts/check_spdx_headers.py` → 0 violations | ✅ |
 | Architecture snapshot valid | `python scripts/validate_architecture_snapshot.py` | ✅ |
 | Release evidence complete | `python scripts/validate_release_evidence.py --require-complete` | ✅ |
