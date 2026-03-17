@@ -43,7 +43,7 @@ These jobs run only when classifier gates evaluate to `true`:
 | `strict-replay` | `pr_tier=critical` or replay/ledger flag from PR template | strict deterministic replay verification |
 | `evidence-suite` | governance/runtime/security path changes or replay/ledger impact flag | evidence/sandbox tests |
 | `promotion-suite` | governance/runtime path changes, policy/constitution flag, or `pr_tier=critical` | governance/promotion selectors |
-| `shadow-governance-gate` | policy-touching paths (`governance/governance_policy*.json`, policy runtime/tests fixtures) or policy/constitution flag | replay-only policy evaluator against historical ledgers |
+| `shadow-governance-gate` | `policy_touch=true` (canonical set: `runtime/governance/constitution.yaml`, `governance/**`, `schemas/governance_policy*.json`, `schemas/governance_policy_artifact*.json`, `docs/schemas/constitution.v1.json`) or policy/constitution flag from PR template | replay-only policy evaluator against historical ledgers |
 | `phase7-reputation-gate` | governance/server/relevant UI path changes (`governance/**`, `server.py`, `ui/**`) | reviewer reputation + ledger + pressure + constitutional-floor + reviewer panel endpoint/UI coverage |
 | `pr3h-acceptance-gate` | PR-3H closure scope (`tests/acceptance/pr3h/**`, `scripts/validate_pr3h_acceptance.py`, checkpoint/entropy replay acceptance surfaces) | checkpoint tamper escalation + entropy triage replay fixtures via machine-readable audit output |
 | `benchmark-regression-gate` | always-on CI promotion check | deterministic benchmark generation + category delta non-regression (`scripts/validate_benchmark_deltas.py`) |
@@ -57,7 +57,14 @@ These jobs run only when classifier gates evaluate to `true`:
 - `promotion-suite`
   - Runs when governance/runtime paths changed, policy/constitution impact is flagged, or the PR is `critical` tier.
 - `shadow-governance-gate`
-  - Non-optional for policy-touching PRs (or explicit policy-impact flag).
+  - Non-optional when either trigger is true: classifier `policy_touch=true` **or** PR template policy/constitution checkbox (`gov_policy_flag=true`).
+  - Canonical `policy_touch` path set in `.github/workflows/ci.yml` (`dorny/paths-filter`):
+    - `runtime/governance/constitution.yaml`
+    - `governance/**`
+    - `schemas/governance_policy*.json`
+    - `schemas/governance_policy_artifact*.json`
+    - `docs/schemas/constitution.v1.json`
+  - Exact gate behavior: `run_shadow_governance_gate=true` iff `POLICY_TOUCH == true || gov_policy_flag == true`.
   - Runs `scripts/evaluate_shadow_governance.py` in replay-only mode against `tests/fixtures/governance/shadow_replay_ledger.json`.
   - Fails closed when any threshold breach occurs (`false_allow_rate > 0.05`, `false_block_rate > 0.20`, or `divergence_count > 3`).
 - `phase7-reputation-gate`

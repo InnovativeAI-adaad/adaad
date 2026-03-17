@@ -54,6 +54,12 @@ jobs:
             governance:
               - 'governance/**'
               - 'docs/governance/**'
+            policy_touch:
+              - 'runtime/governance/constitution.yaml'
+              - 'governance/**'
+              - 'schemas/governance_policy*.json'
+              - 'schemas/governance_policy_artifact*.json'
+              - 'docs/schemas/constitution.v1.json'
             runtime:
               - 'runtime/**'
               - 'app/**'
