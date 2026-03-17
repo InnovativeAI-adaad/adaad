@@ -15,7 +15,12 @@ ACTIVE_DOC_PATHS = [
     "docs/*.md",
     "docs/governance/*.md",
 ]
+GOVERNANCE_DOC_PATHS = [
+    "docs/ADAAD_STRATEGIC_BUILD_SUGGESTIONS.md",
+    "docs/governance/*.md",
+]
 REQ_FILE_PATTERN = re.compile(r"requirements[^\s'\"`]*\.txt")
+WORKFLOW_REF_PATTERN = re.compile(r"\.github/workflows/[A-Za-z0-9._/-]+\.ya?ml")
 
 
 def _iter_active_docs() -> list[Path]:
@@ -45,6 +50,31 @@ def _scan_file(path: Path) -> list[dict[str, object]]:
     return findings
 
 
+def _iter_governance_docs() -> list[Path]:
+    files: set[Path] = set()
+    for pattern in GOVERNANCE_DOC_PATHS:
+        files.update((ROOT / ".").glob(pattern))
+    return sorted(path for path in files if path.is_file())
+
+
+def _scan_workflow_refs(path: Path) -> list[dict[str, object]]:
+    findings: list[dict[str, object]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        for match in WORKFLOW_REF_PATTERN.finditer(line):
+            workflow_ref = match.group(0)
+            target = ROOT / workflow_ref
+            if not target.exists():
+                findings.append(
+                    {
+                        "kind": "missing_workflow_file_reference",
+                        "file": str(path.relative_to(ROOT)),
+                        "line": line_number,
+                        "target": workflow_ref,
+                    }
+                )
+    return findings
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Fail if active documentation references nonexistent dependency requirement files."
@@ -59,6 +89,9 @@ def main() -> int:
 
     for doc_path in _iter_active_docs():
         findings.extend(_scan_file(doc_path))
+
+    for doc_path in _iter_governance_docs():
+        findings.extend(_scan_workflow_refs(doc_path))
 
     findings = sorted(findings, key=lambda item: (item["file"], item["line"], item["target"]))
 
