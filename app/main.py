@@ -15,7 +15,6 @@
 Deterministic orchestrator entrypoint.
 """
 
-import argparse
 import json
 import logging
 import os
@@ -30,6 +29,16 @@ from app.architect_agent import ArchitectAgent
 from app.beast_mode_loop import BeastModeLoop
 from app.dream_mode import DreamMode
 from app.mutation_executor import MutationExecutor
+from app.orchestration.boot_config import (
+    FacadeRuntimeState,
+    build_init_state,
+    dry_run_env_enabled,
+    resolve_replay_mode,
+    select_epoch,
+)
+from app.orchestration.cli_handlers import build_main_parser, handle_export_replay_proof, handle_status_report
+from app.orchestration.runtime_factory import build_orchestrator
+from app.orchestration.replay_preflight import execute_replay_preflight
 from runtime.api import MutationEngine, MutationRequest, agent_path_from_id, iter_agent_dirs, resolve_agent_id
 from runtime.api.mutation_runtime import verify_all
 from runtime.api.runtime_services import (
@@ -43,7 +52,6 @@ from runtime.api.runtime_services import (
     RecoveryPolicy,
     RecoveryTierLevel,
     ReplayMode,
-    ReplayProofBuilder,
     RULE_ARCHITECT_SCAN,
     RULE_CONSTITUTION_VERSION,
     RULE_KEY_ROTATION,
@@ -72,9 +80,7 @@ from runtime.api.runtime_services import (
 )
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
-from adaad.orchestrator.status import build_status_report, render_human_table, report_as_json
 from runtime.preflight import validate_agent_contract_preflight
-from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
 from security import cryovant
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
@@ -266,7 +272,7 @@ class Orchestrator:
                 continue
             rel = Path(module_name)
             if rel.parts[:2] == ("adaad", "agents") and len(rel.parts) >= 3:
-                blocked.add(rel.parts[2])
+                blocked.add(Path(rel.parts[2]).stem)
             else:
                 blocked.add(rel.stem)
         return sorted(blocked)
@@ -291,7 +297,7 @@ class Orchestrator:
             "failing_modules": preflight.get("failing_modules", []),
         }
         self.state["fail_closed"] = True
-        self.evolution_runtime.fail_closed = True
+        self.evolution_runtime.governor.fail_closed = True
         self._fail(fail_reason, payload=self.state["agent_contract_preflight"])
 
     def boot(self) -> None:
@@ -366,103 +372,16 @@ class Orchestrator:
 
     def _run_replay_preflight(self, *, verify_only: bool = False) -> Dict[str, Any]:
         """Delegate to the module-level run_replay_preflight for testability."""
-        return run_replay_preflight(self, json.dumps, verify_only=verify_only)
+        return run_replay_preflight(self, dump, verify_only=verify_only)
 
     def _run_replay_preflight_impl(self, dump_func: Any, *, verify_only: bool = False) -> Dict[str, Any]:
         """Core replay preflight implementation (called via module-level delegation)."""
-        mode = self.replay_mode
-        preflight = self.evolution_runtime.replay_preflight(mode, epoch_id=self.replay_epoch or None)
-        has_divergence = bool(preflight.get("has_divergence"))
-        self.state["replay_mode"] = mode.value
-        self.state["replay_target"] = preflight.get("verify_target")
-        self.state["replay_decision"] = preflight.get("decision")
-        self.state["replay_results"] = preflight.get("results", [])
-        self.state["replay_divergence"] = has_divergence
-        self.state["status"] = "replay_warning" if has_divergence else "replay_verified"
-        replay_score = self._aggregate_replay_score(preflight.get("results", []))
-        self.state["replay_score"] = replay_score
-        outcome = {
-            "mode": mode.value,
-            "verify_only": verify_only,
-            "ok": not has_divergence,
-            "decision": preflight.get("decision"),
-            "target": preflight.get("verify_target"),
-            "divergence": has_divergence,
-            "results": preflight.get("results", []),
-            "replay_score": replay_score,
-            "ts": now_iso(),
-        }
-        journal.write_entry(agent_id="system", action="replay_verified", payload=outcome)
-        try:
-            manifest_path = self.write_replay_manifest(outcome)
-            self._v(f"Replay manifest written: {manifest_path}")
-        except Exception as exc:
-            metrics.log(
-                event_type="replay_manifest_write_failed",
-                payload={"error": str(exc), "mode": outcome["mode"], "target": outcome.get("target")},
-                level="WARN",
-            )
-        if has_divergence:
-            replay_command = f"python -m app.main --verify-replay --replay {mode.value}"
-            if self.replay_epoch:
-                replay_command += f" --replay-epoch {self.replay_epoch}"
-            try:
-                bundle = build_replay_divergence_artifacts(
-                    preflight=preflight,
-                    replay_command=replay_command,
-                    replay_env_flags=_replay_env_flags(),
-                    ledger=self.evolution_runtime.ledger,
-                    artifacts_root=APP_ROOT.parent / "security" / "replay_artifacts",
-                )
-                outcome["divergence_artifacts"] = {
-                    "artifact_dir": bundle.artifact_dir,
-                    "machine_report": bundle.machine_report_path,
-                    "human_report": bundle.human_report_path,
-                }
-                self._v("Replay divergence artifacts:")
-                self._v(f"  Dir: {bundle.artifact_dir}")
-                self._v(f"  JSON: {bundle.machine_report_path}")
-                self._v(f"  MD: {bundle.human_report_path}")
-            except Exception as exc:
-                metrics.log(
-                    event_type="replay_divergence_artifact_failed",
-                    payload={"error": str(exc), "mode": outcome["mode"], "target": outcome.get("target")},
-                    level="WARN",
-                )
-        if has_divergence and mode.fail_closed:
-            self._fail("replay_divergence", payload={"artifacts": outcome.get("divergence_artifacts") or {}})
-        self._v("Replay Summary:")
-        self._v(f"  Mode: {mode.value}")
-        self._v(f"  Target: {preflight.get('verify_target')}")
-        self._v(f"  Divergence: {has_divergence}")
-        self._v(f"  Score: {replay_score}")
-        if verify_only:
-            dump()
-            return {"verify_only": True, **outcome}
-        return {"verify_only": False, **outcome}
-
-    @staticmethod
-    def _aggregate_replay_score(results: list[Dict[str, Any]]) -> float:
-        if not results:
-            return 1.0
-        scores = [float(result.get("replay_score", 0.0)) for result in results]
-        return round(sum(scores) / len(scores), 4)
-
-
-    def write_replay_manifest(self, outcome: Dict[str, Any]) -> os.PathLike[str]:
-        manifests_dir = APP_ROOT.parent / "security" / "replay_manifests"
-        manifests_dir.mkdir(parents=True, exist_ok=True)
-
-        def _sanitize_component(value: Any) -> str:
-            normalized = re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "unknown")).strip("-._")
-            return normalized or "unknown"
-
-        mode_component = _sanitize_component(outcome.get("mode"))
-        target_component = _sanitize_component(outcome.get("target"))
-        timestamp_component = _sanitize_component(outcome.get("ts"))
-        manifest_path = manifests_dir / f"{mode_component}__{target_component}__{timestamp_component}.json"
-        manifest_path.write_text(json.dumps(outcome, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        return manifest_path
+        return execute_replay_preflight(
+            self,
+            dump_func,
+            verify_only=verify_only,
+            replay_env_flags=_replay_env_flags,
+        )
 
     def verify_replay_only(self) -> None:
         self._v("Running replay verification-only mode")
@@ -970,87 +889,46 @@ def run_mutation_cycle(orchestrator: "Orchestrator") -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ADAAD orchestrator")
-    parser.add_argument("--verbose", action="store_true", help="Print boot stage diagnostics to stdout.")
-    parser.add_argument("--dry-run", action="store_true", help="Evaluate mutations without applying them.")
-    parser.add_argument(
-        "--replay",
-        default="off",
-        help=(
-            "Replay mode: off (skip replay), audit (verify and continue), strict (verify and fail-close). "
-            "Deprecated aliases: full->audit, true->audit, false->off."
-        ),
-    )
-    parser.add_argument("--replay-epoch", default="", help="Replay a specific epoch id as the verification target.")
-    parser.add_argument("--epoch", default="", help="Epoch identifier used for replay-proof export or replay targeting.")
-    parser.add_argument("--verify-replay", action="store_true", help="Run replay verification and exit after reporting result.")
-    parser.add_argument(
-        "--exit-after-boot",
-        action="store_true",
-        help="Complete one governed boot (including replay audit) and exit before any mutation cycle.",
-    )
-    parser.add_argument(
-        "--export-replay-proof",
-        action="store_true",
-        help="Export a signed replay proof bundle for --epoch and exit.",
-    )
-    parser.add_argument(
-        "--adaad-status",
-        action="store_true",
-        help="Print ADAAD/DEVADAAD governance status summary and exit.",
-    )
-    parser.add_argument(
-        "--trigger-mode",
-        choices=("ADAAD", "DEVADAAD"),
-        default="ADAAD",
-        help="Trigger mode context for --adaad-status output.",
-    )
-    parser.add_argument(
-        "--status-format",
-        choices=("table", "json", "both"),
-        default="both",
-        help="Output format for --adaad-status.",
-    )
+    parser = build_main_parser()
     args = parser.parse_args()
 
-    dry_run_env = os.getenv("ADAAD_DRY_RUN", "").lower() in {"1", "true", "yes", "on"}
+    dry_run_env = dry_run_env_enabled(os.environ)
     try:
-        replay_mode = normalize_replay_mode(args.replay)
+        replay_mode = resolve_replay_mode(args.replay)
     except ValueError as exc:
         parser.error(str(exc))
 
     if _governance_ci_mode_enabled():
         _apply_governance_ci_mode_defaults()
 
-    selected_epoch = (args.epoch or args.replay_epoch).strip()
+    selected_epoch = select_epoch(args.epoch, args.replay_epoch)
     if args.epoch and args.replay_epoch and args.epoch.strip() != args.replay_epoch.strip():
         logging.warning("Both --epoch (%s) and --replay-epoch (%s) were provided; using --epoch.", args.epoch, args.replay_epoch)
 
-    if args.export_replay_proof:
-        if not selected_epoch:
-            parser.error("--export-replay-proof requires --epoch <id>")
-        proof_path = ReplayProofBuilder().write_bundle(selected_epoch)
-        print(proof_path.as_posix())
+    facade_state = FacadeRuntimeState(dry_run_env=dry_run_env, selected_epoch=selected_epoch)
+
+    if handle_export_replay_proof(
+        parser=parser,
+        export_replay_proof=args.export_replay_proof,
+        selected_epoch=facade_state.selected_epoch,
+    ):
         return
 
-    if args.adaad_status:
-        report = build_status_report(repo_root=APP_ROOT.parent, trigger_mode=args.trigger_mode)
-        if args.status_format in {"table", "both"}:
-            print(render_human_table(report))
-        if args.status_format in {"json", "both"}:
-            if args.status_format == "both":
-                print()
-            print(report_as_json(report))
+    if handle_status_report(
+        adaad_status=args.adaad_status,
+        trigger_mode=args.trigger_mode,
+        status_format=args.status_format,
+    ):
         return
 
-    orchestrator = Orchestrator(
-        dry_run=args.dry_run or dry_run_env,
+    init_state = build_init_state(
+        args=args,
+        dry_run_env=facade_state.dry_run_env,
         replay_mode=replay_mode,
-        replay_epoch=selected_epoch,
-        exit_after_boot=args.exit_after_boot,
-        verbose=args.verbose,
+        selected_epoch=facade_state.selected_epoch,
     )
-    if args.verify_replay:
+    orchestrator = build_orchestrator(init_state)
+    if init_state.verify_replay:
         orchestrator.verify_replay_only()
         return
     orchestrator.boot()
