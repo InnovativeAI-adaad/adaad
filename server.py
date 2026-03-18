@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, Mapping
 
 from contextlib import asynccontextmanager
@@ -46,6 +46,7 @@ MOCK_DIR = APONI_DIR / "mock"
 INDEX = APONI_DIR / "index.html"
 ENHANCED_DIR = ROOT / "ui" / "enhanced"
 ENHANCED_INDEX = ENHANCED_DIR / "enhanced_dashboard.html"
+WHALEDIC_DIR = ROOT / "ui" / "developer" / "ADAADdev"
 REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
 FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
 GATE_LOCK_FILE = ROOT / "security" / "ledger" / "gate.lock"
@@ -72,6 +73,7 @@ class SPAStaticFiles(StaticFiles):
 async def _lifespan(application: FastAPI):  # noqa: ARG001
     """Lifespan: ensure APONI assets exist at startup (stub-safe)."""
     APONI_DIR.mkdir(parents=True, exist_ok=True)
+    WHALEDIC_DIR.mkdir(parents=True, exist_ok=True)
     (APONI_DIR / "mock").mkdir(exist_ok=True)
     if not INDEX.exists():
         # Minimal stub so the server always starts — replace with real Aponi build
@@ -194,6 +196,24 @@ def _load_mock(name: str) -> Any:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception as e:  # pragma: no cover - defensive guard
         raise HTTPException(status_code=500, detail=f"mock '{name}' parse error: {e}")
+
+
+def _resolve_static_asset(base_dir: Path, asset_path: str) -> Path:
+    """Resolve a user-requested static asset path under a fixed base directory.
+
+    Rejects absolute paths, parent traversal, and empty components before path
+    resolution to satisfy fail-closed path handling for user-controlled input.
+    """
+    normalized = PurePosixPath("/" + asset_path).as_posix().lstrip("/")
+    candidate = Path(normalized)
+    if not normalized or candidate.is_absolute() or ".." in candidate.parts:
+        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    resolved = (base_dir / candidate).resolve()
+    try:
+        resolved.relative_to(base_dir.resolve())
+    except ValueError:
+        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    return resolved
 
 
 def _read_gate_state() -> Dict[str, Any]:
@@ -3010,11 +3030,19 @@ def serve_aponi_asset(asset_path: str) -> Response:
 
     Path-traversal protection: rejects any path that resolves outside APONI_DIR.
     """
-    resolved = (APONI_DIR / asset_path).resolve()
-    try:
-        resolved.relative_to(APONI_DIR.resolve())
-    except ValueError:
-        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    resolved = _resolve_static_asset(APONI_DIR, asset_path)
+    if not resolved.exists() or not resolved.is_file():
+        raise HTTPException(status_code=404, detail="asset_not_found")
+    return FileResponse(str(resolved))
+
+
+@app.get("/ui/developer/ADAADdev/{asset_path:path}")
+def serve_whaledic_asset(asset_path: str) -> Response:
+    """Serve Whale.Dic developer assets at /ui/developer/ADAADdev/<path>.
+
+    Whale.Dic · ADAADinside™ developer tool
+    """
+    resolved = _resolve_static_asset(WHALEDIC_DIR, asset_path)
     if not resolved.exists() or not resolved.is_file():
         raise HTTPException(status_code=404, detail="asset_not_found")
     return FileResponse(str(resolved))

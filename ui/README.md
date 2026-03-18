@@ -202,3 +202,42 @@ This event intentionally excludes mutation request body fields so UI-linked tele
 - `ui/features/replay_panel.py` owns replay divergence panel payload assembly.
 - `ui/features/evidence_panel.py` owns evidence/replay diff export helper logic.
 - `ui/features/federation_panel.py` owns federation panel integration constants for deterministic UI assembly.
+
+## Whale.Dic — Developer Intelligence Interface
+
+**Path:** `ui/developer/ADAADdev/whaledic.html`  
+**Route:** `/ui/developer/ADAADdev/whaledic.html`  
+**Audience:** Developer / ADAADdev team  
+**Brand:** ADAADinside™ · InnovativeAI LLC  
+**Status:** Active — scaffold · visual shell in progress
+
+### Description
+Whale.Dic is the primary developer intelligence interface for the ADAAD governed autonomy OS.
+It provides live visibility into governance gate status, mutation pipeline, evidence ledger,
+agent health, replay scores, and webhook events.
+
+It also hosts **dork** — the ADAADinside™ AI assistant — a streaming LLM-powered chat interface
+with full ADAAD governance context and live runtime state injection.
+
+### Runtime connectivity
+| Surface | Data source | Mode |
+|---------|------------|------|
+| Governance gate | `/api/governance/status` | Polled (30s) |
+| Mutation pipeline | `/api/mutations/recent` | Polled (30s) |
+| Replay score | `/api/replay/score` | Polled (30s) |
+| Epoch counter | `/api/epoch/current` | Polled (30s) |
+| Agent health | `/api/agents/health` | Polled (30s) |
+| Evidence ledger | `/api/ledger/entries` | On demand |
+| Webhook stream | `/api/webhooks/stream` | SSE (live) |
+| dork LLM | `api.anthropic.com/v1/messages` | Browser direct, SSE streaming |
+
+Routes not yet implemented in `aponi_dashboard.py` are flagged as `[MOCK]` in the HTML
+and tracked in `docs/debt/whaledic-api-debt.md`.
+
+### Mutation authority
+None. Whale.Dic is a read-only runtime observer. It cannot trigger mutations, approve PRs,
+modify the evidence ledger, or alter agent state. dork's LLM outputs are advisory only.
+
+### Navigation
+Accessible via the **Whale.Dic** button in `ui/aponi/index.html`.
+Back-link to Aponi is present in the Whale.Dic sidebar.
