@@ -23,3 +23,13 @@ def test_webhook_stream_has_onerror_and_conversation_renderer_escapes_html() -> 
     assert 'source.onerror = () =>' in html
     assert 'function escapeHtml(value)' in html
     assert 'escapeHtml(turn.content)' in html
+    assert 'escapeHtml(h.ts)' in html
+    assert 'escapeHtml(r.sha)' in html
+
+
+def test_runtime_state_cache_and_ledger_log_try_catch_present() -> None:
+    html = Path('ui/developer/ADAADdev/whaledic.html').read_text(encoding='utf-8')
+    assert 'const RUNTIME_STATE_TTL_MS = 30000;' in html
+    assert 'if (runtimeStateCache && now - runtimeStateCacheTs < RUNTIME_STATE_TTL_MS)' in html
+    assert 'const response = await fetch(ROUTES.ledgerLog' in html
+    assert 'if (!response.ok)' in html

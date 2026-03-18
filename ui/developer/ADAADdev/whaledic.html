@@ -161,6 +161,9 @@
     let conversation = [];
     let requestTimestamps = [];
     let ledgerOffset = 0;
+    let runtimeStateCache = null;
+    let runtimeStateCacheTs = 0;
+    const RUNTIME_STATE_TTL_MS = 30000;
 
     function busEvent(type, detail) {
       const line = `[${new Date().toISOString()}] ${type} :: ${detail}`;
@@ -216,43 +219,52 @@
     }
 
     async function fetchRuntimeState() {
+      const now = Date.now();
+      if (runtimeStateCache && now - runtimeStateCacheTs < RUNTIME_STATE_TTL_MS) {
+        return runtimeStateCache;
+      }
       const [governance, replay, epoch] = await Promise.all([
         safeFetchJson(ROUTES.governance),
         safeFetchJson(ROUTES.replay),
         safeFetchJson(ROUTES.epoch)
       ]);
-      return {
+      runtimeStateCache = {
         governance: governance?.overall ?? 'PASS [MOCK]',
         replay: replay?.score ?? '98 [MOCK]',
+        replayMode: replay?.mode ?? 'strict',
         epoch: epoch?.epoch ?? '--'
       };
+      runtimeStateCacheTs = now;
+      return runtimeStateCache;
     }
 
     async function refreshDashboard() {
-      const governance = await safeFetchJson(ROUTES.governance);
+      const [runtimeState, governance, mutationData, agents, readiness] = await Promise.all([
+        fetchRuntimeState(),
+        safeFetchJson(ROUTES.governance),
+        safeFetchJson(ROUTES.mutations),
+        safeFetchJson(ROUTES.agents),
+        safeFetchJson(ROUTES.readiness)
+      ]);
       document.getElementById('governanceGate').textContent = governance ? `${governance.overall} @ ${governance.timestamp}` : 'Live 7/7 PASS [MOCK]';
 
-      const mutationData = await safeFetchJson(ROUTES.mutations);
       const mutationList = document.getElementById('mutationList');
       if (Array.isArray(mutationData) && mutationData.length) {
-        mutationList.innerHTML = mutationData.map((m) => `<li>${m.agent} · ${m.intent} · ${m.status} · ${m.sha}</li>`).join('');
+        mutationList.innerHTML = mutationData.map((m) => `<li>${escapeHtml(m.agent)} · ${escapeHtml(m.intent)} · ${escapeHtml(m.status)} · ${escapeHtml(m.sha)}</li>`).join('');
       }
 
-      const replayData = await safeFetchJson(ROUTES.replay);
-      const score = Number(replayData?.score ?? 98);
-      document.getElementById('replayCard').textContent = `${score} · ${replayData?.mode ?? 'strict'} ${replayData ? '' : '[MOCK]'}`;
+      const score = Number(runtimeState?.replay ?? 98);
+      const replayMode = runtimeState?.replayMode ?? 'strict';
+      document.getElementById('replayCard').textContent = `${score} · ${replayMode} ${runtimeState ? '' : '[MOCK]'}`;
       document.getElementById('replayBar').style.width = `${Math.max(0, Math.min(100, score))}%`;
       document.getElementById('replayScoreLabel').textContent = `${score}%`;
 
-      const epochData = await safeFetchJson(ROUTES.epoch);
-      document.getElementById('epochPill').textContent = `EPOCH ${epochData?.epoch ?? '--'}`;
+      document.getElementById('epochPill').textContent = `EPOCH ${escapeHtml(String(runtimeState?.epoch ?? '--'))}`;
 
-      const agents = await safeFetchJson(ROUTES.agents);
       if (Array.isArray(agents) && agents.length) {
         document.getElementById('agentHealth').textContent = agents.map((a) => `${a.name}:${a.status}`).join(' · ');
       }
 
-      const readiness = await safeFetchJson(ROUTES.readiness);
       document.getElementById('readinessComposite').textContent = readiness ? `${readiness.composite}` : '96 [MOCK]';
 
       await refreshLedger(false);
@@ -264,7 +276,7 @@
       const ledgerData = await safeFetchJson(`${ROUTES.ledger}&offset=${ledgerOffset}`);
       const rows = document.getElementById('ledgerRows');
       if (Array.isArray(ledgerData) && ledgerData.length) {
-        rows.innerHTML = ledgerData.map((r) => `<tr><td>${r.ts}</td><td>${r.agent}</td><td>${r.action}</td><td>${r.epoch}</td><td>${r.sha}</td><td>${r.status}</td></tr>`).join('');
+        rows.innerHTML = ledgerData.map((r) => `<tr><td>${escapeHtml(r.ts)}</td><td>${escapeHtml(r.agent)}</td><td>${escapeHtml(r.action)}</td><td>${escapeHtml(r.epoch)}</td><td>${escapeHtml(r.sha)}</td><td>${escapeHtml(r.status)}</td></tr>`).join('');
       }
     }
 
@@ -272,7 +284,7 @@
       const hooks = await safeFetchJson(ROUTES.webhooksRecent);
       const list = document.getElementById('webhookList');
       if (Array.isArray(hooks) && hooks.length) {
-        list.innerHTML = hooks.map((h) => `<li>${h.ts} · ${h.agent} · ${h.action}</li>`).join('');
+        list.innerHTML = hooks.map((h) => `<li>${escapeHtml(h.ts)} · ${escapeHtml(h.agent)} · ${escapeHtml(h.action)}</li>`).join('');
       }
     }
 
@@ -376,16 +388,20 @@
         Array.from(new Uint8Array(buf)).map((x) => x.toString(16).padStart(2, '0')).join('')
       );
 
-      if (MISSING_ROUTES.has(ROUTES.ledgerLog)) {
+      try {
+        const response = await fetch(ROUTES.ledgerLog, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'dork', user_msg_hash, response_tokens: responseTokens, ts: new Date().toISOString() })
+        });
+        if (!response.ok) {
+          MISSING_ROUTES.add(ROUTES.ledgerLog);
+          busEvent('mock_data', ROUTES.ledgerLog);
+        }
+      } catch (_err) {
+        MISSING_ROUTES.add(ROUTES.ledgerLog);
         busEvent('mock_data', ROUTES.ledgerLog);
-        return;
       }
-
-      await fetch(ROUTES.ledgerLog, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: 'dork', user_msg_hash, response_tokens: responseTokens, ts: new Date().toISOString() })
-      });
     }
 
     async function sendChat() {
