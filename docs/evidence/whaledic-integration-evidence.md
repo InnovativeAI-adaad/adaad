@@ -22,13 +22,21 @@ content-length: 17822
 
 Recorded output verification:
 
-- `ui/aponi/index.html` contains a visible `Whale.Dic` link with `ADAADinside™` badge and href `/ui/developer/ADAADdev/whaledic.html`.
+- `pytest -v tests/test_aponi_ui.py` output:
+
+```text
+tests/test_aponi_ui.py::test_whaledic_nav_link PASSED
+```
 
 ## 3) Whale.Dic page render evidence
 
 Recorded output verification:
 
-- `curl` and integration tests confirm the Whale.Dic page is served as HTML at the canonical route.
+- `pytest -v tests/test_server_routes.py` output:
+
+```text
+tests/test_server_routes.py::test_whaledic_static_route PASSED
+```
 
 ## 4) Mock routes flagged
 

@@ -16,3 +16,10 @@ def test_testmode_intercepts_anthropic_fetch_and_mock_data_bus_event_present() -
     assert "document.body?.dataset?.testmode === 'true'" in html
     assert "busEvent('testmode', 'anthropic_intercepted');" in html
     assert "busEvent('mock_data', route);" in html
+
+
+def test_webhook_stream_has_onerror_and_conversation_renderer_escapes_html() -> None:
+    html = Path('ui/developer/ADAADdev/whaledic.html').read_text(encoding='utf-8')
+    assert 'source.onerror = () =>' in html
+    assert 'function escapeHtml(value)' in html
+    assert 'escapeHtml(turn.content)' in html

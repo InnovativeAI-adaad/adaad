@@ -41,6 +41,7 @@
   </style>
 </head>
 <body>
+  <!-- SCAFFOLD: visual shell pending, see whale_dic.html -->
   <!-- MOCK: waiting for /api/governance/status -->
   <!-- MOCK: waiting for /api/mutations/recent -->
   <!-- MOCK: waiting for /api/replay/score -->
@@ -182,7 +183,16 @@
 
     function renderConversation() {
       const log = document.getElementById('chatlog');
-      log.innerHTML = conversation.map((turn) => `<div class="turn"><div class="role">${turn.role}</div><div>${turn.content}</div></div>`).join('');
+      log.innerHTML = conversation.map((turn) => `<div class="turn"><div class="role">${escapeHtml(turn.role)}</div><div>${escapeHtml(turn.content)}</div></div>`).join('');
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
     }
 
     function buildLiveSection(liveState) {
@@ -429,7 +439,13 @@
       try {
         const source = new EventSource(ROUTES.webhooksStream);
         source.onmessage = (event) => busEvent('webhook_stream', event.data);
+        source.onerror = () => {
+          MISSING_ROUTES.add(ROUTES.webhooksStream);
+          busEvent('mock_data', ROUTES.webhooksStream);
+          source.close();
+        };
       } catch (_err) {
+        MISSING_ROUTES.add(ROUTES.webhooksStream);
         busEvent('mock_data', ROUTES.webhooksStream);
       }
     }

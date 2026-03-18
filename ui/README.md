@@ -209,7 +209,7 @@ This event intentionally excludes mutation request body fields so UI-linked tele
 **Route:** `/ui/developer/ADAADdev/whaledic.html`  
 **Audience:** Developer / ADAADdev team  
 **Brand:** ADAADinside™ · InnovativeAI LLC  
-**Status:** Active — production-integrated
+**Status:** Active — scaffold · visual shell in progress
 
 ### Description
 Whale.Dic is the primary developer intelligence interface for the ADAAD governed autonomy OS.

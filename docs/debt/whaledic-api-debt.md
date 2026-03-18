@@ -10,3 +10,4 @@
 - [DEBT-008] `/api/webhooks/stream` · needed by: Whale.Dic feature R-07 Webhook stream · created: 2026-03-18 · status: OPEN
 - [DEBT-009] `/api/release/readiness` · needed by: Whale.Dic feature R-08 Release readiness score · created: 2026-03-18 · status: OPEN
 - [DEBT-010] `/api/ledger/log` · needed by: Whale.Dic feature D-03 Governance audit log for dork turns · created: 2026-03-18 · status: OPEN
+- [DEBT-011] Full Whale.Dic visual shell integration (`whale_dic.html`) · needed by: Whale.Dic feature H-01 production shell parity · created: 2026-03-18 · status: OPEN
