@@ -49,6 +49,7 @@ Use this table as the canonical mapping to prevent drift between lane ownership,
 | Replay (critical) | `.github/workflows/ci.yml` | `strict-replay` |
 | Promotion (critical) | `.github/workflows/ci.yml` | `promotion-suite` |
 | Shadow governance (policy) | `.github/workflows/ci.yml` | `shadow-governance-gate` |
+| Workflow integrity | `.github/workflows/ci.yml` | `workflow-integrity-validation` |
 | Release strict gate | `.github/workflows/governance_strict_release_gate.yml` | `release-gate` |
 | Post-merge docs sync | `.github/workflows/post_merge_doc_sync.yml` | `post-merge-doc-sync-contract-gate` |
 
@@ -149,6 +150,18 @@ A dedicated workflow, `.github/workflows/secret_scan.yml`, runs on `pull_request
 - commit history (`gitleaks git`), including PR diff ranges via `base.sha..head.sha` when available
 
 `Secret Scan / secret-scan` must be configured as a **required status check** in branch protection for `main`. This prevents secret-scan failures (or removal from required checks) from being bypassed silently.
+
+## Workflow integrity gate (required)
+
+The CI workflow includes an always-on job, `workflow-integrity-validation`, which runs `python scripts/validate_workflow_integrity.py`.
+
+The gate is fail-closed and enforces repository-level CI control invariants:
+
+- every workflow file in `.github/workflows` declares a top-level `name:` field
+- no duplicate workflow names across workflow files
+- CodeQL workflow surface is canonicalized to exactly `.github/workflows/codeql.yml`
+
+This prevents duplicate or drifting workflow definitions from silently weakening branch-protection signal quality.
 
 ## Governance-impact override guidance
 
