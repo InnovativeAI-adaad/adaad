@@ -73,6 +73,7 @@ class SPAStaticFiles(StaticFiles):
 async def _lifespan(application: FastAPI):  # noqa: ARG001
     """Lifespan: ensure APONI assets exist at startup (stub-safe)."""
     APONI_DIR.mkdir(parents=True, exist_ok=True)
+    WHALEDIC_DIR.mkdir(parents=True, exist_ok=True)
     (APONI_DIR / "mock").mkdir(exist_ok=True)
     if not INDEX.exists():
         # Minimal stub so the server always starts — replace with real Aponi build
@@ -3023,7 +3024,10 @@ def serve_aponi_asset(asset_path: str) -> Response:
 
 @app.get("/ui/developer/ADAADdev/{asset_path:path}")
 def serve_whaledic_asset(asset_path: str) -> Response:
-    """Serve Whale.Dic developer assets at /ui/developer/ADAADdev/<path>."""
+    """Serve Whale.Dic developer assets at /ui/developer/ADAADdev/<path>.
+
+    Whale.Dic · ADAADinside™ developer tool
+    """
     resolved = (WHALEDIC_DIR / asset_path).resolve()
     try:
         resolved.relative_to(WHALEDIC_DIR.resolve())
@@ -3121,7 +3125,7 @@ async def github_webhook(request: Request) -> dict[str, Any]:
     result = dispatch_event(event_type, payload)
     return result
 
-app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")  # Whale.Dic · ADAADinside™ developer tool is served via /ui/developer/ADAADdev/*
+app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
 
 
 # ── Direct run: python server.py ──────────────────────────────────────────

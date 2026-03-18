@@ -148,7 +148,7 @@
       ledgerLog: '/api/ledger/log'
     };
 
-    const MISSING_ROUTES = new Set(Object.values(ROUTES));
+    const MISSING_ROUTES = new Set();
     const BASE_SYSTEM_PROMPT = `You are dork, ADAADinside™ assistant.\n## LIVE RUNTIME STATE\n[unavailable]\n`;
     const HISTORY_KEY = 'whaledic_conv_history';
     const RATE_KEY = 'whaledic_rate_timestamps';
@@ -156,7 +156,6 @@
     const TOKEN_WARN_THRESHOLD = 12000;
     let totalTokens = 0;
     let isStreaming = false;
-    let activeTab = 'chat';
     let activeSystemPrompt = BASE_SYSTEM_PROMPT;
     let conversation = [];
     let requestTimestamps = [];
@@ -200,6 +199,7 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return await response.json();
       } catch (_err) {
+        MISSING_ROUTES.add(route);
         busEvent('mock_data', route);
         return null;
       }
@@ -318,9 +318,47 @@
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, stream: true })
       });
-      return response.json();
+      if (!response.ok || !response.body) {
+        throw new Error(`Anthropic request failed (${response.status})`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffered = '';
+      let text = '';
+      let outputTokens = 0;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffered += decoder.decode(value, { stream: true });
+        const lines = buffered.split('\n');
+        buffered = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data:')) continue;
+          const payloadStr = line.slice(5).trim();
+          if (!payloadStr || payloadStr === '[DONE]') continue;
+          try {
+            const evt = JSON.parse(payloadStr);
+            if (evt.type === 'content_block_delta' && evt.delta?.text) {
+              text += evt.delta.text;
+            }
+            if (evt.type === 'message_delta' && typeof evt.usage?.output_tokens === 'number') {
+              outputTokens = evt.usage.output_tokens;
+            }
+          } catch (_err) {
+            // Ignore malformed stream event frames.
+          }
+        }
+      }
+
+      return {
+        content: [{ type: 'text', text: text || 'No response' }],
+        usage: { output_tokens: outputTokens || estimateTokens(text) }
+      };
     }
 
     async function auditDorkTurn(userMsg, responseTokens) {
@@ -341,6 +379,10 @@
     }
 
     async function sendChat() {
+      if (!window.__anthropic_key_available) {
+        showApiKeyPrompt();
+        return;
+      }
       const input = document.getElementById('chatInput');
       const userMsg = input.value.trim();
       if (!userMsg) return;
@@ -360,7 +402,7 @@
       isStreaming = true;
       try {
         const resp = await anthropicRequest({
-          model: 'claude-sonnet-4',
+          model: 'claude-sonnet-4-20250514',
           max_tokens: 1200,
           system: activeSystemPrompt,
           messages: conversation.slice(-16).map((turn) => ({ role: turn.role, content: turn.content }))
@@ -393,7 +435,7 @@
     }
 
     async function autoRefreshSystemPrompt() {
-      if (activeTab !== 'chat' || isStreaming) return;
+      if (isStreaming) return;
       const liveState = await fetchRuntimeState();
       activeSystemPrompt = constructDorkPrompt(BASE_SYSTEM_PROMPT, liveState);
       busEvent('system_prompt_refresh', 'ok');

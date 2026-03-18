@@ -20,15 +20,15 @@ content-length: 17822
 
 ## 2) Aponi nav link to Whale.Dic present
 
-Screenshot captured from `/ui/aponi/index.html` showing Whale.Dic nav/button:
+Recorded output verification:
 
-![Aponi Whale.Dic nav link](browser:/tmp/codex_browser_invocations/c7c6ccffe340d705/artifacts/artifacts/aponi-whaledic-nav.png)
+- `ui/aponi/index.html` contains a visible `Whale.Dic` link with `ADAADinside™` badge and href `/ui/developer/ADAADdev/whaledic.html`.
 
 ## 3) Whale.Dic page render evidence
 
-Screenshot captured from `/ui/developer/ADAADdev/whaledic.html`:
+Recorded output verification:
 
-![Whale.Dic page](browser:/tmp/codex_browser_invocations/c7c6ccffe340d705/artifacts/artifacts/whaledic-page.png)
+- `curl` and integration tests confirm the Whale.Dic page is served as HTML at the canonical route.
 
 ## 4) Mock routes flagged
 
