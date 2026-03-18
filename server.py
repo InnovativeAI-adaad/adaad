@@ -46,6 +46,7 @@ MOCK_DIR = APONI_DIR / "mock"
 INDEX = APONI_DIR / "index.html"
 ENHANCED_DIR = ROOT / "ui" / "enhanced"
 ENHANCED_INDEX = ENHANCED_DIR / "enhanced_dashboard.html"
+WHALEDIC_DIR = ROOT / "ui" / "developer" / "ADAADdev"
 REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
 FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
 GATE_LOCK_FILE = ROOT / "security" / "ledger" / "gate.lock"
@@ -3019,6 +3020,19 @@ def serve_aponi_asset(asset_path: str) -> Response:
         raise HTTPException(status_code=404, detail="asset_not_found")
     return FileResponse(str(resolved))
 
+
+@app.get("/ui/developer/ADAADdev/{asset_path:path}")
+def serve_whaledic_asset(asset_path: str) -> Response:
+    """Serve Whale.Dic developer assets at /ui/developer/ADAADdev/<path>."""
+    resolved = (WHALEDIC_DIR / asset_path).resolve()
+    try:
+        resolved.relative_to(WHALEDIC_DIR.resolve())
+    except ValueError:
+        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    if not resolved.exists() or not resolved.is_file():
+        raise HTTPException(status_code=404, detail="asset_not_found")
+    return FileResponse(str(resolved))
+
 # ── Phase 52: Epoch Memory Store Endpoint ────────────────────────────────────
 
 @app.get("/intelligence/epoch-memory")
@@ -3107,7 +3121,7 @@ async def github_webhook(request: Request) -> dict[str, Any]:
     result = dispatch_event(event_type, payload)
     return result
 
-app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
+app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")  # Whale.Dic · ADAADinside™ developer tool is served via /ui/developer/ADAADdev/*
 
 
 # ── Direct run: python server.py ──────────────────────────────────────────

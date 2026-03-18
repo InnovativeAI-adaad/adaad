@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Whale.Dic · ADAADinside™</title>
+  <style>
+    :root { --bg:#050b14; --panel:#0f1724; --border:rgba(255,255,255,.1); --text:#e6edf6; --muted:#8aa0b8; --accent:#3b82f6; --ok:#22c55e; --warn:#f59e0b; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; color:var(--text); background:var(--bg); }
+    a { color:#9cc3ff; text-decoration:none; }
+    .app { display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
+    .sidebar { border-right:1px solid var(--border); padding:18px; background:#0a1220; }
+    .main { padding:18px; }
+    .brand { font-weight:700; font-size:18px; margin-bottom:8px; }
+    .muted { color:var(--muted); font-size:12px; }
+    .nav { margin-top:16px; display:grid; gap:8px; }
+    .nav a { border:1px solid var(--border); border-radius:10px; padding:8px 10px; display:block; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .pill { border:1px solid var(--border); border-radius:999px; padding:6px 10px; font-size:12px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .card { border:1px solid var(--border); border-radius:12px; background:var(--panel); padding:12px; }
+    .bar { width:100%; height:10px; border-radius:6px; background:#1b2a44; overflow:hidden; }
+    .fill { height:100%; background:linear-gradient(90deg,#22c55e,#3b82f6); width:0%; transition:width .4s ease; }
+    .timeline, .ledger, .events, .chatlog { margin-top:12px; }
+    .table { width:100%; border-collapse:collapse; font-size:12px; }
+    .table th,.table td { border-bottom:1px solid var(--border); padding:6px; text-align:left; }
+    .chat { margin-top:12px; display:grid; gap:10px; }
+    .chatlog { max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:8px; background:#0a1220; }
+    .turn { margin-bottom:8px; font-size:13px; }
+    .turn .role { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+    .row { display:flex; gap:8px; }
+    input, button { border:1px solid var(--border); border-radius:10px; background:#0a1220; color:var(--text); padding:8px; }
+    input { flex:1; }
+    button { cursor:pointer; }
+    #tokenGate { display:none; border:1px solid rgba(245,158,11,.5); color:#fcd34d; background:rgba(245,158,11,.12); border-radius:8px; padding:8px; font-size:12px; }
+    #apikeyPrompt { display:none; border:1px solid rgba(245,158,11,.5); border-radius:8px; padding:8px; margin-top:8px; }
+    #eventBus { max-height:160px; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:8px; background:#0a1220; font-family:ui-monospace,Consolas,monospace; font-size:11px; }
+    .warn { color:var(--warn); }
+    @media (max-width: 1000px) { .app { grid-template-columns:1fr; } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <!-- MOCK: waiting for /api/governance/status -->
+  <!-- MOCK: waiting for /api/mutations/recent -->
+  <!-- MOCK: waiting for /api/replay/score -->
+  <!-- MOCK: waiting for /api/epoch/current -->
+  <!-- MOCK: waiting for /api/agents/health -->
+  <!-- MOCK: waiting for /api/ledger/entries -->
+  <!-- MOCK: waiting for /api/webhooks/recent -->
+  <!-- MOCK: waiting for /api/webhooks/stream -->
+  <!-- MOCK: waiting for /api/release/readiness -->
+  <!-- MOCK: waiting for /api/ledger/log -->
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">Whale.Dic</div>
+      <div class="muted">ADAADinside™ · Developer Intelligence</div>
+      <nav class="nav">
+        <a href="/ui/aponi/index.html">← Back to Aponi Dashboard</a>
+        <a href="https://github.com/InnovativeAI-adaad/ADAAD" target="_blank" rel="noreferrer">GitHub Repository</a>
+      </nav>
+      <div class="timeline">
+        <div class="muted">Replay score</div>
+        <div class="bar"><div id="replayBar" class="fill"></div></div>
+        <div id="replayScoreLabel" class="muted">0%</div>
+      </div>
+      <div class="timeline">
+        <div class="muted">Event Bus</div>
+        <div id="eventBus"></div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <h1 style="margin:0;font-size:20px;">Whale.Dic Runtime Panel</h1>
+        <div id="epochPill" class="pill">EPOCH --</div>
+      </div>
+
+      <section class="grid">
+        <div class="card">
+          <div class="muted">Governance Gate</div>
+          <div id="governanceGate">Live 7/7 PASS [MOCK]</div>
+        </div>
+        <div class="card">
+          <div class="muted">Replay Score</div>
+          <div id="replayCard">98 · strict [MOCK]</div>
+        </div>
+        <div class="card">
+          <div class="muted">Release Readiness</div>
+          <div id="readinessComposite">96 [MOCK]</div>
+        </div>
+      </section>
+
+      <section class="timeline card">
+        <div class="muted">Mutation Pipeline — Recent</div>
+        <ul id="mutationList">
+          <li>agent: architect · status: PASS · sha: demo123 [MOCK]</li>
+        </ul>
+      </section>
+
+      <section class="timeline card">
+        <div class="muted">Agent Triad</div>
+        <div id="agentHealth">No live agent health route. [MOCK]</div>
+      </section>
+
+      <section class="ledger card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div class="muted">Evidence Ledger</div>
+          <button id="loadMoreLedger" type="button">Load more</button>
+        </div>
+        <table class="table">
+          <thead><tr><th>TS</th><th>Agent</th><th>Action</th><th>Epoch</th><th>SHA</th><th>Status</th></tr></thead>
+          <tbody id="ledgerRows"><tr><td colspan="6">No live ledger route. [MOCK]</td></tr></tbody>
+        </table>
+      </section>
+
+      <section class="events card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <div class="muted">Webhook Events</div>
+          <button id="simulateEvent" type="button">Simulate event (dev fallback)</button>
+        </div>
+        <ul id="webhookList"><li>No live webhook stream route. [MOCK]</li></ul>
+      </section>
+
+      <section class="chat card">
+        <h2 style="margin:0;font-size:16px;">dork — ADAADinside™ assistant</h2>
+        <div id="tokenGate">ADAADinside™ GovernanceGate: token budget threshold reached. Context will be trimmed on next turn.</div>
+        <div id="apikeyPrompt" class="warn">Anthropic key unavailable. Configure your API key in the runtime environment.</div>
+        <div id="chatlog" class="chatlog"></div>
+        <div class="row">
+          <input id="chatInput" type="text" placeholder="Ask dork about governance state..." />
+          <button id="chatSend" type="button">Send</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const ROUTES = {
+      governance: '/api/governance/status',
+      mutations: '/api/mutations/recent?limit=5',
+      replay: '/api/replay/score',
+      epoch: '/api/epoch/current',
+      agents: '/api/agents/health',
+      ledger: '/api/ledger/entries?limit=20',
+      webhooksRecent: '/api/webhooks/recent?limit=10',
+      webhooksStream: '/api/webhooks/stream',
+      readiness: '/api/release/readiness',
+      ledgerLog: '/api/ledger/log'
+    };
+
+    const MISSING_ROUTES = new Set(Object.values(ROUTES));
+    const BASE_SYSTEM_PROMPT = `You are dork, ADAADinside™ assistant.\n## LIVE RUNTIME STATE\n[unavailable]\n`;
+    const HISTORY_KEY = 'whaledic_conv_history';
+    const RATE_KEY = 'whaledic_rate_timestamps';
+    const TOKEN_CAP = 16000;
+    const TOKEN_WARN_THRESHOLD = 12000;
+    let totalTokens = 0;
+    let isStreaming = false;
+    let activeTab = 'chat';
+    let activeSystemPrompt = BASE_SYSTEM_PROMPT;
+    let conversation = [];
+    let requestTimestamps = [];
+    let ledgerOffset = 0;
+
+    function busEvent(type, detail) {
+      const line = `[${new Date().toISOString()}] ${type} :: ${detail}`;
+      const el = document.getElementById('eventBus');
+      el.textContent = `${line}\n${el.textContent}`.trim();
+    }
+
+    function readSession(key, fallback) {
+      try {
+        const value = sessionStorage.getItem(key);
+        return value ? JSON.parse(value) : fallback;
+      } catch (_err) {
+        return fallback;
+      }
+    }
+
+    function writeSession(key, value) {
+      try { sessionStorage.setItem(key, JSON.stringify(value)); } catch (_err) {}
+    }
+
+    function renderConversation() {
+      const log = document.getElementById('chatlog');
+      log.innerHTML = conversation.map((turn) => `<div class="turn"><div class="role">${turn.role}</div><div>${turn.content}</div></div>`).join('');
+    }
+
+    function buildLiveSection(liveState) {
+      return `\n## LIVE RUNTIME STATE\n- Governance: ${liveState.governance}\n- Replay: ${liveState.replay}\n- Epoch: ${liveState.epoch}\n`;
+    }
+
+    function constructDorkPrompt(basePrompt, liveState) {
+      return basePrompt + buildLiveSection(liveState);
+    }
+
+    async function safeFetchJson(route) {
+      try {
+        const response = await fetch(route, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (_err) {
+        busEvent('mock_data', route);
+        return null;
+      }
+    }
+
+    async function fetchRuntimeState() {
+      const [governance, replay, epoch] = await Promise.all([
+        safeFetchJson(ROUTES.governance),
+        safeFetchJson(ROUTES.replay),
+        safeFetchJson(ROUTES.epoch)
+      ]);
+      return {
+        governance: governance?.overall ?? 'PASS [MOCK]',
+        replay: replay?.score ?? '98 [MOCK]',
+        epoch: epoch?.epoch ?? '--'
+      };
+    }
+
+    async function refreshDashboard() {
+      const governance = await safeFetchJson(ROUTES.governance);
+      document.getElementById('governanceGate').textContent = governance ? `${governance.overall} @ ${governance.timestamp}` : 'Live 7/7 PASS [MOCK]';
+
+      const mutationData = await safeFetchJson(ROUTES.mutations);
+      const mutationList = document.getElementById('mutationList');
+      if (Array.isArray(mutationData) && mutationData.length) {
+        mutationList.innerHTML = mutationData.map((m) => `<li>${m.agent} · ${m.intent} · ${m.status} · ${m.sha}</li>`).join('');
+      }
+
+      const replayData = await safeFetchJson(ROUTES.replay);
+      const score = Number(replayData?.score ?? 98);
+      document.getElementById('replayCard').textContent = `${score} · ${replayData?.mode ?? 'strict'} ${replayData ? '' : '[MOCK]'}`;
+      document.getElementById('replayBar').style.width = `${Math.max(0, Math.min(100, score))}%`;
+      document.getElementById('replayScoreLabel').textContent = `${score}%`;
+
+      const epochData = await safeFetchJson(ROUTES.epoch);
+      document.getElementById('epochPill').textContent = `EPOCH ${epochData?.epoch ?? '--'}`;
+
+      const agents = await safeFetchJson(ROUTES.agents);
+      if (Array.isArray(agents) && agents.length) {
+        document.getElementById('agentHealth').textContent = agents.map((a) => `${a.name}:${a.status}`).join(' · ');
+      }
+
+      const readiness = await safeFetchJson(ROUTES.readiness);
+      document.getElementById('readinessComposite').textContent = readiness ? `${readiness.composite}` : '96 [MOCK]';
+
+      await refreshLedger(false);
+      await refreshWebhookEvents();
+    }
+
+    async function refreshLedger(loadMore) {
+      if (loadMore) ledgerOffset += 20;
+      const ledgerData = await safeFetchJson(`${ROUTES.ledger}&offset=${ledgerOffset}`);
+      const rows = document.getElementById('ledgerRows');
+      if (Array.isArray(ledgerData) && ledgerData.length) {
+        rows.innerHTML = ledgerData.map((r) => `<tr><td>${r.ts}</td><td>${r.agent}</td><td>${r.action}</td><td>${r.epoch}</td><td>${r.sha}</td><td>${r.status}</td></tr>`).join('');
+      }
+    }
+
+    async function refreshWebhookEvents() {
+      const hooks = await safeFetchJson(ROUTES.webhooksRecent);
+      const list = document.getElementById('webhookList');
+      if (Array.isArray(hooks) && hooks.length) {
+        list.innerHTML = hooks.map((h) => `<li>${h.ts} · ${h.agent} · ${h.action}</li>`).join('');
+      }
+    }
+
+    function simulateEvent() {
+      const list = document.getElementById('webhookList');
+      const li = document.createElement('li');
+      li.textContent = `${new Date().toISOString()} · simulated webhook event [dev fallback]`;
+      list.prepend(li);
+      busEvent('simulate_event', 'manual');
+    }
+
+    function restoreConversation() {
+      conversation = readSession(HISTORY_KEY, []);
+      requestTimestamps = readSession(RATE_KEY, []);
+      renderConversation();
+    }
+
+    function persistConversation() {
+      writeSession(HISTORY_KEY, conversation.slice(-10));
+      writeSession(RATE_KEY, requestTimestamps);
+    }
+
+    function estimateTokens(text) {
+      return Math.ceil((text || '').length / 4);
+    }
+
+    function enforceTokenBudget() {
+      if (totalTokens > TOKEN_WARN_THRESHOLD) {
+        document.getElementById('tokenGate').style.display = 'block';
+        if (conversation.length > 16) {
+          conversation = conversation.slice(-16); // last 8 turns
+        }
+      }
+    }
+
+    function isRateGated() {
+      const now = Date.now();
+      requestTimestamps = requestTimestamps.filter((t) => now - t < 60000);
+      return requestTimestamps.length >= 6;
+    }
+
+    function showApiKeyPrompt() {
+      document.getElementById('apikeyPrompt').style.display = 'block';
+    }
+
+    async function anthropicRequest(payload) {
+      const testMode = document.body?.dataset?.testmode === 'true';
+      if (testMode) {
+        busEvent('testmode', 'anthropic_intercepted');
+        return { content: [{ type: 'text', text: 'Mocked dork response in test mode.' }], usage: { output_tokens: 12 } };
+      }
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return response.json();
+    }
+
+    async function auditDorkTurn(userMsg, responseTokens) {
+      const user_msg_hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(userMsg)).then((buf) =>
+        Array.from(new Uint8Array(buf)).map((x) => x.toString(16).padStart(2, '0')).join('')
+      );
+
+      if (MISSING_ROUTES.has(ROUTES.ledgerLog)) {
+        busEvent('mock_data', ROUTES.ledgerLog);
+        return;
+      }
+
+      await fetch(ROUTES.ledgerLog, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'dork', user_msg_hash, response_tokens: responseTokens, ts: new Date().toISOString() })
+      });
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chatInput');
+      const userMsg = input.value.trim();
+      if (!userMsg) return;
+      if (isRateGated()) {
+        busEvent('rate_gate', 'closed');
+        return;
+      }
+
+      requestTimestamps.push(Date.now());
+      conversation.push({ role: 'user', content: userMsg });
+      input.value = '';
+      renderConversation();
+
+      const liveState = await fetchRuntimeState();
+      activeSystemPrompt = constructDorkPrompt(BASE_SYSTEM_PROMPT, liveState);
+
+      isStreaming = true;
+      try {
+        const resp = await anthropicRequest({
+          model: 'claude-sonnet-4',
+          max_tokens: 1200,
+          system: activeSystemPrompt,
+          messages: conversation.slice(-16).map((turn) => ({ role: turn.role, content: turn.content }))
+        });
+        const text = resp?.content?.[0]?.text || 'No response';
+        conversation.push({ role: 'assistant', content: text });
+        totalTokens += estimateTokens(userMsg) + Number(resp?.usage?.output_tokens || estimateTokens(text));
+        enforceTokenBudget();
+        await auditDorkTurn(userMsg, Number(resp?.usage?.output_tokens || 0));
+      } catch (err) {
+        conversation.push({ role: 'assistant', content: `dork error: ${err?.message || 'request failed'}` });
+      } finally {
+        isStreaming = false;
+        persistConversation();
+        renderConversation();
+      }
+    }
+
+    function startWebhookStream() {
+      if (MISSING_ROUTES.has(ROUTES.webhooksStream)) {
+        busEvent('mock_data', ROUTES.webhooksStream);
+        return;
+      }
+      try {
+        const source = new EventSource(ROUTES.webhooksStream);
+        source.onmessage = (event) => busEvent('webhook_stream', event.data);
+      } catch (_err) {
+        busEvent('mock_data', ROUTES.webhooksStream);
+      }
+    }
+
+    async function autoRefreshSystemPrompt() {
+      if (activeTab !== 'chat' || isStreaming) return;
+      const liveState = await fetchRuntimeState();
+      activeSystemPrompt = constructDorkPrompt(BASE_SYSTEM_PROMPT, liveState);
+      busEvent('system_prompt_refresh', 'ok');
+    }
+
+    function init() {
+      restoreConversation();
+      refreshDashboard();
+      startWebhookStream();
+      setInterval(refreshDashboard, 30000);
+      setInterval(autoRefreshSystemPrompt, 60000);
+
+      document.getElementById('chatSend').addEventListener('click', sendChat);
+      document.getElementById('chatInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendChat();
+      });
+      document.getElementById('simulateEvent').addEventListener('click', simulateEvent);
+      document.getElementById('loadMoreLedger').addEventListener('click', () => refreshLedger(true));
+
+      if (!window.__anthropic_key_available) {
+        showApiKeyPrompt();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
