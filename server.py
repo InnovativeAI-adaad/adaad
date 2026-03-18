@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, Mapping
 
 from contextlib import asynccontextmanager
@@ -196,6 +196,24 @@ def _load_mock(name: str) -> Any:
         return json.loads(p.read_text(encoding="utf-8"))
     except Exception as e:  # pragma: no cover - defensive guard
         raise HTTPException(status_code=500, detail=f"mock '{name}' parse error: {e}")
+
+
+def _resolve_static_asset(base_dir: Path, asset_path: str) -> Path:
+    """Resolve a user-requested static asset path under a fixed base directory.
+
+    Rejects absolute paths, parent traversal, and empty components before path
+    resolution to satisfy fail-closed path handling for user-controlled input.
+    """
+    normalized = PurePosixPath("/" + asset_path).as_posix().lstrip("/")
+    candidate = Path(normalized)
+    if not normalized or candidate.is_absolute() or ".." in candidate.parts:
+        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    resolved = (base_dir / candidate).resolve()
+    try:
+        resolved.relative_to(base_dir.resolve())
+    except ValueError:
+        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    return resolved
 
 
 def _read_gate_state() -> Dict[str, Any]:
@@ -3012,11 +3030,7 @@ def serve_aponi_asset(asset_path: str) -> Response:
 
     Path-traversal protection: rejects any path that resolves outside APONI_DIR.
     """
-    resolved = (APONI_DIR / asset_path).resolve()
-    try:
-        resolved.relative_to(APONI_DIR.resolve())
-    except ValueError:
-        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    resolved = _resolve_static_asset(APONI_DIR, asset_path)
     if not resolved.exists() or not resolved.is_file():
         raise HTTPException(status_code=404, detail="asset_not_found")
     return FileResponse(str(resolved))
@@ -3028,11 +3042,7 @@ def serve_whaledic_asset(asset_path: str) -> Response:
 
     Whale.Dic · ADAADinside™ developer tool
     """
-    resolved = (WHALEDIC_DIR / asset_path).resolve()
-    try:
-        resolved.relative_to(WHALEDIC_DIR.resolve())
-    except ValueError:
-        raise HTTPException(status_code=404, detail="path_traversal_blocked")
+    resolved = _resolve_static_asset(WHALEDIC_DIR, asset_path)
     if not resolved.exists() or not resolved.is_file():
         raise HTTPException(status_code=404, detail="asset_not_found")
     return FileResponse(str(resolved))
