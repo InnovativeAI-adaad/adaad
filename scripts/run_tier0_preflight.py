@@ -181,6 +181,13 @@ def build_checks(include_tests: bool) -> list[Check]:
                 command=(sys.executable, "scripts/validate_governance_doc_consistency.py"),
             ),
         ),
+        Check(
+            "qr attribution registry",
+            lint_check_request(
+                tool_id="tier0-qr-attribution-registry",
+                command=(sys.executable, "scripts/validate_qr_registry.py"),
+            ),
+        ),
     ]
     if include_tests:
         checks.append(

@@ -1,47 +1,112 @@
 {
-  "fdroid": {
-    "campaign_tags": {
-      "medium": "qr",
-      "source": "install_page",
-      "term": "fdroid"
+  "version": 1,
+  "campaign": "install_tracks_2026q2",
+  "approved_query_params": [
+    "utm_source",
+    "utm_medium",
+    "utm_campaign"
+  ],
+  "managed_redirect_prefixes": [
+    "https://innovativeai-adaad.github.io/ADAAD/r/"
+  ],
+  "targets": [
+    {
+      "id": "releases-install-card",
+      "active": true,
+      "placement": "install_card",
+      "asset_path": "docs/assets/qr/releases_install_card.svg",
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
     },
-    "canonical_destination_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo",
-    "purpose": "fdroid"
-  },
-  "install_page": {
-    "campaign_tags": {
-      "medium": "qr",
-      "source": "offline",
-      "term": "install_page"
+    {
+      "id": "releases-install-android-doc",
+      "active": true,
+      "placement": "install_android_doc",
+      "asset_path": "docs/assets/qr/releases_install_android_doc.svg",
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
     },
-    "canonical_destination_url": "https://innovativeai-adaad.github.io/ADAAD/install.html",
-    "purpose": "install_page"
-  },
-  "obtainium": {
-    "campaign_tags": {
-      "medium": "qr",
-      "source": "install_page",
-      "term": "obtainium"
+    {
+      "id": "releases-readme-banner",
+      "active": true,
+      "placement": "readme_banner",
+      "asset_path": "docs/assets/qr/releases_readme_banner.svg",
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
     },
-    "canonical_destination_url": "obtainium://app/https://github.com/InnovativeAI-adaad/ADAAD",
-    "purpose": "obtainium"
-  },
-  "pwa": {
-    "campaign_tags": {
-      "medium": "qr",
-      "source": "install_page",
-      "term": "pwa"
+    {
+      "id": "obtainium-install-card",
+      "active": true,
+      "placement": "install_card",
+      "asset_path": "docs/assets/qr/obtainium_install_card.svg",
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
     },
-    "canonical_destination_url": "https://innovativeai-adaad.github.io/ADAAD/",
-    "purpose": "pwa"
-  },
-  "releases": {
-    "campaign_tags": {
-      "medium": "qr",
-      "source": "install_page",
-      "term": "apk"
+    {
+      "id": "obtainium-install-android-doc",
+      "active": true,
+      "placement": "install_android_doc",
+      "asset_path": "docs/assets/qr/obtainium_install_android_doc.svg",
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
     },
-    "canonical_destination_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest",
-    "purpose": "apk"
-  }
+    {
+      "id": "obtainium-readme-banner",
+      "active": true,
+      "placement": "readme_banner",
+      "asset_path": "docs/assets/qr/obtainium_readme_banner.svg",
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "pwa-install-card",
+      "active": true,
+      "placement": "install_card",
+      "asset_path": "docs/assets/qr/pwa_install_card.svg",
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "pwa-install-android-doc",
+      "active": true,
+      "placement": "install_android_doc",
+      "asset_path": "docs/assets/qr/pwa_install_android_doc.svg",
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "pwa-readme-banner",
+      "active": true,
+      "placement": "readme_banner",
+      "asset_path": "docs/assets/qr/pwa_readme_banner.svg",
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "fdroid-install-card",
+      "active": true,
+      "placement": "install_card",
+      "asset_path": "docs/assets/qr/fdroid_install_card.svg",
+      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "fdroid-install-android-doc",
+      "active": true,
+      "placement": "install_android_doc",
+      "asset_path": "docs/assets/qr/fdroid_install_android_doc.svg",
+      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "fdroid-readme-banner",
+      "active": true,
+      "placement": "readme_banner",
+      "asset_path": "docs/assets/qr/fdroid_readme_banner.svg",
+      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "install-page-install-android-doc",
+      "active": true,
+      "placement": "install_android_doc",
+      "asset_path": "docs/assets/qr/install_page_install_android_doc.svg",
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+    },
+    {
+      "id": "install-page-readme-banner",
+      "active": true,
+      "placement": "readme_banner",
+      "asset_path": "docs/assets/qr/install_page_readme_banner.svg",
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+    }
+  ]
 }
