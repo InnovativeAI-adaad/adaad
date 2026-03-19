@@ -10,6 +10,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict, List
 
+from adaad.orchestrator.evidence_orchestrator import (
+    EvidenceCollectorContext,
+    EvidenceOrchestrator,
+    create_default_evidence_orchestrator,
+)
 from runtime import ROOT_DIR
 from runtime.constitution import CONSTITUTION_VERSION
 from runtime.evolution.lineage_v2 import LineageLedgerV2
@@ -151,6 +156,7 @@ class EvidenceBundleBuilder:
         policy_path: Path = DEFAULT_GOVERNANCE_POLICY_PATH,
         export_dir: Path | None = None,
         schema_path: Path | None = None,
+        evidence_orchestrator: EvidenceOrchestrator | None = None,
     ) -> None:
         self.ledger = ledger or LineageLedgerV2()
         self.replay_engine = replay_engine or ReplayEngine(self.ledger)

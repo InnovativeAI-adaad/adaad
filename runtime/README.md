@@ -59,7 +59,7 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 - Canonical governance event taxonomy/normalization: `runtime/governance/event_taxonomy.py`.
 - Constitution resource governance + shared accounting: `runtime/governance/constitution.yaml`, `runtime/governance/resource_accounting.py`.
 - Replay attestation bundles: `runtime/evolution/replay_attestation.py` (signed replay-proof exports + offline verification helpers).
-- Forensic evidence bundles: `runtime/evolution/evidence_bundle.py` (`schemas/evidence_bundle.v1.json`), including pre-digest `governor_version`, `fitness_weights_hash`, and `goal_graph_hash` provenance anchors.
+- Forensic evidence bundles: `runtime/evolution/evidence_bundle.py` (`schemas/evidence_bundle.v1.json`) delegates deterministic section sequencing to `adaad/orchestrator/evidence_orchestrator.py`, preserving stable collector and item ordering while retaining the existing `EvidenceBundleBuilder.build_bundle(...)` API.
 - Governance signing and operations guides: `docs/governance/POLICY_ARTIFACT_SIGNING_GUIDE.md`, `docs/governance/FORENSIC_BUNDLE_LIFECYCLE.md`, `docs/governance/FEDERATION_CONFLICT_RUNBOOK.md`, and founders-law model docs.
 - Deterministic red-team harness: `runtime/analysis/redteam_harness.py` fed by `experiments/redteam/scenarios.json`, with stable JSON evidence in `reports/redteam/*.json` and fail-closed escalation on high-risk anomalies.
 
