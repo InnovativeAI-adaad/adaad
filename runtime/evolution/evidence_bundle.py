@@ -10,6 +10,11 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict, List
 
+from adaad.orchestrator.evidence_orchestrator import (
+    EvidenceCollectorContext,
+    EvidenceOrchestrator,
+    create_default_evidence_orchestrator,
+)
 from runtime import ROOT_DIR
 from runtime.constitution import CONSTITUTION_VERSION
 from runtime.evolution.lineage_v2 import LineageLedgerV2
@@ -145,6 +150,7 @@ class EvidenceBundleBuilder:
         policy_path: Path = DEFAULT_GOVERNANCE_POLICY_PATH,
         export_dir: Path | None = None,
         schema_path: Path | None = None,
+        evidence_orchestrator: EvidenceOrchestrator | None = None,
     ) -> None:
         self.ledger = ledger or LineageLedgerV2()
         self.replay_engine = replay_engine or ReplayEngine(self.ledger)
@@ -152,6 +158,7 @@ class EvidenceBundleBuilder:
         self.policy_path = policy_path
         self.export_dir = export_dir or FORENSIC_EXPORT_DIR
         self.schema_path = schema_path or (ROOT_DIR / "schemas" / "evidence_bundle.v1.json")
+        self.evidence_orchestrator = evidence_orchestrator or create_default_evidence_orchestrator()
 
     def _resolve_epoch_ids(self, epoch_start: str, epoch_end: str | None = None) -> List[str]:
         requested_start = epoch_start.strip()
@@ -313,10 +320,20 @@ class EvidenceBundleBuilder:
 
     def _build_core(self, epoch_start: str, epoch_end: str | None) -> Dict[str, Any]:
         epoch_ids = self._resolve_epoch_ids(epoch_start=epoch_start, epoch_end=epoch_end)
-        bundles = self._collect_bundle_events(epoch_ids)
-        sandbox_evidence = self._collect_sandbox_evidence(epoch_ids)
-        replay_proofs = self._collect_replay_proofs(epoch_ids)
-        lineage_anchors = self._collect_lineage_anchors(epoch_ids, bundles)
+        context = EvidenceCollectorContext(
+            epoch_ids=epoch_ids,
+            ledger=self.ledger,
+            replay_engine=self.replay_engine,
+            sandbox_evidence_path=self.sandbox_evidence_path,
+        )
+        try:
+            collected = self.evidence_orchestrator.collect(context)
+        except ValueError as exc:
+            raise EvidenceBundleError(str(exc)) from exc
+        bundles = collected.get("bundle_index", [])
+        sandbox_evidence = collected.get("sandbox_evidence", [])
+        replay_proofs = collected.get("replay_proofs", [])
+        lineage_anchors = collected.get("lineage_anchors", [])
         federated_evidence = self._collect_federated_evidence(epoch_ids)
         try:
             policy = load_governance_policy(self.policy_path)
