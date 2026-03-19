@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # Invariant codes: ORCH-01 · RACE-01 · FAIL-CLOSED-03 · AUDIT-TRAIL-02 · DET-01
+#
+# QA-1 role note (DOC-DRIFT-01): this orchestrator is the *post-merge safety-net*
+# corrective pass.  The authoritative pre-merge drift gate is doc_sync_preview.yml.
+# Residual drift reaching main through admin direct-pushes, path-filter gaps, or
+# manual workflow_dispatch runs is corrected here — never in the pre-merge gate.
+# (post_merge_doc_sync.yml was retired by QA-4; this file is its replacement.)
 
 name: Post-Merge Orchestrator
 

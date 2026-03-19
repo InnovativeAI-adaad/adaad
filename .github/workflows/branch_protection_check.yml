@@ -21,8 +21,9 @@ jobs:
             const repo = context.repo.repo;
             const branch = 'main';
             const normalizeContext = (value) => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+            // Conflict-resolution note:
             // Keep required check-run contexts centralized and exact to reduce policy drift.
-            // Values should match GitHub branch protection required_status_checks.contexts exactly.
+            // Values must match GitHub branch protection required_status_checks.contexts exactly.
             const REQUIRED_CONTEXTS = {
               secretScan: [
                 'Secret Scan / secret-scan',
@@ -31,7 +32,9 @@ jobs:
                 'CI / docs-validation',
               ],
               docSyncPreview: [
-                'CI / doc-sync-preview',
+                // Canonical context: workflow name "Doc Sync Preview (PR Gate)" + job "doc-sync-preview".
+                // Must match the name: and jobs.<id>.name: fields in doc_sync_preview.yml exactly.
+                'Doc Sync Preview (PR Gate) / doc-sync-preview',
               ],
               codeql: [
                 'CodeQL / Analyze (python)',

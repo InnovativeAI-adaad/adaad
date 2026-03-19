@@ -1,5 +1,10 @@
 name: CI
 
+# QA-1: docs-validation and doc_sync_preview are complementary.
+# - docs-validation enforces content/schema alignment invariants.
+# - doc_sync_preview blocks merges when sync_docs_on_merge dry-run would mutate files.
+# Both are required branch-protection checks for main.
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
