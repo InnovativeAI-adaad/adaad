@@ -15,6 +15,12 @@ from runtime.constitution import CONSTITUTION_VERSION
 from runtime.evolution.lineage_v2 import LineageLedgerV2
 from runtime.evolution.replay import ReplayEngine
 from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION
+from runtime.evolution.evidence_contracts import (
+    DEFAULT_NORMALIZED_EVIDENCE_SCHEMA_PATH,
+    NORMALIZED_EVIDENCE_SCHEMA_VERSION,
+    NormalizedEvidenceItem,
+    validate_normalized_item,
+)
 from runtime.governance.deterministic_filesystem import read_file_deterministic
 from runtime.governance.foundation import ZERO_HASH, canonical_json, sha256_prefixed_digest
 from runtime.governance.policy_artifact import DEFAULT_GOVERNANCE_POLICY_PATH, GovernancePolicyError, load_governance_policy
@@ -152,6 +158,25 @@ class EvidenceBundleBuilder:
         self.policy_path = policy_path
         self.export_dir = export_dir or FORENSIC_EXPORT_DIR
         self.schema_path = schema_path or (ROOT_DIR / "schemas" / "evidence_bundle.v1.json")
+        self.normalized_item_schema_path = DEFAULT_NORMALIZED_EVIDENCE_SCHEMA_PATH
+
+    def _normalize_item(self, *, source_id: str, epoch_id: str, payload: Dict[str, Any]) -> NormalizedEvidenceItem:
+        normalized = NormalizedEvidenceItem(
+            source_id=source_id,
+            epoch_id=epoch_id,
+            canonical_digest=sha256_prefixed_digest(payload),
+            schema_version=NORMALIZED_EVIDENCE_SCHEMA_VERSION,
+            deterministic_flags=("canonical_json", "sorted_output", "fail_closed_validation"),
+            payload=payload,
+        )
+        errors = validate_normalized_item(normalized, schema_path=self.normalized_item_schema_path)
+        if errors:
+            raise EvidenceBundleError("invalid_normalized_evidence_item:" + "|".join(errors))
+        return normalized
+
+    @staticmethod
+    def _normalized_payloads(items: List[NormalizedEvidenceItem]) -> List[Dict[str, Any]]:
+        return [item.payload for item in items]
 
     def _resolve_epoch_ids(self, epoch_start: str, epoch_end: str | None = None) -> List[str]:
         requested_start = epoch_start.strip()
@@ -173,76 +198,97 @@ class EvidenceBundleBuilder:
         high = max(start_idx, end_idx)
         return sorted(known_epochs[low : high + 1])
 
-    def _collect_bundle_events(self, epoch_ids: List[str]) -> List[Dict[str, Any]]:
-        bundles: List[Dict[str, Any]] = []
+    def _collect_bundle_events(self, epoch_ids: List[str]) -> List[NormalizedEvidenceItem]:
+        bundles: List[NormalizedEvidenceItem] = []
         for epoch_id in epoch_ids:
             for entry in self.ledger.read_epoch(epoch_id):
                 if entry.get("type") != "MutationBundleEvent":
                     continue
                 payload = dict(entry.get("payload") or {})
+                normalized_payload = {
+                    "epoch_id": epoch_id,
+                    "bundle_id": str(payload.get("bundle_id") or payload.get("certificate", {}).get("bundle_id") or ""),
+                    "bundle_digest": str(payload.get("bundle_digest") or ""),
+                    "epoch_digest": str(payload.get("epoch_digest") or ""),
+                    "risk_tier": str(payload.get("risk_tier") or ""),
+                    "certificate": dict(payload.get("certificate") or {}),
+                }
                 bundles.append(
-                    {
-                        "epoch_id": epoch_id,
-                        "bundle_id": str(payload.get("bundle_id") or payload.get("certificate", {}).get("bundle_id") or ""),
-                        "bundle_digest": str(payload.get("bundle_digest") or ""),
-                        "epoch_digest": str(payload.get("epoch_digest") or ""),
-                        "risk_tier": str(payload.get("risk_tier") or ""),
-                        "certificate": dict(payload.get("certificate") or {}),
-                    }
+                    self._normalize_item(
+                        source_id="lineage_ledger.mutation_bundle_event",
+                        epoch_id=epoch_id,
+                        payload=normalized_payload,
+                    )
                 )
-        bundles.sort(key=lambda item: (item["epoch_id"], item["bundle_id"], item["bundle_digest"]))
+        bundles.sort(key=lambda item: (item.epoch_id, str(item.payload.get("bundle_id") or ""), str(item.payload.get("bundle_digest") or "")))
         return bundles
 
-    def _collect_sandbox_evidence(self, epoch_ids: List[str]) -> List[Dict[str, Any]]:
+    def _collect_sandbox_evidence(self, epoch_ids: List[str]) -> List[NormalizedEvidenceItem]:
         allowed = set(epoch_ids)
-        evidence: List[Dict[str, Any]] = []
+        evidence: List[NormalizedEvidenceItem] = []
         for entry in _read_jsonl(self.sandbox_evidence_path):
             payload = dict(entry.get("payload") or {})
             manifest = dict(payload.get("manifest") or {})
             epoch_id = str(manifest.get("epoch_id") or payload.get("epoch_id") or "")
             if epoch_id not in allowed:
                 continue
+            normalized_payload = {
+                "epoch_id": epoch_id,
+                "bundle_id": str(manifest.get("bundle_id") or payload.get("bundle_id") or ""),
+                "evidence_hash": str(payload.get("evidence_hash") or ""),
+                "manifest_hash": str(payload.get("manifest_hash") or ""),
+                "policy_hash": str(payload.get("policy_hash") or ""),
+                "entry_hash": str(entry.get("hash") or ""),
+                "prev_hash": str(entry.get("prev_hash") or ZERO_HASH),
+            }
             evidence.append(
-                {
-                    "epoch_id": epoch_id,
-                    "bundle_id": str(manifest.get("bundle_id") or payload.get("bundle_id") or ""),
-                    "evidence_hash": str(payload.get("evidence_hash") or ""),
-                    "manifest_hash": str(payload.get("manifest_hash") or ""),
-                    "policy_hash": str(payload.get("policy_hash") or ""),
-                    "entry_hash": str(entry.get("hash") or ""),
-                    "prev_hash": str(entry.get("prev_hash") or ZERO_HASH),
-                }
+                self._normalize_item(
+                    source_id="sandbox_evidence.jsonl",
+                    epoch_id=epoch_id,
+                    payload=normalized_payload,
+                )
             )
-        evidence.sort(key=lambda item: (item["epoch_id"], item["bundle_id"], item["entry_hash"]))
+        evidence.sort(key=lambda item: (item.epoch_id, str(item.payload.get("bundle_id") or ""), str(item.payload.get("entry_hash") or "")))
         return evidence
 
-    def _collect_replay_proofs(self, epoch_ids: List[str]) -> List[Dict[str, Any]]:
-        proofs: List[Dict[str, Any]] = []
+    def _collect_replay_proofs(self, epoch_ids: List[str]) -> List[NormalizedEvidenceItem]:
+        proofs: List[NormalizedEvidenceItem] = []
         for epoch_id in epoch_ids:
             replay = self.replay_engine.replay_epoch(epoch_id)
+            normalized_payload = {
+                "epoch_id": epoch_id,
+                "digest": str(replay.get("digest") or ""),
+                "canonical_digest": str(replay.get("canonical_digest") or ""),
+                "event_count": int(replay.get("events") or 0),
+                "sandbox_replay": list(replay.get("sandbox_replay") or []),
+            }
             proofs.append(
-                {
-                    "epoch_id": epoch_id,
-                    "digest": str(replay.get("digest") or ""),
-                    "canonical_digest": str(replay.get("canonical_digest") or ""),
-                    "event_count": int(replay.get("events") or 0),
-                    "sandbox_replay": list(replay.get("sandbox_replay") or []),
-                }
+                self._normalize_item(
+                    source_id="replay_engine.replay_epoch",
+                    epoch_id=epoch_id,
+                    payload=normalized_payload,
+                )
             )
-        proofs.sort(key=lambda item: item["epoch_id"])
+        proofs.sort(key=lambda item: item.epoch_id)
         return proofs
 
-    def _collect_lineage_anchors(self, epoch_ids: List[str], bundles: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        anchors: List[Dict[str, Any]] = []
+    def _collect_lineage_anchors(self, epoch_ids: List[str], bundles: List[NormalizedEvidenceItem]) -> List[NormalizedEvidenceItem]:
+        anchors: List[NormalizedEvidenceItem] = []
+        bundle_payloads = self._normalized_payloads(bundles)
         for epoch_id in epoch_ids:
-            epoch_bundle_ids = sorted({entry["bundle_id"] for entry in bundles if entry["epoch_id"] == epoch_id and entry["bundle_id"]})
+            epoch_bundle_ids = sorted({entry["bundle_id"] for entry in bundle_payloads if entry["epoch_id"] == epoch_id and entry["bundle_id"]})
+            normalized_payload = {
+                "epoch_id": epoch_id,
+                "expected_epoch_digest": str(self.ledger.get_expected_epoch_digest(epoch_id) or ""),
+                "incremental_epoch_digest": str(self.ledger.compute_incremental_epoch_digest(epoch_id)),
+                "bundle_ids": epoch_bundle_ids,
+            }
             anchors.append(
-                {
-                    "epoch_id": epoch_id,
-                    "expected_epoch_digest": str(self.ledger.get_expected_epoch_digest(epoch_id) or ""),
-                    "incremental_epoch_digest": str(self.ledger.compute_incremental_epoch_digest(epoch_id)),
-                    "bundle_ids": epoch_bundle_ids,
-                }
+                self._normalize_item(
+                    source_id="lineage_ledger.epoch_digest_anchor",
+                    epoch_id=epoch_id,
+                    payload=normalized_payload,
+                )
             )
         return anchors
 
@@ -267,7 +313,7 @@ class EvidenceBundleBuilder:
         dict
             ``federated_evidence`` section of the evidence bundle.
         """
-        results: List[Dict[str, Any]] = []
+        results: List[NormalizedEvidenceItem] = []
         epoch_set = set(epoch_ids)
         divergence_count = 0
         for epoch_id in epoch_ids:
@@ -289,26 +335,32 @@ class EvidenceBundleBuilder:
                 ) or "no_divergence:digest_mismatch" in failure_codes
                 if no_div_fail:
                     divergence_count += 1
+                normalized_payload = {
+                    "epoch_id": epoch_id,
+                    "proposal_id": proposal_id,
+                    "passed": passed,
+                    "failure_codes": failure_codes,
+                    "matrix_digest": matrix_digest,
+                    "has_divergence": no_div_fail,
+                }
                 results.append(
-                    {
-                        "epoch_id": epoch_id,
-                        "proposal_id": proposal_id,
-                        "passed": passed,
-                        "failure_codes": failure_codes,
-                        "matrix_digest": matrix_digest,
-                        "has_divergence": no_div_fail,
-                    }
+                    self._normalize_item(
+                        source_id=f"lineage_ledger.{etype}",
+                        epoch_id=epoch_id,
+                        payload=normalized_payload,
+                    )
                 )
-        results.sort(key=lambda r: (r["epoch_id"], r["proposal_id"]))
+        results.sort(key=lambda item: (item.epoch_id, str(item.payload.get("proposal_id") or "")))
+        result_payloads = self._normalized_payloads(results)
         return {
             "schema_version": "federated_evidence.v1",
             "epoch_ids": sorted(epoch_set),
-            "verification_count": len(results),
-            "passed_count": sum(1 for r in results if r["passed"]),
-            "failed_count": sum(1 for r in results if not r["passed"]),
+            "verification_count": len(result_payloads),
+            "passed_count": sum(1 for r in result_payloads if r["passed"]),
+            "failed_count": sum(1 for r in result_payloads if not r["passed"]),
             "divergence_count": divergence_count,
             "invariant_ok": divergence_count == 0,
-            "verifications": results,
+            "verifications": result_payloads,
         }
 
     def _build_core(self, epoch_start: str, epoch_end: str | None) -> Dict[str, Any]:
@@ -317,6 +369,10 @@ class EvidenceBundleBuilder:
         sandbox_evidence = self._collect_sandbox_evidence(epoch_ids)
         replay_proofs = self._collect_replay_proofs(epoch_ids)
         lineage_anchors = self._collect_lineage_anchors(epoch_ids, bundles)
+        bundle_payloads = self._normalized_payloads(bundles)
+        sandbox_payloads = self._normalized_payloads(sandbox_evidence)
+        replay_payloads = self._normalized_payloads(replay_proofs)
+        anchor_payloads = self._normalized_payloads(lineage_anchors)
         federated_evidence = self._collect_federated_evidence(epoch_ids)
         try:
             policy = load_governance_policy(self.policy_path)
@@ -360,18 +416,18 @@ class EvidenceBundleBuilder:
                 "epoch_end": epoch_ids[-1],
                 "epoch_ids": epoch_ids,
             },
-            "replay_proofs": replay_proofs,
-            "sandbox_evidence": sandbox_evidence,
+            "replay_proofs": replay_payloads,
+            "sandbox_evidence": sandbox_payloads,
             "sandbox_snapshot": sandbox_snapshot,
             "policy_artifact_metadata": policy_artifact_metadata,
             "risk_summaries": {
-                "bundle_count": len(bundles),
-                "sandbox_evidence_count": len(sandbox_evidence),
-                "replay_proof_count": len(replay_proofs),
-                "high_risk_bundle_count": len([b for b in bundles if b.get("risk_tier") in {"high", "critical"}]),
+                "bundle_count": len(bundle_payloads),
+                "sandbox_evidence_count": len(sandbox_payloads),
+                "replay_proof_count": len(replay_payloads),
+                "high_risk_bundle_count": len([b for b in bundle_payloads if b.get("risk_tier") in {"high", "critical"}]),
             },
-            "lineage_anchors": lineage_anchors,
-            "bundle_index": bundles,
+            "lineage_anchors": anchor_payloads,
+            "bundle_index": bundle_payloads,
             "federated_evidence": federated_evidence,
         }
 
