@@ -13,6 +13,15 @@ ROOT = Path(__file__).resolve().parents[1]
 MD_LINK_PATTERN = re.compile(r"(!?)\[([^\]]*)\]\(([^)]+)\)")
 HTML_IMG_PATTERN = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
 ATTR_PATTERN = re.compile(r'([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(["\'])(.*?)\2')
+MANIFEST_LINK_PATTERN = re.compile(
+    r'<link\b[^>]*rel=(["\'])manifest\1[^>]*href=(["\'])(.*?)\2[^>]*>',
+    re.IGNORECASE,
+)
+SERVICE_WORKER_REGISTER_PATTERN = re.compile(
+    r"navigator\.serviceWorker\.register\((['\"])(.*?)\1\)",
+    re.IGNORECASE,
+)
+PUBLISHED_PREFIX = "/ADAAD/"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -175,6 +184,51 @@ def _scan_markdown_file(markdown_file: Path, enforce_image_weight_markers: bool 
     return findings
 
 
+def _resolve_docs_static_target(static_path: str) -> Path:
+    normalized = static_path.strip()
+    if normalized.startswith(PUBLISHED_PREFIX):
+        normalized = normalized[len(PUBLISHED_PREFIX) :]
+    elif normalized.startswith("./"):
+        normalized = normalized[2:]
+    elif normalized.startswith("/"):
+        normalized = normalized[1:]
+    return (ROOT / "docs" / normalized).resolve()
+
+
+def _scan_install_page_assets(install_page: Path | None = None) -> list[dict[str, object]]:
+    page = install_page or (ROOT / "docs" / "install.html")
+    findings: list[dict[str, object]] = []
+    if not page.exists():
+        findings.append({"kind": "missing_install_page", "file": "docs/install.html", "line": 0, "target": "docs/install.html"})
+        return findings
+
+    text = page.read_text(encoding="utf-8")
+
+    manifest_matches = list(MANIFEST_LINK_PATTERN.finditer(text))
+    if not manifest_matches:
+        findings.append({"kind": "missing_manifest_link", "file": "docs/install.html", "line": 0, "target": "manifest"})
+    for match in manifest_matches:
+        manifest_path = _normalize_destination(match.group(3))
+        if not _resolve_docs_static_target(manifest_path).exists():
+            findings.append({"kind": "missing_install_static_asset", "file": "docs/install.html", "line": 0, "target": manifest_path})
+
+    worker_matches = list(SERVICE_WORKER_REGISTER_PATTERN.finditer(text))
+    if not worker_matches:
+        findings.append({"kind": "missing_service_worker_registration", "file": "docs/install.html", "line": 0, "target": "serviceWorker.register"})
+    for match in worker_matches:
+        worker_path = _normalize_destination(match.group(2))
+        if not _resolve_docs_static_target(worker_path).exists():
+            findings.append({"kind": "missing_install_static_asset", "file": "docs/install.html", "line": 0, "target": worker_path})
+
+    for img_match in HTML_IMG_PATTERN.finditer(text):
+        attrs = _parse_html_attributes(img_match.group(0))
+        source = _normalize_destination(attrs.get("src", ""))
+        if _is_local_target(source) and not _resolve_docs_static_target(source).exists():
+            findings.append({"kind": "missing_install_static_asset", "file": "docs/install.html", "line": 0, "target": source})
+
+    return sorted(findings, key=lambda item: (str(item["kind"]), str(item["target"])))
+
+
 def _resolve_markdown_targets(roots: list[str] | None) -> list[Path]:
     if roots is None:
         return sorted(ROOT.rglob("*.md"))
@@ -205,6 +259,7 @@ def _collect_findings(
     for markdown_file in _resolve_markdown_targets(roots):
         scoped_marker_check = enforce_image_weight_markers and markdown_file in image_weight_scope_files
         findings.extend(_scan_markdown_file(markdown_file, enforce_image_weight_markers=scoped_marker_check))
+    findings.extend(_scan_install_page_assets())
     return sorted(findings, key=lambda item: (str(item["file"]), int(item["line"]), str(item["kind"]), str(item["target"])))
 
 
