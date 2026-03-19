@@ -35,3 +35,15 @@ All governance-critical call sites that can produce timestamps, IDs, or tokens m
 - governance tier + non-deterministic provider => rejected
 - critical tier + non-deterministic provider => rejected
 - deterministic provider produces identical values across repeated runs with same seed/label inputs
+
+
+## Replay CLI Namespace
+
+The orchestrator exposes deterministic replay commands via a dedicated namespace:
+
+- `python -m app.main replay verify --epoch <id> --mode strict|audit|off`
+- `python -m app.main replay manifest --epoch <id> [--mode strict|audit|off] [--output <path>]`
+- `python -m app.main replay divergence-report --epoch <id> [--mode strict|audit|off]`
+- `python -m app.main replay bundle --epoch <id>` or `--pr-id <id>`
+
+All replay namespace commands emit canonical JSON (`sort_keys=True`) for machine consumers.

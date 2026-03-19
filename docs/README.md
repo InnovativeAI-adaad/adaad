@@ -105,6 +105,19 @@
 
 <img src="assets/adaad-section-divider.svg" width="100%" style="opacity:0.72;" alt=""/>
 
+## Replay CLI Namespace
+
+Use the replay namespace for machine-readable deterministic replay workflows:
+
+```bash
+python -m app.main replay verify --epoch epoch-42 --mode strict
+python -m app.main replay manifest --epoch epoch-42 --output adaad/replay/manifests/epoch-42.json
+python -m app.main replay divergence-report --epoch epoch-42 --mode audit
+python -m app.main replay bundle --pr-id PR-PHASE65-01
+```
+
+Each command prints canonical JSON so CI and governance automation can consume output without table parsing.
+
 ## Architecture Overview
 
 <div align="center">

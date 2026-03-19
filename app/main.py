@@ -42,7 +42,7 @@ from app.orchestration.boot_config import (
     resolve_replay_mode,
     select_epoch,
 )
-from app.orchestration.cli_handlers import build_main_parser, handle_export_replay_proof, handle_status_report
+from app.orchestration.cli_handlers import build_main_parser, handle_export_replay_proof, handle_replay_namespace, handle_status_report
 from app.orchestration.runtime_factory import build_orchestrator
 from app.orchestration.replay_preflight import execute_replay_preflight
 from runtime.api import MutationEngine, MutationRequest, agent_path_from_id, iter_agent_dirs, resolve_agent_id
@@ -871,6 +871,9 @@ def run_mutation_cycle(orchestrator: "Orchestrator") -> None:
 def main() -> None:
     parser = build_main_parser()
     args = parser.parse_args()
+
+    if handle_replay_namespace(parser=parser, args=args):
+        return
 
     dry_run_env = dry_run_env_enabled(os.environ)
     try:
