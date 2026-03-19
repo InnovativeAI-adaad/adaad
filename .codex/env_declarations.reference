@@ -1,0 +1,19 @@
+# Declare these in the Codex environment UI → "Environment variables"
+# ─────────────────────────────────────────────────────────────────
+
+# [INV-RUNTIME] Force Python 3.11 as default in all container shells.
+PYTHON=python3.11
+
+# [INV-CONSTITUTION] Pin the active constitution version.
+# Must match the value in CONSTITUTION_VERSION file at repo root.
+# Update this whenever a new constitution is promoted.
+CONSTITUTION_VERSION=1          # ← set to your current version integer
+
+# [INV-AUDIT] Tag every container run with the environment label.
+ADAAD_ENV=codex
+
+# Optional: suppress pytest warnings noise in CI output.
+PYTHONWARNINGS=ignore::DeprecationWarning
+
+# Optional: deterministic hash seeds for reproducible population fingerprinting.
+PYTHONHASHSEED=0
