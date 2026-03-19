@@ -36,6 +36,7 @@ from runtime.evolution.replay_divergence import build_signed_replay_manifest
 from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
 from runtime.evolution.replay_manifest import REPLAY_MANIFESTS_DIR, build_replay_manifest_v1, write_replay_manifest_v1
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
+from runtime.evolution.replay_state_machine import ReplayStateMachine
 from runtime.evolution.replay_service import ReplayVerificationService
 from runtime.fitness_v2 import score_mutation_enhanced
 from runtime.founders_law import (
@@ -49,6 +50,7 @@ from runtime.founders_law import (
     enforce_law,
 )
 from runtime.governance.foundation import default_provider
+from runtime.governance.foundation import canonical_json
 from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
 from runtime.preflight import validate_agent_contract_preflight, validate_constitution_version_config
 from runtime.manifest.generator import generate_tool_manifest
@@ -167,9 +169,11 @@ __all__ = [
     "now_iso",
     "build_replay_divergence_artifacts",
     "build_replay_manifest_v1",
+    "canonical_json",
     "register",
     "register_capability",
     "reviewer_calibration_service",
+    "ReplayStateMachine",
     "score_mutation_enhanced",
     "write_replay_manifest_v1",
     "validate_constitution_version_config",

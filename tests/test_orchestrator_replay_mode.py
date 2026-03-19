@@ -481,5 +481,48 @@ class AdaadStatusCliTest(unittest.TestCase):
         printer.assert_has_calls([mock.call("TABLE"), mock.call(), mock.call('{"status":"ok"}')])
 
 
+class ReplayNamespaceCliTest(unittest.TestCase):
+    def test_replay_verify_emits_deterministic_json(self) -> None:
+        fake_runtime = mock.Mock()
+        fake_runtime.replay_preflight.return_value = {
+            "mode": "strict",
+            "verify_target": "single_epoch",
+            "has_divergence": False,
+            "decision": "continue",
+            "results": [],
+        }
+        with mock.patch("app.orchestration.cli_handlers.EvolutionRuntime", return_value=fake_runtime):
+            with mock.patch("sys.argv", ["app.main", "replay", "verify", "--epoch", "epoch-1", "--mode", "strict"]):
+                with mock.patch("builtins.print") as printer:
+                    main()
+        emitted = printer.call_args.args[0]
+        payload = __import__("json").loads(emitted)
+        self.assertEqual(payload["schema_version"], "replay_cli.verify.v1")
+        self.assertEqual(payload["command"], "verify")
+        self.assertEqual(payload["epoch"], "epoch-1")
+
+    def test_replay_bundle_accepts_pr_id_epoch_resolution(self) -> None:
+        fake_ledger = mock.Mock()
+        fake_ledger.list_epoch_ids.return_value = ["epoch-1"]
+        fake_ledger.read_epoch.return_value = [{"payload": {"pr_id": "PR-123"}}]
+
+        fake_runtime = mock.Mock()
+        fake_runtime.ledger = fake_ledger
+
+        fake_builder = mock.Mock()
+        fake_builder.write_bundle.return_value = mock.Mock(as_posix=mock.Mock(return_value="security/ledger/replay_proofs/epoch-1.replay_attestation.v1.json"))
+
+        with mock.patch("app.orchestration.cli_handlers.EvolutionRuntime", return_value=fake_runtime):
+            with mock.patch("app.orchestration.cli_handlers.ReplayProofBuilder", return_value=fake_builder):
+                with mock.patch("sys.argv", ["app.main", "replay", "bundle", "--pr-id", "PR-123"]):
+                    with mock.patch("builtins.print") as printer:
+                        main()
+
+        fake_builder.write_bundle.assert_called_once_with("epoch-1")
+        payload = __import__("json").loads(printer.call_args.args[0])
+        self.assertEqual(payload["epoch"], "epoch-1")
+        self.assertEqual(payload["pr_id"], "PR-123")
+
+
 if __name__ == "__main__":
     unittest.main()
