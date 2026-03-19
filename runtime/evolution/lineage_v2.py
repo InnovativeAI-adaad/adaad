@@ -374,8 +374,9 @@ class LineageLedgerV2:
         entry["hash"] = self._compute_hash(prev_hash, entry)
         with self.ledger_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        # Advance the cached tail hash to the new entry — no re-scan needed.
-        self._verified_tail_hash = entry["hash"]
+        # Invalidate the verification cache; the caller must re-verify before
+        # consuming a trusted tail hash again.
+        self._verified_tail_hash = None
         if event_type == "MutationBundleEvent":
             epoch_id = str(payload.get("epoch_id") or "")
             digest = str(payload.get("epoch_digest") or "")

@@ -238,6 +238,10 @@ def list_capabilities() -> List[Dict[str, Any]]:
 
 import dataclasses as _dc
 import hashlib as _hashlib
+import json as _json
+import logging as _logging
+import os as _os
+import time as _time
 
 
 @_dc.dataclass
@@ -253,7 +257,7 @@ class CapabilityChange:
     new_version: str
     epoch_evidence_hash: str
     proposal_hash: str
-    timestamp: float = _dc.field(default_factory=lambda: __import__("time").time())
+    timestamp: float = _dc.field(default_factory=_time.time)
 
     def __post_init__(self) -> None:
         if not self.node_id:
@@ -282,8 +286,9 @@ class CapabilityChange:
 
 # Module-level capability change ledger path (overridable via env var)
 _CAP_CHANGE_LEDGER_PATH = Path(
-    __import__("os").getenv("ADAAD_CAP_CHANGE_LEDGER", "data/capability_changes.jsonl")
+    _os.getenv("ADAAD_CAP_CHANGE_LEDGER", "data/capability_changes.jsonl")
 )
+_LOG = _logging.getLogger(__name__)
 
 
 def record_capability_change(
@@ -303,22 +308,19 @@ def record_capability_change(
     Returns:
         SHA-256 digest of the serialised record.
     """
-    import json as _json
-    import logging as _logging
-    _log = _logging.getLogger(__name__)
-
     path = ledger_path or _CAP_CHANGE_LEDGER_PATH
     record = change.to_dict()
     serialised = _json.dumps(record, sort_keys=True, default=str)
     digest = _hashlib.sha256(serialised.encode()).hexdigest()
     record["record_hash"] = digest
+    record_line = _json.dumps(record, sort_keys=True, default=str)
 
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
-            fh.write(_json.dumps(record, sort_keys=True, default=str) + "\n")
+            fh.write(record_line + "\n")
     except Exception:  # noqa: BLE001 — fail-safe
-        _log.warning(
+        _LOG.warning(
             "record_capability_change: failed to write ledger entry for %s",
             change.change_id, exc_info=True,
         )

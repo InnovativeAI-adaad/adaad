@@ -273,7 +273,7 @@ def test_replay_attestation_cross_instance_revocation_check(tmp_path) -> None:
     assert result["signature_results"][0]["error"] == "key_revoked"
 
 
-def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
+def test_replay_attestation_ed25519_happy_path(tmp_path, monkeypatch) -> None:
     if not replay_attestation._has_pynacl():
         pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519"
@@ -294,7 +294,7 @@ def test_replay_attestation_ed25519_happy_path(tmp_path) -> None:
     assert verify_replay_proof_bundle(bundle)["ok"]
 
 
-def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
+def test_replay_attestation_ed25519_tamper_detection(tmp_path, monkeypatch) -> None:
     if not replay_attestation._has_pynacl():
         pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519-tamper"
@@ -317,7 +317,7 @@ def test_replay_attestation_ed25519_tamper_detection(tmp_path) -> None:
     assert result["signature_results"][0]["error"] == "signature_mismatch"
 
 
-def test_replay_attestation_ed25519_unknown_key_id(tmp_path) -> None:
+def test_replay_attestation_ed25519_unknown_key_id(tmp_path, monkeypatch) -> None:
     if not replay_attestation._has_pynacl():
         pytest.skip("PyNaCl not installed")
     epoch_id = "epoch-ed25519-unknown"
