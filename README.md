@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture · v9.11.0 · Phase 76"/>
+<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture · v9.12.0 · Phase 77"/>
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.11.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.11.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/9.11.0/)&nbsp;[![Phase](https://img.shields.io/badge/Phase_76-Seed_CEL_Outcome-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.12.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.12.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/9.12.0/)&nbsp;[![Phase](https://img.shields.io/badge/Phase_77-GitHub_App_Governance-000?style=for-the-badge&labelColor=0d1117&color=f97316)](ROADMAP.md)&nbsp;[![Self-Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
-[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C649_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/76_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
+[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C649_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Phases](https://img.shields.io/badge/77_Phases-Complete-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Evolved](https://img.shields.io/badge/⛓_First_Autonomous_Evolution-March_13_2026_—_Hash_In_Ledger-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phone](https://img.shields.io/badge/📱_Runs_On-A_$200_Android_Phone-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
 <br/>
 
@@ -43,7 +43,7 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 </tr>
 </table>
 
-<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats — v9.11.0 · 4,649 tests · 76 phases · 23 rules · 12,441 ledger entries"/>
+<img src="docs/assets/adaad-stats-card.svg" width="100%" alt="ADAAD Stats — v9.12.0 · 4,649 tests · 77 phases · 23 rules · 12,441 ledger entries"/>
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## ADAAD vs. Everything Else
@@ -104,9 +104,9 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 📅 76-Phase Evolution Timeline
+## 📅 77-Phase Evolution Timeline
 
-<img src="docs/assets/readme/adaad-phase-timeline.svg" width="100%" alt="ADAAD Phase Timeline — Phase 1 through 76 · First self-evolution at Phase 65"/>
+<img src="docs/assets/readme/adaad-phase-timeline.svg" width="100%" alt="ADAAD Phase Timeline — Phase 1 through 77 · First self-evolution at Phase 65"/>
 
 | Phase | Era | Milestone | Version |
 |:---:|:---|:---|:---:|
@@ -132,6 +132,7 @@ Every AI code tool works the same way: **suggest → you apply.** No audit trail
 | 74 | Seed → Proposal | Seed-to-Proposal Bridge · deterministic `cycle_id` routing | v9.9 |
 | **75** | **Seed CEL Injection** | **Approved seeds wired into CEL Step 4 as advisory signal** | **v9.10.0** |
 | **76** | **Seed CEL Outcome Recorder** | **CEL epoch outcome recorded back to lineage ledger — full loop closed** | **v9.11.0** |
+| **77** | **GitHub App Governance** | **GitHub App governance + Constitution version alignment** | **v9.12.0** |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -192,6 +193,8 @@ PYTHONPATH=. python -m ui.aponi --port 8080   # → http://localhost:8080
 | 🟢 Federation | **HMAC-GATED · DUAL-GATE** · `federation_dual_gate` |
 | 🟢 CodeIntelModel | **SCANNING · DETERMINISM-VERIFIED** · `INTEL-DET-0` |
 | 🟢 Innovations Pipeline | **SEED-CEL-AUDIT-0 · SEED-REVIEW-0 · SEED-PROP-0** |
+| 🟢 ADAADchat App | **ONLINE · GOVERNANCE-ALIGNED** · conversational operator surface |
+| 🟢 ExternalEventBridge | **ACTIVE · SHA-256 JSONL CHAINED** · `GITHUB-AUDIT-0` |
 | 🟢 Autonomous Self-Evolution | **PHASE 65 PROVEN · LEDGER SEALED** · `MUTATION-TARGET` |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -465,7 +468,7 @@ EvolutionLedger                                 EvolutionLedger
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  APONI  ·  Governance Console  ·  ADAAD v9.11.0  ·  Phase 76    │
+│  APONI  ·  Governance Console  ·  ADAAD v9.12.0  ·  Phase 77    │
 ├──────────────────────────────────────────────────────────────────┤
 │  Evolution Loop    ● ACTIVE       Epoch 1,247                    │
 │  GovernanceGate    ● ENFORCING    23 rules / 0 bypass            │
@@ -541,14 +544,14 @@ Pending evidence rows: none
 
 | Metric | Value |
 |:---|:---|
-| **Version** | `9.11.0` — Phase 76: Seed CEL Outcome Recorder |
-| **Runtime Python** | 329+ files |
-| **Test files** | **451** · ~40,000+ lines |
+| **Version** | `9.12.0` — Phase 77: GitHub App Governance + Constitution version alignment |
+| **Source files** | **565+** |
+| **Test files** | **454** · ~40,000+ lines |
 | **Passing tests** | **4,649** |
 | **Constitutional rules** | **23** — Constitution v0.9.0 |
 | **Architectural invariants** | **8** — code-level, non-overridable |
 | **Seed invariants** | **6** — `SEED-CEL-0` through `SEED-REVIEW-0` |
-| **Development phases** | **76** complete |
+| **Development phases** | **77** complete |
 | **Evidence ledger entries** | **12,441** — SHA-256 hash-chained |
 | **Android support** | Full — Termux + Pydroid3 |
 | **Federation** | Multi-repo HMAC-gated (Phase 5) |
@@ -675,7 +678,8 @@ Phases 69–75 built a governed pathway for human-sourced ideas (seeds) to enter
 | v9.7.0 | 72 | Graduated seed tracking · promotion lifecycle ledger |
 | v9.8.0 | 73 | Human-governed seed review · `audit:write` scope · Aponi review panel |
 | v9.9.0 | 74 | Seed-to-Proposal Bridge · deterministic `cycle_id` · `SEED-PROP-0` |
-| v9.11.0 | 75 | Seed CEL injection · `resolve_step4_request()` · `SEED-CEL-AUDIT-0` |
+| v9.11.0 | 76 | Seed CEL outcome recorder · lineage closure · `SEED-OUTCOME-IDEM-0` |
+| v9.12.0 | 77 | GitHub App governance · ExternalEventBridge · Constitution version alignment |
 
 </details>
 
@@ -709,10 +713,10 @@ Built by **Dustin L. Reid**, InnovativeAI LLC — Blackwell, Oklahoma.
 
 <br/>
 
-![ledger](https://img.shields.io/badge/Evidence_Ledger-SHA--256_Hash--Chained-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-0d1117?style=flat-square&labelColor=0d1117&color=f5c842)&nbsp;![evolved](https://img.shields.io/badge/Self--Evolved-Phase_65_—_March_13_2026-0d1117?style=flat-square&labelColor=0d1117&color=ff4466)&nbsp;![invariants](https://img.shields.io/badge/8_Invariants-Code--Level-0d1117?style=flat-square&labelColor=0d1117&color=a855f7)&nbsp;![tests](https://img.shields.io/badge/4%2C649_Tests-Passing-0d1117?style=flat-square&labelColor=0d1117&color=00ff88)&nbsp;![phases](https://img.shields.io/badge/76_Phases-Complete-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![free](https://img.shields.io/badge/Apache_2.0-Free_Forever-0d1117?style=flat-square&labelColor=0d1117&color=22c55e)
+![ledger](https://img.shields.io/badge/Evidence_Ledger-SHA--256_Hash--Chained-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-0d1117?style=flat-square&labelColor=0d1117&color=f5c842)&nbsp;![evolved](https://img.shields.io/badge/Self--Evolved-Phase_65_—_March_13_2026-0d1117?style=flat-square&labelColor=0d1117&color=ff4466)&nbsp;![invariants](https://img.shields.io/badge/8_Invariants-Code--Level-0d1117?style=flat-square&labelColor=0d1117&color=a855f7)&nbsp;![tests](https://img.shields.io/badge/4%2C649_Tests-Passing-0d1117?style=flat-square&labelColor=0d1117&color=00ff88)&nbsp;![phases](https://img.shields.io/badge/77_Phases-Complete-0d1117?style=flat-square&labelColor=0d1117&color=00d4ff)&nbsp;![free](https://img.shields.io/badge/Apache_2.0-Free_Forever-0d1117?style=flat-square&labelColor=0d1117&color=22c55e)
 
 <br/>
 
-<sub><code>ADAAD v9.11.0</code> &nbsp;·&nbsp; Phase 76 &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
+<sub><code>ADAAD v9.12.0</code> &nbsp;·&nbsp; Phase 77 &nbsp;·&nbsp; Apache 2.0 &nbsp;·&nbsp; InnovativeAI LLC &nbsp;·&nbsp; Blackwell, Oklahoma &nbsp;·&nbsp; <a href="https://github.com/InnovativeAI-adaad/ADAAD">github.com/InnovativeAI-adaad/ADAAD</a></sub>
 
 </div>
