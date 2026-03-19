@@ -48,7 +48,7 @@ DEPRECATED_IMPORT_PATHS: tuple[tuple[str, str], ...] = (
 LAYER_IMPORT_BOUNDARIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     # Directory scopes MUST end with "/" so prefix checks remain segment-safe.
     # Orchestrator wiring must stay app/UI-agnostic.
-    ("adaad/orchestrator/", ("app", "ui")),
+    ("adaad/orchestrator/", ("app", "ui", "runtime.integrations", "runtime.platform")),
     # Pure execution engine must not depend on entrypoints/UI.
     ("app/mutation_executor.py", ("app.main", "ui")),
     # Runtime package root remains a stable adapter surface only.
