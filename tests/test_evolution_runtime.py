@@ -130,6 +130,37 @@ class EvolutionRuntimeComponentsTest(unittest.TestCase):
         self.assertEqual(detail["decision"], "diverge")
         self.assertLess(detail["replay_score"], 1.0)
         self.assertTrue(detail["cause_buckets"]["digest_mismatch"])
+        self.assertEqual(result["fail_closed_payload"]["reason_code"], "hash_mismatch")
+
+    def test_replay_preflight_strict_halts_on_first_divergence(self) -> None:
+        runtime = EvolutionRuntime()
+        runtime.verify_epoch = mock.Mock(
+            side_effect=[
+                {
+                    "epoch_id": "epoch-1",
+                    "expected_digest": "sha256:a",
+                    "actual_digest": "sha256:b",
+                    "passed": False,
+                    "decision": "diverge",
+                    "cause_buckets": {"digest_mismatch": True},
+                },
+                {
+                    "epoch_id": "epoch-2",
+                    "expected_digest": "sha256:c",
+                    "actual_digest": "sha256:c",
+                    "passed": True,
+                    "decision": "match",
+                    "cause_buckets": {"digest_mismatch": False},
+                },
+            ]
+        )
+        runtime.ledger.list_epoch_ids = mock.Mock(return_value=["epoch-1", "epoch-2"])
+
+        result = runtime.replay_preflight("strict")
+
+        self.assertEqual(runtime.verify_epoch.call_count, 1)
+        self.assertEqual(result["decision"], "fail_closed")
+        self.assertEqual(result["fail_closed_payload"]["reason_code"], "hash_mismatch")
 
     def test_boot_fail_closes_on_federation_split_brain(self) -> None:
         runtime = EvolutionRuntime()
