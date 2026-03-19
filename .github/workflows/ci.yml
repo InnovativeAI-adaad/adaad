@@ -207,6 +207,8 @@ jobs:
           install-deps: "true"
       - name: Validate governance policy schemas
         run: python scripts/validate_governance_schemas.py
+      - name: Validate context memory schema and references
+        run: python scripts/validate_context_memory.py
 
   docs-validation:
     runs-on: ubuntu-latest

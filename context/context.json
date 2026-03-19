@@ -1,0 +1,135 @@
+{
+  "active": {
+    "version": "v9.11.0",
+    "phase": "Phase 76 COMPLETE · v9.11.0",
+    "expected_next_pr_identifier": "PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)"
+  },
+  "module_ownership": [
+    {
+      "module_path": "runtime/",
+      "owner_doc": "docs/governance/LANE_OWNERSHIP.md",
+      "notes": "Runtime and orchestration governance lane ownership."
+    },
+    {
+      "module_path": "security/",
+      "owner_doc": "docs/governance/SECURITY_INVARIANTS_MATRIX.md",
+      "notes": "Security lane and fail-closed invariants."
+    },
+    {
+      "module_path": "app/",
+      "owner_doc": "docs/ARCHITECTURE_CONTRACT.md",
+      "notes": "Boot entrypoint and runtime boundary contract."
+    },
+    {
+      "module_path": "docs/governance/",
+      "owner_doc": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md",
+      "notes": "Canonical sequence and closure-state contract."
+    }
+  ],
+  "current_invariants": [
+    {
+      "id": "INVARIANT PHASE6-AUTH-0",
+      "statement": "authority_level immutable on amendment proposals.",
+      "source_doc": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
+    },
+    {
+      "id": "INVARIANT PHASE6-STORM-0",
+      "statement": "At most one pending amendment per node at any time.",
+      "source_doc": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
+    },
+    {
+      "id": "INVARIANT PHASE6-HUMAN-0",
+      "statement": "Human governor sign-off is non-delegatable for amendments.",
+      "source_doc": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
+    },
+    {
+      "id": "INVARIANT PHASE6-FED-0",
+      "statement": "Source-node approval never binds destination nodes.",
+      "source_doc": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
+    },
+    {
+      "id": "INVARIANT PHASE6-APK-0",
+      "statement": "Every APK must pass governance gate before signing.",
+      "source_doc": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
+    }
+  ],
+  "authoritative_docs": [
+    "docs/CONSTITUTION.md",
+    "docs/ARCHITECTURE_CONTRACT.md",
+    "docs/governance/SECURITY_INVARIANTS_MATRIX.md",
+    "docs/governance/ci-gating.md",
+    "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
+  ],
+  "critical_commands": [
+    {
+      "gate": "Tier 0 schema validation",
+      "command": "python scripts/validate_governance_schemas.py",
+      "applies_to": "All PRs"
+    },
+    {
+      "gate": "Tier 0 architecture snapshot",
+      "command": "python scripts/validate_architecture_snapshot.py",
+      "applies_to": "All PRs"
+    },
+    {
+      "gate": "Tier 0 determinism lint",
+      "command": "python tools/lint_determinism.py runtime/ security/ adaad/orchestrator/ app/main.py",
+      "applies_to": "All PRs"
+    },
+    {
+      "gate": "Tier 1 full test suite",
+      "command": "PYTHONPATH=. pytest tests/ -q",
+      "applies_to": "All PRs"
+    },
+    {
+      "gate": "Tier 1 evidence completeness",
+      "command": "python scripts/validate_release_evidence.py --require-complete",
+      "applies_to": "All PRs"
+    },
+    {
+      "gate": "Tier 2 strict replay",
+      "command": "ADAAD_ENV=dev CRYOVANT_DEV_MODE=1 ADAAD_FORCE_DETERMINISTIC_PROVIDER=1 ADAAD_DETERMINISTIC_SEED=ci-strict-replay PYTHONPATH=. python -m app.main --verify-replay --replay strict",
+      "applies_to": "Critical-tier PRs"
+    }
+  ],
+  "ci_tier_mapping": {
+    "docs": {
+      "description": "Docs-only or markdown-only scope.",
+      "required_gates": ["Tier 0", "Docs validation"]
+    },
+    "low": {
+      "description": "Tests-only or minimal non-governance maintenance scope.",
+      "required_gates": ["Tier 0", "Tier 1"]
+    },
+    "standard": {
+      "description": "Default product changes without critical governance/runtime triggers.",
+      "required_gates": ["Tier 0", "Tier 1"]
+    },
+    "critical": {
+      "description": "Governance/runtime/security or policy/replay-impact changes.",
+      "required_gates": ["Tier 0", "Tier 1", "Tier 2", "Tier 3"]
+    }
+  },
+  "integration_points": [
+    {
+      "name": "QR",
+      "paths": ["docs/assets/qr/registry.json", "scripts/generate_qr_assets.py", "scripts/validate_qr_registry.py"],
+      "source_doc": "docs/assets/qr/README.md"
+    },
+    {
+      "name": "Whale.Dic",
+      "paths": ["ui/developer/ADAADdev/whaledic.html", "ui/README.md", "docs/evidence/whaledic-integration-evidence.md"],
+      "source_doc": "ui/README.md"
+    },
+    {
+      "name": "service_worker",
+      "paths": ["docs/sw.js", "docs/install.html"],
+      "source_doc": "docs/install.html"
+    },
+    {
+      "name": "ledger",
+      "paths": ["security/ledger/journal.py", "security/ledger/lineage_v2.py", "docs/governance/ledger_event_contract.md"],
+      "source_doc": "docs/governance/ledger_event_contract.md"
+    }
+  ]
+}

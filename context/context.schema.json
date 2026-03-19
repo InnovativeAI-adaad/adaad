@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.dev/schemas/context/context.schema.json",
+  "title": "ADAAD Context Memory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "active",
+    "module_ownership",
+    "current_invariants",
+    "authoritative_docs",
+    "critical_commands",
+    "ci_tier_mapping",
+    "integration_points"
+  ],
+  "properties": {
+    "active": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "phase", "expected_next_pr_identifier"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "phase": {"type": "string", "minLength": 1},
+        "expected_next_pr_identifier": {"type": "string", "minLength": 1}
+      }
+    },
+    "module_ownership": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["module_path", "owner_doc"],
+        "properties": {
+          "module_path": {"type": "string", "minLength": 1},
+          "owner_doc": {"type": "string", "minLength": 1},
+          "notes": {"type": "string"}
+        }
+      }
+    },
+    "current_invariants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "source_doc"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "statement": {"type": "string", "minLength": 1},
+          "source_doc": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "authoritative_docs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "critical_commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate", "command"],
+        "properties": {
+          "gate": {"type": "string", "minLength": 1},
+          "command": {"type": "string", "minLength": 1},
+          "applies_to": {"type": "string"}
+        }
+      }
+    },
+    "ci_tier_mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["docs", "low", "standard", "critical"],
+      "properties": {
+        "docs": {"$ref": "#/$defs/tier"},
+        "low": {"$ref": "#/$defs/tier"},
+        "standard": {"$ref": "#/$defs/tier"},
+        "critical": {"$ref": "#/$defs/tier"}
+      }
+    },
+    "integration_points": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "paths", "source_doc"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": ["QR", "Whale.Dic", "service_worker", "ledger"]
+          },
+          "paths": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "source_doc": {"type": "string", "minLength": 1},
+          "notes": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "tier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "required_gates"],
+      "properties": {
+        "description": {"type": "string", "minLength": 1},
+        "required_gates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}
