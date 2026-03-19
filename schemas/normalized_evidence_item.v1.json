@@ -1,0 +1,26 @@
+{
+  "$id": "https://adaad.local/schemas/normalized_evidence_item.v1.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "NormalizedEvidenceItem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_id",
+    "epoch_id",
+    "canonical_digest",
+    "schema_version",
+    "deterministic_flags",
+    "payload"
+  ],
+  "properties": {
+    "source_id": {"type": "string", "minLength": 1},
+    "epoch_id": {"type": "string", "minLength": 1},
+    "canonical_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "schema_version": {"type": "string", "const": "normalized_evidence_item.v1"},
+    "deterministic_flags": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    },
+    "payload": {"type": "object"}
+  }
+}
