@@ -72,6 +72,7 @@ def _merge_keyring_payloads(base: Dict[str, Dict[str, str]], overlay: Mapping[st
                 target[field] = value.strip()
 
 
+@lru_cache(maxsize=128)
 def _key_variant_tokens(key_id: str) -> List[str]:
     normalized = key_id.strip().upper().replace("-", "_")
     compact = normalized.replace("_", "")
@@ -686,8 +687,9 @@ def verify_replay_proof_bundle(
                     }
                 )
                 continue
-            signer = _build_signer("ed25519", keyring=keyring or _load_replay_proof_keyring())
-            if key_id not in (keyring or _load_replay_proof_keyring()):
+            resolved_ed25519_keyring = keyring or _load_replay_proof_keyring()
+            signer = _build_signer("ed25519", keyring=resolved_ed25519_keyring)
+            if key_id not in resolved_ed25519_keyring:
                 validation.append({"ok": False, "key_id": key_id, "algorithm": algorithm, "error": "unknown_key_id"})
                 continue
             matches = signer.verify(key_id=key_id, signed_digest=signed_digest, signature=provided)
