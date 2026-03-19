@@ -3,3 +3,4 @@
 cryptography==44.0.3
 pytest-benchmark==5.2.3
 libcst>=1.1.0,<2.0
+qrcode==8.2
