@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0.0",
+  "profile": "pydroid3_constrained",
+  "metrics": {
+    "startup_latency_ms": {
+      "baseline": 1400.0,
+      "max": 2500.0,
+      "regression_tolerance_pct": 20.0
+    },
+    "peak_memory_mb": {
+      "baseline": 35.0,
+      "max": 60.0,
+      "regression_tolerance_pct": 25.0
+    },
+    "qr_workflow_ms": {
+      "baseline": 1.0,
+      "max": 15.0,
+      "regression_tolerance_pct": 30.0
+    },
+    "ledger_workflow_ms": {
+      "baseline": 2.0,
+      "max": 20.0,
+      "regression_tolerance_pct": 30.0
+    }
+  }
+}
