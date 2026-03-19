@@ -8,7 +8,7 @@ import re
 from typing import Any, Callable, Dict
 
 from app import APP_ROOT
-from runtime.api.runtime_services import build_replay_divergence_artifacts, dump, metrics, now_iso
+from runtime.api.runtime_services import build_replay_divergence_artifacts, build_signed_replay_manifest, dump, metrics, now_iso
 from security.ledger import journal
 
 
@@ -31,7 +31,8 @@ def write_replay_manifest(outcome: Dict[str, Any]) -> str:
     target_component = _sanitize_component(outcome.get("target"))
     timestamp_component = _sanitize_component(outcome.get("ts"))
     manifest_path = manifests_dir / f"{mode_component}__{target_component}__{timestamp_component}.json"
-    manifest_path.write_text(json.dumps(outcome, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    signed = build_signed_replay_manifest(outcome)
+    manifest_path.write_text(json.dumps(signed, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return str(manifest_path)
 
 
@@ -61,6 +62,8 @@ def execute_replay_preflight(
         "target": preflight.get("verify_target"),
         "divergence": has_divergence,
         "results": preflight.get("results", []),
+        "divergence_details": preflight.get("divergence_details", []),
+        "diagnostics": preflight.get("fail_closed_payload", {}),
         "replay_score": replay_score,
         "ts": now_iso(),
     }
@@ -102,7 +105,13 @@ def execute_replay_preflight(
                 level="WARN",
             )
     if has_divergence and mode.fail_closed:
-        orchestrator._fail("replay_divergence", payload={"artifacts": outcome.get("divergence_artifacts") or {}})
+        orchestrator._fail(
+            "replay_divergence",
+            payload={
+                "artifacts": outcome.get("divergence_artifacts") or {},
+                "decision_payload": preflight.get("fail_closed_payload", {}),
+            },
+        )
     orchestrator._v("Replay Summary:")
     orchestrator._v(f"  Mode: {mode.value}")
     orchestrator._v(f"  Target: {preflight.get('verify_target')}")

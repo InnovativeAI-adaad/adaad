@@ -32,6 +32,7 @@ from runtime.evolution import EvolutionRuntime
 from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, CheckpointVerifier
 from runtime.evolution.lineage_v2 import LineageIntegrityError
 from runtime.evolution.replay_attestation import ReplayProofBuilder
+from runtime.evolution.replay_divergence import build_signed_replay_manifest
 from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
 from runtime.evolution.replay_service import ReplayVerificationService
@@ -147,6 +148,8 @@ __all__ = [
     "StorageManager",
     "TierManager",
     "WarmPool",
+    "build_signed_replay_manifest",
+    "build_replay_divergence_artifacts",
     "create_mcp_app",
     "default_provider",
     "determine_tier",

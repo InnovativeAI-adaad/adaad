@@ -69,4 +69,5 @@ def test_write_replay_manifest_creates_expected_file(tmp_path: Path) -> None:
     assert payload["target"] == "epoch:2026-02-13T10:00:00Z"
     assert payload["decision"] == "match"
     assert payload["ok"] is True
-
+    assert payload["manifest_digest"].startswith("sha256:")
+    assert payload["signature"]["signed_digest"] == payload["manifest_digest"]

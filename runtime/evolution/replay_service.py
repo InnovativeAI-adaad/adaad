@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from runtime.api.orchestration import StatusEnvelope
+from runtime.evolution.replay_divergence import build_signed_replay_manifest
 from runtime.timeutils import now_iso
 from security.ledger import journal
 
@@ -34,6 +35,8 @@ class ReplayVerificationService:
             "target": preflight.get("verify_target"),
             "divergence": has_divergence,
             "results": preflight.get("results", []),
+            "divergence_details": preflight.get("divergence_details", []),
+            "diagnostics": preflight.get("fail_closed_payload", {}),
             "replay_score": replay_score,
             "ts": now_iso(),
         }
@@ -63,5 +66,6 @@ class ReplayVerificationService:
         target_component = _sanitize_component(outcome.get("target"))
         timestamp_component = _sanitize_component(outcome.get("ts"))
         manifest_path = self.manifests_dir / f"{mode_component}__{target_component}__{timestamp_component}.json"
-        manifest_path.write_text(json.dumps(outcome, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        signed = build_signed_replay_manifest(outcome)
+        manifest_path.write_text(json.dumps(signed, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return manifest_path
