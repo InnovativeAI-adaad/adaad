@@ -37,16 +37,18 @@ def test_last_hash_uses_cache_after_verification(tmp_path: pytest.TempPathFactor
     assert second_tail == first_tail
 
 
-def test_append_invalidates_tail_hash_cache(tmp_path: pytest.TempPathFactory) -> None:
+def test_append_advances_tail_hash_cache(tmp_path: pytest.TempPathFactory) -> None:
+    """After append, _verified_tail_hash advances to the new entry hash (warm-cache O(n) contract)."""
     ledger = LineageLedgerV2(tmp_path / "lineage.jsonl")
     _append_events(ledger, 3)
 
     _ = ledger._last_hash()
     assert ledger.get_verified_tail_hash() is not None
 
-    ledger.append_event("MutationBundleEvent", {"epoch_id": "epoch-1", "bundle_id": "bundle-3", "impact": 0.2})
+    entry = ledger.append_event("MutationBundleEvent", {"epoch_id": "epoch-1", "bundle_id": "bundle-3", "impact": 0.2})
 
-    assert ledger.get_verified_tail_hash() is None
+    # Warm-cache: tail hash must be advanced to the new entry, not nullified.
+    assert ledger.get_verified_tail_hash() == entry["hash"]
 
 
 def test_verify_integrity_detects_hash_tampering(tmp_path: pytest.TempPathFactory) -> None:

@@ -520,7 +520,7 @@ def test_ed25519_sign_verify_happy_path() -> None:
         keyring={
             "key": {
                 "private_key": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
-                "public_key": "VCpo0nP2e+8j0f55X08AS6slquAElv5mkI4kmQDAfPo=",
+                "public_key": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=",
             }
         }
     )

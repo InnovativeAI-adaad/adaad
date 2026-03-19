@@ -96,6 +96,11 @@ from ui.aponi_dashboard import AponiDashboard
 
 ORCHESTRATOR_LOGGER = "adaad.orchestrator"
 
+# Underscore-prefixed aliases for test-import compatibility
+_apply_governance_ci_mode_defaults = apply_governance_ci_mode_defaults
+_governance_ci_mode_enabled = governance_ci_mode_enabled
+_read_adaad_version = read_adaad_version
+
 
 def _get_orchestrator_logger() -> logging.Logger:
     logger = logging.getLogger(ORCHESTRATOR_LOGGER)
