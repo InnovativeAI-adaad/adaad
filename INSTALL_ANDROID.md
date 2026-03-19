@@ -1,5 +1,5 @@
 # Installing ADAAD on Android
-**InnovativeAI LLC · v7.0.0 · Free · No Play Store required**
+**InnovativeAI LLC · Version synced from `VERSION` during docs publish · Free · No Play Store required**
 
 > **Minimum:** Android 8.0 (API 26) · ~50 MB storage · Internet for workspace sync
 
@@ -186,7 +186,7 @@ To persist the key across sessions, add the `export` line to `~/.bashrc`.
 | *PWA "Add to Home screen" not shown* | Must use Chrome (not Firefox or Samsung Browser) — visit the page, wait 30s |
 | *`pip install adaad` fails on Android* | Android Python is typically 3.10; package requires ≥ 3.11 — use `git clone https://github.com/InnovativeAI-adaad/ADAAD.git` instead |
 | *`metadata-generation-failed` in Termux* | Run `pkg install libsodium python-cryptography -y` then `python3 onboard.py` |
-| *`on_event` deprecation warning* | Fixed in v7.0.0+ — update via `git pull` |
+| *`on_event` deprecation warning* | FastAPI lifespan APIs are now the canonical startup/shutdown path; update to the latest main branch and restart the server process |
 | *Server exits immediately in Termux* | Ensure `ui/aponi` exists; run `python3 server.py` from the ADAAD directory |
 
 File a bug: `https://github.com/InnovativeAI-adaad/ADAAD/issues` — label: `android`

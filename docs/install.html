@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00d4ff"/>
   <meta name="description" content="Install ADAAD — Constitutional Governance on Android. Free. No Play Store required."/>
   <title>Install ADAAD on Android</title>
-  <link rel="manifest" href="/ADAAD/manifest.json"/>
+  <link rel="manifest" href="./manifest.json"/>
   <style>
     :root {
       --bg:       #060d14;
@@ -226,7 +226,7 @@
 <header>
   <h1>ADAAD</h1>
   <p>Autonomous Development &amp; Adaptation Architecture</p>
-  <span class="version-pill">v3.1.0-dev · Community · Free</span>
+  <span class="version-pill">Version synced from /VERSION at docs publish · Community · Free</span>
 </header>
 
 <main>
@@ -423,7 +423,7 @@
 
   // ── PWA install prompt ────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/ADAAD/sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 </script>
 </body>

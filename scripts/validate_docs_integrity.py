@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MD_LINK_PATTERN = re.compile(r"(!?)\[([^\]]*)\]\(([^)]+)\)")
 HTML_IMG_PATTERN = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
 ATTR_PATTERN = re.compile(r'([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(["\'])(.*?)\2')
+SVG_IMAGE_TAG_PATTERN = re.compile(r"<image\b[^>]*>", re.IGNORECASE)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -175,6 +176,40 @@ def _scan_markdown_file(markdown_file: Path, enforce_image_weight_markers: bool 
     return findings
 
 
+def _scan_svg_asset_file(svg_file: Path) -> list[dict[str, object]]:
+    findings: list[dict[str, object]] = []
+    text = svg_file.read_text(encoding="utf-8")
+    relative_file = str(svg_file.relative_to(ROOT))
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for tag_match in SVG_IMAGE_TAG_PATTERN.finditer(line):
+            attrs = _parse_html_attributes(tag_match.group(0))
+            href = _normalize_destination(attrs.get("href", ""))
+            if not href or not _is_local_target(href):
+                continue
+
+            if href.startswith("docs/assets/"):
+                findings.append(
+                    {
+                        "kind": "bad_svg_intra_asset_href_path",
+                        "file": relative_file,
+                        "line": line_number,
+                        "target": href,
+                    }
+                )
+
+            target_path = _resolve_target(svg_file, href)
+            if not target_path.exists():
+                findings.append(
+                    {
+                        "kind": "missing_local_target",
+                        "file": relative_file,
+                        "line": line_number,
+                        "target": href,
+                    }
+                )
+    return findings
+
+
 def _resolve_markdown_targets(roots: list[str] | None) -> list[Path]:
     if roots is None:
         return sorted(ROOT.rglob("*.md"))
@@ -205,6 +240,10 @@ def _collect_findings(
     for markdown_file in _resolve_markdown_targets(roots):
         scoped_marker_check = enforce_image_weight_markers and markdown_file in image_weight_scope_files
         findings.extend(_scan_markdown_file(markdown_file, enforce_image_weight_markers=scoped_marker_check))
+
+    for svg_file in sorted((ROOT / "docs/assets").rglob("*.svg")):
+        findings.extend(_scan_svg_asset_file(svg_file))
+
     return sorted(findings, key=lambda item: (str(item["file"]), int(item["line"]), str(item["kind"]), str(item["target"])))
 
 

@@ -1,0 +1,24 @@
+{
+  "name": "ADAAD Install Hub",
+  "short_name": "ADAAD",
+  "description": "Install ADAAD on Android with deterministic governance artifacts.",
+  "start_url": "/ADAAD/install.html",
+  "scope": "/ADAAD/",
+  "display": "standalone",
+  "background_color": "#060d14",
+  "theme_color": "#00d4ff",
+  "icons": [
+    {
+      "src": "/ADAAD/assets/adaad-hero.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/ADAAD/assets/adaad-banner.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
