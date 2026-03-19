@@ -12,25 +12,44 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def test_scan_install_page_assets_accepts_present_manifest_and_worker(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    _write(tmp_path / "docs/install.html", '<link rel="manifest" href="./manifest.json"/>\n<script>navigator.serviceWorker.register("./sw.js");</script>\n<img src="/ADAAD/assets/qr/pwa.svg">\n')
-    _write(tmp_path / "docs/manifest.json", "{}")
-    _write(tmp_path / "docs/sw.js", "self.addEventListener('fetch', () => {});")
-    _write(tmp_path / "docs/assets/qr/pwa.svg", "<svg/>")
+def test_scan_svg_asset_file_accepts_relative_href(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    svg_file = tmp_path / "docs/assets/platforms.svg"
+    _write(svg_file, '<svg><image href="qr/fdroid.svg"/></svg>\n')
+    _write(tmp_path / "docs/assets/qr/fdroid.svg", "<svg/>\n")
 
     monkeypatch.setattr(validator, "ROOT", tmp_path)
 
-    assert validator._scan_install_page_assets() == []
+    findings = validator._scan_svg_asset_file(svg_file)
+
+    assert findings == []
 
 
-def test_scan_install_page_assets_fails_closed_for_missing_assets(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    _write(tmp_path / "docs/install.html", '<link rel="manifest" href="./manifest.json"/>\n<script>navigator.serviceWorker.register("./sw.js");</script>\n<img src="/ADAAD/assets/qr/missing.svg">\n')
+def test_scan_svg_asset_file_flags_bad_docs_assets_prefixed_href(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    svg_file = tmp_path / "docs/assets/platforms.svg"
+    _write(svg_file, '<svg><image href="docs/assets/qr/fdroid.svg"/></svg>\n')
+    _write(tmp_path / "docs/assets/qr/fdroid.svg", "<svg/>\n")
 
     monkeypatch.setattr(validator, "ROOT", tmp_path)
 
-    findings = validator._scan_install_page_assets()
-    missing_targets = {entry["target"] for entry in findings if entry["kind"] == "missing_install_static_asset"}
+    findings = validator._scan_svg_asset_file(svg_file)
 
-    assert "./manifest.json" in missing_targets
-    assert "./sw.js" in missing_targets
-    assert "/ADAAD/assets/qr/missing.svg" in missing_targets
+    kinds = {finding["kind"] for finding in findings}
+    assert "bad_svg_intra_asset_href_path" in kinds
+    assert "missing_local_target" in kinds
+    assert all(finding["target"] == "docs/assets/qr/fdroid.svg" for finding in findings)
+
+
+def test_collect_findings_detects_bad_svg_asset_path_contract(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _write(tmp_path / "README.md", "![banner](docs/assets/platforms.svg)\n")
+    _write(tmp_path / "docs/assets/platforms.svg", '<svg><image href="docs/assets/qr/fdroid.svg"/></svg>\n')
+    _write(tmp_path / "docs/assets/qr/fdroid.svg", "<svg/>\n")
+
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+
+    findings = validator._collect_findings(roots=["README.md"])
+
+    assert any(
+        finding["kind"] == "bad_svg_intra_asset_href_path"
+        and finding["file"] == "docs/assets/platforms.svg"
+        for finding in findings
+    )
