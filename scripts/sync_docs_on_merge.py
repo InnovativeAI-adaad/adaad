@@ -584,10 +584,15 @@ def main(argv: list[str] | None = None) -> int:
 
     _emit("sync_complete", {
         "version": version,
+        # Contract invariant: always emit integer files_changed for CI parsers.
         "files_changed": files_changed,
         "total_replacements": len(all_changes),
         "dry_run": args.dry_run,
     })
+
+    # Secondary dry-run summary event for lightweight stdout parsers.
+    if args.dry_run:
+        _emit("dry_run_summary", {"files_would_change": files_changed})
 
     if args.format == "text" and all_changes:
         print("\nSummary:")

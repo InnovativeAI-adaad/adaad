@@ -30,6 +30,9 @@ jobs:
               docsValidation: [
                 'CI / docs-validation',
               ],
+              docSyncPreview: [
+                'Doc Sync Preview (PR Gate) / doc-sync-preview',
+              ],
               codeql: [
                 'CodeQL / Analyze (python)',
               ],
@@ -66,6 +69,14 @@ jobs:
             if (!hasDocsValidation) {
               core.setFailed(
                 `required_status_checks must include one of: ${REQUIRED_CONTEXTS.docsValidation.join(', ')}`
+              );
+              return;
+            }
+
+            const hasDocSyncPreview = hasAnyRequiredContext(REQUIRED_CONTEXTS.docSyncPreview);
+            if (!hasDocSyncPreview) {
+              core.setFailed(
+                `required_status_checks must include one of: ${REQUIRED_CONTEXTS.docSyncPreview.join(', ')}`
               );
               return;
             }

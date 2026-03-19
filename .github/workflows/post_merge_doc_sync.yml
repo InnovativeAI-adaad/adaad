@@ -1,5 +1,10 @@
 name: Post-Merge Doc Sync
 
+# QA-1: This workflow remains the post-merge safety net only.
+# Pre-merge drift blocking is enforced by .github/workflows/doc_sync_preview.yml.
+# Residual drift can still reach main through admin bypasses or manual runs;
+# this job exists to correct those edge cases deterministically.
+
 # ── Trigger ──────────────────────────────────────────────────────────────────
 # Fires on every push to main EXCEPT commits made by this workflow itself
 # (identified by the committer e-mail used below).  The `if` guard on the

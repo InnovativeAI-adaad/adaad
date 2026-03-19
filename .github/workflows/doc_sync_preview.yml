@@ -1,0 +1,155 @@
+# SPDX-License-Identifier: Apache-2.0
+# ─────────────────────────────────────────────────────────────────────────────
+# doc_sync_preview.yml — PR-time documentation drift gate
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Doc Sync Preview (PR Gate)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'VERSION'
+      - 'CHANGELOG.md'
+      - 'ROADMAP.md'
+      - 'README.md'
+      - 'QUICKSTART.md'
+      - 'docs/**'
+      - 'governance/**'
+      - 'scripts/sync_docs_on_merge.py'
+      - 'scripts/validate_readme_alignment.py'
+
+concurrency:
+  group: doc-sync-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  doc-sync-preview:
+    name: doc-sync-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install dependencies (if present)
+        run: |
+          python -m pip install --upgrade pip --quiet
+          if [ -f requirements.dev.txt ]; then
+            pip install -r requirements.dev.txt --quiet
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt --quiet
+          fi
+
+      - name: Gate — validate VERSION file
+        id: version_gate
+        run: |
+          set -euo pipefail
+          VERSION=$(cat VERSION)
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "SYNC_ERROR_BAD_VERSION: VERSION contains '${VERSION}'" >&2
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "VERSION gate PASSED: ${VERSION}"
+
+      - name: Gate — CHANGELOG entry must exist for current version
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version_gate.outputs.version }}"
+          if ! grep -q "## \[${VERSION}\]" CHANGELOG.md; then
+            echo "SYNC_ERROR_MISSING_CHANGELOG: no entry for [${VERSION}]" >&2
+            exit 1
+          fi
+          echo "CHANGELOG gate PASSED"
+
+      - name: Dry-run doc sync
+        id: dryrun
+        run: |
+          set -euo pipefail
+          python scripts/sync_docs_on_merge.py --dry-run --format json | tee /tmp/doc_sync_preview.json
+          FILES_CHANGED=$(python3 - <<'PY'
+          import json
+
+          files_changed = 0
+          with open("/tmp/doc_sync_preview.json", encoding="utf-8") as handle:
+              for line in handle:
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      payload = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  if payload.get("event") == "sync_complete":
+                      files_changed = int(payload.get("files_changed", 0))
+                      break
+          print(files_changed)
+          PY
+          )
+          echo "files_changed=${FILES_CHANGED}" >> "$GITHUB_OUTPUT"
+          echo "files_changed=${FILES_CHANGED}"
+
+      - name: Upload dry-run artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-sync-preview-${{ github.event.pull_request.number }}-${{ github.run_id }}
+          path: /tmp/doc_sync_preview.json
+          retention-days: 14
+
+      - name: Write job summary
+        if: always()
+        env:
+          VERSION: ${{ steps.version_gate.outputs.version }}
+          FILES_CHANGED: ${{ steps.dryrun.outputs.files_changed }}
+        run: |
+          {
+            echo "## Doc Sync Preview (PR Gate)"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| PR | #${{ github.event.pull_request.number }} |"
+            echo "| Version | \`${VERSION}\` |"
+            echo "| HEAD SHA | \`${{ github.event.pull_request.head.sha }}\` |"
+            echo "| files_changed | \`${FILES_CHANGED}\` |"
+            echo ""
+            if [ "${FILES_CHANGED}" != "0" ]; then
+              echo "### ❌ Documentation drift detected — remediation required"
+              echo ""
+              echo "Run these commands locally, then commit and push:"
+              echo ""
+              echo '```bash'
+              echo "git pull origin main --rebase"
+              echo "python scripts/sync_docs_on_merge.py --format json"
+              echo "git add -A"
+              echo "git commit -m \"docs(sync): pre-merge alignment for v${VERSION} [doc-sync]\""
+              echo "git push"
+              echo '```'
+              echo ""
+              echo "### Planned changes (dry-run output)"
+              echo '```json'
+              cat /tmp/doc_sync_preview.json 2>/dev/null || echo "(no output captured)"
+              echo '```'
+            else
+              echo "### ✅ No documentation drift detected"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce drift gate
+        if: steps.dryrun.outputs.files_changed != '0'
+        run: |
+          echo "::error title=Documentation drift detected::sync_docs_on_merge.py dry-run reports files_changed=${{ steps.dryrun.outputs.files_changed }}. Run the remediation commands in the job summary."
+          exit 1

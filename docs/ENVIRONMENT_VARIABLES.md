@@ -1,5 +1,15 @@
 # ADAAD Environment Variable Reference
 
+<!--
+QA-1 annotation (DOC-DRIFT-01):
+This file is validated by scripts/validate_readme_alignment.py and remains
+intentionally outside sync_docs_on_merge.py PROTECTED_PATHS so inventory
+generation can update it in later automation phases.
+
+Compatibility note: ADAAD_AMENDMENT_TRIGGER_INTERVAL is legacy naming.
+Use ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL for new code paths.
+-->
+
 This page catalogs `ADAAD_*` environment variables currently read by executable ADAAD code (`*.py`) and operational shell wrappers (`*.sh`) in this repository.
 
 > Compatibility note: older historical docs may reference `ADAAD_AMENDMENT_TRIGGER_INTERVAL`; use `ADAAD_ROADMAP_AMENDMENT_TRIGGER_INTERVAL` for all current configuration and automation.
