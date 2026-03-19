@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -29,14 +29,14 @@ class GovernanceMetricAlertThresholds:
 
 
 def _utc_now_iso() -> str:
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def _parse_iso_utc(raw: str) -> datetime:
     normalized = raw.strip()
     if normalized.endswith("Z"):
         normalized = normalized[:-1] + "+00:00"
-    return datetime.fromisoformat(normalized).astimezone(UTC)
+    return datetime.fromisoformat(normalized).astimezone(timezone.utc)
 
 
 def _serialize_json(obj: dict[str, Any]) -> str:
@@ -239,7 +239,7 @@ class GovernanceMetricsReport:
         return round(sum(lags) / len(lags), 3)
 
     def weekly_summary(self, *, end_at: datetime | None = None, lookback_days: int = 7) -> dict[str, Any]:
-        report_end = end_at or datetime.now(UTC)
+        report_end = end_at or datetime.now(timezone.utc)
         window = self._windowed(report_end, lookback_days)
         gate_events = [event for event in window if event["event_type"] == "gate_outcome"]
         blocked_events = [event for event in window if event["event_type"] == "blocked_emission"]
@@ -267,7 +267,7 @@ class GovernanceMetricsReport:
         lookback_days: int = 7,
     ) -> list[str]:
         threshold = thresholds or GovernanceMetricAlertThresholds()
-        report_end = end_at or datetime.now(UTC)
+        report_end = end_at or datetime.now(timezone.utc)
         current = self.weekly_summary(end_at=report_end, lookback_days=lookback_days)
         previous = self.weekly_summary(end_at=report_end - timedelta(days=lookback_days), lookback_days=lookback_days)
 

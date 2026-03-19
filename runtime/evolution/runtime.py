@@ -386,14 +386,20 @@ class EvolutionRuntime:
             decision = "fail_closed"
         else:
             decision = "continue"
+        divergence_class = str((divergence_details[0] if divergence_details else {}).get("divergence_class") or "none")
+        halt_reason = (
+            "federation_drift_detected"
+            if federation_drift_detected and replay_mode.fail_closed
+            else ("replay_divergence" if has_divergence and replay_mode.fail_closed else None)
+        )
         return {
             "mode": replay_mode.value,
             "verify_target": verify_target,
-            "has_divergence": invariant_checks["has_divergence"],
-            "federation_drift_detected": invariant_checks["federation_drift_detected"],
-            "decision": invariant_checks["decision"],
+            "has_divergence": has_divergence,
+            "federation_drift_detected": federation_drift_detected,
+            "decision": decision,
             "halt_reason": halt_reason,
-            "divergence_class": invariant_checks["divergence_class"],
+            "divergence_class": divergence_class,
             "results": results,
             "divergence_details": divergence_details,
             "fail_closed_payload": fail_closed_payload,

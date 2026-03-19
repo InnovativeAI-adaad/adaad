@@ -223,21 +223,42 @@ class Ed25519ReplayProofSigner(ReplayProofSigner):
 
     def verify(self, *, key_id: str, signed_digest: str, signature: str) -> bool:
         key_payload = self.keyring.get(key_id) or {}
-        verify_key_b64 = key_payload.get("public_key")
-        if not verify_key_b64:
-            return False
         if not isinstance(signature, str) or not signature.startswith("ed25519:"):
             return False
         if not _has_pynacl():
             return False
+        verify_key_b64 = key_payload.get("public_key")
+        if not verify_key_b64:
+            private_key_seed_b64 = key_payload.get("private_key")
+            if not private_key_seed_b64:
+                return False
+            try:
+                SigningKey = _load_ed25519_signing_key()
+                derived_verify_key = SigningKey(base64.b64decode(private_key_seed_b64)).verify_key
+                verify_key_b64 = base64.b64encode(bytes(derived_verify_key)).decode("ascii")
+            except Exception:
+                return False
         try:
             VerifyKey = _load_ed25519_verify_key()
-            verify_key = VerifyKey(base64.b64decode(verify_key_b64))
             decoded_signature = base64.b64decode(signature.split(":", 1)[1])
-            verify_key.verify(signed_digest.encode("utf-8"), decoded_signature)
+            verify_key_candidates = [verify_key_b64]
+            private_key_seed_b64 = key_payload.get("private_key")
+            if private_key_seed_b64:
+                SigningKey = _load_ed25519_signing_key()
+                derived_verify_key = SigningKey(base64.b64decode(private_key_seed_b64)).verify_key
+                derived_verify_key_b64 = base64.b64encode(bytes(derived_verify_key)).decode("ascii")
+                if derived_verify_key_b64 not in verify_key_candidates:
+                    verify_key_candidates.append(derived_verify_key_b64)
+            for candidate in verify_key_candidates:
+                verify_key = VerifyKey(base64.b64decode(candidate))
+                try:
+                    verify_key.verify(signed_digest.encode("utf-8"), decoded_signature)
+                    return True
+                except Exception:
+                    continue
         except Exception:
             return False
-        return True
+        return False
 
 
 def sign_replay_payload_digest(*, algorithm: str, key_id: str, signed_digest: str, keyring: Mapping[str, Any] | None = None) -> str:

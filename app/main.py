@@ -360,7 +360,7 @@ class Orchestrator:
             self,
             dump_func,
             verify_only=verify_only,
-            replay_env_flags=_replay_env_flags,
+            replay_env_flags=replay_env_flags,
         )
 
     def verify_replay_only(self) -> None:
@@ -866,6 +866,21 @@ def run_replay_preflight(
 def run_mutation_cycle(orchestrator: "Orchestrator") -> None:
     """Module-level delegation target for Orchestrator._run_mutation_cycle."""
     orchestrator._run_mutation_cycle_impl()
+
+
+def _read_adaad_version() -> str:
+    """Backward-compatible shim for tests and callers expecting legacy helper names."""
+    return read_adaad_version(APP_ROOT.parent)
+
+
+def _governance_ci_mode_enabled() -> bool:
+    """Backward-compatible shim for tests and callers expecting legacy helper names."""
+    return governance_ci_mode_enabled()
+
+
+def _apply_governance_ci_mode_defaults() -> None:
+    """Backward-compatible shim for tests and callers expecting legacy helper names."""
+    apply_governance_ci_mode_defaults()
 
 
 def main() -> None:
