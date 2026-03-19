@@ -1,0 +1,30 @@
+name: Mobile Performance Benchmarks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  mobile-perf-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Run constrained mobile profile benchmark
+        run: >-
+          python scripts/bench_mobile_profile.py
+          --budgets config/mobile_perf_budgets.json
+          --output-json artifacts/mobile_perf/mobile_benchmark.json
+          --output-md artifacts/mobile_perf/mobile_benchmark_summary.md
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-perf-benchmark-${{ github.run_id }}
+          path: |
+            artifacts/mobile_perf/mobile_benchmark.json
+            artifacts/mobile_perf/mobile_benchmark_summary.md
+          if-no-files-found: error
