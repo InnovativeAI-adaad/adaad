@@ -83,10 +83,10 @@ from runtime.api.runtime_services import (
     register,
     register_capability,
     score_mutation_enhanced,
+    validate_agent_contract_preflight,
 )
 from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
-from runtime.preflight import validate_agent_contract_preflight
 from security import cryovant
 from security.whaledic_secrets import enforce_whaledic_secret_policy
 from security.ledger import journal

@@ -238,6 +238,8 @@ def list_capabilities() -> List[Dict[str, Any]]:
 
 import dataclasses as _dc
 import hashlib as _hashlib
+import os as _os
+import time as _time
 
 
 @_dc.dataclass
@@ -253,7 +255,7 @@ class CapabilityChange:
     new_version: str
     epoch_evidence_hash: str
     proposal_hash: str
-    timestamp: float = _dc.field(default_factory=lambda: __import__("time").time())
+    timestamp: float = _dc.field(default_factory=_time.time)
 
     def __post_init__(self) -> None:
         if not self.node_id:
@@ -282,7 +284,7 @@ class CapabilityChange:
 
 # Module-level capability change ledger path (overridable via env var)
 _CAP_CHANGE_LEDGER_PATH = Path(
-    __import__("os").getenv("ADAAD_CAP_CHANGE_LEDGER", "data/capability_changes.jsonl")
+    _os.getenv("ADAAD_CAP_CHANGE_LEDGER", "data/capability_changes.jsonl")
 )
 
 

@@ -32,6 +32,7 @@ from runtime.evolution import EvolutionRuntime
 from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, CheckpointVerifier
 from runtime.evolution.lineage_v2 import LineageIntegrityError
 from runtime.evolution.replay_attestation import ReplayProofBuilder
+from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
 from runtime.evolution.replay_service import ReplayVerificationService
 from runtime.fitness_v2 import score_mutation_enhanced
@@ -47,7 +48,7 @@ from runtime.founders_law import (
 )
 from runtime.governance.foundation import default_provider
 from runtime.governance.decision_pipeline import evaluate_mutation_decision as evaluate_mutation
-from runtime.preflight import validate_constitution_version_config
+from runtime.preflight import validate_agent_contract_preflight, validate_constitution_version_config
 from runtime.manifest.generator import generate_tool_manifest
 from runtime.mcp.server import create_app as create_mcp_app
 from runtime.platform.android_monitor import AndroidMonitor

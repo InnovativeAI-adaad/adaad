@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.11.0 — Phase 76 complete · Phase 77 plan authored · awaiting HUMAN-0 ratification",
+  "active_phase": "v9.11.0 \u2014 Phase 76 complete \u00b7 Phase 77 plan authored \u00b7 awaiting HUMAN-0 ratification",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 75 — Seed Proposal CEL Injection",
+  "last_completed_phase": "Phase 75 \u2014 Seed Proposal CEL Injection",
   "last_completed_pr": "feature/phase-75-seed-proposal-cel-injection",
   "last_gate_results": {
     "tier_0": "pass",
@@ -13,13 +13,13 @@
   },
   "last_invocation": "2026-03-15",
   "last_sync_sha": "899617a",
-  "next_pr": "PR-77-01 (Phase 77 Track A — Governance Infrastructure Sprint — pending Dustin ratification)",
+  "next_pr": "PR-77-01 (Phase 77 Track A \u2014 Governance Infrastructure Sprint \u2014 pending Dustin ratification)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
       "title": "LLM failover strategy undocumented",
       "severity": "P2",
-      "source": "Deep Dive §4.7",
+      "source": "Deep Dive \u00a74.7",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -29,7 +29,7 @@
       "id": "FINDING-66-002",
       "title": "WeightAdaptor telemetry record not published (prediction_accuracy progression)",
       "severity": "P1",
-      "source": "Deep Dive §4.4",
+      "source": "Deep Dive \u00a74.4",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -37,9 +37,9 @@
     },
     {
       "id": "FINDING-66-003",
-      "title": "Patent filing: constitutional mutation governance method — pre-v1.1-GA deadline",
+      "title": "Patent filing: constitutional mutation governance method \u2014 pre-v1.1-GA deadline",
       "severity": "P1",
-      "source": "Deep Dive §2.2.3",
+      "source": "Deep Dive \u00a72.2.3",
       "status": "open",
       "phase_target": "66"
     },
@@ -47,7 +47,7 @@
       "id": "FINDING-66-004",
       "title": "Governance Key Ceremony (PR-01): 2-of-3 Ed25519 threshold not yet executed",
       "severity": "P2",
-      "source": "Deep Dive §VI Medium Term",
+      "source": "Deep Dive \u00a7VI Medium Term",
       "status": "runbook_delivered",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -58,11 +58,51 @@
       "id": "FINDING-66-005",
       "title": "LineageLedgerV2 O(n) fix (C-04/PR-PERF-01): streaming verification + _verified_tail_hash",
       "severity": "P1",
-      "source": "Deep Dive §3.5 / §VI Medium Term",
+      "source": "Deep Dive \u00a73.5 / \u00a7VI Medium Term",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
       "resolved_date": "2026-03-14"
+    },
+    {
+      "id": "FINDING-77-001",
+      "title": "Ed25519 replay attestation sign/verify invariant failures in runtime.evolution.replay_attestation",
+      "severity": "P0",
+      "source": "Live Audit 2026-03-19",
+      "status": "resolved",
+      "phase_target": "77",
+      "resolved_phase": "77",
+      "resolved_date": "2026-03-19"
+    },
+    {
+      "id": "FINDING-77-002",
+      "title": "LineageLedgerV2 tail-hash cache invalidation regression on append",
+      "severity": "P0",
+      "source": "Live Audit 2026-03-19",
+      "status": "resolved",
+      "phase_target": "77",
+      "resolved_phase": "77",
+      "resolved_date": "2026-03-19"
+    },
+    {
+      "id": "FINDING-77-003",
+      "title": "Forbidden dynamic execution (__import__) in runtime/capability_graph.py",
+      "severity": "P0",
+      "source": "Live Audit 2026-03-19",
+      "status": "resolved",
+      "phase_target": "77",
+      "resolved_phase": "77",
+      "resolved_date": "2026-03-19"
+    },
+    {
+      "id": "FINDING-77-004",
+      "title": "App-layer import boundary violations bypassing runtime.api facade",
+      "severity": "P0",
+      "source": "Live Audit 2026-03-19",
+      "status": "resolved",
+      "phase_target": "77",
+      "resolved_phase": "77",
+      "resolved_date": "2026-03-19"
     }
   ],
   "pending_evidence_rows": [],
@@ -264,7 +304,7 @@
     "phase75-inject-endpoint",
     "v9.10.0-released"
   ],
-  "current_version": "9.10.0",
+  "current_version": "9.12.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",

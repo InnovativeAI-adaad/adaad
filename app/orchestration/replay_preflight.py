@@ -8,8 +8,7 @@ import re
 from typing import Any, Callable, Dict
 
 from app import APP_ROOT
-from runtime.api.runtime_services import dump, metrics, now_iso
-from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
+from runtime.api.runtime_services import build_replay_divergence_artifacts, dump, metrics, now_iso
 from security.ledger import journal
 
 

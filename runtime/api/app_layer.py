@@ -7,8 +7,9 @@ from runtime.capability_graph import get_capabilities, register_capability
 from runtime.evolution.entropy_discipline import EntropyBudget, derive_seed, deterministic_context, deterministic_token, deterministic_token_with_budget
 from runtime.evolution.fitness import FitnessEvaluator
 from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_pr_lifecycle_event
+from runtime.governance.external_event_bridge import record as record_external_governance_event
 from runtime.governance.branch_manager import BranchManager
-from runtime.governance.foundation import RuntimeDeterminismProvider, SeededDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
+from runtime.governance.foundation import RuntimeDeterminismProvider, SeededDeterminismProvider, SystemDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
 from runtime.governance.gate_certifier import GateCertifier
 from runtime.governance.gate import DeterministicAxisEvaluator, GovernanceGate
 from runtime.director import GovernanceDeniedError, RuntimeDirector
@@ -35,6 +36,7 @@ __all__ = [
     "ROOT_DIR",
     "RuntimeDeterminismProvider",
     "SeededDeterminismProvider",
+    "SystemDeterminismProvider",
     "default_provider",
     "deterministic_context",
     "deterministic_token",
@@ -50,6 +52,7 @@ __all__ = [
     "now_iso",
     "push_to_dashboard",
     "rank_mutation_candidates",
+    "record_external_governance_event",
     "register_capability",
     "require_replay_safe_provider",
     "safe_get",
