@@ -14,6 +14,7 @@ from runtime.evolution.metrics_schema import EvolutionMetricsEmitter
 from runtime.evolution.replay import ReplayEngine
 from runtime.evolution.replay_divergence import classify_replay_divergence
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
+from runtime.evolution.replay_state_machine import ReplayStateMachine
 from runtime.evolution.replay_verifier import ReplayVerifier
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.checkpoint_verifier import verify_checkpoint_chain, verify_epoch_checkpoint_continuity
@@ -349,7 +350,10 @@ class EvolutionRuntime:
                 "mode": replay_mode.value,
                 "verify_target": "none",
                 "has_divergence": False,
+                "federation_drift_detected": False,
                 "decision": "skip",
+                "halt_reason": None,
+                "divergence_class": None,
                 "results": [],
             }
 
@@ -385,9 +389,11 @@ class EvolutionRuntime:
         return {
             "mode": replay_mode.value,
             "verify_target": verify_target,
-            "has_divergence": has_divergence,
-            "federation_drift_detected": federation_drift_detected,
-            "decision": decision,
+            "has_divergence": invariant_checks["has_divergence"],
+            "federation_drift_detected": invariant_checks["federation_drift_detected"],
+            "decision": invariant_checks["decision"],
+            "halt_reason": halt_reason,
+            "divergence_class": invariant_checks["divergence_class"],
             "results": results,
             "divergence_details": divergence_details,
             "fail_closed_payload": fail_closed_payload,
