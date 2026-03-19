@@ -2,6 +2,34 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.12.1] — 2026-03-19 — Optimize: 7-Fault Sweep
+
+- PR ID: `PR-508-OPTIMIZE-v9.12.1`
+- Title: Optimize — 7-fault sweep (warm-cache regression · constitution version drift · import contracts · GitHub App wiring)
+- Lane/Tier: `runtime` / `hotfix`
+- Evidence refs: `optimize-warm-cache-lineage-v2`, `optimize-constitution-version-drift`, `optimize-import-contracts`, `optimize-github-app-wiring`
+- Fixes:
+  - `runtime/evolution/lineage_v2.py` — O(n→n²) warm-cache regression in `append_event()`; `_verified_tail_hash` now advanced post-append (C-04 contract)
+  - `app/github_app.py` — governance event emission wiring completed
+  - `app/main.py` — import contract alignment (5 modules)
+  - Test suite: `test_lineage_v2_streaming`, `test_replay_attestation_determinism`, `test_constitution_*` — version constant sync
+- Phase 78 note: Journal-level `_VERIFIED_TAIL_CACHE` (11.6× speedup, 1700ms→146ms) deferred — shared journal test-isolation pre-condition required first
+
+## [9.12.0] — 2026-03-19 — Phase 77
+
+- PR ID: `PR-PHASE77-01`
+- Title: GitHub App Governance + Constitution Version Alignment
+- Lane/Tier: `governance` / `constitutional`
+- Evidence refs: `phase77-github-audit-bridge`, `phase77-external-event-bridge`, `phase77-constitution-version-0.9.0`
+- Closes: `FINDING-AUDIT-C03` — `app/github_app.py` and `runtime/integrations/github_webhook_handler.py` governance gap
+- Delivered:
+  - `runtime/governance/external_event_bridge.py` — SHA-256 hash-chained JSONL audit ledger
+  - `ExternalGovernanceSignal` emitted for mutation-class events (`push.main`, `pr.merged`, `ci.failure`)
+  - `app/github_app._emit_governance_event` wired to bridge keyword API
+  - `CONSTITUTION_VERSION` updated `"0.7.0"` → `"0.9.0"` in 3 runtime files + `constitution.yaml`
+  - All 31 Phase-77 tests passing (T77-BRG-01..10, T77-SIG-01..06, T77-CHAIN-01..04, T77-WIRE-01..03, T77-CONST-01..03, T77-IDEM-01..02)
+- Key invariants: `GITHUB-AUDIT-0`, `GITHUB-GATE-OBS-0`, `GITHUB-SIG-CLOSED-0`, `GITHUB-DETERM-0`, `GITHUB-FAILSAFE-0`, `GITHUB-GATE-ISO-0`
+
 ## [9.11.0] — 2026-03-15 — Phase 76
 
 - PR ID: `PR-PHASE76-01`

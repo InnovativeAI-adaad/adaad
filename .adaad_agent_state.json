@@ -1,5 +1,5 @@
 {
-  "active_phase": "v9.11.0 \u2014 Phase 76 complete \u00b7 Phase 77 plan authored \u00b7 awaiting HUMAN-0 ratification",
+  "active_phase": "v9.12.1 RELEASED \u00b7 post-merge doc sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
@@ -11,8 +11,8 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-03-15",
-  "last_sync_sha": "899617a",
+  "last_invocation": "2026-03-19",
+  "last_sync_sha": "aaf00df",
   "next_pr": "PR-77-01 (Phase 77 Track A \u2014 Governance Infrastructure Sprint \u2014 pending Dustin ratification)",
   "open_findings": [
     {
@@ -106,7 +106,7 @@
     }
   ],
   "pending_evidence_rows": [],
-  "schema_version": "1.5.0",
+  "schema_version": "9.12.1",
   "value_checkpoints_reached": [
     "phase0-track-a-hardening",
     "v1.3.0-released",
@@ -304,7 +304,7 @@
     "phase75-inject-endpoint",
     "v9.10.0-released"
   ],
-  "current_version": "9.12.0",
+  "current_version": "9.12.1",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",

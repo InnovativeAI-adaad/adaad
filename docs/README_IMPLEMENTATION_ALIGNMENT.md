@@ -9,10 +9,11 @@ This document cross-references `README.md` operational claims with concrete impl
 
 | Metric | Value |
 | --- | --- |
-| Report version | `6.8.0` |
-| Branch | `main` |
-| Tag | `v7.5.0` |
-| Short SHA | `df468773` |
+| Report version | `9.12.1` |
+| Branch | `docs/autonomous-doc-sync-v9.12.1` |
+| Tag | `(none)` |
+| Short SHA | `aaf00df` |
+| Last sync | 2026-03-19 |
 
 All future architecture snapshots MUST include branch, tag (if any), and short SHA.
 <!-- ARCH_SNAPSHOT_METADATA:END -->

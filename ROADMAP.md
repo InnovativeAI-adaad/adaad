@@ -4,7 +4,7 @@
 
 ---
 
-## What ships today — v3.0.0
+## What ships today — v9.12.1
 
 The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
 
@@ -1504,6 +1504,45 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 `inject_seed_proposal_into_context()` merges a seed-derived `ProposalRequest` into a CEL epoch context dict; `SeedCELInjectionEvent` written to lineage ledger before return (SEED-CEL-AUDIT-0). `resolve_step4_request()` reads `seed_proposal_request` key in state context or falls back to default (SEED-CEL-HUMAN-0). CEL Step 4 wired to call `resolve_step4_request()` with try/except fallback (CEL-WIRE-FAIL-0) — CEL-ORDER-0 preserved. `POST /seeds/promoted/{seed_id}/inject` endpoint returns ready `epoch_context`. Completes the full seed lifecycle pipeline (Phases 71–75).
 
 **Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0
+### Phase 78 — Journal `_VERIFIED_TAIL_CACHE` + Autonomous Doc Sync
+
+**Status:** 🔜 next · **Dependency:** Phase 77 merged at main · **Target:** v9.13.0 · **Gate:** HUMAN-0 ratified plan required
+
+Two parallel workstreams promoted from the Phase 77 optimize sweep and this doc-sync pass.
+
+#### M78-01 — Journal-Level Warm-Cache (`_VERIFIED_TAIL_CACHE`)
+
+`security/ledger/journal.py`
+
+Benchmarked at **11.6× speedup** (1,700 ms → 146 ms per `evaluate_mutation` call). Deferred from Phase 77 optimize sweep (PR #508) because a pre-existing **shared-journal test-isolation** issue was exposed during validation.
+
+- Introduce `_VERIFIED_TAIL_CACHE: dict[str, tuple[str, int]]` — keyed by journal path, value `(tail_hash, entry_count)`.
+- Advance cache entry post-append, mirror the `lineage_v2.py` C-04 pattern.
+- Pre-condition gate: fix shared-journal test-isolation so `test_journal_*` tests cannot bleed state across workers.
+- Acceptance: `evaluate_mutation` p99 latency ≤ 200 ms on 10,000-entry journal; 0 isolation failures in 3 consecutive CI runs.
+
+**Key invariants:** `JOURNAL-CACHE-0` (cache advances atomically), `JOURNAL-CACHE-DETERM-0` (same hash on replay), `JOURNAL-ISOLATE-0` (no cross-test state bleed)
+
+#### M78-02 — Autonomous Doc Sync Workflow
+
+`.github/workflows/docs-autosync.yml`
+
+Eliminates manual doc-drift (version infobox, badge strings, stats card alt-text, CHANGELOG header) that accumulated between Phase 76 → 77.
+
+- Trigger: `push` to `main` (path filters: `VERSION`, `CHANGELOG.md`, `ROADMAP.md`).
+- Steps: read `VERSION` → update `README.md` infobox block (between `ADAAD_VERSION_INFOBOX` markers), badge strings, stats-card alt-text → commit with `[skip ci]` if diff detected.
+- Determinism gate: `docs/scripts/verify_doc_sync.py` — asserts README version string equals `VERSION` file; fails CI if drift > 0.
+- All doc mutations committed under bot identity `InnovativeAI <weirdo@innovativeai.llc>`.
+
+**Acceptance criteria:**
+- On every merge to main, README version matches `VERSION` within 60 s (one workflow run).
+- `verify_doc_sync.py` exits 0 on clean repo, exits 1 on any version drift.
+- Zero manual doc patches required for Phases 79+.
+
+**Key invariants:** `DOC-SYNC-DETERM-0`, `DOC-SYNC-NO-BYPASS-0`, `DOC-SYNC-VERSION-0`
+
+---
+
 ### Phase 77 — GitHub App Governance + Constitution Version Alignment
 
 **Status:** ✅ shipped (v9.12.0) · **Dependency:** Phase 76 merged at main · **Gate:** PR-77-PLAN.md (HUMAN-0 ratified) · **Tests:** T77-BRG-01..10, T77-SIG-01..06, T77-CHAIN-01..04, T77-WIRE-01..03, T77-CONST-01..03, T77-IDEM-01..02
