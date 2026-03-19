@@ -82,8 +82,9 @@ jobs:
           python scripts/sync_docs_on_merge.py --dry-run --format json | tee /tmp/doc_sync_preview.json
           FILES_CHANGED=$(python3 - <<'PY'
           import json
+          import sys
 
-          files_changed = 0
+          files_changed = None
           with open("/tmp/doc_sync_preview.json", encoding="utf-8") as handle:
               for line in handle:
                   line = line.strip()
@@ -94,8 +95,14 @@ jobs:
                   except json.JSONDecodeError:
                       continue
                   if payload.get("event") == "sync_complete":
-                      files_changed = int(payload.get("files_changed", 0))
+                      if "files_changed" not in payload:
+                          print("SYNC_ERROR_BAD_OUTPUT: sync_complete missing files_changed", file=sys.stderr)
+                          sys.exit(2)
+                      files_changed = int(payload["files_changed"])
                       break
+          if files_changed is None:
+              print("SYNC_ERROR_BAD_OUTPUT: sync_complete event missing from dry-run output", file=sys.stderr)
+              sys.exit(2)
           print(files_changed)
           PY
           )
