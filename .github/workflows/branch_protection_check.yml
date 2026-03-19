@@ -32,6 +32,8 @@ jobs:
                 'CI / docs-validation',
               ],
               docSyncPreview: [
+                // Canonical context: workflow name "Doc Sync Preview (PR Gate)" + job "doc-sync-preview".
+                // Must match the name: and jobs.<id>.name: fields in doc_sync_preview.yml exactly.
                 'Doc Sync Preview (PR Gate) / doc-sync-preview',
               ],
               codeql: [

@@ -236,6 +236,7 @@ jobs:
   docs-validation:
     runs-on: ubuntu-latest
     needs: classify
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
@@ -259,8 +260,25 @@ jobs:
           --roots docs/governance docs/comms docs/release docs/releases
       - name: Validate post-merge docs sync governance contract
         run: python scripts/validate_post_merge_doc_sync.py
+      - name: Doc sync preview (pre-merge dry-run gate)
+        run: python scripts/sync_docs_on_merge.py --dry-run --format json
+      - name: Validate env-var inventory is current
+        run: python scripts/validate_env_var_inventory.py
       - name: Validate deterministic changelog generation
         run: python scripts/generate_changelog.py --check
+
+  doc-sync-preview:
+    runs-on: ubuntu-latest
+    needs: classify
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+          requirements-file: requirements.dev.txt
+      - name: Doc sync preview (pre-merge dry-run gate)
+        run: python scripts/sync_docs_on_merge.py --dry-run --format json
 
   workflow-python-version-guard:
     runs-on: ubuntu-latest

@@ -29,7 +29,7 @@ Required CI checks (branch protection required-check table):
 | `CodeQL / Analyze (python)` | Always-on via `.github/workflows/codeql.yml` (`push`, `pull_request`, weekly `schedule`) | Required branch-protection CodeQL security analysis gate |
 | `Branch Protection Check` | Repository branch-protection validation workflow | Fails closed on branch-protection drift |
 
-`Branch Protection Check` workflow validates required branch settings via GitHub API (conflict-resolved policy source).
+`Branch Protection Check` workflow validates required branch settings via GitHub API.
 
 - Branch protection check requires `GITHUB_TOKEN` permission `administration: read` (granted by org admin).
 - Branch protection check enforces `required_pull_request_reviews.required_approving_review_count >= 2`.
