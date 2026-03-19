@@ -33,6 +33,7 @@ from runtime.evolution.checkpoint_verifier import CheckpointVerificationError, C
 from runtime.evolution.lineage_v2 import LineageIntegrityError
 from runtime.evolution.replay_attestation import ReplayProofBuilder
 from runtime.evolution.replay_divergence_artifacts import build_replay_divergence_artifacts
+from runtime.evolution.replay_manifest import REPLAY_MANIFESTS_DIR, build_replay_manifest_v1, write_replay_manifest_v1
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
 from runtime.evolution.replay_service import ReplayVerificationService
 from runtime.fitness_v2 import score_mutation_enhanced
@@ -141,6 +142,7 @@ __all__ = [
     "RecoveryPolicy",
     "RecoveryTierLevel",
     "ReplayMode",
+    "REPLAY_MANIFESTS_DIR",
     "ReplayProofBuilder",
     "ReplayVerificationService",
     "SnapshotManager",
@@ -160,10 +162,13 @@ __all__ = [
     "metrics",
     "normalize_replay_mode",
     "now_iso",
+    "build_replay_divergence_artifacts",
+    "build_replay_manifest_v1",
     "register",
     "register_capability",
     "reviewer_calibration_service",
     "score_mutation_enhanced",
+    "write_replay_manifest_v1",
     "validate_constitution_version_config",
 ]
 

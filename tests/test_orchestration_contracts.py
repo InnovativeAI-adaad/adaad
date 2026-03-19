@@ -4,6 +4,7 @@ from __future__ import annotations
 import pytest
 pytestmark = pytest.mark.regression_standard
 
+import json
 from pathlib import Path
 from unittest import mock
 
@@ -30,7 +31,7 @@ def test_replay_service_contract_envelope_and_manifest(tmp_path: Path) -> None:
         "has_divergence": False,
         "results": [{"replay_score": 1.0}],
     }
-    service = ReplayVerificationService(manifests_dir=tmp_path / "replay_manifests")
+    service = ReplayVerificationService(manifests_dir=tmp_path / "adaad" / "replay" / "manifests")
     with mock.patch("runtime.evolution.replay_service.journal.write_entry"):
         envelope, preflight = service.run_preflight(
             evolution_runtime=runtime,
@@ -41,6 +42,16 @@ def test_replay_service_contract_envelope_and_manifest(tmp_path: Path) -> None:
     assert envelope.reason == "replay_verified"
     assert Path(envelope.evidence_refs[0]).exists()
     assert preflight["verify_target"] == "epoch-1"
+    manifest_payload = json.loads(Path(envelope.evidence_refs[0]).read_text(encoding="utf-8"))
+    assert "replay_started_at" in manifest_payload
+    assert "replay_finished_at" in manifest_payload
+    assert "evidence_items_consumed" in manifest_payload
+    assert "lineage_chain" in manifest_payload
+    assert "reconstructed_state_hash" in manifest_payload
+    assert "divergence" in manifest_payload
+    assert "algorithm" in manifest_payload
+    assert "key_id" in manifest_payload
+    assert "signature" in manifest_payload
 
 
 def test_mutation_orchestration_transition_contract() -> None:

@@ -84,12 +84,12 @@ python -m app.main --verify-replay --replay strict
 Expected checkpoint:
 
 - Replay result is emitted as `replay_verified` in the ledger (`security/ledger/lineage.jsonl`).
-- Replay manifest JSON appears in `security/replay_manifests/`.
+- Replay manifest JSON appears in `adaad/replay/manifests/`.
 
 Inspect replay manifests:
 
 ```bash
-find security/replay_manifests -type f -name '*.json' | tail -n 5
+find adaad/replay/manifests -type f -name '*.json' | tail -n 5
 ```
 
 ## 5) Optional: run the smallest single-agent example (5 min)
@@ -105,5 +105,5 @@ This keeps Dream scope constrained to one local example agent and demonstrates t
 If a file from steps 2–3 is missing, confirm you used full boot mode:
 
 - `python -m app.main --replay audit` runs Dream/Beast and can produce staging + promotion artifacts.
-- `python -m app.main --verify-replay --replay strict` is verification-only and only guarantees replay outputs (ledger `replay_verified` + `security/replay_manifests/*.json`).
+- `python -m app.main --verify-replay --replay strict` is verification-only and only guarantees replay outputs (ledger `replay_verified` + `adaad/replay/manifests/*.json`).
 - `python -m app.main --exit-after-boot --replay audit` exits before mutation cycle, so Dream/Beast artifact files are not expected.

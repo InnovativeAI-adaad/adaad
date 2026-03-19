@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/replay_manifest.v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "replay_started_at",
+    "replay_finished_at",
+    "evidence_items_consumed",
+    "lineage_chain",
+    "reconstructed_state_hash",
+    "divergence",
+    "algorithm",
+    "key_id",
+    "signature"
+  ],
+  "properties": {
+    "replay_started_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"
+    },
+    "replay_finished_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T"
+    },
+    "evidence_items_consumed": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "lineage_chain": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["epoch_id", "decision", "passed", "replay_score"],
+        "properties": {
+          "epoch_id": {"type": "string"},
+          "decision": {"type": "string"},
+          "passed": {"type": "boolean"},
+          "replay_score": {"type": "number"}
+        }
+      }
+    },
+    "reconstructed_state_hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "divergence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "indicators", "halted"],
+      "properties": {
+        "class": {"type": "string", "enum": ["none", "state_divergence", "federation_drift"]},
+        "indicators": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "halted": {"type": "boolean"}
+      }
+    },
+    "algorithm": {
+      "type": "string",
+      "enum": ["hmac-sha256", "ed25519"]
+    },
+    "key_id": {"type": "string", "minLength": 1},
+    "signature": {
+      "type": "string",
+      "pattern": "^(?:sha256:[a-f0-9]{64}|[a-f0-9]{64}|ed25519:[A-Za-z0-9+/=]+)$"
+    }
+  }
+}
