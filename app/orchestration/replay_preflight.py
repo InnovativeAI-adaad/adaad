@@ -3,12 +3,18 @@
 
 from __future__ import annotations
 
-import json
-import re
 from typing import Any, Callable, Dict
 
 from app import APP_ROOT
-from runtime.api.runtime_services import build_replay_divergence_artifacts, build_signed_replay_manifest, dump, metrics, now_iso
+from runtime.api.runtime_services import (
+    REPLAY_MANIFESTS_DIR,
+    build_replay_divergence_artifacts,
+    build_replay_manifest_v1,
+    dump,
+    metrics,
+    now_iso,
+    write_replay_manifest_v1,
+)
 from security.ledger import journal
 
 
@@ -19,21 +25,8 @@ def aggregate_replay_score(results: list[Dict[str, Any]]) -> float:
     return round(sum(scores) / len(scores), 4)
 
 
-def write_replay_manifest(outcome: Dict[str, Any]) -> str:
-    manifests_dir = APP_ROOT.parent / "security" / "replay_manifests"
-    manifests_dir.mkdir(parents=True, exist_ok=True)
-
-    def _sanitize_component(value: Any) -> str:
-        normalized = re.sub(r"[^A-Za-z0-9._-]+", "-", str(value or "unknown")).strip("-._")
-        return normalized or "unknown"
-
-    mode_component = _sanitize_component(outcome.get("mode"))
-    target_component = _sanitize_component(outcome.get("target"))
-    timestamp_component = _sanitize_component(outcome.get("ts"))
-    manifest_path = manifests_dir / f"{mode_component}__{target_component}__{timestamp_component}.json"
-    signed = build_signed_replay_manifest(outcome)
-    manifest_path.write_text(json.dumps(signed, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return str(manifest_path)
+def write_replay_manifest(manifest: Dict[str, Any]) -> str:
+    return str(write_replay_manifest_v1(manifest, manifests_dir=REPLAY_MANIFESTS_DIR))
 
 
 def execute_replay_preflight(
@@ -43,8 +36,10 @@ def execute_replay_preflight(
     verify_only: bool = False,
     replay_env_flags: Callable[[], Dict[str, str]],
 ) -> Dict[str, Any]:
+    replay_started_at = now_iso()
     mode = orchestrator.replay_mode
     preflight = orchestrator.evolution_runtime.replay_preflight(mode, epoch_id=orchestrator.replay_epoch or None)
+    replay_finished_at = now_iso()
     has_divergence = bool(preflight.get("has_divergence"))
     orchestrator.state["replay_mode"] = mode.value
     orchestrator.state["replay_target"] = preflight.get("verify_target")
@@ -65,11 +60,17 @@ def execute_replay_preflight(
         "divergence_details": preflight.get("divergence_details", []),
         "diagnostics": preflight.get("fail_closed_payload", {}),
         "replay_score": replay_score,
-        "ts": now_iso(),
+        "ts": replay_finished_at,
     }
     journal.write_entry(agent_id="system", action="replay_verified", payload=outcome)
     try:
-        manifest_path = write_replay_manifest(outcome)
+        manifest = build_replay_manifest_v1(
+            replay_started_at=replay_started_at,
+            replay_finished_at=replay_finished_at,
+            preflight=preflight,
+            halted=has_divergence and mode.fail_closed,
+        )
+        manifest_path = write_replay_manifest(manifest)
         orchestrator._v(f"Replay manifest written: {manifest_path}")
     except Exception as exc:
         metrics.log(

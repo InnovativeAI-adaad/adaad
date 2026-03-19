@@ -240,6 +240,47 @@ class Ed25519ReplayProofSigner(ReplayProofSigner):
         return True
 
 
+def sign_replay_payload_digest(*, algorithm: str, key_id: str, signed_digest: str, keyring: Mapping[str, Any] | None = None) -> str:
+    """Sign a canonical replay payload digest using replay-proof key material."""
+    if algorithm == "ed25519":
+        signer_keyring: Any = keyring or _load_replay_proof_keyring()
+    elif algorithm == "hmac-sha256":
+        if keyring is not None:
+            signer_keyring = keyring
+        else:
+            hmac_keyring = _load_hmac_replay_proof_keyring()
+            signer_keyring = hmac_keyring if key_id in hmac_keyring else None
+    else:
+        raise ValueError(f"unsupported_signing_algorithm:{algorithm}")
+
+    signer = _build_signer(algorithm, keyring=signer_keyring)
+    return signer.sign(key_id=key_id, signed_digest=signed_digest)
+
+
+def verify_replay_payload_digest_signature(
+    *,
+    algorithm: str,
+    key_id: str,
+    signed_digest: str,
+    signature: str,
+    keyring: Mapping[str, Any] | None = None,
+) -> bool:
+    """Verify a replay payload digest signature using replay-proof key material."""
+    if algorithm == "ed25519":
+        signer_keyring: Any = keyring or _load_replay_proof_keyring()
+    elif algorithm == "hmac-sha256":
+        if keyring is not None:
+            signer_keyring = keyring
+        else:
+            hmac_keyring = _load_hmac_replay_proof_keyring()
+            signer_keyring = hmac_keyring if key_id in hmac_keyring else None
+    else:
+        return False
+
+    signer = _build_signer(algorithm, keyring=signer_keyring)
+    return signer.verify(key_id=key_id, signed_digest=signed_digest, signature=signature)
+
+
 def _build_signer(algorithm: str, *, keyring: Any = None) -> ReplayProofSigner:
     if algorithm == "hmac-sha256":
         return HmacReplayProofSigner(keyring=keyring)
@@ -748,6 +789,8 @@ def validate_replay_proof_schema(bundle: Dict[str, Any]) -> List[str]:
 
 __all__ = [
     "ReplayProofBuilder",
+    "sign_replay_payload_digest",
+    "verify_replay_payload_digest_signature",
     "verify_replay_proof_bundle",
     "load_replay_proof",
     "validate_replay_proof_schema",

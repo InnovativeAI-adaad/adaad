@@ -48,26 +48,26 @@ def test_write_dream_manifest_creates_expected_file(tmp_path: Path) -> None:
 
 
 def test_write_replay_manifest_creates_expected_file(tmp_path: Path) -> None:
-    service = ReplayVerificationService(manifests_dir=tmp_path / "replay_manifests")
-    outcome = {
-        "mode": "strict",
-        "verify_only": False,
-        "ok": True,
-        "decision": "match",
-        "target": "epoch:2026-02-13T10:00:00Z",
-        "divergence": False,
-        "results": [{"expected": "sha256:abc", "actual": "sha256:abc"}],
-        "ts": "2026-02-13T10:00:00Z",
+    service = ReplayVerificationService(manifests_dir=tmp_path / "adaad" / "replay" / "manifests")
+    manifest = {
+        "replay_started_at": "2026-02-13T10:00:00Z",
+        "replay_finished_at": "2026-02-13T10:01:00Z",
+        "evidence_items_consumed": ["epoch-1"],
+        "lineage_chain": [{"epoch_id": "epoch-1", "decision": "match", "passed": True, "replay_score": 1.0}],
+        "reconstructed_state_hash": "sha256:" + ("1" * 64),
+        "divergence": {"class": "none", "indicators": [], "halted": False},
+        "algorithm": "hmac-sha256",
+        "key_id": "proof-key",
+        "signature": "sha256:" + ("2" * 64),
     }
 
-    manifest_path = service.write_replay_manifest(outcome)
+    manifest_path = service.write_replay_manifest(manifest)
 
     assert Path(manifest_path).exists()
-    assert Path(manifest_path).parent.name == "replay_manifests"
+    assert Path(manifest_path).parent.name == "manifests"
     payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-    assert payload["mode"] == "strict"
-    assert payload["target"] == "epoch:2026-02-13T10:00:00Z"
-    assert payload["decision"] == "match"
-    assert payload["ok"] is True
-    assert payload["manifest_digest"].startswith("sha256:")
-    assert payload["signature"]["signed_digest"] == payload["manifest_digest"]
+    assert payload["replay_started_at"] == "2026-02-13T10:00:00Z"
+    assert payload["replay_finished_at"] == "2026-02-13T10:01:00Z"
+    assert payload["divergence"]["class"] == "none"
+    assert payload["algorithm"] == "hmac-sha256"
+    assert payload["key_id"] == "proof-key"
