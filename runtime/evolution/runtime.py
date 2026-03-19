@@ -13,6 +13,7 @@ from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 from runtime.evolution.metrics_schema import EvolutionMetricsEmitter
 from runtime.evolution.replay import ReplayEngine
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
+from runtime.evolution.replay_state_machine import ReplayStateMachine
 from runtime.evolution.replay_verifier import ReplayVerifier
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.checkpoint_verifier import verify_checkpoint_chain, verify_epoch_checkpoint_continuity
@@ -348,7 +349,10 @@ class EvolutionRuntime:
                 "mode": replay_mode.value,
                 "verify_target": "none",
                 "has_divergence": False,
+                "federation_drift_detected": False,
                 "decision": "skip",
+                "halt_reason": None,
+                "divergence_class": None,
                 "results": [],
             }
 
@@ -359,20 +363,27 @@ class EvolutionRuntime:
             results = [self.verify_epoch(each_epoch_id) for each_epoch_id in self.ledger.list_epoch_ids()]
             verify_target = "all_epochs"
 
-        has_divergence = any(not result["passed"] for result in results)
-        federation_drift_detected = any(bool(result.get("federation_drift_detected")) for result in results)
-        if (has_divergence or federation_drift_detected) and replay_mode.fail_closed:
-            reason = "federation_drift_detected" if federation_drift_detected else "replay_divergence"
-            self.governor.enter_fail_closed(reason, self.current_epoch_id or "unknown")
-            decision = "fail_closed"
-        else:
-            decision = "continue"
+        transition = ReplayStateMachine.transition(
+            mode=replay_mode.value,
+            fail_closed=replay_mode.fail_closed,
+            verify_target=verify_target,
+            events=results,
+            prior_state=None,
+        )
+        invariant_checks = transition["invariant_checks"]
+
+        halt_reason = invariant_checks["halt_reason"]
+        if halt_reason:
+            self.governor.enter_fail_closed(halt_reason, self.current_epoch_id or "unknown")
+
         return {
             "mode": replay_mode.value,
             "verify_target": verify_target,
-            "has_divergence": has_divergence,
-            "federation_drift_detected": federation_drift_detected,
-            "decision": decision,
+            "has_divergence": invariant_checks["has_divergence"],
+            "federation_drift_detected": invariant_checks["federation_drift_detected"],
+            "decision": invariant_checks["decision"],
+            "halt_reason": halt_reason,
+            "divergence_class": invariant_checks["divergence_class"],
             "results": results,
         }
 
