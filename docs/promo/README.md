@@ -63,6 +63,18 @@
 
 ---
 
+
+## QR attribution conventions
+
+- QR assets are registry-driven: `docs/assets/qr/registry.json` is the source of truth.
+- Every active QR target must use one of two attribution-safe patterns:
+  1. Approved UTM query params (`utm_source`, `utm_medium`, `utm_campaign`), or
+  2. A managed redirect endpoint under an approved prefix.
+- Current campaign convention: `utm_source=qr` and `utm_campaign=install_tracks_2026q2`.
+- `utm_medium` is **placement-specific** (for example `install_card`, `install_android_doc`, `readme_banner`) so scans are attributable by channel/surface.
+- Never reuse one QR asset across placements; generate one asset per placement in the registry.
+- Validate before publishing: `python scripts/validate_qr_registry.py`.
+
 ## Key messages (keep consistent across all channels)
 
 1. **Lead:** "AI that improves your code — but can't approve its own changes"
