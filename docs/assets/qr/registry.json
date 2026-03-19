@@ -1,0 +1,47 @@
+{
+  "fdroid": {
+    "campaign_tags": {
+      "medium": "qr",
+      "source": "install_page",
+      "term": "fdroid"
+    },
+    "canonical_destination_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo",
+    "purpose": "fdroid"
+  },
+  "install_page": {
+    "campaign_tags": {
+      "medium": "qr",
+      "source": "offline",
+      "term": "install_page"
+    },
+    "canonical_destination_url": "https://innovativeai-adaad.github.io/ADAAD/install.html",
+    "purpose": "install_page"
+  },
+  "obtainium": {
+    "campaign_tags": {
+      "medium": "qr",
+      "source": "install_page",
+      "term": "obtainium"
+    },
+    "canonical_destination_url": "obtainium://app/https://github.com/InnovativeAI-adaad/ADAAD",
+    "purpose": "obtainium"
+  },
+  "pwa": {
+    "campaign_tags": {
+      "medium": "qr",
+      "source": "install_page",
+      "term": "pwa"
+    },
+    "canonical_destination_url": "https://innovativeai-adaad.github.io/ADAAD/",
+    "purpose": "pwa"
+  },
+  "releases": {
+    "campaign_tags": {
+      "medium": "qr",
+      "source": "install_page",
+      "term": "apk"
+    },
+    "canonical_destination_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest",
+    "purpose": "apk"
+  }
+}

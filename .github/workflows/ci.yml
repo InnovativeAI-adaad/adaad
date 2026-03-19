@@ -214,10 +214,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+          requirements-file: requirements.dev.txt
       - name: Validate strict documentation snippets
         run: python scripts/validate_readme_alignment.py --format json
       - name: Validate manifest inventory alignment
         run: python scripts/validate_manifest_inventory.py --format json
+      - name: Validate deterministic QR assets
+        run: python scripts/generate_qr_assets.py --check
       - name: Validate markdown link and image integrity
         run: python scripts/validate_docs_integrity.py --format json
       - name: Validate active docs dependency references
