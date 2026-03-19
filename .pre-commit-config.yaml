@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+repos:
+  - repo: local
+    hooks:
+      - id: env-var-inventory
+        name: ADAAD refresh env-var inventory
+        language: system
+        entry: python scripts/generate_env_var_inventory.py
+        files: >-
+          (?x)^(
+            app/.*\.py|
+            runtime/.*\.py|
+            security/.*\.py|
+            scripts/.*\.py|
+            scripts/.*\.sh|
+            docs/ENVIRONMENT_VARIABLES\.md
+          )$
+        pass_filenames: false
+        stages: [pre-commit]

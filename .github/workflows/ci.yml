@@ -254,6 +254,8 @@ jobs:
           --roots docs/governance docs/comms docs/release docs/releases
       - name: Validate post-merge docs sync governance contract
         run: python scripts/validate_post_merge_doc_sync.py
+      - name: Validate env-var inventory is current
+        run: python scripts/validate_env_var_inventory.py
       - name: Validate deterministic changelog generation
         run: python scripts/generate_changelog.py --check
 
