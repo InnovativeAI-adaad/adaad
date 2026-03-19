@@ -22,6 +22,19 @@
 
 <br/>
 
+<!-- ADAAD_VERSION_INFOBOX:START -->
+> Version infobox placeholder (governed sync source).
+<!-- ADAAD_VERSION_INFOBOX:END -->
+
+## Governance & Determinism Guarantees (Current State)
+
+Key safety controls remain fail-closed and deterministic by default:
+
+- `ADAAD_DETERMINISTIC_LOCK` — enforces deterministic-only execution paths.
+- `ADAAD_DISPATCH_LATENCY_BUDGET_MS` — bounded dispatch latency budget for governance-sensitive dispatch paths.
+
+See `docs/ENVIRONMENT_VARIABLES.md` for full definitions and defaults.
+
 ## Why ADAAD Is Different
 
 Every AI code tool works the same way: **suggest → you apply.** No audit trail. No fitness score. No rollback. You are the last line of defense. ADAAD inverts this — the `GovernanceGate` is the last line of defense, not you.
