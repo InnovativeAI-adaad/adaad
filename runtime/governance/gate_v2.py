@@ -9,6 +9,7 @@ New rules (Phase 63 scope):
   AST-SAFE-0       No exec/eval/unguarded os.system or subprocess; no syntax errors.
   AST-IMPORT-0     No new imports from Tier-0 module roots.
   AST-COMPLEX-0    cyclomatic delta <= +2 (Class A); Class B eligible up to +8 with token.
+  EVIDENCE-BUNDLE-REQ-0  Scoped mutation/governance events must provide a valid evidence bundle.
   SANDBOX-DIV-0    Post-apply test results must match sandbox exactly (gate integration).
   SEMANTIC-INT-0   No removal of error guard without compensating handler.
 
@@ -17,6 +18,7 @@ Constitutional invariants:
   AST-SAFE-0          Hard; no Class B path.
   AST-IMPORT-0        Hard; no Class B path.
   AST-COMPLEX-0       Class A: delta <= +2 hard; Class B: delta <= +8 with ExceptionToken.
+  EVIDENCE-BUNDLE-REQ-0  Hard fail-closed when scoped governance/mutation events lack valid evidence bundle.
   SANDBOX-DIV-0       Hard; no Class B path (mirrors SANDBOX-DIV-0 from Phase 60).
   SEMANTIC-INT-0      Hard; no Class B path.
 """
@@ -252,6 +254,36 @@ def _check_sandbox_div_0(replay_diverged: bool) -> V2RuleResult:
     return V2RuleResult(rule_id="SANDBOX-DIV-0", passed=True)
 
 
+def _check_evidence_bundle_req_0(
+    *,
+    scoped_event: bool,
+    evidence_bundle_present: bool,
+    evidence_bundle_valid: bool,
+) -> V2RuleResult:
+    """EVIDENCE-BUNDLE-REQ-0: fail-closed evidence requirement for scoped events."""
+    if not scoped_event:
+        return V2RuleResult(
+            rule_id="EVIDENCE-BUNDLE-REQ-0",
+            passed=True,
+            detail="not_applicable_unscoped_event",
+        )
+    if not evidence_bundle_present:
+        return V2RuleResult(
+            rule_id="EVIDENCE-BUNDLE-REQ-0",
+            passed=False,
+            reason="missing_evidence_bundle",
+            detail="Scoped mutation/governance event requires evidence bundle presence",
+        )
+    if not evidence_bundle_valid:
+        return V2RuleResult(
+            rule_id="EVIDENCE-BUNDLE-REQ-0",
+            passed=False,
+            reason="invalid_evidence_bundle",
+            detail="Evidence bundle failed deterministic validation checks",
+        )
+    return V2RuleResult(rule_id="EVIDENCE-BUNDLE-REQ-0", passed=True)
+
+
 def _check_semantic_int_0(
     before_source: Optional[str], after_source: str
 ) -> V2RuleResult:
@@ -291,7 +323,7 @@ class GovernanceGateV2:
     """Phase 63 additive governance gate layer.
 
     Evaluates the five new rules (AST-SAFE-0, AST-IMPORT-0, AST-COMPLEX-0,
-    SANDBOX-DIV-0, SEMANTIC-INT-0) after the existing GovernanceGate.
+    EVIDENCE-BUNDLE-REQ-0, SANDBOX-DIV-0, SEMANTIC-INT-0) after the existing GovernanceGate.
 
     GATE-V2-EXISTING-0: the caller is responsible for running the existing
     GovernanceGate first. GovernanceGateV2 must never be substituted for it.
@@ -312,8 +344,11 @@ class GovernanceGateV2:
         before_source: Optional[str] = None,
         replay_diverged: bool = False,
         current_epoch_seq: int = 0,
+        governance_or_mutation_scope_event: bool = False,
+        evidence_bundle_present: bool = False,
+        evidence_bundle_valid: bool = False,
     ) -> V2GateDecision:
-        """Evaluate all five Phase 63 rules in canonical order.
+        """Evaluate all Phase 63+ rules in canonical order.
 
         Returns V2GateDecision with approved=True iff all rules pass.
         class_b_eligible=True iff the only blocking rule is AST-COMPLEX-0 and
@@ -330,6 +365,13 @@ class GovernanceGateV2:
         ))
         results.append(_check_ast_import_0(after_source))
         results.append(_check_ast_safe_0(after_source))
+        results.append(
+            _check_evidence_bundle_req_0(
+                scoped_event=governance_or_mutation_scope_event,
+                evidence_bundle_present=evidence_bundle_present,
+                evidence_bundle_valid=evidence_bundle_valid,
+            )
+        )
         results.append(_check_sandbox_div_0(replay_diverged))
         results.append(_check_semantic_int_0(before_source, after_source))
 
@@ -378,5 +420,6 @@ __all__ = [
     "_check_ast_import_0",
     "_check_ast_complex_0",
     "_check_sandbox_div_0",
+    "_check_evidence_bundle_req_0",
     "_check_semantic_int_0",
 ]

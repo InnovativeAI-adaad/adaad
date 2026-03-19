@@ -22,6 +22,7 @@ Required CI checks (branch protection required-check table):
 | `full-test-suite` (`PYTHONPATH=. pytest tests/ -q`) | Always-on in `.github/workflows/ci.yml` | Blocks merge on any test failure |
 | `governance-tests` (`PYTHONPATH=. pytest tests/ -k governance -q`) | Always-on in `.github/workflows/ci.yml` | Blocks governance regressions |
 | `determinism-lint` (`python tools/lint_determinism.py ...`) | Always-on in `.github/workflows/ci.yml` | Blocks nondeterministic governance/runtime/security changes |
+| `aeo-evidence-publish` (`PYTHONPATH=. python scripts/publish_aeo_evidence_bundle.py --destination ...`) | Always-on after `release-evidence-readiness` in `.github/workflows/ci.yml` | Blocks merge when deterministic evidence bundle cannot be validated/published to configured AEO destination |
 | `spdx-header-lint` (`python scripts/check_spdx_headers.py`) | Always-on in `.github/workflows/ci.yml` | Blocks SPDX header drift |
 | `phase7-reputation-gate` | Conditional required check when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`) | Runs Phase 7 selector set: reputation, ledger, review pressure, constitutional-floor, reviewer panel endpoint/UI coverage |
 | `Secret Scan / secret-scan` | Always-on via `.github/workflows/secret_scan.yml` | Required branch-protection secret scanning gate |
@@ -95,3 +96,13 @@ Violation handling is deterministic:
 - validators emit `governance_canon_violation` ledger transactions with hash-stable payloads
 - escalation is one-way only (no automatic de-escalation)
 - undefined escalation/state is fail-closed (`critical`, mutation blocked)
+
+## Evidence hook matrix (runtime + dashboard + CI)
+
+| Hook | Surface | Contract |
+|---|---|---|
+| `EVIDENCE-BUNDLE-REQ-0` | `runtime/governance/gate_v2.py` | fail-closed for scoped governance/mutation events when evidence bundle is missing or invalid |
+| `MutationEvidenceEvent` emission | `runtime/evolution/governor.py` | each mutation decision emits explicit evidence linkage event for deterministic lineage/evidence projections |
+| Evidence graph projection | `runtime/evolution/evidence_graph.py` | deterministic graph assembly over mutation/evidence lineage events |
+| Aponi evidence graph endpoint | `ui/aponi_dashboard.py` (`GET /evolution/evidence-graph`) | schema-validated response contract (`schemas/aponi_responses/evidence_graph.schema.json`) |
+| AEO evidence publish | `.github/workflows/ci.yml` (`aeo-evidence-publish`) | deterministic, retry-free publish of validated evidence bundle using `scripts/publish_aeo_evidence_bundle.py` |
