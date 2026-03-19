@@ -51,7 +51,7 @@ ACTIVE_INSTALL_DOCS = (
 INSTALL_DOC_VERSION_PATTERNS = {
     "INSTALL_ANDROID.md": re.compile(r"^\*\*.*?\bv(?P<version>\d+\.\d+\.\d+)\b", re.MULTILINE),
     "docs/install.html": re.compile(
-        r'<span\s+class="version-pill">\s*v(?P<version>\d+\.\d+\.\d+)',
+        r'<span\s+class=["\']version-pill["\']>\s*v(?P<version>\d+\.\d+\.\d+)',
         re.IGNORECASE,
     ),
 }

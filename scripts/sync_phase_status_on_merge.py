@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Sync Phase 65 status to shipped after PR-PHASE65-01 merge.
 
+This script performs file-only mutations; orchestrator workflow owns commit/push.
+
 Fail-closed, deterministic, idempotent updater for:
 - ROADMAP.md
 - docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md
@@ -15,6 +17,8 @@ The script will abort without writing if:
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -51,6 +55,24 @@ PROCESSION_EXPECTED_NEXT_BEFORE = (
 PROCESSION_EXPECTED_NEXT_AFTER = (
     '    expected_next_pr: "POST-PHASE65 (Phase 66 planning + v1.0.0-GA closure)"'
 )
+
+_ORCHESTRATOR_ENV_MARKER = "ADAAD_ORCHESTRATOR_RUN"
+
+
+def _fatal(code: str, message: str) -> "NoReturn":
+    print(json.dumps({"event": code, "message": message}), flush=True)
+    raise SystemExit(1)
+
+
+def _assert_orchestrator_context() -> None:
+    """Fail closed in CI unless orchestrator marker is present."""
+    ci = os.getenv("CI", "").strip().lower()
+    marker = os.getenv(_ORCHESTRATOR_ENV_MARKER, "").strip()
+    if ci in {"1", "true", "yes"} and not marker:
+        _fatal(
+            "PHASE_SYNC_ERROR_MISSING_ORCHESTRATOR_MARKER",
+            "sync_phase_status_on_merge.py must be invoked by post_merge_orchestrator.yml in CI",
+        )
 
 
 class SyncError(RuntimeError):
@@ -144,6 +166,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
+        _assert_orchestrator_context()
         result = sync_phase65_status(root=args.root, require_evidence=True, write=not args.dry_run)
         if args.dry_run:
             # idempotency: second dry-run against already-updated files should still report current state

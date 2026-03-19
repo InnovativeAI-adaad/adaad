@@ -10,6 +10,34 @@ on:
   workflow_dispatch:
 
 jobs:
+  full-docs-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+          requirements-file: requirements.dev.txt
+      - name: Validate strict documentation snippets
+        run: python scripts/validate_readme_alignment.py --format json
+      - name: Validate manifest inventory alignment
+        run: python scripts/validate_manifest_inventory.py --format json
+      - name: Validate deterministic QR assets
+        run: python scripts/generate_qr_assets.py --check
+      - name: Validate markdown link and image integrity
+        run: python scripts/validate_docs_integrity.py --format json
+      - name: Validate active docs dependency references
+        run: python scripts/lint_active_docs_dependency_refs.py --format json
+      - name: Validate governance + release markdown link integrity
+        run: >-
+          python scripts/validate_docs_integrity.py
+          --format json
+          --roots docs/governance docs/comms docs/release docs/releases
+      - name: Validate post-merge docs sync governance contract
+        run: python scripts/validate_post_merge_doc_sync.py
+      - name: Validate deterministic changelog generation
+        run: python scripts/generate_changelog.py --check
+
   determinism-lint:
     runs-on: ubuntu-latest
     steps:
@@ -159,6 +187,7 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs:
+      - full-docs-validation
       - determinism-lint
       - entropy-discipline-checks
       - governance-strict-mode-validation
@@ -169,6 +198,7 @@ jobs:
     steps:
       - name: Enforce strict release gate
         env:
+          DOCS_RESULT: ${{ needs.full-docs-validation.result }}
           DETERMINISM_RESULT: ${{ needs.determinism-lint.result }}
           ENTROPY_RESULT: ${{ needs.entropy-discipline-checks.result }}
           GOVERNANCE_RESULT: ${{ needs.governance-strict-mode-validation.result }}
@@ -179,6 +209,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "determinism-lint => $DETERMINISM_RESULT"
+          echo "full-docs-validation => $DOCS_RESULT"
           echo "entropy-discipline-checks => $ENTROPY_RESULT"
           echo "governance-strict-mode-validation => $GOVERNANCE_RESULT"
           echo "replay-strict-validation => $REPLAY_RESULT"
@@ -186,6 +217,7 @@ jobs:
           echo "reviewer-calibration-validation => $REVIEWER_CALIBRATION_RESULT"
           echo "benchmark-delta-validation => $BENCHMARK_DELTA_RESULT"
 
+          test "$DOCS_RESULT" = "success"
           test "$DETERMINISM_RESULT" = "success"
           test "$ENTROPY_RESULT" = "success"
           test "$GOVERNANCE_RESULT" = "success"

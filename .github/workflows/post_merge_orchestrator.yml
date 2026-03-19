@@ -1,0 +1,258 @@
+# SPDX-License-Identifier: Apache-2.0
+# Invariant codes: ORCH-01 · RACE-01 · FAIL-CLOSED-03 · AUDIT-TRAIL-02 · DET-01
+
+name: Post-Merge Orchestrator
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      force_phase_sync:
+        description: "Force phase-status sync even without a phase label"
+        required: false
+        default: "false"
+
+concurrency:
+  group: post-merge-orchestrator
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  orchestrate:
+    name: "Post-merge sync → validate → commit"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: |
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, '[doc-sync]') &&
+      (github.event_name != 'pull_request' || github.event.pull_request.merged == true)
+
+    steps:
+      - name: Resolve target ref
+        id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "sha=${{ github.event.pull_request.merge_commit_sha }}" >> "$GITHUB_OUTPUT"
+            echo "branch=${{ github.event.pull_request.base.ref }}" >> "$GITHUB_OUTPUT"
+            echo "pr_title=${{ github.event.pull_request.title }}" >> "$GITHUB_OUTPUT"
+            labels="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+            echo "pr_labels=${labels}" >> "$GITHUB_OUTPUT"
+          else
+            echo "sha=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+            echo "pr_title=" >> "$GITHUB_OUTPUT"
+            echo "pr_labels=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout at resolved ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.ref.outputs.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip --quiet
+          if [ -f requirements.dev.txt ]; then
+            pip install -r requirements.dev.txt --quiet
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt --quiet
+          fi
+
+      - name: Gate — validate VERSION file
+        id: version_gate
+        run: |
+          set -euo pipefail
+          version=$(cat VERSION)
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "SYNC_ERROR_BAD_VERSION: VERSION contains '${version}'" >&2
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Gate — CHANGELOG entry must exist
+        run: |
+          set -euo pipefail
+          version="${{ steps.version_gate.outputs.version }}"
+          if ! grep -q "## \[${version}\]" CHANGELOG.md; then
+            echo "SYNC_ERROR_MISSING_CHANGELOG: no entry for [${version}]" >&2
+            exit 1
+          fi
+
+      - name: Evaluate phase-sync trigger
+        id: phase_gate
+        run: |
+          set -euo pipefail
+          title="${{ steps.ref.outputs.pr_title }}"
+          labels="${{ steps.ref.outputs.pr_labels }}"
+          force="${{ github.event.inputs.force_phase_sync }}"
+
+          run_phase=false
+          if echo "${title}${labels}" | grep -Eq 'PR-PHASE[0-9]+-[0-9]+'; then
+            run_phase=true
+          fi
+          if [ "${force}" = "true" ]; then
+            run_phase=true
+          fi
+
+          echo "run_phase_sync=${run_phase}" >> "$GITHUB_OUTPUT"
+
+      - name: Phase status sync (if triggered)
+        if: steps.phase_gate.outputs.run_phase_sync == 'true'
+        env:
+          ADAAD_ORCHESTRATOR_RUN: "1"
+        run: |
+          set -euo pipefail
+          python scripts/sync_phase_status_on_merge.py
+
+      - name: Phase sync skipped — log reason
+        if: steps.phase_gate.outputs.run_phase_sync != 'true'
+        run: echo "Phase sync skipped: no matching phase pattern"
+
+      - name: Doc sync dry-run
+        run: |
+          set -euo pipefail
+          python scripts/sync_docs_on_merge.py --dry-run --format json | tee /tmp/doc_sync_dryrun.json
+
+      - name: Doc sync execute
+        id: doc_sync
+        run: |
+          set -euo pipefail
+          python scripts/sync_docs_on_merge.py --format json | tee /tmp/doc_sync_output.json
+
+          files_changed=$(python3 - <<'PY'
+          import json
+
+          with open('/tmp/doc_sync_output.json', encoding='utf-8') as handle:
+              for line in handle:
+                  line = line.strip()
+                  if not line:
+                      continue
+                  try:
+                      obj = json.loads(line)
+                  except json.JSONDecodeError:
+                      continue
+                  if obj.get('event') == 'sync_complete':
+                      print(int(obj.get('files_changed', 0)))
+                      break
+              else:
+                  print(0)
+          PY
+          )
+
+          echo "files_changed=${files_changed}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate — post-merge doc sync contract
+        run: |
+          set -euo pipefail
+          python scripts/validate_post_merge_doc_sync.py
+
+      - name: Validate — README alignment
+        run: |
+          set -euo pipefail
+          python scripts/validate_readme_alignment.py --format json
+
+      - name: Gate — protected files must not be modified
+        run: |
+          set -euo pipefail
+          protected_changed=$(git diff --name-only HEAD | grep -E \
+            '^(docs/CONSTITUTION\.md|docs/governance/ARCHITECT_SPEC|governance/CANONICAL|governance_runtime_profile\.lock\.json|runtime/constitution\.py|schemas/|\.github/workflows/)' \
+            || true)
+          if [ -n "$protected_changed" ]; then
+            echo "SYNC_ERROR_PROTECTED_FILE_MODIFIED:" >&2
+            echo "${protected_changed}" >&2
+            exit 1
+          fi
+
+      - name: Configure git identity
+        run: |
+          git config user.name "ArchitectAgent [ADAAD]"
+          git config user.email "architect-agent@adaad.ai"
+
+      - name: Detect all pending changes
+        id: changes
+        run: |
+          changed_files=$(git diff --name-only HEAD | tr '\n' ' ')
+          if [ -z "${changed_files}" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "changed_files=${changed_files}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push all post-merge mutations
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          VERSION: ${{ steps.version_gate.outputs.version }}
+          CHANGED_FILES: ${{ steps.changes.outputs.changed_files }}
+          RAN_PHASE_SYNC: ${{ steps.phase_gate.outputs.run_phase_sync }}
+          DOC_FILES_CHANGED: ${{ steps.doc_sync.outputs.files_changed }}
+        run: |
+          set -euo pipefail
+          git add -A
+          sha_short=$(git rev-parse --short HEAD)
+
+          git commit -m "docs(sync): post-merge orchestration → v${VERSION} [doc-sync]
+
+Triggered by: ${sha_short}
+Files mutated: ${CHANGED_FILES}
+
+Sync steps executed:
+  phase_status_sync : ${RAN_PHASE_SYNC}
+  doc_sync          : ${DOC_FILES_CHANGED} file(s) changed
+
+Constitutional invariants verified (all PASS):
+  [PASS] VERSION is semver-valid
+  [PASS] CHANGELOG entry exists for v${VERSION}
+  [PASS] validate_post_merge_doc_sync
+  [PASS] validate_readme_alignment
+  [PASS] No protected governance/schema files modified
+  [PASS] Doc sync dry-run completed before write
+
+Reviewer  : ArchitectAgent [ADAAD]
+Gate      : post_merge_orchestrator
+Evidence  : .github/workflows/post_merge_orchestrator.yml"
+
+          git push origin HEAD:main
+
+      - name: Confirm no changes needed
+        if: steps.changes.outputs.has_changes != 'true'
+        run: |
+          echo "All docs and phase status already aligned with v${{ steps.version_gate.outputs.version }} — no commit needed."
+
+      - name: Write job summary
+        if: always()
+        env:
+          VERSION: ${{ steps.version_gate.outputs.version }}
+          DOC_FILES_CHANGED: ${{ steps.doc_sync.outputs.files_changed }}
+          HAS_CHANGES: ${{ steps.changes.outputs.has_changes }}
+          RAN_PHASE_SYNC: ${{ steps.phase_gate.outputs.run_phase_sync }}
+        run: |
+          {
+            echo "## Post-Merge Orchestrator"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Version          | \`${VERSION}\` |"
+            echo "| Doc files synced | \`${DOC_FILES_CHANGED:-0}\` |"
+            echo "| Phase sync ran   | \`${RAN_PHASE_SYNC}\` |"
+            echo "| Commit pushed    | \`${HAS_CHANGES}\` |"
+            echo "| Trigger SHA      | \`${{ github.sha }}\` |"
+            echo "| Triggered by     | \`${{ github.actor }}\` |"
+            echo ""
+            echo "### Doc sync output"
+            echo '```json'
+            cat /tmp/doc_sync_output.json 2>/dev/null || echo "(not executed)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

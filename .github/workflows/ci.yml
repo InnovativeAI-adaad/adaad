@@ -231,6 +231,7 @@ jobs:
   docs-validation:
     runs-on: ubuntu-latest
     needs: classify
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
