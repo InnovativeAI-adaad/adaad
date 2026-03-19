@@ -1,5 +1,5 @@
 # Installing ADAAD on Android
-**InnovativeAI LLC · v7.0.0 · Free · No Play Store required**
+**InnovativeAI LLC · Version synced from `VERSION` during docs publish · Free · No Play Store required**
 
 > **Minimum:** Android 8.0 (API 26) · ~50 MB storage · Internet for workspace sync
 
@@ -31,7 +31,7 @@ Option B — Manual add:
 
 **Step 3 — Done.** Obtainium checks for new releases on your schedule.
 
-![QR — Obtainium import](docs/assets/qr/obtainium.svg)
+![QR — Obtainium import](docs/assets/qr/obtainium_install_android_doc.svg)
 *Scan to auto-import in Obtainium*
 
 ---
@@ -41,7 +41,7 @@ Option B — Manual add:
 **On your Android device:**
 
 1. Open `https://github.com/InnovativeAI-adaad/ADAAD/releases/latest`
-   or scan this QR code: ![QR — Releases](docs/assets/qr/releases.svg)
+   or scan this QR code: ![QR — Releases](docs/assets/qr/releases_install_android_doc.svg)
 2. Tap the `adaad-community-*.apk` file to download
 3. When the download completes, tap **Open** in the notification
 4. Android shows **"Install unknown app"** — tap **Settings** → enable
@@ -69,7 +69,7 @@ The PWA opens in standalone mode (no browser chrome). The Aponi governance
 dashboard, constitution browser, and ledger viewer all work offline once loaded.
 Mutation proposals require a live workspace endpoint.
 
-![QR — PWA](docs/assets/qr/pwa.svg)
+![QR — PWA](docs/assets/qr/pwa_install_android_doc.svg)
 *Scan to open the web app directly*
 
 ---
@@ -84,7 +84,7 @@ who want fully auditable, reproducible builds.
 1. Open the **F-Droid** app
 2. Go to **Settings → Repositories → +**
 3. Paste: `https://innovativeai-adaad.github.io/adaad-fdroid/repo`
-   or scan: ![QR — F-Droid](docs/assets/qr/fdroid.svg)
+   or scan: ![QR — F-Droid](docs/assets/qr/fdroid_install_android_doc.svg)
 4. Tap **Add repository**
 5. F-Droid refreshes — search **ADAAD** → Install
 
@@ -101,7 +101,7 @@ Visit our dedicated install page for a visual, QR-code-first guide:
 
 `https://innovativeai-adaad.github.io/ADAAD/install`
 
-![QR — Install page](docs/assets/qr/install_page.svg)
+![QR — Install page](docs/assets/qr/install_page_install_android_doc.svg)
 *Scan to open the full install guide on your phone*
 
 ---
@@ -186,7 +186,7 @@ To persist the key across sessions, add the `export` line to `~/.bashrc`.
 | *PWA "Add to Home screen" not shown* | Must use Chrome (not Firefox or Samsung Browser) — visit the page, wait 30s |
 | *`pip install adaad` fails on Android* | Android Python is typically 3.10; package requires ≥ 3.11 — use `git clone https://github.com/InnovativeAI-adaad/ADAAD.git` instead |
 | *`metadata-generation-failed` in Termux* | Run `pkg install libsodium python-cryptography -y` then `python3 onboard.py` |
-| *`on_event` deprecation warning* | Fixed in v7.0.0+ — update via `git pull` |
+| *`on_event` deprecation warning* | FastAPI lifespan APIs are now the canonical startup/shutdown path; update to the latest main branch and restart the server process |
 | *Server exits immediately in Termux* | Ensure `ui/aponi` exists; run `python3 server.py` from the ADAAD directory |
 
 File a bug: `https://github.com/InnovativeAI-adaad/ADAAD/issues` — label: `android`

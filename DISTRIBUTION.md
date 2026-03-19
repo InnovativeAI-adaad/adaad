@@ -278,3 +278,22 @@ The free tracks above provide full public availability immediately.
 ---
 
 *Last updated: 2026-03-06 · ADAAD v3.1.0-dev · InnovativeAI LLC*
+
+## QR Attribution Governance
+
+Use the QR registry as the source of truth:
+
+- Registry: `docs/assets/qr/registry.json`
+- Validator: `python scripts/validate_qr_registry.py`
+- Generator: `python scripts/generate_qr_assets.py`
+
+### Required conventions
+
+1. **Per-placement assets only**: each placement gets its own QR SVG (`install_card`, `install_android_doc`, `readme_banner`, etc.).
+2. **Approved attribution params** for direct links:
+   - `utm_source=qr`
+   - `utm_medium=<placement>`
+   - `utm_campaign=install_tracks_2026q2`
+3. **Redirect exception**: if a destination cannot safely carry UTM params, use a managed redirect endpoint under an approved redirect prefix in the registry.
+4. **Validation gate**: every active registry row must pass validator checks before release/promo publishing.
+

@@ -41,7 +41,7 @@
 <text x="180" y="70" fill="#22c55e" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p">F-Droid</text>
 <text x="180" y="86" fill="#1a4a28" font-size="9" letter-spacing="2" text-anchor="middle">ANDROID · VERIFIED</text>
 <rect x="148" y="96" width="64" height="64" rx="4" fill="#0a1a10" stroke="#1a4a28" stroke-width="1"/>
-<image href="docs/assets/qr/fdroid.svg" x="152" y="100" width="56" height="56"/>
+<image href="docs/assets/qr/fdroid_readme_banner.svg" x="152" y="100" width="56" height="56"/>
 <text x="180" y="177" fill="#0d3020" font-size="9" text-anchor="middle">Open source · No tracking</text>
 <text x="180" y="192" fill="#0d3020" font-size="9" text-anchor="middle">Automatic updates</text>
 
@@ -49,7 +49,7 @@
 <text x="540" y="70" fill="#a855f7" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p2">Obtainium</text>
 <text x="540" y="86" fill="#3a1a5a" font-size="9" letter-spacing="2" text-anchor="middle">ANDROID · AUTO-UPDATE</text>
 <rect x="508" y="96" width="64" height="64" rx="4" fill="#0d0a1a" stroke="#2a1a4a" stroke-width="1"/>
-<image href="docs/assets/qr/obtainium.svg" x="512" y="100" width="56" height="56"/>
+<image href="docs/assets/qr/obtainium_readme_banner.svg" x="512" y="100" width="56" height="56"/>
 <text x="540" y="177" fill="#2a1240" font-size="9" text-anchor="middle">Direct from GitHub Releases</text>
 <text x="540" y="192" fill="#2a1240" font-size="9" text-anchor="middle">Full version control</text>
 
@@ -57,7 +57,7 @@
 <text x="900" y="70" fill="#00d4ff" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p3">GitHub Releases</text>
 <text x="900" y="86" fill="#0a2a3a" font-size="9" letter-spacing="2" text-anchor="middle">ALL PLATFORMS</text>
 <rect x="868" y="96" width="64" height="64" rx="4" fill="#0a0f1a" stroke="#0d3050" stroke-width="1"/>
-<image href="docs/assets/qr/releases.svg" x="872" y="100" width="56" height="56"/>
+<image href="docs/assets/qr/releases_readme_banner.svg" x="872" y="100" width="56" height="56"/>
 <text x="900" y="177" fill="#0a2535" font-size="9" text-anchor="middle">Android · Linux · macOS</text>
 <text x="900" y="192" fill="#0a2535" font-size="9" text-anchor="middle">Windows WSL · CI/CD</text>
 
@@ -65,7 +65,7 @@
 <text x="1260" y="70" fill="#f5c842" font-size="16" font-weight="700" text-anchor="middle" filter="url(#ip-glow-sm)" class="ip-p4">PWA</text>
 <text x="1260" y="86" fill="#4a3a0a" font-size="9" letter-spacing="2" text-anchor="middle">BROWSER · INSTALL-FREE</text>
 <rect x="1228" y="96" width="64" height="64" rx="4" fill="#0e0c0a" stroke="#2a2a0d" stroke-width="1"/>
-<image href="docs/assets/qr/pwa.svg" x="1232" y="100" width="56" height="56"/>
+<image href="docs/assets/qr/pwa_readme_banner.svg" x="1232" y="100" width="56" height="56"/>
 <text x="1260" y="177" fill="#3a2f08" font-size="9" text-anchor="middle">No install required</text>
 <text x="1260" y="192" fill="#3a2f08" font-size="9" text-anchor="middle">Works on any device</text>
 </svg>
