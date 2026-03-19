@@ -45,6 +45,12 @@ Legitimate exceptions require updating both `tools/lint_import_paths.py` and `do
 - `Orchestrator._check_key_rotation_status()` now validates `security/keys/rotation.json` via the key-rotation attestation path when the attestation file exists.
 - Environments without rotation attestations keep the existing mtime-based key freshness fallback for migration compatibility.
 
+## DEVADAAD merge authorization replay gate behavior
+
+- `app/orchestration/adaad_trigger.py` now treats replay verification metadata as a hard merge-context prerequisite for `DEVADAAD`.
+- Merge-ready orchestration output must include verified-SHA replay context: manifest path, bundle digest, verification result, schema/signature validity, and divergence flag.
+- Any missing replay metadata or `divergence=true` result fail-closes merge authorization status.
+
 ## Goal graph initialization fail-closed behavior
 
 - `MutationExecutor` now treats `runtime/evolution/goal_graph.json` as a fail-closed initialization dependency in strict contexts.

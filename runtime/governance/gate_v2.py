@@ -98,6 +98,9 @@ class V2GateDecision:
     mutation_id: str
     capability_name: str
     exception_token_id: Optional[str]   # active token if Class B approved
+    replay_manifest_path: str
+    replay_bundle_digest: str
+    replay_verification_result: str
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -107,7 +110,30 @@ class V2GateDecision:
             "mutation_id": self.mutation_id,
             "capability_name": self.capability_name,
             "exception_token_id": self.exception_token_id,
+            "replay_manifest_path": self.replay_manifest_path,
+            "replay_bundle_digest": self.replay_bundle_digest,
+            "replay_verification_result": self.replay_verification_result,
         }
+
+
+@dataclass(frozen=True)
+class ReplayVerificationInputs:
+    """Replay verification inputs bound to governance merge decisions.
+
+    Invariants:
+    - `manifest_path` and `bundle_digest` are deterministic identifiers for the
+      replay evidence artifact bound to the verified SHA.
+    - Schema/signature checks are explicit booleans surfaced by upstream
+      verification and never inferred inside the gate.
+    """
+
+    manifest_path: str
+    bundle_digest: str
+    manifest_signed: bool
+    schema_valid: bool
+    signature_valid: bool
+    divergence: bool
+    verification_result: str
 
 
 # ---------------------------------------------------------------------------
@@ -315,6 +341,56 @@ def _check_semantic_int_0(
     return V2RuleResult(rule_id="SEMANTIC-INT-0", passed=True)
 
 
+def _check_replay_manifest_req_0(
+    *,
+    merge_approval_context: bool,
+    replay_inputs: Optional[ReplayVerificationInputs],
+) -> V2RuleResult:
+    """REPLAY-MANIFEST-REQ-0: merge approval requires valid replay manifest evidence."""
+    if not merge_approval_context:
+        return V2RuleResult(
+            rule_id="REPLAY-MANIFEST-REQ-0",
+            passed=True,
+            detail="not_applicable_non_merge_context",
+        )
+    if replay_inputs is None:
+        return V2RuleResult(
+            rule_id="REPLAY-MANIFEST-REQ-0",
+            passed=False,
+            reason="missing_replay_verification_inputs",
+            detail="Merge approval requires replay verification inputs for verified SHA context",
+        )
+    if not replay_inputs.manifest_signed:
+        return V2RuleResult(
+            rule_id="REPLAY-MANIFEST-REQ-0",
+            passed=False,
+            reason="manifest_not_signed",
+            detail="Replay manifest signature is required for merge approval",
+        )
+    if not replay_inputs.schema_valid:
+        return V2RuleResult(
+            rule_id="REPLAY-MANIFEST-REQ-0",
+            passed=False,
+            reason="manifest_schema_invalid",
+            detail="Replay manifest must pass schema validation for merge approval",
+        )
+    if not replay_inputs.signature_valid:
+        return V2RuleResult(
+            rule_id="REPLAY-MANIFEST-REQ-0",
+            passed=False,
+            reason="manifest_signature_invalid",
+            detail="Replay manifest signature validation failed",
+        )
+    if replay_inputs.divergence:
+        return V2RuleResult(
+            rule_id="REPLAY-MANIFEST-REQ-0",
+            passed=False,
+            reason="replay_divergence_true",
+            detail="Replay manifest reports divergence=true; merge must be blocked",
+        )
+    return V2RuleResult(rule_id="REPLAY-MANIFEST-REQ-0", passed=True)
+
+
 # ---------------------------------------------------------------------------
 # GovernanceGateV2 — additive; does NOT replace GovernanceGate
 # ---------------------------------------------------------------------------
@@ -347,6 +423,14 @@ class GovernanceGateV2:
         governance_or_mutation_scope_event: bool = False,
         evidence_bundle_present: bool = False,
         evidence_bundle_valid: bool = False,
+        merge_approval_context: bool = False,
+        replay_manifest_path: str = "",
+        replay_bundle_digest: str = "",
+        replay_verification_result: str = "",
+        replay_manifest_signed: bool = False,
+        replay_manifest_schema_valid: bool = False,
+        replay_manifest_signature_valid: bool = False,
+        replay_manifest_divergence: bool = False,
     ) -> V2GateDecision:
         """Evaluate all Phase 63+ rules in canonical order.
 
@@ -373,6 +457,29 @@ class GovernanceGateV2:
             )
         )
         results.append(_check_sandbox_div_0(replay_diverged))
+        replay_inputs = ReplayVerificationInputs(
+            manifest_path=str(replay_manifest_path or "").strip(),
+            bundle_digest=str(replay_bundle_digest or "").strip(),
+            manifest_signed=bool(replay_manifest_signed),
+            schema_valid=bool(replay_manifest_schema_valid),
+            signature_valid=bool(replay_manifest_signature_valid),
+            divergence=bool(replay_manifest_divergence),
+            verification_result=str(replay_verification_result or "").strip(),
+        ) if (
+            replay_manifest_path
+            or replay_bundle_digest
+            or replay_verification_result
+            or replay_manifest_signed
+            or replay_manifest_schema_valid
+            or replay_manifest_signature_valid
+            or replay_manifest_divergence
+        ) else None
+        results.append(
+            _check_replay_manifest_req_0(
+                merge_approval_context=merge_approval_context,
+                replay_inputs=replay_inputs,
+            )
+        )
         results.append(_check_semantic_int_0(before_source, after_source))
 
         failed = [r for r in results if not r.passed]
@@ -403,6 +510,9 @@ class GovernanceGateV2:
             mutation_id=mutation_id,
             capability_name=capability_name,
             exception_token_id=exception_token_id,
+            replay_manifest_path=replay_inputs.manifest_path if replay_inputs else "",
+            replay_bundle_digest=replay_inputs.bundle_digest if replay_inputs else "",
+            replay_verification_result=replay_inputs.verification_result if replay_inputs else "",
         )
 
 
@@ -422,4 +532,6 @@ __all__ = [
     "_check_sandbox_div_0",
     "_check_evidence_bundle_req_0",
     "_check_semantic_int_0",
+    "_check_replay_manifest_req_0",
+    "ReplayVerificationInputs",
 ]

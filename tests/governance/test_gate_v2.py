@@ -38,6 +38,7 @@ from runtime.governance.gate_v2 import (
     _check_ast_import_0,
     _check_ast_complex_0,
     _check_evidence_bundle_req_0,
+    _check_replay_manifest_req_0,
     _check_sandbox_div_0,
     _check_semantic_int_0,
 )
@@ -293,6 +294,21 @@ class TestT63Gate05B:
 
 
 # ---------------------------------------------------------------------------
+# T63-GATE-05C: REPLAY-MANIFEST-REQ-0 — merge context requires valid replay manifest
+# ---------------------------------------------------------------------------
+
+class TestT63Gate05C:
+    def test_non_merge_context_is_not_applicable(self):
+        result = _check_replay_manifest_req_0(merge_approval_context=False, replay_inputs=None)
+        assert result.passed
+
+    def test_merge_context_missing_inputs_fails(self):
+        result = _check_replay_manifest_req_0(merge_approval_context=True, replay_inputs=None)
+        assert not result.passed
+        assert result.reason == "missing_replay_verification_inputs"
+
+
+# ---------------------------------------------------------------------------
 # T63-GATE-06: SEMANTIC-INT-0 — error guard removal blocked
 # ---------------------------------------------------------------------------
 
@@ -536,7 +552,7 @@ class TestT63Gate12:
         )
         assert decision.approved
         assert not decision.class_b_eligible
-        assert len(decision.rule_results) == 6
+        assert len(decision.rule_results) == 7
 
     def test_eval_in_source_blocked(self, tmp_path):
         gate = GovernanceGateV2(exception_ledger=_make_ledger(tmp_path))
@@ -582,7 +598,7 @@ class TestT63Gate12:
         )
         rule_ids = {r.rule_id for r in decision.rule_results}
         assert rule_ids == {"AST-SAFE-0", "AST-IMPORT-0", "AST-COMPLEX-0",
-                            "EVIDENCE-BUNDLE-REQ-0", "SANDBOX-DIV-0", "SEMANTIC-INT-0"}
+                            "EVIDENCE-BUNDLE-REQ-0", "SANDBOX-DIV-0", "REPLAY-MANIFEST-REQ-0", "SEMANTIC-INT-0"}
 
     def test_scoped_event_without_evidence_bundle_blocked(self, tmp_path):
         gate = GovernanceGateV2(exception_ledger=_make_ledger(tmp_path))
@@ -600,6 +616,49 @@ class TestT63Gate12:
         assert not decision.approved
         failed_ids = {r.rule_id for r in decision.rule_results if not r.passed}
         assert "EVIDENCE-BUNDLE-REQ-0" in failed_ids
+
+    def test_merge_context_blocks_on_divergence(self, tmp_path):
+        gate = GovernanceGateV2(exception_ledger=_make_ledger(tmp_path))
+        decision = gate.evaluate(
+            mutation_id="mut-merge-diverged",
+            capability_name="evolution.proposal",
+            after_source=_SIMPLE_SOURCE,
+            before_source=_SIMPLE_SOURCE,
+            current_epoch_seq=1,
+            merge_approval_context=True,
+            replay_manifest_path="security/replay_manifests/verified.json",
+            replay_bundle_digest="sha256:" + ("f" * 64),
+            replay_verification_result="fail",
+            replay_manifest_signed=True,
+            replay_manifest_schema_valid=True,
+            replay_manifest_signature_valid=True,
+            replay_manifest_divergence=True,
+        )
+        assert not decision.approved
+        failed_ids = {r.rule_id for r in decision.rule_results if not r.passed}
+        assert "REPLAY-MANIFEST-REQ-0" in failed_ids
+
+    def test_merge_context_passes_on_valid_manifest(self, tmp_path):
+        gate = GovernanceGateV2(exception_ledger=_make_ledger(tmp_path))
+        decision = gate.evaluate(
+            mutation_id="mut-merge-clean",
+            capability_name="evolution.proposal",
+            after_source=_SIMPLE_SOURCE,
+            before_source=_SIMPLE_SOURCE,
+            current_epoch_seq=1,
+            merge_approval_context=True,
+            replay_manifest_path="security/replay_manifests/verified.json",
+            replay_bundle_digest="sha256:" + ("1" * 64),
+            replay_verification_result="pass",
+            replay_manifest_signed=True,
+            replay_manifest_schema_valid=True,
+            replay_manifest_signature_valid=True,
+            replay_manifest_divergence=False,
+        )
+        assert decision.approved
+        assert decision.replay_manifest_path == "security/replay_manifests/verified.json"
+        assert decision.replay_bundle_digest == "sha256:" + ("1" * 64)
+        assert decision.replay_verification_result == "pass"
 
 
 # ---------------------------------------------------------------------------
@@ -705,4 +764,4 @@ class TestT63Gate15:
         d = decision.to_dict()
         assert d["mutation_id"] == "mut-serial"
         assert isinstance(d["rule_results"], list)
-        assert len(d["rule_results"]) == 6
+        assert len(d["rule_results"]) == 7

@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
 from typing import Any, Callable, Mapping, Sequence
@@ -139,34 +139,80 @@ class AdaadTriggerOrchestrator:
                 "tier_0": True,
                 "tier_1": True,
                 "tier_3": True,
+                "tier_m": True,
+                "replay_verification": {
+                    "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
+                    "bundle_digest": "sha256:" + ("a" * 64),
+                    "verification_result": "pass",
+                    "verified_sha": "sha-verified-0001",
+                    "schema_valid": True,
+                    "signature_valid": True,
+                    "divergence": False,
+                },
+            },
+            "replay_diverged": {
+                "blocked_reason": "replay_divergence_detected",
+                "tier_0": True,
+                "tier_1": True,
+                "tier_3": True,
+                "tier_m": False,
+                "replay_verification": {
+                    "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
+                    "bundle_digest": "sha256:" + ("b" * 64),
+                    "verification_result": "fail",
+                    "verified_sha": "sha-verified-0002",
+                    "schema_valid": True,
+                    "signature_valid": True,
+                    "divergence": True,
+                },
             },
         }
         profile = scenario_map.get(scenario, scenario_map["merge_ready"])
 
-        gate_names = ("tier_0", "tier_1", "tier_3")
+        gate_names: tuple[str, ...]
+        if request.merge_authority:
+            gate_names = ("tier_0", "tier_1", "tier_3", "tier_m")
+        else:
+            gate_names = ("tier_0", "tier_1", "tier_3")
         gate_results = self._evaluate_gates(gate_names)
         by_name = {result.gate: result for result in gate_results}
         scenario_pass = all(bool(profile.get(name, True)) for name in gate_names)
         gate_pass = all(by_name.get(name, GateResult("", "", True, "")).passed for name in gate_names)
+        replay_verification = dict(profile.get("replay_verification") or {})
+        replay_gate_pass = self._replay_merge_gate_passes(request=request, replay_verification=replay_verification)
         blocked_reason = profile.get("blocked_reason") if scenario != "merge_ready" else None
+        if request.merge_authority and not replay_gate_pass and not blocked_reason:
+            blocked_reason = "missing_replay_verification_for_verified_sha"
+
+        payload = {
+            "trigger": request.principal,
+            "action": request.action,
+            "simulation": request.simulation,
+            "scenario": scenario,
+        }
+        if replay_verification:
+            payload["replay_bundle_metadata"] = {
+                "manifest_path": str(replay_verification.get("manifest_path", "")).strip(),
+                "bundle_digest": str(replay_verification.get("bundle_digest", "")).strip(),
+                "verification_result": str(replay_verification.get("verification_result", "")).strip(),
+                "verified_sha": str(replay_verification.get("verified_sha", "")).strip().lower(),
+                "schema_valid": bool(replay_verification.get("schema_valid", False)),
+                "signature_valid": bool(replay_verification.get("signature_valid", False)),
+                "divergence": bool(replay_verification.get("divergence", False)),
+            }
 
         ledger_response = self._ledger.write_event(
             {
                 "event_type": "adaad_orchestration_attempt.v1",
-                "timestamp_utc": datetime.now(UTC).isoformat(),
-                "payload": {
-                    "trigger": request.principal,
-                    "action": request.action,
-                    "simulation": request.simulation,
-                    "scenario": scenario,
-                },
+                "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                "payload": payload,
             }
         )
 
         stage_result = self._git.stage(simulation=request.simulation)
         merge_result = self._git.merge(simulation=request.simulation)
 
-        status = "blocked" if blocked_reason or not scenario_pass or not gate_pass else "ready"
+        status = "blocked" if blocked_reason or not scenario_pass or not gate_pass or not replay_gate_pass else "ready"
         output_lines = [
             "[ADAAD ORIENT]",
             f"Trigger: {request.principal}",
@@ -179,6 +225,8 @@ class AdaadTriggerOrchestrator:
         for name in gate_names:
             line_status = "PASS" if bool(profile.get(name, True)) and by_name.get(name, GateResult("", "", True, "")).passed else "FAIL"
             output_lines.append(f"{name}: {line_status} (simulation={'true' if request.simulation else 'false'})")
+        if request.merge_authority:
+            output_lines.append(f"replay_verified_sha_context: {'PASS' if replay_gate_pass else 'FAIL'}")
 
         if blocked_reason:
             output_lines.append(f"Blocked reason: {blocked_reason}")
@@ -189,12 +237,32 @@ class AdaadTriggerOrchestrator:
             "simulation": request.simulation,
             "scenario": scenario,
             "blocked_reason": blocked_reason,
+            "replay_verification": replay_verification,
+            "replay_gate_pass": replay_gate_pass,
             "gate_results": [result.__dict__ for result in gate_results],
             "stage_result": stage_result,
             "merge_result": merge_result,
             "ledger": ledger_response,
             "output": "\n".join(output_lines),
         }
+
+    @staticmethod
+    def _replay_merge_gate_passes(*, request: TriggerRequest, replay_verification: Mapping[str, Any]) -> bool:
+        """Require replay verification output in merge authority flows."""
+        if not request.merge_authority:
+            return True
+        required_str_fields = ("manifest_path", "bundle_digest", "verification_result", "verified_sha")
+        for field in required_str_fields:
+            if not str(replay_verification.get(field, "")).strip():
+                return False
+        if not bool(replay_verification.get("schema_valid", False)):
+            return False
+        if not bool(replay_verification.get("signature_valid", False)):
+            return False
+        if bool(replay_verification.get("divergence", False)):
+            return False
+        verification_result = str(replay_verification.get("verification_result", "")).strip().lower()
+        return verification_result in {"pass", "verified", "ok"}
 
 
 def run_trigger(raw_command: str, *, repo_root: Path, scenario: str = "merge_ready") -> dict[str, Any]:
