@@ -12,7 +12,9 @@ from runtime.evolution.governor import EvolutionGovernor
 from runtime.evolution.lineage_v2 import LineageIntegrityError, LineageLedgerV2
 from runtime.evolution.metrics_schema import EvolutionMetricsEmitter
 from runtime.evolution.replay import ReplayEngine
+from runtime.evolution.replay_divergence import classify_replay_divergence
 from runtime.evolution.replay_mode import ReplayMode, normalize_replay_mode
+from runtime.evolution.replay_state_machine import ReplayStateMachine
 from runtime.evolution.replay_verifier import ReplayVerifier
 from runtime.evolution.checkpoint_registry import CheckpointRegistry
 from runtime.evolution.checkpoint_verifier import verify_checkpoint_chain, verify_epoch_checkpoint_continuity
@@ -348,19 +350,36 @@ class EvolutionRuntime:
                 "mode": replay_mode.value,
                 "verify_target": "none",
                 "has_divergence": False,
+                "federation_drift_detected": False,
                 "decision": "skip",
+                "halt_reason": None,
+                "divergence_class": None,
                 "results": [],
             }
 
-        if epoch_id:
-            results = [self.verify_epoch(epoch_id)]
-            verify_target = "single_epoch"
-        else:
-            results = [self.verify_epoch(each_epoch_id) for each_epoch_id in self.ledger.list_epoch_ids()]
-            verify_target = "all_epochs"
+        divergence_details: list[Dict[str, Any]] = []
+        results: list[Dict[str, Any]] = []
+        verify_target = "single_epoch" if epoch_id else "all_epochs"
+        traversal = [epoch_id] if epoch_id else self.ledger.list_epoch_ids()
+
+        for each_epoch_id in traversal:
+            result = self.verify_epoch(str(each_epoch_id))
+            results.append(result)
+            if bool(result.get("passed")):
+                continue
+            divergence = classify_replay_divergence(result)
+            divergence_details.append(divergence)
+            if replay_mode.fail_closed:
+                break
 
         has_divergence = any(not result["passed"] for result in results)
         federation_drift_detected = any(bool(result.get("federation_drift_detected")) for result in results)
+        fail_closed_payload = {
+            "schema_version": "replay_fail_closed_decision.v1",
+            "ok": False,
+            "reason_code": str((divergence_details[0] if divergence_details else {}).get("reason_code") or "hash_mismatch"),
+            "diagnostics": dict((divergence_details[0] if divergence_details else {}).get("diagnostics") or {}),
+        } if has_divergence else {}
         if (has_divergence or federation_drift_detected) and replay_mode.fail_closed:
             reason = "federation_drift_detected" if federation_drift_detected else "replay_divergence"
             self.governor.enter_fail_closed(reason, self.current_epoch_id or "unknown")
@@ -370,10 +389,14 @@ class EvolutionRuntime:
         return {
             "mode": replay_mode.value,
             "verify_target": verify_target,
-            "has_divergence": has_divergence,
-            "federation_drift_detected": federation_drift_detected,
-            "decision": decision,
+            "has_divergence": invariant_checks["has_divergence"],
+            "federation_drift_detected": invariant_checks["federation_drift_detected"],
+            "decision": invariant_checks["decision"],
+            "halt_reason": halt_reason,
+            "divergence_class": invariant_checks["divergence_class"],
             "results": results,
+            "divergence_details": divergence_details,
+            "fail_closed_payload": fail_closed_payload,
         }
 
     def verify_all_epochs(self) -> bool:

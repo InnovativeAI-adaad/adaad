@@ -244,12 +244,14 @@ class OrchestratorReplayModeTest(unittest.TestCase):
                 "verify_target": "all_epochs",
                 "has_divergence": True,
                 "decision": "fail_closed",
+                "fail_closed_payload": {"schema_version": "replay_fail_closed_decision.v1", "reason_code": "hash_mismatch"},
                 "results": [{"baseline_epoch": "epoch-1", "expected_digest": "a", "actual_digest": "b", "decision": "diverge", "passed": False}],
             })
             orch.boot()
             fail.assert_called_once()
             self.assertEqual(fail.call_args.args[0], "replay_divergence")
             self.assertIn("artifacts", fail.call_args.kwargs.get("payload", {}))
+            self.assertEqual(fail.call_args.kwargs["payload"]["decision_payload"]["reason_code"], "hash_mismatch")
 
     @mock.patch("app.orchestration.replay_preflight.build_replay_divergence_artifacts")
     @mock.patch.object(Orchestrator, "_fail")

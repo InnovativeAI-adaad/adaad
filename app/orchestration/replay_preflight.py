@@ -57,6 +57,8 @@ def execute_replay_preflight(
         "target": preflight.get("verify_target"),
         "divergence": has_divergence,
         "results": preflight.get("results", []),
+        "divergence_details": preflight.get("divergence_details", []),
+        "diagnostics": preflight.get("fail_closed_payload", {}),
         "replay_score": replay_score,
         "ts": replay_finished_at,
     }
@@ -104,7 +106,13 @@ def execute_replay_preflight(
                 level="WARN",
             )
     if has_divergence and mode.fail_closed:
-        orchestrator._fail("replay_divergence", payload={"artifacts": outcome.get("divergence_artifacts") or {}})
+        orchestrator._fail(
+            "replay_divergence",
+            payload={
+                "artifacts": outcome.get("divergence_artifacts") or {},
+                "decision_payload": preflight.get("fail_closed_payload", {}),
+            },
+        )
     orchestrator._v("Replay Summary:")
     orchestrator._v(f"  Mode: {mode.value}")
     orchestrator._v(f"  Target: {preflight.get('verify_target')}")

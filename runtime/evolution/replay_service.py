@@ -35,6 +35,8 @@ class ReplayVerificationService:
             "target": preflight.get("verify_target"),
             "divergence": has_divergence,
             "results": preflight.get("results", []),
+            "divergence_details": preflight.get("divergence_details", []),
+            "diagnostics": preflight.get("fail_closed_payload", {}),
             "replay_score": replay_score,
             "ts": replay_finished_at,
         }

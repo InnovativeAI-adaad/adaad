@@ -22,7 +22,7 @@ def main() -> int:
     parser.add_argument(
         "--scenario",
         default="merge_ready",
-        choices=["dependency_blocked", "evidence_missing", "tier1_failure", "merge_ready"],
+        choices=["dependency_blocked", "evidence_missing", "tier1_failure", "merge_ready", "replay_diverged"],
         help="Predefined scenario profile for orchestration/gate evaluation output.",
     )
     parser.add_argument("--json", action="store_true", help="Emit full JSON envelope.")

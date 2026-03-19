@@ -185,6 +185,38 @@ def build_reviewer_action_outcome_payload(
         payload["tier"] = str(tier).strip()
     return payload
 
+
+def attach_replay_bundle_metadata(
+    payload: Mapping[str, Any],
+    *,
+    manifest_path: str,
+    bundle_digest: str,
+    verification_result: str,
+    verified_sha: str,
+    schema_valid: bool,
+    signature_valid: bool,
+    divergence: bool,
+) -> dict[str, Any]:
+    """Attach replay bundle metadata to a PR governance artifact payload.
+
+    Rationale: keep merge-tier replay evidence binding explicit and deterministic
+    for downstream governance gate evaluation.
+    Invariants: function is pure (no side effects), preserves existing payload
+    keys, and always emits normalized replay metadata fields.
+    """
+    attached = dict(payload)
+    replay_metadata = {
+        "manifest_path": str(manifest_path).strip(),
+        "bundle_digest": str(bundle_digest).strip(),
+        "verification_result": str(verification_result).strip(),
+        "verified_sha": str(verified_sha).strip().lower(),
+        "schema_valid": bool(schema_valid),
+        "signature_valid": bool(signature_valid),
+        "divergence": bool(divergence),
+    }
+    attached["replay_bundle_metadata"] = replay_metadata
+    return attached
+
 __all__ = [
     "CURRENT_PR_LIFECYCLE_SCHEMA_VERSION",
     "REQUIRED_PR_LIFECYCLE_EVENT_TYPES",
@@ -195,4 +227,5 @@ __all__ = [
     "validate_append_only_invariants",
     "build_reviewer_action_outcome_payload",
     "REVIEWER_ACTION_OUTCOME_REQUIRED_FIELDS",
+    "attach_replay_bundle_metadata",
 ]
