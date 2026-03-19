@@ -5,6 +5,7 @@ pytestmark = pytest.mark.governance_gate
 
 from runtime.governance.pr_lifecycle_event_contract import (
     CURRENT_PR_LIFECYCLE_SCHEMA_VERSION,
+    attach_replay_bundle_metadata,
     build_event_digest,
     classify_retry,
     derive_idempotency_key,
@@ -112,3 +113,29 @@ def test_append_only_invariants_detect_tampering() -> None:
 
     errors = validate_append_only_invariants(tampered)
     assert "event[1]:previous_event_digest_mismatch" in errors
+
+
+def test_attach_replay_bundle_metadata_preserves_payload_and_adds_normalized_metadata() -> None:
+    payload = {"trigger": "DEVADAAD", "scenario": "merge_ready"}
+
+    attached = attach_replay_bundle_metadata(
+        payload,
+        manifest_path=" security/replay_manifests/manifest.json ",
+        bundle_digest=" sha256:" + ("a" * 64) + " ",
+        verification_result="pass",
+        verified_sha="ABCDEF1234",
+        schema_valid=True,
+        signature_valid=True,
+        divergence=False,
+    )
+
+    assert attached["trigger"] == "DEVADAAD"
+    assert attached["replay_bundle_metadata"] == {
+        "manifest_path": "security/replay_manifests/manifest.json",
+        "bundle_digest": "sha256:" + ("a" * 64),
+        "verification_result": "pass",
+        "verified_sha": "abcdef1234",
+        "schema_valid": True,
+        "signature_valid": True,
+        "divergence": False,
+    }

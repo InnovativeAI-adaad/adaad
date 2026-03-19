@@ -76,3 +76,29 @@ def test_end_to_end_simulation_never_mutates_git_state(tmp_path: Path) -> None:
 
     assert pre_head == post_head
     assert pre_status == post_status == ""
+
+
+def test_devadaad_merge_ready_requires_verified_sha_replay_context(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True, text=True)
+    (tmp_path / "demo.txt").write_text("data\n", encoding="utf-8")
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path)
+
+    envelope = orchestrator.run("DEVADAAD", scenario="merge_ready")
+
+    assert envelope["status"] == "ready"
+    assert envelope["replay_gate_pass"] is True
+    assert envelope["replay_verification"]["verified_sha"] == "sha-verified-0001"
+    assert "replay_verified_sha_context: PASS" in envelope["output"]
+
+
+def test_devadaad_replay_divergence_blocks_merge(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True, text=True)
+    (tmp_path / "demo.txt").write_text("data\n", encoding="utf-8")
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path)
+
+    envelope = orchestrator.run("DEVADAAD", scenario="replay_diverged")
+
+    assert envelope["status"] == "blocked"
+    assert envelope["replay_gate_pass"] is False
+    assert envelope["blocked_reason"] == "replay_divergence_detected"
+    assert "replay_verified_sha_context: FAIL" in envelope["output"]
