@@ -22,6 +22,7 @@ jobs:
       security: ${{ steps.filter.outputs.security }}
       amendment_logic: ${{ steps.filter.outputs.amendment_logic }}
       phase7_reputation_gate: ${{ steps.filter.outputs.phase7_reputation_gate }}
+      web_assets_policy: ${{ steps.filter.outputs.web_assets_policy }}
       other: ${{ steps.filter.outputs.other }}
       docs_only: ${{ steps.classify.outputs.docs_only }}
       tests_only: ${{ steps.classify.outputs.tests_only }}
@@ -60,6 +61,13 @@ jobs:
               - 'schemas/governance_policy*.json'
               - 'schemas/governance_policy_artifact*.json'
               - 'docs/schemas/constitution.v1.json'
+              - 'docs/assets/**/*.svg'
+              - 'docs/assets/qr/registry.json'
+              - 'docs/manifest.json'
+              - 'docs/sw.js'
+              - 'scripts/validate_qr_registry.py'
+              - 'scripts/generate_qr_assets.py'
+              - 'scripts/validate_manifest_inventory.py'
             runtime:
               - 'runtime/**'
               - 'app/**'
@@ -76,6 +84,14 @@ jobs:
               - 'governance/**'
               - 'server.py'
               - 'ui/**'
+            web_assets_policy:
+              - 'docs/assets/**/*.svg'
+              - 'docs/assets/qr/registry.json'
+              - 'docs/manifest.json'
+              - 'docs/sw.js'
+              - 'scripts/validate_qr_registry.py'
+              - 'scripts/generate_qr_assets.py'
+              - 'scripts/validate_manifest_inventory.py'
             other:
               - '.github/**'
               - 'scripts/**'
@@ -93,6 +109,7 @@ jobs:
           RUNTIME: ${{ steps.filter.outputs.runtime }}
           SECURITY: ${{ steps.filter.outputs.security }}
           POLICY_TOUCH: ${{ steps.filter.outputs.policy_touch }}
+          WEB_ASSETS_POLICY: ${{ steps.filter.outputs.web_assets_policy }}
           OTHER: ${{ steps.filter.outputs.other }}
         run: |
           set -euo pipefail
@@ -162,9 +179,9 @@ jobs:
             promotion_reason="Skipped: ${pr_tier}-only change."
           fi
 
-          if [ "$POLICY_TOUCH" = "true" ] || [ "$gov_policy_flag" = "true" ]; then
+          if [ "$POLICY_TOUCH" = "true" ] || [ "$WEB_ASSETS_POLICY" = "true" ] || [ "$gov_policy_flag" = "true" ]; then
             run_shadow_governance_gate=true
-            shadow_governance_reason='Ran: policy-touching paths or policy-impact flag detected.'
+            shadow_governance_reason='Ran: policy-touching/web-asset-policy paths or policy-impact flag detected.'
           fi
 
           if [ "$IS_PR" = "true" ] && [ "$pr_tier" = "critical" ]; then

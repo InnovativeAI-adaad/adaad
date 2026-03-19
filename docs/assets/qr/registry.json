@@ -15,98 +15,112 @@
       "active": true,
       "placement": "install_card",
       "asset_path": "docs/assets/qr/releases_install_card.svg",
-      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:0ac4714eea049208a657bf46cb41ae5d7c1fc00e432bcd9a9f7e50b61505fc32"
     },
     {
       "id": "releases-install-android-doc",
       "active": true,
       "placement": "install_android_doc",
       "asset_path": "docs/assets/qr/releases_install_android_doc.svg",
-      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:0ac4714eea049208a657bf46cb41ae5d7c1fc00e432bcd9a9f7e50b61505fc32"
     },
     {
       "id": "releases-readme-banner",
       "active": true,
       "placement": "readme_banner",
       "asset_path": "docs/assets/qr/releases_readme_banner.svg",
-      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD/releases/latest?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:0ac4714eea049208a657bf46cb41ae5d7c1fc00e432bcd9a9f7e50b61505fc32"
     },
     {
       "id": "obtainium-install-card",
       "active": true,
       "placement": "install_card",
       "asset_path": "docs/assets/qr/obtainium_install_card.svg",
-      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:5cb7c1215547718b2f36299a788c979aa2278f6e29c1f07d5986899dbd24d028"
     },
     {
       "id": "obtainium-install-android-doc",
       "active": true,
       "placement": "install_android_doc",
       "asset_path": "docs/assets/qr/obtainium_install_android_doc.svg",
-      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:5cb7c1215547718b2f36299a788c979aa2278f6e29c1f07d5986899dbd24d028"
     },
     {
       "id": "obtainium-readme-banner",
       "active": true,
       "placement": "readme_banner",
       "asset_path": "docs/assets/qr/obtainium_readme_banner.svg",
-      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://github.com/InnovativeAI-adaad/ADAAD?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:5cb7c1215547718b2f36299a788c979aa2278f6e29c1f07d5986899dbd24d028"
     },
     {
       "id": "pwa-install-card",
       "active": true,
       "placement": "install_card",
       "asset_path": "docs/assets/qr/pwa_install_card.svg",
-      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:3141b5ae30b05830435a34c19fddf88b9770975088a71f0665d51657df6ba251"
     },
     {
       "id": "pwa-install-android-doc",
       "active": true,
       "placement": "install_android_doc",
       "asset_path": "docs/assets/qr/pwa_install_android_doc.svg",
-      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:3141b5ae30b05830435a34c19fddf88b9770975088a71f0665d51657df6ba251"
     },
     {
       "id": "pwa-readme-banner",
       "active": true,
       "placement": "readme_banner",
       "asset_path": "docs/assets/qr/pwa_readme_banner.svg",
-      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:3141b5ae30b05830435a34c19fddf88b9770975088a71f0665d51657df6ba251"
     },
     {
       "id": "fdroid-install-card",
       "active": true,
       "placement": "install_card",
       "asset_path": "docs/assets/qr/fdroid_install_card.svg",
-      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=install_card&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:2b5bc9c4e3185b99780bcbd4a4897c6711a1c514da9cbbf446d392a692c00183"
     },
     {
       "id": "fdroid-install-android-doc",
       "active": true,
       "placement": "install_android_doc",
       "asset_path": "docs/assets/qr/fdroid_install_android_doc.svg",
-      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:2b5bc9c4e3185b99780bcbd4a4897c6711a1c514da9cbbf446d392a692c00183"
     },
     {
       "id": "fdroid-readme-banner",
       "active": true,
       "placement": "readme_banner",
       "asset_path": "docs/assets/qr/fdroid_readme_banner.svg",
-      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/adaad-fdroid/repo?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:2b5bc9c4e3185b99780bcbd4a4897c6711a1c514da9cbbf446d392a692c00183"
     },
     {
       "id": "install-page-install-android-doc",
       "active": true,
       "placement": "install_android_doc",
       "asset_path": "docs/assets/qr/install_page_install_android_doc.svg",
-      "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=install_android_doc&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:cc495321aaf82bb9cc3b218fc1c93d2de006858841263f521962a5201384059d"
     },
     {
       "id": "install-page-readme-banner",
       "active": true,
       "placement": "readme_banner",
       "asset_path": "docs/assets/qr/install_page_readme_banner.svg",
-      "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
+      "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2",
+      "asset_sha256": "sha256:cc495321aaf82bb9cc3b218fc1c93d2de006858841263f521962a5201384059d"
     }
   ]
 }
