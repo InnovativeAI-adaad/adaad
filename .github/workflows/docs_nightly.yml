@@ -1,0 +1,95 @@
+name: Docs Nightly Full Validation
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: docs-nightly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  full-docs-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+          requirements-file: requirements.dev.txt
+
+      - name: Start timing harness
+        run: |
+          echo "START_TS=$(date +%s)" >> "$GITHUB_ENV"
+          echo -e "step\telapsed_s\tmode" > /tmp/timing.tsv
+
+      - name: Full validate README alignment
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_readme_alignment.py --format json
+          echo -e "validate_readme_alignment\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full validate manifest inventory alignment
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_manifest_inventory.py --format json
+          echo -e "validate_manifest_inventory\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full validate deterministic QR assets
+        run: |
+          T0=$(date +%s)
+          python scripts/generate_qr_assets.py --check
+          echo -e "generate_qr_assets\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full validate markdown link and image integrity
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_docs_integrity.py --format json
+          echo -e "validate_docs_integrity\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full lint active docs dependency references
+        run: |
+          T0=$(date +%s)
+          python scripts/lint_active_docs_dependency_refs.py --format json
+          echo -e "lint_active_docs_dependency_refs\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full validate governance + release markdown link integrity
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_docs_integrity.py --format json --roots docs/governance docs/comms docs/release docs/releases
+          echo -e "validate_docs_integrity_governance\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full validate post-merge docs sync governance contract
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_post_merge_doc_sync.py
+          echo -e "validate_post_merge_doc_sync\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Full validate deterministic changelog generation
+        run: |
+          T0=$(date +%s)
+          python scripts/generate_changelog.py --check
+          echo -e "generate_changelog\t$(( $(date +%s) - T0 ))\tfull" >> /tmp/timing.tsv
+
+      - name: Publish nightly docs validation timing summary
+        if: always()
+        run: |
+          TOTAL_ELAPSED=$(( $(date +%s) - START_TS ))
+          {
+            echo "## Nightly docs validation timing"
+            echo ""
+            echo "> Mode: \`full\` · Total: \`${TOTAL_ELAPSED}s\`"
+            echo ""
+            echo "| Validator | Elapsed (s) | Mode |"
+            echo "| --- | --- | --- |"
+            tail -n +2 /tmp/timing.tsv | while IFS=$'\t' read -r step elapsed mode; do
+              echo "| \`$step\` | \`$elapsed\` | \`$mode\` |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"

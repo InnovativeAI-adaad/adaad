@@ -141,6 +141,27 @@ This provides audit-ready traceability for CI escalation decisions.
 Simplification KPI enforcement is audited as a constitutional-grade control and is included in
 the CI summary table under `simplification-contract-gate`.
 
+## Two-tier docs validation strategy
+
+`docs-validation` in `.github/workflows/ci.yml` now resolves a deterministic tier:
+
+- `full` mode for critical-tier PRs, `push` runs, `workflow_dispatch` runs, and any governance/runtime/security path touches.
+- `scoped` mode for standard/docs-tier PRs, using changed-file input for:
+  - `scripts/validate_docs_integrity.py --changed-files`
+  - `scripts/lint_active_docs_dependency_refs.py --changed-files`
+
+Fail-closed governance behavior is preserved by always running a full integrity scan over
+`docs/governance`, `docs/comms`, `docs/release`, and `docs/releases`, and by expanding those
+roots in scoped mode whenever one of those paths is touched.
+
+To maintain full-repo drift detection, full docs validation also runs in:
+
+- nightly schedule workflow: `.github/workflows/docs_nightly.yml`
+- strict release workflow: `.github/workflows/governance_strict_release_gate.yml` (`full-docs-validation` job)
+
+Each docs-validation run publishes per-step timing and total elapsed seconds in the workflow
+summary for performance tracking.
+
 
 ## Secret scanning gate (required)
 

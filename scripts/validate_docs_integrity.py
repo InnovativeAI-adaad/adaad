@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -14,6 +15,16 @@ MD_LINK_PATTERN = re.compile(r"(!?)\[([^\]]*)\]\(([^)]+)\)")
 HTML_IMG_PATTERN = re.compile(r"<img\b[^>]*>", re.IGNORECASE)
 ATTR_PATTERN = re.compile(r'([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(["\'])(.*?)\2')
 SVG_IMAGE_TAG_PATTERN = re.compile(r"<image\b[^>]*>", re.IGNORECASE)
+
+GOVERNANCE_ALWAYS_ROOTS: frozenset[str] = frozenset(
+    {
+        "docs/governance",
+        "docs/comms",
+        "docs/release",
+        "docs/releases",
+    }
+)
+SCOPED_DOC_EXTENSIONS: frozenset[str] = frozenset({".md", ".html", ".svg", ".txt", ".rst"})
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -31,6 +42,11 @@ def _build_parser() -> argparse.ArgumentParser:
         nargs="+",
         default=None,
         help="Optional markdown roots (files or directories) relative to repo root.",
+    )
+    parser.add_argument(
+        "--changed-files",
+        default=None,
+        help="Optional newline-delimited changed-files list for scoped validation.",
     )
     parser.add_argument(
         "--enforce-image-weight-markers",
@@ -227,24 +243,112 @@ def _resolve_markdown_targets(roots: list[str] | None) -> list[Path]:
     return sorted(targets)
 
 
-def _collect_findings(
+def _collect_svg_targets() -> list[Path]:
+    docs_assets = ROOT / "docs/assets"
+    if not docs_assets.exists():
+        return []
+    return sorted(docs_assets.rglob("*.svg"))
+
+
+def _fatal(code: str, message: str) -> None:
+    print(json.dumps({"event": code, "message": message}, sort_keys=True))
+    raise SystemExit(1)
+
+
+def _resolve_targets(args: argparse.Namespace) -> tuple[list[Path], str]:
+    if args.changed_files is None:
+        markdown_targets = _resolve_markdown_targets(args.roots)
+        svg_targets = _collect_svg_targets()
+        return sorted(set(markdown_targets + svg_targets)), "full"
+
+    changed_files_path = Path(args.changed_files)
+    if not changed_files_path.exists():
+        _fatal("DOCS_INTEGRITY_ERROR_CHANGED_FILES_MISSING", f"--changed-files path does not exist: {changed_files_path}")
+
+    try:
+        lines = changed_files_path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        _fatal("DOCS_INTEGRITY_ERROR_CHANGED_FILES_READ", str(exc))
+
+    direct_targets: set[Path] = set()
+    governance_roots_to_expand: set[str] = set()
+
+    for raw_line in lines:
+        rel = raw_line.strip()
+        if not rel:
+            continue
+        normalized = rel.replace("\\", "/")
+        target = (ROOT / normalized).resolve()
+        if target.suffix.lower() not in SCOPED_DOC_EXTENSIONS:
+            continue
+        if normalized.endswith(".svg") and normalized.startswith("docs/assets/") and target.exists():
+            direct_targets.add(target)
+            continue
+        if normalized.endswith(".md") and target.exists():
+            direct_targets.add(target)
+
+        for root in GOVERNANCE_ALWAYS_ROOTS:
+            if normalized == root or normalized.startswith(f"{root}/"):
+                governance_roots_to_expand.add(root)
+                break
+
+    for gov_root in sorted(governance_roots_to_expand):
+        direct_targets.update(_resolve_markdown_targets([gov_root]))
+        gov_assets = ROOT / gov_root
+        if gov_assets.exists():
+            direct_targets.update(path for path in gov_assets.rglob("*.svg") if path.is_file())
+
+    if not direct_targets:
+        return [], "empty-scoped"
+
+    mode = "scoped+gov-always" if governance_roots_to_expand else "scoped"
+    return sorted(direct_targets), mode
+
+
+def _collect_findings_with_metadata(
     roots: list[str] | None = None,
     enforce_image_weight_markers: bool = False,
     image_weight_roots: list[str] | None = None,
-) -> list[dict[str, object]]:
+    changed_files: str | None = None,
+) -> tuple[list[dict[str, object]], str, int]:
     findings: list[dict[str, object]] = []
     image_weight_scope_files: set[Path] = set()
     if enforce_image_weight_markers:
         image_weight_scope_files = set(_resolve_markdown_targets(image_weight_roots))
 
-    for markdown_file in _resolve_markdown_targets(roots):
+    args = argparse.Namespace(roots=roots, changed_files=changed_files)
+    targets, mode = _resolve_targets(args)
+
+    if mode == "empty-scoped":
+        return [], mode, 0
+
+    markdown_targets = [path for path in targets if path.suffix.lower() == ".md"]
+    svg_targets = [path for path in targets if path.suffix.lower() == ".svg"]
+
+    for markdown_file in markdown_targets:
         scoped_marker_check = enforce_image_weight_markers and markdown_file in image_weight_scope_files
         findings.extend(_scan_markdown_file(markdown_file, enforce_image_weight_markers=scoped_marker_check))
 
-    for svg_file in sorted((ROOT / "docs/assets").rglob("*.svg")):
+    for svg_file in svg_targets:
         findings.extend(_scan_svg_asset_file(svg_file))
 
-    return sorted(findings, key=lambda item: (str(item["file"]), int(item["line"]), str(item["kind"]), str(item["target"])))
+    findings = sorted(findings, key=lambda item: (str(item["file"]), int(item["line"]), str(item["kind"]), str(item["target"])))
+    return findings, mode, len(targets)
+
+
+def _collect_findings(
+    roots: list[str] | None = None,
+    enforce_image_weight_markers: bool = False,
+    image_weight_roots: list[str] | None = None,
+    changed_files: str | None = None,
+) -> list[dict[str, object]]:
+    findings, _mode, _target_count = _collect_findings_with_metadata(
+        roots=roots,
+        enforce_image_weight_markers=enforce_image_weight_markers,
+        image_weight_roots=image_weight_roots,
+        changed_files=changed_files,
+    )
+    return findings
 
 
 def _emit(findings: list[dict[str, object]], output_format: str) -> None:
@@ -274,9 +378,12 @@ def _emit(findings: list[dict[str, object]], output_format: str) -> None:
 def main() -> int:
     args = _build_parser().parse_args()
     findings: list[dict[str, object]] = []
+    mode = "full"
+    target_count = 0
     try:
-        findings = _collect_findings(
+        findings, mode, target_count = _collect_findings_with_metadata(
             roots=args.roots,
+            changed_files=args.changed_files,
             enforce_image_weight_markers=args.enforce_image_weight_markers,
             image_weight_roots=args.image_weight_roots,
         )
@@ -290,7 +397,11 @@ def main() -> int:
             }
         ]
 
+    if args.format == "json":
+        print(json.dumps({"event": "validation_start", "mode": mode, "target_count": target_count}, sort_keys=True))
     _emit(findings=findings, output_format=args.format)
+    if args.format == "json":
+        print(json.dumps({"event": "validation_complete", "mode": mode, "errors": len(findings), "files_checked": target_count}, sort_keys=True))
     return 1 if findings else 0
 
 
