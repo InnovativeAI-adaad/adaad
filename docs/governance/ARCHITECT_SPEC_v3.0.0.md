@@ -2,7 +2,7 @@
 
 ![Governance: Fail-Closed](https://img.shields.io/badge/Governance-Fail--Closed-critical)
 ![ArchitectAgent: Canonical](https://img.shields.io/badge/ArchitectAgent-Canonical-a855f7)
-![Version: 3.0.0](https://img.shields.io/badge/version-3.0.0-00d4ff)
+![Version: 9.12.1](https://img.shields.io/badge/version-9.12.1-00d4ff)
 ![Phase: 5 — Multi-Repo Federation](https://img.shields.io/badge/Phase_5-Multi--Repo_Federation-f59e0b)
 
 > **Authority:** ArchitectAgent · ADAAD Constitutional Governance
