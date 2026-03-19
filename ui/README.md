@@ -234,6 +234,11 @@ with full ADAAD governance context and live runtime state injection.
 Routes not yet implemented in `aponi_dashboard.py` are flagged as `[MOCK]` in the HTML
 and tracked in `docs/debt/whaledic-api-debt.md`.
 
+### Secrets and startup gates
+Whale.Dic dork + ledger API secrets are loaded via encrypted env payloads or OS keyring references only.
+Plaintext fallback env vars are forbidden, and startup fails closed when required secrets are missing/invalid.
+Operator setup and rotation: `docs/security/whaledic-secrets-ops.md`.
+
 ### Mutation authority
 None. Whale.Dic is a read-only runtime observer. It cannot trigger mutations, approve PRs,
 modify the evidence ledger, or alter agent state. dork's LLM outputs are advisory only.

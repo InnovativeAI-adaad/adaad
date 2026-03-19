@@ -88,6 +88,7 @@ from adaad.orchestrator.bootstrap import bootstrap_tool_registry
 from adaad.orchestrator.dispatcher import dispatch
 from runtime.preflight import validate_agent_contract_preflight
 from security import cryovant
+from security.whaledic_secrets import enforce_whaledic_secret_policy
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
 from ui.aponi_dashboard import AponiDashboard
@@ -291,6 +292,10 @@ class Orchestrator:
             cryovant.assert_governance_signing_key_boot()
         except RuntimeError as exc:
             self._fail(str(exc), payload={"boot_stage": "governance_signing_key_assertion"})
+        try:
+            self.state["whaledic_secret_policy"] = enforce_whaledic_secret_policy().__dict__
+        except RuntimeError as exc:
+            self._fail(str(exc), payload={"boot_stage": "whaledic_secret_policy_assertion"})
         boot_invariants = evaluate_boot_invariants(replay_mode=self.replay_mode.value, agents_root=self.agents_root)
         if not boot_invariants.ok:
             self._fail(boot_invariants.reason, payload=boot_invariants.payload)
