@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from adaad.agents.discovery import iter_agent_dirs, resolve_agent_id
+from runtime.logging import emit_error, emit_governance_diagnostic
 from runtime import metrics
 from security import SECURITY_ROOT
 from security.identity_rings import build_ring_token
@@ -383,6 +384,15 @@ def _emit_ring_verification_outcome(
         "subject_id": subject_id,
         "claim_keys": sorted((str(key) for key in (claims or {}).keys())),
     }
+    emit_governance_diagnostic(
+        component="security.cryovant",
+        event_type="cryovant_ring_verification_result",
+        correlation_id=subject_id or "unknown",
+        severity="INFO" if verified else "ERROR",
+        invariant="PHASE6-FED-0",
+        gate="identity_ring_validation",
+        payload=payload,
+    )
     journal.write_entry(
         agent_id=subject_id or "unknown",
         action="identity_ring_verified" if verified else "identity_ring_verification_failed",
@@ -800,6 +810,14 @@ def _emit_critical_json_failure(*, path: Path, reason_code: str, exc: BaseExcept
         "error": str(exc),
         "operation_class": "governance-critical",
     }
+    emit_error(
+        component="security.cryovant",
+        event_type="cryovant_critical_json_read_failed",
+        correlation_id=reason_code,
+        invariant="PHASE6-AUTH-0",
+        gate="critical_artifact_read",
+        payload=payload,
+    )
     metrics.log(
         event_type="cryovant_critical_json_read_failed",
         payload=payload,
