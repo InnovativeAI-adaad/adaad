@@ -109,6 +109,15 @@ def test_layer_boundary_flags_orchestrator_importing_app() -> None:
     assert any(issue.message == lint_import_paths.LAYER_BOUNDARY_VIOLATION_MESSAGE for issue in issues)
 
 
+
+
+def test_layer_boundary_flags_orchestrator_importing_runtime_platform_internal() -> None:
+    path = lint_import_paths.REPO_ROOT / "adaad" / "orchestrator" / "dispatcher.py"
+    tree = _parse("from runtime.platform.storage_manager import StorageManager\n")
+
+    issues = list(lint_import_paths._iter_layer_boundary_issues(path, tree))
+
+    assert any(issue.message == lint_import_paths.LAYER_BOUNDARY_VIOLATION_MESSAGE for issue in issues)
 def test_layer_boundary_allows_orchestrator_runtime_import() -> None:
     path = lint_import_paths.REPO_ROOT / "adaad" / "orchestrator" / "dispatcher.py"
     tree = _parse("from runtime import metrics\n")

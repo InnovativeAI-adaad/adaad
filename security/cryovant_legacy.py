@@ -30,6 +30,7 @@ from security import SECURITY_ROOT
 from security.identity_rings import build_ring_token
 from security.ledger import journal
 from security.ring_claims import ALLOWED_RINGS
+from security.token_parsing import is_valid_governance_token_field, parse_governance_token
 
 ELEMENT_ID = "Water"
 
@@ -566,13 +567,12 @@ def _accept_dev_token(token: str) -> bool:
 
 
 
-def _is_valid_governance_token_field(value: str) -> bool:
-    """Validate governance token fields for delimiter and whitespace safety."""
 
-    candidate = str(value or "")
-    if not candidate.strip() or candidate != candidate.strip():
-        return False
-    return ":" not in candidate
+
+def _is_valid_governance_token_field(value: str) -> bool:
+    """Backwards-compatible alias for token field validation."""
+
+    return is_valid_governance_token_field(value)
 
 def sign_governance_token(
     *,
@@ -592,10 +592,10 @@ def sign_governance_token(
     if expiry <= 0:
         raise ValueError("expires_at must be > 0")
     normalized_key_id = str(key_id or "").strip()
-    if not _is_valid_governance_token_field(normalized_key_id):
+    if not is_valid_governance_token_field(normalized_key_id):
         raise ValueError("key_id required and must not contain ':' or edge whitespace")
     normalized_nonce = str(nonce or "").strip()
-    if not _is_valid_governance_token_field(normalized_nonce):
+    if not is_valid_governance_token_field(normalized_nonce):
         raise ValueError("nonce required and must not contain ':' or edge whitespace")
 
     signed_digest = f"sha256:{normalized_key_id}:{expiry}:{normalized_nonce}"
@@ -636,23 +636,16 @@ def verify_governance_token(
             return False
         return env_mode() == "dev" and dev_mode()
 
-    parts = candidate.split(":", 5)
-    if len(parts) != 6:
+    parsed_token = parse_governance_token(candidate)
+    if parsed_token is None:
         return False
-    prefix, key_id, expires_at_raw, nonce, sig_prefix, digest = parts
-    if prefix != "cryovant-gov-v1" or sig_prefix != "sha256":
-        return False
-    if not _is_valid_governance_token_field(key_id) or not _is_valid_governance_token_field(nonce):
-        return False
-    try:
-        expires_at = int(expires_at_raw)
-    except ValueError:
-        return False
+    key_id = parsed_token.key_id
+    expires_at = parsed_token.expires_at
     if expires_at <= int(time.time()):
         raise TokenExpiredError(f"governance_token_expired:key_id={key_id}:expired_at={expires_at}")
 
-    signature = f"{sig_prefix}:{digest}"
-    signed_digest = f"sha256:{key_id}:{expires_at}:{nonce}"
+    signature = parsed_token.signature
+    signed_digest = f"sha256:{key_id}:{expires_at}:{parsed_token.nonce}"
     try:
         token_valid = verify_hmac_digest_signature(
             key_id=key_id,

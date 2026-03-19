@@ -6,11 +6,12 @@ This directory is governed by a deterministic QR generation workflow.
 
 Source of truth: [`registry.json`](./registry.json)
 
-Each asset ID maps to:
+Each active target maps to:
 
-- `canonical_destination_url`: exact URL/deep-link encoded in the QR code.
-- `purpose`: one of `apk`, `obtainium`, `pwa`, `fdroid`, `install_page`.
-- `campaign_tags`: campaign metadata (kept sorted for deterministic diffs).
+- `asset_path`: generated SVG path.
+- `target_url`: exact URL/deep-link encoded in the QR code.
+- `placement`: canonical medium key used by `canonical_query_ledger.by_placement`.
+- `canonical_query_ledger`: expected campaign/query params used for drift checks.
 
 ## Regenerate QR SVG assets
 
@@ -32,6 +33,19 @@ python scripts/generate_qr_assets.py --check
 ```
 
 `--check` fails if committed QR SVGs differ from regenerated output.
+
+## Validate QR drift and campaign params
+
+```bash
+python scripts/validate_qr_drift.py --format json
+```
+
+This validator:
+
+- enumerates active QR assets and target URLs,
+- checks URL reachability and status class (`2xx`, `3xx`, etc.),
+- compares observed query params to `canonical_query_ledger`,
+- reports mismatches with asset ID plus expected vs observed params.
 
 ## Updating destinations
 

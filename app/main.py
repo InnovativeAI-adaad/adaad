@@ -25,6 +25,12 @@ import sys
 from typing import Any, Dict, Optional
 
 from app import APP_ROOT
+from app.boot import (
+    apply_governance_ci_mode_defaults,
+    governance_ci_mode_enabled,
+    read_adaad_version,
+    replay_env_flags,
+)
 from app.architect_agent import ArchitectAgent
 from app.beast_mode_loop import BeastModeLoop
 from app.dream_mode import DreamMode
@@ -101,37 +107,6 @@ def _get_orchestrator_logger() -> logging.Logger:
     return logger
 
 
-def _read_adaad_version() -> str:
-    """Read VERSION file from project root.
-
-    Returns ``"unknown"`` for any read/decode/parsing failure to preserve
-    deterministic boot behavior.
-    """
-    try:
-        return (APP_ROOT.parent / "VERSION").read_text(encoding="utf-8").strip()
-    except Exception:
-        return "unknown"
-
-
-def _governance_ci_mode_enabled() -> bool:
-    return os.getenv("ADAAD_GOVERNANCE_CI_MODE", "").strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _apply_governance_ci_mode_defaults() -> None:
-    os.environ.setdefault("ADAAD_FORCE_DETERMINISTIC_PROVIDER", "1")
-    os.environ.setdefault("ADAAD_DETERMINISTIC_SEED", "adaad-governance-ci")
-    os.environ.setdefault("ADAAD_RESOURCE_MEMORY_MB", "2048")
-    os.environ.setdefault("ADAAD_RESOURCE_CPU_SECONDS", "30")
-    os.environ.setdefault("ADAAD_RESOURCE_WALL_SECONDS", "60")
-
-
-def _replay_env_flags() -> Dict[str, str]:
-    keys = [key for key in os.environ if key.startswith("ADAAD_") or key.startswith("CRYOVANT_")]
-    if "PYTHONPATH" in os.environ:
-        keys.append("PYTHONPATH")
-    return {key: os.environ.get(key, "") for key in sorted(set(keys))}
-
-
 class Orchestrator:
     """
     Coordinates boot order and health checks.
@@ -149,7 +124,7 @@ class Orchestrator:
         self.state: Dict[str, Any] = {
             "status": "initializing",
             "mutation_enabled": False,
-            "adaad_version": _read_adaad_version(),
+            "adaad_version": read_adaad_version(APP_ROOT.parent),
             "constitution_version": CONSTITUTION_VERSION,
         }
         self.logger = _get_orchestrator_logger()
@@ -898,8 +873,8 @@ def main() -> None:
     except ValueError as exc:
         parser.error(str(exc))
 
-    if _governance_ci_mode_enabled():
-        _apply_governance_ci_mode_defaults()
+    if governance_ci_mode_enabled():
+        apply_governance_ci_mode_defaults()
 
     selected_epoch = select_epoch(args.epoch, args.replay_epoch)
     if args.epoch and args.replay_epoch and args.epoch.strip() != args.replay_epoch.strip():

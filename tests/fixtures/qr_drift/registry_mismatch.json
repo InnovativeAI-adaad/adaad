@@ -1,0 +1,20 @@
+{
+  "canonical_query_ledger": {
+    "by_placement": {
+      "install_card": {
+        "utm_campaign": "install_tracks_2026q2",
+        "utm_medium": "install_card",
+        "utm_source": "qr"
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "asset-mismatch",
+      "active": true,
+      "placement": "install_card",
+      "asset_path": "tests/fixtures/qr_drift/asset_missing.svg",
+      "target_url": "https://example.com/install?utm_source=qr&utm_medium=wrong_medium&utm_campaign=install_tracks_2026q2&z=1"
+    }
+  ]
+}
