@@ -44,6 +44,17 @@ LEGACY_TRIGGER_ALLOWLIST = {
     "docs/ENVIRONMENT_VARIABLES.md",
 }
 COMPATIBILITY_NOTE_SNIPPET = "Compatibility note:"
+ACTIVE_INSTALL_DOCS = (
+    "INSTALL_ANDROID.md",
+    "docs/install.html",
+)
+INSTALL_DOC_VERSION_PATTERNS = {
+    "INSTALL_ANDROID.md": re.compile(r"^\*\*.*?\bv(?P<version>\d+\.\d+\.\d+)\b", re.MULTILINE),
+    "docs/install.html": re.compile(
+        r'<span\s+class="version-pill">\s*v(?P<version>\d+\.\d+\.\d+)',
+        re.IGNORECASE,
+    ),
+}
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -159,6 +170,49 @@ def _iter_markdown_files() -> list[Path]:
     return sorted(markdown_files)
 
 
+def _parse_semver(version: str) -> tuple[int, int, int]:
+    match = re.fullmatch(r"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)", version.strip())
+    if not match:
+        raise ValueError(f"invalid semver: {version!r}")
+    return (
+        int(match.group("major")),
+        int(match.group("minor")),
+        int(match.group("patch")),
+    )
+
+
+def _validate_install_doc_version_freshness(missing: list[str]) -> None:
+    version_path = ROOT / "VERSION"
+    if not version_path.exists():
+        missing.append("missing_file:VERSION")
+        return
+
+    raw_version = version_path.read_text(encoding="utf-8").strip()
+    try:
+        current_major, current_minor, _ = _parse_semver(raw_version)
+    except ValueError as exc:
+        missing.append(f"invalid_version:VERSION:{exc}")
+        return
+
+    for rel in ACTIVE_INSTALL_DOCS:
+        path = ROOT / rel
+        if not path.exists():
+            missing.append(f"missing_file:{rel}")
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        pattern = INSTALL_DOC_VERSION_PATTERNS.get(rel)
+        if pattern is None:
+            continue
+
+        for match in pattern.finditer(text):
+            doc_major, doc_minor, _ = _parse_semver(match.group("version"))
+            if (doc_major, doc_minor) < (current_major, current_minor):
+                missing.append(
+                    f"stale_install_doc_version:{rel}:found=v{match.group('version')}:minimum=v{current_major}.{current_minor}.x"
+                )
+
+
 def main() -> int:
     args = _build_parser().parse_args()
     missing: list[str] = []
@@ -187,6 +241,7 @@ def main() -> int:
                 missing.append(f"legacy_env_var_reference:{rel}:{LEGACY_TRIGGER_VARIABLE}")
             if has_legacy and rel in LEGACY_TRIGGER_ALLOWLIST and COMPATIBILITY_NOTE_SNIPPET not in text and rel != "CHANGELOG.md":
                 missing.append(f"missing_compatibility_note:{rel}")
+        _validate_install_doc_version_freshness(missing=missing)
     except Exception as exc:  # fail closed
         missing.append(f"validator_error:{exc.__class__.__name__}:{exc}")
 
