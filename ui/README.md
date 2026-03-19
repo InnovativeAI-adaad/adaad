@@ -241,3 +241,13 @@ modify the evidence ledger, or alter agent state. dork's LLM outputs are advisor
 ### Navigation
 Accessible via the **Whale.Dic** button in `ui/aponi/index.html`.
 Back-link to Aponi is present in the Whale.Dic sidebar.
+
+### Cache controls (integration)
+Whale.Dic integration now uses a deterministic cache module (`ui/features/whaledic_cache.py`) with:
+
+- key normalization for equivalent queries
+- TTL invalidation (`ttl_ms`)
+- optional offline read-through fallback (`offline_read_through=True`)
+- bounded LRU size controls (`max_entries`) for constrained/mobile environments
+
+Operational runbook: `docs/governance/WHALEDIC_CACHE_RUNBOOK.md`.
