@@ -37,6 +37,7 @@ from runtime.governance.gate_v2 import (
     _check_ast_safe_0,
     _check_ast_import_0,
     _check_ast_complex_0,
+    _check_evidence_bundle_req_0,
     _check_sandbox_div_0,
     _check_semantic_int_0,
 )
@@ -248,6 +249,46 @@ class TestT63Gate05:
 
     def test_clean_replay_passes(self):
         result = _check_sandbox_div_0(replay_diverged=False)
+        assert result.passed
+
+
+# ---------------------------------------------------------------------------
+# T63-GATE-05B: EVIDENCE-BUNDLE-REQ-0 — scoped governance/mutation events fail closed
+# ---------------------------------------------------------------------------
+
+class TestT63Gate05B:
+    def test_unscoped_event_passes_not_applicable(self):
+        result = _check_evidence_bundle_req_0(
+            scoped_event=False,
+            evidence_bundle_present=False,
+            evidence_bundle_valid=False,
+        )
+        assert result.passed
+
+    def test_scoped_event_missing_bundle_fails(self):
+        result = _check_evidence_bundle_req_0(
+            scoped_event=True,
+            evidence_bundle_present=False,
+            evidence_bundle_valid=False,
+        )
+        assert not result.passed
+        assert result.reason == "missing_evidence_bundle"
+
+    def test_scoped_event_invalid_bundle_fails(self):
+        result = _check_evidence_bundle_req_0(
+            scoped_event=True,
+            evidence_bundle_present=True,
+            evidence_bundle_valid=False,
+        )
+        assert not result.passed
+        assert result.reason == "invalid_evidence_bundle"
+
+    def test_scoped_event_valid_bundle_passes(self):
+        result = _check_evidence_bundle_req_0(
+            scoped_event=True,
+            evidence_bundle_present=True,
+            evidence_bundle_valid=True,
+        )
         assert result.passed
 
 
@@ -489,10 +530,13 @@ class TestT63Gate12:
             before_source=_SIMPLE_SOURCE,
             replay_diverged=False,
             current_epoch_seq=1,
+            governance_or_mutation_scope_event=True,
+            evidence_bundle_present=True,
+            evidence_bundle_valid=True,
         )
         assert decision.approved
         assert not decision.class_b_eligible
-        assert len(decision.rule_results) == 5
+        assert len(decision.rule_results) == 6
 
     def test_eval_in_source_blocked(self, tmp_path):
         gate = GovernanceGateV2(exception_ledger=_make_ledger(tmp_path))
@@ -503,6 +547,9 @@ class TestT63Gate12:
             before_source=_SIMPLE_SOURCE,
             replay_diverged=False,
             current_epoch_seq=1,
+            governance_or_mutation_scope_event=True,
+            evidence_bundle_present=True,
+            evidence_bundle_valid=True,
         )
         assert not decision.approved
         failed_ids = {r.rule_id for r in decision.rule_results if not r.passed}
@@ -517,6 +564,9 @@ class TestT63Gate12:
             before_source=_SIMPLE_SOURCE,
             replay_diverged=True,
             current_epoch_seq=1,
+            governance_or_mutation_scope_event=True,
+            evidence_bundle_present=True,
+            evidence_bundle_valid=True,
         )
         assert not decision.approved
         failed_ids = {r.rule_id for r in decision.rule_results if not r.passed}
@@ -532,7 +582,24 @@ class TestT63Gate12:
         )
         rule_ids = {r.rule_id for r in decision.rule_results}
         assert rule_ids == {"AST-SAFE-0", "AST-IMPORT-0", "AST-COMPLEX-0",
-                            "SANDBOX-DIV-0", "SEMANTIC-INT-0"}
+                            "EVIDENCE-BUNDLE-REQ-0", "SANDBOX-DIV-0", "SEMANTIC-INT-0"}
+
+    def test_scoped_event_without_evidence_bundle_blocked(self, tmp_path):
+        gate = GovernanceGateV2(exception_ledger=_make_ledger(tmp_path))
+        decision = gate.evaluate(
+            mutation_id="mut-evidence-missing",
+            capability_name="evolution.proposal",
+            after_source=_SIMPLE_SOURCE,
+            before_source=_SIMPLE_SOURCE,
+            replay_diverged=False,
+            current_epoch_seq=1,
+            governance_or_mutation_scope_event=True,
+            evidence_bundle_present=False,
+            evidence_bundle_valid=False,
+        )
+        assert not decision.approved
+        failed_ids = {r.rule_id for r in decision.rule_results if not r.passed}
+        assert "EVIDENCE-BUNDLE-REQ-0" in failed_ids
 
 
 # ---------------------------------------------------------------------------
@@ -638,4 +705,4 @@ class TestT63Gate15:
         d = decision.to_dict()
         assert d["mutation_id"] == "mut-serial"
         assert isinstance(d["rule_results"], list)
-        assert len(d["rule_results"]) == 5
+        assert len(d["rule_results"]) == 6

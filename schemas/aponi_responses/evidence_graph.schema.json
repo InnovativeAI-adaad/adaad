@@ -1,0 +1,47 @@
+{
+  "type": "object",
+  "required": [
+    "ok",
+    "epoch_id",
+    "window",
+    "node_count",
+    "edge_count",
+    "nodes",
+    "edges"
+  ],
+  "properties": {
+    "ok": { "type": "boolean", "const": true },
+    "epoch_id": { "type": "string" },
+    "window": { "type": "integer" },
+    "node_count": { "type": "integer" },
+    "edge_count": { "type": "integer" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "mutation_id", "epoch_id"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string", "enum": ["mutation", "evidence"] },
+          "mutation_id": { "type": "string" },
+          "epoch_id": { "type": "string" },
+          "status": { "type": "string" },
+          "evidence_bundle_id": { "type": "string" },
+          "evidence_bundle_valid": { "type": "boolean" }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to", "relation"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "relation": { "type": "string" }
+        }
+      }
+    }
+  }
+}
