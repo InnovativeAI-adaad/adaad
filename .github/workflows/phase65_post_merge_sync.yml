@@ -1,47 +1,6 @@
-name: Phase 65 Post-Merge Sync
+# DISABLED — QA-4 (RACE-01, ORCH-01)
+# This workflow is intentionally inert; all post-merge writes now occur in
+# post_merge_orchestrator.yml.
+name: Phase 65 Post-Merge Sync (DISABLED — see post_merge_orchestrator.yml)
 
-on:
-  pull_request:
-    types: [closed]
-
-permissions:
-  contents: write
-
-jobs:
-  sync-phase65-status:
-    if: >-
-      github.event.pull_request.merged == true &&
-      (
-        contains(github.event.pull_request.title, 'PR-PHASE65-01') ||
-        contains(join(github.event.pull_request.labels.*.name, ','), 'PR-PHASE65-01')
-      )
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout main
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.base.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Python 3.11.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11.9'
-
-      - name: Run phase status sync
-        run: python scripts/sync_phase_status_on_merge.py
-
-      - name: Commit synced docs (if needed)
-        run: |
-          set -euo pipefail
-          if git diff --quiet; then
-            echo "No phase status changes required."
-            exit 0
-          fi
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ROADMAP.md docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md
-          git commit -m "docs(phase65): post-merge status sync [skip ci]"
-          git push origin HEAD:${{ github.event.pull_request.base.ref }}
+on: {}
