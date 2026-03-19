@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
@@ -38,6 +38,7 @@ from runtime.intelligence.router import IntelligenceRouter                # noqa
 from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa: E402
 from runtime.governance.rate_limiter import get_limiter as _get_proposal_limiter  # noqa: E402
 from runtime.audit_auth import load_audit_tokens, require_audit_read_scope  # noqa: E402
+from security.whaledic_secrets import enforce_whaledic_secret_policy  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parent
@@ -75,6 +76,9 @@ async def _lifespan(application: FastAPI):  # noqa: ARG001
     APONI_DIR.mkdir(parents=True, exist_ok=True)
     WHALEDIC_DIR.mkdir(parents=True, exist_ok=True)
     (APONI_DIR / "mock").mkdir(exist_ok=True)
+    secret_policy = enforce_whaledic_secret_policy()
+    application.state.whaledic_secret_policy = secret_policy
+
     if not INDEX.exists():
         # Minimal stub so the server always starts — replace with real Aponi build
         INDEX.write_text(
@@ -3045,6 +3049,19 @@ def serve_whaledic_asset(asset_path: str) -> Response:
     resolved = _resolve_static_asset(WHALEDIC_DIR, asset_path)
     if not resolved.exists() or not resolved.is_file():
         raise HTTPException(status_code=404, detail="asset_not_found")
+
+    if resolved.name == "whaledic.html":
+        html = resolved.read_text(encoding="utf-8")
+        policy = getattr(app.state, "whaledic_secret_policy", enforce_whaledic_secret_policy())
+        bootstrap = (
+            "<script>window.__anthropic_key_available = "
+            + ("true" if policy.anthropic_key_available else "false")
+            + ";window.__ledger_api_token_available = "
+            + ("true" if policy.ledger_token_available else "false")
+            + ";</script>"
+        )
+        return HTMLResponse(bootstrap + html)
+
     return FileResponse(str(resolved))
 
 # ── Phase 52: Epoch Memory Store Endpoint ────────────────────────────────────
