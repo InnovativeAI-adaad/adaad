@@ -31,6 +31,8 @@ import logging
 import os
 from typing import Any
 
+from runtime.api.app_layer import GovernanceGate, record_external_governance_event
+
 logger = logging.getLogger(__name__)
 
 GITHUB_WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "")
@@ -61,7 +63,6 @@ def _governance_gate_preflight(event_name: str, data: dict) -> bool:
         return True  # non-mutation-class events always proceed
 
     try:
-        from runtime.governance.gate import GovernanceGate  # type: ignore[import]
         gate = GovernanceGate()
         result = gate.preflight_check(
             surface="webhook",
@@ -285,8 +286,7 @@ def _emit_governance_event(event_name: str, data: dict) -> None:
         return  # gate hard-blocked; emission suppressed and logged above
 
     try:
-        from runtime.governance import external_event_bridge  # GITHUB-AUDIT-0
-        signal = external_event_bridge.record(
+        signal = record_external_governance_event(
             event_name=event_name,
             action=str(data.get("action", "")),
             delivery_id=str(data.get("delivery_id", "")),
