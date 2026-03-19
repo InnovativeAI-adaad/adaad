@@ -26,13 +26,14 @@ Required CI checks (branch protection required-check table):
 | `phase7-reputation-gate` | Conditional required check when governance/server/relevant UI paths change (`governance/**`, `server.py`, `ui/**`) | Runs Phase 7 selector set: reputation, ledger, review pressure, constitutional-floor, reviewer panel endpoint/UI coverage |
 | `Secret Scan / secret-scan` | Always-on via `.github/workflows/secret_scan.yml` | Required branch-protection secret scanning gate |
 | `CodeQL / Analyze (python)` | Always-on via `.github/workflows/codeql.yml` (`push`, `pull_request`, weekly `schedule`) | Required branch-protection CodeQL security analysis gate |
+| `CI / doc-sync-preview` | Always-on via `doc-sync-preview` job in `.github/workflows/ci.yml` | Required pre-merge dry-run gate for `scripts/sync_docs_on_merge.py` (fail-closed on drift) |
 | `Branch Protection Check` | Repository branch-protection validation workflow | Fails closed on branch-protection drift |
 
 `Branch Protection Check` workflow validates required branch settings via GitHub API.
 
 - Branch protection check requires `GITHUB_TOKEN` permission `administration: read` (granted by org admin).
 - Branch protection check enforces `required_pull_request_reviews.required_approving_review_count >= 2`.
-- Branch protection check enforces required contexts for `Secret Scan / secret-scan`, `CI / docs-validation`, and `CodeQL / Analyze (python)`.
+- Branch protection check enforces required contexts for `Secret Scan / secret-scan`, `CI / docs-validation`, `CI / doc-sync-preview`, and `CodeQL / Analyze (python)`.
 - Governance strict release gate (`.github/workflows/governance_strict_release_gate.yml`) executes determinism lint, entropy discipline checks, governance strict-mode validation, strict replay verification, constitution fingerprint stability, and reviewer calibration validation on Python 3.11.9.
 
 Release required-check table (`governance_strict_release_gate.yml`):
