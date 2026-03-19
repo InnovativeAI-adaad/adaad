@@ -10,7 +10,7 @@ pytestmark = pytest.mark.governance_gate
 
 def test_T8_03_01_constitution_version_is_0_4_0():
     from runtime.constitution import CONSTITUTION_VERSION
-    assert CONSTITUTION_VERSION == "0.7.0"  # updated: constitution bumped through Phases 9-10
+    assert CONSTITUTION_VERSION == "0.9.0"  # updated: constitution bumped through Phases 9-13
 
 
 def test_T8_03_02_governance_health_floor_rule_present_in_yaml():
