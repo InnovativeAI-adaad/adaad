@@ -49,6 +49,22 @@ LOCK_PATH = LEDGER_ROOT / "cryovant_journal.lock"
 
 _THREAD_APPEND_LOCK = threading.Lock()
 
+# ---------------------------------------------------------------------------
+# JOURNAL-CACHE-0  — in-memory tail cache (warm path, M78-01)
+#
+# Keyed by str(journal_path) so test isolation is automatic: each test that
+# redirects JOURNAL_PATH to a unique tmp_path gets its own cache bucket.
+#
+# Invariants:
+#   JOURNAL-CACHE-0       : cache entry advances atomically inside the append
+#                           lock — no other thread observes a stale tail.
+#   JOURNAL-CACHE-DETERM-0: given identical inputs, append produces identical
+#                           chain hashes whether the cache is warm or cold.
+#   JOURNAL-ISOLATE-0     : path-keyed bucketing guarantees zero cross-test
+#                           state bleed when JOURNAL_PATH is redirected.
+# ---------------------------------------------------------------------------
+_VERIFIED_TAIL_CACHE: dict[str, tuple[str, int]] = {}
+
 
 class JournalIntegrityError(RuntimeError):
     """Raised when the Cryovant journal integrity verification fails."""
@@ -360,23 +376,102 @@ def verify_journal_integrity(
 
 
 def append_tx(tx_type: str, payload: Dict[str, object], tx_id: Optional[str] = None) -> Dict[str, object]:
-    normalized_type = validate_event_type_for_agm_step(event_type=tx_type, agm_step=payload.get("agm_step") if isinstance(payload, dict) else None)
+    """Append a hash-chained transaction to the Cryovant journal.
+
+    M78-01 warm-path (JOURNAL-CACHE-0): on cache hit the O(n) chain re-scan
+    is skipped entirely, converting repeated appends from O(n²) to O(n) total
+    over the journal lifetime (mirrors the LineageLedgerV2 C-04 pattern).
+
+    Cache key is ``str(JOURNAL_PATH)`` evaluated at call time, so test helpers
+    that redirect the module-level ``JOURNAL_PATH`` to a unique ``tmp_path``
+    automatically get an isolated cache bucket — zero cross-test bleed
+    (JOURNAL-ISOLATE-0).
+
+    Invariants:
+      JOURNAL-CACHE-0       : cache entry advances atomically inside the lock.
+      JOURNAL-CACHE-DETERM-0: hash computed from canonical JSON — byte-identical
+                              to a cold-path replay.
+      JOURNAL-ISOLATE-0     : cache key == str(JOURNAL_PATH) at call time.
+    """
+    normalized_type = validate_event_type_for_agm_step(
+        event_type=tx_type,
+        agm_step=payload.get("agm_step") if isinstance(payload, dict) else None,
+    )
     JOURNAL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with _journal_append_lock(JOURNAL_PATH):
-        prev, offset = _validated_last_hash()
-        entry = {
+    # Snapshot module-level paths at call time so they cannot change mid-call
+    # even if a test redirects them (multi-thread safety for tests).
+    _journal_path = JOURNAL_PATH
+    _tail_path = TAIL_STATE_PATH
+    cache_key = str(_journal_path)
+
+    with _journal_append_lock(_journal_path):
+        # ---------------------------------------------------------------
+        # JOURNAL-CACHE-0: warm-path — skip full O(n) chain re-scan when
+        # the in-memory tail cache is populated AND no external writer has
+        # appended since our last cache update.
+        #
+        # Safety check: stat() the journal to detect entries appended by
+        # other processes (or other tasks in the same pool worker) between
+        # our last cache update and this lock acquisition.  If file_size >
+        # cached_offset, another writer has appended; we fall back to the
+        # cold O(n) scan to rebuild a valid tail pointer.
+        #
+        # This adds one stat() call (O(1)) vs a full O(n) rescan — the
+        # speedup is preserved for single-process / single-task workloads.
+        # ---------------------------------------------------------------
+        cached = _VERIFIED_TAIL_CACHE.get(cache_key)
+        if cached is not None:
+            cached_hash, cached_offset = cached
+            try:
+                current_size = _journal_path.stat().st_size
+            except OSError:
+                current_size = -1
+            if current_size == cached_offset:
+                # Cache is current — no external writes since last update.
+                prev, offset = cached_hash, cached_offset
+            else:
+                # External writes detected; cold-path rescan to catch up.
+                prev, offset = _validated_last_hash()
+                # Refresh cache to the post-scan tail so the next call is warm.
+                _VERIFIED_TAIL_CACHE[cache_key] = (prev, offset)
+        else:
+            # Cold path: full validated chain scan (identical to pre-M78-01).
+            prev, offset = _validated_last_hash()
+
+        entry: Dict[str, object] = {
             "tx": tx_id or f"TX-{normalized_type}-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}",
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "type": normalized_type,
             "payload": payload,
             "prev_hash": prev,
         }
+        # JOURNAL-CACHE-DETERM-0: canonical JSON hash — byte-identical on replay.
         entry["hash"] = _hash_line(prev, entry)
         line = json.dumps(entry, ensure_ascii=False) + "\n"
-        with JOURNAL_PATH.open("a", encoding="utf-8") as f:
+        with _journal_path.open("a", encoding="utf-8") as f:
             f.write(line)
-        _write_tail_state(TAIL_STATE_PATH, last_hash=entry["hash"], offset=offset + len(line.encode("utf-8")))
+        new_offset = offset + len(line.encode("utf-8"))
+        # Persist file-based tail state (cross-process / restart recovery).
+        _write_tail_state(_tail_path, last_hash=str(entry["hash"]), offset=new_offset)
+        # JOURNAL-CACHE-0: advance warm cache atomically inside the lock.
+        # Future same-process appends skip the O(n) re-scan.
+        _VERIFIED_TAIL_CACHE[cache_key] = (str(entry["hash"]), new_offset)
         return entry
+
+
+def invalidate_journal_cache(path: "Path | None" = None) -> None:
+    """Evict the warm-cache entry for *path* (default: ``JOURNAL_PATH``).
+
+    Primarily a test-isolation helper: call this after redirecting
+    ``JOURNAL_PATH`` to a new tmp_path to guarantee the next ``append_tx``
+    performs a clean cold-scan rather than reusing a stale entry from a
+    previous test bucket that happened to share the same path string.
+
+    Under normal production operation this function is never needed —
+    cache entries are path-keyed so distinct journal files never collide.
+    """
+    key = str(path if path is not None else JOURNAL_PATH)
+    _VERIFIED_TAIL_CACHE.pop(key, None)
 
 
 def project_from_lineage(event: Dict[str, object]) -> Dict[str, object]:
@@ -411,6 +506,7 @@ __all__ = [
     "read_entries",
     "read_latest_entry_by_action_and_mutation_id",
     "append_tx",
+    "invalidate_journal_cache",
     "ensure_ledger",
     "ensure_journal",
     "record_rotation_event",
@@ -419,4 +515,5 @@ __all__ = [
     "verify_journal_integrity",
     "JournalIntegrityError",
     "JournalRecoveryHook",
+    "_VERIFIED_TAIL_CACHE",
 ]

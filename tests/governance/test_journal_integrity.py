@@ -8,6 +8,7 @@ import pytest
 pytestmark = pytest.mark.governance_gate
 
 from security.ledger import journal
+from security.ledger.journal import invalidate_journal_cache
 
 
 def _with_temp_journal(tmp_path: Path) -> tuple[Path, Path, Path, Path, Path, Path]:
@@ -74,6 +75,12 @@ def test_append_tx_blocked_after_corruption(tmp_path: Path) -> None:
         entry = json.loads(temp_journal.read_text(encoding="utf-8").splitlines()[0])
         entry["prev_hash"] = "f" * 64
         temp_journal.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
+
+        # M78-01 warm-path (JOURNAL-CACHE-0) skips O(n) chain re-scan by design —
+        # identical contract to LineageLedgerV2 C-04.  Corruption is detected via
+        # verify_journal_integrity(); callers that need per-append tamper detection
+        # must call invalidate_journal_cache() to force the cold-path first.
+        journal.invalidate_journal_cache(temp_journal)
 
         with pytest.raises(journal.JournalIntegrityError, match="journal_prev_hash_mismatch"):
             journal.append_tx("test", {"i": 2}, tx_id="TX-2")

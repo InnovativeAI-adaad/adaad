@@ -4,7 +4,7 @@
 
 ---
 
-## What ships today — v9.12.1
+## What ships today — v9.13.0
 
 The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
 
@@ -1506,7 +1506,7 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 **Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0
 ### Phase 78 — Journal `_VERIFIED_TAIL_CACHE` + Autonomous Doc Sync
 
-**Status:** 🔜 next · **Dependency:** Phase 77 merged at main · **Target:** v9.13.0 · **Gate:** HUMAN-0 ratified plan required
+**Status:** ✅ shipped (v9.13.0) · **Dependency:** Phase 77 merged at main · **Gate:** HUMAN-0 ratified · **Tests:** T78-CACHE-01..08, T78-PERF-01, T78-SYNC-01..06
 
 Two parallel workstreams promoted from the Phase 77 optimize sweep and this doc-sync pass.
 

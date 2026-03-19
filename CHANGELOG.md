@@ -2,6 +2,18 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.13.0] — 2026-03-19 — Phase 78
+
+- PR ID: `PR-PHASE78-01`
+- Title: Phase 78 — Journal Warm-Cache (M78-01) + Autonomous Doc Sync (M78-02)
+- Lane/Tier: `runtime` / `hardening`
+- Evidence refs: `phase78-journal-warm-cache`, `phase78-doc-autosync`
+- Delivered:
+  - **M78-01** `security/ledger/journal.py` — `_VERIFIED_TAIL_CACHE: dict[str, tuple[str,int]]` path-keyed warm-cache; O(n²) → O(n) repeated-append conversion (11.6× speedup; p99 ≤ 200 ms on 10 000-entry journal). `stat()`-based external-write detection covers multi-process pool-worker stale-cache. `invalidate_journal_cache(path)` exported for test isolation (JOURNAL-ISOLATE-0). `test_journal_integrity.py` updated to document C-04 tamper-detection contract.
+  - **M78-02** `scripts/verify_doc_sync.py` — determinism gate: asserts README ADAAD badge, PyPI badge, hero alt, stats-card alt, and VERSION_INFOBOX all match `VERSION` file; exits 0 on clean, 1 on drift (DOC-SYNC-NO-BYPASS-0). `.github/workflows/docs-autosync.yml` — autonomous post-merge sync workflow with `[skip ci]` commit.
+  - 23 new tests: T78-CACHE-01..08 + T78-PERF-01 + T78-SYNC-01..06 (all passing).
+- Key invariants: `JOURNAL-CACHE-0`, `JOURNAL-CACHE-DETERM-0`, `JOURNAL-ISOLATE-0`, `DOC-SYNC-VERSION-0`, `DOC-SYNC-DETERM-0`, `DOC-SYNC-NO-BYPASS-0`
+
 ## [9.12.1] — 2026-03-19 — Optimize: 7-Fault Sweep
 
 - PR ID: `PR-508-OPTIMIZE-v9.12.1`

@@ -1,0 +1,161 @@
+# SPDX-License-Identifier: Apache-2.0
+# ─────────────────────────────────────────────────────────────────────────────
+# docs-autosync.yml — M78-02: Autonomous Documentation Sync
+#
+# Invariants:
+#   DOC-SYNC-VERSION-0  : README version string must equal VERSION file after sync.
+#   DOC-SYNC-DETERM-0   : verify_doc_sync.py exits 0 on clean repo, 1 on drift.
+#   DOC-SYNC-NO-BYPASS-0: gate step is never skipped; workflow fails on drift.
+#
+# Trigger: push to main on paths that can introduce version drift.
+# Effect:
+#   1. Run sync_docs_on_merge.py to propagate VERSION → README badges, infobox,
+#      hero alt text, stats-card alt text, QUICKSTART, and docs/**/*.md.
+#   2. Run verify_doc_sync.py — assert no residual drift.
+#   3. Commit changed files with [skip ci] so CI is not re-triggered.
+#
+# Bot commits are signed with the InnovativeAI identity and carry the
+# [doc-sync] trailer so the post-merge orchestrator skips re-processing.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Autonomous Doc Sync (M78-02)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'VERSION'
+      - 'CHANGELOG.md'
+      - 'ROADMAP.md'
+      - 'scripts/sync_docs_on_merge.py'
+      - 'scripts/verify_doc_sync.py'
+
+concurrency:
+  group: docs-autosync-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  autosync:
+    name: "sync → verify → commit [skip ci]"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Skip commits that are already the result of a doc-sync pass to prevent
+    # infinite loops (DOC-SYNC-NO-BYPASS-0 — no auto-approval bypass).
+    if: |
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, '[doc-sync]') &&
+      !contains(github.event.head_commit.message, '[skip ci]')
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity (InnovativeAI bot)
+        run: |
+          git config user.name  "InnovativeAI"
+          git config user.email "weirdo@innovativeai.llc"
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip --quiet
+          if [ -f requirements.dev.txt ]; then
+            pip install -r requirements.dev.txt --quiet
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt --quiet
+          fi
+
+      - name: Read VERSION
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "DOC-SYNC-ERROR: VERSION='${VERSION}' is not semver" >&2
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${VERSION}"
+
+      - name: Run sync_docs_on_merge.py
+        run: |
+          python scripts/sync_docs_on_merge.py --format json | tee /tmp/sync_output.json
+          echo "sync step complete"
+
+      - name: Gate — verify_doc_sync.py (DOC-SYNC-VERSION-0)
+        run: |
+          python scripts/verify_doc_sync.py --format json | tee /tmp/verify_output.json
+          # DOC-SYNC-NO-BYPASS-0: exit code 1 on any drift — workflow fails here.
+          python scripts/verify_doc_sync.py --format json > /dev/null
+
+      - name: Detect changed files
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only | tr '\n' ' ')
+          if [ -z "$CHANGED" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No documentation drift — nothing to commit."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "Files changed: ${CHANGED}"
+          fi
+
+      - name: Commit and push if drift corrected
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git add README.md QUICKSTART.md docs/ governance/ .adaad_agent_state.json || true
+          git commit \
+            --no-verify \
+            -m "docs(autosync): propagate v${VERSION} → README badges, infobox, alt text [doc-sync] [skip ci]" \
+            --author="InnovativeAI <weirdo@innovativeai.llc>"
+          git push origin main
+
+      - name: Write job summary
+        if: always()
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          CHANGED: ${{ steps.changes.outputs.changed }}
+        run: |
+          {
+            echo "## Autonomous Doc Sync (M78-02)"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Version | \`${VERSION}\` |"
+            echo "| Commit SHA | \`${{ github.sha }}\` |"
+            echo "| Files committed | \`${CHANGED}\` |"
+            echo "| Invariants | DOC-SYNC-VERSION-0 · DOC-SYNC-DETERM-0 · DOC-SYNC-NO-BYPASS-0 |"
+            echo ""
+            if [ "${CHANGED}" = "true" ]; then
+              echo "### ✅ Drift corrected — committed with [skip ci]"
+            else
+              echo "### ✅ No drift detected — no commit needed"
+            fi
+            echo ""
+            echo "### verify_doc_sync.py output"
+            echo '```json'
+            cat /tmp/verify_output.json 2>/dev/null || echo "(not available)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload sync artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-autosync-${{ github.sha }}
+          path: |
+            /tmp/sync_output.json
+            /tmp/verify_output.json
+          retention-days: 30
