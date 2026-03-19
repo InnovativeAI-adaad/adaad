@@ -24,6 +24,7 @@ This page is the standard entry point for users and renders live data from read-
 - `/policy/simulate`
 - `/alerts/evaluate`
 - `/evolution/timeline`
+- `/evolution/evidence-graph` (deterministic mutation/evidence lineage projection; supports `epoch_id` and bounded `limit`)
 - `/replay/divergence`
 - `/replay/diff?epoch_id=...`
 - `/evidence/{bundle_id}` (bearer-auth gated evidence bundle envelope)

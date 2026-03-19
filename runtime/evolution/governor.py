@@ -586,8 +586,20 @@ class EvolutionGovernor:
             payload["impact"] = impact_score
             payload["strategy_set"] = decision.certificate.get("strategy_set", [])
             self.ledger.append_bundle_with_digest(epoch_id, payload)
+            self._emit_mutation_evidence_event(
+                request=request,
+                epoch_id=epoch_id,
+                decision=decision,
+                accepted=True,
+            )
         else:
             self.ledger.append(LineageEvent("GovernanceDecisionEvent", payload))
+            self._emit_mutation_evidence_event(
+                request=request,
+                epoch_id=epoch_id,
+                decision=decision,
+                accepted=False,
+            )
 
         from runtime import metrics
 
@@ -604,6 +616,54 @@ class EvolutionGovernor:
             },
             level="INFO" if decision.accepted else "WARNING",
         )
+
+    @staticmethod
+    def _is_evidence_scoped_request(request: MutationRequest) -> bool:
+        intent = str(request.intent or "").strip().lower()
+        scopes = [str(scope).strip().lower() for scope in (request.capability_scopes or []) if str(scope).strip()]
+        return (
+            "mutation" in intent
+            or "governance" in intent
+            or any(token in {"mutation", "governance"} for token in scopes)
+        )
+
+    def _emit_mutation_evidence_event(
+        self,
+        *,
+        request: MutationRequest,
+        epoch_id: str,
+        decision: GovernanceDecision,
+        accepted: bool,
+    ) -> None:
+        """Emit deterministic evidence event consumed by lineage/evidence projections.
+
+        Rationale: make the mutation→evidence relation explicit for downstream
+        orchestrator graph consumers while preserving existing governance flow.
+        Invariants: immutable identifiers, deterministic payload ordering, and
+        fail-closed evidence-required semantics for scoped governance/mutation intents.
+        """
+        mutation_id = str(
+            (decision.certificate or {}).get("bundle_id")
+            or request.bundle_id
+            or self._deterministic_bundle_id(request=request, epoch_id=epoch_id)
+        ).strip()
+        evidence_scoped = self._is_evidence_scoped_request(request)
+        evidence_bundle_id = str((decision.certificate or {}).get("bundle_id") or "").strip()
+        evidence_bundle_present = bool(evidence_bundle_id)
+        evidence_bundle_valid = bool(accepted and evidence_bundle_present)
+        evidence_status = "valid" if evidence_bundle_valid else ("missing" if evidence_scoped and not evidence_bundle_present else "pending")
+        payload = {
+            "epoch_id": epoch_id,
+            "mutation_id": mutation_id,
+            "evidence_id": f"evidence-{mutation_id}",
+            "evidence_scope_required": evidence_scoped,
+            "evidence_bundle_id": evidence_bundle_id,
+            "evidence_bundle_present": evidence_bundle_present,
+            "evidence_bundle_valid": evidence_bundle_valid,
+            "evidence_status": evidence_status,
+            "decision_reason": decision.reason,
+        }
+        self.ledger.append_event("MutationEvidenceEvent", payload)
 
     def _epoch_started(self, epoch_id: str) -> bool:
         epoch_events = self.ledger.read_epoch(epoch_id)

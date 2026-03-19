@@ -45,6 +45,7 @@ from runtime.governance.instability_calculator import load_instability_policy
 from runtime.governance.policy_artifact import GovernancePolicyError, load_governance_policy
 from runtime.governance.response_schema_validator import validate_response
 from runtime.evolution import EvidenceBundleBuilder, EvidenceBundleError, LineageLedgerV2, ReplayEngine
+from runtime.evolution.evidence_graph import build_evidence_graph_projection
 from runtime.evolution.epoch import CURRENT_EPOCH_PATH
 from runtime.evolution.lineage_v2 import resolve_certified_ancestor_path
 from runtime.evolution.replay_attestation import REPLAY_PROOFS_DIR, load_replay_proof, verify_replay_proof_bundle
@@ -1308,6 +1309,16 @@ class AponiDashboard:
                 if path.startswith("/evolution/timeline"):
                     self._send_validated_response("/evolution/timeline", "evolution_timeline.schema.json", self._evolution_timeline())
                     return
+                if path.startswith("/evolution/evidence-graph"):
+                    epoch_id = query.get("epoch_id", [""])[0].strip()
+                    limit_raw = (query.get("limit") or ["100"])[0]
+                    try:
+                        limit = max(1, min(500, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 100
+                    payload = self._evidence_graph_projection(epoch_id=epoch_id, limit=limit)
+                    self._send_validated_response("/evolution/evidence-graph", "evidence_graph.schema.json", payload)
+                    return
                 if path.startswith("/projection/mutation-roi"):
                     self._send_json(self._mutation_roi_projection())
                     return
@@ -2238,6 +2249,10 @@ class AponiDashboard:
             @staticmethod
             def _evolution_timeline() -> List[Dict]:
                 return evolution_timeline(lineage_v2)
+
+            @staticmethod
+            def _evidence_graph_projection(*, epoch_id: str, limit: int) -> Dict[str, Any]:
+                return build_evidence_graph_projection(lineage_v2, epoch_id=epoch_id, limit=limit)
 
             @staticmethod
             def _series_confidence_band(values: List[float]) -> Dict[str, float]:

@@ -45,6 +45,7 @@ Use this table as the canonical mapping to prevent drift between lane ownership,
 | Security | `.github/workflows/ci.yml` | `artifact-trust-verification` |
 | Secret-scanning | `.github/workflows/secret_scan.yml` | `Secret Scan / secret-scan` |
 | Evidence | `.github/workflows/ci.yml` | `release-evidence-readiness` |
+| Evidence publish | `.github/workflows/ci.yml` | `aeo-evidence-publish` |
 | Documentation | `.github/workflows/ci.yml` | `docs-validation` |
 | Replay (critical) | `.github/workflows/ci.yml` | `strict-replay` |
 | Promotion (critical) | `.github/workflows/ci.yml` | `promotion-suite` |
@@ -67,6 +68,7 @@ These jobs run only when classifier gates evaluate to `true`:
 | `pr3h-acceptance-gate` | PR-3H closure scope (`tests/acceptance/pr3h/**`, `scripts/validate_pr3h_acceptance.py`, checkpoint/entropy replay acceptance surfaces) | checkpoint tamper escalation + entropy triage replay fixtures via machine-readable audit output |
 | `benchmark-regression-gate` | always-on CI promotion check | deterministic benchmark generation + category delta non-regression (`scripts/validate_benchmark_deltas.py`) |
 | `post-merge-doc-sync-contract-gate` | phase-governance docs/procession/release/evidence contract changes (`docs/governance/post_merge_doc_sync_contract.yaml`, `ROADMAP.md`, `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`, `docs/releases/*.md`, `docs/comms/claims_evidence_matrix.md`) | post-merge docs consistency validator (`scripts/validate_post_merge_doc_sync.py`) |
+| `aeo-evidence-publish` | `release-evidence-readiness` succeeded and `AEO_EVIDENCE_DESTINATION` configured in secrets | deterministic CI bundle build + schema validation + single-attempt publish (`scripts/publish_aeo_evidence_bundle.py`) |
 
 - `strict-replay`
   - Runs for `critical` tier or replay/ledger impact flag.
@@ -94,6 +96,13 @@ These jobs run only when classifier gates evaluate to `true`:
   - Required Tier 3 completeness gate for phase-governance PRs that touch roadmap/procession/release/evidence synchronization surfaces.
   - Runs `python scripts/validate_post_merge_doc_sync.py`.
   - Fails closed when contract-required docs, release note version alignment, roadmap/procession phase status consistency, or evidence completion requirements drift.
+
+- `aeo-evidence-publish`
+  - Always runs after `release-evidence-readiness` and fails closed if `AEO_EVIDENCE_DESTINATION` is unset or unreachable.
+  - Uses `scripts/publish_aeo_evidence_bundle.py` to:
+    1. Build deterministic CI-scoped evidence bundle.
+    2. Validate bundle against `schemas/evidence_bundle.v1.json`.
+    3. Publish exactly once to configured AEO destination (no retry loops, no backoff mutation).
 
 
 - `pr3h-acceptance-gate`
