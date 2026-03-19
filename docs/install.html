@@ -261,6 +261,9 @@
       <a class="btn btn-primary" href="https://github.com/InnovativeAI-adaad/ADAAD/releases/latest" id="apk-btn">
         ⬇️ Download Latest APK
       </a>
+      <p id="apk-fallback-msg" style="font-size:.75rem;color:var(--slate);margin-top:.5rem;display:none">
+        Could not resolve a direct APK asset right now. Opening the latest releases page instead.
+      </p>
       <div class="qr-row">
         <img src="/ADAAD/assets/qr/releases_install_card.svg" alt="QR — APK download"/>
         <span class="qr-label">Scan from another device to send the link to your phone</span>
@@ -375,12 +378,37 @@
 </footer>
 
 <script>
+  const debugInstallDiagnostics = new URLSearchParams(window.location.search).has('debug-install');
+  function showInstallDebugHint(message) {
+    if (!debugInstallDiagnostics) return;
+    let hint = document.getElementById('install-debug-hint');
+    if (!hint) {
+      hint = document.createElement('p');
+      hint.id = 'install-debug-hint';
+      hint.style.fontSize = '.75rem';
+      hint.style.color = 'var(--amber)';
+      hint.style.marginTop = '.75rem';
+      document.querySelector('.explainer').appendChild(hint);
+    }
+    hint.textContent = `Debug hint: ${message}`;
+  }
+
+  function warnInstallIssue(code, error, hintMessage) {
+    console.warn(`[install:${code}]`, error);
+    if (hintMessage) {
+      showInstallDebugHint(hintMessage);
+    }
+  }
+
   // ── Smart APK button: detect if on Android, link directly to latest APK ──
   const isAndroid = /android/i.test(navigator.userAgent);
   const apkBtn = document.getElementById('apk-btn');
+  const apkFallbackMsg = document.getElementById('apk-fallback-msg');
+  const releaseUrl = 'https://github.com/InnovativeAI-adaad/ADAAD/releases/latest';
   if (isAndroid) {
     apkBtn.textContent = '⬇️ Tap to Download APK Now';
     apkBtn.style.background = '#22c55e';
+    apkBtn.href = releaseUrl;
     // Try to link to the direct .apk asset; fallback to releases page
     fetch('https://api.github.com/repos/InnovativeAI-adaad/ADAAD/releases/latest')
       .then(r => r.json())
@@ -389,9 +417,16 @@
         if (asset) {
           apkBtn.href = asset.browser_download_url;
           apkBtn.textContent = `⬇️ Download ${asset.name}`;
+          apkFallbackMsg.style.display = 'none';
+          return;
         }
+        apkFallbackMsg.style.display = 'block';
+        warnInstallIssue('apk-resolution-empty', new Error('No community APK found in latest release assets.'), 'APK asset lookup returned no community artifact; fallback copy is active.');
       })
-      .catch(() => {});
+      .catch((error) => {
+        apkFallbackMsg.style.display = 'block';
+        warnInstallIssue('apk-resolution-failed', error, 'Unable to reach GitHub Releases API; fallback copy is active.');
+      });
   }
 
   // ── Obtainium deep-link fallback ─────────────────────────────────────────
@@ -409,21 +444,28 @@
     const url = 'https://innovativeai-adaad.github.io/adaad-fdroid/repo';
     navigator.clipboard.writeText(url).then(() => {
       document.getElementById('fdroid-copied').style.display = 'block';
-    }).catch(() => {
+    }).catch((error) => {
+      warnInstallIssue('clipboard-write-failed', error, 'Clipboard API unavailable; using legacy copy fallback.');
       // Fallback for older Android
       const el = document.createElement('textarea');
       el.value = url;
       document.body.appendChild(el);
       el.select();
-      document.execCommand('copy');
+      const copied = document.execCommand('copy');
       document.body.removeChild(el);
+      if (!copied) {
+        warnInstallIssue('clipboard-execcommand-failed', new Error('document.execCommand("copy") returned false.'), 'Legacy copy fallback failed.');
+        return;
+      }
       document.getElementById('fdroid-copied').style.display = 'block';
     });
   }
 
   // ── PWA install prompt ────────────────────────────────────────────────────
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('/ADAAD/sw.js').catch((error) => {
+      warnInstallIssue('service-worker-register-failed', error, 'Service worker registration failed in this browser context.');
+    });
   }
 </script>
 </body>
