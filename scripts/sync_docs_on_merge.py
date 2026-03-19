@@ -79,6 +79,14 @@ INFOBOX_SYNC_CONTEXT_NOTE = (
     "reflects last sync context only, not arbitrary local working trees. -->"
 )
 
+# Matches `<span class="version-pill">vX.Y.Z</span>` with deterministic group
+# replacement for the version value only.
+_HTML_VERSION_PILL_RE: re.Pattern[str] = re.compile(
+    r'(<span\s+class=["\']version-pill["\']>\s*v)(\d+\.\d+\.\d+)(\s*</span>)',
+    re.IGNORECASE,
+)
+_RULE_INSTALL_HTML_VERSION_PILL = "install_html_version_pill"
+
 # ────────────────────────────────────────────────────────────────────────────
 
 @dataclass
@@ -213,6 +221,21 @@ def _replace_inline_badge(content: str, version: str) -> tuple[str, list[str]]:
     old_vers = re.findall(r"!\[Version: (\d+\.\d+\.\d+)\]", content)
     new = re.sub(pat, rf"\g<1>{version}\g<3>", content)
     return new, [f"inline-badge {v}→{version}" for v in old_vers if v != version]
+
+
+def _replace_html_version_pill(content: str, version: str) -> tuple[str, list[str]]:
+    """Replace version-pill semver values using VERSION as the only source."""
+    changes: list[str] = []
+
+    def _repl(match: re.Match[str]) -> str:
+        old = match.group(2)
+        if old == version:
+            return match.group(0)
+        changes.append(f"{_RULE_INSTALL_HTML_VERSION_PILL} {old}→{version}")
+        return f"{match.group(1)}{version}{match.group(3)}"
+
+    new = _HTML_VERSION_PILL_RE.sub(_repl, content)
+    return new, changes
 
 
 def _build_infobox(plan: SyncPlan) -> str:
@@ -449,6 +472,10 @@ def _process_file(
     content, c = _replace_inline_badge(content, plan.version)
     file_changes.extend(c)
 
+    if path.suffix.lower() == ".html":
+        content, c = _replace_html_version_pill(content, plan.version)
+        file_changes.extend(c)
+
     if INFOBOX_START in original or rel == "README.md":
         content, c = _update_version_infobox(content, plan)
         file_changes.extend(c)
@@ -482,6 +509,7 @@ def _process_file(
 # ── Target discovery ──────────────────────────────────────────────────────────
 
 _ALWAYS_SYNC: list[str] = [
+    "docs/install.html",
     "README.md",
     "ROADMAP.md",
     "QUICKSTART.md",
