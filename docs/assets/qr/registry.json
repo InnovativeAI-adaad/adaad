@@ -108,5 +108,24 @@
       "asset_path": "docs/assets/qr/install_page_readme_banner.svg",
       "target_url": "https://innovativeai-adaad.github.io/ADAAD/install?utm_source=qr&utm_medium=readme_banner&utm_campaign=install_tracks_2026q2"
     }
-  ]
+  ],
+  "canonical_query_ledger": {
+    "by_placement": {
+      "install_card": {
+        "utm_source": "qr",
+        "utm_medium": "install_card",
+        "utm_campaign": "install_tracks_2026q2"
+      },
+      "install_android_doc": {
+        "utm_source": "qr",
+        "utm_medium": "install_android_doc",
+        "utm_campaign": "install_tracks_2026q2"
+      },
+      "readme_banner": {
+        "utm_source": "qr",
+        "utm_medium": "readme_banner",
+        "utm_campaign": "install_tracks_2026q2"
+      }
+    }
+  }
 }
