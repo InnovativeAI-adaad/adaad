@@ -35,3 +35,22 @@ def test_scan_workflow_refs_flags_missing_workflow(tmp_path: Path, monkeypatch: 
     assert len(findings) == 1
     assert findings[0]["kind"] == "missing_workflow_file_reference"
     assert findings[0]["target"] == ".github/workflows/missing_gate.yml"
+
+
+def test_resolve_targets_scoped_uses_changed_docs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    doc = tmp_path / "README.md"
+    _write(doc, "See requirements.dev.txt\n")
+    changed = tmp_path / "changed.txt"
+    _write(changed, "README.md\n")
+    monkeypatch.setattr(validator, "ROOT", tmp_path)
+
+    targets, mode = validator._resolve_targets(str(changed))
+
+    assert mode == "scoped"
+    assert doc in targets
+
+
+def test_governance_roots_match_docs_integrity_validator() -> None:
+    from scripts.validate_docs_integrity import GOVERNANCE_ALWAYS_ROOTS as integrity_roots
+
+    assert validator.GOVERNANCE_ALWAYS_ROOTS == integrity_roots

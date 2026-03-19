@@ -231,31 +231,150 @@ jobs:
   docs-validation:
     runs-on: ubuntu-latest
     needs: classify
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
         with:
           install-deps: "true"
           requirements-file: requirements.dev.txt
-      - name: Validate strict documentation snippets
-        run: python scripts/validate_readme_alignment.py --format json
-      - name: Validate manifest inventory alignment
-        run: python scripts/validate_manifest_inventory.py --format json
-      - name: Validate deterministic QR assets
-        run: python scripts/generate_qr_assets.py --check
-      - name: Validate markdown link and image integrity
-        run: python scripts/validate_docs_integrity.py --format json
-      - name: Validate active docs dependency references
-        run: python scripts/lint_active_docs_dependency_refs.py --format json
-      - name: Validate governance + release markdown link integrity
-        run: >-
-          python scripts/validate_docs_integrity.py
-          --format json
-          --roots docs/governance docs/comms docs/release docs/releases
-      - name: Validate post-merge docs sync governance contract
-        run: python scripts/validate_post_merge_doc_sync.py
-      - name: Validate deterministic changelog generation
-        run: python scripts/generate_changelog.py --check
+
+      - name: Start timing harness
+        run: |
+          echo "START_TS=$(date +%s)" >> "$GITHUB_ENV"
+          echo -e "step	elapsed_s	mode" > /tmp/timing.tsv
+
+      - name: Resolve docs validation tier
+        id: tier
+        env:
+          PR_TIER: ${{ needs.classify.outputs.pr_tier }}
+          EVENT_NAME: ${{ github.event_name }}
+          GOVERNANCE_CHANGED: ${{ needs.classify.outputs.governance }}
+          RUNTIME_CHANGED: ${{ needs.classify.outputs.runtime }}
+          SECURITY_CHANGED: ${{ needs.classify.outputs.security }}
+        run: |
+          set -euo pipefail
+          tier=scoped
+          reason='standard/docs-only scope'
+
+          if [ "$PR_TIER" = "critical" ]; then
+            tier=full
+            reason='critical PR tier'
+          elif [ "$EVENT_NAME" = "push" ]; then
+            tier=full
+            reason='push safety net'
+          elif [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            tier=full
+            reason='manual dispatch'
+          elif [ "$GOVERNANCE_CHANGED" = "true" ] || [ "$RUNTIME_CHANGED" = "true" ] || [ "$SECURITY_CHANGED" = "true" ]; then
+            tier=full
+            reason='governance/runtime/security paths'
+          fi
+
+          echo "tier=$tier" >> "$GITHUB_OUTPUT"
+          echo "tier_reason=$reason" >> "$GITHUB_OUTPUT"
+
+      - name: Collect changed doc files
+        if: steps.tier.outputs.tier == 'scoped'
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_ref="${{ github.event.pull_request.base.sha }}"
+          else
+            base_ref="origin/main"
+            git fetch origin main --depth=1 --quiet
+          fi
+          git diff --name-only "$base_ref"...HEAD > /tmp/changed_files.txt
+          rg --no-line-number --color never -N '.*\.(md|html|txt|rst|svg)$' /tmp/changed_files.txt > /tmp/changed_docs.txt || true
+
+      - name: "[always] Validate README alignment"
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_readme_alignment.py --format json
+          echo -e "validate_readme_alignment	$(( $(date +%s) - T0 ))	always" >> /tmp/timing.tsv
+
+      - name: "[always] Validate post-merge docs sync governance contract"
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_post_merge_doc_sync.py
+          echo -e "validate_post_merge_doc_sync	$(( $(date +%s) - T0 ))	always" >> /tmp/timing.tsv
+
+      - name: "[always] Validate governance + release markdown link integrity"
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_docs_integrity.py --format json --roots docs/governance docs/comms docs/release docs/releases
+          echo -e "validate_docs_integrity_governance	$(( $(date +%s) - T0 ))	always" >> /tmp/timing.tsv
+
+      - name: "[full] Validate manifest inventory alignment"
+        if: steps.tier.outputs.tier == 'full'
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_manifest_inventory.py --format json
+          echo -e "validate_manifest_inventory	$(( $(date +%s) - T0 ))	full" >> /tmp/timing.tsv
+
+      - name: "[full] Validate deterministic QR assets"
+        if: steps.tier.outputs.tier == 'full'
+        run: |
+          T0=$(date +%s)
+          python scripts/generate_qr_assets.py --check
+          echo -e "generate_qr_assets	$(( $(date +%s) - T0 ))	full" >> /tmp/timing.tsv
+
+      - name: "[full] Validate deterministic changelog generation"
+        if: steps.tier.outputs.tier == 'full'
+        run: |
+          T0=$(date +%s)
+          python scripts/generate_changelog.py --check
+          echo -e "generate_changelog	$(( $(date +%s) - T0 ))	full" >> /tmp/timing.tsv
+
+      - name: "[full] Validate markdown link and image integrity"
+        if: steps.tier.outputs.tier == 'full'
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_docs_integrity.py --format json
+          echo -e "validate_docs_integrity	$(( $(date +%s) - T0 ))	full" >> /tmp/timing.tsv
+
+      - name: "[scoped] Validate markdown link and image integrity"
+        if: steps.tier.outputs.tier == 'scoped'
+        run: |
+          T0=$(date +%s)
+          python scripts/validate_docs_integrity.py --format json --changed-files /tmp/changed_docs.txt
+          echo -e "validate_docs_integrity	$(( $(date +%s) - T0 ))	scoped" >> /tmp/timing.tsv
+
+      - name: "[full] Validate active docs dependency references"
+        if: steps.tier.outputs.tier == 'full'
+        run: |
+          T0=$(date +%s)
+          python scripts/lint_active_docs_dependency_refs.py --format json
+          echo -e "lint_active_docs_dependency_refs	$(( $(date +%s) - T0 ))	full" >> /tmp/timing.tsv
+
+      - name: "[scoped] Validate active docs dependency references"
+        if: steps.tier.outputs.tier == 'scoped'
+        run: |
+          T0=$(date +%s)
+          python scripts/lint_active_docs_dependency_refs.py --format json --changed-files /tmp/changed_docs.txt
+          echo -e "lint_active_docs_dependency_refs	$(( $(date +%s) - T0 ))	scoped" >> /tmp/timing.tsv
+
+      - name: Publish docs-validation timing summary
+        if: always()
+        env:
+          TIER: ${{ steps.tier.outputs.tier }}
+          TIER_REASON: ${{ steps.tier.outputs.tier_reason }}
+          PR_TIER: ${{ needs.classify.outputs.pr_tier }}
+        run: |
+          TOTAL_ELAPSED=$(( $(date +%s) - START_TS ))
+          {
+            echo "## Docs validation timing"
+            echo ""
+            echo "> Mode: \`$TIER\` · Reason: $TIER_REASON · PR tier: \`$PR_TIER\` · Total: \`${TOTAL_ELAPSED}s\`"
+            echo ""
+            echo "| Validator | Elapsed (s) | Mode |"
+            echo "| --- | --- | --- |"
+            tail -n +2 /tmp/timing.tsv | while IFS=$'	' read -r step elapsed mode; do
+              echo "| \`$step\` | \`$elapsed\` | \`$mode\` |"
+            done
+            echo ""
+            echo "_Full mode is forced for critical PRs, push runs, workflow_dispatch runs, and governance/runtime/security path changes._"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   workflow-python-version-guard:
     runs-on: ubuntu-latest
