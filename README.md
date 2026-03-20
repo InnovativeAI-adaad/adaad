@@ -4,7 +4,7 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.15.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.15.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/)&nbsp;[![Phases](https://img.shields.io/badge/79_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.16.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.16.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/)&nbsp;[![Phases](https://img.shields.io/badge/84_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C748%2B_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Ledger](https://img.shields.io/badge/12%2C441%2B_Ledger_Entries-SHA--256_Chained-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Phase65](https://img.shields.io/badge/⛓_Phase_65-First_Self--Evolution_·_Sealed-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phase77](https://img.shields.io/badge/🌱_Phase_77-Seed_Epoch_·_LIFECYCLE_COMPLETE-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
@@ -30,12 +30,12 @@ gated through 23 constitutional rules, and deterministically replayable. On any 
 <!-- ADAAD_VERSION_INFOBOX:START -->
 | Field | Value |
 |---|---|
-| **Version** | `9.15.0` |
+| **Version** | `9.16.0` |
 | **Released** | 2026-03-20 |
-| **Phases complete** | 79 — Multi-Generation Lineage Graph |
-| **Tests passing** | 4,748+ |
+| **Phases complete** | 84 — Temporal Fitness Half-Life |
+| **Tests passing** | 4,800+ |
 | **Ledger entries** | 12,441+ SHA-256 hash-chained |
-| **Next** | Phase 80 — KMS/HSM production key wiring · Compound Evolution |
+| **Next** | Phase 85 — KMS/HSM production key wiring |
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -207,7 +207,7 @@ SeedCELOutcomeEvent    Hash-linked to full upstream provenance chain
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 🟢 Live System Status — v9.14.0
+## 🟢 Live System Status — v9.16.0
 
 | Component | Status | Invariant |
 |---|---|---|
@@ -223,7 +223,11 @@ SeedCELOutcomeEvent    Hash-linked to full upstream provenance chain
 | Journal Warm-Cache | 🟢 LIVE | `JOURNAL-CACHE-0` |
 | Autonomous Doc Sync CI | 🟢 LIVE | `DOC-SYNC-VERSION-0` |
 | Multi-Generation Lineage Graph | 🟢 LIVE | `MULTIGEN-0`–`MULTIGEN-REPLAY-0` |
-| KMS/HSM production key wiring | 🟡 Phase 80 | `LEDGER-SIGN-0` (production) |
+| Constitutional Self-Discovery Loop | 🟢 LIVE | `SELF-DISC-0` · `RATIFY-GOV-0` |
+| Pareto Population Evolution | 🟢 LIVE | `PARETO-0` · `PARETO-DETERM-0` |
+| Causal Fitness Attribution (Shapley) | 🟢 LIVE | `CAUSAL-ATTR-0` · `SHAPLEY-BOUND-0` |
+| Temporal Fitness Half-Life | 🟢 LIVE | `DECAY-0` · `HALFLIFE-DETERM-0` |
+| KMS/HSM production key wiring | 🟡 Phase 85 | `LEDGER-SIGN-0` (production) |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -327,6 +331,59 @@ HUMAN-0 is inviolable. No governor sign-off = no merge. Always.
 | Multi-gen lineage reconstructable from ledger | `MULTIGEN-REPLAY-0` | ✅ |
 | README version always matches `VERSION` | `DOC-SYNC-VERSION-0` + CI enforcement | ✅ |
 | Production ledger event signing | `Ed25519FileSigner` / `HMACEnvSigner` | ✅ (KMS wiring Phase 80) |
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
+## Hey Noah.
+
+> *This section exists because Noah Benzing, Alpha Team Member, will not read this document.*
+> *This section is the document.*
+
+You are working on a system that governs its own evolution. Here is what that means in practice, in the fewest words possible.
+
+**The system does not trust you to review every change.** It trusts math.
+
+Every mutation ADAAD makes to itself gets:
+
+1. **Scored** — fitness evaluated against constitutional invariants before execution
+2. **Signed** — SHA-256 hash-chained into a tamper-evident ledger; you cannot alter history
+3. **Gated** — GovernanceGate is the only promotion path, not a suggestion
+4. **Replayed** — any decision, any epoch, from any point in history, is deterministically reproducible
+
+There is no `git push` without a ledger entry. There is no ledger entry without a hash-chain link to everything before it. There is no promotion without a gate decision. This is not configurable.
+
+**What Dustin controls that no one else does:**
+
+- GPG-signed squash merges to `main` — cryptographic proof that a human reviewed the mutation
+- Tier 0 mutations — structural changes to the governance layer itself
+- Tag ceremonies — version anchors in the immutable chain
+- GA sign-off — the public attestation that this system is production-ready
+
+**What DEVADAAD (the AI agent) can do autonomously:**
+
+- Write, test, and push code on feature branches
+- Merge non-Tier-0 PRs with governor sign-off in session
+- Author docs, runbooks, release notes, and governance artifacts
+
+**What DEVADAAD cannot do, ever:**
+
+- Perform GPG operations on Dustin's behalf
+- Promote Tier 0 mutations without explicit human gate
+- Alter the ledger
+
+**The three things you actually need to know:**
+
+| Thing | Why it matters |
+|---|---|
+| `GOV-SOLE-0` | GovernanceGate is the only path. Nothing bypasses it. |
+| `HUMAN-0` | Dustin's GPG sign-off is inviolable. The ledger knows if it's missing. |
+| `REPLAY-0` | Every decision is replayable. There is no "it was fine in testing." |
+
+The full architecture is in [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md). The 23 rules are in [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md). The thesis is in [`docs/thesis/ADAAD_THESIS.md`](docs/thesis/ADAAD_THESIS.md).
+
+You now have no excuse.
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
