@@ -93,11 +93,28 @@ Builds:
 # ─────────────────────────────────────────────────────────────────────────────
 # Metadata
 # ─────────────────────────────────────────────────────────────────────────────
+  - versionName: '9.14.0'
+    versionCode: 91400
+    commit: free-v9.14.0
+    subdir: android
+    sudo:
+      - apt-get update
+      - apt-get install -y openjdk-17-jdk-headless
+    gradle:
+      - community
+    prebuild:
+      - sed -i 's/signingConfig.*signingConfigs\.release//' app/build.gradle
+    scandelete:
+      - keystore/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Metadata
+# ─────────────────────────────────────────────────────────────────────────────
 AutoUpdateMode: Version free-v%v
 UpdateCheckMode: Tags ^free-v
 
-CurrentVersion: '3.1.0'
-CurrentVersionCode: 31000
+CurrentVersion: '9.14.0'
+CurrentVersionCode: 91400
 
 # Anti-features (none — no tracking, no ads, no non-free dependencies)
 # AntiFeatures:

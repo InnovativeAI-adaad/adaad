@@ -109,14 +109,22 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 
 See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable artifact.
 
-### 2.3 Open items blocking v1.0.0-GA
+### 2.3 Open items blocking v1.1-GA
+
+> **VERSIONING DECLARATION (DEVADAAD — Phase 80 Track B):**
+> `v1.1-GA` is the canonical GA tag. `v1.0.0-GA` was never applied and is superseded.
+> This declaration closes FINDING-H04-GA-VERSIONING (pending Dustin sign-off per Gate 4).
 
 | Item | Owner | Status |
 |---|---|---|
-| F-Droid MR URL (manual submission) | Dustin (founder) | ⏳ pending |
-| Founder GPG sign-off in ledger | Dustin (founder) | ⏳ pending |
-| Phase 52 direction proposal | ArchitectAgent → human approval | ✅ complete — ratified and shipped as Phase 52 (`v7.6.0`) |
-| `governance_strict_release_gate.yml` terminal pass | CI | ⏳ unblocked after above |
+| F-Droid MR preparation (YAML) | DEVADAAD | ✅ complete — `android/fdroid/com.innovativeai.adaad.yml` updated to v9.14.0 |
+| F-Droid MR submission (manual) | Dustin (founder) — Gate 3 | ⏳ HUMAN-0: fork fdroid-data, copy YAML, open MR at `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` |
+| Founder GPG sign-off in ledger | Dustin (founder) — Gate 4 | ⏳ HUMAN-0: commit `governance: v1.1-GA human sign-off — 2026-03-20` with GPG |
+| GA versioning declaration documented | DEVADAAD | ✅ complete — this section (closes H-04, pending Dustin Gate 4 sign-off) |
+| GPG tags v9.7.0–v9.10.0 (C-02) | Dustin (founder) | ⏳ HUMAN-0: see audit closeout report for exact commands |
+| `free-v9.10.0` APK tag (M-02) | Dustin (founder) | ⏳ HUMAN-0: `git tag free-v9.10.0 && git push origin free-v9.10.0` |
+| Patent counsel engagement (H-03) | Dustin (founder) | ⏳ HUMAN-0: use `docs/IP_PATENT_COUNSEL_BRIEF.md` + `docs/IP_PATENT_FILING_ARTIFACT.md` |
+| `governance_strict_release_gate.yml` terminal pass | CI | ⏳ unblocked after above human gates |
 
 ---
 
@@ -160,6 +168,7 @@ adaad_pr_procession_contract:
     - phase77
     - phase78
     - phase79
+    - phase80
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -327,10 +336,28 @@ adaad_pr_procession_contract:
           title: "feat(phase77-track-b): First Seed Epoch Run — SEED-LIFECYCLE-COMPLETE-0 demonstrated"
       evidence: "artifacts/governance/phase77/seed_epoch_run_evidence.json"
       run_digest: "sha256:b3a41c40b99177dc51d5cfdd43d826c27aa7bf718f93fd936f7a5658869590ab"
+    phase80:
+      ci_tier: constitutional
+      depends_on: ["phase79"]
+      status: in_progress
+      version: "v9.15.0"
+      title: "Multi-Generation Compound Evolution — Multi-Seed Competitive Epoch"
+      tracks:
+        - id: track_a
+          branch: feat/phase80-seed-competition
+          status: complete
+          invariants: [SEED-COMP-0, SEED-RANK-0, COMP-GOV-0, COMP-LEDGER-0]
+        - id: track_b
+          branch: chore/phase80-ga-unblock
+          status: complete
+          scope: ga_unblock_sprint
+        - id: track_c
+          branch: chore/v9.15-close
+          status: pending
   state_alignment:
-    expected_active_phase: "Phase 79 COMPLETE · v9.14.0"
+    expected_active_phase: "Phase 80 IN PROGRESS · v9.14.0"
     expected_last_completed_pr: "feat/phase-79-multi-gen-lineage"
-    expected_next_pr: "Phase 80 — KMS/HSM production key wiring + Compound Evolution"
+    expected_next_pr: "Phase 80 — PR-80-01 (Multi-Seed Competition) + PR-80-02 (GA Unblock) + PR-80-03 (v9.15.0 close)"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -348,7 +375,7 @@ adaad_pr_procession_contract:
       note: "patent filing — pre-v1.1-GA deadline; Dustin legal action required"
   v1_ga_gate:
     status: "in_progress"
-    canonical_ga_tag: "v1.1-GA (v1.0.0-GA versioning to be clarified — FINDING-H04-GA-VERSIONING)"
+    canonical_ga_tag: "v1.1-GA (DECLARED — v1.0.0-GA superseded, Phase 80 Track B — FINDING-H04 closed pending Gate 4 sign-off)"
     blocking_items:
       - fdroid_submission_recorded
       - founder_gpg_signoff_confirmed
