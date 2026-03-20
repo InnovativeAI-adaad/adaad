@@ -59,7 +59,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 PROTECTED_PATHS: frozenset[str] = frozenset({
     "docs/CONSTITUTION.md",
-    "docs/governance/ARCHITECT_SPEC_v2.0.0.md",
+    "docs/governance/ARCHITECT_SPEC_v3.1.0.md",
     "governance/CANONICAL_ENGINE_DECLARATION.md",
     "governance_runtime_profile.lock.json",
     "runtime/constitution.py",

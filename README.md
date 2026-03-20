@@ -445,6 +445,6 @@ adaad/
 *"The future of autonomous software development is not AI that writes your code.*  
 *It is AI that governs itself while writing your code."*
 
-**[⚡ Get Started](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Read the Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[📖 Read the Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🗺 See the Roadmap](ROADMAP.md)**
+**[⚡ Get Started](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Read the Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[📖 Read the Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🗺 See the Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🔬 Architect Spec](docs/governance/ARCHITECT_SPEC_v3.1.0.md)**
 
 </div>

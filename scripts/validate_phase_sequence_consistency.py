@@ -18,7 +18,7 @@ from pathlib import Path
 AGENTS_PATH = Path("AGENTS.md")
 STATE_PATH = Path(".adaad_agent_state.json")
 SPEC_PATH = Path("docs/governance/ARCHITECT_SPEC_v3.1.0.md")
-PROCESSION_PATH = Path("docs/governance/ADAAD_PR_PROCESSION_2026-03.md")
+PROCESSION_PATH = Path("docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md")
 CANONICAL_SPEC_PATH = "docs/governance/ARCHITECT_SPEC_v3.1.0.md"
 CANONICAL_SPEC_BASENAME = "ARCHITECT_SPEC_v3.1.0.md"
 

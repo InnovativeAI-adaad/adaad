@@ -31,7 +31,7 @@ def _seed_repo(tmp_path: Path) -> Path:
     shutil.copy2(src, repo / "scripts" / "validate_manifest_inventory.py")
 
     (repo / "VERSION").write_text("2.3.0\n", encoding="utf-8")
-    (repo / "docs" / "governance" / "ARCHITECT_SPEC_v3.0.0.md").write_text("# spec\n", encoding="utf-8")
+    (repo / "docs" / "governance" / "ARCHITECT_SPEC_v3.1.0.md").write_text("# spec\n", encoding="utf-8")
     (repo / "docs" / "releases" / "2.3.0.md").write_text("# release\n", encoding="utf-8")
     (repo / "tests" / "test_one.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
 
@@ -40,11 +40,11 @@ def _seed_repo(tmp_path: Path) -> Path:
             [
                 "# ADAAD v2.3.0 — Repository Manifest",
                 "# Human readers: start at docs/README.md",
-                "# Governance spec: docs/governance/ARCHITECT_SPEC_v3.0.0.md",
+                "# Governance spec: docs/governance/ARCHITECT_SPEC_v3.1.0.md",
                 "VERSION                          — Canonical version string (2.3.0)",
                 "Latest tagged release notes      — docs/releases/2.3.0.md",
                 "tests/                           — Full test suite (1 Python files)",
-                "  ARCHITECT_SPEC_v3.0.0.md       — CANONICAL architectural specification (v3.0.0)",
+                "  ARCHITECT_SPEC_v3.1.0.md              — CANONICAL architectural specification (v3.1.0)",
             ]
         )
         + "\n",

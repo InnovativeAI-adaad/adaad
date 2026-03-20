@@ -1,1 +1,0 @@
-Please add the `gate_ok` flag to the `/api/nexus/health` response and address the CodeQL issues before merging this pull request.
