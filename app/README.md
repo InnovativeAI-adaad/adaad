@@ -47,9 +47,9 @@ Legitimate exceptions require updating both `tools/lint_import_paths.py` and `do
 
 ## DEVADAAD merge authorization replay gate behavior
 
-- `app/orchestration/adaad_trigger.py` now treats replay verification metadata as a hard merge-context prerequisite for `DEVADAAD`.
-- Merge-ready orchestration output must include verified-SHA replay context: manifest path, bundle digest, verification result, schema/signature validity, and divergence flag.
-- Any missing replay metadata or `divergence=true` result fail-closes merge authorization status.
+- `app/orchestration/adaad_trigger.py` is a real `DEVADAAD` merge path, not a dry-run-only helper; non-simulation runs invoke `git merge --no-ff --no-edit` only after the gated merge target resolves to the same commit as the verified SHA.
+- Merge-ready orchestration output must include verified-SHA replay context: manifest path, bundle digest, verification result, verified SHA, merge target SHA, schema/signature validity, and divergence flag.
+- Any missing merge-target verification, SHA mismatch, or `divergence=true` replay result fail-closes merge authorization status before any merge command is executed.
 
 ## Goal graph initialization fail-closed behavior
 
