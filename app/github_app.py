@@ -32,7 +32,6 @@ import os
 from typing import Any
 
 from runtime.api.app_layer import GovernanceGate, record_external_governance_event
-import runtime.governance.external_event_bridge as _external_event_bridge
 
 logger = logging.getLogger(__name__)
 
@@ -287,7 +286,7 @@ def _emit_governance_event(event_name: str, data: dict) -> None:
         return  # gate hard-blocked; emission suppressed and logged above
 
     try:
-        signal = _external_event_bridge.record(
+        signal = record_external_governance_event(
             event_name=event_name,
             action=str(data.get("action", "")),
             delivery_id=str(data.get("delivery_id", "")),

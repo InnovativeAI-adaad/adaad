@@ -10,72 +10,67 @@ pytestmark = pytest.mark.governance_gate
 from security.ledger import journal
 
 
-def _with_temp_journal(tmp_path: Path) -> tuple[Path, Path, Path, Path, Path, Path]:
-    original_path = journal.JOURNAL_PATH
-    original_genesis = journal.GENESIS_PATH
-    original_tail = journal.TAIL_STATE_PATH
-    original_lock = journal.LOCK_PATH
-    temp_journal = tmp_path / "cryovant_journal.jsonl"
-    temp_genesis = tmp_path / "cryovant_journal.genesis.jsonl"
-    temp_tail = tmp_path / "cryovant_journal.tail.json"
-    temp_lock = tmp_path / "cryovant_journal.lock"
-    journal.JOURNAL_PATH = temp_journal  # type: ignore
-    journal.GENESIS_PATH = temp_genesis  # type: ignore
-    journal.TAIL_STATE_PATH = temp_tail  # type: ignore
-    journal.LOCK_PATH = temp_lock  # type: ignore
-    return original_path, original_genesis, original_tail, original_lock, temp_journal, temp_genesis
-
-
-def _restore_journal(original_path: Path, original_genesis: Path, original_tail: Path, original_lock: Path) -> None:
-    journal.JOURNAL_PATH = original_path  # type: ignore
-    journal.GENESIS_PATH = original_genesis  # type: ignore
-    journal.TAIL_STATE_PATH = original_tail  # type: ignore
-    journal.LOCK_PATH = original_lock  # type: ignore
+def _temp_paths(tmp_path: Path, name: str = "cryovant_journal") -> journal.JournalPaths:
+    base_path = tmp_path / name
+    return journal.JournalPaths(
+        journal_path=base_path.with_suffix(".jsonl"),
+        genesis_path=base_path.with_name(f"{base_path.name}.genesis.jsonl"),
+        tail_state_path=base_path.with_name(f"{base_path.name}.tail.json"),
+        lock_path=base_path.with_name(f"{base_path.name}.lock"),
+    )
 
 
 def test_verify_journal_integrity_valid_chain(tmp_path: Path) -> None:
-    original_path, original_genesis, original_tail, original_lock, _, _ = _with_temp_journal(tmp_path)
-    try:
-        journal.append_tx("test", {"i": 1}, tx_id="TX-1")
-        journal.append_tx("test", {"i": 2}, tx_id="TX-2")
-        journal.verify_journal_integrity()
-    finally:
-        _restore_journal(original_path, original_genesis, original_tail, original_lock)
+    paths = _temp_paths(tmp_path)
+    journal.append_tx("test", {"i": 1}, tx_id="TX-1", journal_paths=paths)
+    journal.append_tx("test", {"i": 2}, tx_id="TX-2", journal_paths=paths)
+    journal.verify_journal_integrity(journal_paths=paths)
 
 
 def test_verify_journal_integrity_detects_tamper(tmp_path: Path) -> None:
-    original_path, original_genesis, original_tail, original_lock, temp_journal, _ = _with_temp_journal(tmp_path)
-    try:
-        journal.append_tx("test", {"i": 1}, tx_id="TX-1")
-        entry = json.loads(temp_journal.read_text(encoding="utf-8").splitlines()[0])
-        entry["payload"]["i"] = 999
-        temp_journal.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
+    paths = _temp_paths(tmp_path)
+    journal.append_tx("test", {"i": 1}, tx_id="TX-1", journal_paths=paths)
+    entry = json.loads(paths.journal_path.read_text(encoding="utf-8").splitlines()[0])
+    entry["payload"]["i"] = 999
+    paths.journal_path.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
 
-        with pytest.raises(journal.JournalIntegrityError, match="journal_hash_mismatch"):
-            journal.verify_journal_integrity()
-    finally:
-        _restore_journal(original_path, original_genesis, original_tail, original_lock)
+    with pytest.raises(journal.JournalIntegrityError, match="journal_hash_mismatch"):
+        journal.verify_journal_integrity(journal_paths=paths)
 
 
 def test_verify_journal_integrity_detects_malformed_json(tmp_path: Path) -> None:
-    original_path, original_genesis, original_tail, original_lock, temp_journal, _ = _with_temp_journal(tmp_path)
-    try:
-        temp_journal.write_text('{"tx":"oops"\n', encoding="utf-8")
-        with pytest.raises(journal.JournalIntegrityError, match="journal_invalid_json"):
-            journal.verify_journal_integrity()
-    finally:
-        _restore_journal(original_path, original_genesis, original_tail, original_lock)
+    paths = _temp_paths(tmp_path)
+    paths.journal_path.write_text('{"tx":"oops"\n', encoding="utf-8")
+    with pytest.raises(journal.JournalIntegrityError, match="journal_invalid_json"):
+        journal.verify_journal_integrity(journal_paths=paths)
 
 
 def test_append_tx_blocked_after_corruption(tmp_path: Path) -> None:
-    original_path, original_genesis, original_tail, original_lock, temp_journal, _ = _with_temp_journal(tmp_path)
-    try:
-        journal.append_tx("test", {"i": 1}, tx_id="TX-1")
-        entry = json.loads(temp_journal.read_text(encoding="utf-8").splitlines()[0])
-        entry["prev_hash"] = "f" * 64
-        temp_journal.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
+    paths = _temp_paths(tmp_path)
+    journal.append_tx("test", {"i": 1}, tx_id="TX-1", journal_paths=paths)
+    entry = json.loads(paths.journal_path.read_text(encoding="utf-8").splitlines()[0])
+    entry["prev_hash"] = "f" * 64
+    paths.journal_path.write_text(json.dumps(entry, ensure_ascii=False) + "\n", encoding="utf-8")
 
-        with pytest.raises(journal.JournalIntegrityError, match="journal_prev_hash_mismatch"):
-            journal.append_tx("test", {"i": 2}, tx_id="TX-2")
-    finally:
-        _restore_journal(original_path, original_genesis, original_tail, original_lock)
+    with pytest.raises(journal.JournalIntegrityError, match="journal_prev_hash_mismatch"):
+        journal.append_tx("test", {"i": 2}, tx_id="TX-2", journal_paths=paths)
+
+
+def test_corrupted_temp_journal_cache_does_not_poison_other_journal(tmp_path: Path) -> None:
+    journal._VERIFIED_TAIL_CACHE.clear()
+    alpha = _temp_paths(tmp_path / "alpha")
+    beta = _temp_paths(tmp_path / "beta")
+
+    journal.append_tx("test", {"i": 1}, tx_id="TX-A1", journal_paths=alpha)
+    beta_first = journal.append_tx("test", {"i": 1}, tx_id="TX-B1", journal_paths=beta)
+
+    tampered = json.loads(alpha.journal_path.read_text(encoding="utf-8").splitlines()[0])
+    tampered["prev_hash"] = "f" * 64
+    alpha.journal_path.write_text(json.dumps(tampered, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    with pytest.raises(journal.JournalIntegrityError, match="journal_prev_hash_mismatch"):
+        journal.verify_journal_integrity(journal_paths=alpha)
+
+    beta_second = journal.append_tx("test", {"i": 2}, tx_id="TX-B2", journal_paths=beta)
+    assert beta_second["prev_hash"] == beta_first["hash"]
+    assert journal._VERIFIED_TAIL_CACHE[str(beta.journal_path.resolve())][0] == beta_second["hash"]

@@ -7,7 +7,6 @@ from runtime.capability_graph import get_capabilities, register_capability
 from runtime.evolution.entropy_discipline import EntropyBudget, derive_seed, deterministic_context, deterministic_token, deterministic_token_with_budget
 from runtime.evolution.fitness import FitnessEvaluator
 from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_pr_lifecycle_event
-from runtime.governance.external_event_bridge import record as record_external_governance_event
 from runtime.governance.branch_manager import BranchManager
 from runtime.governance.foundation import RuntimeDeterminismProvider, SeededDeterminismProvider, SystemDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
 from runtime.governance.gate_certifier import GateCertifier
@@ -59,6 +58,12 @@ __all__ = [
     "summarize_preflight_rejections",
     "top_preflight_rejections",
 ]
+
+
+def record_external_governance_event(*args, **kwargs):
+    from runtime.governance.external_event_bridge import record
+
+    return record(*args, **kwargs)
 
 
 
