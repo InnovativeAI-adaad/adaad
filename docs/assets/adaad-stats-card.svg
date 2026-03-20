@@ -1,127 +1,124 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" width="100%" preserveAspectRatio="xMidYMid meet">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="govTitle govDesc">
+  <title id="govTitle">GOV SOLE 0 — GovernanceGate sole promotion path</title>
+  <desc id="govDesc">Badge representing GOV-SOLE-0: single promotion path through GovernanceGate, hardware-rooted attestation, and ledger-sealed evidence.</desc>
+
   <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0b0d10"/>
+      <stop offset="1" stop-color="#060708"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.95"/>
+      <stop offset="0.5" stop-color="#8b5cf6" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#f97316" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="gateGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a855f7" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#a855f7" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="softBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feOffset dx="0" dy="2" result="o"/>
+      <feGaussianBlur in="o" stdDeviation="3" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0"/>
+      <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+
+    <!-- Typography -->
     <style>
-      .s-num{font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:28px;fill:#f5f7fa}
-      .s-lbl{font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:9px;fill:#8c919b;letter-spacing:2px}
-      .s-sub{font-family:'JetBrains Mono','Courier New',monospace;font-size:7.5px;fill:#2b2f36}
-      .s-tag{font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:8px;letter-spacing:1.5px}
-      @keyframes countUp{0%{opacity:0;transform:translateY(8px)}40%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(0)}}
-      .c1{animation:countUp .8s ease-out .1s both}
-      .c2{animation:countUp .8s ease-out .25s both}
-      .c3{animation:countUp .8s ease-out .40s both}
-      .c4{animation:countUp .8s ease-out .55s both}
-      .c5{animation:countUp .8s ease-out .70s both}
-      .c6{animation:countUp .8s ease-out .85s both}
-      .c7{animation:countUp .8s ease-out 1.0s both}
-      @keyframes blink{0%,90%,100%{opacity:1}95%{opacity:.2}}
-      .blink{animation:blink 3s ease-in-out infinite}
-      @keyframes barIn{0%{width:0}100%{width:100%}}
+      .title { font-family: 'Inter', Arial, sans-serif; font-weight:900; font-size:26px; fill:#f8fafc; letter-spacing:1px; }
+      .label { font-family: 'Inter', Arial, sans-serif; font-weight:700; font-size:10px; fill:#9aa0a6; letter-spacing:1.6px; text-transform:uppercase; }
+      .meta { font-family: 'JetBrains Mono', monospace; font-size:9px; fill:#9aa0a6; }
+      .pill { font-family: 'Inter', Arial, sans-serif; font-weight:700; font-size:10px; fill:#e6eef8; }
+      .muted { font-family: 'Inter', Arial, sans-serif; font-weight:600; font-size:11px; fill:#cbd5e1; }
+      @media (prefers-reduced-motion: no-preference) {
+        .pulse { animation: pulse 2.8s ease-in-out infinite; transform-origin: center; }
+        @keyframes pulse { 0% { opacity:0.95; transform:scale(1); } 50% { opacity:1; transform:scale(1.015); } 100% { opacity:0.95; transform:scale(1); } }
+        .flow { animation: flow 3.6s linear infinite; }
+        @keyframes flow { 0% { transform: translateX(-12px); } 100% { transform: translateX(12px); } }
+      }
     </style>
-    <linearGradient id="bgS" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0d0f14"/><stop offset="100%" stop-color="#0b0c0f"/>
-    </linearGradient>
-    <linearGradient id="barS" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#3b82f6" stop-opacity=".8"/>
-      <stop offset="50%" stop-color="#8b5cf6" stop-opacity=".7"/>
-      <stop offset="100%" stop-color="#f97316" stop-opacity=".6"/>
-    </linearGradient>
   </defs>
-  <rect width="1200" height="120" fill="url(#bgS)" rx="6"/>
-  <rect width="1200" height="120" fill="none" stroke="#2b2f36" stroke-width="1" rx="6"/>
-  <rect x="0" y="0" width="1200" height="3" fill="url(#barS)" rx="2"/>
 
-  <!-- 7 stats columns — equal width ~171px each -->
-  <!-- 1: Tests -->
-  <g class="c1" transform="translate(0,0)">
-    <rect x="1" y="3" width="170" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="1" y="3" width="3" height="114" fill="#22c55e"/>
-    <text x="86" y="52" class="s-num" text-anchor="middle">4,649</text>
-    <text x="86" y="68" class="s-lbl" text-anchor="middle">TESTS PASSING</text>
-    <g transform="translate(60,78)">
-      <rect width="52" height="16" rx="3" fill="#0f1a0f" stroke="#22c55e" stroke-width=".6"/>
-      <text x="26" y="12" class="s-tag" fill="#22c55e" text-anchor="middle">100% ✓</text>
+  <!-- Card background -->
+  <rect x="0" y="0" width="1200" height="120" rx="8" fill="url(#bgGrad)"/>
+  <rect x="0.5" y="0.5" width="1199" height="119" rx="8" fill="none" stroke="#1f2933" stroke-width="1"/>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1200" height="4" rx="2" fill="url(#accentGrad)"/>
+
+  <!-- Left badge block -->
+  <g transform="translate(24,14)">
+    <rect x="0" y="0" width="420" height="92" rx="8" fill="#071018" stroke="#1f2933" stroke-width="1" filter="url(#shadow)"/>
+
+    <!-- Left invariant stripe -->
+    <rect x="0" y="0" width="6" height="92" rx="4" fill="#a855f7"/>
+
+    <!-- Gate icon group -->
+    <g transform="translate(26,12)">
+      <!-- Gate container -->
+      <rect x="0" y="0" width="72" height="68" rx="8" fill="#071018" stroke="#a855f7" stroke-width="1.6" />
+      <!-- Soft glow behind gate -->
+      <rect x="-8" y="-10" width="88" height="88" rx="12" fill="url(#gateGlow)" class="pulse" opacity="0.9" filter="url(#softBlur)"/>
+      <!-- Vertical bars -->
+      <g stroke="#a855f7" stroke-width="2.2" stroke-linecap="round">
+        <line x1="20" y1="12" x2="20" y2="56"/>
+        <line x1="36" y1="12" x2="36" y2="56"/>
+        <line x1="52" y1="12" x2="52" y2="56"/>
+      </g>
+
+      <!-- Input arrow (left) -->
+      <g transform="translate(-44,30)">
+        <path d="M0 6 L44 6" stroke="#3b82f6" stroke-width="3.2" stroke-linecap="round" fill="none" />
+        <polygon points="44,6 36,0 36,12" fill="#3b82f6"/>
+        <!-- subtle flow line -->
+        <path d="M6 6 C18 2, 26 10, 36 6" stroke="#60a5fa" stroke-width="1" fill="none" opacity="0.6" class="flow"/>
+      </g>
+
+      <!-- Output arrow (right) -->
+      <g transform="translate(84,30)">
+        <path d="M0 6 L44 6" stroke="#22c55e" stroke-width="3.2" stroke-linecap="round" fill="none" />
+        <polygon points="44,6 36,0 36,12" fill="#22c55e"/>
+      </g>
+
+      <!-- Micro lock glyph to indicate hardware-rooted identity -->
+      <g transform="translate(22,4)" opacity="0.95">
+        <rect x="8" y="2" width="28" height="14" rx="3" fill="#020617" stroke="#a855f7" stroke-width="0.9"/>
+        <rect x="18" y="-2" width="8" height="8" rx="2" fill="#a855f7"/>
+      </g>
     </g>
-    <text x="86" y="108" class="s-sub" text-anchor="middle">452 test files</text>
+
+    <!-- Text block -->
+    <g transform="translate(116,18)">
+      <text class="title" x="0" y="22">GOV‑SOLE‑0</text>
+      <text class="muted" x="0" y="44">SOLE PROMOTION PATH</text>
+      <text class="meta" x="0" y="62">governancegate is the only authority • non‑override constitutional invariant</text>
+    </g>
+
+    <!-- Status pill -->
+    <g transform="translate(320,56)">
+      <rect x="0" y="0" width="86" height="22" rx="10" fill="#071018" stroke="#2b2f36" stroke-width="0.8"/>
+      <rect x="4" y="3" width="16" height="16" rx="4" fill="#a855f7"/>
+      <text class="pill" x="44" y="16" text-anchor="middle">CONSTITUTIONAL</text>
+    </g>
   </g>
 
-  <!-- 2: Phases -->
-  <g class="c2" transform="translate(171,0)">
-    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#3b82f6"/>
-    <text x="85" y="52" class="s-num" text-anchor="middle">75</text>
-    <text x="85" y="68" class="s-lbl" text-anchor="middle">PHASES COMPLETE</text>
-    <g transform="translate(46,78)">
-      <rect width="78" height="16" rx="3" fill="#0d1520" stroke="#3b82f6" stroke-width=".6"/>
-      <text x="39" y="12" class="s-tag" fill="#3b82f6" text-anchor="middle">v9.11.0</text>
-    </g>
-    <text x="85" y="108" class="s-sub" text-anchor="middle">Phase 76 · Seed CEL Outcome Recorder</text>
+  <!-- Right context block -->
+  <g transform="translate(468,22)">
+    <text class="label" x="0" y="14">PHASE</text>
+    <text class="title" x="0" y="44" style="font-size:20px">65 · FIRST SELF‑EVOLUTION</text>
+    <text class="meta" x="0" y="66">zero human intervention • evidence hash‑chained • attested signatures</text>
   </g>
 
-  <!-- 3: Constitutional Rules -->
-  <g class="c3" transform="translate(342,0)">
-    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#eab308"/>
-    <text x="85" y="52" class="s-num" text-anchor="middle">23</text>
-    <text x="85" y="68" class="s-lbl" text-anchor="middle">CONSTITUTIONAL RULES</text>
-    <g transform="translate(46,78)">
-      <rect width="78" height="16" rx="3" fill="#181400" stroke="#eab308" stroke-width=".6"/>
-      <text x="39" y="12" class="s-tag" fill="#eab308" text-anchor="middle">v0.9.0</text>
-    </g>
-    <text x="85" y="108" class="s-sub" text-anchor="middle">9 blocking · 5 warning · 9 advisory</text>
-  </g>
-
-  <!-- 4: Invariants -->
-  <g class="c4" transform="translate(513,0)">
-    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#a855f7"/>
-    <text x="85" y="52" class="s-num" text-anchor="middle">8</text>
-    <text x="85" y="68" class="s-lbl" text-anchor="middle">ARCH. INVARIANTS</text>
-    <g transform="translate(40,78)">
-      <rect width="90" height="16" rx="3" fill="#14091f" stroke="#a855f7" stroke-width=".6"/>
-      <text x="45" y="12" class="s-tag" fill="#a855f7" text-anchor="middle">NON-OVERRIDE</text>
-    </g>
-    <text x="85" y="108" class="s-sub" text-anchor="middle">code-level · structural</text>
-  </g>
-
-  <!-- 5: Ledger Entries -->
-  <g class="c5" transform="translate(684,0)">
-    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#14b8a6"/>
-    <text x="85" y="52" class="s-num" text-anchor="middle">12,441</text>
-    <text x="85" y="68" class="s-lbl" text-anchor="middle">LEDGER ENTRIES</text>
-    <g transform="translate(40,78)">
-      <rect width="90" height="16" rx="3" fill="#091514" stroke="#14b8a6" stroke-width=".6"/>
-      <circle cx="9" cy="8" r="3.5" fill="#14b8a6" class="blink"/>
-      <text x="54" y="12" class="s-tag" fill="#14b8a6" text-anchor="middle">LIVE</text>
-    </g>
-    <text x="85" y="108" class="s-sub" text-anchor="middle">SHA-256 · append-only · replay-verifiable</text>
-  </g>
-
-  <!-- 6: Self-Evolution -->
-  <g class="c6" transform="translate(855,0)">
-    <rect x="0" y="3" width="171" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#ef4444"/>
-    <text x="85" y="44" class="s-num" text-anchor="middle" style="font-size:22px">⛓ Phase 65</text>
-    <text x="85" y="62" class="s-lbl" text-anchor="middle">FIRST SELF-EVOLUTION</text>
-    <g transform="translate(30,72)">
-      <rect width="110" height="16" rx="3" fill="#18080a" stroke="#ef4444" stroke-width=".6"/>
-      <text x="55" y="12" class="s-tag" fill="#ef4444" text-anchor="middle">MARCH 13 2026</text>
-    </g>
-    <text x="85" y="100" class="s-sub" text-anchor="middle">zero human intervention</text>
-    <text x="85" y="110" class="s-sub" text-anchor="middle">hash in ledger · proven</text>
-  </g>
-
-  <!-- 7: PyPI -->
-  <g class="c7" transform="translate(1026,0)">
-    <rect x="0" y="3" width="173" height="114" fill="none" stroke="#2b2f36" stroke-width=".5"/>
-    <rect x="0" y="3" width="3" height="114" fill="#3775a9"/>
-    <text x="86" y="42" class="s-num" text-anchor="middle" style="font-size:22px">PyPI</text>
-    <text x="86" y="58" class="s-lbl" text-anchor="middle">FIRST RELEASE</text>
-    <g transform="translate(27,68)">
-      <rect width="118" height="16" rx="3" fill="#09111a" stroke="#3775a9" stroke-width=".6"/>
-      <text x="59" y="12" class="s-tag" fill="#3775a9" text-anchor="middle">pip install adaad</text>
-    </g>
-    <text x="86" y="98" class="s-sub" text-anchor="middle">adaad 9.11.0 · pypi.org</text>
-    <text x="86" y="109" class="s-sub" text-anchor="middle">Python ≥ 3.11 · Apache-2.0</text>
+  <!-- Small version tag -->
+  <g transform="translate(1088,12)" opacity="0.95">
+    <rect x="0" y="0" width="100" height="36" rx="8" fill="#071018" stroke="#1f2933"/>
+    <text class="muted" x="12" y="22">v9.14.0</text>
   </g>
 </svg>
