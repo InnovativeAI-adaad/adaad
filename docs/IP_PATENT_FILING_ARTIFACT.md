@@ -126,3 +126,32 @@ License: Apache 2.0 (code) — IP claims above are separate from the open-source
 4. Prior art search should focus on: autonomous code generation systems (Copilot, Cursor, Devin), ML pipeline governance systems, formal verification systems, and audit trail systems for financial software. None of these systems combine constitutional non-bypassable governance with autonomous mutation and cryptographic replay proof.
 
 5. Patent priority date: ADAAD Phase 1 (Q4 2025) — first implementation of the constitutional gate and hash-chained ledger.
+
+---
+
+## Phase 80 Track B — GA Unblock Addendum (DEVADAAD — 2026-03-20)
+
+This section was appended by DEVADAAD as part of Phase 80 Track B (GA Unblock Sprint).
+
+### Transmittal Checklist
+
+| Item | Status |
+|---|---|
+| Subject matter overview | ✅ This document + `docs/IP_PATENT_COUNSEL_BRIEF.md` |
+| Five core patent claims | ✅ See above sections |
+| Repository reference | ✅ `github.com/InnovativeAI-adaad/ADAAD` (public, Apache-2.0) |
+| Statutory bar urgency acknowledged | ✅ Repo public since early 2026 |
+| Inventor declaration | ⏳ HUMAN-0: Dustin L. Reid to sign with counsel |
+| Filing fee authorization | ⏳ HUMAN-0: Dustin L. Reid |
+| USPTO provisional filing (Form PTO/SB/16) | ⏳ HUMAN-0: Dustin L. Reid |
+
+### HUMAN-0 Filing Instructions
+
+1. Transmit this document and `docs/IP_PATENT_COUNSEL_BRIEF.md` to patent counsel.
+2. Authorize preparation of USPTO Provisional Patent Application (Form PTO/SB/16).
+3. Sign Inventor Declaration.
+4. Upon filing, record application number in `docs/governance/AUDIT_CLOSEOUT_REPORT_2026-03.md` (H-03 close-out evidence).
+
+**Finding:** H-03 (FINDING-66-003) — Close condition: provisional application number recorded.
+
+*Prepared by DEVADAAD — Phase 80 Track B — 2026-03-20. No legal advice expressed or implied.*
