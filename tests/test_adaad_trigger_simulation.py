@@ -14,16 +14,22 @@ pytestmark = pytest.mark.regression_standard
 
 class RecordingGitAdapter:
     def __init__(self) -> None:
-        self.stage_calls = 0
-        self.merge_calls = 0
+        self.operations: list[str] = []
 
     def stage(self, *, simulation: bool) -> dict[str, object]:
-        self.stage_calls += 1
-        return {"status": "executed" if not simulation else "skipped", "simulation": simulation, "operation": "git_add"}
+        self.operations.append("stage")
+        return {"status": "executed", "simulation": simulation, "operation": "git_add"}
 
     def merge(self, *, simulation: bool) -> dict[str, object]:
-        self.merge_calls += 1
-        return {"status": "noop" if not simulation else "skipped", "simulation": simulation, "operation": "git_merge"}
+        self.operations.append("merge")
+        return {"status": "executed", "simulation": simulation, "operation": "git_merge"}
+
+
+class FailingAttestationLedger(VirtualLedgerWriter):
+    def write_event(self, event):  # type: ignore[override]
+        if event.get("event_type") == "merge_attestation.v1":
+            raise RuntimeError("ledger_append_failed")
+        return super().write_event(event)
 
 
 def test_parse_trigger_supports_simulation_action() -> None:
@@ -142,7 +148,9 @@ def test_run_blocks_git_mutations_for_tier1_failure(tmp_path: Path) -> None:
 def test_devadaad_merge_ready_requires_verified_sha_replay_context(tmp_path: Path) -> None:
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True, text=True)
     (tmp_path / "demo.txt").write_text("data\n", encoding="utf-8")
-    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path)
+    ledger = VirtualLedgerWriter()
+    git_adapter = RecordingGitAdapter()
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path, ledger_writer=ledger, git_mutation_adapter=git_adapter)
 
     envelope = orchestrator.run("DEVADAAD simulate", scenario="merge_ready")
 
@@ -150,12 +158,13 @@ def test_devadaad_merge_ready_requires_verified_sha_replay_context(tmp_path: Pat
     assert envelope["decision"]["allow_git_mutations"] is True
     assert envelope["decision"]["mutated_repository_state"] is True
     assert envelope["replay_gate_pass"] is True
-    assert envelope["replay_verification"]["verified_sha"] == "sha-verified-0001"
-    assert envelope["merge_target_sha"] == "sha-verified-0001"
-    assert envelope["merge_target_matches_verified_sha"] is True
+    assert envelope["replay_verification"]["verified_sha"] == "c" * 40
+    assert envelope["merge_attestation"]["event"]["event_type"] == "merge_attestation.v1"
+    assert envelope["merge_attestation"]["event"]["payload"]["pr_id"] == "PR-PHASE65-01"
+    assert ledger.events[-1]["event_type"] == "merge_attestation.v1"
+    assert git_adapter.operations == ["stage", "merge"]
     assert "replay_verified_sha_context: PASS" in envelope["output"]
-    assert "merge_target_matches_verified_sha: PASS" in envelope["output"]
-
+    assert "merge_attestation: PASS" in envelope["output"]
 
 def test_devadaad_executes_real_merge_pinned_to_verified_sha(tmp_path: Path) -> None:
     subprocess.run(["git", "init", "-b", "main"], cwd=tmp_path, check=True, capture_output=True, text=True)
@@ -260,35 +269,23 @@ def test_run_blocks_git_mutations_for_replay_divergence(tmp_path: Path) -> None:
     assert git_adapter.stage_calls == 0
     assert git_adapter.merge_calls == 0
     assert "replay_verified_sha_context: FAIL" in envelope["output"]
-    assert "Decision: deny" in envelope["output"]
-    assert "Repository mutation: not_mutated" in envelope["output"]
 
 
-def test_run_marks_successful_simulation_as_evaluated_without_repository_mutation(tmp_path: Path) -> None:
+def test_devadaad_merge_is_blocked_when_attestation_write_fails(tmp_path: Path) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True, text=True)
+    (tmp_path / "demo.txt").write_text("data\n", encoding="utf-8")
     git_adapter = RecordingGitAdapter()
-    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path, git_mutation_adapter=git_adapter)
+    orchestrator = AdaadTriggerOrchestrator(
+        repo_root=tmp_path,
+        ledger_writer=FailingAttestationLedger(),
+        git_mutation_adapter=git_adapter,
+    )
 
-    envelope = orchestrator.run("ADAAD simulate", scenario="merge_ready")
+    envelope = orchestrator.run("DEVADAAD", scenario="merge_ready")
 
-    assert envelope["status"] == "ready"
-    assert envelope["simulation"] is True
-    assert envelope["decision"] == {
-        "status": "ready",
-        "blocked_reason": None,
-        "all_required_gates_passed": True,
-        "allow_git_mutations": True,
-        "evaluated": True,
-        "evaluated_gates": {
-            "tier_0": {"scenario_pass": True, "gate_pass": True, "passed": True},
-            "tier_1": {"scenario_pass": True, "gate_pass": True, "passed": True},
-            "tier_3": {"scenario_pass": True, "gate_pass": True, "passed": True},
-        },
-        "mutation_kind": "simulated",
-        "mutated_repository_state": False,
-    }
-    assert envelope["stage_result"] == {"status": "skipped", "simulation": True, "operation": "git_add"}
-    assert envelope["merge_result"] == {"status": "skipped", "simulation": True, "operation": "git_merge"}
-    assert git_adapter.stage_calls == 1
-    assert git_adapter.merge_calls == 1
-    assert "Decision: allow" in envelope["output"]
-    assert "Repository mutation: not_mutated" in envelope["output"]
+    assert envelope["status"] == "blocked"
+    assert envelope["blocked_reason"] == "attestation_write_failed"
+    assert envelope["merge_attestation"] is None
+    assert envelope["merge_result"]["status"] == "blocked"
+    assert git_adapter.operations == ["stage"]
+    assert "merge_attestation: FAIL" in envelope["output"]

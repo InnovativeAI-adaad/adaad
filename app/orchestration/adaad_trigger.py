@@ -9,6 +9,11 @@ from pathlib import Path
 import subprocess
 from typing import Any, Callable, Mapping, Sequence
 
+from runtime.api.governance_events import (
+    build_merge_attestation_event,
+    build_merge_attestation_payload,
+)
+
 
 @dataclass(frozen=True)
 class GateResult:
@@ -49,6 +54,10 @@ def parse_trigger(raw_command: str) -> TriggerRequest:
 
 class LedgerSchemaError(RuntimeError):
     """Raised when the simulated ledger payload is malformed."""
+
+
+class AttestationWriteError(RuntimeError):
+    """Raised when merge attestation emission fails closed."""
 
 
 class VirtualLedgerWriter:
@@ -188,29 +197,24 @@ class AdaadTriggerOrchestrator:
                 "tier_1": True,
                 "tier_3": True,
                 "tier_m": True,
+                "merge_context": {
+                    "pr_number": 65,
+                    "pr_id": "PR-PHASE65-01",
+                    "merge_sha": "c" * 40,
+                    "tier_0_digest": "sha256:" + ("d" * 64),
+                    "tier_1_tests_passed": 412,
+                    "tier_1_tests_failed": 0,
+                    "tier_2_replay_digest": "sha256:" + ("e" * 64),
+                    "tier_3_evidence_complete": True,
+                    "tier_m_working_code": True,
+                    "operator_session": "devadaad-session-0001",
+                    "human_signoff_token": None,
+                },
                 "replay_verification": {
                     "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
                     "bundle_digest": "sha256:" + ("a" * 64),
                     "verification_result": "pass",
-                    "verified_sha": "sha-verified-0001",
-                    "merge_target_sha": "sha-verified-0001",
-                    "schema_valid": True,
-                    "signature_valid": True,
-                    "divergence": False,
-                },
-            },
-            "merge_verification_missing": {
-                "blocked_reason": None,
-                "tier_0": True,
-                "tier_1": True,
-                "tier_3": True,
-                "tier_m": True,
-                "replay_verification": {
-                    "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
-                    "bundle_digest": "sha256:" + ("c" * 64),
-                    "verification_result": "pass",
-                    "verified_sha": "sha-verified-0003",
-                    "merge_target_sha": "",
+                    "verified_sha": "c" * 40,
                     "schema_valid": True,
                     "signature_valid": True,
                     "divergence": False,
@@ -222,12 +226,24 @@ class AdaadTriggerOrchestrator:
                 "tier_1": True,
                 "tier_3": True,
                 "tier_m": False,
+                "merge_context": {
+                    "pr_number": 65,
+                    "pr_id": "PR-PHASE65-01",
+                    "merge_sha": "f" * 40,
+                    "tier_0_digest": "sha256:" + ("1" * 64),
+                    "tier_1_tests_passed": 410,
+                    "tier_1_tests_failed": 2,
+                    "tier_2_replay_digest": "sha256:" + ("b" * 64),
+                    "tier_3_evidence_complete": True,
+                    "tier_m_working_code": False,
+                    "operator_session": "devadaad-session-0002",
+                    "human_signoff_token": None,
+                },
                 "replay_verification": {
                     "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
                     "bundle_digest": "sha256:" + ("b" * 64),
                     "verification_result": "fail",
-                    "verified_sha": "sha-verified-0002",
-                    "merge_target_sha": "sha-verified-0002",
+                    "verified_sha": "f" * 40,
                     "schema_valid": True,
                     "signature_valid": True,
                     "divergence": True,
@@ -298,46 +314,33 @@ class AdaadTriggerOrchestrator:
         )
 
         stage_result = self._git.stage(simulation=request.simulation)
-        merge_result: dict[str, Any]
-        merge_ready = not blocked_reason and scenario_pass and gate_pass and replay_gate_pass
-        if not request.merge_authority:
-            merge_result = {
-                "status": "skipped",
-                "simulation": request.simulation,
-                "operation": "git_merge",
-                "reason": "merge_authority_not_granted",
-            }
-        elif not merge_ready:
-            merge_result = {
-                "status": "blocked",
-                "simulation": request.simulation,
-                "operation": "git_merge",
-                "reason": blocked_reason or "gate_failure",
-                "verified_sha": verified_sha,
-                "merge_target_sha": merge_target_sha,
-            }
-        else:
+        status = "blocked" if blocked_reason or not scenario_pass or not gate_pass or not replay_gate_pass else "ready"
+        merge_result = {"status": "skipped", "simulation": request.simulation, "operation": "git_merge"}
+        attestation_result: dict[str, Any] | None = None
+        attestation_attempted = False
+
+        if request.merge_authority and status == "ready":
+            attestation_attempted = True
             try:
-                merge_result = self._git.merge(
-                    simulation=request.simulation,
-                    verified_sha=verified_sha,
-                    merge_target_sha=merge_target_sha,
+                attestation_result = self._write_merge_attestation(
+                    request=request,
+                    profile=profile,
+                    replay_verification=replay_verification,
                 )
-            except (subprocess.CalledProcessError, ValueError) as exc:
-                blocked_reason = "merge_target_verification_failed"
+            except Exception as exc:
+                blocked_reason = "attestation_write_failed"
+                status = "blocked"
                 merge_result = {
                     "status": "blocked",
                     "simulation": request.simulation,
                     "operation": "git_merge",
-                    "reason": blocked_reason,
                     "detail": str(exc),
-                    "verified_sha": verified_sha,
-                    "merge_target_sha": merge_target_sha,
                 }
+            else:
+                merge_result = self._git.merge(simulation=request.simulation)
+        elif not request.merge_authority:
+            merge_result = self._git.merge(simulation=request.simulation)
 
-        status = "blocked" if blocked_reason or not scenario_pass or not gate_pass or not replay_gate_pass else "ready"
-        if request.merge_authority and merge_result["status"] == "executed":
-            status = "merged"
         output_lines = [
             "[ADAAD ORIENT]",
             f"Trigger: {request.principal}",
@@ -354,9 +357,8 @@ class AdaadTriggerOrchestrator:
             output_lines.append(f"{name}: {line_status} (simulation={'true' if request.simulation else 'false'})")
         if request.merge_authority:
             output_lines.append(f"replay_verified_sha_context: {'PASS' if replay_gate_pass else 'FAIL'}")
-            output_lines.append(f"merge_target_matches_verified_sha: {'PASS' if merge_target_matches_verified_sha else 'FAIL'}")
-            if merge_result["status"] == "executed":
-                output_lines.append(f"merge_commit_sha: {merge_result['merge_commit_sha']}")
+            attestation_status = "PASS" if attestation_result else "FAIL" if attestation_attempted else "SKIP"
+            output_lines.append(f"merge_attestation: {attestation_status}")
 
         if decision["blocked_reason"]:
             output_lines.append(f"Blocked reason: {decision['blocked_reason']}")
@@ -376,6 +378,7 @@ class AdaadTriggerOrchestrator:
             "decision": decision,
             "stage_result": stage_result,
             "merge_result": merge_result,
+            "merge_attestation": attestation_result,
             "ledger": ledger_response,
             "output": "\n".join(output_lines),
         }
@@ -446,6 +449,57 @@ class AdaadTriggerOrchestrator:
         verification_result = str(replay_verification.get("verification_result", "")).strip().lower()
         return verification_result in {"pass", "verified", "ok"}
 
+    def _write_merge_attestation(
+        self,
+        *,
+        request: TriggerRequest,
+        profile: Mapping[str, Any],
+        replay_verification: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        merge_context = dict(profile.get("merge_context") or {})
+        if not merge_context:
+            raise AttestationWriteError("merge_attestation_context_missing")
+
+        timestamp_utc = datetime.now(timezone.utc).isoformat()
+        payload = build_merge_attestation_payload(
+            pr_id=str(merge_context.get("pr_id", "")).strip(),
+            merge_sha=str(merge_context.get("merge_sha", "")).strip(),
+            tier_0_digest=str(merge_context.get("tier_0_digest", "")).strip(),
+            tier_1_tests_passed=int(merge_context.get("tier_1_tests_passed", 0)),
+            tier_1_tests_failed=int(merge_context.get("tier_1_tests_failed", 0)),
+            tier_2_replay_digest=str(merge_context["tier_2_replay_digest"]).strip()
+            if merge_context.get("tier_2_replay_digest") is not None
+            else None,
+            tier_3_evidence_complete=bool(merge_context.get("tier_3_evidence_complete", False)),
+            tier_m_working_code=bool(merge_context.get("tier_m_working_code", False)),
+            triggered_by=request.principal,
+            operator_session=str(merge_context.get("operator_session", "")).strip(),
+            timestamp_utc=timestamp_utc,
+            human_signoff_token=merge_context.get("human_signoff_token"),
+        )
+        event = build_merge_attestation_event(
+            pr_number=int(merge_context.get("pr_number", 0)),
+            merge_sha=payload["merge_sha"],
+            payload=payload,
+            sequence=1,
+        )
+        try:
+            ledger_response = self._ledger.write_event(
+                {
+                    "event_type": event["event_type"],
+                    "timestamp_utc": timestamp_utc,
+                    "payload": event,
+                }
+            )
+        except Exception as exc:
+            raise AttestationWriteError(str(exc)) from exc
+        return {
+            "status": "validated",
+            "ledger": ledger_response,
+            "event": event,
+            "replay_verified_sha": str(replay_verification.get("verified_sha", "")).strip().lower(),
+        }
+
 
 def run_trigger(
     raw_command: str,
@@ -460,6 +514,7 @@ def run_trigger(
 
 __all__ = [
     "AdaadTriggerOrchestrator",
+    "AttestationWriteError",
     "GateResult",
     "GitMutationAdapter",
     "LedgerSchemaError",

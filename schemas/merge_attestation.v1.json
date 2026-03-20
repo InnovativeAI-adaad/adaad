@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://adaad.local/schemas/merge_attestation.v1.json",
+  "title": "Merge Attestation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pr_id",
+    "merge_sha",
+    "tier_0_digest",
+    "tier_1_tests_passed",
+    "tier_1_tests_failed",
+    "tier_2_replay_digest",
+    "tier_3_evidence_complete",
+    "tier_m_working_code",
+    "triggered_by",
+    "operator_session",
+    "timestamp_utc",
+    "human_signoff_token"
+  ],
+  "properties": {
+    "pr_id": {"type": "string", "minLength": 1},
+    "merge_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "tier_0_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "tier_1_tests_passed": {"type": "integer", "minimum": 0},
+    "tier_1_tests_failed": {"type": "integer", "minimum": 0},
+    "tier_2_replay_digest": {
+      "anyOf": [
+        {"type": "null"},
+        {"type": "string", "minLength": 1}
+      ]
+    },
+    "tier_3_evidence_complete": {"type": "boolean"},
+    "tier_m_working_code": {"type": "boolean"},
+    "triggered_by": {"type": "string", "const": "DEVADAAD"},
+    "operator_session": {"type": "string", "minLength": 1},
+    "timestamp_utc": {"type": "string", "format": "date-time"},
+    "human_signoff_token": {
+      "anyOf": [
+        {"type": "null"},
+        {"type": "string", "minLength": 1}
+      ]
+    }
+  }
+}
