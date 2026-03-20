@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Run ADAAD / DEVADAAD trigger orchestration, including simulation mode."""
+"""Run ADAAD / DEVADAAD trigger orchestration, including verified-SHA merge execution."""
 
 from __future__ import annotations
 
@@ -22,7 +22,14 @@ def main() -> int:
     parser.add_argument(
         "--scenario",
         default="merge_ready",
-        choices=["dependency_blocked", "evidence_missing", "tier1_failure", "merge_ready", "replay_diverged"],
+        choices=[
+            "dependency_blocked",
+            "evidence_missing",
+            "tier1_failure",
+            "merge_ready",
+            "merge_verification_missing",
+            "replay_diverged",
+        ],
         help="Predefined scenario profile for orchestration/gate evaluation output.",
     )
     parser.add_argument("--json", action="store_true", help="Emit full JSON envelope.")

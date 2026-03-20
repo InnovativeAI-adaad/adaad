@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Governed ADAAD trigger orchestration with simulation-mode safeguards."""
+"""Governed ADAAD trigger orchestration with verified-SHA merge safeguards."""
 
 from __future__ import annotations
 
@@ -86,10 +86,52 @@ class GitMutationAdapter:
         subprocess.run(["git", "add", "-A"], cwd=self.repo_root, check=True)
         return {"status": "executed", "simulation": False, "operation": "git_add"}
 
-    def merge(self, *, simulation: bool) -> dict[str, Any]:
+    def merge(
+        self,
+        *,
+        simulation: bool,
+        verified_sha: str,
+        merge_target_sha: str,
+    ) -> dict[str, Any]:
         if simulation:
             return {"status": "skipped", "simulation": True, "operation": "git_merge"}
-        return {"status": "noop", "simulation": False, "operation": "git_merge"}
+        normalized_verified_sha = self._resolve_commit(verified_sha)
+        normalized_merge_target_sha = self._resolve_commit(merge_target_sha)
+        if normalized_verified_sha != normalized_merge_target_sha:
+            raise ValueError("merge_target_mismatch_verified_sha")
+
+        pre_merge_head_sha = self._git_stdout("git", "rev-parse", "HEAD")
+        subprocess.run(
+            ["git", "merge", "--no-ff", "--no-edit", normalized_merge_target_sha],
+            cwd=self.repo_root,
+            check=True,
+        )
+        merge_commit_sha = self._git_stdout("git", "rev-parse", "HEAD")
+        return {
+            "status": "executed",
+            "simulation": False,
+            "operation": "git_merge",
+            "verified_sha": normalized_verified_sha,
+            "merge_target_sha": normalized_merge_target_sha,
+            "pre_merge_head_sha": pre_merge_head_sha,
+            "merge_commit_sha": merge_commit_sha,
+        }
+
+    def _resolve_commit(self, revision: str) -> str:
+        normalized_revision = str(revision).strip()
+        if not normalized_revision:
+            raise ValueError("missing_revision")
+        return self._git_stdout("git", "rev-parse", "--verify", normalized_revision).lower()
+
+    def _git_stdout(self, *args: str) -> str:
+        completed = subprocess.run(
+            list(args),
+            cwd=self.repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return completed.stdout.strip()
 
 
 class AdaadTriggerOrchestrator:
@@ -115,7 +157,13 @@ class AdaadTriggerOrchestrator:
     def _evaluate_gates(self, gate_names: Sequence[str]) -> list[GateResult]:
         return [self._gate_runner(gate_name) for gate_name in gate_names]
 
-    def run(self, raw_command: str, *, scenario: str = "merge_ready") -> dict[str, Any]:
+    def run(
+        self,
+        raw_command: str,
+        *,
+        scenario: str = "merge_ready",
+        replay_verification: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
         request = parse_trigger(raw_command)
         scenario_map = {
             "dependency_blocked": {
@@ -145,6 +193,24 @@ class AdaadTriggerOrchestrator:
                     "bundle_digest": "sha256:" + ("a" * 64),
                     "verification_result": "pass",
                     "verified_sha": "sha-verified-0001",
+                    "merge_target_sha": "sha-verified-0001",
+                    "schema_valid": True,
+                    "signature_valid": True,
+                    "divergence": False,
+                },
+            },
+            "merge_verification_missing": {
+                "blocked_reason": None,
+                "tier_0": True,
+                "tier_1": True,
+                "tier_3": True,
+                "tier_m": True,
+                "replay_verification": {
+                    "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
+                    "bundle_digest": "sha256:" + ("c" * 64),
+                    "verification_result": "pass",
+                    "verified_sha": "sha-verified-0003",
+                    "merge_target_sha": "",
                     "schema_valid": True,
                     "signature_valid": True,
                     "divergence": False,
@@ -161,6 +227,7 @@ class AdaadTriggerOrchestrator:
                     "bundle_digest": "sha256:" + ("b" * 64),
                     "verification_result": "fail",
                     "verified_sha": "sha-verified-0002",
+                    "merge_target_sha": "sha-verified-0002",
                     "schema_valid": True,
                     "signature_valid": True,
                     "divergence": True,
@@ -177,12 +244,15 @@ class AdaadTriggerOrchestrator:
         gate_results = self._evaluate_gates(gate_names)
         by_name = {result.gate: result for result in gate_results}
         scenario_pass = all(bool(profile.get(name, True)) for name in gate_names)
-        gate_pass = all(by_name.get(name, GateResult("", name, True, "")).passed for name in gate_names)
-        replay_verification = dict(profile.get("replay_verification") or {})
+        gate_pass = all(by_name.get(name, GateResult("", "", True, "")).passed for name in gate_names)
+        replay_verification = dict(replay_verification or profile.get("replay_verification") or {})
+        verified_sha = str(replay_verification.get("verified_sha", "")).strip().lower()
+        merge_target_sha = str(replay_verification.get("merge_target_sha", "")).strip().lower()
+        merge_target_matches_verified_sha = bool(verified_sha) and verified_sha == merge_target_sha
         replay_gate_pass = self._replay_merge_gate_passes(request=request, replay_verification=replay_verification)
         blocked_reason = profile.get("blocked_reason") if scenario != "merge_ready" else None
         if request.merge_authority and not replay_gate_pass and not blocked_reason:
-            blocked_reason = "missing_replay_verification_for_verified_sha"
+            blocked_reason = "missing_merge_sha_verification"
 
         decision = self._build_decision(
             request=request,
@@ -212,7 +282,8 @@ class AdaadTriggerOrchestrator:
                 "manifest_path": str(replay_verification.get("manifest_path", "")).strip(),
                 "bundle_digest": str(replay_verification.get("bundle_digest", "")).strip(),
                 "verification_result": str(replay_verification.get("verification_result", "")).strip(),
-                "verified_sha": str(replay_verification.get("verified_sha", "")).strip().lower(),
+                "verified_sha": verified_sha,
+                "merge_target_sha": merge_target_sha,
                 "schema_valid": bool(replay_verification.get("schema_valid", False)),
                 "signature_valid": bool(replay_verification.get("signature_valid", False)),
                 "divergence": bool(replay_verification.get("divergence", False)),
@@ -226,8 +297,47 @@ class AdaadTriggerOrchestrator:
             }
         )
 
-        stage_result, merge_result = self._execute_git_mutations(request=request, decision=decision)
+        stage_result = self._git.stage(simulation=request.simulation)
+        merge_result: dict[str, Any]
+        merge_ready = not blocked_reason and scenario_pass and gate_pass and replay_gate_pass
+        if not request.merge_authority:
+            merge_result = {
+                "status": "skipped",
+                "simulation": request.simulation,
+                "operation": "git_merge",
+                "reason": "merge_authority_not_granted",
+            }
+        elif not merge_ready:
+            merge_result = {
+                "status": "blocked",
+                "simulation": request.simulation,
+                "operation": "git_merge",
+                "reason": blocked_reason or "gate_failure",
+                "verified_sha": verified_sha,
+                "merge_target_sha": merge_target_sha,
+            }
+        else:
+            try:
+                merge_result = self._git.merge(
+                    simulation=request.simulation,
+                    verified_sha=verified_sha,
+                    merge_target_sha=merge_target_sha,
+                )
+            except (subprocess.CalledProcessError, ValueError) as exc:
+                blocked_reason = "merge_target_verification_failed"
+                merge_result = {
+                    "status": "blocked",
+                    "simulation": request.simulation,
+                    "operation": "git_merge",
+                    "reason": blocked_reason,
+                    "detail": str(exc),
+                    "verified_sha": verified_sha,
+                    "merge_target_sha": merge_target_sha,
+                }
 
+        status = "blocked" if blocked_reason or not scenario_pass or not gate_pass or not replay_gate_pass else "ready"
+        if request.merge_authority and merge_result["status"] == "executed":
+            status = "merged"
         output_lines = [
             "[ADAAD ORIENT]",
             f"Trigger: {request.principal}",
@@ -244,6 +354,9 @@ class AdaadTriggerOrchestrator:
             output_lines.append(f"{name}: {line_status} (simulation={'true' if request.simulation else 'false'})")
         if request.merge_authority:
             output_lines.append(f"replay_verified_sha_context: {'PASS' if replay_gate_pass else 'FAIL'}")
+            output_lines.append(f"merge_target_matches_verified_sha: {'PASS' if merge_target_matches_verified_sha else 'FAIL'}")
+            if merge_result["status"] == "executed":
+                output_lines.append(f"merge_commit_sha: {merge_result['merge_commit_sha']}")
 
         if decision["blocked_reason"]:
             output_lines.append(f"Blocked reason: {decision['blocked_reason']}")
@@ -253,7 +366,10 @@ class AdaadTriggerOrchestrator:
             "status": decision["status"],
             "simulation": request.simulation,
             "scenario": scenario,
-            "blocked_reason": decision["blocked_reason"],
+            "blocked_reason": blocked_reason,
+            "verified_sha": verified_sha,
+            "merge_target_sha": merge_target_sha,
+            "merge_target_matches_verified_sha": merge_target_matches_verified_sha,
             "replay_verification": replay_verification,
             "replay_gate_pass": replay_gate_pass,
             "gate_results": [asdict(result) for result in gate_results],
@@ -313,10 +429,14 @@ class AdaadTriggerOrchestrator:
         """Require replay verification output in merge authority flows."""
         if not request.merge_authority:
             return True
-        required_str_fields = ("manifest_path", "bundle_digest", "verification_result", "verified_sha")
+        required_str_fields = ("manifest_path", "bundle_digest", "verification_result", "verified_sha", "merge_target_sha")
         for field in required_str_fields:
             if not str(replay_verification.get(field, "")).strip():
                 return False
+        if str(replay_verification.get("verified_sha", "")).strip().lower() != str(
+            replay_verification.get("merge_target_sha", "")
+        ).strip().lower():
+            return False
         if not bool(replay_verification.get("schema_valid", False)):
             return False
         if not bool(replay_verification.get("signature_valid", False)):
@@ -327,9 +447,15 @@ class AdaadTriggerOrchestrator:
         return verification_result in {"pass", "verified", "ok"}
 
 
-def run_trigger(raw_command: str, *, repo_root: Path, scenario: str = "merge_ready") -> dict[str, Any]:
+def run_trigger(
+    raw_command: str,
+    *,
+    repo_root: Path,
+    scenario: str = "merge_ready",
+    replay_verification: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     orchestrator = AdaadTriggerOrchestrator(repo_root=repo_root)
-    return orchestrator.run(raw_command, scenario=scenario)
+    return orchestrator.run(raw_command, scenario=scenario, replay_verification=replay_verification)
 
 
 __all__ = [
