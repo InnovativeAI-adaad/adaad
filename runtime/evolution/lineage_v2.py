@@ -290,6 +290,65 @@ class MutationBundleEvent:
         return cert
 
 
+@dataclass(frozen=True)
+class SeedCompetitionEpochEvent:
+    """Phase 80 — Competition epoch ledger entry.
+
+    Records the outcome of a multi-seed competitive evaluation epoch.
+    Written to LineageLedgerV2 *before* any candidate is promoted
+    (COMP-LEDGER-0 invariant).
+
+    Attributes
+    ----------
+    epoch_id:           Unique competition epoch identifier.
+    candidate_ids:      Ordered list of all competing seed IDs (deterministic).
+    ranked_ids:         Fitness-ranked order (highest score first).
+    winner_id:          Promoted candidate (top of ranked_ids).
+    fitness_scores:     Mapping seed_id → float fitness score.
+    gate_verdict:       'pass' | 'fail' | 'deferred'.
+    competition_digest: SHA-256 hex of canonical(candidate_ids + fitness_scores).
+    phase:              ADAAD phase at which competition ran.
+    version:            ADAAD version string.
+    """
+
+    epoch_id: str
+    candidate_ids: List[str]
+    ranked_ids: List[str]
+    winner_id: str
+    fitness_scores: Dict[str, float]
+    gate_verdict: str
+    competition_digest: str
+    phase: int
+    version: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "epoch_id": self.epoch_id,
+            "candidate_ids": list(self.candidate_ids),
+            "ranked_ids": list(self.ranked_ids),
+            "winner_id": self.winner_id,
+            "fitness_scores": dict(self.fitness_scores),
+            "gate_verdict": self.gate_verdict,
+            "competition_digest": self.competition_digest,
+            "phase": self.phase,
+            "version": self.version,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "SeedCompetitionEpochEvent":
+        return cls(
+            epoch_id=data["epoch_id"],
+            candidate_ids=data["candidate_ids"],
+            ranked_ids=data["ranked_ids"],
+            winner_id=data["winner_id"],
+            fitness_scores=data["fitness_scores"],
+            gate_verdict=data["gate_verdict"],
+            competition_digest=data["competition_digest"],
+            phase=data["phase"],
+            version=data["version"],
+        )
+
+
 class LineageLedgerV2:
     def __init__(self, ledger_path: Path | None = None) -> None:
         self.ledger_path = ledger_path or LEDGER_V2_PATH
@@ -482,6 +541,13 @@ class LineageLedgerV2:
             self._epoch_digest_index[epoch_id] = digest
         return digest
 
+    def append_competition_epoch(self, event: "SeedCompetitionEpochEvent") -> dict:
+        """Append a SeedCompetitionEpochEvent to the ledger.
+
+        COMP-LEDGER-0: Must be called before any candidate is promoted.
+        """
+        return self.append_event("SeedCompetitionEpochEvent", event.to_dict())
+
     def _update_epoch_digest(self, epoch_id: str, digest: str) -> None:
         self._epoch_digest_index[epoch_id] = digest
 
@@ -619,6 +685,7 @@ __all__ = [
     "EpochStartEvent",
     "EpochEndEvent",
     "MutationBundleEvent",
+    "SeedCompetitionEpochEvent",
     "LEDGER_V2_PATH",
     "LINEAGE_V2_PATH",
     "LineageIntegrityError",
