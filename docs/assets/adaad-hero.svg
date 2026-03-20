@@ -132,7 +132,7 @@
   </g>
   <g transform="translate(167,236)">
     <rect width="110" height="22" rx="4" fill="#16181d" stroke="#8b5cf6" stroke-width=".8"/>
-    <text x="55" y="15" class="pill-text" fill="#8b5cf6" text-anchor="middle">v9.11.0</text>
+    <text x="55" y="15" class="pill-text" fill="#8b5cf6" text-anchor="middle">v9.16.0</text>
   </g>
 
   <!-- Stats cards -->
@@ -278,12 +278,12 @@
   <g class="led3" transform="translate(718,192)">
     <rect width="456" height="38" rx="3" fill="#0f1014" stroke="#2b2f36" stroke-width=".6"/>
     <rect width="4"   height="38" rx="2" fill="#f97316"/>
-    <text x="14" y="16" class="hash-live">SEED_CEL_OUTCOME · phase=76 · SEED-OUTCOME-AUDIT-0 · v9.11.0</text>
+    <text x="14" y="16" class="hash-live">SEED_CEL_OUTCOME · phase=84 · SEED-OUTCOME-AUDIT-0 · v9.16.0</text>
     <text x="14" y="28" class="hash-text">sha256: c1f4a7e0d3b6c9f2a5d8e1b4c7f0a3d6e9b2c5f8a1d4e7b0c3f6a9d2e5b8c1f4</text>
     <circle cx="440" cy="19" r="4" fill="#22c55e"/>
   </g>
   <line x1="720" y1="232" x2="720" y2="239" stroke="#2b2f36" stroke-width="1" stroke-dasharray="2,2"/>
-  <text x="726" y="238" class="hash-text">⛓ chained → 12,441 entries · replay-verifiable · divergences: 0</text>
+  <text x="726" y="238" class="hash-text">⛓ chained → 12,800+ entries · replay-verifiable · divergences: 0</text>
 
   <!-- Live indicator -->
   <g transform="translate(718,244)">

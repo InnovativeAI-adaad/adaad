@@ -283,9 +283,12 @@ HUMAN-0 is inviolable. No governor sign-off = no merge. Always.
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 79-Phase Evolution Timeline
+## 84-Phase Evolution Timeline
 
-<img src="docs/assets/readme/adaad-phase-timeline.svg" width="100%" alt="Phase Timeline"/>
+<img src="docs/assets/readme/adaad-phase-timeline.svg" width="100%" alt="ADAAD 84-Phase Evolution Timeline"/>
+
+<img src="docs/assets/adaad-evolution-engine.svg" width="100%" alt="ADAAD Evolution Engine — Phases 81–84"/>
+
 
 | Era | Phases | Versions | Milestone |
 |---|---|---|---|
@@ -299,7 +302,8 @@ HUMAN-0 is inviolable. No governor sign-off = no merge. Always.
 | **Seed Epoch** | **77** | **v9.13** | **🌱 SEED-LIFECYCLE-COMPLETE-0 — March 20, 2026** |
 | Signing + Feed | 78 | v9.14 | Ed25519/HMAC · Aponi GitHub Feed · Doc autosync |
 | Multi-Gen | 79 | v9.14 | Multi-Generation Lineage Graph |
-| Next | 80+ | v9.15+ | KMS/HSM production · Compound evolution |
+| Multi-Seed | 80 | v9.15 | Competitive epoch · GA unblock · F-Droid |
+| **Evolution Engine** | **81–84** | **v9.16** | **◈ Self-Discovery · Pareto · Causal Attribution · Half-Life — current** |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -340,6 +344,8 @@ HUMAN-0 is inviolable. No governor sign-off = no merge. Always.
 
 > *This section exists because Noah Benzing, Alpha Team Member, will not read this document.*
 > *This section is the document.*
+
+<img src="docs/assets/readme/noah-tldr.svg" width="100%" alt="Noah TL;DR — GOV-SOLE-0 · HUMAN-0 · REPLAY-0"/>
 
 You are working on a system that governs its own evolution. Here is what that means in practice, in the fewest words possible.
 
