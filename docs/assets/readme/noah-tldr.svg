@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 180" width="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .n-head{font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:11px;letter-spacing:2px}
+      .n-rule{font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:14px}
+      .n-sub {font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:9.5px;fill:#94a3b8}
+      .n-inv {font-family:'JetBrains Mono','Courier New',monospace;font-size:10px;font-weight:700}
+      .n-why {font-family:'Inter',Arial,sans-serif;font-size:8.5px;fill:#64748b}
+      @keyframes nPulse{0%,100%{opacity:.6}50%{opacity:1}}
+      @keyframes nSlide{0%{stroke-dashoffset:200}100%{stroke-dashoffset:0}}
+      .n-bar{stroke-dasharray:200;animation:nSlide 1.5s ease-out forwards}
+      .n-dot{animation:nPulse 2s ease-in-out infinite}
+    </style>
+    <linearGradient id="noahBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0a0a0d"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <linearGradient id="dangerBar" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff4466" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#f97316" stop-opacity=".7"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="180" fill="url(#noahBg)"/>
+  <rect width="1200" height="180" fill="none" stroke="#1f2937" stroke-width="1"/>
+
+  <!-- Top danger stripe -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#dangerBar)"/>
+
+  <!-- Left label block -->
+  <rect x="0" y="0" width="180" height="180" fill="#0d0208"/>
+  <line x1="180" y1="0" x2="180" y2="180" stroke="#ff4466" stroke-width="1" opacity=".4"/>
+  <text x="90" y="72" class="n-head" fill="#ff4466" text-anchor="middle">HEY</text>
+  <text x="90" y="94" class="n-head" fill="#ff4466" text-anchor="middle">NOAH.</text>
+  <text x="90" y="118" class="n-why" text-anchor="middle">Alpha Team Member</text>
+  <text x="90" y="130" class="n-why" text-anchor="middle">who refuses to read</text>
+  <text x="90" y="142" class="n-why" text-anchor="middle">documentation.</text>
+  <text x="90" y="162" font-family="'JetBrains Mono',monospace" font-size="8px" fill="#2b2f36" text-anchor="middle">this section is for you</text>
+
+  <!-- Divider nodes -->
+  <circle cx="180" cy="60" r="3" fill="#ff4466" opacity=".6" class="n-dot"/>
+  <circle cx="180" cy="90" r="3" fill="#ff4466" opacity=".4" class="n-dot"/>
+  <circle cx="180" cy="120" r="3" fill="#ff4466" opacity=".6" class="n-dot"/>
+
+  <!-- Rule 1: GOV-SOLE-0 -->
+  <g transform="translate(200,16)">
+    <rect width="310" height="148" rx="8" fill="#071018" stroke="#3b82f6" stroke-width="1"/>
+    <rect width="310" height="3" rx="2" fill="#3b82f6"/>
+    <text x="20" y="26" class="n-head" fill="#3b82f6">RULE 1</text>
+    <text x="155" y="52" class="n-rule" fill="#f8fafc" text-anchor="middle">GOV-SOLE-0</text>
+    <line x1="20" y1="62" x2="290" y2="62" stroke="#1e3a5f" stroke-width="1"/>
+    <text x="155" y="80" class="n-sub" text-anchor="middle">GovernanceGate is the only</text>
+    <text x="155" y="94" class="n-sub" text-anchor="middle">promotion path. Not optional.</text>
+    <text x="155" y="108" class="n-sub" text-anchor="middle">Not configurable. Not bypassable.</text>
+    <rect x="20" y="120" width="270" height="18" rx="4" fill="#0a1825"/>
+    <text x="155" y="133" class="n-why" text-anchor="middle" style="fill:#60a5fa">If it didn't go through the gate, it didn't happen.</text>
+  </g>
+
+  <!-- Arrow -->
+  <text x="527" y="94" font-family="'Inter',Arial,sans-serif" font-size="20px" fill="#2b2f36" text-anchor="middle">→</text>
+
+  <!-- Rule 2: HUMAN-0 -->
+  <g transform="translate(545,16)">
+    <rect width="310" height="148" rx="8" fill="#070b07" stroke="#22c55e" stroke-width="1"/>
+    <rect width="310" height="3" rx="2" fill="#22c55e"/>
+    <text x="20" y="26" class="n-head" fill="#22c55e">RULE 2</text>
+    <text x="155" y="52" class="n-rule" fill="#f8fafc" text-anchor="middle">HUMAN-0</text>
+    <line x1="20" y1="62" x2="290" y2="62" stroke="#1a3a1a" stroke-width="1"/>
+    <text x="155" y="80" class="n-sub" text-anchor="middle">Dustin's GPG sign-off is</text>
+    <text x="155" y="94" class="n-sub" text-anchor="middle">inviolable. The ledger knows</text>
+    <text x="155" y="108" class="n-sub" text-anchor="middle">if it's missing. It cannot be faked.</text>
+    <rect x="20" y="120" width="270" height="18" rx="4" fill="#061206"/>
+    <text x="155" y="133" class="n-why" text-anchor="middle" style="fill:#86efac">No GPG signature = not a governed release.</text>
+  </g>
+
+  <!-- Arrow -->
+  <text x="872" y="94" font-family="'Inter',Arial,sans-serif" font-size="20px" fill="#2b2f36" text-anchor="middle">→</text>
+
+  <!-- Rule 3: REPLAY-0 -->
+  <g transform="translate(890,16)">
+    <rect width="290" height="148" rx="8" fill="#08070a" stroke="#8b5cf6" stroke-width="1"/>
+    <rect width="290" height="3" rx="2" fill="#8b5cf6"/>
+    <text x="20" y="26" class="n-head" fill="#8b5cf6">RULE 3</text>
+    <text x="145" y="52" class="n-rule" fill="#f8fafc" text-anchor="middle">REPLAY-0</text>
+    <line x1="20" y1="62" x2="270" y2="62" stroke="#2a1a4a" stroke-width="1"/>
+    <text x="145" y="80" class="n-sub" text-anchor="middle">Every decision is deterministically</text>
+    <text x="145" y="94" class="n-sub" text-anchor="middle">replayable from the ledger.</text>
+    <text x="145" y="108" class="n-sub" text-anchor="middle">There is no "it was fine locally."</text>
+    <rect x="20" y="120" width="250" height="18" rx="4" fill="#100a1e"/>
+    <text x="145" y="133" class="n-why" text-anchor="middle" style="fill:#c4b5fd">The ledger is the truth. Everything else is a claim.</text>
+  </g>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="177" width="1200" height="3" fill="url(#dangerBar)"/>
+</svg>

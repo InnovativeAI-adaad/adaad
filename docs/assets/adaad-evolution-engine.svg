@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="100%" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <style>
+      .e-title{font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:13px;fill:#f8fafc;letter-spacing:.5px}
+      .e-sub  {font-family:'Inter',Arial,sans-serif;font-weight:400;font-size:9px;fill:#8c919b}
+      .e-inv  {font-family:'JetBrains Mono','Courier New',monospace;font-size:8px;fill:#3b82f6}
+      .e-tag  {font-family:'Inter',Arial,sans-serif;font-weight:700;font-size:8px;letter-spacing:1.5px}
+      .e-num  {font-family:'Inter',Arial,sans-serif;font-weight:900;font-size:22px}
+      .e-arrow{fill:none;stroke-width:1.5;stroke-linecap:round;marker-end:url(#arrowHead)}
+      @keyframes ePulse{0%,100%{opacity:.7;r:28}50%{opacity:1;r:32}}
+      @keyframes eFlow{0%{stroke-dashoffset:40}100%{stroke-dashoffset:0}}
+      @keyframes eFade{0%,100%{opacity:.4}50%{opacity:.9}}
+      .pulse81{animation:ePulse 2.8s ease-in-out infinite}
+      .pulse82{animation:ePulse 3.1s ease-in-out .4s infinite}
+      .pulse83{animation:ePulse 2.6s ease-in-out .8s infinite}
+      .pulse84{animation:ePulse 3.3s ease-in-out 1.2s infinite}
+      .flow-line{stroke-dasharray:6 4;animation:eFlow 2s linear infinite}
+      .blink{animation:eFade 2.5s ease-in-out infinite}
+    </style>
+    <linearGradient id="evoBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0c0f"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <linearGradient id="card81" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e1040" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <linearGradient id="card82" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0f2010" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <linearGradient id="card83" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#201008" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <linearGradient id="card84" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#200a18" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#0d0f14"/>
+    </linearGradient>
+    <filter id="glow81" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow82" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow83" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow84" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="arr81" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arr82" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#22c55e"/>
+    </marker>
+    <marker id="arr83" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f97316"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="300" fill="url(#evoBg)"/>
+  <rect width="1200" height="300" fill="none" stroke="#2b2f36" stroke-width="1"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1200" height="44" fill="#0a0b0e"/>
+  <text x="600" y="18" font-family="'Inter',Arial,sans-serif" font-weight="900" font-size="11px" fill="#8c919b" text-anchor="middle" letter-spacing="3">EVOLUTION ENGINE — PHASES 81–84</text>
+  <text x="600" y="34" font-family="'Inter',Arial,sans-serif" font-size="9px" fill="#2b2f36" text-anchor="middle" letter-spacing="1">SELF-DISCOVERY · PARETO SELECTION · CAUSAL ATTRIBUTION · TEMPORAL DECAY</text>
+  <line x1="0" y1="44" x2="1200" y2="44" stroke="#2b2f36" stroke-width="1"/>
+
+  <!-- Flow arrows between cards -->
+  <!-- 81→82 -->
+  <line x1="310" y1="172" x2="340" y2="172" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="4 3" class="flow-line" marker-end="url(#arr81)"/>
+  <!-- 82→83 -->
+  <line x1="610" y1="172" x2="640" y2="172" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4 3" class="flow-line" marker-end="url(#arr82)"/>
+  <!-- 83→84 -->
+  <line x1="910" y1="172" x2="940" y2="172" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4 3" class="flow-line" marker-end="url(#arr83)"/>
+
+  <!-- ======================== CARD 81 — Constitutional Self-Discovery ======================== -->
+  <g transform="translate(20,56)">
+    <rect width="290" height="228" rx="10" fill="url(#card81)" stroke="#8b5cf6" stroke-width="1.2"/>
+    <rect width="290" height="4" rx="2" fill="#8b5cf6"/>
+    <!-- Glow orb -->
+    <circle cx="145" cy="80" r="28" fill="#8b5cf6" opacity=".06" class="pulse81" filter="url(#glow81)"/>
+    <!-- Icon: loop arrows -->
+    <path d="M120,68 Q145,52 170,68" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/>
+    <path d="M170,92 Q145,108 120,92" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/>
+    <polygon points="168,62 178,68 168,74" fill="#8b5cf6"/>
+    <polygon points="122,86 112,92 122,98" fill="#8b5cf6"/>
+    <!-- Phase label -->
+    <text x="145" y="128" class="e-num" fill="#8b5cf6" text-anchor="middle">81</text>
+    <text x="145" y="143" class="e-tag" fill="#8b5cf6" text-anchor="middle">CONSTITUTIONAL</text>
+    <text x="145" y="155" class="e-tag" fill="#8b5cf6" text-anchor="middle">SELF-DISCOVERY</text>
+    <line x1="20" y1="163" x2="270" y2="163" stroke="#1e1040" stroke-width="1"/>
+    <text x="20" y="177" class="e-inv">SELF-DISC-0</text>
+    <text x="145" y="177" class="e-sub" text-anchor="middle">Mines failure patterns</text>
+    <text x="20" y="191" class="e-inv">RATIFY-GOV-0</text>
+    <text x="145" y="191" class="e-sub" text-anchor="middle">GovernanceGate-gated ratification</text>
+    <text x="20" y="205" class="e-inv">MINE-DETERM-0</text>
+    <text x="145" y="205" class="e-sub" text-anchor="middle">Identical ledger → identical candidates</text>
+    <rect x="20" y="214" width="250" height="14" rx="4" fill="#1a0f30"/>
+    <text x="145" y="224" class="e-sub" text-anchor="middle" style="fill:#c4b5fd">ADAAD proposes its own constitutional rules</text>
+  </g>
+
+  <!-- ======================== CARD 82 — Pareto Population Evolution ======================== -->
+  <g transform="translate(340,56)">
+    <rect width="290" height="228" rx="10" fill="url(#card82)" stroke="#22c55e" stroke-width="1.2"/>
+    <rect width="290" height="4" rx="2" fill="#22c55e"/>
+    <!-- Glow orb -->
+    <circle cx="145" cy="80" r="28" fill="#22c55e" opacity=".05" class="pulse82" filter="url(#glow82)"/>
+    <!-- Icon: frontier dots -->
+    <circle cx="118" cy="95" r="5" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+    <circle cx="135" cy="78" r="5" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+    <circle cx="155" cy="68" r="5" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+    <circle cx="172" cy="72" r="4" fill="none" stroke="#2b2f36" stroke-width="1" opacity=".5"/>
+    <circle cx="160" cy="90" r="4" fill="none" stroke="#2b2f36" stroke-width="1" opacity=".5"/>
+    <path d="M118,95 L135,78 L155,68" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <path d="M155,68 L172,72" fill="none" stroke="#2b2f36" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+    <!-- Phase label -->
+    <text x="145" y="128" class="e-num" fill="#22c55e" text-anchor="middle">82</text>
+    <text x="145" y="143" class="e-tag" fill="#22c55e" text-anchor="middle">PARETO POPULATION</text>
+    <text x="145" y="155" class="e-tag" fill="#22c55e" text-anchor="middle">EVOLUTION</text>
+    <line x1="20" y1="163" x2="270" y2="163" stroke="#0f2010" stroke-width="1"/>
+    <text x="20" y="177" class="e-inv" style="fill:#22c55e">PARETO-0</text>
+    <text x="145" y="177" class="e-sub" text-anchor="middle">Non-dominated selection only</text>
+    <text x="20" y="191" class="e-inv" style="fill:#22c55e">PARETO-DETERM-0</text>
+    <text x="145" y="191" class="e-sub" text-anchor="middle">Identical population → identical frontier</text>
+    <text x="20" y="205" class="e-inv" style="fill:#22c55e">PARETO-GOV-0</text>
+    <text x="145" y="205" class="e-sub" text-anchor="middle">Ledger-anchored before any promotion</text>
+    <rect x="20" y="214" width="250" height="14" rx="4" fill="#0a180a"/>
+    <text x="145" y="224" class="e-sub" text-anchor="middle" style="fill:#86efac">Multi-objective — no dominated candidate advances</text>
+  </g>
+
+  <!-- ======================== CARD 83 — Causal Fitness Attribution ======================== -->
+  <g transform="translate(660,56)">
+    <rect width="290" height="228" rx="10" fill="url(#card83)" stroke="#f97316" stroke-width="1.2"/>
+    <rect width="290" height="4" rx="2" fill="#f97316"/>
+    <!-- Glow orb -->
+    <circle cx="145" cy="80" r="28" fill="#f97316" opacity=".05" class="pulse83" filter="url(#glow83)"/>
+    <!-- Icon: Shapley attribution bars -->
+    <rect x="112" cy="95" x="112" y="88" width="8" height="18" rx="2" fill="#f97316" opacity=".8"/>
+    <rect x="125" y="80" width="8" height="26" rx="2" fill="#f97316" opacity=".7"/>
+    <rect x="138" y="72" width="8" height="34" rx="2" fill="#f97316" opacity=".9"/>
+    <rect x="151" y="84" width="8" height="22" rx="2" fill="#f97316" opacity=".6"/>
+    <rect x="164" y="91" width="8" height="15" rx="2" fill="#f97316" opacity=".5"/>
+    <line x1="108" y1="106" x2="176" y2="106" stroke="#f97316" stroke-width="1" opacity=".4"/>
+    <!-- Phase label -->
+    <text x="145" y="128" class="e-num" fill="#f97316" text-anchor="middle">83</text>
+    <text x="145" y="143" class="e-tag" fill="#f97316" text-anchor="middle">CAUSAL FITNESS</text>
+    <text x="145" y="155" class="e-tag" fill="#f97316" text-anchor="middle">ATTRIBUTION</text>
+    <line x1="20" y1="163" x2="270" y2="163" stroke="#200f08" stroke-width="1"/>
+    <text x="20" y="177" class="e-inv" style="fill:#f97316">CAUSAL-ATTR-0</text>
+    <text x="145" y="177" class="e-sub" text-anchor="middle">Shapley-value per-op attribution</text>
+    <text x="20" y="191" class="e-inv" style="fill:#f97316">ABLATE-DETERM-0</text>
+    <text x="145" y="191" class="e-sub" text-anchor="middle">Ablation runs deterministic + ledgered</text>
+    <text x="20" y="205" class="e-inv" style="fill:#f97316">SHAPLEY-BOUND-0</text>
+    <text x="145" y="205" class="e-sub" text-anchor="middle">Approximation error bounded</text>
+    <rect x="20" y="214" width="250" height="14" rx="4" fill="#180a02"/>
+    <text x="145" y="224" class="e-sub" text-anchor="middle" style="fill:#fdba74">Every fitness score traceable to operations</text>
+  </g>
+
+  <!-- ======================== CARD 84 — Temporal Fitness Half-Life ======================== -->
+  <g transform="translate(960,56)">
+    <rect width="220" height="228" rx="10" fill="url(#card84)" stroke="#ec4899" stroke-width="1.5"/>
+    <rect width="220" height="4" rx="2" fill="#ec4899"/>
+    <!-- Glow orb -->
+    <circle cx="110" cy="80" r="28" fill="#ec4899" opacity=".06" class="pulse84" filter="url(#glow84)"/>
+    <!-- Icon: decay curve -->
+    <path d="M75,60 Q85,62 95,70 Q108,82 125,95 Q140,105 155,108" fill="none" stroke="#ec4899" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="75" cy="60" r="3" fill="#ec4899"/>
+    <circle cx="155" cy="108" r="3" fill="#ec4899" opacity=".4"/>
+    <line x1="75" y1="108" x2="155" y2="108" stroke="#2b2f36" stroke-width="1" stroke-dasharray="3 2"/>
+    <text x="80" y="118" font-family="'JetBrains Mono',monospace" font-size="7px" fill="#2b2f36">t½</text>
+    <!-- Phase label -->
+    <text x="110" y="140" class="e-num" fill="#ec4899" text-anchor="middle">84</text>
+    <text x="110" y="155" class="e-tag" fill="#ec4899" text-anchor="middle">TEMPORAL FITNESS</text>
+    <text x="110" y="167" class="e-tag" fill="#ec4899" text-anchor="middle">HALF-LIFE</text>
+    <line x1="12" y1="175" x2="208" y2="175" stroke="#200a18" stroke-width="1"/>
+    <text x="12" y="189" class="e-inv" style="fill:#ec4899">DECAY-0</text>
+    <text x="110" y="189" class="e-sub" text-anchor="middle">Drift-discounted history</text>
+    <text x="12" y="203" class="e-inv" style="fill:#ec4899">HALFLIFE-DETERM-0</text>
+    <text x="110" y="203" class="e-sub" text-anchor="middle">State vector → decay coefficient</text>
+    <rect x="12" y="212" width="196" height="14" rx="4" fill="#18051a" class="blink"/>
+    <text x="110" y="222" class="e-sub" text-anchor="middle" style="fill:#f9a8d4">◈ CURRENT PHASE</text>
+  </g>
+</svg>
