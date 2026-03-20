@@ -11,100 +11,114 @@ from pathlib import Path
 from security.ledger import journal
 
 
-def _set_temp_paths(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
-    original_journal = journal.JOURNAL_PATH
-    original_genesis = journal.GENESIS_PATH
-    original_tail = journal.TAIL_STATE_PATH
-    original_lock = journal.LOCK_PATH
-    journal.JOURNAL_PATH = tmp_path / "cryovant_journal.jsonl"  # type: ignore
-    journal.GENESIS_PATH = tmp_path / "cryovant_journal.genesis.jsonl"  # type: ignore
-    journal.TAIL_STATE_PATH = tmp_path / "cryovant_journal.tail.json"  # type: ignore
-    journal.LOCK_PATH = tmp_path / "cryovant_journal.lock"  # type: ignore
-    return original_journal, original_genesis, original_tail, original_lock
-
-
-def _restore_paths(paths: tuple[Path, Path, Path, Path]) -> None:
-    journal.JOURNAL_PATH = paths[0]  # type: ignore
-    journal.GENESIS_PATH = paths[1]  # type: ignore
-    journal.TAIL_STATE_PATH = paths[2]  # type: ignore
-    journal.LOCK_PATH = paths[3]  # type: ignore
+def _temp_paths(tmp_path: Path, name: str = "cryovant_journal") -> journal.JournalPaths:
+    base_path = tmp_path / name
+    return journal.JournalPaths(
+        journal_path=base_path.with_suffix(".jsonl"),
+        genesis_path=base_path.with_name(f"{base_path.name}.genesis.jsonl"),
+        tail_state_path=base_path.with_name(f"{base_path.name}.tail.json"),
+        lock_path=base_path.with_name(f"{base_path.name}.lock"),
+    )
 
 
 def test_journal_hash_chaining(tmp_path: Path) -> None:
-    original_paths = _set_temp_paths(tmp_path)
-    try:
-        first = journal.append_tx("test", {"i": 1}, tx_id="TX-1")
-        second = journal.append_tx("test", {"i": 2}, tx_id="TX-2")
-        assert second["prev_hash"] == first["hash"]
-    finally:
-        _restore_paths(original_paths)
+    paths = _temp_paths(tmp_path)
+    first = journal.append_tx("test", {"i": 1}, tx_id="TX-1", journal_paths=paths)
+    second = journal.append_tx("test", {"i": 2}, tx_id="TX-2", journal_paths=paths)
+    assert second["prev_hash"] == first["hash"]
 
 
 def test_concurrent_thread_appends_preserve_chain(tmp_path: Path) -> None:
-    original_paths = _set_temp_paths(tmp_path)
-    try:
-        workers = 8
-        per_worker = 25
+    paths = _temp_paths(tmp_path)
+    workers = 8
+    per_worker = 25
 
-        def _append(worker_id: int, index: int) -> None:
-            tx_id = f"T-{worker_id}-{index}"
-            journal.append_tx("thread", {"worker": worker_id, "index": index}, tx_id=tx_id)
+    def _append(worker_id: int, index: int) -> None:
+        tx_id = f"T-{worker_id}-{index}"
+        journal.append_tx(
+            "thread",
+            {"worker": worker_id, "index": index},
+            tx_id=tx_id,
+            journal_paths=paths,
+        )
 
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            for worker_id in range(workers):
-                for index in range(per_worker):
-                    pool.submit(_append, worker_id, index)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for worker_id in range(workers):
+            for index in range(per_worker):
+                pool.submit(_append, worker_id, index)
 
-        journal.verify_journal_integrity()
-        lines = [line for line in journal.JOURNAL_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
-        assert len(lines) == workers * per_worker
-    finally:
-        _restore_paths(original_paths)
+    journal.verify_journal_integrity(journal_paths=paths)
+    lines = [line for line in paths.journal_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert len(lines) == workers * per_worker
 
 
-def _process_append(journal_path: str, genesis_path: str, tail_path: str, lock_path: str, tx_id: str) -> None:
-    journal.JOURNAL_PATH = Path(journal_path)  # type: ignore
-    journal.GENESIS_PATH = Path(genesis_path)  # type: ignore
-    journal.TAIL_STATE_PATH = Path(tail_path)  # type: ignore
-    journal.LOCK_PATH = Path(lock_path)  # type: ignore
-    journal.append_tx("process", {"tx": tx_id}, tx_id=tx_id)
+def _process_append(paths: tuple[str, str, str, str], tx_id: str) -> None:
+    journal.append_tx(
+        "process",
+        {"tx": tx_id},
+        tx_id=tx_id,
+        journal_paths=journal.JournalPaths(
+            journal_path=Path(paths[0]),
+            genesis_path=Path(paths[1]),
+            tail_state_path=Path(paths[2]),
+            lock_path=Path(paths[3]),
+        ),
+    )
 
 
 def test_concurrent_process_appends_preserve_chain(tmp_path: Path) -> None:
-    original_paths = _set_temp_paths(tmp_path)
-    try:
-        tx_count = 24
-        args = [
-            (
-                str(journal.JOURNAL_PATH),
-                str(journal.GENESIS_PATH),
-                str(journal.TAIL_STATE_PATH),
-                str(journal.LOCK_PATH),
-                f"P-{index}",
-            )
-            for index in range(tx_count)
-        ]
+    paths = _temp_paths(tmp_path)
+    tx_count = 24
+    process_paths = (
+        str(paths.journal_path),
+        str(paths.genesis_path),
+        str(paths.tail_state_path),
+        str(paths.lock_path),
+    )
+    args = [(process_paths, f"P-{index}") for index in range(tx_count)]
 
-        with multiprocessing.get_context("spawn").Pool(processes=6) as pool:
-            pool.starmap(_process_append, args)
+    with multiprocessing.get_context("spawn").Pool(processes=6) as pool:
+        pool.starmap(_process_append, args)
 
-        journal.verify_journal_integrity()
-        entries = [json.loads(line) for line in journal.JOURNAL_PATH.read_text(encoding="utf-8").splitlines() if line.strip()]
-        assert len(entries) == tx_count
-        assert len({entry["tx"] for entry in entries}) == tx_count
-    finally:
-        _restore_paths(original_paths)
+    journal.verify_journal_integrity(journal_paths=paths)
+    entries = [json.loads(line) for line in paths.journal_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    assert len(entries) == tx_count
+    assert len({entry["tx"] for entry in entries}) == tx_count
 
 
 def test_append_rejects_unknown_event_type(tmp_path: Path) -> None:
-    original_paths = _set_temp_paths(tmp_path)
+    paths = _temp_paths(tmp_path)
     try:
-        try:
-            journal.append_tx("unknown_type", {"agm_step": "step_1"}, tx_id="TX-BAD")
-            assert False, "expected ValueError"
-        except ValueError as exc:
-            assert str(exc) == "event_type_not_allowed:unknown_type:agm_step_01"
+        journal.append_tx("unknown_type", {"agm_step": "step_1"}, tx_id="TX-BAD", journal_paths=paths)
+        assert False, "expected ValueError"
+    except ValueError as exc:
+        assert str(exc) == "event_type_not_allowed:unknown_type:agm_step_01"
 
-        assert not journal.JOURNAL_PATH.exists() or journal.JOURNAL_PATH.read_text(encoding="utf-8").strip() == ""
-    finally:
-        _restore_paths(original_paths)
+    assert not paths.journal_path.exists() or paths.journal_path.read_text(encoding="utf-8").strip() == ""
+
+
+def test_temp_journals_do_not_share_tail_state_lock_or_cache(tmp_path: Path) -> None:
+    journal._VERIFIED_TAIL_CACHE.clear()
+    alpha = _temp_paths(tmp_path / "alpha")
+    beta = _temp_paths(tmp_path / "beta")
+
+    alpha_first = journal.append_tx("test", {"i": 1}, tx_id="TX-A1", journal_paths=alpha)
+    beta_first = journal.append_tx("test", {"i": 1}, tx_id="TX-B1", journal_paths=beta)
+    alpha_second = journal.append_tx("test", {"i": 2}, tx_id="TX-A2", journal_paths=alpha)
+
+    assert alpha.tail_state_path != beta.tail_state_path
+    assert alpha.lock_path != beta.lock_path
+    assert alpha.tail_state_path.exists()
+    assert beta.tail_state_path.exists()
+    assert alpha.lock_path.exists()
+    assert beta.lock_path.exists()
+    assert json.loads(alpha.tail_state_path.read_text(encoding="utf-8"))["last_hash"] == alpha_second["hash"]
+    assert json.loads(beta.tail_state_path.read_text(encoding="utf-8"))["last_hash"] == beta_first["hash"]
+
+    alpha_key = str(alpha.journal_path.resolve())
+    beta_key = str(beta.journal_path.resolve())
+    assert set(journal._VERIFIED_TAIL_CACHE) >= {alpha_key, beta_key}
+    assert journal._VERIFIED_TAIL_CACHE[alpha_key][0] == alpha_second["hash"]
+    assert journal._VERIFIED_TAIL_CACHE[beta_key][0] == beta_first["hash"]
+    assert beta_first["prev_hash"] == "0" * 64
+    assert alpha_first["prev_hash"] == "0" * 64

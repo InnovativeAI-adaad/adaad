@@ -662,6 +662,10 @@ class EvolutionGovernor:
             "evidence_bundle_valid": evidence_bundle_valid,
             "evidence_status": evidence_status,
             "decision_reason": decision.reason,
+            "accepted": accepted,
+            "mutation_cost": decision.mutation_cost,
+            "fitness_gain": decision.fitness_gain,
+            "roi": decision.roi,
         }
         self.ledger.append_event("MutationEvidenceEvent", payload)
 

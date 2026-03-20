@@ -30,6 +30,7 @@ import time
 import hashlib
 import os
 import threading
+from dataclasses import dataclass
 from pathlib import Path
 from contextlib import contextmanager
 from collections import deque
@@ -48,6 +49,18 @@ TAIL_STATE_PATH = LEDGER_ROOT / "cryovant_journal.tail.json"
 LOCK_PATH = LEDGER_ROOT / "cryovant_journal.lock"
 
 _THREAD_APPEND_LOCK = threading.Lock()
+_VERIFIED_TAIL_CACHE_LOCK = threading.Lock()
+_VERIFIED_TAIL_CACHE: dict[str, tuple[str, int, int, str]] = {}
+
+
+@dataclass(frozen=True)
+class JournalPaths:
+    """Resolved file-system paths for one journal instance."""
+
+    journal_path: Path
+    genesis_path: Path
+    tail_state_path: Path
+    lock_path: Path
 
 
 class JournalIntegrityError(RuntimeError):
@@ -71,17 +84,82 @@ def ensure_ledger() -> Path:
     return LEDGER_FILE
 
 
-def ensure_journal() -> Path:
+def _derived_journal_paths(journal_path: Path) -> JournalPaths:
+    return JournalPaths(
+        journal_path=journal_path,
+        genesis_path=journal_path.with_suffix(journal_path.suffix + ".genesis"),
+        tail_state_path=journal_path.with_suffix(journal_path.suffix + ".tail"),
+        lock_path=journal_path.with_suffix(journal_path.suffix + ".lock"),
+    )
+
+
+def _resolve_journal_paths(
+    *,
+    journal_path: Path | None = None,
+    journal_paths: JournalPaths | None = None,
+) -> JournalPaths:
+    if journal_path is not None and journal_paths is not None:
+        raise ValueError("journal_path_and_journal_paths_are_mutually_exclusive")
+    if journal_paths is not None:
+        return JournalPaths(
+            journal_path=Path(journal_paths.journal_path),
+            genesis_path=Path(journal_paths.genesis_path),
+            tail_state_path=Path(journal_paths.tail_state_path),
+            lock_path=Path(journal_paths.lock_path),
+        )
+    if journal_path is not None:
+        return _derived_journal_paths(Path(journal_path))
+    return JournalPaths(
+        journal_path=JOURNAL_PATH,
+        genesis_path=GENESIS_PATH,
+        tail_state_path=TAIL_STATE_PATH,
+        lock_path=LOCK_PATH,
+    )
+
+
+def _journal_cache_key(path: Path) -> str:
+    return str(path.resolve(strict=False))
+
+
+def _journal_content_digest(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _read_verified_tail_cache(path: Path) -> tuple[str, int, int, str] | None:
+    with _VERIFIED_TAIL_CACHE_LOCK:
+        return _VERIFIED_TAIL_CACHE.get(_journal_cache_key(path))
+
+
+def _write_verified_tail_cache(path: Path, *, last_hash: str, offset: int) -> None:
+    modified_ns = path.stat().st_mtime_ns if path.exists() else 0
+    content_digest = _journal_content_digest(path)
+    with _VERIFIED_TAIL_CACHE_LOCK:
+        _VERIFIED_TAIL_CACHE[_journal_cache_key(path)] = (last_hash, offset, modified_ns, content_digest)
+
+
+def _clear_verified_tail_cache(path: Path) -> None:
+    with _VERIFIED_TAIL_CACHE_LOCK:
+        _VERIFIED_TAIL_CACHE.pop(_journal_cache_key(path), None)
+
+
+def ensure_journal(
+    *,
+    journal_path: Path | None = None,
+    journal_paths: JournalPaths | None = None,
+) -> Path:
     """
     Ensure the Cryovant journal exists, seeding from genesis if available.
     """
-    LEDGER_ROOT.mkdir(parents=True, exist_ok=True)
-    if not JOURNAL_PATH.exists():
-        if GENESIS_PATH.exists():
-            JOURNAL_PATH.write_text(GENESIS_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    paths = _resolve_journal_paths(journal_path=journal_path, journal_paths=journal_paths)
+    paths.journal_path.parent.mkdir(parents=True, exist_ok=True)
+    if not paths.journal_path.exists():
+        if paths.genesis_path.exists():
+            paths.journal_path.write_text(paths.genesis_path.read_text(encoding="utf-8"), encoding="utf-8")
         else:
-            JOURNAL_PATH.touch()
-    return JOURNAL_PATH
+            paths.journal_path.touch()
+    return paths.journal_path
 
 
 def write_entry(agent_id: str, action: str, payload: Dict[str, str] | None = None) -> None:
@@ -273,58 +351,106 @@ def _write_tail_state(path: Path, *, last_hash: str, offset: int) -> None:
     temp_path.replace(path)
 
 
+def _write_verified_tail_state(paths: JournalPaths, *, last_hash: str, offset: int) -> None:
+    _write_tail_state(paths.tail_state_path, last_hash=last_hash, offset=offset)
+    _write_verified_tail_cache(paths.journal_path, last_hash=last_hash, offset=offset)
+
+
+def _resume_verified_tail(
+    *,
+    paths: JournalPaths,
+    recovery_hook: JournalRecoveryHook | None,
+    state_hash: str,
+    state_offset: int,
+    verified_mtime_ns: int | None = None,
+    verified_content_digest: str | None = None,
+) -> tuple[str, int] | None:
+    stat_result = paths.journal_path.stat()
+    journal_size = stat_result.st_size
+    if journal_size < state_offset:
+        return None
+    if journal_size == state_offset:
+        if (
+            verified_mtime_ns is not None
+            and stat_result.st_mtime_ns == verified_mtime_ns
+            and verified_content_digest is not None
+            and _journal_content_digest(paths.journal_path) == verified_content_digest
+        ):
+            _write_verified_tail_cache(paths.journal_path, last_hash=state_hash, offset=state_offset)
+            return state_hash, state_offset
+        return None
+    last_hash, offset = _scan_chain(
+        path=paths.journal_path,
+        recovery_hook=recovery_hook,
+        start_offset=state_offset,
+        expected_prev_hash=state_hash,
+    )
+    _write_verified_tail_state(paths, last_hash=last_hash, offset=offset)
+    return last_hash, offset
+
+
 def _validated_last_hash(
     recovery_hook: JournalRecoveryHook | None = None,
     *,
     journal_path: Path | None = None,
+    journal_paths: JournalPaths | None = None,
 ) -> tuple[str, int]:
-    if journal_path is None:
-        ensure_journal()
-        path = JOURNAL_PATH
-        tail_path = TAIL_STATE_PATH
-    else:
-        path = journal_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if not path.exists():
-            path.touch()
-        tail_path = path.with_suffix(path.suffix + ".tail")
-
+    paths = _resolve_journal_paths(journal_path=journal_path, journal_paths=journal_paths)
+    ensure_journal(journal_paths=paths)
     default_hash = "0" * 64
-    tail_state = _read_tail_state(tail_path)
-    if tail_state is not None:
-        state_hash, state_offset = tail_state
+    for tail_state in (
+        _read_verified_tail_cache(paths.journal_path),
+        _read_tail_state(paths.tail_state_path),
+    ):
+        if tail_state is None:
+            continue
+        state_hash = tail_state[0]
+        state_offset = tail_state[1]
+        verified_mtime_ns = tail_state[2] if len(tail_state) > 2 else None
+        verified_content_digest = tail_state[3] if len(tail_state) > 3 else None
         try:
-            if path.stat().st_size > state_offset:
-                last_hash, offset = _scan_chain(
-                    path=path,
-                    recovery_hook=recovery_hook,
-                    start_offset=state_offset,
-                    expected_prev_hash=state_hash,
-                )
-                _write_tail_state(tail_path, last_hash=last_hash, offset=offset)
-                return last_hash, offset
+            resumed_tail = _resume_verified_tail(
+                paths=paths,
+                recovery_hook=recovery_hook,
+                state_hash=state_hash,
+                state_offset=state_offset,
+                verified_mtime_ns=verified_mtime_ns,
+                verified_content_digest=verified_content_digest,
+            )
+            if resumed_tail is not None:
+                return resumed_tail
         except JournalIntegrityError:
             # Cached tail state is inconsistent with the current journal; fall back
             # to a full rescan from offset 0 below to rebuild a valid tail state.
+            _clear_verified_tail_cache(paths.journal_path)
             metrics.log(
                 event_type="ledger_journal_tail_recovery_error",
-                payload={"journal_path": str(path)},
+                payload={"journal_path": str(paths.journal_path)},
                 level="WARNING",
             )
 
     last_hash, offset = _scan_chain(
-        path=path,
+        path=paths.journal_path,
         recovery_hook=recovery_hook,
         start_offset=0,
         expected_prev_hash=default_hash,
     )
-    _write_tail_state(tail_path, last_hash=last_hash, offset=offset)
+    _write_verified_tail_state(paths, last_hash=last_hash, offset=offset)
     return last_hash, offset
 
 
 @contextmanager
-def _journal_append_lock(path: Path):
-    lock_path = LOCK_PATH if path == JOURNAL_PATH else path.with_suffix(path.suffix + ".lock")
+def _journal_append_lock(
+    path: Path | None = None,
+    *,
+    journal_path: Path | None = None,
+    journal_paths: JournalPaths | None = None,
+):
+    resolved_paths = _resolve_journal_paths(
+        journal_path=journal_path if journal_path is not None else path,
+        journal_paths=journal_paths,
+    )
+    lock_path = resolved_paths.lock_path
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     with _THREAD_APPEND_LOCK:
         with lock_path.open("a+", encoding="utf-8") as handle:
@@ -354,16 +480,32 @@ def verify_journal_integrity(
     recovery_hook: JournalRecoveryHook | None = None,
     *,
     journal_path: Path | None = None,
+    journal_paths: JournalPaths | None = None,
 ) -> None:
     """Recompute the chain from genesis and validate every stored hash."""
-    _validated_last_hash(recovery_hook=recovery_hook, journal_path=journal_path)
+    _validated_last_hash(
+        recovery_hook=recovery_hook,
+        journal_path=journal_path,
+        journal_paths=journal_paths,
+    )
 
 
-def append_tx(tx_type: str, payload: Dict[str, object], tx_id: Optional[str] = None) -> Dict[str, object]:
-    normalized_type = validate_event_type_for_agm_step(event_type=tx_type, agm_step=payload.get("agm_step") if isinstance(payload, dict) else None)
-    JOURNAL_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with _journal_append_lock(JOURNAL_PATH):
-        prev, offset = _validated_last_hash()
+def append_tx(
+    tx_type: str,
+    payload: Dict[str, object],
+    tx_id: Optional[str] = None,
+    *,
+    journal_path: Path | None = None,
+    journal_paths: JournalPaths | None = None,
+) -> Dict[str, object]:
+    normalized_type = validate_event_type_for_agm_step(
+        event_type=tx_type,
+        agm_step=payload.get("agm_step") if isinstance(payload, dict) else None,
+    )
+    paths = _resolve_journal_paths(journal_path=journal_path, journal_paths=journal_paths)
+    ensure_journal(journal_paths=paths)
+    with _journal_append_lock(journal_paths=paths):
+        prev, offset = _validated_last_hash(journal_paths=paths)
         entry = {
             "tx": tx_id or f"TX-{normalized_type}-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}",
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -373,9 +515,13 @@ def append_tx(tx_type: str, payload: Dict[str, object], tx_id: Optional[str] = N
         }
         entry["hash"] = _hash_line(prev, entry)
         line = json.dumps(entry, ensure_ascii=False) + "\n"
-        with JOURNAL_PATH.open("a", encoding="utf-8") as f:
+        with paths.journal_path.open("a", encoding="utf-8") as f:
             f.write(line)
-        _write_tail_state(TAIL_STATE_PATH, last_hash=entry["hash"], offset=offset + len(line.encode("utf-8")))
+        _write_verified_tail_state(
+            paths,
+            last_hash=entry["hash"],
+            offset=offset + len(line.encode("utf-8")),
+        )
         return entry
 
 
@@ -418,5 +564,6 @@ __all__ = [
     "project_from_lineage",
     "verify_journal_integrity",
     "JournalIntegrityError",
+    "JournalPaths",
     "JournalRecoveryHook",
 ]
