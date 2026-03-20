@@ -1,0 +1,53 @@
+{
+  "schema": "governance-sign-off/v1",
+  "phase": 84,
+  "track": "A",
+  "pr": "PR-84-01",
+  "title": "Temporal Fitness Half-Life \u2014 CodebaseStateVector + FitnessDecayScorer",
+  "version_target": "9.19.0",
+  "date": "2026-03-20T16:38:37Z",
+  "governor": "Dustin L. Reid",
+  "agent": "DEVADAAD",
+  "invariants_introduced": [
+    {
+      "id": "TFHL-0",
+      "description": "Decay re-evaluation is read-only \u2014 FitnessDecayEvent is a NEW append, never modifies original record"
+    },
+    {
+      "id": "TFHL-DET-0",
+      "description": "Identical codebase state + decay params \u2192 identical adjusted scores and drift magnitudes"
+    },
+    {
+      "id": "TFHL-IMM-0",
+      "description": "CodebaseStateVector is frozen/immutable \u2014 created once, never modified"
+    },
+    {
+      "id": "TFHL-DECAY-0",
+      "description": "Decay model: adjusted = recorded \u00d7 exp(-k \u00d7 drift), k=2.0 default, clamped [0,1]"
+    },
+    {
+      "id": "TFHL-ALERT-0",
+      "description": "FitnessDecayEvent emitted to LineageLedgerV2 when adjusted_score < 0.60 threshold"
+    },
+    {
+      "id": "TFHL-ADVISORY-0",
+      "description": "Module never imports or invokes GovernanceGate \u2014 advisory only"
+    },
+    {
+      "id": "TFHL-SCOPE-0",
+      "description": "Vector fingerprints only the relevant region, not the whole repo \u2014 bounded computation"
+    }
+  ],
+  "files_added": [
+    "runtime/evolution/codebase_state_vector.py \u2014 CodebaseStateVector, FileSnapshot, drift_from()",
+    "runtime/evolution/fitness_decay_scorer.py  \u2014 FitnessDecayScorer, FitnessRecord, FitnessDecayResult",
+    "tests/test_phase84_fitness_half_life.py    \u2014 26 constitutional tests T84-TFHL-01..26"
+  ],
+  "test_results": {
+    "total": 26,
+    "passed": 26,
+    "failed": 0
+  },
+  "novelty": "First governance-anchored mutation system to model fitness decay over time. Past 'good' decisions are continuously re-evaluated as surrounding code evolves. Decay uses exponential model (exp(-k\u00d7drift)) with CodebaseStateVector drift computed from AST node deltas, cyclomatic complexity deltas, and source digest comparisons.",
+  "artifact_digest": "sha256:c267ffc333af6ac4b7934841302c565ea223c72143c638d1740fa7be404d60a6"
+}
