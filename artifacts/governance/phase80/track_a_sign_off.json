@@ -1,0 +1,45 @@
+{
+  "schema": "governance-sign-off/v1",
+  "phase": 80,
+  "track": "A",
+  "pr": "PR-80-01",
+  "title": "Multi-Seed Competitive Epoch \u2014 SeedCompetitionOrchestrator",
+  "version_target": "9.15.0",
+  "date": "2026-03-20T15:51:27Z",
+  "governor": "Dustin L. Reid",
+  "agent": "DEVADAAD",
+  "invariants_introduced": [
+    {
+      "id": "SEED-COMP-0",
+      "description": "No seed promoted without competitive ranking of all candidates in epoch window"
+    },
+    {
+      "id": "SEED-RANK-0",
+      "description": "Fitness ranking is deterministic \u2014 equal inputs produce identical rank orderings"
+    },
+    {
+      "id": "COMP-GOV-0",
+      "description": "GovernanceGate evaluates all candidates before any single candidate advances"
+    },
+    {
+      "id": "COMP-LEDGER-0",
+      "description": "SeedCompetitionEpochEvent written to LineageLedgerV2 before any promotion"
+    }
+  ],
+  "files_changed": [
+    "runtime/evolution/lineage_v2.py \u2014 SeedCompetitionEpochEvent + append_competition_epoch()",
+    "runtime/seed_competition.py \u2014 SeedCompetitionOrchestrator (new)",
+    "runtime/fitness_pipeline.py \u2014 rank_seeds_by_fitness() surface",
+    "tests/test_phase80_seed_competition.py \u2014 24 constitutional tests (T80-COMP-01..24)",
+    "pytest.ini \u2014 phase80 mark registered"
+  ],
+  "test_results": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "suite": "tests/test_phase80_seed_competition.py"
+  },
+  "human_gate_required": false,
+  "notes": "Track A core complete. Aponi dashboard panel (COMP-VIS-0) deferred to post-merge iteration per plan.",
+  "artifact_digest": "sha256:5a0a327d5d0c946237a30b7a2a7aa38098ac29b918785ac5615da134a7e95da2"
+}

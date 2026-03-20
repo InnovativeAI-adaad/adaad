@@ -299,6 +299,58 @@ class FitnessPipeline:
         }
 
 
+
+
+# ---------------------------------------------------------------------------
+# Phase 80: Multi-seed ranking surface  (SEED-RANK-0)
+# ---------------------------------------------------------------------------
+
+
+def rank_seeds_by_fitness(
+    seed_contexts: Dict[str, Any],
+    *,
+    pipeline: "FitnessPipeline | None" = None,
+) -> List[tuple]:
+    """Rank multiple seeds by composite fitness score.
+
+    Parameters
+    ----------
+    seed_contexts : mapping of candidate_id → mutation_data dict.
+    pipeline      : FitnessPipeline instance; instantiated with defaults if None.
+
+    Returns
+    -------
+    List of (candidate_id, score) tuples sorted highest-score first.
+    Ties broken lexicographically by candidate_id (SEED-RANK-0 determinism).
+
+    Raises
+    ------
+    ValueError if seed_contexts is empty.
+    """
+    if not seed_contexts:
+        raise ValueError("SEED-RANK-0: seed_contexts must not be empty")
+
+    if pipeline is None:
+        # Use FitnessOrchestrator directly — FitnessPipeline requires explicit evaluators
+        from runtime.evolution.fitness_orchestrator import FitnessOrchestrator as _FO
+        _orch = _FO()
+        scored: List[tuple] = []
+        for cid, ctx in seed_contexts.items():
+            result = _orch.score(ctx)
+            score = float(result.total_score)
+            scored.append((cid, score))
+    else:
+        scored = []
+        for cid, ctx in seed_contexts.items():
+            result = pipeline.evaluate(ctx)
+            score = float(result.get("overall_score", 0.0))
+            scored.append((cid, score))
+
+    # Deterministic sort: descending score, ascending id for ties (SEED-RANK-0)
+    scored.sort(key=lambda t: (-t[1], t[0]))
+    return scored
+
+
 __all__ = [
     "FitnessMetric",
     "FitnessEvaluator",
@@ -307,4 +359,5 @@ __all__ = [
     "EfficiencyEvaluator",
     "PolicyComplianceEvaluator",
     "FitnessPipeline",
+    "rank_seeds_by_fitness",
 ]
