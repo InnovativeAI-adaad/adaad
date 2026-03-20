@@ -2,6 +2,47 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.15.0] — 2026-03-20 — Phase 80 Complete (Multi-Generation Compound Evolution)
+
+### Phase 80 — Multi-Seed Competitive Epoch
+
+#### Track A — Multi-Seed Competition Infrastructure (#PR-80-01)
+
+- `runtime/seed_competition.py` — `SeedCompetitionOrchestrator` (new): population-level competitive epoch runner
+  - `SeedCandidate` (frozen dataclass): candidate_id + fitness_context + metadata
+  - `CompetitionResult` (frozen dataclass): epoch_id, winner_id, ranked_ids, fitness_scores, gate_verdict, competition_digest
+  - `_rank_candidates()`: deterministic fitness ranking, tie-break by lexicographic candidate_id
+  - `_competition_digest()`: SHA-256 of canonical sorted inputs (SEED-RANK-0)
+- `runtime/evolution/lineage_v2.py` — `SeedCompetitionEpochEvent` (frozen dataclass) + `append_competition_epoch()` on `LineageLedgerV2`
+- `runtime/fitness_pipeline.py` — `rank_seeds_by_fitness()`: multi-seed ranking surface using FitnessOrchestrator
+- `tests/test_phase80_seed_competition.py` — 24 constitutional tests T80-COMP-01..24 (24/24 pass)
+- `artifacts/governance/phase80/track_a_sign_off.json` — governance sign-off artifact
+- `pytest.ini` — phase80 mark registered
+
+**Invariants introduced:**
+- `SEED-COMP-0`: No seed promoted without competitive ranking of all candidates in epoch window
+- `SEED-RANK-0`: Fitness ranking deterministic — equal inputs → identical rank orderings; ties lexicographic
+- `COMP-GOV-0`: GovernanceGate evaluates all candidates before any single candidate advances
+- `COMP-LEDGER-0`: `SeedCompetitionEpochEvent` written to `LineageLedgerV2` before any promotion
+
+#### Track B — GA Unblock Sprint (#PR-80-02)
+
+- `android/fdroid/com.innovativeai.adaad.yml` — v9.14.0 build entry (versionCode 91400); `CurrentVersion` → 9.14.0
+- `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` — § 2.3 updated: v1.1-GA canonical declaration (closes FINDING-H04-GA-VERSIONING pending Gate 4); phase80 node added to automation contract
+- `docs/IP_PATENT_FILING_ARTIFACT.md` — Phase 80 Track B transmittal checklist + H-03 filing instructions appended
+
+**HUMAN-0 gate actions (non-delegable — not included in this release):**
+- Gate 3: F-Droid MR submission (Dustin)
+- Gate 4: GPG v1.1-GA sign-off commit (Dustin)
+- C-02: GPG tag ceremony v9.7.0–v9.10.0 (Dustin)
+- H-03: Patent counsel engagement + provisional filing (Dustin)
+
+### Metrics at v9.15.0
+- Tests: 4,772+ passing (+24)
+- Phases complete: 80
+- Constitutional invariants: 27 (+4)
+- Seed competition: population-level competitive epoch now operational
+
 ## [9.14.0] — 2026-03-20 — Phases 78 + 79 + Thesis
 
 ### Phase 78 — Production Signing Infrastructure + Aponi GitHub Feed + Doc Autosync

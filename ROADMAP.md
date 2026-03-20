@@ -4,9 +4,9 @@
 
 ---
 
-## What ships today — v9.14.0
+## What ships today — v9.15.0
 
-The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
+Population-level competitive evolution is operational. Multiple seed candidates now compete, rank by fitness, pass a constitutional gate, and record a cryptographic epoch event — before any single candidate is promoted.
 
 | Subsystem | Status | Description |
 |-----------|--------|-------------|
@@ -21,6 +21,10 @@ The self-improving loop is live. Three AI agents compete. The fittest mutations 
 | `GovernanceGate` | ✅ shipped | Constitutional authority — the only surface that approves mutations |
 | Evidence Ledger | ✅ shipped | Append-only, SHA-256 hash-chained, replay-proof |
 | Deterministic Replay | ✅ shipped | Every decision byte-identical on re-run; divergence halts |
+| `MultiGenLineageGraph` | ✅ shipped | Multi-generation DAG with cryptographic ancestor provenance (Phase 79) |
+| `SeedCompetitionOrchestrator` | ✅ shipped | Population-level competitive epoch — rank, gate, ledger, promote (Phase 80) |
+| `rank_seeds_by_fitness()` | ✅ shipped | Deterministic multi-seed fitness ranking surface (Phase 80) |
+| `SeedCompetitionEpochEvent` | ✅ shipped | Ledger-anchored competition epoch record — COMP-LEDGER-0 enforced (Phase 80) |
 
 ---
 
@@ -1302,7 +1306,12 @@ Both wiring points are exception-isolated — failures are silent no-ops that ne
 | 52 | Governed Cross-Epoch Memory & Learning Store | v7.6.0 | ✅ |
 | 53 | EvolutionLoop × EpochMemoryStore Live Wiring | v7.7.0 | ✅ |
 
-**Next:** Phase 68 — Full Innovations Orchestration (end-to-end oracle, story mode, federated map rendering)
+| 77 | Constitutional Closure + First Seed Epoch Run | v9.13.0 | ✅ |
+| 78 | Production Signing + Aponi GitHub Feed + Doc Autosync | v9.14.0 | ✅ |
+| 79 | Multi-Generation Lineage Graph | v9.14.0 | ✅ |
+| 80 | Multi-Seed Competitive Epoch + GA Unblock Sprint | v9.15.0 | ✅ |
+
+**Next:** Phase 81 — CompoundEvolutionTracker (multi-generation fitness aggregation across competitive epochs)
 
 ---
 
@@ -1514,6 +1523,26 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 
 ---
 
+### Phase 80 — Multi-Generation Compound Evolution (Multi-Seed Competitive Epoch)
+
+**Status:** ✅ shipped (v9.15.0) · **Dependency:** Phase 79 merged ✅ · **Tests:** 24 constitutional
+
+Population-level competitive evolution: multiple seed candidates score, rank deterministically, pass the constitutional gate, and record a `SeedCompetitionEpochEvent` before any promotion. Establishes the foundation for compound multi-generation evolution.
+
+**Track A — Multi-Seed Competition Infrastructure:**
+- `runtime/seed_competition.py` — `SeedCompetitionOrchestrator`: full lifecycle for competitive epoch (score → rank → gate → ledger → promote)
+- `runtime/evolution/lineage_v2.py` — `SeedCompetitionEpochEvent` + `append_competition_epoch()`
+- `runtime/fitness_pipeline.py` — `rank_seeds_by_fitness()` deterministic ranking surface
+
+**Track B — GA Unblock Sprint:**
+- `android/fdroid/com.innovativeai.adaad.yml` — v9.14.0 build entry; CurrentVersion updated
+- Procession doc § 2.3 — v1.1-GA declared canonical; FINDING-H04 agent close-out
+- `docs/IP_PATENT_FILING_ARTIFACT.md` — H-03 transmittal checklist + filing instructions
+
+**Key invariants:** `SEED-COMP-0`, `SEED-RANK-0`, `COMP-GOV-0`, `COMP-LEDGER-0`
+
+---
+
 ### Phase 78 — Journal `_VERIFIED_TAIL_CACHE` + Autonomous Doc Sync
 
 **Status:** ✅ shipped (v9.14.0) · **Dependency:** Phase 77 merged ✅ · **Gate:** HUMAN-0 ratified · **Tests:** 46 new
@@ -1572,3 +1601,20 @@ Inaugural end-to-end Seed Lifecycle Pipeline demonstration. Full 7-step pipeline
 Closes the full seed lifecycle feedback loop. `record_cel_outcome()` accepts outcome_status (success/partial/failed/skipped), fitness_delta, and mutation_count; writes `SeedCELOutcomeEvent` to `LineageLedgerV2` before emitting `seed_cel_outcome` bus frame. Idempotent on (seed_id, cycle_id). `POST /innovations/seeds/{seed_id}/cel-outcome` audit:write-gated endpoint. Aponi: `_onSeedCelOutcome()` renders status-keyed icon toast, updates seed row outcome badge, persists to `innState.seedOutcomes`; `_onSeedCelInjection()` link toast for Phase 75 injection events.
 
 **Key invariants:** SEED-OUTCOME-0, SEED-OUTCOME-LINK-0, SEED-OUTCOME-DETERM-0, SEED-OUTCOME-AUDIT-0, SEED-OUTCOME-IDEM-0, CEL-OUTCOME-FAIL-0
+
+---
+
+### Phase 81 — CompoundEvolutionTracker (Planned)
+
+**Status:** 🔜 planned · **Dependency:** Phase 80 merged · **Target:** v9.16.0
+
+Capitalises on the Phase 79 `MultiGenLineageGraph` and Phase 80 `SeedCompetitionEpochEvent` infrastructure to build the `CompoundEvolutionTracker`: a multi-generation fitness aggregator that synthesises ancestry provenance with competitive epoch outcomes.
+
+**Planned deliverables:**
+- `runtime/evolution/compound_evolution.py` — `CompoundEvolutionTracker`: aggregate fitness across competitive epochs, identify evolutionary branches with compound improvement, surface `LineageLedgerV2` evidence chains
+- `COMP-TRACK-0`: compound fitness score deterministic given identical ledger contents
+- `COMP-ANCESTRY-0`: every compound fitness record traces to a `MultiGenLineageGraph` node
+- Aponi dashboard panel: compound evolution timeline visualisation (`COMP-VIS-0`, deferred from Phase 80)
+- 20–26 constitutional tests
+
+**Prerequisites:** Phase 80 complete ✅
