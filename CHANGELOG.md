@@ -2,6 +2,33 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.14.0] — 2026-03-20 — Phases 78 + 79 + Thesis
+
+### Phase 78 — Production Signing Infrastructure + Aponi GitHub Feed + Doc Autosync
+
+- **M78-01 Journal warm-cache** (`JOURNAL-CACHE-0`): 9 constitutional tests confirming O(n) append performance, tamper detection, and cross-instance isolation
+- **M78-02 Autonomous Doc Sync** (`DOC-SYNC-VERSION-0`): `.github/workflows/docs-autosync.yml` triggers on VERSION/CHANGELOG/ROADMAP push; `scripts/verify_doc_sync.py` exits 1 on any version drift
+- **Ed25519/HMAC production signers** (`LEDGER-SIGN-0`): `HMACEnvSigner` (ADAAD_LEDGER_HMAC_SECRET), `Ed25519FileSigner` (ADAAD_SIGNING_KEY_PATH), `build_signer_from_env()` priority factory. 21 tests
+- **Aponi GitHub Feed Panel**: `data-view="github"` nav, `loadGithubFeed()` async, event-type-keyed CSS classes (push/pr/ci/slash/install/rejected), governance bridge fallback. 16 tests
+- Total: 46 new tests
+
+### Phase 79 — Multi-Generation Lineage Graph
+
+- `runtime/evolution/multi_gen_lineage.py`: `GenerationNode` (frozen dataclass, `node_digest`), `MultiGenLineageGraph` (DAG: `register_node`, `ancestor_path`, `descendant_set`, `generation_summary`, `graph_digest`, `to_dict`, `from_ledger`)
+- `MULTIGEN-0`: every node ledger-anchored; `MULTIGEN-ACYC-0`: DAG, cycles structurally impossible; `MULTIGEN-DETERM-0`: identical ledger → identical `graph_digest`; `MULTIGEN-REPLAY-0`: graph reconstructable from ledger alone; `MULTIGEN-ISOLATE-0`: no shared state
+- Foundation for Phase 80 compound evolution
+- 26 tests
+
+### Thesis
+
+- `docs/thesis/ADAAD_THESIS.md`: 500-line comprehensive technical thesis covering architecture, all 23 constitutional invariants, proven capabilities, operator model, current live state, and evolution trajectory
+
+### Metrics at v9.14.0
+- Tests: 4,748+ passing
+- Phases complete: 79
+- Constitutional invariants: 23
+- Evidence ledger entries: 12,441+
+
 ## [9.13.0] — 2026-03-20 — Phase 77 Complete (Track A + Track B)
 
 ### Track A — Constitutional Governance Infrastructure (#PR-77-01)

@@ -113,10 +113,10 @@ adaad_pr_procession_contract:
   schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase77_complete"
-  milestone: "v9.13.0"
+  active_phase: "phase79_complete"
+  milestone: "v9.14.0"
   last_state_align: "2026-03-20"
-  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-20"
+  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-20 (phases 78+79)"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -144,6 +144,8 @@ adaad_pr_procession_contract:
     - phase75
     - phase76
     - phase77
+    - phase78
+    - phase79
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -288,6 +290,18 @@ adaad_pr_procession_contract:
       status: merged
       version: "v9.13.0"
       title: "Constitutional Closure + First Seed Epoch Run"
+    phase78:
+      ci_tier: constitutional
+      depends_on: ["phase77"]
+      status: merged
+      version: "v9.14.0"
+      title: "Production Signing + Aponi GitHub Feed + Doc Autosync"
+    phase79:
+      ci_tier: constitutional
+      depends_on: ["phase78"]
+      status: merged
+      version: "v9.14.0"
+      title: "Multi-Generation Lineage Graph"
       prs:
         - id: PR-77-01
           branch: feat/phase-77-track-a-close
@@ -300,9 +314,9 @@ adaad_pr_procession_contract:
       evidence: "artifacts/governance/phase77/seed_epoch_run_evidence.json"
       run_digest: "sha256:b3a41c40b99177dc51d5cfdd43d826c27aa7bf718f93fd936f7a5658869590ab"
   state_alignment:
-    expected_active_phase: "Phase 77 COMPLETE · v9.13.0"
-    expected_last_completed_pr: "feat/phase-77-track-b-seed-epoch"
-    expected_next_pr: "Phase 78 — KMS/HSM Event Signing + Aponi GitHub Feed (Candidates 3 & 4)"
+    expected_active_phase: "Phase 79 COMPLETE · v9.14.0"
+    expected_last_completed_pr: "feat/phase-79-multi-gen-lineage"
+    expected_next_pr: "Phase 80 — KMS/HSM production key wiring + Compound Evolution"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP

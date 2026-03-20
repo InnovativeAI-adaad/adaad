@@ -4,7 +4,7 @@
 
 ---
 
-## What ships today — v9.13.0
+## What ships today — v9.14.0
 
 The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
 
@@ -1504,9 +1504,19 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 `inject_seed_proposal_into_context()` merges a seed-derived `ProposalRequest` into a CEL epoch context dict; `SeedCELInjectionEvent` written to lineage ledger before return (SEED-CEL-AUDIT-0). `resolve_step4_request()` reads `seed_proposal_request` key in state context or falls back to default (SEED-CEL-HUMAN-0). CEL Step 4 wired to call `resolve_step4_request()` with try/except fallback (CEL-WIRE-FAIL-0) — CEL-ORDER-0 preserved. `POST /seeds/promoted/{seed_id}/inject` endpoint returns ready `epoch_context`. Completes the full seed lifecycle pipeline (Phases 71–75).
 
 **Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0
+### Phase 79 — Multi-Generation Lineage Graph
+
+**Status:** ✅ shipped (v9.14.0) · **Dependency:** Phase 78 merged ✅ · **Tests:** 26 constitutional
+
+`runtime/evolution/multi_gen_lineage.py` — `GenerationNode`, `MultiGenLineageGraph`, `produce_lineage_evidence()`. Enables cross-epoch ancestry queries: `ancestor_path()`, `descendant_set()`, `generation_summary()`, `graph_digest()`. Fully reconstructable from `LineageLedgerV2` alone (`MULTIGEN-REPLAY-0`). Foundation for Phase 80 compound evolution.
+
+**Key invariants:** `MULTIGEN-0`, `MULTIGEN-ACYC-0`, `MULTIGEN-DETERM-0`, `MULTIGEN-REPLAY-0`, `MULTIGEN-ISOLATE-0`
+
+---
+
 ### Phase 78 — Journal `_VERIFIED_TAIL_CACHE` + Autonomous Doc Sync
 
-**Status:** 🔜 next · **Dependency:** Phase 77 merged at main ✅ · **Target:** v9.14.0 · **Gate:** HUMAN-0 ratified plan required
+**Status:** ✅ shipped (v9.14.0) · **Dependency:** Phase 77 merged ✅ · **Gate:** HUMAN-0 ratified · **Tests:** 46 new
 
 Two parallel workstreams promoted from the Phase 77 optimize sweep and this doc-sync pass.
 
