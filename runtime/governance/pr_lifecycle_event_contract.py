@@ -17,6 +17,7 @@ REQUIRED_PR_LIFECYCLE_EVENT_TYPES: tuple[str, ...] = (
     "sandbox_preflight_passed",
     "forensic_bundle_exported",
     "reviewer_action_outcome",
+    "merge_attestation.v1",
 )
 
 # Fields required in reviewer_action_outcome payload for reputation calibration input.
@@ -28,6 +29,21 @@ REVIEWER_ACTION_OUTCOME_REQUIRED_FIELDS: tuple[str, ...] = (
     "latency_seconds",
     "epoch_id",
     "scoring_algorithm_version",
+)
+
+MERGE_ATTESTATION_REQUIRED_FIELDS: tuple[str, ...] = (
+    "pr_id",
+    "merge_sha",
+    "tier_0_digest",
+    "tier_1_tests_passed",
+    "tier_1_tests_failed",
+    "tier_2_replay_digest",
+    "tier_3_evidence_complete",
+    "tier_m_working_code",
+    "triggered_by",
+    "operator_session",
+    "timestamp_utc",
+    "human_signoff_token",
 )
 
 CURRENT_PR_LIFECYCLE_SCHEMA_VERSION = "1.0"
@@ -217,14 +233,169 @@ def attach_replay_bundle_metadata(
     attached["replay_bundle_metadata"] = replay_metadata
     return attached
 
+
+def _normalize_non_empty_string(value: object, *, field_name: str) -> str:
+    normalized = str(value).strip()
+    if not normalized:
+        raise ValueError(f"merge_attestation.v1: {field_name} must be a non-empty string")
+    return normalized
+
+
+def _normalize_sha256_digest(value: object, *, field_name: str) -> str:
+    normalized = _normalize_non_empty_string(value, field_name=field_name).lower()
+    prefix, _, digest = normalized.partition(":")
+    if prefix != "sha256" or len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        raise ValueError(f"merge_attestation.v1: {field_name} must be a sha256-prefixed digest")
+    return normalized
+
+
+def _normalize_git_sha(value: object, *, field_name: str) -> str:
+    normalized = _normalize_non_empty_string(value, field_name=field_name).lower()
+    if len(normalized) != 40 or any(char not in "0123456789abcdef" for char in normalized):
+        raise ValueError(f"merge_attestation.v1: {field_name} must be a 40-character lowercase git sha")
+    return normalized
+
+
+def _normalize_optional_string(value: object) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip()
+    return normalized or None
+
+
+def validate_merge_attestation_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate and normalize a merge_attestation.v1 payload."""
+
+    missing = [field for field in MERGE_ATTESTATION_REQUIRED_FIELDS if field not in payload]
+    if missing:
+        raise ValueError(f"merge_attestation.v1: missing required fields: {', '.join(missing)}")
+
+    triggered_by = _normalize_non_empty_string(payload["triggered_by"], field_name="triggered_by")
+    if triggered_by != "DEVADAAD":
+        raise ValueError("merge_attestation.v1: triggered_by must be DEVADAAD")
+
+    tier_1_tests_passed = int(payload["tier_1_tests_passed"])
+    tier_1_tests_failed = int(payload["tier_1_tests_failed"])
+    if tier_1_tests_passed < 0:
+        raise ValueError("merge_attestation.v1: tier_1_tests_passed must be >= 0")
+    if tier_1_tests_failed < 0:
+        raise ValueError("merge_attestation.v1: tier_1_tests_failed must be >= 0")
+
+    return {
+        "pr_id": _normalize_non_empty_string(payload["pr_id"], field_name="pr_id"),
+        "merge_sha": _normalize_git_sha(payload["merge_sha"], field_name="merge_sha"),
+        "tier_0_digest": _normalize_sha256_digest(payload["tier_0_digest"], field_name="tier_0_digest"),
+        "tier_1_tests_passed": tier_1_tests_passed,
+        "tier_1_tests_failed": tier_1_tests_failed,
+        "tier_2_replay_digest": _normalize_optional_string(payload["tier_2_replay_digest"]),
+        "tier_3_evidence_complete": bool(payload["tier_3_evidence_complete"]),
+        "tier_m_working_code": bool(payload["tier_m_working_code"]),
+        "triggered_by": triggered_by,
+        "operator_session": _normalize_non_empty_string(payload["operator_session"], field_name="operator_session"),
+        "timestamp_utc": _normalize_non_empty_string(payload["timestamp_utc"], field_name="timestamp_utc"),
+        "human_signoff_token": _normalize_optional_string(payload["human_signoff_token"]),
+    }
+
+
+def build_merge_attestation_payload(
+    *,
+    pr_id: str,
+    merge_sha: str,
+    tier_0_digest: str,
+    tier_1_tests_passed: int,
+    tier_1_tests_failed: int,
+    tier_2_replay_digest: str | None,
+    tier_3_evidence_complete: bool,
+    tier_m_working_code: bool,
+    triggered_by: str,
+    operator_session: str,
+    timestamp_utc: str,
+    human_signoff_token: str | None,
+) -> dict[str, Any]:
+    """Build a validated merge_attestation.v1 payload."""
+
+    return validate_merge_attestation_payload(
+        {
+            "pr_id": pr_id,
+            "merge_sha": merge_sha,
+            "tier_0_digest": tier_0_digest,
+            "tier_1_tests_passed": tier_1_tests_passed,
+            "tier_1_tests_failed": tier_1_tests_failed,
+            "tier_2_replay_digest": tier_2_replay_digest,
+            "tier_3_evidence_complete": tier_3_evidence_complete,
+            "tier_m_working_code": tier_m_working_code,
+            "triggered_by": triggered_by,
+            "operator_session": operator_session,
+            "timestamp_utc": timestamp_utc,
+            "human_signoff_token": human_signoff_token,
+        }
+    )
+
+
+def build_merge_attestation_event(
+    *,
+    pr_number: int,
+    merge_sha: str,
+    payload: Mapping[str, Any],
+    sequence: int,
+    previous_event_digest: str = ZERO_HASH,
+    attempt: int = 1,
+    correlation_id: str | None = None,
+    causation_event_id: str | None = None,
+) -> dict[str, Any]:
+    """Build a deterministic PR lifecycle merge attestation event envelope."""
+
+    normalized_payload = validate_merge_attestation_payload(payload)
+    normalized_merge_sha = _normalize_git_sha(merge_sha, field_name="merge_sha")
+    if normalized_payload["merge_sha"] != normalized_merge_sha:
+        raise ValueError("merge_attestation.v1: payload merge_sha must match envelope merge_sha")
+
+    idempotency_key = derive_idempotency_key(
+        pr_number=pr_number,
+        commit_sha=normalized_merge_sha,
+        event_type="merge_attestation.v1",
+    )
+    event_id_material = {
+        "event_type": "merge_attestation.v1",
+        "pr_number": int(pr_number),
+        "merge_sha": normalized_merge_sha,
+        "sequence": int(sequence),
+        "attempt": int(attempt),
+    }
+    event_id = "prl_" + sha256_prefixed_digest(canonical_json_bytes(event_id_material)).split(":", 1)[1][:16]
+    event = {
+        "schema_version": CURRENT_PR_LIFECYCLE_SCHEMA_VERSION,
+        "event_id": event_id,
+        "event_type": "merge_attestation.v1",
+        "pr_number": int(pr_number),
+        "commit_sha": normalized_merge_sha,
+        "idempotency_key": idempotency_key,
+        "attempt": int(attempt),
+        "sequence": int(sequence),
+        "emitted_at": normalized_payload["timestamp_utc"],
+        "correlation_id": correlation_id or f"merge-attestation:{normalized_payload['pr_id']}",
+        "previous_event_digest": previous_event_digest,
+        "event_digest": "",
+        "payload": normalized_payload,
+    }
+    normalized_causation_event_id = _normalize_optional_string(causation_event_id)
+    if normalized_causation_event_id is not None:
+        event["causation_event_id"] = normalized_causation_event_id
+    event["event_digest"] = build_event_digest(event)
+    return event
+
 __all__ = [
     "CURRENT_PR_LIFECYCLE_SCHEMA_VERSION",
+    "MERGE_ATTESTATION_REQUIRED_FIELDS",
     "REQUIRED_PR_LIFECYCLE_EVENT_TYPES",
+    "build_merge_attestation_event",
+    "build_merge_attestation_payload",
     "build_event_digest",
     "classify_retry",
     "derive_idempotency_key",
     "is_schema_version_compatible",
     "validate_append_only_invariants",
+    "validate_merge_attestation_payload",
     "build_reviewer_action_outcome_payload",
     "REVIEWER_ACTION_OUTCOME_REQUIRED_FIELDS",
     "attach_replay_bundle_metadata",

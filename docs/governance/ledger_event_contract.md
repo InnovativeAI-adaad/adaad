@@ -8,6 +8,7 @@ This document defines the contract for required governance PR lifecycle events:
 - `promotion_policy_evaluated`
 - `sandbox_preflight_passed`
 - `forensic_bundle_exported`
+- `merge_attestation.v1`
 
 ## 1) Common envelope and required fields
 
@@ -82,6 +83,23 @@ Required payload fields:
 - `bundle_digest`
 - `exported_at`
 
+### `merge_attestation.v1`
+
+Required payload fields:
+
+- `pr_id`
+- `merge_sha`
+- `tier_0_digest`
+- `tier_1_tests_passed`
+- `tier_1_tests_failed`
+- `tier_2_replay_digest`
+- `tier_3_evidence_complete`
+- `tier_m_working_code`
+- `triggered_by` (must be `DEVADAAD`)
+- `operator_session`
+- `timestamp_utc`
+- `human_signoff_token`
+
 ## 3) Schema versioning and migration policy
 
 - `schema_version` is mandatory for each event.
@@ -139,12 +157,13 @@ Retry rules:
 
 Recommended lifecycle order:
 
-1. `pr_merged`
-2. `constitution_evaluated`
-3. `replay_verified`
-4. `promotion_policy_evaluated`
-5. `sandbox_preflight_passed`
-6. `forensic_bundle_exported`
+1. `constitution_evaluated`
+2. `replay_verified`
+3. `promotion_policy_evaluated`
+4. `sandbox_preflight_passed`
+5. `forensic_bundle_exported`
+6. `merge_attestation.v1`
+7. `pr_merged`
 
 If out-of-order emission is necessary, `causation_event_id` must preserve explicit dependency lineage.
 

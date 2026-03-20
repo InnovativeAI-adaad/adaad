@@ -31,7 +31,8 @@
         "promotion_policy_evaluated",
         "sandbox_preflight_passed",
         "forensic_bundle_exported",
-        "reviewer_action_outcome"
+        "reviewer_action_outcome",
+        "merge_attestation.v1"
       ]
     },
     "pr_number": {"type": "integer", "minimum": 1},
@@ -186,6 +187,16 @@
               "tier": {"type": "string", "minLength": 1},
               "constitutional_floor_enforced": {"type": "boolean"}
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {"properties": {"event_type": {"const": "merge_attestation.v1"}}},
+      "then": {
+        "properties": {
+          "payload": {
+            "$ref": "https://adaad.local/schemas/merge_attestation.v1.json"
           }
         }
       }

@@ -7,10 +7,13 @@ from runtime.governance.pr_lifecycle_event_contract import (
     CURRENT_PR_LIFECYCLE_SCHEMA_VERSION,
     attach_replay_bundle_metadata,
     build_event_digest,
+    build_merge_attestation_event,
+    build_merge_attestation_payload,
     classify_retry,
     derive_idempotency_key,
     is_schema_version_compatible,
     validate_append_only_invariants,
+    validate_merge_attestation_payload,
 )
 
 
@@ -139,3 +142,86 @@ def test_attach_replay_bundle_metadata_preserves_payload_and_adds_normalized_met
         "signature_valid": True,
         "divergence": False,
     }
+
+
+def test_build_merge_attestation_payload_normalizes_required_fields() -> None:
+    payload = build_merge_attestation_payload(
+        pr_id=" PR-PHASE65-01 ",
+        merge_sha="A" * 40,
+        tier_0_digest="SHA256:" + ("b" * 64),
+        tier_1_tests_passed=12,
+        tier_1_tests_failed=0,
+        tier_2_replay_digest=" replay-digest-v1 ",
+        tier_3_evidence_complete=True,
+        tier_m_working_code=True,
+        triggered_by="DEVADAAD",
+        operator_session=" session-01 ",
+        timestamp_utc="2026-03-20T00:00:00+00:00",
+        human_signoff_token=" signoff-1 ",
+    )
+
+    assert payload == {
+        "pr_id": "PR-PHASE65-01",
+        "merge_sha": "a" * 40,
+        "tier_0_digest": "sha256:" + ("b" * 64),
+        "tier_1_tests_passed": 12,
+        "tier_1_tests_failed": 0,
+        "tier_2_replay_digest": "replay-digest-v1",
+        "tier_3_evidence_complete": True,
+        "tier_m_working_code": True,
+        "triggered_by": "DEVADAAD",
+        "operator_session": "session-01",
+        "timestamp_utc": "2026-03-20T00:00:00+00:00",
+        "human_signoff_token": "signoff-1",
+    }
+
+
+def test_build_merge_attestation_event_uses_deterministic_idempotency() -> None:
+    payload = build_merge_attestation_payload(
+        pr_id="PR-PHASE65-01",
+        merge_sha="c" * 40,
+        tier_0_digest="sha256:" + ("d" * 64),
+        tier_1_tests_passed=120,
+        tier_1_tests_failed=0,
+        tier_2_replay_digest="sha256:" + ("e" * 64),
+        tier_3_evidence_complete=True,
+        tier_m_working_code=True,
+        triggered_by="DEVADAAD",
+        operator_session="session-merge-01",
+        timestamp_utc="2026-03-20T00:00:00+00:00",
+        human_signoff_token=None,
+    )
+
+    event = build_merge_attestation_event(
+        pr_number=65,
+        merge_sha="c" * 40,
+        payload=payload,
+        sequence=1,
+    )
+
+    assert event["event_type"] == "merge_attestation.v1"
+    assert event["idempotency_key"] == derive_idempotency_key(
+        pr_number=65,
+        commit_sha="c" * 40,
+        event_type="merge_attestation.v1",
+    )
+    assert event["event_digest"] == build_event_digest(event)
+
+
+def test_validate_merge_attestation_payload_fails_closed_when_required_field_missing() -> None:
+    with pytest.raises(ValueError, match="missing required fields: merge_sha"):
+        validate_merge_attestation_payload(
+            {
+                "pr_id": "PR-PHASE65-01",
+                "tier_0_digest": "sha256:" + ("d" * 64),
+                "tier_1_tests_passed": 1,
+                "tier_1_tests_failed": 0,
+                "tier_2_replay_digest": None,
+                "tier_3_evidence_complete": True,
+                "tier_m_working_code": True,
+                "triggered_by": "DEVADAAD",
+                "operator_session": "session-1",
+                "timestamp_utc": "2026-03-20T00:00:00+00:00",
+                "human_signoff_token": None,
+            }
+        )
