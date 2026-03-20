@@ -63,9 +63,18 @@ def test_get_installation_token_uses_env_identity(monkeypatch):
     assert seen['url'].endswith('/app/installations/777/access_tokens')
 
 
-def test_webhook_handler_fails_closed_without_identity_env(monkeypatch):
+def test_webhook_handler_delegates_to_governed_app(monkeypatch):
+    """Phase 77: shim delegates to app.github_app; identity not required for push.
+
+    The old handler eagerly called require_github_identity() on every push.
+    The governed shim routes through app.github_app.dispatch_event which treats
+    push as an advisory observation (GITHUB-APP-MUT-0 — no identity gate needed).
+    """
     monkeypatch.delenv('ADAAD_GITHUB_APP_ID', raising=False)
     monkeypatch.delenv('ADAAD_GITHUB_INSTALL_ID', raising=False)
 
-    with pytest.raises(RuntimeError, match='ADAAD_GITHUB_APP_ID'):
-        github_webhook_handler.handle_push({'repository': {'full_name': 'org/repo'}})
+    result = github_webhook_handler.handle_push(
+        {'repository': {'full_name': 'org/repo'}, 'ref': 'refs/heads/feature'}
+    )
+    assert result.get('event') == 'push'
+    assert result.get('status') == 'ok'

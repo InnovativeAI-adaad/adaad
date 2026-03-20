@@ -51,7 +51,11 @@ class FitnessMetric:
 class FitnessEvaluator(ABC):
     @abstractmethod
     def evaluate(self, mutation_data: Dict[str, Any]) -> FitnessMetric:
-        raise NotImplementedError
+        """Evaluate mutation_data and return a FitnessMetric.
+
+        Must be deterministic: identical inputs → identical FitnessMetric.
+        Must not raise on missing telemetry; use fallback scoring instead.
+        """
 
 
 # -- Existing evaluators (unchanged API) --------------------------------------
