@@ -2421,7 +2421,33 @@ class AponiDashboard:
     .replay-chip-alert {{ border-color: #ff9b77; color: #ffd7c7; }}
     .replay-note {{ font-size: 0.76rem; color: #b7c9e2; margin-bottom: 0.45rem; }}
     .replay-detail {{ max-height: 220px; overflow: auto; font-size: 0.74rem; }}
-  </style>
+  
+    /* ── GitHub Feed Panel (Phase 78) ─────────────────────────────── */
+    .github-feed-toolbar { display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem; }
+    .github-feed-status  { font-size:0.8rem; color:#7090a0; }
+    .feed-refresh-btn    { font-size:0.75rem; padding:0.25rem 0.6rem; border:1px solid #2a4060;
+                           border-radius:4px; background:#0d1f30; color:#a0c8e8; cursor:pointer; }
+    .feed-refresh-btn:hover { background:#1a3050; }
+    .github-feed-list    { display:flex; flex-direction:column; gap:0.4rem; max-height:540px;
+                           overflow-y:auto; }
+    .feed-empty          { color:#506070; font-size:0.85rem; padding:1rem 0; }
+    .feed-event-card     { border:1px solid #1e3048; border-radius:6px; padding:0.5rem 0.75rem;
+                           background:#0b1a28; display:grid;
+                           grid-template-columns:auto 1fr auto; gap:0 0.6rem; align-items:start; }
+    .feed-event-icon     { font-size:1rem; line-height:1.4; }
+    .feed-event-body     { min-width:0; }
+    .feed-event-type     { font-size:0.72rem; font-weight:700; text-transform:uppercase;
+                           letter-spacing:0.04em; color:#4a90c0; }
+    .feed-event-detail   { font-size:0.82rem; color:#c0d8e8; white-space:nowrap;
+                           overflow:hidden; text-overflow:ellipsis; }
+    .feed-event-meta     { font-size:0.7rem; color:#506070; white-space:nowrap; }
+    .feed-event-card.push      { border-left:3px solid #00d4ff; }
+    .feed-event-card.pr        { border-left:3px solid #00ff88; }
+    .feed-event-card.ci        { border-left:3px solid #f97316; }
+    .feed-event-card.slash     { border-left:3px solid #a855f7; }
+    .feed-event-card.install   { border-left:3px solid #f5c842; }
+    .feed-event-card.rejected  { border-left:3px solid #ff4466; }
+    </style>
 </head>
 <body>
   <header>
@@ -2441,6 +2467,7 @@ class AponiDashboard:
       <button class="view-btn active" data-view="home" type="button">Home</button>
       <button class="view-btn" data-view="insights" type="button">Insights</button>
       <button class="view-btn" data-view="history" type="button">History</button>
+      <button class="view-btn" data-view="github" type="button">⬡ GitHub</button>
     </div>
   </header>
 
@@ -2525,6 +2552,18 @@ class AponiDashboard:
       <div id="insights"></div>
       <div id="insightsActions" class="action-grid">Loading...</div>
     </section>
+    <div id="view-github" class="view" role="tabpanel" aria-hidden="true">
+      <section id="card-github-feed" data-card-key="githubFeed">
+        <h2>&#9451; GitHub Feed</h2>
+        <div class="github-feed-toolbar">
+          <span class="github-feed-status" id="githubFeedStatus">Loading events&hellip;</span>
+          <button type="button" id="githubFeedRefresh" class="feed-refresh-btn">&#8635; Refresh</button>
+        </div>
+        <div id="githubFeedList" class="github-feed-list" role="list" aria-live="polite">
+          <div class="feed-empty">No GitHub events recorded yet. Push a commit or open a PR to see events here.</div>
+        </div>
+      </section>
+    </div>
   </main>
   <template id="actionCardTemplate">
     <article class="action-card" data-source="" data-kind="" data-payload="">
@@ -4480,8 +4519,92 @@ async function refreshProposalSimulationResult() {
   }
 }
 
+
+// ── GitHub Feed Panel (Phase 78) ────────────────────────────────────────────
+const GITHUB_FEED_EVENT_ICONS = {
+  'push': '⬆', 'pr': '⎇', 'pr.merged': '⎇', 'pr.updated': '⎇',
+  'ci.failure': '✗', 'ci': '◎', 'slash_command': '/', 'slash': '/',
+  'installation': '⚙', 'gate.preflight_blocked': '⛔', 'rejected': '⛔',
+};
+
+function classifyFeedEvent(eventName) {
+  if (!eventName) return 'generic';
+  if (eventName.startsWith('push')) return 'push';
+  if (eventName.startsWith('pr')) return 'pr';
+  if (eventName.startsWith('ci')) return 'ci';
+  if (eventName.startsWith('slash')) return 'slash';
+  if (eventName.startsWith('install')) return 'install';
+  if (eventName.includes('reject') || eventName.includes('block')) return 'rejected';
+  return 'generic';
+}
+
+function renderGithubFeedCard(event) {
+  const cls = classifyFeedEvent(event.event || event.event_name || '');
+  const icon = GITHUB_FEED_EVENT_ICONS[cls] || '◈';
+  const evtName = (event.event || event.event_name || 'unknown').replace('github_app.', '');
+  const repo = (event.data && event.data.repo) || (event.data && event.data.repository) || '';
+  const actor = (event.data && (event.data.pusher || event.data.merged_by || event.data.actor || event.data.sender)) || '';
+  const detail = [repo, actor].filter(Boolean).join(' · ') || JSON.stringify(event.data || {}).slice(0, 80);
+  const ts = (event.ts || event.timestamp || '').slice(0, 19).replace('T', ' ');
+  return `<div class="feed-event-card ${cls}" role="listitem">
+    <span class="feed-event-icon">${icon}</span>
+    <div class="feed-event-body">
+      <div class="feed-event-type">${evtName}</div>
+      <div class="feed-event-detail" title="${detail}">${detail}</div>
+    </div>
+    <span class="feed-event-meta">${ts}</span>
+  </div>`;
+}
+
+async function loadGithubFeed() {
+  const list   = document.getElementById('githubFeedList');
+  const status = document.getElementById('githubFeedStatus');
+  if (!list) return;
+  try {
+    status && (status.textContent = 'Loading…');
+    const res = await fetch('/api/github/feed?limit=50');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const events = await res.json();
+    if (!Array.isArray(events) || events.length === 0) {
+      list.innerHTML = '<div class="feed-empty">No GitHub events recorded yet.</div>';
+      status && (status.textContent = 'No events');
+      return;
+    }
+    list.innerHTML = events.map(renderGithubFeedCard).join('');
+    status && (status.textContent = `${events.length} event${events.length !== 1 ? 's' : ''}`);
+  } catch (err) {
+    // Fallback: try to read from JSONL audit log via governance endpoint
+    try {
+      const r2 = await fetch('/api/governance/external-events?limit=50');
+      if (r2.ok) {
+        const data = await r2.json();
+        const evts = data.events || data || [];
+        if (evts.length > 0) {
+          list.innerHTML = evts.map(renderGithubFeedCard).join('');
+          status && (status.textContent = `${evts.length} events (governance bridge)`);
+          return;
+        }
+      }
+    } catch (_) {}
+    list.innerHTML = '<div class="feed-empty">GitHub feed unavailable — governance API not reachable.</div>';
+    status && (status.textContent = 'Unavailable');
+  }
+}
+
+function setupGithubFeedPanel() {
+  const refreshBtn = document.getElementById('githubFeedRefresh');
+  if (refreshBtn) refreshBtn.addEventListener('click', loadGithubFeed);
+  // Auto-load when panel becomes active
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    if (btn.dataset.view === 'github') {
+      btn.addEventListener('click', loadGithubFeed);
+    }
+  });
+}
+
 setupViews();
 markFeatureEntry('dashboard_loaded');
+setupGithubFeedPanel();
 setupFloatingPanel();
 setupModeTracking();
 setupModeSwitcher();
