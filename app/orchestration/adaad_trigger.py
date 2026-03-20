@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
@@ -71,7 +71,7 @@ class VirtualLedgerWriter:
         persisted = dict(event)
         persisted["simulated"] = True
         self.events.append(persisted)
-        return {"status": "validated", "simulated": True, "event_type": str(event["event_type"]) }
+        return {"status": "validated", "simulated": True, "event_type": str(event["event_type"])}
 
 
 class GitMutationAdapter:
@@ -254,11 +254,28 @@ class AdaadTriggerOrchestrator:
         if request.merge_authority and not replay_gate_pass and not blocked_reason:
             blocked_reason = "missing_merge_sha_verification"
 
+        decision = self._build_decision(
+            request=request,
+            gate_names=gate_names,
+            profile=profile,
+            by_name=by_name,
+            blocked_reason=blocked_reason,
+            scenario_pass=scenario_pass,
+            gate_pass=gate_pass,
+            replay_gate_pass=replay_gate_pass,
+        )
+
         payload = {
             "trigger": request.principal,
             "action": request.action,
             "simulation": request.simulation,
             "scenario": scenario,
+            "decision": {
+                "status": decision["status"],
+                "allow_git_mutations": decision["allow_git_mutations"],
+                "mutated_repository_state": decision["mutated_repository_state"],
+                "blocked_reason": decision["blocked_reason"],
+            },
         }
         if replay_verification:
             payload["replay_bundle_metadata"] = {
@@ -325,13 +342,15 @@ class AdaadTriggerOrchestrator:
             "[ADAAD ORIENT]",
             f"Trigger: {request.principal}",
             f"Action: {request.action}",
-            f"simulation=true" if request.simulation else "simulation=false",
+            "simulation=true" if request.simulation else "simulation=false",
             f"Scenario: {scenario}",
-            f"Status: {status}",
+            f"Status: {decision['status']}",
+            f"Decision: {'allow' if decision['allow_git_mutations'] else 'deny'}",
+            f"Repository mutation: {'mutated' if decision['mutated_repository_state'] else 'not_mutated'}",
         ]
 
         for name in gate_names:
-            line_status = "PASS" if bool(profile.get(name, True)) and by_name.get(name, GateResult("", "", True, "")).passed else "FAIL"
+            line_status = "PASS" if decision["evaluated_gates"][name]["passed"] else "FAIL"
             output_lines.append(f"{name}: {line_status} (simulation={'true' if request.simulation else 'false'})")
         if request.merge_authority:
             output_lines.append(f"replay_verified_sha_context: {'PASS' if replay_gate_pass else 'FAIL'}")
@@ -339,12 +358,12 @@ class AdaadTriggerOrchestrator:
             if merge_result["status"] == "executed":
                 output_lines.append(f"merge_commit_sha: {merge_result['merge_commit_sha']}")
 
-        if blocked_reason:
-            output_lines.append(f"Blocked reason: {blocked_reason}")
+        if decision["blocked_reason"]:
+            output_lines.append(f"Blocked reason: {decision['blocked_reason']}")
 
         return {
             "request": request,
-            "status": status,
+            "status": decision["status"],
             "simulation": request.simulation,
             "scenario": scenario,
             "blocked_reason": blocked_reason,
@@ -353,12 +372,57 @@ class AdaadTriggerOrchestrator:
             "merge_target_matches_verified_sha": merge_target_matches_verified_sha,
             "replay_verification": replay_verification,
             "replay_gate_pass": replay_gate_pass,
-            "gate_results": [result.__dict__ for result in gate_results],
+            "gate_results": [asdict(result) for result in gate_results],
+            "decision": decision,
             "stage_result": stage_result,
             "merge_result": merge_result,
             "ledger": ledger_response,
             "output": "\n".join(output_lines),
         }
+
+    def _build_decision(
+        self,
+        *,
+        request: TriggerRequest,
+        gate_names: Sequence[str],
+        profile: Mapping[str, Any],
+        by_name: Mapping[str, GateResult],
+        blocked_reason: str | None,
+        scenario_pass: bool,
+        gate_pass: bool,
+        replay_gate_pass: bool,
+    ) -> dict[str, Any]:
+        evaluated_gates = {
+            name: {
+                "scenario_pass": bool(profile.get(name, True)),
+                "gate_pass": by_name.get(name, GateResult("", name, True, "")).passed,
+                "passed": bool(profile.get(name, True)) and by_name.get(name, GateResult("", name, True, "")).passed,
+            }
+            for name in gate_names
+        }
+        all_required_gates_passed = scenario_pass and gate_pass and replay_gate_pass
+        allow_git_mutations = all_required_gates_passed and blocked_reason is None
+        mutation_kind = "simulated" if request.simulation else ("mutated" if allow_git_mutations else "blocked")
+        return {
+            "status": "ready" if allow_git_mutations else "blocked",
+            "blocked_reason": blocked_reason,
+            "all_required_gates_passed": all_required_gates_passed,
+            "allow_git_mutations": allow_git_mutations,
+            "evaluated": True,
+            "evaluated_gates": evaluated_gates,
+            "mutation_kind": mutation_kind,
+            "mutated_repository_state": allow_git_mutations and not request.simulation,
+        }
+
+    def _execute_git_mutations(self, *, request: TriggerRequest, decision: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+        if not bool(decision.get("allow_git_mutations", False)):
+            return (
+                {"status": "skipped", "reason": "blocked", "simulation": request.simulation, "operation": "git_add"},
+                {"status": "skipped", "reason": "blocked", "simulation": request.simulation, "operation": "git_merge"},
+            )
+        stage_result = self._git.stage(simulation=request.simulation)
+        merge_result = self._git.merge(simulation=request.simulation)
+        return stage_result, merge_result
 
     @staticmethod
     def _replay_merge_gate_passes(*, request: TriggerRequest, replay_verification: Mapping[str, Any]) -> bool:

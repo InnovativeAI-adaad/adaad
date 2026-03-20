@@ -74,6 +74,56 @@ def _extract_pr_ids(text: str) -> list[str]:
     return re.findall(r"PR-PHASE\d+-\d+", text)
 
 
+def _extract_prose_milestone(text: str) -> tuple[int, str] | None:
+    match = re.search(
+        r"^\*\*Milestone:\*\*\s*`(?P<version>[^`]+)`\s*\(Phase\s+(?P<phase>\d+)\s+complete\b",
+        text,
+        flags=re.IGNORECASE | re.MULTILINE,
+    )
+    if not match:
+        return None
+    return int(match.group("phase")), match.group("version")
+
+
+def _extract_contract_active_phase(text: str) -> int | None:
+    match = re.search(r'^\s*active_phase:\s*"phase(?P<phase>\d+)_complete"', text, flags=re.MULTILINE)
+    if not match:
+        return None
+    return int(match.group("phase"))
+
+
+def _extract_contract_milestone(text: str) -> str | None:
+    match = re.search(r'^\s*milestone:\s*"(?P<milestone>[^"]+)"', text, flags=re.MULTILINE)
+    if not match:
+        return None
+    return match.group("milestone")
+
+
+def _extract_state_alignment_next(text: str) -> str | None:
+    match = re.search(r'^\s*expected_next_pr:\s*"(?P<next>[^"]+)"', text, flags=re.MULTILINE)
+    if not match:
+        return None
+    return match.group("next")
+
+
+def _extract_prose_next_phase(text: str) -> int | None:
+    match = re.search(r'^-\s+Next:\s+\*\*Phase\s+(?P<phase>\d+)\*\*', text, flags=re.MULTILINE)
+    if not match:
+        return None
+    return int(match.group("phase"))
+
+
+def _extract_phase_table_statuses(text: str) -> dict[int, str]:
+    statuses: dict[int, str] = {}
+    for match in re.finditer(
+        r'^\|\s*(?P<phase>\d+)\s*\|\s*[^|]+\|\s*[^|]+\|\s*(?P<status>[^|]+?)\s*\|$',
+        text,
+        flags=re.MULTILINE,
+    ):
+        statuses[int(match.group("phase"))] = match.group("status").strip().lower()
+    return statuses
+
+
 def _find_stale_source_violations(
     loaded_docs: dict[str, tuple[Path, str]],
     archived_source: str,
@@ -122,6 +172,22 @@ def validate(repo_root: Path, rules_path: Path) -> list[ValidationError]:
             )
         )
 
+    prose_milestone = _extract_prose_milestone(procession_text)
+    contract_active_phase = _extract_contract_active_phase(procession_text)
+    contract_milestone = _extract_contract_milestone(procession_text)
+    if prose_milestone and contract_active_phase is not None and prose_milestone[0] != contract_active_phase:
+        errors.append(
+            ValidationError(
+                f"{docs['procession_v2'][0]} prose milestone phase mismatch: expected Phase {contract_active_phase} got Phase {prose_milestone[0]}"
+            )
+        )
+    if prose_milestone and contract_milestone and prose_milestone[1] != contract_milestone:
+        errors.append(
+            ValidationError(
+                f"{docs['procession_v2'][0]} prose milestone version mismatch: expected {contract_milestone} got {prose_milestone[1]}"
+            )
+        )
+
     procession_next_pr = _extract_next_pr(procession_text)
     if procession_next_pr != canonical["next_pr"]:
         errors.append(
@@ -137,6 +203,34 @@ def validate(repo_root: Path, rules_path: Path) -> list[ValidationError]:
                 f"{docs['ci_gating'][0]} references conflicting next PR set: expected to include {canonical['next_pr']} got {sorted(set(ci_pr_ids))}"
             )
         )
+
+    prose_next_phase = _extract_prose_next_phase(procession_text)
+    state_alignment_next = _extract_state_alignment_next(procession_text)
+    if prose_next_phase is not None and state_alignment_next is not None:
+        expected_prefix = f"Phase {prose_next_phase}"
+        if not state_alignment_next.startswith(expected_prefix):
+            errors.append(
+                ValidationError(
+                    f"{docs['procession_v2'][0]} prose next phase mismatch: expected state_alignment.expected_next_pr to start with {expected_prefix!r} got {state_alignment_next!r}"
+                )
+            )
+
+    phase_table_statuses = _extract_phase_table_statuses(procession_text)
+    if contract_active_phase is not None and phase_table_statuses:
+        active_status = phase_table_statuses.get(contract_active_phase)
+        if active_status == "next":
+            errors.append(
+                ValidationError(
+                    f"{docs['procession_v2'][0]} phase summary table marks active phase {contract_active_phase} as next"
+                )
+            )
+        stale_next = [phase for phase, status in phase_table_statuses.items() if phase <= contract_active_phase and status == "next"]
+        if stale_next:
+            errors.append(
+                ValidationError(
+                    f"{docs['procession_v2'][0]} phase summary table has stale next markers at phases {sorted(stale_next)}"
+                )
+            )
 
     required_tiers = canonical["required_ci_tiers"]
     procession_tiers = _extract_required_tiers(procession_text)
