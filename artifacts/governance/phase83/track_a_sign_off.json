@@ -1,0 +1,41 @@
+{
+  "schema": "governance-sign-off/v1",
+  "phase": 83,
+  "track": "A",
+  "pr": "PR-83-01",
+  "title": "Causal Fitness Attribution Engine \u2014 MutationAblator + CausalFitnessAttributor",
+  "version_target": "9.18.0",
+  "date": "2026-03-20T16:32:18Z",
+  "governor": "Dustin L. Reid",
+  "agent": "DEVADAAD",
+  "invariants_introduced": [
+    {
+      "id": "CFAE-0",
+      "description": "Attribution is advisory \u2014 never overrides GovernanceGate decisions"
+    },
+    {
+      "id": "CFAE-DET-0",
+      "description": "Identical inputs produce identical attribution scores"
+    },
+    {
+      "id": "CFAE-BOUND-0",
+      "description": "All attribution scores bounded in [-1.0, 1.0]"
+    },
+    {
+      "id": "CFAE-LEDGER-0",
+      "description": "CausalAttributionReport written to LineageLedgerV2 when ledger injected (non-blocking)"
+    }
+  ],
+  "files_added": [
+    "runtime/evolution/mutation_ablator.py \u2014 MutationAblator, MutationOperation, AST/field op extractors",
+    "runtime/evolution/causal_fitness_attributor.py \u2014 CausalFitnessAttributor, CausalAttributionReport, OperationAttribution",
+    "tests/test_phase83_causal_fitness_attribution.py \u2014 28 constitutional tests T83-CFAE-01..28"
+  ],
+  "test_results": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0
+  },
+  "novelty": "First governance-anchored system with Shapley-approximation causal attribution of fitness gain to individual AST operations. Operations tagged CAUSAL-HIGH feed Phase 86 OperatorCoevolution and Phase 87 RoleSpecialization. Attribution is strictly advisory per CFAE-0.",
+  "artifact_digest": "sha256:a74d3ac080bac9331928890ee0930b500f2610c9249929f88b7ed545a4c984b1"
+}
