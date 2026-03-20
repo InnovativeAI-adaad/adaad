@@ -9,10 +9,10 @@ This document cross-references `README.md` operational claims with concrete impl
 
 | Metric | Value |
 | --- | --- |
-| Report version | `9.12.1` |
-| Branch | `docs/autonomous-doc-sync-v9.12.1` |
+| Report version | `9.13.0` |
+| Branch | `phase78/journal-warm-cache-doc-sync` |
 | Tag | `(none)` |
-| Short SHA | `aaf00df` |
+| Short SHA | `c699817` |
 | Last sync | 2026-03-19 |
 
 All future architecture snapshots MUST include branch, tag (if any), and short SHA.

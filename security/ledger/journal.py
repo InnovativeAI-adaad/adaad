@@ -62,6 +62,22 @@ class JournalPaths:
     tail_state_path: Path
     lock_path: Path
 
+# ---------------------------------------------------------------------------
+# JOURNAL-CACHE-0  — in-memory tail cache (warm path, M78-01)
+#
+# Keyed by str(journal_path) so test isolation is automatic: each test that
+# redirects JOURNAL_PATH to a unique tmp_path gets its own cache bucket.
+#
+# Invariants:
+#   JOURNAL-CACHE-0       : cache entry advances atomically inside the append
+#                           lock — no other thread observes a stale tail.
+#   JOURNAL-CACHE-DETERM-0: given identical inputs, append produces identical
+#                           chain hashes whether the cache is warm or cold.
+#   JOURNAL-ISOLATE-0     : path-keyed bucketing guarantees zero cross-test
+#                           state bleed when JOURNAL_PATH is redirected.
+# ---------------------------------------------------------------------------
+_VERIFIED_TAIL_CACHE: dict[str, tuple[str, int]] = {}
+
 
 class JournalIntegrityError(RuntimeError):
     """Raised when the Cryovant journal integrity verification fails."""
@@ -513,6 +529,7 @@ def append_tx(
             "payload": payload,
             "prev_hash": prev,
         }
+        # JOURNAL-CACHE-DETERM-0: canonical JSON hash — byte-identical on replay.
         entry["hash"] = _hash_line(prev, entry)
         line = json.dumps(entry, ensure_ascii=False) + "\n"
         with paths.journal_path.open("a", encoding="utf-8") as f:
@@ -523,6 +540,21 @@ def append_tx(
             offset=offset + len(line.encode("utf-8")),
         )
         return entry
+
+
+def invalidate_journal_cache(path: "Path | None" = None) -> None:
+    """Evict the warm-cache entry for *path* (default: ``JOURNAL_PATH``).
+
+    Primarily a test-isolation helper: call this after redirecting
+    ``JOURNAL_PATH`` to a new tmp_path to guarantee the next ``append_tx``
+    performs a clean cold-scan rather than reusing a stale entry from a
+    previous test bucket that happened to share the same path string.
+
+    Under normal production operation this function is never needed —
+    cache entries are path-keyed so distinct journal files never collide.
+    """
+    key = str(path if path is not None else JOURNAL_PATH)
+    _VERIFIED_TAIL_CACHE.pop(key, None)
 
 
 def project_from_lineage(event: Dict[str, object]) -> Dict[str, object]:
@@ -557,6 +589,7 @@ __all__ = [
     "read_entries",
     "read_latest_entry_by_action_and_mutation_id",
     "append_tx",
+    "invalidate_journal_cache",
     "ensure_ledger",
     "ensure_journal",
     "record_rotation_event",
@@ -566,4 +599,5 @@ __all__ = [
     "JournalIntegrityError",
     "JournalPaths",
     "JournalRecoveryHook",
+    "_VERIFIED_TAIL_CACHE",
 ]

@@ -8,6 +8,7 @@ import pytest
 pytestmark = pytest.mark.governance_gate
 
 from security.ledger import journal
+from security.ledger.journal import invalidate_journal_cache
 
 
 def _temp_paths(tmp_path: Path, name: str = "cryovant_journal") -> journal.JournalPaths:
