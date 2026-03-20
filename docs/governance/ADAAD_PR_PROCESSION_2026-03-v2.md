@@ -4,8 +4,8 @@
 > **Canonical source (automation sequence control):** This document is the controlling source for **Phase 51+ PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
-**Last reviewed:** 2026-03-15
-**Milestone:** `v9.11.0` (Phase 76 complete — Seed CEL Outcome Recorder)
+**Last reviewed:** 2026-03-20
+**Milestone:** `v9.13.0` (Phase 77 complete — Constitutional Closure + First Seed Epoch Run)
 
 ---
 
@@ -113,10 +113,10 @@ adaad_pr_procession_contract:
   schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase76_complete"
-  milestone: "v9.11.0"
-  last_state_align: "2026-03-15"
-  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-15"
+  active_phase: "phase77_complete"
+  milestone: "v9.13.0"
+  last_state_align: "2026-03-20"
+  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-20"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -143,6 +143,7 @@ adaad_pr_procession_contract:
     - phase74
     - phase75
     - phase76
+    - phase77
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -281,15 +282,33 @@ adaad_pr_procession_contract:
       status: merged
       version: "v9.11.0"
       title: "Seed CEL Outcome Recorder"
+    phase77:
+      ci_tier: constitutional
+      depends_on: ["phase76"]
+      status: merged
+      version: "v9.13.0"
+      title: "Constitutional Closure + First Seed Epoch Run"
+      prs:
+        - id: PR-77-01
+          branch: feat/phase-77-track-a-close
+          sha: 3efbb27
+          title: "governance(phase77-track-a): close 4 constitutional stubs — ABC enforcement + webhook consolidation"
+        - id: PR-77-02
+          branch: feat/phase-77-track-b-seed-epoch
+          sha: 90ca1fc
+          title: "feat(phase77-track-b): First Seed Epoch Run — SEED-LIFECYCLE-COMPLETE-0 demonstrated"
+      evidence: "artifacts/governance/phase77/seed_epoch_run_evidence.json"
+      run_digest: "sha256:b3a41c40b99177dc51d5cfdd43d826c27aa7bf718f93fd936f7a5658869590ab"
   state_alignment:
-    expected_active_phase: "Phase 76 COMPLETE · v9.11.0"
-    expected_last_completed_pr: "feature/phase-76-seed-cel-outcome-recorder"
-    expected_next_pr: "PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)"
+    expected_active_phase: "Phase 77 COMPLETE · v9.13.0"
+    expected_last_completed_pr: "feat/phase-77-track-b-seed-epoch"
+    expected_next_pr: "Phase 78 — KMS/HSM Event Signing + Aponi GitHub Feed (Candidates 3 & 4)"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
       severity: P0
-      status: open
+      status: closed
+      closed_in: "v9.13.0 / PR-77-01"
       phase_target: "77"
     - id: FINDING-H04-GA-VERSIONING
       severity: P1
@@ -315,10 +334,10 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feature/phase-76-seed-cel-outcome-recorder`
+2. `last_completed_pr` is not `feat/phase-77-track-b-seed-epoch`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
-5. `next_pr` is not `PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)`
+5. `expected_next_pr` is not `Phase 78 — KMS/HSM Event Signing + Aponi GitHub Feed`
 
 ---
 

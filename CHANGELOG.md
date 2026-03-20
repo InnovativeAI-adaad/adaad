@@ -2,6 +2,40 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.13.0] — 2026-03-20 — Phase 77 Complete (Track A + Track B)
+
+### Track A — Constitutional Governance Infrastructure (#PR-77-01)
+
+- PR ID: `PR-77-01`
+- Title: Close 4 constitutional stubs — ABC enforcement + webhook consolidation
+- Lane/Tier: `governance` / `constitutional`
+- Evidence refs: `phase77-track-a-abc-enforcement`, `phase77-webhook-shim-deleg-0`
+- Closes: `FINDING-AUDIT-C03` remnant (dual webhook handler) + 3 `NotImplementedError` stubs
+- Delivered:
+  - `runtime/evolution/event_signing.py` — `EventSigner` / `EventVerifier` → proper ABC (`EVENT-SIGN-ABSTRACT-0`)
+  - `runtime/innovations.py` — `GovernancePlugin.evaluate()` → proper ABC (`GPLUGIN-ABSTRACT-0`)
+  - `runtime/fitness_pipeline.py` — `FitnessEvaluator` abstractmethod contract clarified
+  - `runtime/integrations/github_webhook_handler.py` — replaced with governed shim delegating 100% to `app.github_app` (`WEBHOOK-SHIM-DELEG-0` / `WEBHOOK-SHIM-COMPAT-0`)
+  - 26 constitutional closure tests (`tests/test_phase77_track_a_close.py`)
+- Key invariants: `EVENT-SIGN-ABSTRACT-0`, `GPLUGIN-ABSTRACT-0`, `WEBHOOK-SHIM-DELEG-0`, `WEBHOOK-SHIM-COMPAT-0`
+
+### Track B — First Seed Epoch Run (#PR-77-02)
+
+- PR ID: `PR-77-02`
+- Title: First Seed Epoch Run — SEED-LIFECYCLE-COMPLETE-0 demonstrated
+- Lane/Tier: `governance` / `constitutional`
+- Evidence refs: `artifacts/governance/phase77/seed_epoch_run_evidence.json`
+- run_digest: `sha256:b3a41c40b99177dc51d5cfdd43d826c27aa7bf718f93fd936f7a5658869590ab`
+- Milestone: **First live demonstration of end-to-end Seed Lifecycle Pipeline** (Phases 71–76)
+- Delivered:
+  - `scripts/run_phase77_seed_epoch.py` — reproducible 7-step pipeline executor
+  - `artifacts/governance/phase77/seed_epoch_run_evidence.json` — inaugural `EpochEvidence` artifact
+  - Full pipeline executed: `CapabilitySeed` → `SeedPromotionQueue` → human review → `ProposalRequest` → CEL injection → `LiveWiredCEL.run_epoch()` (14 steps) → `SeedCELOutcomeEvent`
+  - 27 constitutional tests (`tests/test_phase77_track_b_seed_epoch.py`)
+- Key invariants demonstrated: `SEED-LIFECYCLE-COMPLETE-0`, `SEED-PROMO-0`, `SEED-REVIEW-HUMAN-0`, `SEED-PROP-LEDGER-0`, `SEED-CEL-AUDIT-0`, `SEED-OUTCOME-AUDIT-0`, `CEL-ORDER-0`
+- Total: 53 new tests | 150 passing across affected modules | 0 regressions
+- Governor: Dustin L. Reid — 2026-03-20
+
 ## [9.12.1] — 2026-03-19 — Optimize: 7-Fault Sweep
 
 - PR ID: `PR-508-OPTIMIZE-v9.12.1`

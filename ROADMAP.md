@@ -4,7 +4,7 @@
 
 ---
 
-## What ships today — v9.12.1
+## What ships today — v9.13.0
 
 The self-improving loop is live. Three AI agents compete. The fittest mutations survive. Weights adapt. Evidence is permanent.
 
@@ -1506,7 +1506,7 @@ Governed human-approval workflow for promoted seeds. `record_review()` enforces 
 **Key invariants:** SEED-CEL-0, SEED-CEL-HUMAN-0, SEED-CEL-DETERM-0, SEED-CEL-AUDIT-0
 ### Phase 78 — Journal `_VERIFIED_TAIL_CACHE` + Autonomous Doc Sync
 
-**Status:** 🔜 next · **Dependency:** Phase 77 merged at main · **Target:** v9.13.0 · **Gate:** HUMAN-0 ratified plan required
+**Status:** 🔜 next · **Dependency:** Phase 77 merged at main ✅ · **Target:** v9.14.0 · **Gate:** HUMAN-0 ratified plan required
 
 Two parallel workstreams promoted from the Phase 77 optimize sweep and this doc-sync pass.
 
@@ -1543,13 +1543,17 @@ Eliminates manual doc-drift (version infobox, badge strings, stats card alt-text
 
 ---
 
-### Phase 77 — GitHub App Governance + Constitution Version Alignment
+### Phase 77 — Constitutional Closure + First Seed Epoch Run
 
-**Status:** ✅ shipped (v9.12.0) · **Dependency:** Phase 76 merged at main · **Gate:** PR-77-PLAN.md (HUMAN-0 ratified) · **Tests:** T77-BRG-01..10, T77-SIG-01..06, T77-CHAIN-01..04, T77-WIRE-01..03, T77-CONST-01..03, T77-IDEM-01..02
+**Status:** ✅ shipped (v9.13.0) · **Dependency:** Phase 76 merged at main · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-20) · **Tests:** 53 new (26 Track A + 27 Track B) · **Evidence:** `artifacts/governance/phase77/seed_epoch_run_evidence.json`
 
-Closes FINDING-AUDIT-C03 governance gap: `app/github_app.py` and `runtime/integrations/github_webhook_handler.py` were committed outside the PR procession. `runtime/governance/external_event_bridge.py` — SHA-256 hash-chained JSONL audit ledger — provides the official governance audit trail. `ExternalGovernanceSignal` emitted for mutation-class events (`push.main`, `pr.merged`, `ci.failure`) and readable by `GovernanceHealthAggregator`. `app/github_app._emit_governance_event` wired to the bridge's keyword API. `CONSTITUTION_VERSION` constant updated `"0.7.0"` → `"0.9.0"` in three runtime files + `constitution.yaml` (M-01 code-side closure). All 31 tests passing.
+**Track A — Constitutional Governance Infrastructure (PR-77-01 · v9.12.x):**
+Closes FINDING-AUDIT-C03 governance gap and four `NotImplementedError` stubs. `EventSigner` / `EventVerifier` → proper `ABC` (`EVENT-SIGN-ABSTRACT-0`). `GovernancePlugin.evaluate()` → proper `ABC` (`GPLUGIN-ABSTRACT-0`). `FitnessEvaluator` abstractmethod contract clarified. `runtime/integrations/github_webhook_handler.py` replaced with governed shim delegating 100% to `app.github_app` (`WEBHOOK-SHIM-DELEG-0`). 26 constitutional tests.
 
-**Key invariants:** GITHUB-AUDIT-0, GITHUB-GATE-OBS-0, GITHUB-SIG-CLOSED-0, GITHUB-DETERM-0, GITHUB-FAILSAFE-0, GITHUB-GATE-ISO-0
+**Track B — First Seed Epoch Run (PR-77-02 · v9.13.0):**
+Inaugural end-to-end Seed Lifecycle Pipeline demonstration. Full 7-step pipeline executed: `CapabilitySeed` → `SeedPromotionQueue` (SEED-PROMO-0) → human review (SEED-REVIEW-HUMAN-0) → `ProposalRequest` (SEED-PROP-LEDGER-0) → CEL context injection (SEED-CEL-AUDIT-0) → `LiveWiredCEL.run_epoch()` — 14/14 steps (CEL-ORDER-0) → `SeedCELOutcomeEvent` (SEED-OUTCOME-AUDIT-0). Evidence artifact: `run_digest: sha256:b3a41c40...` · outcome: success. 27 constitutional tests.
+
+**Key invariants demonstrated:** SEED-LIFECYCLE-COMPLETE-0, EVENT-SIGN-ABSTRACT-0, GPLUGIN-ABSTRACT-0, WEBHOOK-SHIM-DELEG-0, SEED-PROMO-0, SEED-REVIEW-HUMAN-0, SEED-PROP-LEDGER-0, SEED-CEL-AUDIT-0, SEED-OUTCOME-AUDIT-0, CEL-ORDER-0
 
 ### Phase 76 — Seed CEL Outcome Recorder
 

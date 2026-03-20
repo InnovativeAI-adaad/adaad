@@ -3,8 +3,8 @@
 > **Authority:** Canonical gate checklist for the `v1.1-GA` public-readiness tag.
 > Supersedes v1.0.0-GA baseline (Phase 51 / v7.5.0). Refreshed to v9.11.0.
 > Referenced by `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` § 2.2.
-> **Last updated:** 2026-03-15 · **Baseline:** v9.11.0 · **Phase:** 76 complete
-> **Status:** IN PROGRESS — Gates 3 and 4 are hard blocks pending Dustin action
+> **Last updated:** 2026-03-20 · **Baseline:** v9.13.0 · **Phase:** 77 complete
+> **Status:** IN PROGRESS — Gates 3 and 4 are hard blocks pending Dustin action (Gate 2 pending H-04)
 
 ---
 
@@ -26,7 +26,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Artifact | Status |
 |---|---|---|
-| All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,649 tests — v9.11.0 |
+| All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,702+ tests — v9.13.0 |
 | Determinism suite | `pytest tests/determinism/ -q` → 0 failures | ✅ |
 | Governance inviolability suite | `pytest tests/governance/inviolability/ -q` → 0 failures | ✅ |
 | CodeQL analysis (`CodeQL / Analyze (python)`) | `.github/workflows/codeql.yml` — no high/critical | ✅ |
@@ -35,6 +35,8 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | Release evidence complete | `python scripts/validate_release_evidence.py --require-complete` | ✅ |
 | Release hardening claims valid | `python scripts/validate_release_hardening_claims.py` | ✅ |
 | Phase 76 seed outcome suite | `pytest tests/test_phase76_seed_cel_outcome.py` → 25/25 | ✅ |
+| Phase 77 Track A constitutional suite | `pytest tests/test_phase77_track_a_close.py` → 26/26 | ✅ |
+| Phase 77 Track B seed epoch suite | `pytest tests/test_phase77_track_b_seed_epoch.py` → 27/27 | ✅ |
 | PyPI package published | `pip install adaad==9.11.0` resolves | ✅ |
 
 **Gate 1: ✅ CLEARED**
@@ -53,6 +55,9 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | Release notes v7.0.0–v9.11.0 | `docs/releases/` — all versions | ✅ PR-2 |
 | GitHub App surface governed | `app/github_app.py` — `GITHUB-APP-GOV-0` wired | ✅ PR-3 |
 | Seed Lifecycle (Phases 71–76) documented | ROADMAP + release notes + invariant tables | ✅ |
+| Phase 77 Track A — ABC stubs closed | `tests/test_phase77_track_a_close.py` — 26/26 | ✅ PR-77-01 |
+| Phase 77 Track B — First Seed Epoch Run | `artifacts/governance/phase77/seed_epoch_run_evidence.json` | ✅ PR-77-02 |
+| SEED-LIFECYCLE-COMPLETE-0 demonstrated | `run_digest: sha256:b3a41c40...` · outcome: success | ✅ |
 | GA versioning decision in procession doc § 2.3 | v1.0.0-GA vs v1.1-GA | ⏳ **FINDING-H04 — Dustin** |
 
 **Gate 2: ⏳ — 1 item pending (H-04 Dustin-owned)**
@@ -98,7 +103,9 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | 65 — First Autonomous Self-Evolution | v9.0.0 | ✅ AUDIT-0 · REPLAY-0 · MUTATION-TARGET |
 | 66–70 (Innovations Pipeline) | v9.1.0–v9.5.0 | ✅ |
 | 71–75 (Seed Lifecycle Pipeline) | v9.6.0–v9.10.0 | ✅ full lifecycle end-to-end |
+| 76–77 (Seed CEL Outcome + Epoch Run) | v9.11.0–v9.13.0 | ✅ SEED-LIFECYCLE-COMPLETE-0 demonstrated |
 | 76 — Seed CEL Outcome Recorder | v9.11.0 | ✅ feedback loop closed |
+| 77 — Constitutional Closure + First Seed Epoch Run | v9.13.0 | ✅ SEED-LIFECYCLE-COMPLETE-0 · ABC enforcement · webhook consolidation |
 | 77 (TBD) | pending | ⏳ PR-77-PLAN (non-blocking for GA) |
 
 **Gate 5: ✅ CLEARED**
