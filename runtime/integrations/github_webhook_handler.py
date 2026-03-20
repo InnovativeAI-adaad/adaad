@@ -1,115 +1,106 @@
 # SPDX-License-Identifier: Apache-2.0
-import hashlib, hmac, json, logging, os, time
+"""GitHub webhook handler — governed shim (Phase 77 consolidation).
+
+This module previously contained a duplicate, ungoverned webhook implementation.
+It has been consolidated into ``app.github_app`` as part of Track A / Phase 77
+(dual-handler audit finding C-03 remnant closure).
+
+All event dispatch, signature verification, and ledger emission now route
+through ``app.github_app``, which enforces:
+
+  GITHUB-APP-GOV-0  — GovernanceGate pre-check on mutation-class events
+  GITHUB-APP-SIG-0  — HMAC-SHA256 signature verification; fail-closed
+  GITHUB-APP-LOG-0  — every accepted event emits a ledger record
+  GITHUB-APP-MUT-0  — no autonomous mutation triggered; advisory only
+
+Public API (preserved for backwards-compatibility)
+──────────────────────────────────────────────────
+  verify_webhook_signature(payload_bytes, sig_header) → bool
+  handle_webhook(payload_bytes, event_type, signature, delivery_id) → (int, dict)
+  handle_push(payload)          → dict
+  handle_pull_request(payload)  → dict
+  handle_check_run(payload)     → dict
+  handle_workflow_run(payload)  → dict
+  handle_installation(payload)  → dict
+  EVENT_HANDLERS                → dict
+  HANDLED_EVENTS                → set
+
+Constitutional invariants:
+  WEBHOOK-SHIM-DELEG-0  This module never re-implements signature verification
+                         or ledger emission; it delegates 100% to app.github_app.
+  WEBHOOK-SHIM-COMPAT-0 The public API surface is preserved for import
+                         compatibility only; no governance logic lives here.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
 from typing import Any
 
-from runtime.integrations.github_identity_config import require_github_identity
+from app.github_app import dispatch_event, verify_webhook_signature
 
-logger = logging.getLogger('adaad.github_webhook')
+logger = logging.getLogger("adaad.github_webhook")
+
 HANDLED_EVENTS = {
-    'push', 'pull_request', 'pull_request_review',
-    'check_run', 'check_suite', 'workflow_run',
-    'installation', 'repository',
+    "push", "pull_request", "pull_request_review",
+    "check_run", "check_suite", "workflow_run",
+    "installation", "repository",
 }
 
-def _ts():
-    return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-
-def emit_ledger_event(event):
-    logger.info('LEDGER_EVENT %s', json.dumps(event))
+EVENT_HANDLERS: dict[str, Any] = {}
 
 
-def _github_identity():
-    return require_github_identity()
+def handle_push(payload: dict) -> dict:
+    return dispatch_event("push", payload)
 
-def verify_webhook_signature(payload_bytes, sig_header):
-    secret = os.environ.get('GITHUB_WEBHOOK_SECRET', '')
-    if not secret:
-        logger.error('webhook_secret_not_configured:fail_closed')
-        return False
-    if not sig_header or not sig_header.startswith('sha256='):
-        logger.warning('webhook_signature_missing')
-        return False
-    expected = 'sha256=' + hmac.new(secret.encode(), payload_bytes, hashlib.sha256).hexdigest()
-    return hmac.compare_digest(expected, sig_header)
 
-def handle_push(p):
-    identity = _github_identity()
-    emit_ledger_event({'event_type': 'github_push', 'installation_id': identity['installation_id'],
-        'repository': p.get('repository', {}).get('full_name'),
-        'branch': p.get('ref', '').replace('refs/heads/', ''),
-        'pusher': p.get('pusher', {}).get('name'),
-        'commit_count': len(p.get('commits', [])), 'timestamp': _ts()})
-    return {'status': 'accepted', 'ledger_event': 'github_push'}
+def handle_pull_request(payload: dict) -> dict:
+    return dispatch_event("pull_request", payload)
 
-def handle_pull_request(p):
-    identity = _github_identity()
-    pr = p.get('pull_request', {})
-    emit_ledger_event({'event_type': 'github_pull_request', 'installation_id': identity['installation_id'],
-        'action': p.get('action'), 'pr_number': pr.get('number'),
-        'pr_title': pr.get('title'), 'author': pr.get('user', {}).get('login'),
-        'base_branch': pr.get('base', {}).get('ref'),
-        'merged': pr.get('merged', False),
-        'repository': p.get('repository', {}).get('full_name'), 'timestamp': _ts()})
-    if p.get('action') == 'closed' and pr.get('merged') and pr.get('base', {}).get('ref') in ('main', 'master'):
-        emit_ledger_event({'event_type': 'governance_gate_trigger',
-            'trigger': 'pr_merged_to_main', 'installation_id': identity['installation_id'],
-            'pr_number': pr.get('number'), 'timestamp': _ts()})
-    return {'status': 'accepted', 'ledger_event': 'github_pull_request'}
 
-def handle_check_run(p):
-    identity = _github_identity()
-    cr = p.get('check_run', {})
-    emit_ledger_event({'event_type': 'github_check_run', 'installation_id': identity['installation_id'],
-        'action': p.get('action'), 'check_name': cr.get('name'),
-        'conclusion': cr.get('conclusion'), 'status': cr.get('status'),
-        'repository': p.get('repository', {}).get('full_name'), 'timestamp': _ts()})
-    if cr.get('conclusion') in ('failure', 'timed_out', 'cancelled') and 'governance' in (cr.get('name') or '').lower():
-        emit_ledger_event({'event_type': 'governance_gate_blocked',
-            'reason': 'check_run_failed:' + str(cr.get('name')),
-            'installation_id': identity['installation_id'], 'timestamp': _ts()})
-    return {'status': 'accepted', 'ledger_event': 'github_check_run'}
+def handle_check_run(payload: dict) -> dict:
+    return dispatch_event("check_run", payload)
 
-def handle_workflow_run(p):
-    identity = _github_identity()
-    wf = p.get('workflow_run', {})
-    emit_ledger_event({'event_type': 'github_workflow_run', 'installation_id': identity['installation_id'],
-        'workflow_name': wf.get('name'), 'conclusion': wf.get('conclusion'),
-        'status': wf.get('status'), 'run_number': wf.get('run_number'),
-        'repository': p.get('repository', {}).get('full_name'), 'timestamp': _ts()})
-    return {'status': 'accepted', 'ledger_event': 'github_workflow_run'}
 
-def handle_installation(p):
-    identity = _github_identity()
-    action = p.get('action', 'unknown')
-    emit_ledger_event({'event_type': 'github_app_' + action,
-        'installation_id': str(p.get('installation', {}).get('id', identity['installation_id'])),
-        'app_id': identity['app_id'],
-        'account': p.get('installation', {}).get('account', {}).get('login'),
-        'action': action, 'timestamp': _ts()})
-    return {'status': 'accepted', 'ledger_event': 'github_app_' + action}
+def handle_workflow_run(payload: dict) -> dict:
+    return dispatch_event("workflow_run", payload)
 
-EVENT_HANDLERS = {
-    'push': handle_push, 'pull_request': handle_pull_request,
-    'check_run': handle_check_run, 'workflow_run': handle_workflow_run,
-    'installation': handle_installation,
-}
 
-def handle_webhook(payload_bytes, event_type, signature, delivery_id=None):
+def handle_installation(payload: dict) -> dict:
+    return dispatch_event("installation", payload)
+
+
+EVENT_HANDLERS.update({
+    "push": handle_push,
+    "pull_request": handle_pull_request,
+    "check_run": handle_check_run,
+    "workflow_run": handle_workflow_run,
+    "installation": handle_installation,
+})
+
+
+def handle_webhook(
+    payload_bytes: bytes,
+    event_type: str,
+    signature: str,
+    delivery_id: str | None = None,
+) -> tuple[int, dict]:
+    """Verify signature then route to governed dispatch_event."""
     if not verify_webhook_signature(payload_bytes, signature):
-        logger.warning('webhook_signature_invalid delivery=%s', delivery_id)
-        emit_ledger_event({'event_type': 'github_webhook_signature_rejected',
-            'delivery_id': delivery_id, 'timestamp': _ts()})
-        return 401, {'error': 'invalid_signature'}
+        logger.warning("webhook_signature_invalid delivery=%s", delivery_id)
+        return 401, {"error": "invalid_signature"}
     try:
         payload = json.loads(payload_bytes)
     except json.JSONDecodeError:
-        return 400, {'error': 'invalid_json'}
+        return 400, {"error": "invalid_json"}
     if event_type not in HANDLED_EVENTS:
-        return 200, {'status': 'ignored', 'event': event_type}
-    handler = EVENT_HANDLERS.get(event_type)
-    if handler is None:
-        identity = _github_identity()
-        emit_ledger_event({'event_type': 'github_' + event_type,
-            'installation_id': identity['installation_id'], 'timestamp': _ts()})
-        return 200, {'status': 'logged', 'event': event_type}
-    return 200, handler(payload)
+        return 200, {"status": "ignored", "event": event_type}
+    return 200, dispatch_event(event_type, payload)
+
+
+__all__ = [
+    "HANDLED_EVENTS", "EVENT_HANDLERS", "verify_webhook_signature",
+    "handle_webhook", "handle_push", "handle_pull_request",
+    "handle_check_run", "handle_workflow_run", "handle_installation",
+]

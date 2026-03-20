@@ -1,5 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Signer/verifier abstractions for AGM ledger events."""
+"""Signer/verifier abstractions for AGM ledger events.
+
+Constitutional invariants
+─────────────────────────
+  EVENT-SIGN-ABSTRACT-0  EventSigner and EventVerifier are abstract base
+                         classes; direct instantiation is a runtime error.
+  EVENT-SIGN-DETERM-0    Implementations must be deterministic: identical
+                         (message, key) inputs produce identical SignatureBundle
+                         outputs.
+  EVENT-SIGN-COMPARE-0   Signature comparison must use hmac.compare_digest
+                         to prevent timing-oracle attacks.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +18,7 @@ import hashlib
 import hmac
 import json
 import os
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 
@@ -17,18 +29,30 @@ class SignatureBundle:
     algorithm: str
 
 
-class EventSigner:
-    """Production signer interface (typically KMS/HSM backed)."""
+class EventSigner(ABC):
+    """Abstract base: production signer interface (typically KMS/HSM backed).
 
+    Subclasses must implement sign() deterministically.
+    See DeterministicMockSigner for test usage; KMS wiring is Phase 78+.
+    """
+
+    @abstractmethod
     def sign(self, message: str) -> SignatureBundle:
-        raise NotImplementedError
+        """Sign *message* and return a SignatureBundle.
+
+        Must be deterministic: identical (message, key) → identical bundle.
+        """
 
 
-class EventVerifier:
-    """Production verifier interface (typically KMS/HSM backed)."""
+class EventVerifier(ABC):
+    """Abstract base: production verifier interface (typically KMS/HSM backed).
 
+    Subclasses must implement verify() using constant-time comparison.
+    """
+
+    @abstractmethod
     def verify(self, *, message: str, signature: SignatureBundle) -> bool:
-        raise NotImplementedError
+        """Return True iff *signature* is valid for *message*."""
 
 
 class DeterministicMockSigner(EventSigner, EventVerifier):

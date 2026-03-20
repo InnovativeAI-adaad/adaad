@@ -18,6 +18,7 @@ Design goals:
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass
 import hashlib
 from typing import Any, Iterable, Mapping, Sequence
@@ -99,13 +100,24 @@ class PluginRuleResult:
     message: str
 
 
-class GovernancePlugin:
-    """Simple deterministic governance plugin protocol."""
+class GovernancePlugin(ABC):
+    """Abstract base: deterministic governance plugin protocol.
+
+    Constitutional invariants
+    ─────────────────────────
+      GPLUGIN-ABSTRACT-0   GovernancePlugin is an abstract base class;
+                           direct instantiation is a runtime error.
+      GPLUGIN-DETERM-0     evaluate() must be pure/deterministic:
+                           identical mutation inputs → identical result.
+      GPLUGIN-NOSIDE-0     evaluate() must not mutate shared state or
+                           emit ledger events directly.
+    """
 
     plugin_id: str = "plugin.unknown"
 
+    @abstractmethod
     def evaluate(self, mutation: Mapping[str, Any]) -> PluginRuleResult:
-        raise NotImplementedError
+        """Evaluate *mutation* and return a deterministic PluginRuleResult."""
 
 
 class NoNewDependenciesPlugin(GovernancePlugin):
