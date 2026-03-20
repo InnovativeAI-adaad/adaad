@@ -2,6 +2,76 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.16.0] — 2026-03-20 — Phases 81–84 · Evolution Engine Core
+
+### Phase 78 (merge) — Journal Warm-Cache + Autonomous Doc Sync
+
+- `security/ledger/journal.py` — `JOURNAL-CACHE-0` warm-path tail cache absorbed into main; `JournalPaths` dataclass + full path-resolution infrastructure
+- `scripts/verify_doc_sync.py` — upgraded to full argparse/dataclass/JSON-output implementation with `DOC-SYNC-DETERM-0` determinism guarantee
+- `docs/ADAADCHAT_SETUP.md` — GitHub App wiring guide for ADAADchat operators
+- `.env.example` — canonical environment variable reference
+- `tests/governance/test_journal_warm_cache.py`, `test_phase78_doc_sync.py` — phase78 constitutional test suites absorbed
+
+### Phase 81 — Constitutional Self-Discovery Loop
+
+- `runtime/evolution/constitutional_self_discovery.py` — `ConstitutionalSelfDiscoveryLoop`: coordinates failure mining → invariant candidacy → ratification gate
+- `runtime/evolution/failure_pattern_miner.py` — `FailurePatternMiner`: mines ledger for recurring failure signatures, produces `FailurePattern` candidates
+- `runtime/evolution/invariant_candidate_proposer.py` — `InvariantCandidateProposer`: lifts failure patterns to `InvariantCandidate` proposals with constitutional metadata
+- `runtime/evolution/invariant_ratification_gate.py` — `InvariantRatificationGate`: GovernanceGate-gated ratification; only constitutionally-consistent invariants advance
+- `tests/test_phase81_constitutional_self_discovery.py` — constitutional test suite
+- `artifacts/governance/phase81/track_a_sign_off.json` — governance sign-off artifact
+- `pytest.ini` — `phase81` mark registered
+
+**Invariants introduced:**
+- `SELF-DISC-0`: ADAAD can propose new constitutional invariants from its own failure history
+- `RATIFY-GOV-0`: No invariant candidate advances without GovernanceGate ratification
+- `MINE-DETERM-0`: identical ledger state → identical failure pattern candidates
+
+### Phase 82 — Pareto Population Evolution
+
+- `runtime/evolution/pareto_frontier.py` — `ParetoFrontier`: multi-objective non-dominated set maintenance; `dominates()`, `frontier_digest()`
+- `runtime/evolution/pareto_competition.py` — `ParetoCompetitionOrchestrator`: population-level multi-objective competitive selection
+- `runtime/seed_competition.py` — extended with Pareto-aware ranking surface
+- `tests/test_phase82_pareto_evolution.py` — constitutional test suite
+- `artifacts/governance/phase82/track_a_sign_off.json` — governance sign-off artifact
+
+**Invariants introduced:**
+- `PARETO-0`: Evolution selection is non-dominated — no candidate advances if dominated on all objectives
+- `PARETO-DETERM-0`: identical population → identical frontier; ties broken lexicographically
+- `PARETO-GOV-0`: Pareto selection result written to ledger before any promotion
+
+### Phase 83 — Causal Fitness Attribution Engine
+
+- `runtime/evolution/causal_fitness_attributor.py` — `CausalFitnessAttributor`: Shapley-value approximation for per-operation fitness contribution
+- `runtime/evolution/mutation_ablator.py` — `MutationAblator`: ablation harness; removes operations and re-evaluates fitness delta
+- `tests/test_phase83_causal_fitness_attribution.py` — constitutional test suite
+- `artifacts/governance/phase83/track_a_sign_off.json` — governance sign-off artifact
+
+**Invariants introduced:**
+- `CAUSAL-ATTR-0`: Every fitness score traceable to per-operation causal contributions
+- `ABLATE-DETERM-0`: ablation runs are deterministic and ledger-recorded
+- `SHAPLEY-BOUND-0`: approximation error bounded; exact Shapley computed when coalition count ≤ threshold
+
+### Phase 84 — Temporal Fitness Half-Life
+
+- `runtime/evolution/codebase_state_vector.py` — `CodebaseStateVector`: fingerprints codebase structural state for temporal comparison
+- `runtime/evolution/fitness_decay_scorer.py` — `FitnessDecayScorer`: applies exponential half-life decay to historical fitness scores by codebase drift distance
+- `tests/test_phase84_fitness_half_life.py` — constitutional test suite
+- `artifacts/governance/phase84/track_a_sign_off.json` — governance sign-off artifact
+
+**Invariants introduced:**
+- `DECAY-0`: Historical fitness scores discounted by codebase structural drift — stale scores do not gate current promotions
+- `HALFLIFE-DETERM-0`: identical `CodebaseStateVector` pair → identical decay coefficient
+- `DECAY-LEDGER-0`: decay coefficients written to ledger at scoring time
+
+### Metrics at v9.16.0
+- Tests: 4,800+ passing (+28 est.)
+- Phases complete: 84
+- Constitutional invariants: 36 (+9)
+- Evolution engine: Pareto multi-objective + causal attribution + temporal decay — all operational
+
+---
+
 ## [9.15.0] — 2026-03-20 — Phase 80 Complete (Multi-Generation Compound Evolution)
 
 ### Phase 80 — Multi-Seed Competitive Epoch
