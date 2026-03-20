@@ -5,7 +5,7 @@
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
 **Last reviewed:** 2026-03-20
-**Milestone:** `v9.13.0` (Phase 77 complete — Constitutional Closure + First Seed Epoch Run)
+**Milestone:** `v9.14.0` (Phase 79 complete — Multi-Generation Lineage Graph)
 
 ---
 
@@ -49,12 +49,12 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 ---
 
 
-## 1A) v8 Constitutional Sequence (Active)
+## 1A) v8–v9 Constitutional Sequence (Active)
 
 ### 1A.1 Sequence order (authoritative)
 
 ```text
-57 → 58 → 59 → 60 → 61 → 62 → 63 → 64 → 65
+57 → 58 → 59 → 60 → 61 → 62 → 63 → 64 → 65 → 66 → 67 → 68 → 69 → 70 → 71 → 72 → 73 → 74 → 75 → 76 → 77 → 78 → 79
 ```
 
 ### 1A.2 Phase status + dependency table
@@ -69,19 +69,33 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 | 62 | v8.5.0 | Phase 61 | shipped |
 | 63 | v8.6.0 | Phase 62 | shipped |
 | 64 | v8.7.0 | Phase 63 | shipped |
-| 65 | v9.0.0 | Phase 64 | next |
+| 65 | v9.0.0 | Phase 64 | shipped |
+| 66 | v9.1.0 | Phase 65 | shipped |
+| 67 | v9.2.0 | Phase 66 | shipped |
+| 68 | v9.3.0 | Phase 67 | shipped |
+| 69 | v9.4.0 | Phase 68 | shipped |
+| 70 | v9.5.0 | Phase 69 | shipped |
+| 71 | v9.6.0 | Phase 70 | shipped |
+| 72 | v9.7.0 | Phase 71 | shipped |
+| 73 | v9.8.0 | Phase 72 | shipped |
+| 74 | v9.9.0 | Phase 73 | shipped |
+| 75 | v9.10.0 | Phase 74 | shipped |
+| 76 | v9.11.0 | Phase 75 | shipped |
+| 77 | v9.13.0 | Phase 76 | shipped |
+| 78 | v9.14.0 | Phase 77 | shipped |
+| 79 | v9.14.0 | Phase 78 | shipped |
 
 ### 1A.3 Dependency pointer
 
-> **v8 sequencing source of truth:** This document controls active v8.x PR sequencing and status. `ROADMAP.md` mirrors this state for human-facing roadmap context and must remain aligned.
+> **v8/v9 sequencing source of truth:** This document controls active constitutional PR sequencing and status across the v8.x and v9.x release lines. `ROADMAP.md` mirrors this state for human-facing roadmap context and must remain aligned.
 
-- Next: **Phase 65** (First Autonomous Capability Evolution, v9.0.0).
+- Next: **Phase 80** (KMS/HSM production key wiring + Compound Evolution).
 
 ## 2) Active Planning — v1.0.0-GA Gate
 
 ### 2.1 What v1.0.0-GA means
 
-`v1.0.0-GA` is the public-readiness milestone. It is distinct from the version series (currently v7.x.x). GA requires:
+`v1.0.0-GA` is the public-readiness milestone. It is distinct from the version series (currently v9.x.x). GA requires:
 
 1. **All CI tiers green** on a single tagged commit — Tier 0 through Tier 3
 2. **Zero open constitutional violations** — `scripts/validate_release_evidence.py --require-complete` must pass
@@ -348,10 +362,10 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feat/phase-77-track-b-seed-epoch`
+2. `last_completed_pr` is not `feat/phase-79-multi-gen-lineage`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
-5. `expected_next_pr` is not `Phase 78 — KMS/HSM Event Signing + Aponi GitHub Feed`
+5. `expected_next_pr` is not `Phase 80 — KMS/HSM production key wiring + Compound Evolution`
 
 ---
 
