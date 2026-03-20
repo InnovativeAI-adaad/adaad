@@ -1,0 +1,77 @@
+{
+  "schema": "governance-sign-off/v1",
+  "phase": 81,
+  "track": "A",
+  "pr": "PR-81-01",
+  "title": "Constitutional Self-Discovery Loop \u2014 FailurePatternMiner + InvariantCandidateProposer + InvariantRatificationGate",
+  "version_target": "9.16.0",
+  "date": "2026-03-20T16:17:01Z",
+  "governor": "Dustin L. Reid",
+  "agent": "DEVADAAD",
+  "invariants_introduced": [
+    {
+      "id": "CSDL-0",
+      "description": "No auto-discovered invariant enters constitution.yaml without HUMAN-0 ratification"
+    },
+    {
+      "id": "CSDL-0-AGENT",
+      "description": "DEVADAAD generates and presents; governor decides and patches"
+    },
+    {
+      "id": "CSDL-CLUSTER-0",
+      "description": "Clustering is deterministic \u2014 identical rejection corpora produce identical clusters"
+    },
+    {
+      "id": "CSDL-CANDIDATE-0",
+      "description": "Candidate IDs are stable and deterministic from cluster_id"
+    },
+    {
+      "id": "CSDL-CANDIDATE-ADVISORY-0",
+      "description": "All candidates are disabled (enabled=False) until HUMAN-0 ratification"
+    },
+    {
+      "id": "CSDL-CANDIDATE-DEDUP-0",
+      "description": "Same cluster produces same candidate_id \u2014 idempotent"
+    },
+    {
+      "id": "CSDL-MIN-FREQ-0",
+      "description": "Only clusters meeting MIN_CLUSTER_FREQUENCY are proposed"
+    },
+    {
+      "id": "CSDL-IMMUTABLE-0",
+      "description": "Mining is strictly read-only \u2014 ledger never modified"
+    },
+    {
+      "id": "CSDL-AUDIT-0",
+      "description": "Every ratification decision produces a RatificationRecord with evidence_digest"
+    },
+    {
+      "id": "CSDL-REPLAY-0",
+      "description": "Ratification records are deterministically replayable from their evidence digest"
+    }
+  ],
+  "files_added": [
+    "runtime/evolution/failure_pattern_miner.py \u2014 FailurePatternMiner + FailureCluster + RejectionRecord",
+    "runtime/evolution/invariant_candidate_proposer.py \u2014 InvariantCandidateProposer + InvariantCandidate",
+    "runtime/evolution/invariant_ratification_gate.py \u2014 InvariantRatificationGate + RatificationRecord + RatificationPackage",
+    "runtime/evolution/constitutional_self_discovery.py \u2014 ConstitutionalSelfDiscoveryLoop + DiscoveryRunResult (orchestrator)",
+    "tests/test_phase81_constitutional_self_discovery.py \u2014 30 constitutional tests T81-CSDL-01..30",
+    "pytest.ini \u2014 phase81 mark registered",
+    "artifacts/governance/phase81/track_a_sign_off.json \u2014 this artifact"
+  ],
+  "test_results": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0,
+    "suite": "tests/test_phase81_constitutional_self_discovery.py"
+  },
+  "human_gate_required": true,
+  "human_gate_actions": [
+    "Review InvariantRatificationGate.present_batch() output on live ledger",
+    "Call ratify(candidate, verdict='approve'|'reject') for each candidate",
+    "Manually apply yaml_patch to runtime/governance/constitution.yaml for approved candidates",
+    "Commit with: governance(phase81): ratify invariant {invariant_id} \u2014 CSDL-0"
+  ],
+  "novelty": "First constitutionally-governed system with autonomous invariant discovery from its own governance history. No prior art in production code evolution systems.",
+  "artifact_digest": "sha256:77af1f39973a81b2b992e61355fa6a3ab6984564ba051fe451724076c52a859e"
+}
