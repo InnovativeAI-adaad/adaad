@@ -8,7 +8,7 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.16.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.16.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/)&nbsp;[![Phases](https://img.shields.io/badge/84_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.17.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![PyPI](https://img.shields.io/badge/PyPI-adaad_9.17.0-000?style=for-the-badge&labelColor=0d1117&color=3775a9)](https://pypi.org/project/adaad/)&nbsp;[![Phases](https://img.shields.io/badge/84_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-PROVEN_·_Phase_65-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![Constitution](https://img.shields.io/badge/Constitution-v0.9.0_—_23_Rules-000?style=for-the-badge&labelColor=0d1117&color=f5c842)](docs/CONSTITUTION.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/4%2C748%2B_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Ledger](https://img.shields.io/badge/12%2C441%2B_Ledger_Entries-SHA--256_Chained-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Phase65](https://img.shields.io/badge/⛓_Phase_65-First_Self--Evolution_·_Sealed-ff4466?style=flat-square&labelColor=100005)&nbsp;![Phase77](https://img.shields.io/badge/🌱_Phase_77-Seed_Epoch_·_LIFECYCLE_COMPLETE-00ff88?style=flat-square&labelColor=001500)&nbsp;![Replay](https://img.shields.io/badge/🔐_Every_Decision-Deterministically_Replayable-00d4ff?style=flat-square&labelColor=001520)
 
@@ -34,8 +34,8 @@ gated through 23 constitutional rules, and deterministically replayable. On any 
 <!-- ADAAD_VERSION_INFOBOX:START -->
 | Field | Value |
 |---|---|
-| **Version** | `9.16.0` |
-| **Released** | 2026-03-20 |
+| **Version** | `9.17.0` |
+| **Released** | 2026-03-21 |
 | **Phases complete** | 84 — Temporal Fitness Half-Life |
 | **Tests passing** | 4,800+ |
 | **Ledger entries** | 12,441+ SHA-256 hash-chained |
