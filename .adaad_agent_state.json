@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.13.0 RELEASED \u00b7 post-merge doc sync",
+  "active_phase": "v9.16.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 75 \u2014 Seed Proposal CEL Injection",
+  "last_completed_phase": "Phases 81\u201384 \u00b7 Evolution Engine Core",
   "last_completed_pr": "feature/phase-75-seed-proposal-cel-injection",
   "last_gate_results": {
     "tier_0": "pass",
@@ -11,8 +11,8 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-03-19",
-  "last_sync_sha": "c699817",
+  "last_invocation": "2026-03-21",
+  "last_sync_sha": "25f3072",
   "next_pr": "PR-77-01 (Phase 77 Track A \u2014 Governance Infrastructure Sprint \u2014 pending Dustin ratification)",
   "open_findings": [
     {
@@ -106,7 +106,7 @@
     }
   ],
   "pending_evidence_rows": [],
-  "schema_version": "9.13.0",
+  "schema_version": "1.5.0",
   "value_checkpoints_reached": [
     "phase0-track-a-hardening",
     "v1.3.0-released",
@@ -304,7 +304,7 @@
     "phase75-inject-endpoint",
     "v9.10.0-released"
   ],
-  "current_version": "9.12.1",
+  "current_version": "9.16.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -336,5 +336,7 @@
     "phase75-step4-wire",
     "v9.10.0-released",
     "phase77-plan-authored"
-  ]
+  ],
+  "software_version": "9.16.0",
+  "last_agent_state_sync_digest": "gsync-d202131a642fb816"
 }

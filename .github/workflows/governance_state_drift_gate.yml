@@ -1,0 +1,66 @@
+# SPDX-License-Identifier: Apache-2.0
+# Phase 85 Track B — Governance State Drift Gate
+# GSYNC-GATE-0: Merge-blocking check. Any drift between .adaad_agent_state.json
+# tracked fields and their canonical sources (VERSION, CHANGELOG) blocks merge.
+
+name: governance-state-drift-gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - VERSION
+      - CHANGELOG.md
+      - .adaad_agent_state.json
+      - scripts/sync_agent_state_on_merge.py
+      - scripts/validate_governance_state_drift.py
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drift-gate:
+    name: "Governance state drift check (GSYNC-GATE-0)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: |
+      !contains(github.event.head_commit.message, '[doc-sync]') &&
+      !contains(github.event.head_commit.message, '[skip-drift-gate]')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3.11.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Run governance state drift gate
+        id: drift
+        run: |
+          set -euo pipefail
+          python scripts/validate_governance_state_drift.py | tee /tmp/drift_result.json
+          exit_code=${PIPESTATUS[0]}
+          if [ $exit_code -ne 0 ]; then
+            echo "GSYNC-GATE-0 VIOLATED: .adaad_agent_state.json is drifted."
+            echo "Run scripts/sync_agent_state_on_merge.py to correct."
+            exit 1
+          fi
+          echo "GSYNC-GATE-0 PASS: agent state fields are in sync."
+
+      - name: Write job summary
+        if: always()
+        run: |
+          {
+            echo "## Governance State Drift Gate"
+            echo ""
+            echo "| Invariant | Status |"
+            echo "| --- | --- |"
+            cat /tmp/drift_result.json 2>/dev/null || echo "(no output)"
+          } >> "$GITHUB_STEP_SUMMARY"

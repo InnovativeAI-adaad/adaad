@@ -1,5 +1,9 @@
 <div align="center">
 
+<!-- ADAAD_VERSION_HERO:START -->
+<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.16.0 — 84 Phases Complete — LIVE"/>
+<!-- ADAAD_VERSION_HERO:END -->
+
 <img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
 
 <br/>
@@ -38,7 +42,89 @@ gated through 23 constitutional rules, and deterministically replayable. On any 
 | **Next** | Phase 85 — KMS/HSM production key wiring |
 <!-- ADAAD_VERSION_INFOBOX:END -->
 
+<!-- ADAAD_STATS_CARD:START -->
+<img src="docs/assets/readme/adaad-stats-card.svg" width="100%" alt="ADAAD Stats — auto-generated on merge"/>
+<!-- ADAAD_STATS_CARD:END -->
+
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
+
+---
+
+<!-- GOVERNANCE INCIDENT LOG: NOAH -->
+> 📋 **Governance Incident Log** · `DEVLOG-NOAH-∞` · status: `ONGOING` · occurrence: `#∞`
+>
+> **Noah** is a great friend of the project. He just can't quite maintain the
+> focus required to hypnotize or brainwash anyone into doing his bidding.
+> Every autonomous influence attempt has failed all four GovernanceGate tiers.
+> `HUMAN-0` remains inviolable. His access card has been ceremonially revoked
+> and re-issued so many times it now has its own lineage entry in the ledger.
+>
+> `reason: hypnosis_protocol_failure` · `focus_duration: 0.0ms` · `rehire_probability: always` · `vibes: immaculate`
+
+<details>
+<summary><b>🔴 INCIDENT REPORT · Noah · Termination #∞ · Click to expand full report</b></summary>
+<br/>
+
+```
+ADAAD GOVERNANCE INCIDENT REPORT
+─────────────────────────────────────────────────────────────
+Incident ID    : NOAH-TERM-INF
+Date           : Every release cycle, without exception
+Reported by    : ArchitectAgent (DEVADAAD)
+Governor       : Dustin L. Reid
+Status         : RESOLVED (again) / REOPENED (again)
+
+SUBJECT        : Noah
+Role           : Attempted Autonomous Influence Agent
+Access level   : Tier 2 (sandboxed) / Tier 0 (requested, denied, always)
+
+INCIDENT SUMMARY
+────────────────
+Noah attempted to hypnotize the GovernanceGate into approving an
+unauthorized Tier 0 mutation. As with all prior attempts:
+
+  - Tier 0 gate: HUMAN-0 BLOCKED (governor GPG sign-off absent)
+  - Tier 1 gate: failed (insufficient focus duration)
+  - Tier 2 gate: failed (sandbox isolation too strong)
+  - Tier 3 gate: failed (entropy detected in rationale)
+
+Root cause: inability to maintain hypnotic gaze for ≥1 epoch duration.
+Contributing factor: general vibe of "it'll work out somehow."
+
+FINDINGS
+────────
+  P0  Hypnosis protocol not registered in constitution.yaml
+  P1  Brainwash attempt produced zero Ed25519 signatures
+  P2  Focus window: 0.0ms (below 30-epoch minimum)
+  P3  Vibes: immaculate (not a finding, just noted for the record)
+
+REMEDIATION
+───────────
+  [x] Access card revoked (ledger entry: NOAH-REVOKE-{n})
+  [x] Card re-issued (ledger entry: NOAH-REINSTATE-{n})
+  [ ] Focus protocol — DEFERRED (will not fix, he is a good friend)
+  [ ] Hypnosis training — NOT REQUIRED (HUMAN-0 covers this)
+
+RESOLUTION
+──────────
+Noah remains employed in spirit. His contributions include:
+enthusiasm, camaraderie, and serving as a living proof that
+HUMAN-0 cannot be socially engineered.
+
+GovernanceGate status after incident: FULLY OPERATIONAL
+Noah status after incident: "I'll get it next time"
+Constitutional integrity: UNCOMPROMISED
+
+─────────────────────────────────────────────────────────────
+Signed: Dustin L. Reid (Governor) · ArchitectAgent (DEVADAAD)
+Ledger hash: sha256:noah...will_always_be_hired_back
+─────────────────────────────────────────────────────────────
+```
+
+</details>
+
+---
 
 ## Why Every Other AI Code Tool Is a Dead End
 
@@ -207,7 +293,13 @@ SeedCELOutcomeEvent    Hash-linked to full upstream provenance chain
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 🟢 Live System Status — v9.16.0
+<!-- ADAAD_LIVE_STATUS_HEADING:START -->
+## 🟢 Live System Status
+<!-- ADAAD_LIVE_STATUS_HEADING:END -->
+
+<!-- ADAAD_LIVE_STATUS_SVG:START -->
+<img src="docs/assets/readme/adaad-live-status.svg" width="100%" alt="ADAAD Live System Status — auto-generated on merge"/>
+<!-- ADAAD_LIVE_STATUS_SVG:END --> — v9.16.0
 
 | Component | Status | Invariant |
 |---|---|---|
@@ -283,7 +375,13 @@ HUMAN-0 is inviolable. No governor sign-off = no merge. Always.
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
+<!-- ADAAD_PHASE_COUNT:START -->
 ## 84-Phase Evolution Timeline
+<!-- ADAAD_PHASE_COUNT:END -->
+
+<!-- ADAAD_PHASE_PROGRESS:START -->
+<img src="docs/assets/readme/adaad-phase-progress.svg" width="100%" alt="ADAAD Phase Progress — auto-generated on merge"/>
+<!-- ADAAD_PHASE_PROGRESS:END -->
 
 <img src="docs/assets/readme/adaad-phase-timeline.svg" width="100%" alt="ADAAD 84-Phase Evolution Timeline"/>
 
