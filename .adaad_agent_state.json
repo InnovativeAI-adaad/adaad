@@ -1,10 +1,10 @@
 {
-    "active_phase": "v9.16.0 RELEASED · post-merge agent sync",
+    "active_phase": "v9.17.0 RELEASED · post-merge agent sync",
     "blocked_at_gate": null,
     "blocked_at_tier": null,
     "blocked_reason": null,
-    "last_completed_phase": "Phases 81–85 · Evolution Engine Core + Governance State Sync",
-    "last_completed_pr": "feat(phase85): README visual overhaul + governance state sync hardening",
+    "last_completed_phase": "Phase 86 · Evolution Engine Integration + CompoundEvolutionTracker",
+    "last_completed_pr": "feat/phase86-cel-fitness-wiring",
     "last_gate_results": {
         "tier_0": "pass",
         "tier_1": "pass",
@@ -12,8 +12,8 @@
         "tier_3": "pass"
     },
     "last_invocation": "2026-03-21",
-    "last_sync_sha": "e4fbbe2",
-    "next_pr": "Phase 86 — direction pending governor ratification",
+    "last_sync_sha": "f13eaa3",
+    "next_pr": "Phase 87 — direction pending governor ratification",
     "open_findings": [
         {
             "id": "FINDING-66-001",
@@ -304,7 +304,7 @@
         "phase75-inject-endpoint",
         "v9.10.0-released"
     ],
-    "current_version": "9.16.0",
+    "current_version": "9.17.0",
     "completed_milestones": [
         "phase66-plan",
         "phase66-weight-adaptor-telemetry",
@@ -337,6 +337,6 @@
         "v9.10.0-released",
         "phase77-plan-authored"
     ],
-    "software_version": "9.16.0",
+    "software_version": "9.17.0",
     "last_agent_state_sync_digest": "gsync-d202131a642fb816"
 }

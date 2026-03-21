@@ -3,7 +3,7 @@
 > **Authority:** Canonical gate checklist for the `v1.1-GA` public-readiness tag.
 > Supersedes v1.0.0-GA baseline (Phase 51 / v7.5.0). Refreshed to v9.11.0.
 > Referenced by `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` § 2.2.
-> **Last updated:** 2026-03-21 · **Baseline:** v9.16.0 · **Phase:** 85 complete
+> **Last updated:** 2026-03-21 · **Baseline:** v9.17.0 · **Phase:** 86 complete
 > **Status:** IN PROGRESS — Gates 3 and 4 are hard blocks pending Dustin action (Gate 2 pending H-04)
 
 ---
@@ -26,7 +26,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Artifact | Status |
 |---|---|---|
-| All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,800+ tests — v9.16.0 |
+| All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,870+ tests — v9.17.0 |
 | Determinism suite | `pytest tests/determinism/ -q` → 0 failures | ✅ |
 | Governance inviolability suite | `pytest tests/governance/inviolability/ -q` → 0 failures | ✅ |
 | CodeQL analysis (`CodeQL / Analyze (python)`) | `.github/workflows/codeql.yml` — no high/critical | ✅ |
@@ -39,6 +39,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | Phase 77 Track B seed epoch suite | `pytest tests/test_phase77_track_b_seed_epoch.py` → 27/27 | ✅ |
 | Phase 81–84 evolution engine suites | `pytest tests/test_phase8{1,2,3,4}_*.py` → all pass | ✅ |
 | Phase 85 governance state sync suite | `pytest tests/test_phase85_*.py` → 26/26 | ✅ |
+| Phase 86 CEL wiring + CompoundEvolution | `pytest -m phase86` → 70/70 | ✅ |
 | PyPI package published | `pip install adaad==9.11.0` resolves | ✅ |
 
 **Gate 1: ✅ CLEARED**

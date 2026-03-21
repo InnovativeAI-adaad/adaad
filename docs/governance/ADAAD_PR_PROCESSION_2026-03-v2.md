@@ -135,10 +135,10 @@ adaad_pr_procession_contract:
   schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase85_complete"
-  milestone: "v9.16.0"
+  active_phase: "phase86_complete"
+  milestone: "v9.17.0"
   last_state_align: "2026-03-21"
-  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-21 (phases 81–85)"
+  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-21 (phases 81–86)"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -174,6 +174,7 @@ adaad_pr_procession_contract:
     - phase83
     - phase84
     - phase85
+    - phase86
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -438,10 +439,33 @@ adaad_pr_procession_contract:
           title: "Aesthetic Overhaul + Noah Governance Incident Log"
           pr: PR-85-04
           status: complete
+    phase86:
+      ci_tier: constitutional
+      depends_on: ["phase85"]
+      status: merged
+      version: "v9.17.0"
+      title: "Evolution Engine Integration + CompoundEvolutionTracker"
+      merge_sha: f13eaa3
+      invariants: [STEP8-LEDGER-FIRST-0, STEP8-DETERM-0, CEL-PARETO-0, CEL-PARETO-DETERM-0, CEL-SELF-DISC-0, CEL-SELF-DISC-NONBLOCK-0, SELF-DISC-HUMAN-0, COMP-TRACK-0, COMP-ANCESTRY-0, COMP-GOV-WRITE-0, COMP-CAUSAL-0]
+      tracks:
+        - id: track_a
+          title: "CEL Evolution Engine Wiring"
+          pr: PR-86-01
+          sha: 7da0468
+          status: complete
+        - id: track_b
+          title: "CompoundEvolutionTracker"
+          pr: PR-86-02
+          sha: f13eaa3
+          status: complete
+        - id: track_c
+          title: "VERSION/CHANGELOG/procession close"
+          pr: PR-86-03
+          status: complete
   state_alignment:
-    expected_active_phase: "Phase 85 COMPLETE · v9.16.0"
-    expected_last_completed_pr: "feat(phase85): README visual overhaul + governance state sync hardening"
-    expected_next_pr: "Phase 86 — direction pending governor ratification"
+    expected_active_phase: "Phase 86 COMPLETE · v9.17.0"
+    expected_last_completed_pr: "feat/phase86-cel-fitness-wiring"
+    expected_next_pr: "Phase 87 — direction pending governor ratification"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -465,7 +489,7 @@ adaad_pr_procession_contract:
       - founder_gpg_signoff_confirmed
       - ga_versioning_decision_documented
   missing_tags:
-    note: "v9.7.0–v9.10.0 and v9.14.0–v9.16.0 GPG-signed tag ceremonies required — Dustin local action C-02"
+    note: "v9.7.0–v9.10.0 and v9.14.0–v9.17.0 GPG-signed tag ceremonies required — Dustin local action C-02"
     ceremony_targets:
       - tag: v9.14.0
         sha: 5c32cf3
@@ -476,6 +500,9 @@ adaad_pr_procession_contract:
       - tag: v9.16.0
         sha: b98d59d
         message: "chore(tag): v9.16.0 — Phases 81–85 · Evolution Engine Core + Governance State Sync"
+      - tag: v9.17.0
+        sha: f13eaa3
+        message: "chore(tag): v9.17.0 — Phase 86 · Evolution Engine Integration + CompoundEvolutionTracker"
 ```
 
 ### 3.1 Preflight alignment rules
