@@ -1319,6 +1319,35 @@ class AponiDashboard:
                     payload = self._evidence_graph_projection(epoch_id=epoch_id, limit=limit)
                     self._send_validated_response("/evolution/evidence-graph", "evidence_graph.schema.json", payload)
                     return
+                # ── Phase 87 — Evolution Engine Dashboard routes ───────────
+                if path.startswith("/evolution/compound"):
+                    limit_raw = (query.get("limit") or ["20"])[0]
+                    try:
+                        limit = max(1, min(200, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 20
+                    self._send_json(self._compound_evolution_feed(limit=limit))
+                    return
+                if path.startswith("/evolution/pareto"):
+                    limit_raw = (query.get("limit") or ["20"])[0]
+                    try:
+                        limit = max(1, min(200, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 20
+                    self._send_json(self._pareto_epoch_feed(limit=limit))
+                    return
+                if path.startswith("/evolution/cel-steps"):
+                    epoch_id = query.get("epoch_id", [""])[0].strip()
+                    self._send_json(self._cel_step_detail(epoch_id=epoch_id))
+                    return
+                if path.startswith("/evolution/self-discovery"):
+                    limit_raw = (query.get("limit") or ["50"])[0]
+                    try:
+                        limit = max(1, min(500, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 50
+                    self._send_json(self._self_discovery_candidates(limit=limit))
+                    return
                 if path.startswith("/projection/mutation-roi"):
                     self._send_json(self._mutation_roi_projection())
                     return
@@ -2253,6 +2282,171 @@ class AponiDashboard:
             @staticmethod
             def _evidence_graph_projection(*, epoch_id: str, limit: int) -> Dict[str, Any]:
                 return build_evidence_graph_projection(lineage_v2, epoch_id=epoch_id, limit=limit)
+
+            @staticmethod
+            def _compound_evolution_feed(*, limit: int = 20) -> Dict[str, Any]:
+                """Phase 87 — /evolution/compound.
+
+                Returns the most recent CompoundEvolutionRecord entries from the
+                LineageLedgerV2, enriched with generation_depth and compound_fitness.
+
+                COMP-APONI-0: read-only; no ledger mutation.
+                """
+                try:
+                    entries = lineage_v2.read_all()
+                    compound = [
+                        e for e in entries
+                        if e.get("event_type") == "compound_evolution_record.v1"
+                    ]
+                    compound_sorted = sorted(
+                        compound,
+                        key=lambda e: e.get("record_id", ""),
+                        reverse=True,
+                    )[-limit:]
+                    return {
+                        "ok": True,
+                        "count": len(compound_sorted),
+                        "records": [
+                            {
+                                "record_id": e.get("record_id", ""),
+                                "epoch_id": e.get("epoch_id", ""),
+                                "compound_fitness": e.get("compound_fitness", 0.0),
+                                "generation_depth": e.get("generation_depth", 0),
+                                "ancestry_trace": e.get("ancestry_trace", []),
+                                "top_causal_ops": e.get("top_causal_ops", []),
+                                "pareto_epoch_digest": e.get("pareto_epoch_digest", ""),
+                                "record_digest": e.get("record_digest", ""),
+                                "schema_version": e.get("schema_version", ""),
+                            }
+                            for e in compound_sorted
+                        ],
+                    }
+                except Exception as exc:  # noqa: BLE001
+                    return {"ok": False, "error": str(exc), "records": []}
+
+            @staticmethod
+            def _pareto_epoch_feed(*, limit: int = 20) -> Dict[str, Any]:
+                """Phase 87 — /evolution/pareto.
+
+                Returns the most recent ParetoCompetitionEpochEvent entries from
+                the LineageLedgerV2, surfacing frontier_ids, dominated_ids, and
+                the epoch_digest for audit traceability.
+
+                PARETO-APONI-0: read-only; advisory surface only.
+                """
+                try:
+                    entries = lineage_v2.read_all()
+                    pareto = [
+                        e for e in entries
+                        if e.get("event_type") in {
+                            "pareto_competition_epoch.v1",
+                            "ParetoCompetitionEpochEvent",
+                        }
+                    ]
+                    pareto_sorted = sorted(
+                        pareto,
+                        key=lambda e: e.get("epoch_id", ""),
+                        reverse=True,
+                    )[-limit:]
+                    return {
+                        "ok": True,
+                        "count": len(pareto_sorted),
+                        "epochs": [
+                            {
+                                "epoch_id": e.get("epoch_id", ""),
+                                "frontier_ids": e.get("frontier_ids", []),
+                                "dominated_ids": e.get("dominated_ids", []),
+                                "passed_gate_ids": e.get("passed_gate_ids", []),
+                                "gate_verdict": e.get("gate_verdict", ""),
+                                "epoch_digest": e.get("epoch_digest", ""),
+                                "scalar_ranking": e.get("scalar_ranking", []),
+                            }
+                            for e in pareto_sorted
+                        ],
+                    }
+                except Exception as exc:  # noqa: BLE001
+                    return {"ok": False, "error": str(exc), "epochs": []}
+
+            @staticmethod
+            def _cel_step_detail(*, epoch_id: str) -> Dict[str, Any]:
+                """Phase 87 — /evolution/cel-steps?epoch_id=...
+
+                Returns per-step detail for a specific CEL epoch from the ledger,
+                including fitness_event_digest (Step 8), pareto_frontier_digest
+                (Step 9), and self_discovery_result (post-epoch hook).
+
+                CEL-APONI-0: read-only audit surface; no replay triggered.
+                """
+                if not epoch_id:
+                    return {"ok": False, "error": "missing_epoch_id", "steps": []}
+                try:
+                    entries = lineage_v2.read_all()
+                    cel_entries = [
+                        e for e in entries
+                        if e.get("epoch_id") == epoch_id
+                        and e.get("event_type", "").startswith("cel_")
+                    ]
+                    # Also surface compound record for this epoch if present
+                    compound = next(
+                        (
+                            e for e in entries
+                            if e.get("event_type") == "compound_evolution_record.v1"
+                            and e.get("epoch_id") == epoch_id
+                        ),
+                        None,
+                    )
+                    return {
+                        "ok": True,
+                        "epoch_id": epoch_id,
+                        "cel_event_count": len(cel_entries),
+                        "events": cel_entries,
+                        "compound_record": compound,
+                        "fitness_event_digest": next(
+                            (e.get("fitness_event_digest") for e in cel_entries
+                             if e.get("step") == 8),
+                            None,
+                        ),
+                        "pareto_frontier_digest": next(
+                            (e.get("frontier_digest") for e in cel_entries
+                             if e.get("step") == 9),
+                            None,
+                        ),
+                    }
+                except Exception as exc:  # noqa: BLE001
+                    return {"ok": False, "error": str(exc), "steps": []}
+
+            @staticmethod
+            def _self_discovery_candidates(*, limit: int = 50) -> Dict[str, Any]:
+                """Phase 87 — /evolution/self-discovery.
+
+                Returns invariant candidates produced by ConstitutionalSelfDiscoveryLoop
+                from the ledger stream. All candidates are advisory:
+                SELF-DISC-HUMAN-0 applies — none are promoted without HUMAN-0 sign-off.
+
+                DISC-APONI-0: read-only; HUMAN-0 advisory note included in every response.
+                """
+                try:
+                    entries = lineage_v2.read_all()
+                    disc = [
+                        e for e in entries
+                        if e.get("event_type") in {
+                            "self_discovery_candidates.v1",
+                            "constitutional_self_discovery.v1",
+                        }
+                    ]
+                    disc_sorted = disc[-limit:]
+                    return {
+                        "ok": True,
+                        "count": len(disc_sorted),
+                        "human_0_note": (
+                            "SELF-DISC-HUMAN-0: all candidates are advisory. "
+                            "No invariant enters CONSTITUTION.md without governor sign-off."
+                        ),
+                        "candidates": disc_sorted,
+                    }
+                except Exception as exc:  # noqa: BLE001
+                    return {"ok": False, "error": str(exc), "candidates": []}
+
 
             @staticmethod
             def _series_confidence_band(values: List[float]) -> Dict[str, float]:
@@ -4728,7 +4922,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[APONI] dashboard running on http://{dashboard.host}:{dashboard.port}")
     print(
         "[APONI] endpoints: / /state /metrics /fitness /system/intelligence /risk/summary /risk/instability /policy/simulate /simulation/context /simulation/run /simulation/results/{run_id} /alerts/evaluate /replay/divergence /replay/diff?epoch_id=... "
-        "/capabilities /lineage /mutations /staging /evolution/epoch?epoch_id=... /evolution/live /evolution/active /evolution/timeline /projection/mutation-roi /projection/lineage-trajectory /projection/confidence-bands /control/free-sources /control/skill-profiles /control/capability-matrix /control/policy-summary /control/templates /control/environment-health /control/queue /control/queue/verify /ux/summary /ux/events"
+        "/capabilities /lineage /mutations /staging /evolution/epoch?epoch_id=... /evolution/live /evolution/active /evolution/timeline /evolution/evidence-graph?epoch_id=...&limit=... /evolution/compound?limit=... /evolution/pareto?limit=... /evolution/cel-steps?epoch_id=... /evolution/self-discovery?limit=... /projection/mutation-roi /projection/lineage-trajectory /projection/confidence-bands /control/free-sources /control/skill-profiles /control/capability-matrix /control/policy-summary /control/templates /control/environment-health /control/queue /control/queue/verify /ux/summary /ux/events"
     )
     try:
         while True:
