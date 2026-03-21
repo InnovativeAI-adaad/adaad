@@ -1618,3 +1618,32 @@ Capitalises on the Phase 79 `MultiGenLineageGraph` and Phase 80 `SeedCompetition
 - 20–26 constitutional tests
 
 **Prerequisites:** Phase 80 complete ✅
+
+---
+
+### Phase 85 — Governance State Sync Hardening + README Visual Overhaul
+
+**Status:** ✅ shipped (v9.16.0) · **Dependency:** Phase 84 merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-21) · **Tests:** 26 new (phase85 suites) · **Commit:** e4fbbe2
+
+Four compounding agent state drift defects root-caused and closed. `scripts/sync_agent_state_on_merge.py` now owns `current_version`, `schema_version`, `last_completed_phase` derivation. `scripts/validate_governance_state_drift.py` + `.github/workflows/governance_state_drift_gate.yml` enforce drift prevention at merge time. `scripts/generate_readme_svgs.py` produces 4 deterministic CSS-animated SVG assets on every merge. Noah Governance Incident Log (`DEVLOG-NOAH-∞`) embedded as permanent README easter egg — `HUMAN-0` remains inviolable; Noah is rehired unconditionally.
+
+**Key invariants:** `GSYNC-0`, `GSYNC-DETERM-0`, `GSYNC-SCHEMA-0`, `GSYNC-PHASE-0`, `GSYNC-GATE-0`, `GSYNC-CLOSED-0`, `README-SVG-0`, `README-DETERM-0`
+
+---
+
+### Phase 86 — Evolution Engine Integration + CompoundEvolutionTracker
+
+**Status:** 🔜 planned · **Dependency:** Phase 85 merged ✅ · **Target:** v9.17.0 · **Plan:** `docs/plans/PHASE_86_PLAN.md`
+
+Wires the Phase 81–84 evolution reasoning stack into the live `ConstitutionalEvolutionLoop`. CEL Step 8 (`FITNESS-SCORE`) stub replaced with real `FitnessOrchestrator` + `FitnessDecayScorer` + `CausalFitnessAttributor`. New Step 8.5 (`PARETO-SELECT`) inserts `ParetoCompetitionOrchestrator.run_epoch()` as the candidate promotion mechanism, replacing the naive `score > 0.5` threshold in place since Phase 64. `ConstitutionalSelfDiscoveryLoop` wired as a non-blocking post-epoch hook (every 5 epochs). `CompoundEvolutionTracker` ships as the originally planned Phase 81 deliverable — multi-generation fitness aggregation across competitive epochs with full causal ancestry provenance.
+
+**Planned deliverables:**
+- `runtime/evolution/constitutional_evolution_loop.py` — Step 8 real scoring, Step 8.5 PARETO-SELECT, Step 14.5 self-discovery hook
+- `runtime/evolution/compound_evolution.py` — `CompoundEvolutionTracker`
+- `schemas/compound_evolution_record.py` — `CompoundEvolutionRecord`
+- `tests/test_phase86_cel_fitness_wiring.py`, `test_phase86_pareto_select_step.py`, `test_phase86_self_discovery_hook.py`, `test_phase86_compound_evolution.py`
+- ~60–70 constitutional tests total
+
+**New invariants:** `STEP8-LEDGER-FIRST-0`, `STEP8-DETERM-0`, `CEL-PARETO-0`, `CEL-PARETO-DETERM-0`, `CEL-SELF-DISC-0`, `CEL-SELF-DISC-NONBLOCK-0`, `SELF-DISC-HUMAN-0`, `COMP-TRACK-0`, `COMP-ANCESTRY-0`, `COMP-GOV-WRITE-0`, `COMP-CAUSAL-0`
+
+**Prerequisites:** Phase 85 complete ✅ · governor ratification of Phase 86 plan (HUMAN-0)
