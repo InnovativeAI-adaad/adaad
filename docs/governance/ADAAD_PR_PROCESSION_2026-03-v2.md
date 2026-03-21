@@ -135,10 +135,10 @@ adaad_pr_procession_contract:
   schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase79_complete"
-  milestone: "v9.14.0"
-  last_state_align: "2026-03-20"
-  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-20 (phases 78+79)"
+  active_phase: "phase85_complete"
+  milestone: "v9.16.0"
+  last_state_align: "2026-03-21"
+  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-21 (phases 81–85)"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -169,6 +169,11 @@ adaad_pr_procession_contract:
     - phase78
     - phase79
     - phase80
+    - phase81
+    - phase82
+    - phase83
+    - phase84
+    - phase85
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -339,9 +344,10 @@ adaad_pr_procession_contract:
     phase80:
       ci_tier: constitutional
       depends_on: ["phase79"]
-      status: in_progress
+      status: merged
       version: "v9.15.0"
       title: "Multi-Generation Compound Evolution — Multi-Seed Competitive Epoch"
+      merge_sha: be9c905
       tracks:
         - id: track_a
           branch: feat/phase80-seed-competition
@@ -353,11 +359,89 @@ adaad_pr_procession_contract:
           scope: ga_unblock_sprint
         - id: track_c
           branch: chore/v9.15-close
-          status: pending
+          status: complete
+    phase81:
+      ci_tier: constitutional
+      depends_on: ["phase80"]
+      status: merged
+      version: "v9.16.0"
+      title: "Constitutional Self-Discovery Loop"
+      merge_sha: e63daa7
+      invariants: [SELF-DISC-0, RATIFY-GOV-0, MINE-DETERM-0]
+      prs:
+        - id: PR-81-01
+          sha: 9ea5867
+          title: "feat(phase81): Constitutional Self-Discovery Loop — FailurePatternMiner + InvariantRatificationGate"
+      evidence: "artifacts/governance/phase81/track_a_sign_off.json"
+    phase82:
+      ci_tier: constitutional
+      depends_on: ["phase81"]
+      status: merged
+      version: "v9.16.0"
+      title: "Pareto Population Evolution"
+      merge_sha: ef4d4be
+      invariants: [PARETO-0, PARETO-DETERM-0, PARETO-GOV-0]
+      prs:
+        - id: PR-82-01
+          sha: 6d285a0
+          title: "feat(phase82): Pareto Population Evolution — multi-objective frontier"
+      evidence: "artifacts/governance/phase82/track_a_sign_off.json"
+    phase83:
+      ci_tier: constitutional
+      depends_on: ["phase82"]
+      status: merged
+      version: "v9.16.0"
+      title: "Causal Fitness Attribution Engine"
+      merge_sha: f54518d
+      invariants: [CAUSAL-ATTR-0, ABLATE-DETERM-0, SHAPLEY-BOUND-0]
+      prs:
+        - id: PR-83-01
+          sha: 7fc6679
+          title: "feat(phase83): Causal Fitness Attribution Engine — Shapley-approximation per-op attribution"
+      evidence: "artifacts/governance/phase83/track_a_sign_off.json"
+    phase84:
+      ci_tier: constitutional
+      depends_on: ["phase83"]
+      status: merged
+      version: "v9.16.0"
+      title: "Temporal Fitness Half-Life"
+      merge_sha: dd5c796
+      invariants: [DECAY-0, HALFLIFE-DETERM-0, DECAY-LEDGER-0]
+      prs:
+        - id: PR-84-01
+          sha: a433367
+          title: "feat(phase84): Temporal Fitness Half-Life — CodebaseStateVector + FitnessDecayScorer"
+      evidence: "artifacts/governance/phase84/track_a_sign_off.json"
+    phase85:
+      ci_tier: constitutional
+      depends_on: ["phase84"]
+      status: merged
+      version: "v9.16.0"
+      title: "Governance State Sync Hardening + README Visual Overhaul"
+      merge_sha: e4fbbe2
+      note: "direct commit to main (not merge-commit pattern) — procession model deviation recorded for audit"
+      invariants: [GSYNC-0, GSYNC-DETERM-0, GSYNC-SCHEMA-0, GSYNC-PHASE-0, GSYNC-GATE-0, GSYNC-CLOSED-0, README-SVG-0, README-DETERM-0]
+      tracks:
+        - id: track_a
+          title: "README Visual Overhaul"
+          pr: PR-85-01
+          status: complete
+        - id: track_b
+          title: "Governance State Sync Hardening"
+          pr: PR-85-02
+          status: complete
+        - id: track_c
+          title: "Automated README SVG Generation"
+          pr: PR-85-03
+          status: complete
+        - id: track_d
+          title: "Aesthetic Overhaul + Noah Governance Incident Log"
+          pr: PR-85-04
+          status: complete
   state_alignment:
-    expected_active_phase: "Phase 80 IN PROGRESS · v9.14.0"
-    expected_last_completed_pr: "feat/phase-79-multi-gen-lineage"
-    expected_next_pr: "Phase 80 — PR-80-01 (Multi-Seed Competition) + PR-80-02 (GA Unblock) + PR-80-03 (v9.15.0 close)"
+    expected_active_phase: "Phase 85 COMPLETE · v9.16.0"
+    expected_last_completed_pr: "feat(phase85): README visual overhaul + governance state sync hardening"
+    expected_next_pr: "Phase 86 — direction pending governor ratification"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -381,7 +465,17 @@ adaad_pr_procession_contract:
       - founder_gpg_signoff_confirmed
       - ga_versioning_decision_documented
   missing_tags:
-    note: "v9.7.0, v9.8.0, v9.9.0, v9.10.0 GPG-signed tag ceremonies required — Dustin local action C-02"
+    note: "v9.7.0–v9.10.0 and v9.14.0–v9.16.0 GPG-signed tag ceremonies required — Dustin local action C-02"
+    ceremony_targets:
+      - tag: v9.14.0
+        sha: 5c32cf3
+        message: "chore(tag): v9.14.0 — Phases 78+79 · Production Signing + Multi-Gen Lineage"
+      - tag: v9.15.0
+        sha: be9c905
+        message: "chore(tag): v9.15.0 — Phase 80 · Multi-Generation Compound Evolution"
+      - tag: v9.16.0
+        sha: b98d59d
+        message: "chore(tag): v9.16.0 — Phases 81–85 · Evolution Engine Core + Governance State Sync"
 ```
 
 ### 3.1 Preflight alignment rules
