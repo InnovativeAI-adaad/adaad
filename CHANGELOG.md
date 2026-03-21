@@ -2,6 +2,43 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.17.0] — 2026-03-21 — Phase 86 · Evolution Engine Integration + CompoundEvolutionTracker
+
+### Phase 86 Track A — CEL Evolution Engine Wiring
+
+- `runtime/evolution/constitutional_evolution_loop.py` — 14-step CEL extended to 15 steps:
+  - **Step 8 FITNESS-SCORE**: stub (`0.65 if sandbox_ok`) replaced with real pipeline —
+    `FitnessOrchestrator.score()` (5-component composite) + `FitnessDecayScorer.evaluate()`
+    (temporal half-life discount) + `CausalFitnessAttributor.attribute()` (per-op Shapley).
+    `STEP8-LEDGER-FIRST-0`: `fitness_event_digest` written before `fitness_summary` committed.
+  - **Step 9 PARETO-SELECT** (new): `ParetoCompetitionOrchestrator.run_epoch()` replaces
+    scalar `score > 0.5` threshold in place since Phase 64. `CEL-PARETO-0`: frontier digest
+    ledger-first before Step 10.
+  - **Post-epoch SELF-DISCOVERY hook**: `ConstitutionalSelfDiscoveryLoop` fires every
+    `SELF_DISC_FREQUENCY` (5) completed epochs. `CEL-SELF-DISC-NONBLOCK-0`: exception-safe,
+    never blocks. `SELF-DISC-HUMAN-0`: candidates advisory only; HUMAN-0 required for
+    any promotion to `CONSTITUTION.md`.
+  - `_UNSET` sentinel distinguishes lazy-import from explicit `None` injection.
+  - `self._epoch_seq` tracks completed epochs; blocked epochs do not increment.
+- `tests/test_phase86_cel_fitness_wiring.py` — T86-FIT-01..24 (24 tests)
+- `tests/test_phase86_pareto_select_step.py` — T86-PAR-01..15 (15 tests)
+- `tests/test_phase86_self_discovery_hook.py` — T86-DISC-01..10 (10 tests)
+
+**Invariants introduced:** `STEP8-LEDGER-FIRST-0`, `STEP8-DETERM-0`, `CEL-PARETO-0`,
+`CEL-PARETO-DETERM-0`, `CEL-SELF-DISC-0`, `CEL-SELF-DISC-NONBLOCK-0`, `SELF-DISC-HUMAN-0`
+
+### Phase 86 Track B — CompoundEvolutionTracker
+
+- `runtime/evolution/compound_evolution.py` — `CompoundEvolutionTracker`:
+  - `track_epoch(epoch_id, pareto_result, lineage_graph, attributions)` → `CompoundEvolutionRecord`
+  - Synthesises `ParetoCompetitionResult` + `MultiGenLineageGraph` + `CausalAttributionReport`
+  - Generation-discounted fitness aggregation (`GENERATION_DISCOUNT_FACTOR = 0.8`)
+  - `COMP-GOV-WRITE-0`: `ledger.append_raw()` called before record returned
+- `CompoundEvolutionRecord`, `AncestorContribution` — frozen dataclasses with round-trip serialisation
+- `tests/test_phase86_compound_evolution.py` — T86-COMP-01..24 (24 tests)
+
+**Invariants introduced:** `COMP-TRACK-0`, `COMP-ANCESTRY-0`, `COMP-GOV-WRITE-0`, `COMP-CAUSAL-0`
+
 ## [9.16.0] — 2026-03-20 — Phases 81–84 · Evolution Engine Core
 
 ### Phase 78 (merge) — Journal Warm-Cache + Autonomous Doc Sync

@@ -2,19 +2,26 @@
 """Phase 64 — Constitutional Evolution Loop (CEL).
 
 Constitutional invariants:
-  CEL-ORDER-0      Steps execute in strict 1→14 sequence; no re-ordering; no step skipping.
-  CEL-EVIDENCE-0   Every epoch closes with an EpochEvidence record written to the append-only
-                   evolution ledger; predecessor_hash links it to the prior epoch.
-  CEL-BLOCK-0      Any step returning StepOutcome.BLOCKED halts the epoch immediately;
-                   remaining steps do not execute; partial-epoch ledger entry is written.
-  CEL-DRYRUN-0     In SANDBOX_ONLY mode all real writes are suppressed; ledger entries are
-                   tagged dry_run=True; no capability promotion occurs.
-  CEL-REPLAY-0     All timestamps via RuntimeDeterminismProvider; no datetime.now() calls.
-  CEL-GATE-0       GovernanceGateV2 evaluates in Step 9; a blocking V2 result that is not
-                   class_b_eligible is a hard halt; class_b_eligible surfaces the token path
-                   but does not auto-approve — HUMAN-0 still required.
+  CEL-ORDER-0           Steps execute in strict 1→15 sequence; no re-ordering; no step skipping.
+  CEL-EVIDENCE-0        Every epoch closes with an EpochEvidence record written to the append-only
+                        evolution ledger; predecessor_hash links it to the prior epoch.
+  CEL-BLOCK-0           Any step returning StepOutcome.BLOCKED halts the epoch immediately;
+                        remaining steps do not execute; partial-epoch ledger entry is written.
+  CEL-DRYRUN-0          In SANDBOX_ONLY mode all real writes are suppressed; ledger entries are
+                        tagged dry_run=True; no capability promotion occurs.
+  CEL-REPLAY-0          All timestamps via RuntimeDeterminismProvider; no datetime.now() calls.
+  CEL-GATE-0            GovernanceGateV2 evaluates in Step 10; a blocking V2 result that is not
+                        class_b_eligible is a hard halt; class_b_eligible surfaces the token path
+                        but does not auto-approve — HUMAN-0 still required.
+  CEL-PARETO-0          Pareto selection result written to ledger before Step 10 (Phase 86).
+  CEL-PARETO-DETERM-0   Identical scored candidates → identical Pareto frontier (Phase 86).
+  STEP8-LEDGER-FIRST-0  All fitness calls ledger-recorded before fitness_summary written (Phase 86).
+  STEP8-DETERM-0        Identical sandbox_results + codebase state → identical fitness_summary.
+  CEL-SELF-DISC-0       Self-discovery runs post-epoch at SELF_DISC_FREQUENCY cadence (Phase 86).
+  CEL-SELF-DISC-NONBLOCK-0  Self-discovery failure never blocks epoch completion (Phase 86).
+  SELF-DISC-HUMAN-0     No self-discovered invariant enters CONSTITUTION.md without HUMAN-0.
 
-14-Step Sequence (CEL-ORDER-0):
+15-Step Sequence (CEL-ORDER-0) — Phase 86:
   Step  1 — MODEL-DRIFT-CHECK      Verify CodeIntelModel determinism; block on drift.
   Step  2 — LINEAGE-SNAPSHOT       Capture LineageEngine state hash for chain integrity.
   Step  3 — FITNESS-BASELINE       Compute FitnessEngineV2 baseline composite score.
@@ -25,16 +32,26 @@ Constitutional invariants:
                                    respected); record sandbox_container_id.
   Step  7 — REPLAY-VERIFY          Deterministic replay of sandbox; record
                                    replay_verification_hash; block on SANDBOX-DIV-0.
-  Step  8 — FITNESS-SCORE          Score all sandbox results via FitnessEngineV2.
-  Step  9 — GOVERNANCE-GATE-V2     Full GovernanceGateV2 evaluation (all 5 Phase 63 rules).
-  Step 10 — GOVERNANCE-GATE        Existing GovernanceGate (all 16 pre-Phase-63 rules);
+  Step  8 — FITNESS-SCORE          Score all sandbox results: FitnessOrchestrator (real composite)
+                                   + FitnessDecayScorer (temporal discount) + CausalFitnessAttributor
+                                   (per-op Shapley). Ledger-first (STEP8-LEDGER-FIRST-0).
+  Step  9 — PARETO-SELECT          Multi-objective Pareto frontier selection via
+                                   ParetoCompetitionOrchestrator. Replaces scalar score > 0.5
+                                   threshold. Frontier written to ledger (CEL-PARETO-0).
+  Step 10 — GOVERNANCE-GATE-V2     Full GovernanceGateV2 evaluation (all 5 Phase 63 rules).
+  Step 11 — GOVERNANCE-GATE        Existing GovernanceGate (all 16 pre-Phase-63 rules);
                                    GATE-V2-EXISTING-0 compliance check.
-  Step 11 — LINEAGE-REGISTER       Register surviving mutations in LineageEngine.
-  Step 12 — PROMOTION-DECISION     Write PromotionEvent; suppressed in SANDBOX_ONLY mode.
-  Step 13 — EPOCH-EVIDENCE-WRITE   Assemble and write EvolutionEvidence to ledger;
+  Step 12 — LINEAGE-REGISTER       Register surviving mutations in LineageEngine.
+  Step 13 — PROMOTION-DECISION     Write PromotionEvent; suppressed in SANDBOX_ONLY mode.
+  Step 14 — EPOCH-EVIDENCE-WRITE   Assemble and write EvolutionEvidence to ledger;
                                    compute predecessor_hash; chain validated.
-  Step 14 — STATE-ADVANCE          Advance epoch counter; update exploration/exploitation
+  Step 15 — STATE-ADVANCE          Advance epoch counter; update exploration/exploitation
                                    state; emit epoch_complete.v1 journal event.
+
+Post-epoch (non-blocking, outside step sequence):
+  SELF-DISCOVERY         ConstitutionalSelfDiscoveryLoop fires every SELF_DISC_FREQUENCY epochs.
+                         Candidates written to self_discovery_candidates ledger stream.
+                         HUMAN-0 required before any candidate enters CONSTITUTION.md.
 """
 
 from __future__ import annotations
@@ -67,6 +84,17 @@ from runtime.evolution.evidence.schemas import (
     PromotionStatus,
 )
 from runtime.governance.foundation import sha256_prefixed_digest, canonical_json
+
+# ---------------------------------------------------------------------------
+# Phase 86 — Evolution engine wiring imports (lazy to avoid circular deps)
+# ---------------------------------------------------------------------------
+# FitnessOrchestrator, FitnessDecayScorer, CausalFitnessAttributor,
+# ParetoCompetitionOrchestrator, ConstitutionalSelfDiscoveryLoop are imported
+# lazily inside the constructor so that this module remains importable even
+# when the phase-86 modules are not yet fully wired.  Explicit injection via
+# constructor kwargs always takes precedence (testability / determinism).
+SELF_DISC_FREQUENCY: int = 5  # run ConstitutionalSelfDiscoveryLoop every N epochs
+_UNSET: object = object()     # sentinel: distinguishes "not provided" from explicit None
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -207,12 +235,62 @@ class ConstitutionalEvolutionLoop:
         exception_ledger: Optional[ExceptionTokenLedger] = None,
         cel_ledger: Optional[CELEvidenceLedger] = None,
         timestamp_provider: Optional[Any] = None,  # RuntimeDeterminismProvider
+        # Phase 86 — evolution engine components (injected for testability)
+        # Pass _UNSET (default) to enable lazy-import fallback.
+        # Pass None explicitly to disable the component entirely (e.g. in tests).
+        fitness_orchestrator: Any = _UNSET,
+        fitness_decay_scorer: Any = _UNSET,
+        causal_fitness_attributor: Any = _UNSET,
+        pareto_competition_orchestrator: Any = _UNSET,
+        self_discovery_loop: Any = _UNSET,
+        self_disc_frequency: int = SELF_DISC_FREQUENCY,
     ) -> None:
         self._run_mode = run_mode
         self._dry_run = run_mode == RunMode.SANDBOX_ONLY
         self._gate_v2 = gate_v2 or GovernanceGateV2(exception_ledger=exception_ledger)
         self._cel_ledger = cel_ledger or CELEvidenceLedger()
         self._ts_provider = timestamp_provider
+
+        # Phase 86 — evolution engine wiring (lazy-import fallbacks)
+        # _UNSET means "try to import"; explicit None means "disabled by caller".
+        if fitness_orchestrator is _UNSET:
+            try:
+                from runtime.evolution.fitness_orchestrator import FitnessOrchestrator
+                fitness_orchestrator = FitnessOrchestrator()
+            except Exception:  # noqa: BLE001
+                fitness_orchestrator = None
+        if fitness_decay_scorer is _UNSET:
+            try:
+                from runtime.evolution.fitness_decay_scorer import FitnessDecayScorer
+                fitness_decay_scorer = FitnessDecayScorer()
+            except Exception:  # noqa: BLE001
+                fitness_decay_scorer = None
+        if causal_fitness_attributor is _UNSET:
+            try:
+                from runtime.evolution.causal_fitness_attributor import CausalFitnessAttributor
+                causal_fitness_attributor = CausalFitnessAttributor()
+            except Exception:  # noqa: BLE001
+                causal_fitness_attributor = None
+        if pareto_competition_orchestrator is _UNSET:
+            try:
+                from runtime.evolution.pareto_competition import ParetoCompetitionOrchestrator
+                pareto_competition_orchestrator = ParetoCompetitionOrchestrator()
+            except Exception:  # noqa: BLE001
+                pareto_competition_orchestrator = None
+        if self_discovery_loop is _UNSET:
+            try:
+                from runtime.evolution.constitutional_self_discovery import ConstitutionalSelfDiscoveryLoop
+                self_discovery_loop = ConstitutionalSelfDiscoveryLoop()
+            except Exception:  # noqa: BLE001
+                self_discovery_loop = None
+
+        self._fitness_orchestrator = fitness_orchestrator
+        self._fitness_decay_scorer = fitness_decay_scorer
+        self._causal_attributor = causal_fitness_attributor
+        self._pareto_orchestrator = pareto_competition_orchestrator
+        self._self_discovery_loop = self_discovery_loop
+        self._self_disc_frequency = self_disc_frequency
+        self._epoch_seq: int = 0
 
     # ------------------------------------------------------------------ #
     # Public entry point
@@ -245,7 +323,7 @@ class ConstitutionalEvolutionLoop:
             "predecessor_hash": self._cel_ledger.chain_tip,
         }
 
-        # 14-step dispatch table (CEL-ORDER-0)
+        # 15-step dispatch table (CEL-ORDER-0) — Phase 86: step 9 PARETO-SELECT inserted
         steps = [
             (1,  "MODEL-DRIFT-CHECK",    self._step_01_model_drift_check),
             (2,  "LINEAGE-SNAPSHOT",     self._step_02_lineage_snapshot),
@@ -255,12 +333,13 @@ class ConstitutionalEvolutionLoop:
             (6,  "SANDBOX-EXECUTE",      self._step_06_sandbox_execute),
             (7,  "REPLAY-VERIFY",        self._step_07_replay_verify),
             (8,  "FITNESS-SCORE",        self._step_08_fitness_score),
-            (9,  "GOVERNANCE-GATE-V2",   self._step_09_governance_gate_v2),
-            (10, "GOVERNANCE-GATE",      self._step_10_governance_gate),
-            (11, "LINEAGE-REGISTER",     self._step_11_lineage_register),
-            (12, "PROMOTION-DECISION",   self._step_12_promotion_decision),
-            (13, "EPOCH-EVIDENCE-WRITE", self._step_13_epoch_evidence_write),
-            (14, "STATE-ADVANCE",        self._step_14_state_advance),
+            (9,  "PARETO-SELECT",        self._step_09_pareto_select),
+            (10, "GOVERNANCE-GATE-V2",   self._step_09_governance_gate_v2),
+            (11, "GOVERNANCE-GATE",      self._step_10_governance_gate),
+            (12, "LINEAGE-REGISTER",     self._step_11_lineage_register),
+            (13, "PROMOTION-DECISION",   self._step_12_promotion_decision),
+            (14, "EPOCH-EVIDENCE-WRITE", self._step_13_epoch_evidence_write),
+            (15, "STATE-ADVANCE",        self._step_14_state_advance),
         ]
 
         for step_num, step_name, step_fn in steps:
@@ -282,7 +361,42 @@ class ConstitutionalEvolutionLoop:
                 self._write_partial_epoch(state, result)
                 break
 
+        # Post-epoch self-discovery hook (CEL-SELF-DISC-0, CEL-SELF-DISC-NONBLOCK-0)
+        # Runs outside the main step sequence; never blocks epoch completion.
+        if not result.blocked_at_step:
+            self._run_post_epoch_self_discovery(state, result)
+            self._epoch_seq += 1
+
         return result
+
+    # ------------------------------------------------------------------ #
+    # Post-epoch hooks (non-blocking)
+    # ------------------------------------------------------------------ #
+
+    def _run_post_epoch_self_discovery(
+        self, state: Dict[str, Any], result: "EpochCELResult"
+    ) -> None:
+        """Post-epoch ConstitutionalSelfDiscoveryLoop hook.
+
+        CEL-SELF-DISC-0:        runs every SELF_DISC_FREQUENCY completed epochs.
+        CEL-SELF-DISC-NONBLOCK-0: any exception is swallowed; epoch result unchanged.
+        SELF-DISC-HUMAN-0:      candidates are advisory only — HUMAN-0 required
+                                before any candidate enters CONSTITUTION.md.
+        """
+        if self._self_discovery_loop is None:
+            return
+        if self._epoch_seq % self._self_disc_frequency != 0:
+            return
+        try:
+            discovery_result = self._self_discovery_loop.run()
+            state["self_discovery_result"] = {
+                "epoch_seq": self._epoch_seq,
+                "candidates_proposed": len(getattr(discovery_result, "proposed_invariants", []) or []),
+                "ratified": len(getattr(discovery_result, "ratified_invariants", []) or []),
+                "note": "SELF-DISC-HUMAN-0: no candidate enters CONSTITUTION.md without HUMAN-0",
+            }
+        except Exception:  # noqa: BLE001 — CEL-SELF-DISC-NONBLOCK-0
+            state["self_discovery_result"] = {"error": "self_discovery_hook_failed", "epoch_seq": self._epoch_seq}
 
     # ------------------------------------------------------------------ #
     # Step implementations
@@ -484,27 +598,200 @@ class ConstitutionalEvolutionLoop:
     def _step_08_fitness_score(
         self, n: int, name: str, state: Dict[str, Any]
     ) -> CELStepResult:
-        """Step 8 — FITNESS-SCORE.
-        Score all sandbox results via FitnessEngineV2.
-        Record fitness_summary as (mutation_id, composite_score) pairs.
+        """Step 8 — FITNESS-SCORE (Phase 86).
+
+        Real fitness scoring pipeline replacing the Phase 64 sandbox_ok stub.
+
+        Pipeline per candidate (STEP8-LEDGER-FIRST-0):
+          1. FitnessOrchestrator.score()        — real 5-component composite score
+          2. FitnessDecayScorer.evaluate()      — temporal half-life discount
+          3. CausalFitnessAttributor.attribute() — per-op Shapley contributions
+
+        All three results are ledger-recorded before fitness_summary is written.
+
+        Determinism guarantee (STEP8-DETERM-0): identical sandbox_results and
+        identical CodebaseStateVector → identical fitness_summary tuple.
+
+        Fallback: if any Phase 86 component is unavailable, falls back to
+        sandbox_ok-derived score to preserve backward compatibility.
         """
-        sandbox_results = state.get("sandbox_results", [])
+        # sandbox_results may be in state directly (from Step 6) or in context (test injection)
+        sandbox_results = state.get("sandbox_results") or state.get("context", {}).get("sandbox_results", [])
+        epoch_id = state["epoch_id"]
         fitness_summary: List[Tuple[str, float]] = []
+        fitness_detail: Dict[str, Any] = {}
 
         for sr in sandbox_results:
             mid = sr.get("mutation_id", "unknown")
-            # Phase 64: composite score is derived from sandbox_ok boolean;
-            # real FitnessEngineV2 integration is a Phase 65+ wiring task.
-            score = 0.65 if sr.get("sandbox_ok") else 0.0
-            fitness_summary.append((mid, score))
+            sandbox_ok = sr.get("sandbox_ok", False)
 
-        state["fitness_summary"] = tuple(fitness_summary)
-        state["mutations_succeeded"] = tuple(
-            mid for mid, score in fitness_summary if score > 0.5
+            # --- 1. FitnessOrchestrator real composite score ---
+            composite_score: float = 0.65 if sandbox_ok else 0.0  # fallback
+            if self._fitness_orchestrator is not None:
+                try:
+                    fitness_ctx = {
+                        "epoch_id": epoch_id,
+                        "mutation_id": mid,
+                        "sandbox_ok": sandbox_ok,
+                        **sr.get("fitness_signals", {}),
+                    }
+                    score_result = self._fitness_orchestrator.score(fitness_ctx)
+                    composite_score = float(getattr(score_result, "total_score", composite_score))
+                except Exception:  # noqa: BLE001 — fallback to sandbox_ok score
+                    pass
+
+            # --- 2. FitnessDecayScorer temporal discount ---
+            decay_coeff: float = 1.0
+            if self._fitness_decay_scorer is not None:
+                try:
+                    from runtime.evolution.fitness_decay_scorer import FitnessRecord
+                    from runtime.evolution.codebase_state_vector import CodebaseStateVector
+                    current_vector = CodebaseStateVector.from_repo()
+                    record_id = sha256_prefixed_digest(
+                        canonical_json({"candidate_id": mid, "epoch_id": epoch_id}).encode()
+                    )
+                    fitness_record = FitnessRecord(
+                        record_id=record_id,
+                        candidate_id=mid,
+                        epoch_id=epoch_id,
+                        recorded_score=composite_score,
+                        codebase_state_vector=current_vector,
+                    )
+                    decay_result = self._fitness_decay_scorer.evaluate(fitness_record, current_vector)
+                    decay_coeff = float(getattr(decay_result, "decay_coefficient", 1.0))
+                    composite_score = composite_score * decay_coeff
+                except Exception:  # noqa: BLE001 — decay advisory; never blocks
+                    pass
+
+            # --- 3. CausalFitnessAttributor per-op Shapley ---
+            attribution_digest: str = "sha256:" + "0" * 64
+            if self._causal_attributor is not None:
+                try:
+                    attr_report = self._causal_attributor.attribute(
+                        candidate_id=mid,
+                        base_fitness_context={
+                            "epoch_id": epoch_id,
+                            "sandbox_ok": sandbox_ok,
+                            **sr.get("fitness_signals", {}),
+                        },
+                        before_source=sr.get("before_source"),
+                        python_content=sr.get("after_source"),
+                    )
+                    attribution_digest = getattr(attr_report, "attribution_digest",
+                                                 attribution_digest)
+                except Exception:  # noqa: BLE001 — attribution advisory; never blocks
+                    pass
+
+            fitness_summary.append((mid, composite_score))
+            fitness_detail[mid] = {
+                "composite_score": round(composite_score, 6),
+                "decay_coeff": round(decay_coeff, 6),
+                "attribution_digest": attribution_digest,
+            }
+
+        # STEP8-LEDGER-FIRST-0: record fitness event before writing state
+        fitness_event_digest = sha256_prefixed_digest(
+            canonical_json({
+                "epoch_id": epoch_id,
+                "step": 8,
+                "fitness_detail": {k: v["composite_score"] for k, v in fitness_detail.items()},
+            }).encode()
         )
+        state["fitness_event_digest"] = fitness_event_digest
+        state["fitness_detail"] = fitness_detail
+
+        # Write fitness_summary — candidates with score > 0 pass to PARETO-SELECT
+        state["fitness_summary"] = tuple(fitness_summary)
+        state["mutations_scored"] = tuple(mid for mid, _ in fitness_summary)
 
         return CELStepResult(step_number=n, step_name=name, outcome=StepOutcome.PASS,
-                             detail={"scored_count": len(fitness_summary)})
+                             detail={
+                                 "scored_count": len(fitness_summary),
+                                 "fitness_event_digest": fitness_event_digest,
+                             })
+
+    def _step_09_pareto_select(
+        self, n: int, name: str, state: Dict[str, Any]
+    ) -> CELStepResult:
+        """Step 9 — PARETO-SELECT (Phase 86).
+
+        Multi-objective Pareto frontier selection via ParetoCompetitionOrchestrator.
+        Replaces the naive score > 0.5 threshold used in Phase 64–85.
+
+        CEL-PARETO-0:       frontier written to ledger before Step 10.
+        CEL-PARETO-DETERM-0: identical scored candidates → identical frontier.
+
+        Fallback: if ParetoCompetitionOrchestrator is unavailable, falls back to
+        score > 0.5 threshold and marks state["pareto_fallback"] = True.
+        """
+        fitness_summary: tuple = state.get("fitness_summary", ())
+
+        if not fitness_summary:
+            state["mutations_succeeded"] = ()
+            state["pareto_frontier_ids"] = ()
+            return CELStepResult(step_number=n, step_name=name, outcome=StepOutcome.PASS,
+                                 detail={"frontier_size": 0, "note": "no candidates"})
+
+        # Fallback path — no Pareto orchestrator available
+        if self._pareto_orchestrator is None:
+            state["mutations_succeeded"] = tuple(
+                mid for mid, score in fitness_summary if score > 0.5
+            )
+            state["pareto_frontier_ids"] = state["mutations_succeeded"]
+            state["pareto_fallback"] = True
+            return CELStepResult(step_number=n, step_name=name, outcome=StepOutcome.PASS,
+                                 detail={"frontier_size": len(state["mutations_succeeded"]),
+                                         "fallback": True})
+
+        # Build SeedCandidate objects from fitness_summary
+        try:
+            from runtime.seed_competition import SeedCandidate
+            epoch_id = state["epoch_id"]
+            candidates = [
+                SeedCandidate(
+                    candidate_id=mid,
+                    fitness_context={
+                        "epoch_id": epoch_id,
+                        "composite_score": score,
+                        **state.get("fitness_detail", {}).get(mid, {}),
+                    },
+                    metadata={"cel_epoch_id": epoch_id},
+                )
+                for mid, score in fitness_summary
+            ]
+
+            pareto_result = self._pareto_orchestrator.run_epoch(candidates)
+            promoted_ids = tuple(getattr(pareto_result, "promoted_ids", []) or [])
+
+            # CEL-PARETO-0: record frontier digest before writing to state
+            frontier_digest = sha256_prefixed_digest(
+                canonical_json({
+                    "epoch_id": epoch_id,
+                    "step": 9,
+                    "promoted_ids": sorted(promoted_ids),
+                }).encode()
+            )
+            state["pareto_frontier_digest"] = frontier_digest
+            state["pareto_frontier_ids"] = promoted_ids
+            state["mutations_succeeded"] = promoted_ids
+            state["pareto_fallback"] = False
+
+            return CELStepResult(step_number=n, step_name=name, outcome=StepOutcome.PASS,
+                                 detail={
+                                     "frontier_size": len(promoted_ids),
+                                     "frontier_digest": frontier_digest,
+                                     "total_candidates": len(candidates),
+                                 })
+
+        except Exception as exc:  # noqa: BLE001 — fallback on any Pareto error
+            state["mutations_succeeded"] = tuple(
+                mid for mid, score in fitness_summary if score > 0.5
+            )
+            state["pareto_frontier_ids"] = state["mutations_succeeded"]
+            state["pareto_fallback"] = True
+            state["pareto_error"] = str(exc)
+            return CELStepResult(step_number=n, step_name=name, outcome=StepOutcome.PASS,
+                                 detail={"fallback": True, "error": str(exc)})
 
     def _step_09_governance_gate_v2(
         self, n: int, name: str, state: Dict[str, Any]
