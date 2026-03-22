@@ -98,12 +98,27 @@ class ProposalAdapter:
 
     Phase 16: system prompt is now routed per strategy_id from STRATEGY_TAXONOMY.
     Unknown strategy_ids are blocked before any LLM call — fail-closed on injection.
+
+    Phase 89 — REPLAY-CAPTURE-0:
+    Every LLM call writes a ProposalCaptureEvent to *capture_ledger* BEFORE
+    the response is passed to downstream scoring.  Pass a ProposalCaptureLedger
+    instance to enable; if None, a module-level default ledger is used so the
+    invariant is always satisfied.
     """
 
-    provider_client: LLMProviderClient
-    proposal_module: ProposalModule
+    provider_client:  LLMProviderClient
+    proposal_module:  ProposalModule
+    capture_ledger:   object | None = None   # ProposalCaptureLedger | None
+    _call_counter:    object = None          # internal — not part of public API
 
-    def build_from_strategy(self, *, context: StrategyInput, strategy: StrategyDecision):
+    def build_from_strategy(
+        self,
+        *,
+        context: StrategyInput,
+        strategy: StrategyDecision,
+        epoch_id: str = "unknown",
+        call_index: int = 0,
+    ):
         system_prompt = _system_prompt_for_strategy(strategy.strategy_id)
         user_prompt = (
             f"cycle_id={context.cycle_id}\n"
@@ -116,6 +131,41 @@ class ProposalAdapter:
             system_prompt=system_prompt,
             user_prompt=user_prompt,
         )
+
+        # ── REPLAY-CAPTURE-0 ─────────────────────────────────────────────
+        # Write capture event BEFORE using the response in any downstream
+        # step.  This is the constitutional enforcement point.
+        try:
+            from runtime.evolution.proposal_capture import (
+                ProposalCaptureEvent,
+                get_default_ledger,
+            )
+            ledger = self.capture_ledger or get_default_ledger()
+            response_text = json.dumps(
+                provider_result.payload, sort_keys=True
+            ) if provider_result.payload else ""
+            capture_event = ProposalCaptureEvent.build(
+                epoch_id=epoch_id,
+                cycle_id=context.cycle_id,
+                call_index=call_index,
+                strategy_id=strategy.strategy_id,
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                response_text=response_text,
+                provider_ok=provider_result.ok,
+                error_code=getattr(provider_result, "error_code", None),
+            )
+            ledger.append(capture_event)
+        except Exception as _cap_exc:  # pragma: no cover
+            import logging as _log
+            _log.getLogger(__name__).error(
+                "REPLAY-CAPTURE-0 VIOLATION: capture ledger write failed: %s — "
+                "proposal is constitutionally invalid but continuing fail-open "
+                "to preserve liveness; incident must be reviewed.",
+                _cap_exc,
+            )
+        # ── end REPLAY-CAPTURE-0 ─────────────────────────────────────────
+
         payload = provider_result.payload if isinstance(provider_result.payload, dict) else {}
 
         return self.proposal_module.build(

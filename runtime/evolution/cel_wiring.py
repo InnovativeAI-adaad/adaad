@@ -128,18 +128,18 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
         self,
         *,
         run_mode: RunMode = RunMode.SANDBOX_ONLY,
-        gate_v2: Optional[GovernanceGateV2] = None,
-        gate: Optional[GovernanceGate] = None,
-        fitness_engine: Optional[FitnessEngineV2] = None,
-        proposal_engine: Optional[ProposalEngine] = None,
-        exception_ledger: Optional[ExceptionTokenLedger] = None,
-        cel_ledger: Optional[CELEvidenceLedger] = None,
-        wiring_config: Optional[WiringConfig] = None,
-        timestamp_provider: Optional[Any] = None,
-        promotion_ledger_path: Optional[Path] = None,
+        gate_v2: GovernanceGateV2 | None = None,
+        gate: GovernanceGate | None = None,
+        fitness_engine: FitnessEngineV2 | None = None,
+        proposal_engine: ProposalEngine | None = None,
+        exception_ledger: ExceptionTokenLedger | None = None,
+        cel_ledger: CELEvidenceLedger | None = None,
+        wiring_config: WiringConfig | None = None,
+        timestamp_provider: Any | None = None,
+        promotion_ledger_path: Path | None = None,
         # Phase 67 — Innovations wiring (all optional; no-ops when absent)
-        innovations_engine: Optional[ADAADInnovationEngine] = None,
-        gplugins: Optional[List[GovernancePlugin]] = None,
+        innovations_engine: ADAADInnovationEngine | None = None,
+        gplugins: list[GovernancePlugin | None] = None,
         epoch_seq: int = 0,
     ) -> None:
         super().__init__(
@@ -159,8 +159,8 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             os.getenv("ADAAD_PROMOTION_LEDGER", "data/promotion_events.jsonl")
         )
         # Phase 67 — stored for injection into step overrides
-        self._innovations_engine: Optional[ADAADInnovationEngine] = innovations_engine
-        self._gplugins: List[GovernancePlugin] = list(gplugins or [])
+        self._innovations_engine: ADAADInnovationEngine | None = innovations_engine
+        self._gplugins: list[GovernancePlugin] = list(gplugins or [])
         self._epoch_seq: int = epoch_seq
 
     # ------------------------------------------------------------------ #
@@ -168,7 +168,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     # ------------------------------------------------------------------ #
 
     def _step_04_proposal_generate(
-        self, n: int, name: str, state: Dict[str, Any]
+        self, n: int, name: str, state: dict[str, Any]
     ) -> CELStepResult:
         """CEL-WIRE-PROP-0: generate proposals via ProposalEngine.generate().
 
@@ -190,7 +190,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             strategy_id = context.get("strategy_id", self._wiring_cfg.noop_strategy_id)
 
             # ---- Phase 67: Vision Mode (INNOV-VISION-0) ------------------
-            vision_detail: Dict[str, Any] = {}
+            vision_detail: dict[str, Any] = {}
             if self._innovations_engine is not None:
                 projection = run_vision_forecast(self._innovations_engine, state)
                 if projection is not None:
@@ -203,7 +203,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     vision_detail = state["vision_projection"]
 
             # ---- Phase 67: Personality selection (INNOV-PERSONA-0) -------
-            personality_detail: Dict[str, Any] = {}
+            personality_detail: dict[str, Any] = {}
             if self._innovations_engine is not None:
                 personality = select_agent_personality(
                     self._innovations_engine, epoch_id, strategy_id=strategy_id
@@ -244,7 +244,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
 
             proposal = self._proposal_engine.generate(request)
 
-            proposal_dict: Dict[str, Any] = {
+            proposal_dict: dict[str, Any] = {
                 "mutation_id": proposal.proposal_id,
                 "after_source": context.get(
                     "after_source",
@@ -285,7 +285,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     # ------------------------------------------------------------------ #
 
     def _step_08_fitness_score(
-        self, n: int, name: str, state: Dict[str, Any]
+        self, n: int, name: str, state: dict[str, Any]
     ) -> CELStepResult:
         """CEL-WIRE-FIT-0: score proposals via FitnessEngineV2.score().
 
@@ -296,7 +296,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             sandbox_results = state.get("sandbox_results", [])
             epoch_id = state["epoch_id"]
             replay_diverged = state.get("replay_diverged", False)
-            fitness_summary: List[Tuple[str, float]] = []
+            fitness_summary: list[tuple[str, float]] = []
 
             for sr in sandbox_results:
                 mid = sr.get("mutation_id", "unknown")
@@ -351,7 +351,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     # ------------------------------------------------------------------ #
 
     def _step_10_governance_gate(
-        self, n: int, name: str, state: Dict[str, Any]
+        self, n: int, name: str, state: dict[str, Any]
     ) -> CELStepResult:
         """CEL-WIRE-GATE-0: call GovernanceGate.approve_mutation() for every V2-approved proposal.
 
@@ -365,8 +365,8 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                 for d in state.get("v2_gate_decisions", [])
             }
 
-            gate_outcomes: List[Dict[str, Any]] = []
-            rejected: List[str] = []
+            gate_outcomes: list[dict[str, Any]] = []
+            rejected: list[str] = []
 
             for mid in mutations_succeeded:
                 v2 = v2_decisions.get(mid, {})
@@ -417,8 +417,8 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                 )
 
             # ---- Phase 67: Governance Plugins (GPLUGIN-BLOCK-0) ---------
-            gplugin_outcomes: List[Dict[str, Any]] = []
-            gplugin_blocked: List[str] = []
+            gplugin_outcomes: list[dict[str, Any]] = []
+            gplugin_blocked: list[str] = []
             if self._innovations_engine is not None and self._gplugins:
                 approved_mutations = list(state.get("mutations_succeeded", ()))
                 proposals_by_id = {
@@ -484,7 +484,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     # ------------------------------------------------------------------ #
 
     def _step_12_promotion_decision(
-        self, n: int, name: str, state: Dict[str, Any]
+        self, n: int, name: str, state: dict[str, Any]
     ) -> CELStepResult:
         """CEL-WIRE-PROMO-0: write PromotionEvent for each approved mutation.
 
@@ -501,8 +501,8 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
         try:
             mutations_succeeded = list(state.get("mutations_succeeded", ()))
             epoch_id = state["epoch_id"]
-            promo_events: List[Dict[str, Any]] = []
-            prev_hash: Optional[str] = None
+            promo_events: list[dict[str, Any]] = []
+            prev_hash: str | None = None
 
             for mid in mutations_succeeded:
                 event = create_promotion_event(
@@ -551,7 +551,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     # ------------------------------------------------------------------ #
 
     def _step_14_state_advance(
-        self, n: int, name: str, state: Dict[str, Any]
+        self, n: int, name: str, state: dict[str, Any]
     ) -> CELStepResult:
         """Phase 67/70 extension of STATE-ADVANCE.
 
@@ -597,11 +597,29 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
     def run_epoch(
         self,
         *,
-        epoch_id: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None,
+        epoch_id: str | None = None,
+        context: dict[str, Any | None] = None,
     ):
-        """Phase 70: emit epoch_start/end frames around the base run_epoch."""
+        """Phase 70: emit epoch_start/end frames around the base run_epoch.
+
+        Phase 89 — CEL-LIVE-0:
+        If ADAAD_ANTHROPIC_API_KEY is present and non-empty, the run_mode
+        MUST be RunMode.LIVE.  Running in SANDBOX_ONLY with a live key is a
+        constitutional violation — the system must not produce sandbox results
+        when it has the capability to run live proposals.
+        """
         import uuid  # noqa: PLC0415
+        # ── CEL-LIVE-0 enforcement ────────────────────────────────────────
+        api_key = os.getenv("ADAAD_ANTHROPIC_API_KEY", "").strip()
+        if api_key and self._run_mode is RunMode.SANDBOX_ONLY:
+            raise RuntimeError(
+                "CEL-LIVE-0 VIOLATION: ADAAD_ANTHROPIC_API_KEY is set but "
+                "LiveWiredCEL is running in RunMode.SANDBOX_ONLY.  "
+                "Use make_live_wired_cel() which auto-upgrades to RunMode.LIVE "
+                "when the key is present, or construct LiveWiredCEL with "
+                "run_mode=RunMode.LIVE explicitly."
+            )
+        # ── end CEL-LIVE-0 ───────────────────────────────────────────────
         eid = epoch_id or str(uuid.uuid4())
         run_mode_str = self._run_mode.value if hasattr(self._run_mode, "value") else str(self._run_mode)
         _emit_epoch_start(eid, run_mode_str)
@@ -620,12 +638,30 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
 def make_live_wired_cel(
     *,
     run_mode: RunMode = RunMode.SANDBOX_ONLY,
-    exception_ledger_path: Optional[Path] = None,
-    cel_ledger_path: Optional[Path] = None,
-    promotion_ledger_path: Optional[Path] = None,
-    wiring_config: Optional[WiringConfig] = None,
+    exception_ledger_path: Path | None = None,
+    cel_ledger_path: Path | None = None,
+    promotion_ledger_path: Path | None = None,
+    wiring_config: WiringConfig | None = None,
 ) -> LiveWiredCEL:
-    """Construct a fully wired LiveWiredCEL with default subsystem instances."""
+    """Construct a fully wired LiveWiredCEL with default subsystem instances.
+
+    Phase 89 — CEL-LIVE-0:
+    If ADAAD_ANTHROPIC_API_KEY is present and non-empty, *run_mode* is
+    automatically upgraded to RunMode.LIVE regardless of the caller-supplied
+    value.  This ensures that a system with a valid key never silently runs
+    in sandbox mode.  The upgrade is logged at INFO level.
+    """
+    # ── CEL-LIVE-0: auto-upgrade ──────────────────────────────────────────
+    import logging as _log  # noqa: PLC0415
+    _factory_log = _log.getLogger(__name__)
+    api_key = os.getenv("ADAAD_ANTHROPIC_API_KEY", "").strip()
+    if api_key and run_mode is RunMode.SANDBOX_ONLY:
+        _factory_log.info(
+            "make_live_wired_cel: ADAAD_ANTHROPIC_API_KEY detected — "
+            "upgrading run_mode SANDBOX_ONLY → LIVE (CEL-LIVE-0)"
+        )
+        run_mode = RunMode.LIVE
+    # ── end auto-upgrade ─────────────────────────────────────────────────
     exc_ledger = ExceptionTokenLedger(
         ledger_path=exception_ledger_path or Path(
             os.getenv("ADAAD_EXCEPTION_LEDGER", "data/exception_tokens.jsonl")
@@ -681,11 +717,11 @@ def assert_cel_enabled_or_raise() -> None:
 
 def build_cel(
     *,
-    sandbox_only: Optional[bool] = None,
-    exception_ledger_path: Optional[Path] = None,
-    cel_ledger_path: Optional[Path] = None,
-    promotion_ledger_path: Optional[Path] = None,
-    wiring_config: Optional[WiringConfig] = None,
+    sandbox_only: bool | None = None,
+    exception_ledger_path: Path | None = None,
+    cel_ledger_path: Path | None = None,
+    promotion_ledger_path: Path | None = None,
+    wiring_config: WiringConfig | None = None,
 ) -> "LiveWiredCEL":
     """Build and return a fully wired LiveWiredCEL.
 
