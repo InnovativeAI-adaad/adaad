@@ -347,9 +347,10 @@
   ],
   "software_version": "9.18.0",
   "last_agent_state_sync_digest": "gsync-d202131a642fb816",
-  "version": "9.19.0",
+  "version": "9.20.0",
   "phase": 87,
-  "phase_label": "INNOV-02 ACSE",
-  "last_innovation": "INNOV-02",
-  "acse_active": true
+  "phase_label": "INNOV-03 TIFE",
+  "last_innovation": "INNOV-03",
+  "acse_active": true,
+  "tife_active": true
 }
