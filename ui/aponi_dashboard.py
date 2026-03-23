@@ -1370,6 +1370,136 @@ class AponiDashboard:
                     verification = _verify_control_queue(entries)
                     self._send_json({"enabled": self._command_surface_enabled(), "entries": entries[-50:], "latest_digest": verification.get("latest_digest", "")})
                     return
+                # ── Whale.Dic API routes (DEBT-001 through DEBT-010) ──────────────
+                if path.startswith("/api/governance/status"):
+                    gate_snapshot = _read_gate_state()
+                    intel = self._run_background(self._intelligence_snapshot)
+                    self._send_json({
+                        "ok": True,
+                        "locked": gate_snapshot.get("locked", False),
+                        "reason": gate_snapshot.get("reason", ""),
+                        "constitution_version": intel.get("constitution_version", ""),
+                        "mutation_enabled": not gate_snapshot.get("locked", False),
+                        "replay_mode": intel.get("replay_mode", "audit"),
+                        "gate_checks": intel.get("gate_checks", []),
+                        "tier": intel.get("recovery_tier", "NOMINAL"),
+                    })
+                    return
+                if path.startswith("/api/mutations/recent"):
+                    limit_raw = (query.get("limit") or ["20"])[0]
+                    try:
+                        limit = max(1, min(100, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 20
+                    recent_entries = [
+                        e for e in metrics.tail(limit=500)
+                        if isinstance(e, dict) and str(e.get("event", "")).startswith("mutation_")
+                    ]
+                    self._send_json({"ok": True, "mutations": recent_entries[-limit:], "total": len(recent_entries)})
+                    return
+                if path.startswith("/api/replay/score"):
+                    try:
+                        from runtime.metrics_analysis import rolling_determinism_score
+                        det = rolling_determinism_score(window=200)
+                        score = det.get("rolling_score", 1.0)
+                        divergence = det.get("failed", 0)
+                    except Exception:
+                        score = 1.0
+                        divergence = 0
+                    self._send_json({"ok": True, "score": score, "divergence": divergence, "mode": "audit"})
+                    return
+                if path.startswith("/api/epoch/current"):
+                    intel = self._run_background(self._intelligence_snapshot)
+                    self._send_json({"ok": True, "epoch": intel.get("epoch", 0), "phase": intel.get("phase", "unknown")})
+                    return
+                if path.startswith("/api/agents/health"):
+                    intel = self._run_background(self._intelligence_snapshot)
+                    agents_payload = intel.get("agents", {})
+                    self._send_json({"ok": True, "agents": agents_payload})
+                    return
+                if path.startswith("/api/ledger/entries"):
+                    limit_raw = (query.get("limit") or ["50"])[0]
+                    try:
+                        limit = max(1, min(200, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 50
+                    from governance.mutation_ledger import MutationLedger
+                    try:
+                        ledger = MutationLedger()
+                        entries = list(ledger.tail(limit=limit))
+                    except Exception:
+                        entries = []
+                    self._send_json({"ok": True, "entries": entries, "count": len(entries)})
+                    return
+                if path.startswith("/api/webhooks/stream"):
+                    # SSE stream — emit recent webhook events then keep-alive
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/event-stream")
+                    self.send_header("Cache-Control", "no-cache")
+                    self.send_header("Connection", "keep-alive")
+                    self.end_headers()
+                    recent_wh = [
+                        e for e in metrics.tail(limit=200)
+                        if isinstance(e, dict) and str(e.get("event", "")).startswith("github_webhook_")
+                    ]
+                    for evt in recent_wh[-10:]:
+                        import json as _json
+                        data_line = _json.dumps(evt)
+                        self.wfile.write(f"data: {data_line}\n\n".encode())
+                    self.wfile.write(b"data: {\"type\":\"connected\"}\n\n")
+                    self.wfile.flush()
+                    return
+                if path.startswith("/api/webhooks/recent"):
+                    limit_raw = (query.get("limit") or ["20"])[0]
+                    try:
+                        limit = max(1, min(100, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 20
+                    wh_events = [
+                        e for e in metrics.tail(limit=500)
+                        if isinstance(e, dict) and str(e.get("event", "")).startswith("github_webhook_")
+                    ]
+                    self._send_json({"ok": True, "events": wh_events[-limit:], "total": len(wh_events)})
+                    return
+                if path.startswith("/api/release/readiness"):
+                    intel = self._run_background(self._intelligence_snapshot)
+                    try:
+                        from runtime.metrics_analysis import rolling_determinism_score
+                        det = rolling_determinism_score(window=200)
+                        replay_score = det.get("rolling_score", 1.0)
+                    except Exception:
+                        replay_score = 1.0
+                    gate = _read_gate_state()
+                    gate_ok = not gate.get("locked", False)
+                    score = round((replay_score * 0.5) + (0.5 if gate_ok else 0.0), 3)
+                    self._send_json({
+                        "ok": True,
+                        "readiness_score": score,
+                        "gate_ok": gate_ok,
+                        "replay_score": replay_score,
+                        "blockers": [] if score >= 0.8 else ["governance_gate_locked" if not gate_ok else "replay_divergence"],
+                    })
+                    return
+                if path.startswith("/api/ledger/log"):
+                    limit_raw = (query.get("limit") or ["100"])[0]
+                    try:
+                        limit = max(1, min(500, int(limit_raw)))
+                    except (TypeError, ValueError):
+                        limit = 100
+                    entries = [
+                        e for e in metrics.tail(limit=limit * 3)
+                        if isinstance(e, dict) and e.get("event")
+                    ]
+                    self._send_json({"ok": True, "log": entries[-limit:], "count": len(entries)})
+                    return
+                if path.startswith("/ui/developer/ADAADdev/whaledic.html"):
+                    _whaledic = APP_ROOT.parent / "ui" / "developer" / "ADAADdev" / "whaledic.html"
+                    if _whaledic.exists():
+                        self._send_html(_whaledic.read_text(encoding="utf-8"))
+                    else:
+                        self.send_response(404)
+                        self.end_headers()
+                    return
                 # SPA fallback — serve ui/aponi/index.html for browser deep-links
                 _aponi_index = APP_ROOT.parent / "ui" / "aponi" / "index.html"
                 if _aponi_index.exists():
