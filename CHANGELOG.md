@@ -2,6 +2,44 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.19.0] — 2026-03-23 — Phase 87 INNOV-02 · Adversarial Constitutional Stress Engine (ACSE)
+
+### World-First: Governed Constitutional Adversarial Red-Teaming
+
+ADAAD now red-teams its own mutation proposals and constitutional amendments before they
+advance to GovernanceGate v2.  ACSE is the immune system's attack function — the system
+stress-tests itself constitutionally before anything merges.
+
+**New module:** `runtime/evolution/acse_engine.py`
+
+- `MutationCandidate` — minimal projection of a mutation fed to ACSE; decoupled from full mutation model
+- `AdversarialBudget` — resource envelope: wall-clock ms, LLM call quota, max vector count
+- `AdversarialTestVector` — single deterministic adversarial probe; class, verdict, violation detail, seed audit
+- `AdversarialEvidenceBundle` — full output package; hash-chained; mandatory GovernanceGate v2 input
+- `derive_adversarial_seed()` — `SHA-256(lineage_digest + epoch_id)`; determinism-verified on every run
+- `_generate_invariant_probe_vectors()` — ≥ 5 canonical vectors per touched invariant class (ACSE-0)
+- `_generate_boundary_stress_vectors()` — one probe per claimed fitness threshold at 1% boundary delta
+- `_generate_replay_interference_vectors()` — 3 isolation-context replay probes
+- `evaluate_acse_gate_0()` — 8-check gate; fail-closed; full `AdversarialEvidenceBundle` on all outcomes
+- `acse_csap_gate1_check()` — **hardened CSAP-GATE-1 check 3**: advisory → hard FAIL; `ACSE_CLEAR` bundle required
+
+**Invariants introduced:**
+- `ACSE-0`: ACSE MUST produce ≥ 5 deterministic adversarial test vectors per invariant class touched
+  before any mutation proceeds to GovernanceGate v2
+- `ACSE-1`: `AdversarialEvidenceBundle` MUST be hash-chained and archived before mutation state advances
+
+**Failure modes covered:** `ACSE_BOUNDARY_BREACH`, `ACSE_VIOLATION_FOUND`, `ACSE_BUDGET_EXCEEDED`,
+`ACSE_SEED_NONDETERMINISTIC`, `ACSE_COUNTER_EVIDENCE_UNSIGNED`
+
+**CSAP integration:** CSAP-GATE-1 check 3 hardened from advisory to hard FAIL.  Any amendment
+without `ACSE_CLEAR` bundle is now unconditionally rejected.
+
+**Tests:** `tests/test_phase87_innov02_acse.py` — T87-ACSE-01..20 (20/20 PASS)
+
+**Next:** INNOV-03 TIFE (v9.20.0) — Temporal Invariant Forecasting Engine
+
+---
+
 ## [9.18.0] — 2026-03-23 — Phase 87 INNOV-01 · Constitutional Self-Amendment Protocol (CSAP)
 
 ### World-First: Governed Constitutional Self-Amendment
