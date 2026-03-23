@@ -2,6 +2,38 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.20.0] — 2026-03-23 — Phase 87 INNOV-03 · Temporal Invariant Forecasting Engine (TIFE)
+
+### World-First: Multi-Epoch Constitutional Pre-Validation
+
+ADAAD now evaluates proposed mutations against simulated *future* system states before
+governance approval — the first autonomous evolution system to implement multi-epoch
+constitutional pre-validation.  Governance transforms from reactive to predictive.
+
+**New module:** `runtime/evolution/tife_engine.py`
+
+- `TIFEMutationInput` — mutation projection enriched with capability deltas, governance debt, trajectory flags
+- `VisionProjection` — trajectory forecast baseline (dead-end paths, debt trajectory, capability deltas)
+- `CapabilityGraphSnapshot` — CapabilityGraphV2 projection; `non_redundant_ids()` for regression detection
+- `InvariantEvaluationReport` — per-epoch invariant status, projected debt, ISI contribution
+- `TemporalViabilityReport` — full output; hash-chained; specifies first_violation_epoch on BLOCKED
+- `evaluate_tife_gate_0()` — 5-check temporal viability gate; fail-closed; report on both outcomes
+- `analyse_isi_trend()` — rolling ISI health signal for AnalysisAgent; degrading/stable/improving + alert
+
+**Invariant introduced:**
+- `TIFE-0`: Every mutation MUST pass TIFE-GATE-0 (ISI ≥ 0.85, no debt breach, no dead-end,
+  no capability regression) before GovernanceGate v2.  Failed mutations enter `temporal_hold`;
+  TemporalViabilityReport specifies the remediation epoch.
+
+**Failure modes covered:** `TIFE_ISI_BELOW_THRESHOLD`, `TIFE_DEBT_HORIZON_BREACH`,
+`TIFE_TRAJECTORY_DEAD_END`, `TIFE_CAPABILITY_REGRESSION`, `TIFE_SIMULATION_NONDETERMINISTIC`
+
+**Tests:** `tests/test_phase87_innov03_tife.py` — T87-TIFE-01..20 (20/20 PASS)
+
+**Next:** INNOV-04 SCDD (v9.21.0) — Semantic Constitutional Drift Detector
+
+---
+
 ## [9.19.0] — 2026-03-23 — Phase 87 INNOV-02 · Adversarial Constitutional Stress Engine (ACSE)
 
 ### World-First: Governed Constitutional Adversarial Red-Teaming
