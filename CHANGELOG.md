@@ -2,6 +2,37 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.18.0] — 2026-03-23 — Phase 87 INNOV-01 · Constitutional Self-Amendment Protocol (CSAP)
+
+### World-First: Governed Constitutional Self-Amendment
+
+ADAAD can now propose, validate, and cryptographically ratify amendments to its own
+constitutional invariant set under a two-gate supermajority protocol.
+
+**New module:** `runtime/evolution/csap_protocol.py`
+
+- `ConstitutionalAmendmentProposal` — machine-readable proposal dataclass; `content_hash()` deterministic
+- `InvariantParser` — structural parser enforcing modal-verb grammar; deterministic; no IO
+- `InvariantsMatrix` — full invariant registry; `apply_amendment()` returns new matrix (immutable); original never mutated
+- `ConstitutionalAmendmentQueue` — append-only persisted proposal queue (CSAP-GATE-1 check 1)
+- `ConstitutionalAmendmentLedger` — append-only ledger; `verify_chain()` predecessor-hash audit; CSAP-1 enforced
+- `evaluate_csap_gate_0()` — six deterministic eligibility checks; fail-closed
+- `evaluate_csap_gate_1()` — six ratification checks; fitness regression delta gate; ACSE advisory hook
+- `ConstitutionalSelfAmendmentProtocol` — orchestrator; CSAP-1 ledger-before-matrix ordering enforced
+
+**Invariants introduced:**
+- `CSAP-0`: Hard-class amendment MUST NOT proceed without HUMAN-0 co-signature — enforced in CSAP-GATE-0 check 6
+- `CSAP-1`: Ledger MUST be written before InvariantsMatrix is mutated — enforced in orchestrator `evaluate()`
+
+**Failure modes covered:** `AMENDMENT_INELIGIBLE`, `RATIFICATION_DENIED`, `AMENDMENT_CONFLICT`,
+`AMENDMENT_REPLAY_BROKEN`, `INVARIANT_PARSER_REJECT`
+
+**Tests:** `tests/test_phase87_innov01_csap.py` — T87-CSAP-01..20 (20/20 PASS)
+
+**Next:** INNOV-02 ACSE (v9.19.0) — when ACSE ships, CSAP-GATE-1 check 3 hardens from advisory to hard FAIL.
+
+---
+
 ## [9.17.1] — 2026-03-23 — Phase 87 · Innovation Architecture Plan — HUMAN-0 Ratified
 
 ### Governance — Phase 87 Innovation Architecture Plan
