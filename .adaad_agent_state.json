@@ -1,10 +1,10 @@
 {
-    "active_phase": "Phase 87 \u2014 Innovation Architecture Plan ratified \u00b7 HUMAN-0 signed",
+    "active_phase": "v9.18.0 RELEASED \u00b7 INNOV-01 CSAP",
     "blocked_at_gate": null,
     "blocked_at_tier": null,
     "blocked_reason": null,
-    "last_completed_phase": "Phase 87 \u2014 Innovation Architecture Plan (CSAP/ACSE/TIFE/SCDD/AOEP/CEPD/LSME)",
-    "last_completed_pr": "docs/phase87-innovation-plan",
+    "last_completed_phase": "Phase 87 INNOV-01 \u2014 Constitutional Self-Amendment Protocol (CSAP)",
+    "last_completed_pr": "feat/phase87-innov01-csap",
     "last_gate_results": {
         "tier_0": "pass",
         "tier_1": "pass",
@@ -13,7 +13,7 @@
     },
     "last_invocation": "2026-03-23",
     "last_sync_sha": "f13eaa3",
-    "next_pr": "Phase 87 implementation begins \u2014 INNOV-01 CSAP (v9.18.0)",
+    "next_pr": "Phase 87 INNOV-02 \u2014 Adversarial Constitutional Stress Engine (ACSE) (v9.19.0)",
     "open_findings": [
         {
             "id": "FINDING-66-001",
@@ -303,9 +303,12 @@
         "phase75-cel-step4-wired",
         "phase75-inject-endpoint",
         "v9.10.0-released",
-        "phase87-plan-authored"
+        "phase87-plan-authored",
+        "phase87-csap-0-enforced",
+        "phase87-csap-1-enforced",
+        "phase87-innov01-world-first"
     ],
-    "current_version": "9.17.0",
+    "current_version": "9.18.0",
     "completed_milestones": [
         "phase66-plan",
         "phase66-weight-adaptor-telemetry",
@@ -338,8 +341,10 @@
         "v9.10.0-released",
         "phase77-plan-authored",
         "phase87-plan-authored",
-        "phase87-human0-ratified"
+        "phase87-human0-ratified",
+        "phase87-innov01-csap-implemented",
+        "v9.18.0-released"
     ],
-    "software_version": "9.17.0",
+    "software_version": "9.18.0",
     "last_agent_state_sync_digest": "gsync-d202131a642fb816"
 }
