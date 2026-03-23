@@ -2,6 +2,38 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.17.1] — 2026-03-23 — Phase 87 · Innovation Architecture Plan — HUMAN-0 Ratified
+
+### Governance — Phase 87 Innovation Architecture Plan
+
+Seven world-first autonomous improvement features ratified by HUMAN-0 (Dustin L. Reid).
+No implementation code in this PR — plan document and governance ledger event only.
+
+**Document:** `docs/governance/PHASE_87_INNOVATION_ARCHITECTURE_PLAN.md`  
+**Document SHA-256:** `sha256:780af05e3b610f3bd864be5a906fe7c840e563fc346c3a70baec1b6360cbdb2b`  
+**Governance ledger event:** `HUMAN_0_RATIFICATION · PHASE-87-PLAN · record_hash sha256:09832b5aff5b587fa7a70ba1fb1c65b79dfc44ee30163a37782172784e3b3ef1`
+
+**Features ratified (implementation sequence v9.18.0 → v9.24.0):**
+
+| ID | Name | Abbr | Target |
+|----|------|------|--------|
+| INNOV-01 | Constitutional Self-Amendment Protocol | CSAP | v9.18.0 |
+| INNOV-02 | Adversarial Constitutional Stress Engine | ACSE | v9.19.0 |
+| INNOV-03 | Temporal Invariant Forecasting Engine | TIFE | v9.20.0 |
+| INNOV-04 | Semantic Constitutional Drift Detector | SCDD | v9.21.0 |
+| INNOV-05 | Autonomous Organ Emergence Protocol | AOEP | v9.22.0 |
+| INNOV-06 | Cryptographic Evolution Proof DAG | CEPD | v9.23.0 |
+| INNOV-07 | Live Shadow Mutation Execution | LSME | v9.24.0 |
+
+**New Hard-class invariants registered (pending InvariantsMatrix update in INNOV-01 PR):**
+`CSAP-0`, `CSAP-1`, `ACSE-0`, `ACSE-1`, `TIFE-0`, `SCDD-0`, `AOEP-0`, `CEPD-0`, `CEPD-1`, `LSME-0`, `LSME-1`
+
+**Open finding:** FINDING-66-003 (patent filing) addressed by CEPD (INNOV-06) via `CryptographicProofBundle`.
+
+**Invariant:** All seven implementations MUST proceed in ID order. No phase may begin until all prior phases are RELEASED and tagged.
+
+---
+
 ## [9.17.0] — 2026-03-21 — Phase 86 · Evolution Engine Integration + CompoundEvolutionTracker
 
 ### Phase 86 Track A — CEL Evolution Engine Wiring
