@@ -1,0 +1,56 @@
+{
+  "phase": 91,
+  "innovation": "INNOV-07",
+  "name": "Live Shadow Mutation Execution",
+  "abbreviation": "LSME",
+  "version": "9.24.0",
+  "status": "RATIFIED",
+  "gate": "HUMAN-0",
+  "operator": "Dustin L. Reid",
+  "operator_email": "weirdo@innovativeai.llc",
+  "timestamp": "2026-03-23T00:00:00Z",
+  "invariants_introduced": [
+    "LSME-0",
+    "LSME-1"
+  ],
+  "tests": {
+    "count": 20,
+    "result": "ALL_PASS",
+    "ids": [
+      "T91-LSME-01",
+      "T91-LSME-02",
+      "T91-LSME-03",
+      "T91-LSME-04",
+      "T91-LSME-05",
+      "T91-LSME-06",
+      "T91-LSME-07",
+      "T91-LSME-08",
+      "T91-LSME-09",
+      "T91-LSME-10",
+      "T91-LSME-11",
+      "T91-LSME-12",
+      "T91-LSME-13",
+      "T91-LSME-14",
+      "T91-LSME-15",
+      "T91-LSME-16",
+      "T91-LSME-17",
+      "T91-LSME-18",
+      "T91-LSME-19",
+      "T91-LSME-20"
+    ]
+  },
+  "module": "runtime/evolution/lsme_engine.py",
+  "test_file": "tests/test_phase91_lsme.py",
+  "sequence_complete": true,
+  "innovations_shipped": [
+    "CSAP",
+    "ACSE",
+    "TIFE",
+    "SCDD",
+    "AOEP",
+    "CEPD",
+    "LSME"
+  ],
+  "description": "World-first constitutionally-governed shadow execution of mutations against live production traffic. Zero-write contract enforced before any traffic replay. LSME-GATE-0 pre-execution (contract + AST), LSME-GATE-1 post-execution (divergence, error delta, P99 latency, invariants). LSME_BUDGET_EXCEEDED is non-blocking; all others are blocking. ShadowFitnessReport committed before comparison (LSME-1).",
+  "record_hash": "sha256:f4945c19ef4aa16532cac40c621c7ba76e74ca586e6514d7ef816bbabdcb9ca7"
+}
