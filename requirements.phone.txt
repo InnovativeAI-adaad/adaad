@@ -38,3 +38,13 @@ h11>=0.8,<0.17
 click>=7.0
 certifi
 idna
+
+# PHONE-LIBCST-01: libcst is pure-Python (no Rust extension) and installs
+# correctly on armv8l without maturin.  Required by:
+#   - constitution rules: phase63_ast_{safe,import,complexity}_scaffold
+#   - SemanticDiffEngine (runtime/evolution/semantic_diff.py)
+#   - mutation AST scaffold (runtime/autonomy/mutation_scaffold.py)
+# Omitting it silently disables the full constitutional AST validation
+# subsystem on mobile — the import failure is caught lazily at call time,
+# not at startup, making it extremely difficult to diagnose in the field.
+libcst>=1.1.0,<2.0
