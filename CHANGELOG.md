@@ -2,6 +2,49 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.21.0] — 2026-03-23 — Phase 87 INNOV-04 · Semantic Constitutional Drift Detector (SCDD)
+
+### World-First: Semantic Drift Detection for Constitutional Invariants
+
+ADAAD now detects when constitutional invariants have drifted semantically — when the
+same rule text begins governing a different behavioral surface due to system substrate
+evolution — the first autonomous evolution system to distinguish rule text stability
+from behavioral coverage drift across epochs.
+
+**New module:** `runtime/evolution/scdd_engine.py`
+
+- `BehavioralSurfaceSnapshot` — per-epoch empirical statistics of how a rule fires:
+  evaluations, blocks, block_rate, mean_fitness_delta_blocked, touched_mutation_classes
+- `SemanticInvariantFingerprint` — deterministic fingerprint composed of statement_hash
+  + surface_hash + composite_hash; basis for cross-epoch drift comparison
+- `DriftVector` — per-invariant drift measurement: coverage_delta (40%), precision_delta
+  (30%), class_surface_delta (30%); statement change adds 0.10 bonus; clamped to [0, 1]
+- `ConstitutionalDriftReport` — full output; hash-chained; produced on ALL outcomes
+  (STABLE, REVIEW_REQUIRED, BLOCKED); contains all DriftVectors + max_drift_score
+- `SCDDEvaluationInput` — input bundle: baseline fingerprints, current fingerprints,
+  rule statements, predecessor_hash
+- `compute_semantic_fingerprint()` — deterministic; SHA-256(statement) + SHA-256(surface
+  JSON) → SHA-256(statement_hash + surface_hash); replay-verified
+- `compute_drift_vector()` — weighted composite of coverage, precision, class-surface
+  delta + statement change bonus; `_classify_drift()` maps score → DriftClass
+- `evaluate_scdd_gate_0()` — 7-check gate; fail-closed; full report on all outcomes
+
+**Invariant introduced:**
+- `SCDD-0`: SCDD MUST run every N epochs; any invariant with semantic drift score ≥
+  SCDD_CRITICAL_THRESHOLD (0.75) MUST produce SCDD_BLOCKED outcome, blocking further
+  mutation progress until the drifted invariant is reviewed through CSAP.
+
+**Failure modes covered:** `SCDD_CRITICAL_DRIFT_FOUND`, `SCDD_FINGERPRINT_NONDETERMINISTIC`,
+`SCDD_BASELINE_MISSING`, `SCDD_EMPTY_INVARIANT_SET`, `SCDD_SURFACE_HASH_CONFLICT`
+
+**Drift classification thresholds:** STABLE < 0.30 ≤ MINOR < 0.55 ≤ MAJOR < 0.75 ≤ CRITICAL
+
+**Tests:** `tests/test_phase87_innov04_scdd.py` — T87-SCDD-01..20 (20/20 PASS)
+
+**Next:** INNOV-05 AOEP (v9.22.0) — Autonomous Organ Emergence Protocol
+
+---
+
 ## [9.20.0] — 2026-03-23 — Phase 87 INNOV-03 · Temporal Invariant Forecasting Engine (TIFE)
 
 ### World-First: Multi-Epoch Constitutional Pre-Validation
