@@ -1618,3 +1618,27 @@ Capitalises on the Phase 79 `MultiGenLineageGraph` and Phase 80 `SeedCompetition
 - 20–26 constitutional tests
 
 **Prerequisites:** Phase 80 complete ✅
+
+---
+
+### Phase 88 — INNOV-04 · Semantic Constitutional Drift Detector (SCDD)
+
+**Status:** ✅ shipped (v9.21.0) · **Dependency:** Phase 87 INNOV-03 TIFE merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-23) · **Tests:** T87-SCDD-01..20 (20/20 PASS) · **Evidence:** `artifacts/governance/phase87/scdd_signoff.json`
+
+World-first semantic drift detection for constitutional invariants in an autonomous evolution system.
+
+**New module:** `runtime/evolution/scdd_engine.py`
+
+- `BehavioralSurfaceSnapshot` — per-epoch empirical rule firing statistics (block_rate, fitness delta, mutation class surface)
+- `SemanticInvariantFingerprint` — deterministic composite of statement_hash + surface_hash; tamper-evident
+- `DriftVector` — weighted drift score: coverage_delta (40%) + precision_delta (30%) + class_surface_delta Jaccard (30%) + statement change bonus (0.10)
+- `ConstitutionalDriftReport` — hash-chained full output; produced on STABLE, REVIEW_REQUIRED, and BLOCKED
+- `evaluate_scdd_gate_0()` — 7-check gate; fail-closed on CRITICAL drift, nondeterminism, missing baseline, empty corpus
+- `compute_semantic_fingerprint()` / `compute_drift_vector()` — deterministic, replay-verifiable
+
+**Invariant enforced:**
+- `SCDD-0`: SCDD MUST run every N epochs; drift_score ≥ 0.75 (CRITICAL) → SCDD_BLOCKED; epoch cannot advance until invariant is re-ratified through CSAP.
+
+**Drift thresholds:** STABLE < 0.30 ≤ MINOR < 0.55 ≤ MAJOR < 0.75 ≤ CRITICAL
+
+**Next:** Phase 89 — INNOV-05 · Autonomous Organ Emergence Protocol (AOEP) → v9.22.0
