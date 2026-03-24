@@ -4,9 +4,9 @@
 
 ---
 
-## What ships today — v9.15.0
+## What ships today — v9.24.0
 
-Population-level competitive evolution is operational. Multiple seed candidates now compete, rank by fitness, pass a constitutional gate, and record a cryptographic epoch event — before any single candidate is promoted.
+Phase 90 (INNOV-06 CEPD) is complete. ADAAD now produces cryptographically linked proof DAGs of its full evolutionary lineage — every mutation node bound to all causal ancestors via Merkle root, independently verifiable without system access. All 7 innovations from the HUMAN-0 ratified Phase 87 Innovation Architecture Plan have shipped (v9.18.0–v9.24.0), including Constitutional Self-Amendment, Adversarial Stress Engine, Temporal Invariant Forecasting, Semantic Drift Detection, Autonomous Organ Emergence, Cryptographic Evolution Proof DAG, and Live Shadow Mutation Execution.
 
 | Subsystem | Status | Description |
 |-----------|--------|-------------|

@@ -1,9 +1,9 @@
 # ADAAD v1.1-GA Readiness Checklist
 
 > **Authority:** Canonical gate checklist for the `v1.1-GA` public-readiness tag.
-> Supersedes v1.0.0-GA baseline (Phase 51 / v7.5.0). Refreshed to v9.11.0.
+> Supersedes v1.0.0-GA baseline (Phase 51 / v7.5.0). Refreshed to v9.24.0.
 > Referenced by `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` § 2.2.
-> **Last updated:** 2026-03-21 · **Baseline:** v9.17.0 · **Phase:** 86 complete
+> **Last updated:** 2026-03-24 · **Baseline:** v9.24.0 · **Phase:** 90 complete
 > **Status:** IN PROGRESS — Gates 3 and 4 are hard blocks pending Dustin action (Gate 2 pending H-04)
 
 ---
@@ -26,7 +26,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Artifact | Status |
 |---|---|---|
-| All CI required checks green | `.github/workflows/ci.yml` | ✅ 4,870+ tests — v9.17.0 |
+| All CI required checks green | `.github/workflows/ci.yml` | ✅ 5,296+ tests — v9.24.0 |
 | Determinism suite | `pytest tests/determinism/ -q` → 0 failures | ✅ |
 | Governance inviolability suite | `pytest tests/governance/inviolability/ -q` → 0 failures | ✅ |
 | CodeQL analysis (`CodeQL / Analyze (python)`) | `.github/workflows/codeql.yml` — no high/critical | ✅ |
@@ -110,6 +110,13 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | 76 — Seed CEL Outcome Recorder | v9.11.0 | ✅ feedback loop closed |
 | 77 — Constitutional Closure + First Seed Epoch Run | v9.13.0 | ✅ SEED-LIFECYCLE-COMPLETE-0 · ABC enforcement · webhook consolidation |
 | 77 (TBD) | pending | ⏳ PR-77-PLAN (non-blocking for GA) |
+| 78–86 (Evolution Hardening + SCDD) | v9.14.0–v9.17.0 | ✅ |
+| 87 INNOV-01 — Constitutional Self-Amendment Protocol (CSAP) | v9.18.0 | ✅ CSAP-0, CSAP-1 · 20/20 |
+| 87 INNOV-02 — Adversarial Constitutional Stress Engine (ACSE) | v9.19.0 | ✅ ACSE-0, ACSE-1 · 20/20 |
+| 87 INNOV-03 — Temporal Invariant Forecasting Engine (TIFE) | v9.20.0 | ✅ TIFE-0 · 20/20 |
+| 88 INNOV-04 — Semantic Constitutional Drift Detector (SCDD) | v9.21.0 | ✅ SCDD-0 · 40/40 |
+| 89 INNOV-05 — Autonomous Organ Emergence Protocol (AOEP) | v9.22.0 | ✅ AOEP-0 · 20/20 |
+| 90 INNOV-06 — Cryptographic Evolution Proof DAG (CEPD) | v9.23.0–v9.24.0 | ✅ CEPD-0, CEPD-1 · 20/20 |
 
 **Gate 5: ✅ CLEARED**
 

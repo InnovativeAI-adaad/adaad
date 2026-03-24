@@ -195,7 +195,8 @@ Federation constraints (governed separately): 2 federation-BLOCKING.
 Policy hash: `71eb6499bc09d8b4…` (authoritative: `runtime/constitution.py → POLICY_HASH`)
 
 **Version**: 0.9.0
-**Last Updated**: 2026-03-13
+**Last Updated**: 2026-03-24
+**Active Phase**: 90 (v9.24.0 — INNOV-06 CEPD complete)
 **Next Review**: After 1000 mutations logged
 
 **Canonical implementation specs:**
