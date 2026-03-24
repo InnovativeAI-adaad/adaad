@@ -1642,3 +1642,23 @@ World-first semantic drift detection for constitutional invariants in an autonom
 **Drift thresholds:** STABLE < 0.30 ≤ MINOR < 0.55 ≤ MAJOR < 0.75 ≤ CRITICAL
 
 **Next:** Phase 89 — INNOV-05 · Autonomous Organ Emergence Protocol (AOEP) → v9.22.0
+
+---
+
+### Phase 89 — INNOV-05 · Autonomous Organ Emergence Protocol (AOEP)
+
+**Status:** ✅ shipped (v9.22.0) · **Dependency:** Phase 88 INNOV-04 SCDD merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-23) · **Tests:** T89-AOEP-01..20 (20/20 PASS) · **Evidence:** `artifacts/governance/phase89/phase89_sign_off.json`
+
+World-first constitutionally-governed autonomous architectural self-extension. ADAAD can now propose entirely new organs to address sustained capability gaps — subject to unconditional HUMAN-0 ratification.
+
+**New module:** `runtime/evolution/aoep_protocol.py`
+
+- `evaluate_aoep_gate_0()` — 5-check gap qualification (sustained epochs, distinct failure patterns, manifest addressability, memory sufficiency, schema completeness)
+- `evaluate_aoep_gate_1()` — HUMAN-0 ratification; no bypass path; `RatificationRecord` produced on approval
+- `AOEPCooldownTracker` — prevents evaluation storms after gate failures
+- All outputs hash-chained and ledger-appendable
+
+**Invariant enforced:**
+- `AOEP-0`: No organ enters implementation without HUMAN-0 written sign-off. Absence of human_0_signature always produces AOEP_HUMAN_0_BLOCKED.
+
+**Next:** Phase 90 — INNOV-06 · Cryptographic Evolution Proof DAG (CEPD) → v9.23.0

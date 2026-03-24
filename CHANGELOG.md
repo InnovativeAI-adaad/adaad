@@ -2,6 +2,46 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.22.0] — 2026-03-23 — Phase 89 INNOV-05 · Autonomous Organ Emergence Protocol (AOEP)
+
+### World-First: Constitutionally-Governed Autonomous Architectural Self-Extension
+
+ADAAD can now autonomously identify behavioral gaps in its capability surface and
+propose entirely new organs — new architectural subsystems — to address those gaps.
+All proposals require HUMAN-0 ratification; no organ constitutionally exists until
+the ratification event is appended to governance_events.jsonl.
+
+**New module:** `runtime/evolution/aoep_protocol.py`
+
+- `CapabilityGapSignal` — detected capability gap: sustained_epochs, affected mutation
+  classes, candidate_organ_purpose, deterministic gap_id + gap_hash
+- `FailurePatternSummary` — recurring failure patterns attributed to a structural gap
+- `OrganManifestEntry` — single organ in the current organ manifest (capability surface)
+- `OrganProposal` — formal proposal for a new organ; always status PENDING_HUMAN_0 on
+  GATE-0 pass; human_0_required is unconditionally True
+- `Human0RatificationPayload` — HUMAN-0 sign-off bundle: proposal_id, ratification_hash,
+  operator_id, timestamp, human_0_signature, predecessor_hash
+- `RatificationRecord` — hash-chained ledger-ready record of GATE-1 outcome
+- `AOEPCooldownTracker` — per-gap re-evaluation cooldown (AOEP_REEVAL_COOLDOWN_EPOCHS=5)
+- `evaluate_aoep_gate_0()` — 5-check gap qualification gate; fail-closed
+- `evaluate_aoep_gate_1()` — HUMAN-0 ratification gate; AOEP-0 non-bypassable
+
+**Invariant introduced:**
+- `AOEP-0`: Every OrganProposal MUST be submitted to HUMAN-0 before implementation.
+  AOEP-GATE-1 has NO automated bypass — empty human_0_signature ALWAYS produces
+  AOEP_HUMAN_0_BLOCKED; the organ does not constitutionally exist until ratification
+  event is appended to governance_events.jsonl.
+
+**Failure modes:** `AOEP_GAP_UNQUALIFIED`, `AOEP_GAP_ADDRESSABLE`, `AOEP_HUMAN_0_BLOCKED`,
+`AOEP_PROPOSAL_INCOMPLETE`, `AOEP_MANIFEST_CONFLICT`, `AOEP_INSUFFICIENT_MEMORY`,
+`AOEP_INSUFFICIENT_PATTERNS`, `AOEP_SIGNATURE_MISSING`, `AOEP_RATIFICATION_HASH_MISMATCH`
+
+**Tests:** `tests/test_phase89_aoep.py` — T89-AOEP-01..20 (20/20 PASS)
+
+**Next:** INNOV-06 CEPD (v9.23.0) — Cryptographic Evolution Proof DAG
+
+---
+
 ## [9.21.0] — 2026-03-23 — Phase 87 INNOV-04 · Semantic Constitutional Drift Detector (SCDD)
 
 ### World-First: Semantic Drift Detection for Constitutional Invariants
