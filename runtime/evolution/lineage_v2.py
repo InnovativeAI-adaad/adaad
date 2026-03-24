@@ -367,14 +367,39 @@ class LineageLedgerV2:
         return self._verified_tail_hash or ("0" * 64)
 
     def verify_integrity(self, recovery_hook: LineageRecoveryHook | None = None, max_lines: int | None = None) -> None:
-        """Recompute chain from genesis and verify each stored hash."""
+        """Recompute chain from genesis and verify each stored hash.
+
+        When max_lines is supplied the scan stops early after that many lines.
+        The warm-cache pointer (_verified_tail_hash) is advanced to the last
+        verified entry in the scanned prefix so that subsequent _last_hash()
+        calls can chain appends from the verified boundary without re-scanning.
+
+        Invariant: after any call to verify_integrity() that returns without
+        raising, _verified_tail_hash is not None and reflects the SHA-256 tip
+        of the deepest verified entry.  Callers that pass max_lines receive a
+        partial-prefix guarantee, not a full-chain guarantee.
+        """
         self._ensure()
         self._verified_tail_hash = None
         prev_hash = "0" * 64
         with self.ledger_path.open("r", encoding="utf-8") as handle:
             for line_no, line in enumerate(handle, start=1):
                 if max_lines is not None and line_no > max_lines:
-                    LOG.warning("lineage_verify_integrity_truncated", extra={"line_no": line_no, "max_lines": max_lines})
+                    # LINEAGE-CACHE-01: Advance the warm-cache pointer to the
+                    # last verified entry in the scanned prefix before returning.
+                    # Without this, _verified_tail_hash remains None and every
+                    # subsequent _last_hash() call triggers a full O(n) re-scan,
+                    # converting O(n) total append cost to O(n²).
+                    self._verified_tail_hash = prev_hash or ("0" * 64)
+                    LOG.warning(
+                        "lineage_verify_integrity_truncated",
+                        extra={
+                            "line_no": line_no,
+                            "max_lines": max_lines,
+                            "partial_tail_hash": self._verified_tail_hash[:16],
+                            "verified_lines": line_no - 1,
+                        },
+                    )
                     return
                 entry_text = line.strip()
                 if not entry_text:
@@ -407,6 +432,10 @@ class LineageLedgerV2:
                     raise error
                 prev_hash = entry_hash
         self._verified_tail_hash = prev_hash
+
+    # Contracts:
+    # POST: _verified_tail_hash is not None after any non-raising call.
+    # POST (max_lines path): _verified_tail_hash reflects prefix [0..max_lines].
 
     @staticmethod
     def _compute_hash(prev_hash: str, entry: Dict[str, Any]) -> str:

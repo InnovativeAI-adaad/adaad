@@ -1,5 +1,5 @@
 {
-  "active_phase": "v9.24.0 RELEASED \u00b7 Phase 90 INNOV-06 CEPD",
+  "active_phase": "v9.24.0-phase91-audit-hardening",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
@@ -103,6 +103,61 @@
       "phase_target": "77",
       "resolved_phase": "77",
       "resolved_date": "2026-03-19"
+    },
+    {
+      "id": "FINDING-91-001",
+      "title": "LINEAGE-CACHE-01: verify_integrity truncated path poisons warm-cache pointer",
+      "severity": "P1",
+      "source": "Senior Audit 2026-03-24",
+      "status": "resolved",
+      "phase_target": "91",
+      "resolved_phase": "91",
+      "resolved_date": "2026-03-24",
+      "evidence_branch": "fix/phase91-audit-5patch"
+    },
+    {
+      "id": "FINDING-91-002",
+      "title": "CI-DUPE-01: duplicate semantic-diff-determinism job silently dead-codes first definition",
+      "severity": "P1",
+      "source": "Senior Audit 2026-03-24",
+      "status": "resolved",
+      "phase_target": "91",
+      "resolved_phase": "91",
+      "resolved_date": "2026-03-24",
+      "evidence_branch": "fix/phase91-audit-5patch"
+    },
+    {
+      "id": "FINDING-91-003",
+      "title": "PYPROJECT-VER-01: pyproject.toml version frozen at 9.15.0 vs canonical 9.24.0",
+      "severity": "P1",
+      "source": "Senior Audit 2026-03-24",
+      "status": "resolved",
+      "phase_target": "91",
+      "resolved_phase": "91",
+      "resolved_date": "2026-03-24",
+      "evidence_branch": "fix/phase91-audit-5patch"
+    },
+    {
+      "id": "FINDING-91-004",
+      "title": "PHONE-LIBCST-01: requirements.phone.txt missing libcst silently disables AST subsystem on mobile",
+      "severity": "P2",
+      "source": "Senior Audit 2026-03-24",
+      "status": "resolved",
+      "phase_target": "91",
+      "resolved_phase": "91",
+      "resolved_date": "2026-03-24",
+      "evidence_branch": "fix/phase91-audit-5patch"
+    },
+    {
+      "id": "FINDING-91-005",
+      "title": "AUDIT-TEL-01: load_audit_tokens silent on misconfiguration; scope check non-constant-time",
+      "severity": "P2",
+      "source": "Senior Audit 2026-03-24",
+      "status": "resolved",
+      "phase_target": "91",
+      "resolved_phase": "91",
+      "resolved_date": "2026-03-24",
+      "evidence_branch": "fix/phase91-audit-5patch"
     }
   ],
   "pending_evidence_rows": [],

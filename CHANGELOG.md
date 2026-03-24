@@ -2,7 +2,32 @@
 
 Generated deterministically from merged governance metadata.
 
-## [9.24.0] — 2026-03-23 — Phase 91 INNOV-07 · Live Shadow Mutation Execution (LSME)
+## [9.24.1] — 2026-03-24 — Phase 91 Audit Hardening · Senior Audit Pass
+
+**Branch:** `fix/phase91-audit-5patch`
+**Audit basis:** Senior Audit Thesis v9.24.0 (2026-03-24)
+
+### Fixed — P1
+
+- **FINDING-91-001 / LINEAGE-CACHE-01** (`runtime/evolution/lineage_v2.py`): `verify_integrity(max_lines=N)` early-return path now advances `_verified_tail_hash` to the last verified prefix entry before returning. Previously the pointer was left `None`, causing every subsequent `_last_hash()` call to trigger a full O(n) re-scan — an O(n²) total cost at ledger scale. Postcondition contract annotated inline.
+- **FINDING-91-002 / CI-DUPE-01** (`.github/workflows/ci.yml`): Renamed the first (dead) `semantic-diff-determinism` job definition to `semantic-diff-determinism-baseline`. Added to `ci-gating-summary` `needs:` chain and summary table. Both fixture sets now run and gate independently.
+- **FINDING-91-003 / PYPROJECT-VER-01** (`pyproject.toml`): `version` aligned from `9.15.0` to `9.24.0` (9 minor-version drift). `pip`, PyPI, and GitHub Packages now report correct package metadata.
+
+### Fixed — P2
+
+- **FINDING-91-004 / PHONE-LIBCST-01** (`requirements.phone.txt`): Added `libcst>=1.1.0,<2.0`. The omission silently disabled the full constitutional AST validation subsystem on mobile (Pydroid3/Termux path). `libcst` is pure-Python and installs on armv8l without issue.
+- **FINDING-91-005 / AUDIT-TEL-01** (`runtime/audit_auth.py`): `load_audit_tokens()` now emits structured log events on all three failure modes (absent env var: DEBUG; malformed JSON: WARNING; wrong type: WARNING). Scope checks in `require_audit_read_scope` and `require_audit_write_scope` replaced with `hmac.compare_digest` for constant-time comparison.
+
+### Tests Added
+
+- `tests/test_lineage_v2_cache_coherence.py` — 4 `@autonomous_critical` tests (CACHE-01/02/03/04)
+- `tests/test_audit_auth_telemetry.py` — 6 `@autonomous_critical` tests (AUDIT-TEL-01)
+
+### Still Open (GA-blocking)
+
+- **FINDING-66-003**: Patent filing — awaiting provisional application number from IP counsel.
+- **FINDING-66-004**: Ed25519 2-of-3 key ceremony — runbook delivered; ceremony execution deferred to key holders.
+
 
 ### World-First: Constitutionally-Governed Shadow Execution Against Live Traffic
 
