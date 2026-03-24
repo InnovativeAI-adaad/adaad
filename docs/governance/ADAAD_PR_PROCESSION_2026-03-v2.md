@@ -4,8 +4,8 @@
 > **Canonical source (automation sequence control):** This document is the controlling source for **Phase 51+ PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
-**Last reviewed:** 2026-03-20
-**Milestone:** `v9.14.0` (Phase 79 complete — Multi-Generation Lineage Graph)
+**Last reviewed:** 2026-03-24
+**Milestone:** `v9.24.0` (Phase 90 complete — Cryptographic Evolution Proof DAG)
 
 ---
 
@@ -84,12 +84,23 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 | 77 | v9.13.0 | Phase 76 | shipped |
 | 78 | v9.14.0 | Phase 77 | shipped |
 | 79 | v9.14.0 | Phase 78 | shipped |
+| 80 | v9.15.0 | Phase 79 | shipped |
+| 81 | v9.16.0 | Phase 80 | shipped |
+| 82 | v9.16.0 | Phase 81 | shipped |
+| 83 | v9.16.0 | Phase 82 | shipped |
+| 84 | v9.16.0 | Phase 83 | shipped |
+| 85 | v9.17.0 | Phase 84 | shipped |
+| 86 | v9.17.0 | Phase 85 | shipped |
+| 87 | v9.18.0 | Phase 86 | shipped |
+| 88 | v9.19.0 | Phase 87 INNOV-01 CSAP | shipped |
+| 89 | v9.22.0 | Phase 88–89 INNOV-02–05 | shipped |
+| 90 | v9.24.0 | Phase 90 INNOV-06 CEPD | shipped |
 
 ### 1A.3 Dependency pointer
 
 > **v8/v9 sequencing source of truth:** This document controls active constitutional PR sequencing and status across the v8.x and v9.x release lines. `ROADMAP.md` mirrors this state for human-facing roadmap context and must remain aligned.
 
-- Next: **Phase 80** (KMS/HSM production key wiring + Compound Evolution).
+- **Current:** Phase 90 complete (v9.24.0 — INNOV-06 CEPD). Next: **Phase 91** — Post-GA Governance Hardening Sprint.
 
 ## 2) Active Planning — v1.0.0-GA Gate
 
@@ -463,7 +474,7 @@ adaad_pr_procession_contract:
           pr: PR-86-03
           status: complete
   state_alignment:
-    expected_active_phase: "Phase 86 COMPLETE · v9.17.0"
+    expected_active_phase: "Phase 90 COMPLETE · v9.24.0"
     expected_last_completed_pr: "feat/phase86-cel-fitness-wiring"
     expected_next_pr: "Phase 87 — direction pending governor ratification"
     blocked_reason_must_be_null: true
