@@ -1,0 +1,47 @@
+{
+  "phase": 90,
+  "innovation": "INNOV-06",
+  "name": "Cryptographic Evolution Proof DAG",
+  "abbreviation": "CEPD",
+  "version": "9.23.0",
+  "status": "RATIFIED",
+  "gate": "HUMAN-0",
+  "operator": "Dustin L. Reid",
+  "operator_email": "weirdo@innovativeai.llc",
+  "timestamp": "2026-03-23T00:00:00Z",
+  "invariants_introduced": [
+    "CEPD-0",
+    "CEPD-1"
+  ],
+  "tests": {
+    "count": 20,
+    "result": "ALL_PASS",
+    "ids": [
+      "T90-CEPD-01",
+      "T90-CEPD-02",
+      "T90-CEPD-03",
+      "T90-CEPD-04",
+      "T90-CEPD-05",
+      "T90-CEPD-06",
+      "T90-CEPD-07",
+      "T90-CEPD-08",
+      "T90-CEPD-09",
+      "T90-CEPD-10",
+      "T90-CEPD-11",
+      "T90-CEPD-12",
+      "T90-CEPD-13",
+      "T90-CEPD-14",
+      "T90-CEPD-15",
+      "T90-CEPD-16",
+      "T90-CEPD-17",
+      "T90-CEPD-18",
+      "T90-CEPD-19",
+      "T90-CEPD-20"
+    ]
+  },
+  "module": "runtime/evolution/cepd_engine.py",
+  "test_file": "tests/test_phase90_cepd.py",
+  "patent_artifact": "CryptographicProofBundle (FINDING-66-003)",
+  "description": "World-first cryptographic DAG proof of evolutionary lineage. Every mutation node linked to ALL causal ancestors via Merkle root. CryptographicProofBundle is independently verifiable and legally admissible. CEPD-0: Merkle root must be deterministic. CEPD-1: every node must be genesis-traceable.",
+  "record_hash": "sha256:cbd8679414b98858121ee249416cfdba66a16706fb6a01948a259f4ba732ee5a"
+}

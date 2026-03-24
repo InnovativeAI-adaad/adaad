@@ -1662,3 +1662,24 @@ World-first constitutionally-governed autonomous architectural self-extension. A
 - `AOEP-0`: No organ enters implementation without HUMAN-0 written sign-off. Absence of human_0_signature always produces AOEP_HUMAN_0_BLOCKED.
 
 **Next:** Phase 90 — INNOV-06 · Cryptographic Evolution Proof DAG (CEPD) → v9.23.0
+
+---
+
+### Phase 90 — INNOV-06 · Cryptographic Evolution Proof DAG (CEPD)
+
+**Status:** ✅ shipped (v9.23.0) · **Dependency:** Phase 89 INNOV-05 AOEP merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-23) · **Tests:** T90-CEPD-01..20 (20/20 PASS) · **Evidence:** `artifacts/governance/phase90/phase90_sign_off.json`
+
+World-first cryptographic DAG proof of evolutionary lineage. Every mutation node cryptographically linked to ALL causal ancestors via Merkle root. CryptographicProofBundle addresses FINDING-66-003 (patent prosecution artifact).
+
+**New module:** `runtime/evolution/cepd_engine.py`
+
+- `evaluate_cepd_gate_0()` — 5-check gate: ancestor completeness, Merkle determinism, schema, signature, genesis traceability
+- `CryptographicProofBundle` — self-contained, independently verifiable proof; no system access required for verification
+- `CEPDDagStore` — append-only DAG with genesis pre-seeded and BFS traceability
+- `verify_proof_bundle()` — independent third-party verifier surface (legal admissibility)
+
+**Invariants enforced:**
+- `CEPD-0`: ancestor_merkle_root MUST be deterministically reproducible from causal ancestor set alone.
+- `CEPD-1`: every node MUST trace to genesis; untraceable node is a constitutional integrity failure.
+
+**Next:** Phase 91 — INNOV-07 · Live Shadow Mutation Execution (LSME) → v9.24.0

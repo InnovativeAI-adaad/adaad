@@ -2,6 +2,45 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.23.0] — 2026-03-23 — Phase 90 INNOV-06 · Cryptographic Evolution Proof DAG (CEPD)
+
+### World-First: Cryptographic DAG Proof of Evolutionary Lineage
+
+ADAAD now produces an unbreakable, tamper-evident proof of evolutionary lineage from
+genesis to current state — the first autonomous evolution system to generate a
+cryptographic DAG linking every mutation to ALL of its causal ancestors via Merkle
+root.  CryptographicProofBundle is independently verifiable by third parties without
+system access, and is structured for legal admissibility (FINDING-66-003).
+
+**New module:** `runtime/evolution/cepd_engine.py`
+
+- `CEPDDagNode` — DAG node: mutation_id, epoch_id, parent_node_ids, ancestor_merkle_root,
+  payload_hash, HMAC/Ed25519 signature, cepd_version
+- `CryptographicProofBundle` — self-contained proof: dag_node + complete ancestor_set +
+  merkle_root + lineage_depth + genesis_traceable + bundle_hash; primary patent artifact
+- `CEPDDagStore` — append-only in-memory DAG; genesis pre-seeded; BFS genesis traceability
+- `compute_ancestor_merkle_root()` — deterministic SHA-256 Merkle over sorted ancestor IDs
+- `verify_merkle_determinism()` — CEPD-0 self-check; two independent computations
+- `evaluate_cepd_gate_0()` — 5-check DAG integrity gate; fail-closed; appends node on pass
+- `verify_proof_bundle()` — independent verifier surface (no system access required)
+- `sign_node()` / `verify_signature()` — HMAC-SHA256 (offline) or Ed25519 (PyNaCl)
+
+**Invariants introduced:**
+- `CEPD-0`: Every DAG node MUST carry an ancestor_merkle_root that is deterministically
+  reproducible from its causal ancestor set alone (CEPD_MERKLE_NONDETERMINISTIC → rejected).
+- `CEPD-1`: Every DAG node MUST be traceable to the genesis node by following parent edges
+  (CEPD_GENESIS_UNTRACEABLE is a constitutional integrity failure; HUMAN-0 alert required).
+
+**Failure modes:** `CEPD_ANCESTOR_INCOMPLETE`, `CEPD_SIGNATURE_INVALID`,
+`CEPD_MERKLE_NONDETERMINISTIC`, `CEPD_GENESIS_UNTRACEABLE`, `CEPD_DEPTH_EXCEEDED`,
+`CEPD_NODE_INCOMPLETE`, `CEPD_NODE_REJECTED`
+
+**Tests:** `tests/test_phase90_cepd.py` — T90-CEPD-01..20 (20/20 PASS)
+
+**Next:** INNOV-07 LSME (v9.24.0) — Live Shadow Mutation Execution
+
+---
+
 ## [9.22.0] — 2026-03-23 — Phase 89 INNOV-05 · Autonomous Organ Emergence Protocol (AOEP)
 
 ### World-First: Constitutionally-Governed Autonomous Architectural Self-Extension
