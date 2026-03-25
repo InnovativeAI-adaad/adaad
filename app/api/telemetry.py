@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Header, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies import require_audit_scope
 
@@ -26,7 +26,7 @@ def telemetry_decisions(
     outcome: str | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
-    authorization: str | None = Header(default=None),
+    authn: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     import server as _server
 
@@ -35,30 +35,30 @@ def telemetry_decisions(
         outcome=outcome,
         limit=limit,
         offset=offset,
-        authorization=authorization,
+        authn=authn,
     )
 
 
 @router.get('/telemetry/analytics')
 def telemetry_analytics(
     window_size: int = Query(default=100, ge=10, le=10000),
-    authorization: str | None = Header(default=None),
+    authn: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     import server as _server
 
-    return _server.telemetry_analytics_legacy(window_size=window_size, authorization=authorization)
+    return _server.telemetry_analytics_legacy(window_size=window_size, authn=authn)
 
 
 @router.get('/telemetry/strategy/{strategy_id}')
 def telemetry_strategy_detail(
     strategy_id: str,
     window_size: int = Query(default=100, ge=10, le=10000),
-    authorization: str | None = Header(default=None),
+    authn: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     import server as _server
 
     return _server.telemetry_strategy_detail_legacy(
         strategy_id=strategy_id,
         window_size=window_size,
-        authorization=authorization,
+        authn=authn,
     )
