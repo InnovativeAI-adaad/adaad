@@ -85,6 +85,7 @@ def load_live_version(
     try:
         adaad_version = version_path.read_text(encoding="utf-8").strip() or "unknown"
     except OSError:
+        # Best-effort read: fall back to default "unknown" if version file is missing or unreadable.
         pass
 
     report: dict[str, Any] = {}
