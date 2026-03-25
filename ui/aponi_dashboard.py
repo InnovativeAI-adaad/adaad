@@ -50,6 +50,13 @@ from runtime.evolution.epoch import CURRENT_EPOCH_PATH
 from runtime.evolution.lineage_v2 import resolve_certified_ancestor_path
 from runtime.evolution.replay_attestation import REPLAY_PROOFS_DIR, load_replay_proof, verify_replay_proof_bundle
 from security.ledger import journal
+from runtime.system_status import (
+    GATE_PROTOCOL,
+    DEFAULT_GATE_LOCK_FILE,
+    DEFAULT_REPORT_VERSION_PATH,
+    DEFAULT_VERSION_PATH,
+    load_live_version,
+)
 
 from ui.features.evidence_panel import replay_diff_export, state_fingerprint
 from ui.features.federation_panel import FEDERATION_PANEL_SECTION_ID
@@ -62,82 +69,29 @@ ELEMENT_ID = "Metal"
 # Mirrors server.py: locks legacy dashboard API when gate.lock exists or
 # ADAAD_GATE_LOCKED env-var is truthy.  "/" and "/index.html" always pass.
 
-_DASHBOARD_GATE_LOCK_FILE = Path(
-    os.environ.get(
-        "ADAAD_GATE_LOCK_FILE",
-        str(APP_ROOT.parent / "security" / "ledger" / "gate.lock"),
-    )
-)
-_DASHBOARD_GATE_PROTOCOL = "adaad-gate/1.0"
+_DASHBOARD_GATE_LOCK_FILE = Path(os.environ.get("ADAAD_GATE_LOCK_FILE", str(DEFAULT_GATE_LOCK_FILE)))
+_DASHBOARD_GATE_PROTOCOL = GATE_PROTOCOL
 
 
 def _read_gate_state() -> Dict[str, Any]:
-    """Return gate snapshot. Never raises; never surfaces secrets."""
-    locked = False
-    reason: Any = None
-    source = "default"
+    from runtime.system_status import read_gate_state as _read_gate_state_snapshot
 
-    env_flag = os.environ.get("ADAAD_GATE_LOCKED")
-    if env_flag:
-        locked = env_flag.lower() not in {"", "0", "false", "no"}
-        source = "env"
-        reason = os.environ.get("ADAAD_GATE_REASON") or reason
-
-    if _DASHBOARD_GATE_LOCK_FILE.exists():
-        source = "file"
-        locked = True
-        try:
-            contents = _DASHBOARD_GATE_LOCK_FILE.read_text(encoding="utf-8").strip()
-            if contents:
-                reason = contents
-        except Exception:
-            pass
-
-    if reason:
-        reason = str(reason)[:280]
-
-    return {
-        "locked": locked,
-        "reason": reason,
-        "source": source,
-        "checked_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "protocol": _DASHBOARD_GATE_PROTOCOL,
-    }
+    return _read_gate_state_snapshot(
+        gate_lock_file=_DASHBOARD_GATE_LOCK_FILE,
+        protocol=_DASHBOARD_GATE_PROTOCOL,
+    )
 
 HUMAN_DASHBOARD_TITLE = "Aponi Governance Nerve Center"
 
 # Version-resolution paths (used by /version endpoint and state injection)
-_ADAAD_VERSION_PATH: Path = APP_ROOT.parent / "VERSION"
-_REPORT_VERSION_PATH: Path = APP_ROOT.parent / "governance" / "report_version.json"
+_ADAAD_VERSION_PATH: Path = DEFAULT_VERSION_PATH
+_REPORT_VERSION_PATH: Path = DEFAULT_REPORT_VERSION_PATH
 
 
 def _load_live_version() -> Dict[str, Any]:
-    """Return authoritative live version fields. Never raises.
-
-    Reads VERSION file, governance/report_version.json, and the live
-    constitution.CONSTITUTION_VERSION constant.  Returns degraded 'unknown'
-    fields on any read failure so callers always receive parseable data.
-    """
-    adaad_version = "unknown"
-    try:
-        adaad_version = _ADAAD_VERSION_PATH.read_text(encoding="utf-8").strip()
-    except OSError:
-        pass
-
-    report: Dict[str, Any] = {}
-    try:
-        report = json.loads(_REPORT_VERSION_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        pass
-
-    return {
-        "adaad_version": adaad_version,
-        "constitution_version": constitution.CONSTITUTION_VERSION,
-        "last_sync_sha": report.get("last_sync_sha", "unknown"),
-        "last_sync_date": report.get("last_sync_date", "unknown"),
-        "report_version": report.get("report_version", adaad_version),
-        "source": "runtime",
-    }
+    live = load_live_version(version_path=_ADAAD_VERSION_PATH, report_version_path=_REPORT_VERSION_PATH)
+    live["source"] = "runtime"
+    return live
 
 
 SEMANTIC_DRIFT_CLASSES: tuple[str, ...] = (
