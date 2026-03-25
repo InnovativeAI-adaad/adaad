@@ -39,6 +39,14 @@ from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa
 from runtime.governance.rate_limiter import get_limiter as _get_proposal_limiter  # noqa: E402
 from runtime.audit_auth import load_audit_tokens, require_audit_read_scope  # noqa: E402
 from security.whaledic_secrets import enforce_whaledic_secret_policy  # noqa: E402
+from runtime.system_status import (
+    GATE_PROTOCOL,
+    DEFAULT_GATE_LOCK_FILE,
+    DEFAULT_REPORT_VERSION_PATH,
+    DEFAULT_VERSION_PATH,
+    load_live_version as load_live_version_snapshot,
+    read_gate_state as read_gate_state_snapshot,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -50,8 +58,7 @@ ENHANCED_INDEX = ENHANCED_DIR / "enhanced_dashboard.html"
 WHALEDIC_DIR = ROOT / "ui" / "developer" / "ADAADdev"
 REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
 FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
-GATE_LOCK_FILE = ROOT / "security" / "ledger" / "gate.lock"
-GATE_PROTOCOL = "adaad-gate/1.0"
+GATE_LOCK_FILE = DEFAULT_GATE_LOCK_FILE
 
 
 class SPAStaticFiles(StaticFiles):
@@ -221,40 +228,7 @@ def _resolve_static_asset(base_dir: Path, asset_path: str) -> Path:
 
 
 def _read_gate_state() -> Dict[str, Any]:
-    """
-    Best-effort gate snapshot. Never surfaces secrets.
-    """
-    locked = False
-    reason = None
-    source = "default"
-
-    env_flag = os.environ.get("ADAAD_GATE_LOCKED")
-    if env_flag:
-        locked = env_flag.lower() not in {"", "0", "false", "no"}
-        source = "env"
-        reason = os.environ.get("ADAAD_GATE_REASON") or reason
-
-    if GATE_LOCK_FILE.exists():
-        source = "file"
-        locked = True
-        try:
-            contents = GATE_LOCK_FILE.read_text(encoding="utf-8").strip()
-            if contents:
-                reason = contents
-        except Exception:
-            # Fall back to prior reason if present
-            pass
-
-    if reason:
-        reason = reason[:280]
-
-    return {
-        "locked": locked,
-        "reason": reason,
-        "source": source,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
-        "protocol": GATE_PROTOCOL,
-    }
+    return read_gate_state_snapshot(gate_lock_file=GATE_LOCK_FILE, protocol=GATE_PROTOCOL)
 
 
 
@@ -277,45 +251,16 @@ def _assert_gate_open() -> Dict[str, Any]:
     return gate
 
 
-_REPORT_VERSION_PATH = ROOT / "governance" / "report_version.json"
-_VERSION_PATH = ROOT / "VERSION"
+_REPORT_VERSION_PATH = DEFAULT_REPORT_VERSION_PATH
+_VERSION_PATH = DEFAULT_VERSION_PATH
 
 
 def _load_live_version() -> Dict[str, Any]:
-    """Read VERSION + report_version.json + constitution constant.
-
-    Never raises — returns degraded payload on any read failure so the
-    dashboard always gets a parseable JSON response.
-    """
-    adaad_version = "unknown"
-    try:
-        adaad_version = _VERSION_PATH.read_text(encoding="utf-8").strip()
-    except OSError:
-        pass
-
-    report: Dict[str, Any] = {}
-    try:
-        report = json.loads(_REPORT_VERSION_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        pass
-
-    # Import constitution version at call-time to pick up any live reload
-    constitution_version = "unknown"
-    try:
-        from runtime.constitution import CONSTITUTION_VERSION as _CV
-        constitution_version = _CV
-    except Exception:  # pragma: no cover
-        pass
-
-    return {
-        "adaad_version": adaad_version,
-        "constitution_version": constitution_version,
-        "last_sync_sha": report.get("last_sync_sha", "unknown"),
-        "last_sync_date": report.get("last_sync_date", "unknown"),
-        "report_version": report.get("report_version", adaad_version),
-        "protocol": GATE_PROTOCOL,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
-    }
+    return load_live_version_snapshot(
+        version_path=_VERSION_PATH,
+        report_version_path=_REPORT_VERSION_PATH,
+        protocol=GATE_PROTOCOL,
+    )
 
 
 @app.get("/api/version")
