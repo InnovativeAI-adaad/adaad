@@ -4,6 +4,7 @@ import json
 import importlib
 import logging
 import os
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, Mapping
@@ -2864,23 +2865,69 @@ async def ws_events(websocket: WebSocket) -> None:
     """
     from runtime.innovations_bus import get_bus  # noqa: PLC0415 — avoid import-time cycle
 
+    relay_policy = websocket.query_params.get("relay_policy", "drop_oldest")
+    if relay_policy not in {"drop_oldest", "coalesce_latest"}:
+        await websocket.close(code=1008, reason="invalid_relay_policy")
+        return
+
+    def _parse_limit(name: str, default: int, cap: int) -> int:
+        raw = websocket.query_params.get(name)
+        if raw is None:
+            return default
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail=f"invalid_{name}") from None
+        if value < 0 or value > cap:
+            raise HTTPException(status_code=422, detail=f"invalid_{name}")
+        return value
+
+    def _parse_float(name: str, default: float, minimum: float, maximum: float) -> float:
+        raw = websocket.query_params.get(name)
+        if raw is None:
+            return default
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail=f"invalid_{name}") from None
+        if value < minimum or value > maximum:
+            raise HTTPException(status_code=422, detail=f"invalid_{name}")
+        return value
+
+    try:
+        metrics_limit = _parse_limit("metrics_limit", default=200, cap=500)
+        journal_limit = _parse_limit("journal_limit", default=200, cap=500)
+        relay_queue_limit = _parse_limit("relay_queue_limit", default=128, cap=512)
+        heartbeat_interval_s = _parse_float("heartbeat_interval_s", default=30.0, minimum=1.0, maximum=120.0)
+        stale_timeout_s = _parse_float("stale_timeout_s", default=90.0, minimum=2.0, maximum=300.0)
+    except HTTPException:
+        await websocket.close(code=1008, reason="invalid_query_params")
+        return
+
     await websocket.accept()
     # Hello frame
     await websocket.send_json({
         "type": "hello",
         "channels": ["metrics", "journal", "innovations"],
         "status": "live",
+        "endpoint_meta": {
+            "history_caps": {"metrics_limit_max": 500, "journal_limit_max": 500},
+            "queue_policy": relay_policy,
+            "relay_queue_limit": relay_queue_limit,
+            "heartbeat_interval_s": heartbeat_interval_s,
+            "stale_timeout_s": stale_timeout_s,
+        },
     })
     # Historical batch
     events = []
-    for entry in metrics.tail(limit=200):
+    for entry in metrics.tail(limit=metrics_limit):
         events.append({
             "channel": "metrics",
             "kind": str(entry.get("event", entry.get("event_type", "metric"))),
             "timestamp": str(entry.get("timestamp", entry.get("ts", ""))),
             "event": entry,
         })
-    for entry in journal.read_entries(limit=200):
+    for entry in journal.read_entries(limit=journal_limit):
         events.append({
             "channel": "journal",
             "kind": str(entry.get("action", entry.get("tx_type", "journal"))),
@@ -2892,20 +2939,82 @@ async def ws_events(websocket: WebSocket) -> None:
     # Subscribe to innovations bus and relay frames until disconnect
     bus = get_bus()
     queue = await bus.subscribe()
+    relay_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=relay_queue_limit)
+    disconnect_reason = "client_closed"
+    dropped_frames = 0
+    last_client_signal = asyncio.get_event_loop().time()
+    coalesced_latest: dict[str, Any] | None = None
+    stop_signal = asyncio.Event()
+
+    async def _client_reader() -> None:
+        nonlocal last_client_signal
+        while not stop_signal.is_set():
+            try:
+                message = await asyncio.wait_for(websocket.receive_json(), timeout=heartbeat_interval_s)
+            except asyncio.TimeoutError:
+                continue
+            except Exception:  # noqa: BLE001
+                break
+            if isinstance(message, dict) and message.get("type") == "pong":
+                last_client_signal = asyncio.get_event_loop().time()
+
+    async def _relay_ingress() -> None:
+        nonlocal dropped_frames, coalesced_latest
+        while not stop_signal.is_set():
+            frame = await queue.get()
+            if relay_policy == "coalesce_latest":
+                if relay_queue.full():
+                    coalesced_latest = frame
+                    dropped_frames += 1
+                    metrics.log("ws_events_frames_dropped", payload={"policy": relay_policy, "dropped": dropped_frames})
+                    continue
+            if relay_queue.full():
+                _ = relay_queue.get_nowait()
+                dropped_frames += 1
+                metrics.log("ws_events_frames_dropped", payload={"policy": relay_policy, "dropped": dropped_frames})
+            await relay_queue.put(frame)
+            if coalesced_latest is not None and not relay_queue.full():
+                await relay_queue.put(coalesced_latest)
+                coalesced_latest = None
+            metrics.log("ws_events_queue_depth", payload={"depth": relay_queue.qsize(), "limit": relay_queue_limit})
+
+    reader_task = asyncio.create_task(_client_reader())
+    ingress_task = asyncio.create_task(_relay_ingress())
     try:
         while True:
             try:
-                frame = await asyncio.wait_for(queue.get(), timeout=30.0)
+                now = asyncio.get_event_loop().time()
+                if (now - last_client_signal) >= stale_timeout_s:
+                    disconnect_reason = "stale_client_timeout"
+                    await websocket.send_json({"type": "disconnect", "reason": disconnect_reason})
+                    break
+                frame = await asyncio.wait_for(relay_queue.get(), timeout=heartbeat_interval_s)
                 await websocket.send_json({"type": "innovations", "channel": "innovations", **frame})
             except asyncio.TimeoutError:
                 # Keepalive ping
-                await websocket.send_json({"type": "ping", "ts": __import__("datetime").datetime.utcnow().isoformat()})
+                await websocket.send_json({"type": "ping", "ts": datetime.now(timezone.utc).isoformat()})
     except Exception:  # noqa: BLE001 — client disconnected
-        pass
+        disconnect_reason = "send_or_receive_failure"
     finally:
+        stop_signal.set()
+        ingress_task.cancel()
+        reader_task.cancel()
+        for task in (ingress_task, reader_task):
+            try:
+                await task
+            except BaseException:  # noqa: BLE001
+                pass
         await bus.unsubscribe(queue)
+        metrics.log(
+            "ws_events_disconnect",
+            payload={
+                "cause": disconnect_reason,
+                "dropped_frames": dropped_frames,
+                "queue_depth": relay_queue.qsize(),
+            },
+        )
         try:
-            await websocket.close()
+            await websocket.close(reason=disconnect_reason)
         except Exception:  # noqa: BLE001
             pass
 
