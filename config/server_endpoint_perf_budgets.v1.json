@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "config_version": "v1",
+  "regression_policy": {
+    "min_relative_regression_pct": 8.0,
+    "pvalue_threshold": 0.05
+  },
+  "endpoint_groups": {
+    "critical_read_gets": {
+      "http_get": [
+        "/api/health",
+        "/api/nexus/health",
+        "/governance/health",
+        "/api/status"
+      ],
+      "websocket_connect": [],
+      "budgets": {
+        "latency_median_ms": 80.0,
+        "latency_p95_ms": 160.0,
+        "max_payload_bytes": 65536,
+        "error_rate": 0.0
+      },
+      "regression_noise_floor": {
+        "latency_median_ms": 2.0,
+        "latency_p95_ms": 4.0,
+        "response_bytes_median": 128.0,
+        "error_rate": 0.02
+      }
+    },
+    "websocket_connect_path": {
+      "http_get": [],
+      "websocket_connect": [
+        "/ws/events"
+      ],
+      "budgets": {
+        "latency_median_ms": 120.0,
+        "latency_p95_ms": 220.0,
+        "max_payload_bytes": 8192,
+        "error_rate": 0.0
+      },
+      "regression_noise_floor": {
+        "latency_median_ms": 3.0,
+        "latency_p95_ms": 6.0,
+        "response_bytes_median": 64.0,
+        "error_rate": 0.02
+      }
+    }
+  }
+}

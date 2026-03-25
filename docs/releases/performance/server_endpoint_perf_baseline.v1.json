@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0.0",
+  "config_version": "v1",
+  "generated_at_utc": "2026-03-25T00:00:00+00:00",
+  "iterations": 10,
+  "warmups": 2,
+  "pass": true,
+  "groups": [
+    {
+      "group": "critical_read_gets",
+      "samples": 10,
+      "latency_ms_samples": [30.0, 31.0, 32.0, 30.0, 33.0, 31.0, 32.0, 30.0, 33.0, 31.0],
+      "response_bytes_samples": [1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200],
+      "latency_median_ms": 31.0,
+      "latency_p95_ms": 33.0,
+      "response_bytes_median": 1200,
+      "error_rate": 0.0,
+      "endpoints": ["/api/health", "/api/nexus/health", "/governance/health", "/api/status"]
+    },
+    {
+      "group": "websocket_connect_path",
+      "samples": 10,
+      "latency_ms_samples": [42.0, 43.0, 44.0, 45.0, 44.0, 43.0, 42.0, 44.0, 45.0, 43.0],
+      "response_bytes_samples": [256, 256, 256, 256, 256, 256, 256, 256, 256, 256],
+      "latency_median_ms": 43.5,
+      "latency_p95_ms": 45.0,
+      "response_bytes_median": 256,
+      "error_rate": 0.0,
+      "endpoints": ["/ws/events"]
+    }
+  ],
+  "budgets": {
+    "critical_read_gets": {"group": "critical_read_gets", "pass": true, "checks": {}},
+    "websocket_connect_path": {"group": "websocket_connect_path", "pass": true, "checks": {}}
+  }
+}
