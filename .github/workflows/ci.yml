@@ -77,6 +77,7 @@ jobs:
             runtime:
               - 'runtime/**'
               - 'app/**'
+              - 'server.py'
               - 'nexus_setup.py'
             security:
               - 'security/**'
@@ -727,6 +728,43 @@ import sys"),
           --baseline docs/releases/benchmarks/3.1.1/benchmark_results.json
           --candidate docs/releases/benchmarks/ci-${{ github.sha }}/benchmark_results.json
 
+  server-performance-budget-gate:
+    runs-on: ubuntu-latest
+    needs: classify
+    if: needs.classify.outputs.runtime == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          install-deps: "true"
+      - name: Benchmark critical GET and websocket endpoints
+        run: >-
+          python scripts/bench_server_endpoints.py
+          --config config/server_endpoint_perf_budgets.v1.json
+          --output-json artifacts/perf/server_endpoint_perf_current.json
+          --output-md artifacts/perf/server_endpoint_perf_summary.md
+      - name: Validate statistically meaningful perf regressions only
+        run: >-
+          python scripts/validate_server_perf_regression.py
+          --baseline docs/releases/performance/server_endpoint_perf_baseline.v1.json
+          --candidate artifacts/perf/server_endpoint_perf_current.json
+          --config config/server_endpoint_perf_budgets.v1.json
+      - name: Publish endpoint performance trend metrics
+        run: >-
+          python scripts/publish_server_perf_trends.py
+          --input artifacts/perf/server_endpoint_perf_current.json
+          --history-jsonl artifacts/perf/server_endpoint_perf_trends.jsonl
+          --summary-md artifacts/perf/server_endpoint_perf_trends.md
+      - name: Upload endpoint perf artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: server-endpoint-perf-${{ github.run_id }}
+          path: |
+            artifacts/perf/server_endpoint_perf_current.json
+            artifacts/perf/server_endpoint_perf_summary.md
+            artifacts/perf/server_endpoint_perf_trends.jsonl
+            artifacts/perf/server_endpoint_perf_trends.md
 
   semantic-diff-determinism:
     # CI-DUPE-01: This is Definition B (the active extended fixture runner).
@@ -817,6 +855,7 @@ import sys"),
       - aeo-evidence-publish
       - simplification-contract-gate
       - benchmark-regression-gate
+      - server-performance-budget-gate
       - fast-path-innovations
       - semantic-diff-determinism
       - semantic-diff-determinism-baseline
@@ -859,6 +898,7 @@ import sys"),
             echo "| evidence-subsystem-determinism | ${{ needs.evidence-subsystem-determinism.result }} | Always-on deterministic synthetic mutation/governance replay bundle check. |"
             echo "| phase6-amendment-gate-determinism | ${{ needs.phase6-amendment-gate-determinism.result }} | Phase 6 M6-03 determinism selector. |"
             echo "| benchmark-regression-gate | ${{ needs.benchmark-regression-gate.result }} | Deterministic benchmark generation and non-regression promotion gate. |"
+            echo "| server-performance-budget-gate | ${{ needs.server-performance-budget-gate.result }} | Runtime/server refactor gate: endpoint correctness + performance budget with statistically meaningful regression detection and trend publishing. |"
             echo
 
             echo "### 🔴 Security lane — Owner: Security Maintainer"

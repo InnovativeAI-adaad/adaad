@@ -6,6 +6,7 @@ import hashlib
 import logging
 import os
 import time
+import asyncio
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -16,6 +17,18 @@ from contextlib import asynccontextmanager
 import anyio
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
+
+from app.api.schemas.governance import (
+    FastPathCheckpointVerifyResponse,
+    FastPathEntropyGateRequest,
+    FastPathEntropyGateResponse,
+    FastPathRoutePreviewRequest,
+    FastPathRoutePreviewResponse,
+    FastPathStatsResponse,
+    ParallelGateEvaluateRequest,
+    ParallelGateEvaluateResponse,
+    ParallelGateProbeLibraryResponse,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +38,7 @@ from app.api.audit import router as audit_router
 from app.api.ui import router as ui_router
 from app.api.simulation import router as simulation_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
+from app.api.dependencies import require_audit_scope, require_gate_open
 from runtime.innovations_router import router as innovations_router
 
 # ── Module-level runtime imports ─────────────────────────────────────────────
@@ -359,17 +373,8 @@ def health() -> dict[str, Any]:
 
 
 @app.get("/api/nexus/health")
-def nexus_health() -> dict[str, Any]:
-    gate = _read_gate_state()
-    unlocked = not gate["locked"]
-    snapshot = {"ok": unlocked, "gate_ok": unlocked, "protocol": GATE_PROTOCOL, "gate": gate}
-    if gate["locked"]:
-        raise HTTPException(
-            status_code=423,
-            detail=gate["reason"] or "Cryovant gate LOCKED",
-            headers={"X-ADAAD-GATE": "locked"},
-        )
-    return snapshot
+def nexus_health(gate: dict[str, Any] = Depends(require_gate_open)) -> dict[str, Any]:
+    return {"ok": True, "gate_ok": True, "protocol": GATE_PROTOCOL, "gate": gate}
 
 
 @app.get("/api/nexus/handshake")
@@ -438,9 +443,9 @@ for endpoint_name in MOCK_ENDPOINTS:
 def governance_reviewer_calibration(
     epoch_id: str | None = Query(default=None),
     reviewer_ids: str | None = Query(default=None),
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
     if not epoch_id:
         raise HTTPException(status_code=422, detail="missing_epoch_id")
 
@@ -462,7 +467,7 @@ def governance_reviewer_calibration(
 @app.get("/governance/health")
 def governance_health(
     epoch_id: str | None = Query(default=None),
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return current and rolling governance health score.
 
@@ -479,7 +484,7 @@ def governance_health(
     """
     from runtime.governance.health_service import governance_health_service
 
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
     resolved_epoch = epoch_id or "current"
     result = governance_health_service(epoch_id=resolved_epoch)
     result["constitutional_floor"] = "enforced"
@@ -508,9 +513,10 @@ def telemetry_decisions_legacy(
     outcome: str | None = None,
     limit: int = 100,
     offset: int = 0,
-    authorization: str | None = None,
+    authn: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    authn = _require_audit_read_scope(authorization)
+    if authn is None:
+        raise HTTPException(status_code=500, detail="missing_auth_context")
     sink = get_telemetry_sink()
     if sink is None:
         try:
@@ -543,8 +549,12 @@ def telemetry_decisions_legacy(
     return {"schema_version": "1.0", "authn": authn, "data": {"decisions": decisions, "total_queried": total_queried, "ledger_path": ledger_path_str, "sink_type": sink_type}}
 
 
-def telemetry_analytics_legacy(window_size: int = 100, authorization: str | None = None) -> dict[str, Any]:
-    authn = _require_audit_read_scope(authorization)
+def telemetry_analytics_legacy(
+    window_size: int = 100,
+    authn: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if authn is None:
+        raise HTTPException(status_code=500, detail="missing_auth_context")
     from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
     from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
     sink = get_telemetry_sink()
@@ -568,8 +578,13 @@ def telemetry_analytics_legacy(window_size: int = 100, authorization: str | None
     return {"schema_version": "1.0", "authn": authn, "data": {"status": report.status, "health_score": report.health_score, "strategy_stats": [_stat_to_dict(s) for s in report.strategy_stats], "dominant_strategy": report.dominant_strategy, "dominant_share": report.dominant_share, "stale_strategy_ids": list(report.stale_strategy_ids), "drift_max": report.drift_max, "window_size": report.window_size, "total_decisions": report.total_decisions, "window_decisions": report.window_decisions, "ledger_chain_valid": report.ledger_chain_valid, "report_digest": report.report_digest}}
 
 
-def telemetry_strategy_detail_legacy(strategy_id: str, window_size: int = 100, authorization: str | None = None) -> dict[str, Any]:
-    authn = _require_audit_read_scope(authorization)
+def telemetry_strategy_detail_legacy(
+    strategy_id: str,
+    window_size: int = 100,
+    authn: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    if authn is None:
+        raise HTTPException(status_code=500, detail="missing_auth_context")
     from runtime.intelligence.strategy import STRATEGY_TAXONOMY
     if strategy_id not in STRATEGY_TAXONOMY:
         raise HTTPException(status_code=404, detail=f"unknown_strategy_id:{strategy_id}")
@@ -600,7 +615,7 @@ def telemetry_strategy_detail_legacy(strategy_id: str, window_size: int = 100, a
 @app.get("/governance/routing-health")
 def governance_routing_health(
     window_size: int = Query(default=100, ge=10, le=10000),
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return RoutingHealthReport as a governed response. Read-only.
 
@@ -624,7 +639,7 @@ def governance_routing_health(
     report_digest       sha256 prefixed string
     available           bool
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
     from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
@@ -697,7 +712,7 @@ def governance_routing_health(
 
 @app.get("/governance/review-pressure")
 def governance_review_pressure(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return advisory PressureAdjustment based on current governance health. Read-only.
 
@@ -713,7 +728,7 @@ def governance_review_pressure(
     adjustment_digest     sha256-prefixed digest
     adaptor_version       "24.0"
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.health_pressure_adaptor import HealthPressureAdaptor
     from runtime.governance.health_service import governance_health_service
@@ -781,7 +796,7 @@ def governance_pressure_history(
     pressure_tier: str | None = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return paginated PressureAdjustment ledger history. Read-only.
 
@@ -799,7 +814,7 @@ def governance_pressure_history(
     ledger_active   bool
     ledger_path     str | null
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     import os
     from pathlib import Path as _Path
@@ -849,7 +864,7 @@ def governance_pressure_history(
 @app.get("/governance/admission-status")
 def governance_admission_status(
     risk_score: float = 0.50,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return advisory AdmissionDecision for a mutation with the given risk_score.
 
@@ -875,7 +890,7 @@ def governance_admission_status(
     decision_digest       sha256-prefixed deterministic digest
     controller_version    "25.0"
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.mutation_admission import MutationAdmissionController
     from runtime.governance.health_service import governance_health_service
@@ -914,7 +929,7 @@ def governance_admission_status(
 
 @app.get("/governance/admission-rate")
 def governance_admission_rate(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return AdmissionRateReport from the global AdmissionRateTracker. Read-only.
 
@@ -928,7 +943,7 @@ def governance_admission_rate(
     report_digest          str   — sha256-prefixed deterministic digest
     tracker_version        str   — "26.0"
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.admission_tracker import AdmissionRateTracker
 
@@ -960,7 +975,7 @@ def governance_admission_audit(
     band: str | None = None,
     admitted_only: bool = False,
     blocked_only: bool = False,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return recent AdmissionDecision records from the audit ledger. Read-only.
 
@@ -990,7 +1005,7 @@ def governance_admission_audit(
     escalation_breakdown dict  — escalation_mode → count (Phase 29)
     ledger_version       str   — "29.0"
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.admission_audit_ledger import (
         ADMISSION_LEDGER_VERSION,
@@ -1030,7 +1045,7 @@ def governance_admission_audit(
 @app.get("/governance/admission-enforcement")
 def governance_admission_enforcement(
     risk_score: float = 0.50,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return AdmissionBandEnforcer verdict for a mutation with the given risk_score.
 
@@ -1053,7 +1068,7 @@ def governance_admission_enforcement(
     enforcer_version  "28.0"
     decision          full AdmissionDecision payload (same as /admission-status)
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.admission_band_enforcer import AdmissionBandEnforcer
     from runtime.governance.health_service import governance_health_service
@@ -1084,7 +1099,7 @@ def governance_threat_scans(
     limit: int = 20,
     recommendation: str | None = None,
     triggered_only: bool = False,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return recent ThreatMonitor scan records from the audit ledger. Read-only.
 
@@ -1108,7 +1123,7 @@ def governance_threat_scans(
     risk_level_breakdown     dict  — risk_level → count
     ledger_version           str   — "30.0"
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.threat_scan_ledger import (
         THREAT_SCAN_LEDGER_VERSION,
@@ -1147,7 +1162,7 @@ def governance_threat_scans(
 @app.get("/governance/debt")
 def governance_debt(
     epoch_id: str = "current",
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return the current GovernanceDebtLedger snapshot. Read-only.
 
@@ -1173,7 +1188,7 @@ def governance_debt(
     snapshot_hash           str   — sha256 deterministic hash of this snapshot
     debt_ledger_schema      str   — "1.0"
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.debt_ledger import (
         DEBT_LEDGER_SCHEMA_VERSION,
@@ -1227,7 +1242,7 @@ def governance_debt(
 @app.post("/governance/certify")
 def governance_certify(
     request: dict[str, Any],
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Run GateCertifier security scan on a named runtime file. Read-only governance check.
 
@@ -1252,7 +1267,7 @@ def governance_certify(
     hash            str   — sha256 of file content (when accessible)
     generated_at    str   — ISO timestamp
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from dataclasses import dataclass as _dc
     from pathlib import Path
@@ -1301,7 +1316,7 @@ def governance_certify(
 def governance_certifier_scans(
     limit: int = 20,
     rejected_only: bool = False,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return recent GateCertifier scan records from the audit ledger. Read-only.
 
@@ -1328,7 +1343,7 @@ def governance_certifier_scans(
     This endpoint is read-only and advisory.  It never approves or blocks
     mutations.  GovernanceGate retains sole mutation-approval authority.
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.certifier_scan_ledger import (
         CERTIFIER_SCAN_LEDGER_VERSION,
@@ -1364,7 +1379,7 @@ def governance_certifier_scans(
 def governance_gate_decisions(
     limit: int = 20,
     denied_only: bool = False,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return recent GovernanceGate decision records from the audit ledger. Read-only.
 
@@ -1392,7 +1407,7 @@ def governance_gate_decisions(
     This endpoint is read-only and advisory.  It never approves or blocks
     mutations.  GovernanceGate retains sole mutation-approval authority.
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.governance.gate_decision_ledger import (
         GATE_DECISION_LEDGER_VERSION,
@@ -1431,7 +1446,7 @@ _DEFAULT_REPUTATION_LEDGER_PATH = "security/ledger/reviewer_reputation_audit.jso
 def governance_reviewer_reputation_ledger(
     limit: int = 20,
     epoch_id: str | None = None,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return recent reviewer reputation ledger entries. Read-only.
 
@@ -1457,7 +1472,7 @@ def governance_reviewer_reputation_ledger(
     This endpoint is read-only and advisory.  It never approves or blocks
     mutations.  GovernanceGate retains sole mutation-approval authority.
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from collections import deque
     from runtime.governance.reviewer_reputation_ledger import LEDGER_FORMAT_VERSION
@@ -1633,7 +1648,7 @@ def _mutation_window_from_file(path: Path, *, limit: int, promoted_only: bool) -
 async def governance_mutation_ledger(
     limit: int = 20,
     promoted_only: bool = False,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return recent MutationLedger entries from the hash-chained audit ledger. Read-only.
 
@@ -1658,7 +1673,7 @@ async def governance_mutation_ledger(
     This endpoint is read-only and advisory.  It never approves or blocks
     mutations.  GovernanceGate retains sole mutation-approval authority.
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
 
     from runtime.state.jsonl_snapshot_cache import read_mutation_ledger_snapshot
 
@@ -1744,7 +1759,7 @@ _PARALLEL_GATE_MAX_WORKERS = 8
 @app.get("/governance/scoring-engine")
 async def governance_scoring_engine(
     limit: int = 20,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """PR-06: GET /governance/scoring-engine
 
@@ -1756,7 +1771,7 @@ async def governance_scoring_engine(
     - scoring is deterministic (DET-ALL-0); algorithm_version is pinned.
     - Never raises; always returns a valid envelope.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     try:
         from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION, SEVERITY_WEIGHTS
         from runtime.io.jsonl_tail import read_jsonl_tail
@@ -1821,7 +1836,7 @@ async def governance_scoring_engine(
 
 @app.get("/governance/tier-calibration")
 def governance_tier_calibration(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """PR-07: GET /governance/tier-calibration
 
@@ -1833,7 +1848,7 @@ def governance_tier_calibration(
     - Constitutional floor (min_count >= 1) is never overridden.
     - advisory_only: true — this endpoint never modifies tier config.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     try:
         from runtime.governance.review_pressure import (
             DEFAULT_TIER_CONFIG,
@@ -1863,7 +1878,7 @@ def governance_tier_calibration(
 
 @app.get("/governance/advisory-rule")
 def governance_advisory_rule(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """PR-08: GET /governance/advisory-rule
 
@@ -1875,7 +1890,7 @@ def governance_advisory_rule(
     - Advisory rules produce ADVISORY severity events only (never BLOCKING).
     - constitutional_floor is always >= 1 reviewer regardless of this rule.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     try:
         from runtime.governance.review_quality import ReviewQualityGate
         gate = ReviewQualityGate()
@@ -1898,7 +1913,7 @@ def governance_advisory_rule(
 
 @app.get("/governance/aponi-panel")
 def governance_aponi_panel(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """PR-09: GET /governance/aponi-panel
 
@@ -1910,7 +1925,7 @@ def governance_aponi_panel(
     This is the ADAAD-7 integration endpoint that wires the feedback loop
     enterprise buyers require: reputation → pressure → scoring → calibration.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     result: dict[str, Any] = {"ok": True, "panel": "aponi-adaad7"}
 
     # Reputation snapshot
@@ -1965,8 +1980,8 @@ def governance_aponi_panel(
     return result
 
 
-@app.get("/api/governance/parallel-gate/probe-library")
-def api_parallel_gate_probe_library() -> dict[str, Any]:
+@app.get("/api/governance/parallel-gate/probe-library", response_model=ParallelGateProbeLibraryResponse)
+def api_parallel_gate_probe_library() -> ParallelGateProbeLibraryResponse:
     """Return the canonical probe library for the parallel governance gate."""
     total = sum(len(rules) for rules in _PARALLEL_GATE_PROBE_LIBRARY.values())
     return {
@@ -1977,31 +1992,22 @@ def api_parallel_gate_probe_library() -> dict[str, Any]:
     }
 
 
-@app.post("/api/governance/parallel-gate/evaluate")
-def api_parallel_gate_evaluate(request: dict = Body(default={})) -> dict[str, Any]:
+@app.post("/api/governance/parallel-gate/evaluate", response_model=ParallelGateEvaluateResponse)
+def api_parallel_gate_evaluate(request: ParallelGateEvaluateRequest) -> ParallelGateEvaluateResponse:
     """Evaluate governance axes concurrently and return a merged decision."""
     import time as _time
     import hashlib as _hl
     import json as _json
-    from fastapi import HTTPException as _HTTPException
+    mutation_id = request.mutation_id
+    trust_mode = request.trust_mode
+    specs_raw = request.axis_specs
+    human_override = request.human_override
 
-    mutation_id = request.get("mutation_id")
-    if not mutation_id:
-        raise _HTTPException(status_code=422, detail="mutation_id is required")
-
-    trust_mode     = str(request.get("trust_mode") or "standard")
-    specs_raw      = list(request.get("axis_specs") or [])
-    human_override = bool(request.get("human_override", False))
-
-    if len(specs_raw) == 0 or len(specs_raw) > 20:
-        raise _HTTPException(status_code=422, detail="axis_specs must contain 1–20 entries")
-
-    mutation_id = str(mutation_id)
     t0 = _time.monotonic()
     results: list[dict] = []
     for spec in specs_raw:
-        axis    = str(spec.get("axis") or "unknown")
-        rule_id = str(spec.get("rule_id") or "unknown")
+        axis = spec.axis
+        rule_id = spec.rule_id
         lib_rules = _PARALLEL_GATE_PROBE_LIBRARY.get(axis, [])
         found_in_lib = False
         default_ok, default_reason = True, "no_default"
@@ -2019,8 +2025,8 @@ def api_parallel_gate_evaluate(request: dict = Body(default={})) -> dict[str, An
             default_ok     = not is_failure
             default_reason = "probe_not_found_default_fail" if is_failure else "probe_not_found_default_pass"
 
-        ok     = bool(spec.get("ok", default_ok))
-        reason = str(spec.get("reason") or (default_reason if ok else "probe_failed"))
+        ok = spec.ok if spec.ok is not None else default_ok
+        reason = spec.reason or (default_reason if ok else "probe_failed")
         t_axis = _time.monotonic()
         results.append({
             "axis":        axis,
@@ -2080,8 +2086,8 @@ _GENESIS_DIGEST  = "sha256:" + __import__("hashlib").sha256(
 ).hexdigest()
 
 
-@app.get("/api/fast-path/stats")
-def api_fast_path_stats() -> dict[str, Any]:
+@app.get("/api/fast-path/stats", response_model=FastPathStatsResponse)
+def api_fast_path_stats() -> FastPathStatsResponse:
     """Return fast-path intelligence subsystem version and configuration."""
     from runtime.evolution.mutation_route_optimizer import (
         ELEVATED_PATH_PREFIXES, ELEVATED_INTENT_KEYWORDS, TRIVIAL_OP_TYPES, ROUTE_VERSION,
@@ -2110,19 +2116,19 @@ def api_fast_path_stats() -> dict[str, Any]:
     }
 
 
-@app.post("/api/fast-path/route-preview")
-def api_fast_path_route_preview(request: dict = Body(default={})) -> dict[str, Any]:
+@app.post("/api/fast-path/route-preview", response_model=FastPathRoutePreviewResponse)
+def api_fast_path_route_preview(request: FastPathRoutePreviewRequest) -> FastPathRoutePreviewResponse:
     """Preview the routing tier for a mutation candidate."""
     import hashlib as _hl
     import json as _json
     from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, ROUTE_VERSION
 
-    mutation_id   = str(request.get("mutation_id") or "unknown")
-    intent        = str(request.get("intent") or "")
-    files_touched = list(request.get("files_touched") or [])
-    loc_added     = int(request.get("loc_added") or 0)
-    loc_deleted   = int(request.get("loc_deleted") or 0)
-    risk_tags     = list(request.get("risk_tags") or [])
+    mutation_id = request.mutation_id
+    intent = request.intent
+    files_touched = request.files_touched
+    loc_added = request.loc_added
+    loc_deleted = request.loc_deleted
+    risk_tags = request.risk_tags
 
     optimizer = MutationRouteOptimizer()
     dec = optimizer.route(
@@ -2157,16 +2163,16 @@ def api_fast_path_route_preview(request: dict = Body(default={})) -> dict[str, A
     }
 
 
-@app.post("/api/fast-path/entropy-gate")
-def api_fast_path_entropy_gate(request: dict = Body(default={})) -> dict[str, Any]:
+@app.post("/api/fast-path/entropy-gate", response_model=FastPathEntropyGateResponse)
+def api_fast_path_entropy_gate(request: FastPathEntropyGateRequest) -> FastPathEntropyGateResponse:
     """Evaluate entropy gate verdict for a mutation candidate."""
     import hashlib as _hl
     import json as _json
 
-    mutation_id    = str(request.get("mutation_id") or "unknown")
-    estimated_bits = int(request.get("estimated_bits") or 0)
-    sources        = list(request.get("sources") or [])
-    strict         = bool(request.get("strict", True))
+    mutation_id = request.mutation_id
+    estimated_bits = request.estimated_bits
+    sources = request.sources
+    strict = request.strict
 
     has_network = "network" in sources
     if estimated_bits >= _FP_DENY_BITS:
@@ -2201,8 +2207,8 @@ def api_fast_path_entropy_gate(request: dict = Body(default={})) -> dict[str, An
     }
 
 
-@app.get("/api/fast-path/checkpoint-chain/verify")
-def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
+@app.get("/api/fast-path/checkpoint-chain/verify", response_model=FastPathCheckpointVerifyResponse)
+def api_fast_path_checkpoint_chain_verify() -> FastPathCheckpointVerifyResponse:
     """Verify the fast-path checkpoint chain integrity."""
     import hashlib as _hl
     import json as _json
@@ -2241,6 +2247,7 @@ def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
 
     return {
         "ok":             True,
+        "chain_version":  _CHECKPOINT_CHAIN_VERSION,
         "integrity":      True,
         "chain_length":   len(links),
         "genesis_digest": _GENESIS_DIGEST,
@@ -2363,10 +2370,10 @@ class _SimulationRunRequest(BaseModel):
 @app.post("/simulation/run")
 async def simulation_run(
     body: _SimulationRunRequest,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """POST /simulation/run — simulate governance evaluation, no ledger writes."""
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     run_id = str(_uuid.uuid4())
     result = _evaluate_simulation(body.dsl_text, body.epoch_ids, body.epoch_data_map)
     envelope: dict[str, Any] = {
@@ -2384,10 +2391,10 @@ async def simulation_run(
 @app.get("/simulation/results/{run_id}")
 async def simulation_results(
     run_id: str,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """GET /simulation/results/{run_id} — retrieve simulation result by run ID."""
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     with _SIMULATION_STORE_LOCK:
         envelope = _SIMULATION_STORE.get(run_id)
     if envelope is None:
@@ -2406,7 +2413,7 @@ async def simulation_results(
 
 @app.get("/evolution/market-fitness-bridge")
 async def market_fitness_bridge_status(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """GET /evolution/market-fitness-bridge
 
@@ -2418,7 +2425,7 @@ async def market_fitness_bridge_status(
     - When wired, includes the most recent signal snapshot and bridge statistics.
     - Fail-safe: on any internal error, returns ``ok=True`` with ``wired=False``.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     try:
         from runtime.evolution.economic_fitness import EconomicFitnessEvaluator
         from runtime.market.market_signal_adapter import MarketSignalAdapter
@@ -2452,7 +2459,7 @@ async def market_fitness_bridge_status(
 
 @app.get("/economic/market-fitness")
 async def get_economic_market_fitness(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """GET /economic/market-fitness
 
@@ -2466,7 +2473,7 @@ async def get_economic_market_fitness(
     - signal_source reflects the active feed backend (synthetic/live).
     - Fail-safe: on any internal error returns ok=True with degraded=True.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     try:
         from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
         from runtime.market.feed_registry import FeedRegistry
@@ -2743,14 +2750,14 @@ def api_status_mock_disabled() -> dict:
 def audit_replay_proof(
     epoch_id: str,
     redaction: str | None = Query(default=None),
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return the replay attestation proof bundle for an epoch.
 
     Requires audit:read scope. When redaction=sensitive, strips signature values.
     Response: {schema_version, authn, data: {epoch_id, bundle_path, bundle, verification}}
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
     proof_file = REPLAY_PROOFS_DIR / f"{epoch_id}.replay_attestation.v1.json"
     if not proof_file.exists():
         raise HTTPException(status_code=404, detail="replay_proof_not_found")
@@ -2786,7 +2793,7 @@ def audit_replay_proof(
 @app.get("/api/audit/epochs/{epoch_id}/lineage")
 def audit_epoch_lineage(
     epoch_id: str,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return lineage events and journal entries for an epoch.
 
@@ -2794,7 +2801,7 @@ def audit_epoch_lineage(
     Response: {schema_version, authn, data: {epoch_id, lineage, lineage_digest,
                expected_epoch_digest, journal_entries}}
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
     ledger = LineageLedgerV2()
     lineage = ledger.read_epoch(epoch_id)
     lineage_digest = ledger.compute_incremental_epoch_digest(epoch_id)
@@ -2838,14 +2845,14 @@ def _redact_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
 @app.get("/api/audit/bundles/{bundle_id}")
 def audit_bundle(
     bundle_id: str,
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
 ) -> dict[str, Any]:
     """Return a forensic evidence bundle with validation results.
 
     Requires audit:read scope.
     Response: {schema_version, authn, data: {bundle_id, bundle_path, bundle, validation}}
     """
-    authn = _require_audit_read_scope(authorization)
+    authn = auth_ctx
     raw_bundle, bundle_path = _load_bundle(bundle_id)
     builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
     validation = builder.validate_bundle(raw_bundle)
@@ -2997,23 +3004,69 @@ async def ws_events(websocket: WebSocket) -> None:
     """
     from runtime.innovations_bus import get_bus  # noqa: PLC0415 — avoid import-time cycle
 
+    relay_policy = websocket.query_params.get("relay_policy", "drop_oldest")
+    if relay_policy not in {"drop_oldest", "coalesce_latest"}:
+        await websocket.close(code=1008, reason="invalid_relay_policy")
+        return
+
+    def _parse_limit(name: str, default: int, cap: int) -> int:
+        raw = websocket.query_params.get(name)
+        if raw is None:
+            return default
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail=f"invalid_{name}") from None
+        if value < 0 or value > cap:
+            raise HTTPException(status_code=422, detail=f"invalid_{name}")
+        return value
+
+    def _parse_float(name: str, default: float, minimum: float, maximum: float) -> float:
+        raw = websocket.query_params.get(name)
+        if raw is None:
+            return default
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=422, detail=f"invalid_{name}") from None
+        if value < minimum or value > maximum:
+            raise HTTPException(status_code=422, detail=f"invalid_{name}")
+        return value
+
+    try:
+        metrics_limit = _parse_limit("metrics_limit", default=200, cap=500)
+        journal_limit = _parse_limit("journal_limit", default=200, cap=500)
+        relay_queue_limit = _parse_limit("relay_queue_limit", default=128, cap=512)
+        heartbeat_interval_s = _parse_float("heartbeat_interval_s", default=30.0, minimum=1.0, maximum=120.0)
+        stale_timeout_s = _parse_float("stale_timeout_s", default=90.0, minimum=2.0, maximum=300.0)
+    except HTTPException:
+        await websocket.close(code=1008, reason="invalid_query_params")
+        return
+
     await websocket.accept()
     # Hello frame
     await websocket.send_json({
         "type": "hello",
         "channels": ["metrics", "journal", "innovations"],
         "status": "live",
+        "endpoint_meta": {
+            "history_caps": {"metrics_limit_max": 500, "journal_limit_max": 500},
+            "queue_policy": relay_policy,
+            "relay_queue_limit": relay_queue_limit,
+            "heartbeat_interval_s": heartbeat_interval_s,
+            "stale_timeout_s": stale_timeout_s,
+        },
     })
     # Historical batch
     events = []
-    for entry in metrics.tail(limit=200):
+    for entry in metrics.tail(limit=metrics_limit):
         events.append({
             "channel": "metrics",
             "kind": str(entry.get("event", entry.get("event_type", "metric"))),
             "timestamp": str(entry.get("timestamp", entry.get("ts", ""))),
             "event": entry,
         })
-    for entry in journal.read_entries(limit=200):
+    for entry in journal.read_entries(limit=journal_limit):
         events.append({
             "channel": "journal",
             "kind": str(entry.get("action", entry.get("tx_type", "journal"))),
@@ -3025,20 +3078,82 @@ async def ws_events(websocket: WebSocket) -> None:
     # Subscribe to innovations bus and relay frames until disconnect
     bus = get_bus()
     queue = await bus.subscribe()
+    relay_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=relay_queue_limit)
+    disconnect_reason = "client_closed"
+    dropped_frames = 0
+    last_client_signal = asyncio.get_event_loop().time()
+    coalesced_latest: dict[str, Any] | None = None
+    stop_signal = asyncio.Event()
+
+    async def _client_reader() -> None:
+        nonlocal last_client_signal
+        while not stop_signal.is_set():
+            try:
+                message = await asyncio.wait_for(websocket.receive_json(), timeout=heartbeat_interval_s)
+            except asyncio.TimeoutError:
+                continue
+            except Exception:  # noqa: BLE001
+                break
+            if isinstance(message, dict) and message.get("type") == "pong":
+                last_client_signal = asyncio.get_event_loop().time()
+
+    async def _relay_ingress() -> None:
+        nonlocal dropped_frames, coalesced_latest
+        while not stop_signal.is_set():
+            frame = await queue.get()
+            if relay_policy == "coalesce_latest":
+                if relay_queue.full():
+                    coalesced_latest = frame
+                    dropped_frames += 1
+                    metrics.log("ws_events_frames_dropped", payload={"policy": relay_policy, "dropped": dropped_frames})
+                    continue
+            if relay_queue.full():
+                _ = relay_queue.get_nowait()
+                dropped_frames += 1
+                metrics.log("ws_events_frames_dropped", payload={"policy": relay_policy, "dropped": dropped_frames})
+            await relay_queue.put(frame)
+            if coalesced_latest is not None and not relay_queue.full():
+                await relay_queue.put(coalesced_latest)
+                coalesced_latest = None
+            metrics.log("ws_events_queue_depth", payload={"depth": relay_queue.qsize(), "limit": relay_queue_limit})
+
+    reader_task = asyncio.create_task(_client_reader())
+    ingress_task = asyncio.create_task(_relay_ingress())
     try:
         while True:
             try:
-                frame = await asyncio.wait_for(queue.get(), timeout=30.0)
+                now = asyncio.get_event_loop().time()
+                if (now - last_client_signal) >= stale_timeout_s:
+                    disconnect_reason = "stale_client_timeout"
+                    await websocket.send_json({"type": "disconnect", "reason": disconnect_reason})
+                    break
+                frame = await asyncio.wait_for(relay_queue.get(), timeout=heartbeat_interval_s)
                 await websocket.send_json({"type": "innovations", "channel": "innovations", **frame})
             except asyncio.TimeoutError:
                 # Keepalive ping
-                await websocket.send_json({"type": "ping", "ts": __import__("datetime").datetime.utcnow().isoformat()})
+                await websocket.send_json({"type": "ping", "ts": datetime.now(timezone.utc).isoformat()})
     except Exception:  # noqa: BLE001 — client disconnected
-        pass
+        disconnect_reason = "send_or_receive_failure"
     finally:
+        stop_signal.set()
+        ingress_task.cancel()
+        reader_task.cancel()
+        for task in (ingress_task, reader_task):
+            try:
+                await task
+            except BaseException:  # noqa: BLE001
+                pass
         await bus.unsubscribe(queue)
+        metrics.log(
+            "ws_events_disconnect",
+            payload={
+                "cause": disconnect_reason,
+                "dropped_frames": dropped_frames,
+                "queue_depth": relay_queue.qsize(),
+            },
+        )
         try:
-            await websocket.close()
+            await websocket.close(reason=disconnect_reason)
         except Exception:  # noqa: BLE001
             pass
 
@@ -3086,7 +3201,7 @@ def serve_whaledic_asset(asset_path: str) -> Response:
 
 @app.get("/intelligence/epoch-memory")
 async def get_epoch_memory(
-    authorization: str | None = Header(default=None),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
     n: int | None = None,
 ) -> dict[str, Any]:
     """GET /intelligence/epoch-memory
@@ -3103,7 +3218,7 @@ async def get_epoch_memory(
     Query params:
         n (int, optional): Limit window to the n most recent entries.
     """
-    _require_audit_read_scope(authorization)
+    _ = auth_ctx
     try:
         from runtime.autonomy.epoch_memory_store import EpochMemoryStore, STORE_DEFAULT_PATH
         from runtime.autonomy.learning_signal_extractor import LearningSignalExtractor

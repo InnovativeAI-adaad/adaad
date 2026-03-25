@@ -282,3 +282,34 @@ def test_checkpoint_chain_verify_is_deterministic():
     d2 = client.get("/api/fast-path/checkpoint-chain/verify").json()["genesis_digest"]
     # genesis payload is fixed so digest must be stable
     assert d1 == d2
+
+
+def test_route_preview_legacy_payload_defaults_still_succeed():
+    """Legacy-compatible minimal payload retains default-safe behavior."""
+    res = _route({"intent": "refactor", "loc_added": 1, "loc_deleted": 0})
+    assert res.status_code == 200
+    assert res.json()["decision"]["mutation_id"] == "unknown"
+
+
+def test_route_preview_invalid_loc_type_fails_validation():
+    res = _route({"mutation_id": "bad_loc", "intent": "refactor", "loc_added": "1", "loc_deleted": 0})
+    assert res.status_code == 422
+    assert any(item["loc"][-1] == "loc_added" for item in res.json()["detail"])
+
+
+def test_route_preview_unknown_field_rejected():
+    res = _route({"mutation_id": "bad_extra", "intent": "refactor", "shadow": "x"})
+    assert res.status_code == 422
+    assert any(item["type"] == "extra_forbidden" for item in res.json()["detail"])
+
+
+def test_entropy_gate_legacy_payload_defaults_still_succeed():
+    res = _gate({"estimated_bits": 0, "sources": []})
+    assert res.status_code == 200
+    assert res.json()["result"]["estimated_bits"] == 0
+
+
+def test_entropy_gate_invalid_sources_type_fails_validation():
+    res = _gate({"mutation_id": "bad_sources", "estimated_bits": 1, "sources": "network"})
+    assert res.status_code == 422
+    assert any(item["loc"][-1] == "sources" for item in res.json()["detail"])
