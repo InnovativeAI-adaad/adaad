@@ -293,3 +293,34 @@ def test_preset_elevated_mixed_scenario():
     ]
     res = _eval({"mutation_id": "t_elev_mix", "trust_mode": "elevated", "axis_specs": specs})
     assert res.json()["decision"]["approved"] is False
+
+
+def test_evaluate_legacy_minimal_payload_still_succeeds():
+    """Legacy-compatible payload (only required fields) must still pass."""
+    res = _eval({
+        "mutation_id": "legacy_minimal_001",
+        "axis_specs": [{"axis": "entropy", "rule_id": "budget_ok"}],
+    })
+    assert res.status_code == 200
+    assert res.json()["decision"]["trust_mode"] == "standard"
+
+
+def test_evaluate_malformed_axis_specs_type_fails_with_validation_error():
+    res = _eval({
+        "mutation_id": "bad_axis_type",
+        "axis_specs": "not-a-list",
+    })
+    assert res.status_code == 422
+    detail = res.json()["detail"]
+    assert any(item["loc"][-1] == "axis_specs" for item in detail)
+
+
+def test_evaluate_unknown_field_rejected_deterministically():
+    res = _eval({
+        "mutation_id": "bad_extra",
+        "axis_specs": [{"axis": "entropy", "rule_id": "budget_ok"}],
+        "unexpected": True,
+    })
+    assert res.status_code == 422
+    detail = res.json()["detail"]
+    assert any(item["type"] == "extra_forbidden" for item in detail)

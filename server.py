@@ -13,6 +13,18 @@ from contextlib import asynccontextmanager
 import anyio
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
+
+from app.api.schemas.governance import (
+    FastPathCheckpointVerifyResponse,
+    FastPathEntropyGateRequest,
+    FastPathEntropyGateResponse,
+    FastPathRoutePreviewRequest,
+    FastPathRoutePreviewResponse,
+    FastPathStatsResponse,
+    ParallelGateEvaluateRequest,
+    ParallelGateEvaluateResponse,
+    ParallelGateProbeLibraryResponse,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -1832,8 +1844,8 @@ def governance_aponi_panel(
     return result
 
 
-@app.get("/api/governance/parallel-gate/probe-library")
-def api_parallel_gate_probe_library() -> dict[str, Any]:
+@app.get("/api/governance/parallel-gate/probe-library", response_model=ParallelGateProbeLibraryResponse)
+def api_parallel_gate_probe_library() -> ParallelGateProbeLibraryResponse:
     """Return the canonical probe library for the parallel governance gate."""
     total = sum(len(rules) for rules in _PARALLEL_GATE_PROBE_LIBRARY.values())
     return {
@@ -1844,31 +1856,22 @@ def api_parallel_gate_probe_library() -> dict[str, Any]:
     }
 
 
-@app.post("/api/governance/parallel-gate/evaluate")
-def api_parallel_gate_evaluate(request: dict = Body(default={})) -> dict[str, Any]:
+@app.post("/api/governance/parallel-gate/evaluate", response_model=ParallelGateEvaluateResponse)
+def api_parallel_gate_evaluate(request: ParallelGateEvaluateRequest) -> ParallelGateEvaluateResponse:
     """Evaluate governance axes concurrently and return a merged decision."""
     import time as _time
     import hashlib as _hl
     import json as _json
-    from fastapi import HTTPException as _HTTPException
+    mutation_id = request.mutation_id
+    trust_mode = request.trust_mode
+    specs_raw = request.axis_specs
+    human_override = request.human_override
 
-    mutation_id = request.get("mutation_id")
-    if not mutation_id:
-        raise _HTTPException(status_code=422, detail="mutation_id is required")
-
-    trust_mode     = str(request.get("trust_mode") or "standard")
-    specs_raw      = list(request.get("axis_specs") or [])
-    human_override = bool(request.get("human_override", False))
-
-    if len(specs_raw) == 0 or len(specs_raw) > 20:
-        raise _HTTPException(status_code=422, detail="axis_specs must contain 1–20 entries")
-
-    mutation_id = str(mutation_id)
     t0 = _time.monotonic()
     results: list[dict] = []
     for spec in specs_raw:
-        axis    = str(spec.get("axis") or "unknown")
-        rule_id = str(spec.get("rule_id") or "unknown")
+        axis = spec.axis
+        rule_id = spec.rule_id
         lib_rules = _PARALLEL_GATE_PROBE_LIBRARY.get(axis, [])
         found_in_lib = False
         default_ok, default_reason = True, "no_default"
@@ -1886,8 +1889,8 @@ def api_parallel_gate_evaluate(request: dict = Body(default={})) -> dict[str, An
             default_ok     = not is_failure
             default_reason = "probe_not_found_default_fail" if is_failure else "probe_not_found_default_pass"
 
-        ok     = bool(spec.get("ok", default_ok))
-        reason = str(spec.get("reason") or (default_reason if ok else "probe_failed"))
+        ok = spec.ok if spec.ok is not None else default_ok
+        reason = spec.reason or (default_reason if ok else "probe_failed")
         t_axis = _time.monotonic()
         results.append({
             "axis":        axis,
@@ -1947,8 +1950,8 @@ _GENESIS_DIGEST  = "sha256:" + __import__("hashlib").sha256(
 ).hexdigest()
 
 
-@app.get("/api/fast-path/stats")
-def api_fast_path_stats() -> dict[str, Any]:
+@app.get("/api/fast-path/stats", response_model=FastPathStatsResponse)
+def api_fast_path_stats() -> FastPathStatsResponse:
     """Return fast-path intelligence subsystem version and configuration."""
     from runtime.evolution.mutation_route_optimizer import (
         ELEVATED_PATH_PREFIXES, ELEVATED_INTENT_KEYWORDS, TRIVIAL_OP_TYPES, ROUTE_VERSION,
@@ -1977,19 +1980,19 @@ def api_fast_path_stats() -> dict[str, Any]:
     }
 
 
-@app.post("/api/fast-path/route-preview")
-def api_fast_path_route_preview(request: dict = Body(default={})) -> dict[str, Any]:
+@app.post("/api/fast-path/route-preview", response_model=FastPathRoutePreviewResponse)
+def api_fast_path_route_preview(request: FastPathRoutePreviewRequest) -> FastPathRoutePreviewResponse:
     """Preview the routing tier for a mutation candidate."""
     import hashlib as _hl
     import json as _json
     from runtime.evolution.mutation_route_optimizer import MutationRouteOptimizer, ROUTE_VERSION
 
-    mutation_id   = str(request.get("mutation_id") or "unknown")
-    intent        = str(request.get("intent") or "")
-    files_touched = list(request.get("files_touched") or [])
-    loc_added     = int(request.get("loc_added") or 0)
-    loc_deleted   = int(request.get("loc_deleted") or 0)
-    risk_tags     = list(request.get("risk_tags") or [])
+    mutation_id = request.mutation_id
+    intent = request.intent
+    files_touched = request.files_touched
+    loc_added = request.loc_added
+    loc_deleted = request.loc_deleted
+    risk_tags = request.risk_tags
 
     optimizer = MutationRouteOptimizer()
     dec = optimizer.route(
@@ -2024,16 +2027,16 @@ def api_fast_path_route_preview(request: dict = Body(default={})) -> dict[str, A
     }
 
 
-@app.post("/api/fast-path/entropy-gate")
-def api_fast_path_entropy_gate(request: dict = Body(default={})) -> dict[str, Any]:
+@app.post("/api/fast-path/entropy-gate", response_model=FastPathEntropyGateResponse)
+def api_fast_path_entropy_gate(request: FastPathEntropyGateRequest) -> FastPathEntropyGateResponse:
     """Evaluate entropy gate verdict for a mutation candidate."""
     import hashlib as _hl
     import json as _json
 
-    mutation_id    = str(request.get("mutation_id") or "unknown")
-    estimated_bits = int(request.get("estimated_bits") or 0)
-    sources        = list(request.get("sources") or [])
-    strict         = bool(request.get("strict", True))
+    mutation_id = request.mutation_id
+    estimated_bits = request.estimated_bits
+    sources = request.sources
+    strict = request.strict
 
     has_network = "network" in sources
     if estimated_bits >= _FP_DENY_BITS:
@@ -2068,8 +2071,8 @@ def api_fast_path_entropy_gate(request: dict = Body(default={})) -> dict[str, An
     }
 
 
-@app.get("/api/fast-path/checkpoint-chain/verify")
-def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
+@app.get("/api/fast-path/checkpoint-chain/verify", response_model=FastPathCheckpointVerifyResponse)
+def api_fast_path_checkpoint_chain_verify() -> FastPathCheckpointVerifyResponse:
     """Verify the fast-path checkpoint chain integrity."""
     import hashlib as _hl
     import json as _json
@@ -2108,6 +2111,7 @@ def api_fast_path_checkpoint_chain_verify() -> dict[str, Any]:
 
     return {
         "ok":             True,
+        "chain_version":  _CHECKPOINT_CHAIN_VERSION,
         "integrity":      True,
         "chain_length":   len(links),
         "genesis_digest": _GENESIS_DIGEST,
