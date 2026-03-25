@@ -8,6 +8,7 @@ from typing import Any, Dict, Mapping
 
 from contextlib import asynccontextmanager
 
+import anyio
 from fastapi import Body, Depends, FastAPI, Header, HTTPException, Query, Request, WebSocket
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -1646,8 +1647,35 @@ def governance_reviewer_reputation_ledger(
 _DEFAULT_MUTATION_LEDGER_PATH = "security/ledger/mutation_audit.jsonl"
 
 
+def _mutation_window_from_file(path: Path, *, limit: int, promoted_only: bool) -> list[dict[str, Any]]:
+    import json as _json
+    from collections import deque
+    from runtime.io.jsonl_tail import read_jsonl_tail
+
+    bounded_limit = max(0, int(limit))
+    if bounded_limit == 0 or not path.exists():
+        return []
+
+    if not promoted_only:
+        tail_result = read_jsonl_tail(path, limit=bounded_limit)
+        return list(reversed(tail_result.records))
+
+    window: deque[dict[str, Any]] = deque(maxlen=bounded_limit)
+    with path.open("r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            if not raw_line.strip():
+                continue
+            try:
+                parsed = _json.loads(raw_line)
+            except _json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict) and parsed.get("entry", {}).get("promoted") is True:
+                window.append(parsed)
+    return list(reversed(list(window)))
+
+
 @app.get("/governance/mutation-ledger")
-def governance_mutation_ledger(
+async def governance_mutation_ledger(
     limit: int = 20,
     promoted_only: bool = False,
     authorization: str | None = Header(default=None),
@@ -1677,29 +1705,21 @@ def governance_mutation_ledger(
     """
     authn = _require_audit_read_scope(authorization)
 
-    from runtime.governance.mutation_ledger import (
-        GENESIS_PREV_HASH as _MUTATION_GENESIS_HASH,
-        MutationLedger,
+    from runtime.state.jsonl_snapshot_cache import read_mutation_ledger_snapshot
+
+    ledger_path = Path(_DEFAULT_MUTATION_LEDGER_PATH)
+    bounded_limit = max(0, int(limit))
+
+    snapshot = await anyio.to_thread.run_sync(
+        lambda: read_mutation_ledger_snapshot(ledger_path, ttl_seconds=2.0)
     )
-    from pathlib import Path
-
-    ledger = MutationLedger(
-        Path(_DEFAULT_MUTATION_LEDGER_PATH),
-        test_mode=True,
+    windowed = await anyio.to_thread.run_sync(
+        lambda: _mutation_window_from_file(
+            ledger_path,
+            limit=bounded_limit,
+            promoted_only=promoted_only,
+        )
     )
-
-    all_entries = ledger.entries()
-    promoted_count = sum(
-        1 for e in all_entries
-        if e.get("entry", {}).get("promoted") is True
-    )
-
-    if promoted_only:
-        filtered = [e for e in all_entries if e.get("entry", {}).get("promoted") is True]
-    else:
-        filtered = all_entries
-
-    windowed = list(reversed(filtered))[:limit]
 
     return {
         "schema_version": "1.0",
@@ -1707,9 +1727,9 @@ def governance_mutation_ledger(
         "data": {
             "entries":         windowed,
             "total_in_window": len(windowed),
-            "total_entries":   len(all_entries),
-            "promoted_count":  promoted_count,
-            "last_hash":       ledger.last_hash(),
+            "total_entries":   snapshot.total_entries,
+            "promoted_count":  snapshot.promoted_count,
+            "last_hash":       snapshot.last_hash,
             "ledger_version":  "1.0",
         },
     }
@@ -1758,7 +1778,7 @@ _PARALLEL_GATE_MAX_WORKERS = 8
 # ── ADAAD-7 value gate endpoints (PR-06 / PR-07 / PR-08 / PR-09) ────────────
 
 @app.get("/governance/scoring-engine")
-def governance_scoring_engine(
+async def governance_scoring_engine(
     limit: int = 20,
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
@@ -1775,19 +1795,20 @@ def governance_scoring_engine(
     _require_audit_read_scope(authorization)
     try:
         from runtime.evolution.scoring_algorithm import ALGORITHM_VERSION, SEVERITY_WEIGHTS
-        from runtime.evolution.scoring_ledger import ScoringLedger
-        from runtime.state.ledger_store import ScoringLedgerStore
+        from runtime.io.jsonl_tail import read_jsonl_tail
         import os as _os
         ledger_path_env = _os.environ.get("ADAAD_SCORING_LEDGER_PATH", "")
         from pathlib import Path as _Path
         ledger_path = _Path(ledger_path_env) if ledger_path_env else None
+        bounded_limit = max(0, int(limit))
+
         entries: list = []
-        if ledger_path and ledger_path.exists():
+        if ledger_path and ledger_path.exists() and bounded_limit > 0:
             try:
-                ledger = ScoringLedger(ledger_path)
-                raw = ledger_path.read_text(encoding="utf-8").splitlines()
-                import json as _json
-                entries = [_json.loads(l) for l in raw[-limit:] if l.strip()]
+                tail_result = await anyio.to_thread.run_sync(
+                    lambda: read_jsonl_tail(ledger_path, limit=bounded_limit)
+                )
+                entries = tail_result.records
             except Exception:
                 pass
         return {
