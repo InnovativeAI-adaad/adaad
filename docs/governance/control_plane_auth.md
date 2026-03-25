@@ -20,3 +20,7 @@ These requirements apply to:
 - Other future control-plane mutation endpoints.
 
 Environment flags (for example command-surface toggles) are defense-in-depth only and are **not** a substitute for cryptographic authentication.
+
+## FastAPI enforcement path note (auditability)
+
+For server-side FastAPI routes, auth and gate checks should be routed through shared dependencies in `app/api/dependencies.py` (`auth_context`, `require_audit_scope`, `require_gate_open`) so future audits can verify a single enforcement path instead of per-endpoint inline logic.
