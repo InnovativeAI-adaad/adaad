@@ -14,6 +14,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from app.api.nexus.mutate import router as mutate_router
+from app.api.governance import router as governance_router
+from app.api.audit import router as audit_router
+from app.api.ui import router as ui_router
+from app.api.simulation import router as simulation_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
 from runtime.innovations_router import router as innovations_router
 
@@ -481,215 +485,95 @@ def governance_health(
 
 
 # ---------------------------------------------------------------------------
-# Phase 21 — Telemetry Ledger Read Endpoint (PR-21-02)
+# Telemetry endpoints are routed via app.api.telemetry
 # ---------------------------------------------------------------------------
+from app.api.telemetry import (
+    router as telemetry_router,
+    set_telemetry_sink as _set_telemetry_sink_for_server,
+    get_telemetry_sink,
+)
 
-# Module-level reference to the active telemetry sink for the autonomy loop.
-# Set during app lifespan or test setup via _set_telemetry_sink_for_server().
-_telemetry_sink_ref: "Any | None" = None
-# Phase 25: module-level pressure audit ledger (None = inactive)
-_pressure_audit_ledger: "Any | None" = None
+app.include_router(telemetry_router)
 
-
-def _set_telemetry_sink_for_server(sink: "Any | None") -> None:
-    """Set the active telemetry sink reference for GET /telemetry/decisions.
-    Called by app lifespan (when FileTelemetrySink is active) or by tests.
-    """
-    global _telemetry_sink_ref
-    _telemetry_sink_ref = sink
+app.include_router(governance_router)
+app.include_router(audit_router)
+app.include_router(ui_router)
+app.include_router(simulation_router)
 
 
-@app.get("/telemetry/decisions")
-def telemetry_decisions(
-    strategy_id: str | None = Query(default=None),
-    outcome: str | None = Query(default=None),
-    limit: int = Query(default=100, ge=1, le=500),
-    offset: int = Query(default=0, ge=0),
-    authorization: str | None = Header(default=None),
+def telemetry_decisions_legacy(
+    strategy_id: str | None = None,
+    outcome: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+    authorization: str | None = None,
 ) -> dict[str, Any]:
-    """Return paginated routing decision telemetry. Read-only.
-
-    Query params
-    ------------
-    strategy_id  — filter by strategy id (optional)
-    outcome      — filter by outcome string (optional)
-    limit        — max records returned (1–500, default 100)
-    offset       — pagination offset (default 0)
-
-    Response fields
-    ---------------
-    decisions       list  — payload dicts, newest-first
-    total_queried   int   — number of records matching filters
-    ledger_path     str | null
-    sink_type       "file" | "memory"
-    """
     authn = _require_audit_read_scope(authorization)
-
-    sink = _telemetry_sink_ref
-
+    sink = get_telemetry_sink()
     if sink is None:
-        # Fallback: check for global AutonomyLoop default sink via import
         try:
             from runtime.intelligence.routed_decision_telemetry import InMemoryTelemetrySink
-            sink = InMemoryTelemetrySink()  # empty, but structurally valid
+            sink = InMemoryTelemetrySink()
         except Exception:
             sink = None
-
     sink_type = "memory"
     ledger_path_str = None
-
     if sink is not None:
         from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
         if isinstance(sink, FileTelemetrySink):
             sink_type = "file"
             ledger_path_str = str(sink._path)
             reader = TelemetryLedgerReader(sink._path)
-            decisions = reader.query(
-                strategy_id=strategy_id,
-                outcome=outcome,
-                limit=limit,
-                offset=offset,
-            )
+            decisions = reader.query(strategy_id=strategy_id, outcome=outcome, limit=limit, offset=offset)
             total_queried = len(decisions)
         else:
-            # InMemoryTelemetrySink or compatible
             all_entries = list(getattr(sink, "entries", lambda: [])())
             if strategy_id is not None:
                 all_entries = [e for e in all_entries if e.get("strategy_id") == strategy_id]
             if outcome is not None:
                 all_entries = [e for e in all_entries if e.get("outcome") == outcome]
-            all_entries.reverse()  # newest-first
+            all_entries.reverse()
             total_queried = len(all_entries)
             decisions = all_entries[offset: offset + limit]
     else:
         decisions = []
         total_queried = 0
-
-    return {
-        "schema_version": "1.0",
-        "authn": authn,
-        "data": {
-            "decisions": decisions,
-            "total_queried": total_queried,
-            "ledger_path": ledger_path_str,
-            "sink_type": sink_type,
-        },
-    }
+    return {"schema_version": "1.0", "authn": authn, "data": {"decisions": decisions, "total_queried": total_queried, "ledger_path": ledger_path_str, "sink_type": sink_type}}
 
 
-# ---------------------------------------------------------------------------
-# Phase 22 — Strategy Analytics Endpoints (PR-22-02)
-# ---------------------------------------------------------------------------
-
-@app.get("/telemetry/analytics")
-def telemetry_analytics(
-    window_size: int = Query(default=100, ge=10, le=10000),
-    authorization: str | None = Header(default=None),
-) -> dict[str, Any]:
-    """Return RoutingHealthReport — rolling win-rate analytics. Read-only.
-
-    Query params
-    ------------
-    window_size  — rolling window size (10–10000, default 100)
-
-    Response fields (data)
-    ----------------------
-    status              "green" | "amber" | "red"
-    health_score        float 0–1
-    strategy_stats      list of StrategyWindowStats dicts
-    dominant_strategy   str | null
-    dominant_share      float
-    stale_strategy_ids  list[str]
-    drift_max           float
-    window_size         int
-    total_decisions     int
-    window_decisions    int
-    ledger_chain_valid  bool
-    report_digest       sha256 prefixed string
-    """
+def telemetry_analytics_legacy(window_size: int = 100, authorization: str | None = None) -> dict[str, Any]:
     authn = _require_audit_read_scope(authorization)
-
     from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
     from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
-    from runtime.intelligence.routed_decision_telemetry import InMemoryTelemetrySink
-
-    sink = _telemetry_sink_ref
-
-    # Build an analytics-compatible reader from whatever sink is active
+    sink = get_telemetry_sink()
     if isinstance(sink, FileTelemetrySink):
         reader = TelemetryLedgerReader(sink._path)
     else:
-        # Wrap InMemoryTelemetrySink (or None) in an adapter for StrategyAnalyticsEngine
         class _MemoryAdapter:
             def __init__(self, s):
                 self._sink = s
             def _all_payloads(self):
                 if self._sink is None:
                     return []
-                entries = getattr(self._sink, "entries", lambda: [])()
-                return list(entries)
+                return list(getattr(self._sink, "entries", lambda: [])())
             def verify_chain(self):
-                return True  # in-memory is always structurally valid
+                return True
         reader = _MemoryAdapter(sink)
-
     engine = StrategyAnalyticsEngine(reader, window_size=window_size)
     report = engine.generate_report()
-
     def _stat_to_dict(s):
-        return {
-            "strategy_id": s.strategy_id,
-            "window_size": s.window_size,
-            "total": s.total,
-            "approved": s.approved,
-            "win_rate": s.win_rate,
-            "window_win_rate": s.window_win_rate,
-            "drift": s.drift,
-            "stale": s.stale,
-            "last_seen_sequence": s.last_seen_sequence,
-        }
-
-    return {
-        "schema_version": "1.0",
-        "authn": authn,
-        "data": {
-            "status": report.status,
-            "health_score": report.health_score,
-            "strategy_stats": [_stat_to_dict(s) for s in report.strategy_stats],
-            "dominant_strategy": report.dominant_strategy,
-            "dominant_share": report.dominant_share,
-            "stale_strategy_ids": list(report.stale_strategy_ids),
-            "drift_max": report.drift_max,
-            "window_size": report.window_size,
-            "total_decisions": report.total_decisions,
-            "window_decisions": report.window_decisions,
-            "ledger_chain_valid": report.ledger_chain_valid,
-            "report_digest": report.report_digest,
-        },
-    }
+        return {"strategy_id": s.strategy_id, "window_size": s.window_size, "total": s.total, "approved": s.approved, "win_rate": s.win_rate, "window_win_rate": s.window_win_rate, "drift": s.drift, "stale": s.stale, "last_seen_sequence": s.last_seen_sequence}
+    return {"schema_version": "1.0", "authn": authn, "data": {"status": report.status, "health_score": report.health_score, "strategy_stats": [_stat_to_dict(s) for s in report.strategy_stats], "dominant_strategy": report.dominant_strategy, "dominant_share": report.dominant_share, "stale_strategy_ids": list(report.stale_strategy_ids), "drift_max": report.drift_max, "window_size": report.window_size, "total_decisions": report.total_decisions, "window_decisions": report.window_decisions, "ledger_chain_valid": report.ledger_chain_valid, "report_digest": report.report_digest}}
 
 
-@app.get("/telemetry/strategy/{strategy_id}")
-def telemetry_strategy_detail(
-    strategy_id: str,
-    window_size: int = Query(default=100, ge=10, le=10000),
-    authorization: str | None = Header(default=None),
-) -> dict[str, Any]:
-    """Return per-strategy StrategyWindowStats. Read-only.
-
-    Path param: strategy_id — must be in STRATEGY_TAXONOMY.
-    Returns 404 if strategy_id is unknown.
-    """
+def telemetry_strategy_detail_legacy(strategy_id: str, window_size: int = 100, authorization: str | None = None) -> dict[str, Any]:
     authn = _require_audit_read_scope(authorization)
-
     from runtime.intelligence.strategy import STRATEGY_TAXONOMY
     if strategy_id not in STRATEGY_TAXONOMY:
         raise HTTPException(status_code=404, detail=f"unknown_strategy_id:{strategy_id}")
-
     from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
     from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
-
-    sink = _telemetry_sink_ref
-
+    sink = get_telemetry_sink()
     if isinstance(sink, FileTelemetrySink):
         reader = TelemetryLedgerReader(sink._path)
     else:
@@ -703,28 +587,10 @@ def telemetry_strategy_detail(
             def verify_chain(self):
                 return True
         reader = _MemAdapter(sink)
-
     engine = StrategyAnalyticsEngine(reader, window_size=window_size)
     report = engine.generate_report()
     stat = next(s for s in report.strategy_stats if s.strategy_id == strategy_id)
-
-    return {
-        "schema_version": "1.0",
-        "authn": authn,
-        "data": {
-            "strategy_id": stat.strategy_id,
-            "window_size": stat.window_size,
-            "total": stat.total,
-            "approved": stat.approved,
-            "win_rate": stat.win_rate,
-            "window_win_rate": stat.window_win_rate,
-            "drift": stat.drift,
-            "stale": stat.stale,
-            "last_seen_sequence": stat.last_seen_sequence,
-        },
-    }
-
-
+    return {"schema_version": "1.0", "authn": authn, "data": {"strategy_id": stat.strategy_id, "window_size": stat.window_size, "total": stat.total, "approved": stat.approved, "win_rate": stat.win_rate, "window_win_rate": stat.window_win_rate, "drift": stat.drift, "stale": stat.stale, "last_seen_sequence": stat.last_seen_sequence}}
 # ---------------------------------------------------------------------------
 # Phase 23 — Routing Health Endpoint (PR-23-02)
 # ---------------------------------------------------------------------------
@@ -761,7 +627,7 @@ def governance_routing_health(
     from runtime.intelligence.strategy_analytics import StrategyAnalyticsEngine
     from runtime.intelligence.file_telemetry_sink import FileTelemetrySink, TelemetryLedgerReader
 
-    sink = _telemetry_sink_ref
+    sink = get_telemetry_sink()
 
     if isinstance(sink, FileTelemetrySink):
         reader = TelemetryLedgerReader(sink._path)
