@@ -48,6 +48,8 @@ def read_gate_state(
             if contents:
                 reason = contents
         except OSError:
+            # Reading the lock file is best-effort: if we cannot read a reason,
+            # keep the gate locked but omit the reason rather than raising.
             pass
 
     if reason:
