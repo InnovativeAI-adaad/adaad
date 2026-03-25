@@ -16,6 +16,7 @@ Deterministic orchestrator entrypoint.
 """
 
 import json
+import importlib
 import logging
 import os
 import re
@@ -91,7 +92,6 @@ from security import cryovant
 from security.whaledic_secrets import enforce_whaledic_secret_policy
 from security.ledger import journal
 from security.ledger.journal import JournalIntegrityError
-from ui.aponi_dashboard import AponiDashboard
 
 
 ORCHESTRATOR_LOGGER = "adaad.orchestrator"
@@ -111,6 +111,25 @@ def _get_orchestrator_logger() -> logging.Logger:
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
     return logger
+
+
+def _build_aponi_dashboard() -> Any:
+    try:
+        dashboard_cls = getattr(importlib.import_module("ui.aponi_dashboard"), "AponiDashboard")
+    except Exception as exc:
+        detail = f"lazy_init_failed:ui.aponi_dashboard.AponiDashboard:{type(exc).__name__}:{exc}"
+        metrics.log(
+            event_type="lazy_init_failure",
+            payload={"component": "app.main", "target": "ui.aponi_dashboard.AponiDashboard", "error": str(exc)},
+            level="ERROR",
+        )
+        raise RuntimeError(detail) from exc
+    metrics.log(
+        event_type="lazy_init_success",
+        payload={"component": "app.main", "target": "ui.aponi_dashboard.AponiDashboard"},
+        level="INFO",
+    )
+    return dashboard_cls()
 
 
 class Orchestrator:
@@ -140,7 +159,7 @@ class Orchestrator:
         self.architect = ArchitectAgent(self.agents_root)
         self.dream: Optional[DreamMode] = None
         self.beast: Optional[BeastModeLoop] = None
-        self.dashboard = AponiDashboard()
+        self.dashboard = _build_aponi_dashboard()
         self.evolution_runtime = EvolutionRuntime()
         self.snapshot_manager = SnapshotManager(APP_ROOT.parent / ".ledger_snapshots")
         self.recovery_hook = AutoRecoveryHook(self.snapshot_manager)

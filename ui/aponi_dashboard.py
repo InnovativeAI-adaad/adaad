@@ -17,6 +17,7 @@ Minimal HTTP dashboard served with the standard library.
 
 import argparse
 import concurrent.futures
+import importlib
 import json
 import logging
 import os
@@ -44,11 +45,7 @@ from runtime.governance.event_taxonomy import (
 from runtime.governance.instability_calculator import load_instability_policy
 from runtime.governance.policy_artifact import GovernancePolicyError, load_governance_policy
 from runtime.governance.response_schema_validator import validate_response
-from runtime.evolution import EvidenceBundleBuilder, EvidenceBundleError, LineageLedgerV2, ReplayEngine
-from runtime.evolution.evidence_graph import build_evidence_graph_projection
 from runtime.evolution.epoch import CURRENT_EPOCH_PATH
-from runtime.evolution.lineage_v2 import resolve_certified_ancestor_path
-from runtime.evolution.replay_attestation import REPLAY_PROOFS_DIR, load_replay_proof, verify_replay_proof_bundle
 from security.ledger import journal
 from runtime.system_status import (
     GATE_PROTOCOL,
@@ -58,12 +55,88 @@ from runtime.system_status import (
     load_live_version,
 )
 
-from ui.features.evidence_panel import replay_diff_export, state_fingerprint
-from ui.features.federation_panel import FEDERATION_PANEL_SECTION_ID
-from ui.features.replay_panel import replay_divergence
-from ui.features.timeline import evolution_timeline
-
 ELEMENT_ID = "Metal"
+FEDERATION_PANEL_SECTION_ID = "federation-panel"
+_LAZY_IMPORT_CACHE: Dict[str, Any] = {}
+
+
+def _lazy_import(module_path: str, attr_name: str) -> Any:
+    cache_key = f"{module_path}:{attr_name}"
+    if cache_key in _LAZY_IMPORT_CACHE:
+        return _LAZY_IMPORT_CACHE[cache_key]
+    try:
+        module = importlib.import_module(module_path)
+        resolved = getattr(module, attr_name)
+    except Exception as exc:
+        detail = f"lazy_init_failed:{module_path}.{attr_name}:{type(exc).__name__}:{exc}"
+        logging.getLogger(__name__).error(detail)
+        metrics.log(
+            event_type="lazy_init_failure",
+            payload={"component": "ui.aponi_dashboard", "target": f"{module_path}.{attr_name}", "error": str(exc)},
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
+        raise RuntimeError(detail) from exc
+    _LAZY_IMPORT_CACHE[cache_key] = resolved
+    metrics.log(
+        event_type="lazy_init_success",
+        payload={"component": "ui.aponi_dashboard", "target": f"{module_path}.{attr_name}"},
+        level="INFO",
+        element_id=ELEMENT_ID,
+    )
+    return resolved
+
+
+def LineageLedgerV2(*args, **kwargs):  # type: ignore[no-redef]
+    return _lazy_import("runtime.evolution", "LineageLedgerV2")(*args, **kwargs)
+
+
+def ReplayEngine(*args, **kwargs):  # type: ignore[no-redef]
+    return _lazy_import("runtime.evolution", "ReplayEngine")(*args, **kwargs)
+
+
+def EvidenceBundleBuilder(*args, **kwargs):  # type: ignore[no-redef]
+    return _lazy_import("runtime.evolution", "EvidenceBundleBuilder")(*args, **kwargs)
+
+
+def _evidence_bundle_error_type():
+    return _lazy_import("runtime.evolution", "EvidenceBundleError")
+
+
+def build_evidence_graph_projection(*args, **kwargs):
+    return _lazy_import("runtime.evolution.evidence_graph", "build_evidence_graph_projection")(*args, **kwargs)
+
+
+def resolve_certified_ancestor_path(*args, **kwargs):
+    return _lazy_import("runtime.evolution.lineage_v2", "resolve_certified_ancestor_path")(*args, **kwargs)
+
+
+def _replay_proofs_dir() -> Path:
+    return _lazy_import("runtime.evolution.replay_attestation", "REPLAY_PROOFS_DIR")
+
+
+def load_replay_proof(*args, **kwargs):
+    return _lazy_import("runtime.evolution.replay_attestation", "load_replay_proof")(*args, **kwargs)
+
+
+def verify_replay_proof_bundle(*args, **kwargs):
+    return _lazy_import("runtime.evolution.replay_attestation", "verify_replay_proof_bundle")(*args, **kwargs)
+
+
+def replay_diff_export(*args, **kwargs):
+    return _lazy_import("ui.features.evidence_panel", "replay_diff_export")(*args, **kwargs)
+
+
+def state_fingerprint(*args, **kwargs):
+    return _lazy_import("ui.features.evidence_panel", "state_fingerprint")(*args, **kwargs)
+
+
+def replay_divergence(*args, **kwargs):
+    return _lazy_import("ui.features.replay_panel", "replay_divergence")(*args, **kwargs)
+
+
+def evolution_timeline(*args, **kwargs):
+    return _lazy_import("ui.features.timeline", "evolution_timeline")(*args, **kwargs)
 
 # ── Cryovant Gate ────────────────────────────────────────────────────────────
 # Mirrors server.py: locks legacy dashboard API when gate.lock exists or
@@ -102,18 +175,44 @@ SEMANTIC_DRIFT_CLASSES: tuple[str, ...] = (
     "uncategorized_drift",
 )
 GOVERNANCE_POLICY_ERROR: str | None = None
-try:
-    GOVERNANCE_POLICY = load_governance_policy()
-except GovernancePolicyError as _policy_exc:
-    GOVERNANCE_POLICY = None
-    GOVERNANCE_POLICY_ERROR = str(_policy_exc)
+GOVERNANCE_POLICY = None
+_GOVERNANCE_POLICY_LOADED = False
+
+
+def _load_governance_policy_cached():
+    global GOVERNANCE_POLICY, GOVERNANCE_POLICY_ERROR, _GOVERNANCE_POLICY_LOADED
+    if _GOVERNANCE_POLICY_LOADED:
+        return GOVERNANCE_POLICY
+    try:
+        GOVERNANCE_POLICY = load_governance_policy()
+        GOVERNANCE_POLICY_ERROR = None
+        metrics.log(
+            event_type="lazy_init_success",
+            payload={"component": "ui.aponi_dashboard", "target": "governance_policy"},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
+    except GovernancePolicyError as policy_exc:
+        GOVERNANCE_POLICY = None
+        GOVERNANCE_POLICY_ERROR = str(policy_exc)
+        metrics.log(
+            event_type="lazy_init_failure",
+            payload={"component": "ui.aponi_dashboard", "target": "governance_policy", "error": str(policy_exc)},
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
+    _GOVERNANCE_POLICY_LOADED = True
+    return GOVERNANCE_POLICY
 
 
 def _require_governance_policy():
-    if GOVERNANCE_POLICY is None:
+    if GOVERNANCE_POLICY is not None:
+        return GOVERNANCE_POLICY
+    policy = _load_governance_policy_cached()
+    if policy is None:
         detail = GOVERNANCE_POLICY_ERROR or "governance policy unavailable"
         raise GovernancePolicyError(f"policy unavailable (fail-closed): {detail}")
-    return GOVERNANCE_POLICY
+    return policy
 CONTROL_AGENT_ID_RE = re.compile(r"^[a-z0-9_\-]{3,64}$")
 CONTROL_COMMAND_ID_RE = re.compile(r"^cmd-[0-9]{6}-[0-9a-f]{12}$")
 CONTROL_GOVERNANCE_PROFILES = {"strict", "high-assurance"}
@@ -147,21 +246,51 @@ UX_EVENT_TYPES = {
 
 
 INSTABILITY_POLICY_ERROR: str | None = None
-try:
-    INSTABILITY_POLICY = load_instability_policy()
-except GovernancePolicyError as _instability_policy_exc:
-    INSTABILITY_POLICY = None
-    INSTABILITY_POLICY_ERROR = str(_instability_policy_exc)
-    logging.getLogger(__name__).error(
-        "ADAAD: instability policy failed to load at module init: %s", _instability_policy_exc
-    )
+INSTABILITY_POLICY = None
+_INSTABILITY_POLICY_LOADED = False
+
+
+def _load_instability_policy_cached():
+    global INSTABILITY_POLICY, INSTABILITY_POLICY_ERROR, _INSTABILITY_POLICY_LOADED
+    if _INSTABILITY_POLICY_LOADED:
+        return INSTABILITY_POLICY
+    try:
+        INSTABILITY_POLICY = load_instability_policy()
+        INSTABILITY_POLICY_ERROR = None
+        metrics.log(
+            event_type="lazy_init_success",
+            payload={"component": "ui.aponi_dashboard", "target": "instability_policy"},
+            level="INFO",
+            element_id=ELEMENT_ID,
+        )
+    except GovernancePolicyError as instability_policy_exc:
+        INSTABILITY_POLICY = None
+        INSTABILITY_POLICY_ERROR = str(instability_policy_exc)
+        logging.getLogger(__name__).error(
+            "ADAAD: instability policy failed to load lazily: %s", instability_policy_exc
+        )
+        metrics.log(
+            event_type="lazy_init_failure",
+            payload={
+                "component": "ui.aponi_dashboard",
+                "target": "instability_policy",
+                "error": str(instability_policy_exc),
+            },
+            level="ERROR",
+            element_id=ELEMENT_ID,
+        )
+    _INSTABILITY_POLICY_LOADED = True
+    return INSTABILITY_POLICY
 
 
 def _require_instability_policy():
-    if INSTABILITY_POLICY is None:
+    if INSTABILITY_POLICY is not None:
+        return INSTABILITY_POLICY
+    policy = _load_instability_policy_cached()
+    if policy is None:
         detail = INSTABILITY_POLICY_ERROR or "instability policy unavailable"
         raise GovernancePolicyError(f"policy unavailable (fail-closed): {detail}")
-    return INSTABILITY_POLICY
+    return policy
 
 
 def _extract_schema_version(raw: object) -> str:
@@ -691,7 +820,7 @@ def _environment_health_snapshot() -> Dict[str, object]:
     queue_path_exists = CONTROL_QUEUE_PATH.exists()
     sources = _load_free_capability_sources()
     profiles = _load_skill_profiles()
-    policy_ok = GOVERNANCE_POLICY is not None
+    policy_ok = _load_governance_policy_cached() is not None
     return {
         "policy_loaded": policy_ok,
         "policy_error": GOVERNANCE_POLICY_ERROR or "",
@@ -2167,7 +2296,7 @@ class AponiDashboard:
                     return {"ok": False, "error": "epoch_not_found", "epoch_id": epoch_id}
                 try:
                     bundle = cls._bundle_builder.build_bundle(epoch_start=epoch_id, persist=True)
-                except EvidenceBundleError as exc:
+                except _evidence_bundle_error_type() as exc:
                     return {"ok": False, "error": "bundle_export_failed", "epoch_id": epoch_id, "detail": str(exc)}
                 return {
                     "ok": True,
@@ -2260,7 +2389,7 @@ class AponiDashboard:
 
             @staticmethod
             def _replay_proof_status(epoch_id: str) -> Dict:
-                proof_path = REPLAY_PROOFS_DIR / f"{epoch_id}.replay_attestation.v1.json"
+                proof_path = _replay_proofs_dir() / f"{epoch_id}.replay_attestation.v1.json"
                 if not proof_path.exists():
                     return {
                         "reference": str(proof_path),

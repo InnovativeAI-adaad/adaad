@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import importlib
+import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
@@ -31,16 +33,6 @@ import runtime.metrics as metrics                                          # noq
 import security.ledger.journal as journal                                  # noqa: E402
 import runtime.constitution as constitution                                # noqa: E402
 from runtime.evolution.lineage_v2 import LineageLedgerV2                  # noqa: E402
-from runtime.metrics_analysis import (                                    # noqa: E402
-    rolling_determinism_score,
-    mutation_rate_snapshot,
-)
-from runtime.mcp.proposal_validator import validate_proposal               # noqa: E402
-from runtime.mcp.proposal_queue import append_proposal                    # noqa: E402
-from runtime.mcp.linting_bridge import MutationLintingBridge              # noqa: E402
-from runtime.governance.foundation.determinism import default_provider    # noqa: E402
-from runtime.intelligence.router import IntelligenceRouter                # noqa: E402
-from runtime.evolution.evidence_bundle import EvidenceBundleBuilder       # noqa: E402
 from runtime.governance.rate_limiter import get_limiter as _get_proposal_limiter  # noqa: E402
 from runtime.audit_auth import load_audit_tokens, require_audit_read_scope  # noqa: E402
 from security.whaledic_secrets import enforce_whaledic_secret_policy  # noqa: E402
@@ -52,6 +44,35 @@ from runtime.system_status import (
     load_live_version as load_live_version_snapshot,
     read_gate_state as read_gate_state_snapshot,
 )
+
+_LAZY_IMPORT_CACHE: dict[str, Any] = {}
+_LAZY_IMPORT_LOG = logging.getLogger("adaad.lazy_import.server")
+
+
+def _lazy_import(module_path: str, attr_name: str) -> Any:
+    cache_key = f"{module_path}:{attr_name}"
+    if cache_key in _LAZY_IMPORT_CACHE:
+        return _LAZY_IMPORT_CACHE[cache_key]
+    try:
+        module = importlib.import_module(module_path)
+        resolved = getattr(module, attr_name)
+    except Exception as exc:
+        detail = f"lazy_init_failed:{module_path}.{attr_name}:{type(exc).__name__}:{exc}"
+        _LAZY_IMPORT_LOG.error(detail)
+        metrics.log(
+            event_type="lazy_init_failure",
+            payload={"component": "server", "target": f"{module_path}.{attr_name}", "error": str(exc)},
+            level="ERROR",
+        )
+        raise RuntimeError(detail) from exc
+    _LAZY_IMPORT_CACHE[cache_key] = resolved
+    _LAZY_IMPORT_LOG.info("lazy_init_ok:%s.%s", module_path, attr_name)
+    metrics.log(
+        event_type="lazy_init_success",
+        payload={"component": "server", "target": f"{module_path}.{attr_name}"},
+        level="INFO",
+    )
+    return resolved
 
 
 ROOT = Path(__file__).resolve().parent
@@ -244,6 +265,38 @@ def _load_audit_tokens() -> dict[str, list[str]]:
 
 def _require_audit_read_scope(authorization: str | None) -> dict[str, str]:
     return require_audit_read_scope(authorization)
+
+
+def rolling_determinism_score() -> float:
+    return _lazy_import("runtime.metrics_analysis", "rolling_determinism_score")()
+
+
+def mutation_rate_snapshot() -> dict[str, Any]:
+    return _lazy_import("runtime.metrics_analysis", "mutation_rate_snapshot")()
+
+
+def validate_proposal(payload: dict[str, Any]) -> tuple[Any, dict[str, Any]]:
+    return _lazy_import("runtime.mcp.proposal_validator", "validate_proposal")(payload)
+
+
+def append_proposal(*, proposal_id: str, request: Any) -> dict[str, Any]:
+    return _lazy_import("runtime.mcp.proposal_queue", "append_proposal")(proposal_id=proposal_id, request=request)
+
+
+def default_provider() -> Any:
+    return _lazy_import("runtime.governance.foundation.determinism", "default_provider")()
+
+
+def IntelligenceRouter() -> Any:
+    return _lazy_import("runtime.intelligence.router", "IntelligenceRouter")()
+
+
+def MutationLintingBridge() -> Any:
+    return _lazy_import("runtime.mcp.linting_bridge", "MutationLintingBridge")()
+
+
+def EvidenceBundleBuilder(*, export_dir: Path) -> Any:
+    return _lazy_import("runtime.evolution.evidence_bundle", "EvidenceBundleBuilder")(export_dir=export_dir)
 
 def _assert_gate_open() -> Dict[str, Any]:
     gate = _read_gate_state()
