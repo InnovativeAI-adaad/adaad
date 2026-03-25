@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import json
 import importlib
+import hashlib
 import logging
 import os
+import time
 from datetime import datetime, timezone
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Dict, Mapping
+from typing import Any, Callable, Dict, Mapping
 
 from contextlib import asynccontextmanager
 
@@ -1456,50 +1459,87 @@ def governance_reviewer_reputation_ledger(
     """
     authn = _require_audit_read_scope(authorization)
 
-    from runtime.governance.reviewer_reputation_ledger import (
-        LEDGER_FORMAT_VERSION,
-        ReviewerReputationLedger,
-    )
-    from pathlib import Path
+    from collections import deque
+    from runtime.governance.reviewer_reputation_ledger import LEDGER_FORMAT_VERSION
+    from runtime.io.jsonl_tail import read_jsonl_tail
 
-    ledger = ReviewerReputationLedger.load(
-        Path(_DEFAULT_REPUTATION_LEDGER_PATH),
-        verify_integrity=True,
-    )
+    def _build_reputation_aggregates(path: Path) -> dict[str, Any]:
+        breakdown: dict[str, int] = {}
+        ledger_digest_state = hashlib.sha256()
+        total_entries = 0
+        chain_ok = True
+        prior_hash: str | None = None
+        for row in _iter_jsonl_or_raise(path):
+            total_entries += 1
+            decision = row.get("decision")
+            if isinstance(decision, str):
+                breakdown[decision] = breakdown.get(decision, 0) + 1
+            ledger_digest_state.update(json.dumps(row, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+            entry_hash = row.get("entry_hash")
+            prev_entry_hash = row.get("prev_entry_hash")
+            if not isinstance(entry_hash, str) or not entry_hash.startswith("sha256:"):
+                chain_ok = False
+            elif prior_hash is not None and prev_entry_hash != prior_hash:
+                chain_ok = False
+            prior_hash = entry_hash if isinstance(entry_hash, str) else prior_hash
+        return {
+            "total_entries": total_entries,
+            "decision_breakdown": breakdown,
+            "ledger_digest": f"sha256:{ledger_digest_state.hexdigest()}",
+            "chain_integrity_valid": chain_ok,
+        }
 
-    all_entries = ledger.entries()
-
-    # Filter by epoch_id if requested
-    if epoch_id is not None:
-        filtered = [e for e in all_entries if e.epoch_id == epoch_id]
-    else:
-        filtered = all_entries
-
-    # Most recent first, then apply limit
-    windowed = list(reversed(filtered))[:limit]
-
-    # Decision breakdown over all entries (not just window)
-    breakdown: dict[str, int] = {}
-    for e in all_entries:
-        breakdown[e.decision] = breakdown.get(e.decision, 0) + 1
-
-    # Chain integrity
+    ledger_path = Path(_DEFAULT_REPUTATION_LEDGER_PATH)
+    degraded = False
+    error: str | None = None
     try:
-        chain_ok = ledger.verify_chain_integrity()
-    except Exception:
-        chain_ok = False
+        aggregates = _cached_ledger_aggregate(
+            "reviewer_reputation",
+            ledger_path,
+            ttl_seconds=2.0,
+            builder=_build_reputation_aggregates,
+        )
+    except Exception as exc:  # noqa: BLE001
+        aggregates = {
+            "total_entries": 0,
+            "decision_breakdown": {},
+            "ledger_digest": "sha256:" + ("0" * 64),
+            "chain_integrity_valid": False,
+        }
+        degraded = True
+        error = str(exc)
+
+    bounded_limit = max(0, int(limit))
+    windowed: list[dict[str, Any]] = []
+    if bounded_limit > 0 and not degraded:
+        try:
+            if epoch_id is None:
+                tail_result = read_jsonl_tail(ledger_path, limit=bounded_limit)
+                windowed = list(reversed(tail_result.records))
+            else:
+                entries: deque[dict[str, Any]] = deque(maxlen=bounded_limit)
+                for row in _iter_jsonl_or_raise(ledger_path):
+                    if row.get("epoch_id") == epoch_id:
+                        entries.append(row)
+                windowed = list(reversed(list(entries)))
+        except Exception as exc:  # noqa: BLE001
+            degraded = True
+            error = str(exc)
+            windowed = []
 
     return {
         "schema_version": "1.0",
         "authn": authn,
         "data": {
-            "entries":               [e.to_dict() for e in windowed],
+            "entries":               windowed,
             "total_in_window":       len(windowed),
-            "total_entries":         len(all_entries),
-            "decision_breakdown":    breakdown,
-            "chain_integrity_valid": chain_ok,
-            "ledger_digest":         ledger.ledger_digest(),
+            "total_entries":         int(aggregates["total_entries"]),
+            "decision_breakdown":    aggregates["decision_breakdown"],
+            "chain_integrity_valid": bool(aggregates["chain_integrity_valid"]) and not degraded,
+            "ledger_digest":         aggregates["ledger_digest"],
             "ledger_format_version": LEDGER_FORMAT_VERSION,
+            "degraded":              degraded,
+            "error":                 error,
         },
     }
 
@@ -1511,8 +1551,66 @@ def governance_reviewer_reputation_ledger(
 _DEFAULT_MUTATION_LEDGER_PATH = "security/ledger/mutation_audit.jsonl"
 
 
+@dataclass(frozen=True)
+class _CachedLedgerAggregate:
+    expires_at: float
+    source_mtime_ns: int
+    source_size: int
+    payload: dict[str, Any]
+
+
+_LEDGER_AGGREGATE_CACHE: dict[tuple[str, Path], _CachedLedgerAggregate] = {}
+
+
+def _cached_ledger_aggregate(
+    cache_scope: str,
+    path: Path,
+    *,
+    ttl_seconds: float,
+    builder: Callable[[Path], dict[str, Any]],
+) -> dict[str, Any]:
+    resolved = path.resolve()
+    now = time.monotonic()
+    stat = resolved.stat() if resolved.exists() else None
+    source_mtime_ns = stat.st_mtime_ns if stat else 0
+    source_size = stat.st_size if stat else 0
+    cache_key = (cache_scope, resolved)
+    cached = _LEDGER_AGGREGATE_CACHE.get(cache_key)
+    if (
+        cached
+        and cached.expires_at >= now
+        and cached.source_mtime_ns == source_mtime_ns
+        and cached.source_size == source_size
+    ):
+        return dict(cached.payload)
+
+    payload = builder(resolved)
+    _LEDGER_AGGREGATE_CACHE[cache_key] = _CachedLedgerAggregate(
+        expires_at=now + max(0.0, ttl_seconds),
+        source_mtime_ns=source_mtime_ns,
+        source_size=source_size,
+        payload=dict(payload),
+    )
+    return payload
+
+
+def _iter_jsonl_or_raise(path: Path):
+    if not path.exists():
+        return
+    with path.open("r", encoding="utf-8") as handle:
+        for idx, line in enumerate(handle, start=1):
+            if not line.strip():
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"jsonl_parse_error:{path}:{idx}") from exc
+            if not isinstance(record, dict):
+                raise ValueError(f"jsonl_non_object:{path}:{idx}")
+            yield record
+
+
 def _mutation_window_from_file(path: Path, *, limit: int, promoted_only: bool) -> list[dict[str, Any]]:
-    import json as _json
     from collections import deque
     from runtime.io.jsonl_tail import read_jsonl_tail
 
@@ -1525,16 +1623,9 @@ def _mutation_window_from_file(path: Path, *, limit: int, promoted_only: bool) -
         return list(reversed(tail_result.records))
 
     window: deque[dict[str, Any]] = deque(maxlen=bounded_limit)
-    with path.open("r", encoding="utf-8") as handle:
-        for raw_line in handle:
-            if not raw_line.strip():
-                continue
-            try:
-                parsed = _json.loads(raw_line)
-            except _json.JSONDecodeError:
-                continue
-            if isinstance(parsed, dict) and parsed.get("entry", {}).get("promoted") is True:
-                window.append(parsed)
+    for parsed in _iter_jsonl_or_raise(path):
+        if parsed.get("entry", {}).get("promoted") is True:
+            window.append(parsed)
     return list(reversed(list(window)))
 
 
@@ -1577,13 +1668,20 @@ async def governance_mutation_ledger(
     snapshot = await anyio.to_thread.run_sync(
         lambda: read_mutation_ledger_snapshot(ledger_path, ttl_seconds=2.0)
     )
-    windowed = await anyio.to_thread.run_sync(
-        lambda: _mutation_window_from_file(
-            ledger_path,
-            limit=bounded_limit,
-            promoted_only=promoted_only,
+    degraded = False
+    error: str | None = None
+    try:
+        windowed = await anyio.to_thread.run_sync(
+            lambda: _mutation_window_from_file(
+                ledger_path,
+                limit=bounded_limit,
+                promoted_only=promoted_only,
+            )
         )
-    )
+    except Exception as exc:  # noqa: BLE001
+        windowed = []
+        degraded = True
+        error = str(exc)
 
     return {
         "schema_version": "1.0",
@@ -1595,6 +1693,8 @@ async def governance_mutation_ledger(
             "promoted_count":  snapshot.promoted_count,
             "last_hash":       snapshot.last_hash,
             "ledger_version":  "1.0",
+            "degraded":        degraded,
+            "error":           error,
         },
     }
 
@@ -1666,7 +1766,18 @@ async def governance_scoring_engine(
         ledger_path = _Path(ledger_path_env) if ledger_path_env else None
         bounded_limit = max(0, int(limit))
 
+        def _build_scoring_summary(path: _Path) -> dict[str, Any]:
+            digest = hashlib.sha256()
+            total = 0
+            with path.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(65536), b""):
+                    digest.update(chunk)
+            for _ in _iter_jsonl_or_raise(path):
+                total += 1
+            return {"total_entries": total, "ledger_digest": "sha256:" + digest.hexdigest()}
+
         entries: list = []
+        summary = {"total_entries": 0, "ledger_digest": "sha256:" + ("0" * 64)}
         if ledger_path and ledger_path.exists() and bounded_limit > 0:
             try:
                 tail_result = await anyio.to_thread.run_sync(
@@ -1675,15 +1786,37 @@ async def governance_scoring_engine(
                 entries = tail_result.records
             except Exception:
                 pass
+        if ledger_path and ledger_path.exists():
+            summary = await anyio.to_thread.run_sync(
+                lambda: _cached_ledger_aggregate(
+                    "scoring_engine_summary",
+                    ledger_path,
+                    ttl_seconds=2.0,
+                    builder=_build_scoring_summary,
+                )
+            )
         return {
             "ok": True,
             "algorithm_version": ALGORITHM_VERSION,
             "severity_weights": dict(SEVERITY_WEIGHTS),
             "recent_entries": entries,
             "entry_count": len(entries),
+            "total_entries": int(summary["total_entries"]),
+            "ledger_digest": summary["ledger_digest"],
+            "degraded": False,
         }
     except Exception as exc:  # noqa: BLE001
-        return {"ok": True, "degraded": True, "error": str(exc)}
+        return {
+            "ok": True,
+            "algorithm_version": "unknown",
+            "severity_weights": {},
+            "recent_entries": [],
+            "entry_count": 0,
+            "total_entries": 0,
+            "ledger_digest": "sha256:" + ("0" * 64),
+            "degraded": True,
+            "error": str(exc),
+        }
 
 
 @app.get("/governance/tier-calibration")

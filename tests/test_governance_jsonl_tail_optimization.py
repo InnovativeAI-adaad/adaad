@@ -66,6 +66,8 @@ def test_governance_mutation_ledger_schema_unchanged(client: TestClient) -> None
         "promoted_count",
         "last_hash",
         "ledger_version",
+        "degraded",
+        "error",
     }
 
 
@@ -95,8 +97,10 @@ def test_governance_mutation_ledger_matches_legacy_logic(
 
     assert resp_all.status_code == 200
     assert resp_promoted.status_code == 200
-    assert resp_all.json()["data"] == expected_all
-    assert resp_promoted.json()["data"] == expected_promoted
+    assert {k: v for k, v in resp_all.json()["data"].items() if k in expected_all} == expected_all
+    assert {k: v for k, v in resp_promoted.json()["data"].items() if k in expected_promoted} == expected_promoted
+    assert resp_all.json()["data"]["degraded"] is False
+    assert resp_promoted.json()["data"]["degraded"] is False
 
 
 def test_jsonl_tail_large_file_reads_bounded_bytes(tmp_path: Path) -> None:
@@ -124,6 +128,59 @@ def test_governance_scoring_engine_schema_and_logic_match(
     payload = response.json()
 
     assert response.status_code == 200
-    assert set(payload.keys()) == {"ok", "algorithm_version", "severity_weights", "recent_entries", "entry_count"}
+    assert set(payload.keys()) == {
+        "ok",
+        "algorithm_version",
+        "severity_weights",
+        "recent_entries",
+        "entry_count",
+        "total_entries",
+        "ledger_digest",
+        "degraded",
+    }
     assert payload["recent_entries"] == rows[-3:]
     assert payload["entry_count"] == 3
+    assert payload["total_entries"] == len(rows)
+    assert payload["degraded"] is False
+
+
+def test_large_mutation_ledger_uses_streaming_path(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    ledger = tmp_path / "large_mutation.jsonl"
+    rows = [
+        {"entry": {"promoted": idx % 7 == 0}, "hash": f"sha256:{idx:064x}"}
+        for idx in range(25_000)
+    ]
+    ledger.write_text("\n".join(json.dumps(row) for row in rows) + "\n", encoding="utf-8")
+    import server as server_module
+
+    monkeypatch.setattr(server_module, "_DEFAULT_MUTATION_LEDGER_PATH", str(ledger))
+    response = client.get("/governance/mutation-ledger?limit=5", headers=_AUTH)
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["degraded"] is False
+    assert data["total_entries"] == len(rows)
+    assert len(data["entries"]) == 5
+
+
+def test_reviewer_endpoint_degraded_envelope_on_corruption(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    ledger = tmp_path / "reputation.jsonl"
+    ledger.write_text('{"sequence_number": 1, "decision": "approve", "entry_hash": "sha256:abc"}\n{not-json}\n')
+    import server as server_module
+
+    monkeypatch.setattr(server_module, "_DEFAULT_REPUTATION_LEDGER_PATH", str(ledger))
+    response = client.get("/governance/reviewer-reputation-ledger?limit=3", headers=_AUTH)
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["degraded"] is True
+    assert isinstance(data["entries"], list)
+    assert set(data.keys()) >= {"entries", "degraded", "error", "total_entries", "decision_breakdown"}
