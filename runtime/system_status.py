@@ -96,6 +96,7 @@ def load_live_version(
         if isinstance(loaded, dict):
             report = loaded
     except (OSError, json.JSONDecodeError):
+        # Best-effort read: if the report file is missing or invalid, fall back to defaults.
         pass
 
     constitution_version = constitution_version_provider()
