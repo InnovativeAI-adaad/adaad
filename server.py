@@ -7,6 +7,9 @@ import logging
 import os
 import time
 import asyncio
+import csv
+import io
+import uuid
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
@@ -38,7 +41,7 @@ from app.api.audit import router as audit_router
 from app.api.ui import router as ui_router
 from app.api.simulation import router as simulation_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
-from app.api.dependencies import require_audit_scope, require_gate_open
+from app.api.dependencies import require_audit_scope, require_gate_open, require_tenant_context
 from app.api.versioning import register_v1_aliases
 from runtime.api.extensions import extension_sdk_descriptor
 from runtime.innovations_router import router as innovations_router
@@ -103,6 +106,7 @@ ENHANCED_INDEX = ENHANCED_DIR / "enhanced_dashboard.html"
 WHALEDIC_DIR = ROOT / "ui" / "developer" / "ADAADdev"
 REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
 FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
+COMPLIANCE_EXPORT_DIR = ROOT / "reports" / "compliance_exports"
 GATE_LOCK_FILE = DEFAULT_GATE_LOCK_FILE
 
 
@@ -3039,6 +3043,240 @@ def lint_preview(
 @app.get("/api/status")
 def api_status_mock_disabled() -> dict:
     raise HTTPException(status_code=404, detail="mock_endpoints_disabled")
+
+
+_COMPLIANCE_EXPORT_DATASETS: frozenset[str] = frozenset(
+    {
+        "control-evidence-snapshots",
+        "immutable-replay-attestations",
+        "policy-change-history",
+        "incident-remediation-logs",
+    }
+)
+
+
+def _jsonable_scalar(value: Any) -> Any:
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def _render_csv(rows: list[dict[str, Any]]) -> str:
+    if not rows:
+        return ""
+    keys: list[str] = sorted({key for row in rows for key in row.keys()})
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=keys)
+    writer.writeheader()
+    for row in rows:
+        writer.writerow({key: _jsonable_scalar(row.get(key)) for key in keys})
+    return buffer.getvalue()
+
+
+def _load_replay_attestations() -> list[dict[str, Any]]:
+    attestations: list[dict[str, Any]] = []
+    if not REPLAY_PROOFS_DIR.exists():
+        return attestations
+    for proof_file in sorted(REPLAY_PROOFS_DIR.glob("*.replay_attestation.v1.json")):
+        try:
+            bundle = json.loads(proof_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        attestations.append(
+            {
+                "epoch_id": str(bundle.get("epoch_id") or proof_file.name.split(".", 1)[0]),
+                "proof_digest": str(bundle.get("proof_digest", "")),
+                "canonical_digest": str(bundle.get("canonical_digest", "")),
+                "checkpoint_chain_digest": str(bundle.get("checkpoint_chain_digest", "")),
+                "replay_digest": str(bundle.get("replay_digest", "")),
+                "signature_count": len(bundle.get("signatures", [])) if isinstance(bundle.get("signatures"), list) else 0,
+                "source_path": str(proof_file),
+            }
+        )
+    return attestations
+
+
+def _load_policy_change_history() -> list[dict[str, Any]]:
+    entries = journal.read_entries(limit=1000)
+    filtered: list[dict[str, Any]] = []
+    for item in entries:
+        tx_type = str(item.get("tx_type", ""))
+        payload = item.get("payload", {})
+        reason = ""
+        if isinstance(payload, dict):
+            reason = str(payload.get("reason_code") or payload.get("reason") or "")
+        text = f"{tx_type} {reason}".lower()
+        if "policy" not in text and "governance" not in text:
+            continue
+        filtered.append(
+            {
+                "entry_id": str(item.get("entry_id", "")),
+                "timestamp": str(item.get("timestamp", "")),
+                "tx_type": tx_type,
+                "reason_code": reason,
+                "payload": payload if isinstance(payload, dict) else {},
+            }
+        )
+    policy_baseline = ROOT / "governance" / "governance_policy_v1.json"
+    if policy_baseline.exists():
+        try:
+            baseline = json.loads(policy_baseline.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            baseline = {}
+        filtered.insert(
+            0,
+            {
+                "entry_id": "baseline-governance-policy-v1",
+                "timestamp": "",
+                "tx_type": "policy_baseline",
+                "reason_code": "",
+                "payload": baseline if isinstance(baseline, dict) else {},
+            },
+        )
+    return filtered
+
+
+def _load_control_evidence_snapshots() -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    evidence_matrix = ROOT / "docs" / "comms" / "claims_evidence_matrix.md"
+    if evidence_matrix.exists():
+        rows.append(
+            {
+                "control_id": "claims-evidence-matrix",
+                "snapshot_type": "evidence_matrix",
+                "source_path": str(evidence_matrix),
+                "sha256": hashlib.sha256(evidence_matrix.read_bytes()).hexdigest(),
+            }
+        )
+    runtime_profile = ROOT / "governance_runtime_profile.lock.json"
+    if runtime_profile.exists():
+        rows.append(
+            {
+                "control_id": "governance-runtime-profile",
+                "snapshot_type": "runtime_profile",
+                "source_path": str(runtime_profile),
+                "sha256": hashlib.sha256(runtime_profile.read_bytes()).hexdigest(),
+            }
+        )
+    rows.extend(
+        {
+            "control_id": f"replay-attestation:{row['epoch_id']}",
+            "snapshot_type": "immutable_replay_attestation",
+            "source_path": row["source_path"],
+            "sha256": row["proof_digest"] or row["canonical_digest"],
+        }
+        for row in _load_replay_attestations()
+    )
+    return rows
+
+
+def _load_incident_remediation_logs() -> list[dict[str, Any]]:
+    entries = journal.read_entries(limit=2000)
+    rows: list[dict[str, Any]] = []
+    for item in entries:
+        tx_type = str(item.get("tx_type", ""))
+        payload = item.get("payload", {})
+        payload_text = json.dumps(payload, sort_keys=True) if isinstance(payload, dict) else str(payload)
+        combined = f"{tx_type} {payload_text}".lower()
+        if "incident" not in combined and "remediation" not in combined and "recover" not in combined:
+            continue
+        rows.append(
+            {
+                "entry_id": str(item.get("entry_id", "")),
+                "timestamp": str(item.get("timestamp", "")),
+                "tx_type": tx_type,
+                "severity": str(payload.get("severity", "")) if isinstance(payload, dict) else "",
+                "status": str(payload.get("status", "")) if isinstance(payload, dict) else "",
+                "payload": payload if isinstance(payload, dict) else {},
+            }
+        )
+    return rows
+
+
+def _compliance_dataset_rows(dataset: str) -> list[dict[str, Any]]:
+    if dataset == "control-evidence-snapshots":
+        return _load_control_evidence_snapshots()
+    if dataset == "immutable-replay-attestations":
+        return _load_replay_attestations()
+    if dataset == "policy-change-history":
+        return _load_policy_change_history()
+    if dataset == "incident-remediation-logs":
+        return _load_incident_remediation_logs()
+    raise HTTPException(status_code=404, detail="unknown_compliance_dataset")
+
+
+@app.get("/api/compliance/exports/{dataset}")
+def get_compliance_export(
+    dataset: str,
+    fmt: str = Query(default="json", pattern="^(json|csv)$"),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+) -> Response:
+    if dataset not in _COMPLIANCE_EXPORT_DATASETS:
+        raise HTTPException(status_code=404, detail="unknown_compliance_dataset")
+    rows = _compliance_dataset_rows(dataset)
+    if fmt == "csv":
+        body = _render_csv(rows)
+        return Response(
+            content=body,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="{dataset}.csv"'},
+        )
+    payload = {
+        "schema_version": "1.0",
+        "authn": auth_ctx,
+        "data": {
+            "dataset": dataset,
+            "format": "json",
+            "record_count": len(rows),
+            "records": rows,
+        },
+    }
+    return JSONResponse(content=payload)
+
+
+@app.post("/api/compliance/exports/{dataset}/jobs")
+def create_compliance_export_job(
+    dataset: str,
+    fmt: str = Query(default="json", pattern="^(json|csv)$"),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+) -> dict[str, Any]:
+    if dataset not in _COMPLIANCE_EXPORT_DATASETS:
+        raise HTTPException(status_code=404, detail="unknown_compliance_dataset")
+    rows = _compliance_dataset_rows(dataset)
+    COMPLIANCE_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    job_id = f"job-{uuid.uuid4().hex[:12]}"
+    extension = "csv" if fmt == "csv" else "json"
+    export_path = COMPLIANCE_EXPORT_DIR / f"{dataset}.{timestamp}.{job_id}.{extension}"
+    if fmt == "csv":
+        export_path.write_text(_render_csv(rows), encoding="utf-8")
+    else:
+        export_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": "1.0",
+                    "dataset": dataset,
+                    "record_count": len(rows),
+                    "records": rows,
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    return {
+        "schema_version": "1.0",
+        "authn": auth_ctx,
+        "data": {
+            "job_id": job_id,
+            "dataset": dataset,
+            "format": fmt,
+            "record_count": len(rows),
+            "path": str(export_path),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        },
+    }
 
 
 # ── Audit endpoints (Phase 46+ — evidence, replay proofs, lineage) ───────────
