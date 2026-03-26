@@ -402,6 +402,11 @@ class FederationMutationBroker:
                     "FederationMutationBroker: destination gate raised for proposal=%s — %s",
                     proposal.proposal_id, exc,
                 )
+                self._emit_warning_diagnostic(
+                    operation="evaluate_inbound_proposals.destination_gate",
+                    proposal=proposal,
+                    exc=exc,
+                )
                 self._quarantine(envelope, reason=f"destination_gate_raised:{exc}")
                 continue
 
@@ -557,6 +562,15 @@ class FederationMutationBroker:
             for rollback_entry in reversed(rollback_entries):
                 state_writer(rollback_entry["destination"], rollback_entry["snapshot"])
 
+            self._emit_warning_diagnostic(
+                operation="propagate_amendment",
+                proposal_id=proposal_id,
+                source_mutation_id=str(mutation_payload.get("mutation_id", "unknown")),
+                source_epoch_id=str(mutation_payload.get("epoch_id", "unknown")),
+                federation_gate_id="",
+                exc=exc,
+            )
+
             rollback_payload = {
                 "proposal_id": proposal_id,
                 "source_node": source_node,
@@ -633,6 +647,40 @@ class FederationMutationBroker:
                     f"audit_persistence_failed:{event_type}:{exc.__class__.__name__}:{exc}"
                 ) from exc
             return self._last_audit_status
+
+    @staticmethod
+    def _exception_classification(exc: Exception) -> str:
+        if isinstance(exc, (OSError, TimeoutError, ConnectionError, FileNotFoundError, PermissionError)):
+            return "environmental_exception"
+        return "invariant_violation_exception"
+
+    def _emit_warning_diagnostic(
+        self,
+        *,
+        operation: str,
+        exc: Exception,
+        proposal: Optional[FederatedMutationProposal] = None,
+        proposal_id: Optional[str] = None,
+        source_mutation_id: Optional[str] = None,
+        source_epoch_id: Optional[str] = None,
+        federation_gate_id: Optional[str] = None,
+    ) -> None:
+        payload = {
+            "component": "FederationMutationBroker",
+            "operation": operation,
+            "proposal_id": proposal.proposal_id if proposal is not None else (proposal_id or "unknown"),
+            "source_mutation_id": proposal.source_mutation_id if proposal is not None else (source_mutation_id or "unknown"),
+            "source_epoch_id": proposal.source_epoch_id if proposal is not None else (source_epoch_id or "unknown"),
+            "federation_gate_id": proposal.federation_gate_id if proposal is not None else (federation_gate_id or ""),
+            "exception_type": exc.__class__.__name__,
+            "exception_classification": self._exception_classification(exc),
+        }
+        try:
+            self._emit_audit("federation_mutation_diagnostic_warning.v1", payload)
+        except FederationMutationBrokerError:
+            raise
+        except Exception:  # noqa: BLE001
+            pass
 
     def _validate_federation_hmac_key_path(self, federation_hmac_key_path: str) -> None:
         key_path = Path(federation_hmac_key_path) if federation_hmac_key_path else None
