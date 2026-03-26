@@ -1,14 +1,14 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.24.1 — 90 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.24.1 — 91 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 <img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.24.1-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/90_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_90-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.24.1-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/91_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_91-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C296_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/30_Innovations-Implemented-00d4ff?style=flat-square&labelColor=0d1117)
 
@@ -160,7 +160,7 @@ Constitutional governance should not depend on cloud infrastructure. ADAAD's saf
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 <!-- ADAAD_PHASE_COUNT:START -->
-## 89-phase evolution timeline
+## 91-phase evolution timeline
 <!-- ADAAD_PHASE_COUNT:END -->
 
 <!-- ADAAD_PHASE_PROGRESS:START -->
@@ -178,6 +178,8 @@ Constitutional governance should not depend on cloud infrastructure. ADAAD's saf
 | **Phase 77** | **🌱 First governed seed epoch — March 20, 2026** |
 | Phases 78–86 | Multi-gen lineage, Pareto selection, causal attribution, fitness half-life |
 | **Phase 89** | **◈ CEL live — real proposals through the full loop — March 22, 2026** |
+| **Phase 90** | **🧭 INNOV-06 CEPD — cryptographic evolution proof DAG — March 23, 2026** |
+| **Phase 91** | **🛡 Audit hardening — senior audit pass and release v9.24.1 — March 24, 2026** |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
