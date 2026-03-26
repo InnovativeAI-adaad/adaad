@@ -33,6 +33,7 @@
 ### C-02 — Missing GPG Signatures on Tags v9.7.0–v9.10.0
 **Status:** ⏳ HUMAN-0 GATE — Not closable by agent
 **Assigned to:** Dustin L. Reid
+**Latest evidence (2026-03-26):** `artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md` records failed non-founder attempts (`No secret key`); no signed tags were created, so C-02 remains open.
 **Action:**
 ```bash
 git tag -s v9.7.0 -m "v9.7.0 — constitutional governance"
@@ -100,6 +101,7 @@ git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0
 ### M-02 — free-v9.10.0 APK Distribution Tag Missing
 **Status:** ⏳ HUMAN-0 GATE
 **Assigned to:** Dustin L. Reid
+**Latest evidence (2026-03-26):** `artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md` confirms the tag ceremony could not execute without founder signing key material.
 **Action:**
 ```bash
 git tag free-v9.10.0
