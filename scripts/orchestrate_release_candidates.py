@@ -5,9 +5,9 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
-import time
 from pathlib import Path
 from typing import Any
 
@@ -25,13 +25,51 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _load_candidates(path: Path) -> list[dict[str, Any]]:
-    raw = json.loads(path.read_text(encoding="utf-8"))
+def _extract_candidates(raw: Any) -> list[dict[str, Any]]:
     if isinstance(raw, dict):
         raw = raw.get("candidates", [])
     if not isinstance(raw, list):
         raise ValueError("candidate payload must be a list or {'candidates': [...]} object")
     return [item for item in raw if isinstance(item, dict)]
+
+
+def _canonical_json(value: Any) -> str:
+    """Return a deterministic JSON encoding for digest derivation."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+
+
+def _resolve_release_metadata(raw_payload: Any) -> tuple[str, str]:
+    """Resolve release version/lane from candidate payload metadata.
+
+    This preserves a stable derivation contract for release decision bundle IDs.
+    """
+    if not isinstance(raw_payload, dict):
+        return "unknown-version", "unknown-lane"
+
+    version = str(raw_payload.get("release_version") or raw_payload.get("version") or "").strip()
+    lane = str(raw_payload.get("lane") or raw_payload.get("control_lane") or "").strip()
+    return version or "unknown-version", lane or "unknown-lane"
+
+
+def _derive_bundle_id(*, release_inputs: Any, release_version: str, lane: str) -> str:
+    """Build a deterministic, human-readable release decision bundle ID.
+
+    ID derivation contract (deterministic by construction):
+    1) Normalize the release inputs + release metadata to canonical JSON.
+    2) Compute SHA-256 over that canonical string.
+    3) Emit a readable stable label + short digest segment:
+       ``release-decision-<12hex>``.
+
+    This intentionally replaces epoch-second suffixes so re-running with the
+    same inputs yields the same bundle ID.
+    """
+    canonical_material = {
+        "lane": str(lane or "unknown-lane"),
+        "release_inputs": release_inputs,
+        "release_version": str(release_version or "unknown-version"),
+    }
+    digest = hashlib.sha256(_canonical_json(canonical_material).encode("utf-8")).hexdigest()
+    return f"release-decision-{digest[:12]}"
 
 
 def _score(candidate: dict[str, Any]) -> float:
@@ -68,7 +106,9 @@ def _run(request):
 
 def main() -> int:
     args = _parse_args()
-    candidates = _load_candidates(args.candidates)
+    raw_payload = json.loads(args.candidates.read_text(encoding="utf-8"))
+    candidates = _extract_candidates(raw_payload)
+    release_version, lane = _resolve_release_metadata(raw_payload)
     compliant = [candidate for candidate in candidates if _policy_ok(candidate)]
     compliant.sort(key=_score, reverse=True)
 
@@ -82,7 +122,7 @@ def main() -> int:
         for item in candidates
     ]
 
-    bundle_id = f"release-decision-{int(time.time())}"
+    bundle_id = _derive_bundle_id(release_inputs=raw_payload, release_version=release_version, lane=lane)
     bundle_dir = args.output_dir / bundle_id
     bundle_dir.mkdir(parents=True, exist_ok=True)
 

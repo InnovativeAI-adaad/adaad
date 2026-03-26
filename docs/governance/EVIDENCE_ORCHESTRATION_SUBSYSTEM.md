@@ -142,3 +142,22 @@ Behavior:
 - Returns non-zero on any divergence.
 
 This gate is wired as fail-closed in `.github/workflows/ci.yml`.
+
+---
+
+## 7) Release decision bundle ID derivation (script contract)
+
+`scripts/orchestrate_release_candidates.py` emits deterministic release decision bundle IDs.
+
+Contract:
+
+1. Canonicalize a material object containing:
+   - `release_inputs` (raw candidate payload),
+   - `release_version` (`release_version` or `version` metadata; fallback `unknown-version`),
+   - `lane` (`lane` or `control_lane`; fallback `unknown-lane`).
+2. Compute SHA-256 over canonical JSON (`sort_keys=True`, canonical separators).
+3. Emit a human-readable ID: `release-decision-<12hex>`.
+
+Compatibility note:
+
+- Validators/parsers must accept digest-suffix IDs and must not require epoch-second numeric suffixes.
