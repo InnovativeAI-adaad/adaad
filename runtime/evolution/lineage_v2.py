@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Protocol
 
 from runtime import ROOT_DIR
 from runtime.governance.deterministic_filesystem import read_file_deterministic
+from runtime.tenancy import payload_in_tenant_scope, tenant_partition_path
 
 LOG = logging.getLogger(__name__)
 
@@ -350,8 +351,14 @@ class SeedCompetitionEpochEvent:
 
 
 class LineageLedgerV2:
-    def __init__(self, ledger_path: Path | None = None) -> None:
-        self.ledger_path = ledger_path or LEDGER_V2_PATH
+    def __init__(
+        self,
+        ledger_path: Path | None = None,
+        tenant_context: dict[str, str] | None = None,
+    ) -> None:
+        base_path = ledger_path or LEDGER_V2_PATH
+        self.ledger_path = tenant_partition_path(base_path, tenant_context)
+        self.tenant_context = dict(tenant_context or {})
         self._epoch_digest_index: Dict[str, str] = {}
         self._verified_tail_hash: str | None = None
 
@@ -504,6 +511,8 @@ class LineageLedgerV2:
                 continue
             entry = json.loads(line)
             if isinstance(entry, dict):
+                if self.tenant_context and not payload_in_tenant_scope(entry, self.tenant_context):
+                    continue
                 entries.append(entry)
         return entries
 
