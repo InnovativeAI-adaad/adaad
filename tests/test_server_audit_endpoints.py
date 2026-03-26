@@ -314,3 +314,81 @@ def test_reviewer_calibration_requires_epoch_id(monkeypatch) -> None:
 
     assert resp.status_code == 422
     assert resp.json() == {"detail": "missing_epoch_id"}
+
+
+def test_compliance_export_json_replay_attestations(monkeypatch, tmp_path) -> None:
+    proof_dir = tmp_path / "proofs"
+    proof_dir.mkdir()
+    (proof_dir / "epoch-1.replay_attestation.v1.json").write_text(
+        json.dumps(
+            {
+                "epoch_id": "epoch-1",
+                "proof_digest": "sha256:abc",
+                "canonical_digest": "sha256:def",
+                "checkpoint_chain_digest": "sha256:ghi",
+                "replay_digest": "sha256:jkl",
+                "signatures": [{"key_id": "k1"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(server, "REPLAY_PROOFS_DIR", proof_dir)
+    monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
+
+    with TestClient(server.app) as client:
+        response = client.get(
+            "/api/compliance/exports/immutable-replay-attestations?fmt=json",
+            headers=_auth_header(),
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["data"]["dataset"] == "immutable-replay-attestations"
+    assert payload["data"]["record_count"] == 1
+    assert payload["data"]["records"][0]["epoch_id"] == "epoch-1"
+
+
+def test_compliance_export_csv_policy_history(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
+    monkeypatch.setattr(
+        server.journal,
+        "read_entries",
+        lambda limit=1000: [
+            {
+                "entry_id": "e-1",
+                "timestamp": "2026-03-26T00:00:00Z",
+                "tx_type": "governance_policy_updated",
+                "payload": {"reason_code": "policy_rotation"},
+            }
+        ],
+    )
+
+    with TestClient(server.app) as client:
+        response = client.get(
+            "/api/compliance/exports/policy-change-history?fmt=csv",
+            headers=_auth_header(),
+        )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "tx_type" in response.text
+    assert "governance_policy_updated" in response.text
+
+
+def test_compliance_export_job_writes_file(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
+    monkeypatch.setattr(server, "COMPLIANCE_EXPORT_DIR", tmp_path / "compliance")
+    monkeypatch.setattr(server.journal, "read_entries", lambda limit=2000: [])
+
+    with TestClient(server.app) as client:
+        response = client.post(
+            "/api/compliance/exports/incident-remediation-logs/jobs?fmt=json",
+            headers=_auth_header(),
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    output_path = payload["data"]["path"]
+    assert payload["data"]["dataset"] == "incident-remediation-logs"
+    assert output_path.endswith(".json")
+    assert server.Path(output_path).exists()
