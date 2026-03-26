@@ -2,6 +2,12 @@
 repos:
   - repo: local
     hooks:
+      - id: plaintext-secret-scan
+        name: ADAAD plaintext secret scan
+        language: system
+        entry: python scripts/scan_secrets.py --path .
+        pass_filenames: false
+        stages: [pre-commit]
       - id: env-var-inventory
         name: ADAAD refresh env-var inventory
         language: system
