@@ -2,11 +2,22 @@ __pycache__/
 *.py[cod]
 *.log
 .env
+.env.local
+.env.*.local
 .venv/
 .envrc
 .tmp/
 .pytest_cache/
 .mypy_cache/
+*.pem
+*.key
+*.p12
+*.pfx
+*.secret
+*.secrets
+SECRET
+**/SECRET
+secrets.local.*
 
 # Data and telemetry
 /data/quarantine/*

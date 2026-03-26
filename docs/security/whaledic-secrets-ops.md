@@ -79,6 +79,8 @@ The runtime reads secret material via keyring and only retains in process memory
 5. Revoke old key/keyring material.
 6. Record rotation event in your operator runbook / evidence ledger.
 
+For repository plaintext-leak incidents, follow `docs/security/SECRET_ROTATION_RUNBOOK.md` in addition to this Whale.Dic-specific procedure.
+
 ## Failure codes
 
 - `whaledic_secret_missing_required:*` — required secret not provided for enabled feature.
