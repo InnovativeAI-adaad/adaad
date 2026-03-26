@@ -4,6 +4,8 @@ from typing import Any
 
 from fastapi import Depends, Header
 
+from runtime.audit_auth import require_audit_read_scope
+
 
 def auth_context(authorization: str | None = Header(default=None)) -> str | None:
     """Extract the shared Authorization header context for API dependencies."""
@@ -11,10 +13,8 @@ def auth_context(authorization: str | None = Header(default=None)) -> str | None
 
 
 def require_audit_scope(authorization: str | None = Depends(auth_context)) -> dict[str, Any]:
-    """Enforce audit:read scope and return normalized auth metadata."""
-    import server as _server
-
-    return _server._require_audit_read_scope(authorization)
+    """Enforce read-level access and return normalized auth metadata."""
+    return require_audit_read_scope(authorization)
 
 
 def require_gate_open() -> dict[str, Any]:

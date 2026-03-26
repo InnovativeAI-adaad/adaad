@@ -6,12 +6,11 @@ Canonical parsing for ADAAD audit bearer tokens.
 
 from __future__ import annotations
 
-import hmac
 import json
 import logging
 import os
 
-from fastapi import HTTPException
+from security.unified_auth import require_scopes
 
 _LOG = logging.getLogger(__name__)
 
@@ -34,9 +33,6 @@ def load_audit_tokens() -> dict[str, list[str]]:
     """
     raw = os.environ.get("ADAAD_AUDIT_TOKENS", "")
     if not raw:
-        # Mode (a): env var absent or empty — intentional or operator forgot.
-        # Log at DEBUG to avoid noise in normal dev environments where auth
-        # tokens are legitimately absent.
         _LOG.debug(
             "audit_tokens_not_configured",
             extra={"reason": _TOKENS_UNCONFIGURED, "source": "ADAAD_AUDIT_TOKENS"},
@@ -45,8 +41,6 @@ def load_audit_tokens() -> dict[str, list[str]]:
     try:
         decoded = json.loads(raw)
     except json.JSONDecodeError as exc:
-        # Mode (b): env var set but contains malformed JSON.  This is always
-        # a misconfiguration — emit WARNING so it surfaces in ops dashboards.
         _LOG.warning(
             "audit_tokens_malformed_json",
             extra={
@@ -58,7 +52,6 @@ def load_audit_tokens() -> dict[str, list[str]]:
         )
         return {}
     if not isinstance(decoded, dict):
-        # Mode (c): env var contains valid JSON but wrong type (e.g., list).
         _LOG.warning(
             "audit_tokens_wrong_type",
             extra={
@@ -79,23 +72,12 @@ def load_audit_tokens() -> dict[str, list[str]]:
 
 
 def require_audit_read_scope(authorization: str | None) -> dict[str, str]:
-    if not authorization:
-        raise HTTPException(status_code=401, detail="missing_authentication")
-
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=401, detail="missing_authentication")
-
-    # AUDIT-TEL-01: Use hmac.compare_digest for constant-time token lookup
-    # to eliminate timing side-channels that could enumerate valid tokens.
-    # dict.get() is O(1) average but not constant-time across key lengths.
-    token_scopes = load_audit_tokens().get(token)
-    if token_scopes is None:
-        raise HTTPException(status_code=401, detail="invalid_token")
-    if not any(hmac.compare_digest(scope, "audit:read") for scope in token_scopes):
-        raise HTTPException(status_code=403, detail="insufficient_scope")
-
-    return {"scheme": "bearer", "scope": "audit:read", "redaction": "sensitive"}
+    auth = require_scopes(authorization, ("audit:read",))
+    return {
+        "scheme": str(auth["scheme"]),
+        "scope": "audit:read",
+        "redaction": str(auth.get("redaction") or "sensitive"),
+    }
 
 
 def require_audit_write_scope(authorization: str | None) -> dict[str, str]:
@@ -104,20 +86,12 @@ def require_audit_write_scope(authorization: str | None) -> dict[str, str]:
     Phase 73 — seed review decisions require elevated write authority.
     SEED-REVIEW-AUTH-0: all seed review decision endpoints require audit:write.
     """
-    if not authorization:
-        raise HTTPException(status_code=401, detail="missing_authentication")
-
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=401, detail="missing_authentication")
-
-    token_scopes = load_audit_tokens().get(token)
-    if token_scopes is None:
-        raise HTTPException(status_code=401, detail="invalid_token")
-    if not any(hmac.compare_digest(scope, "audit:write") for scope in token_scopes):
-        raise HTTPException(status_code=403, detail="insufficient_scope")
-
-    return {"scheme": "bearer", "scope": "audit:write", "redaction": "sensitive"}
+    auth = require_scopes(authorization, ("audit:write",))
+    return {
+        "scheme": str(auth["scheme"]),
+        "scope": "audit:write",
+        "redaction": str(auth.get("redaction") or "sensitive"),
+    }
 
 
 __all__ = [
