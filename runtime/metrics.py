@@ -70,6 +70,26 @@ _BILLABLE_COUNTS: Dict[str, int] = {name: 0 for name in BILLABLE_EVENT_DEFINITIO
 _ACTIVE_USERS: set[str] = set()
 _ACTIVE_SEATS: set[str] = set()
 
+CONVERSION_FUNNEL_DEFINITIONS: Dict[str, Dict[str, str]] = {
+    "paywall_prompt_presented": {
+        "description": "Upgrade/paywall prompt shown after entitlement denial.",
+    },
+    "upgrade_prompt_engaged": {
+        "description": "Operator clicked or acknowledged an upgrade prompt CTA.",
+    },
+    "first_governance_replay_proof": {
+        "description": "First successful governance replay proof verification observed.",
+    },
+    "first_team_collaboration_event": {
+        "description": "First successful governance collaboration event observed.",
+    },
+    "first_production_runbook_completion": {
+        "description": "First successful production runbook completion captured.",
+    },
+}
+_CONVERSION_COUNTS: Dict[str, int] = {name: 0 for name in CONVERSION_FUNNEL_DEFINITIONS}
+_CONVERSION_LOCK = threading.Lock()
+
 
 # ---------------------------------------------------------------------------
 # MetricsSink abstraction (Phase 67 / Phase 3 metrics fan-out)
@@ -220,6 +240,39 @@ def reset_billable_usage() -> None:
         _ACTIVE_SEATS.clear()
         for key in _BILLABLE_COUNTS:
             _BILLABLE_COUNTS[key] = 0
+
+
+def register_conversion_stage(stage: str, *, quantity: int = 1) -> None:
+    """Register a conversion funnel stage event."""
+    if quantity <= 0:
+        return
+    with _CONVERSION_LOCK:
+        if stage in _CONVERSION_COUNTS:
+            _CONVERSION_COUNTS[stage] += int(quantity)
+
+
+def conversion_funnel_snapshot() -> Dict[str, Any]:
+    """Return deterministic conversion funnel counters plus stage rates."""
+    with _CONVERSION_LOCK:
+        counters = dict(_CONVERSION_COUNTS)
+    baseline = max(1, int(counters.get("paywall_prompt_presented", 0)))
+    return {
+        "stage_definitions": CONVERSION_FUNNEL_DEFINITIONS,
+        "counters": counters,
+        "rates": {
+            "upgrade_prompt_engagement_rate": float(counters.get("upgrade_prompt_engaged", 0)) / float(baseline),
+            "first_replay_proof_rate": float(counters.get("first_governance_replay_proof", 0)) / float(baseline),
+            "first_team_collaboration_rate": float(counters.get("first_team_collaboration_event", 0)) / float(baseline),
+            "first_production_runbook_completion_rate": float(counters.get("first_production_runbook_completion", 0)) / float(baseline),
+        },
+    }
+
+
+def reset_conversion_funnel() -> None:
+    """Reset conversion funnel counters (test-only utility)."""
+    with _CONVERSION_LOCK:
+        for key in _CONVERSION_COUNTS:
+            _CONVERSION_COUNTS[key] = 0
 
 
 class _FileLock:
