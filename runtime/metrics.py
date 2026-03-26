@@ -41,6 +41,34 @@ ELEMENT_ID = "Earth"
 
 METRICS_PATH = ROOT_DIR / "reports" / "metrics.jsonl"
 _THREAD_LOCK = threading.Lock()
+_BILLING_LOCK = threading.Lock()
+
+
+BILLABLE_EVENT_DEFINITIONS: Dict[str, Dict[str, str]] = {
+    "active_users": {
+        "unit": "users",
+        "description": "Unique active user identities observed in API requests.",
+    },
+    "active_seats": {
+        "unit": "seats",
+        "description": "Unique seat identifiers observed in API requests.",
+    },
+    "mutation_epochs_executed": {
+        "unit": "events",
+        "description": "Successful mutation-epoch execution requests accepted by API surfaces.",
+    },
+    "replay_verifications": {
+        "unit": "events",
+        "description": "Successful replay-verification requests served by audit APIs.",
+    },
+    "governance_approvals": {
+        "unit": "events",
+        "description": "Successful governance-approval proposal submissions.",
+    },
+}
+_BILLABLE_COUNTS: Dict[str, int] = {name: 0 for name in BILLABLE_EVENT_DEFINITIONS}
+_ACTIVE_USERS: set[str] = set()
+_ACTIVE_SEATS: set[str] = set()
 
 
 # ---------------------------------------------------------------------------
@@ -130,6 +158,13 @@ def get_active_sinks() -> "List[MetricsSink]":
                 if _is_truthy(os.environ.get("ADAAD_METRICS_OTEL", "")):
                     active.append(OpenTelemetrySink())
                 _sinks = active
+    else:
+        with _sinks_lock:
+            if _sinks and isinstance(_sinks[0], JsonlSink):
+                if _sinks[0]._path != METRICS_PATH:  # type: ignore[attr-defined]
+                    updated = list(_sinks)
+                    updated[0] = JsonlSink()
+                    _sinks = updated
     return _sinks
 
 
@@ -138,6 +173,53 @@ def _set_sinks(sinks: "List[MetricsSink]") -> None:
     global _sinks
     with _sinks_lock:
         _sinks = sinks
+
+
+def register_billable_usage(
+    *,
+    event_name: str,
+    quantity: int = 1,
+    user_id: str = "",
+    seat_id: str = "",
+) -> None:
+    """Register a billable usage event and active actor cardinality.
+
+    Unknown event names are ignored to preserve fail-safe request handling.
+    """
+    if quantity <= 0:
+        return
+    with _BILLING_LOCK:
+        if user_id.strip():
+            _ACTIVE_USERS.add(user_id.strip())
+            _BILLABLE_COUNTS["active_users"] = len(_ACTIVE_USERS)
+        if seat_id.strip():
+            _ACTIVE_SEATS.add(seat_id.strip())
+            _BILLABLE_COUNTS["active_seats"] = len(_ACTIVE_SEATS)
+        if event_name in _BILLABLE_COUNTS:
+            _BILLABLE_COUNTS[event_name] += int(quantity)
+
+
+def billable_usage_snapshot() -> Dict[str, Any]:
+    """Return a deterministic snapshot of billable counters."""
+    with _BILLING_LOCK:
+        counts = dict(_BILLABLE_COUNTS)
+        active_user_ids = sorted(_ACTIVE_USERS)
+        active_seat_ids = sorted(_ACTIVE_SEATS)
+    return {
+        "event_definitions": BILLABLE_EVENT_DEFINITIONS,
+        "counters": counts,
+        "active_user_ids": active_user_ids,
+        "active_seat_ids": active_seat_ids,
+    }
+
+
+def reset_billable_usage() -> None:
+    """Reset all in-memory billable counters (test-only utility)."""
+    with _BILLING_LOCK:
+        _ACTIVE_USERS.clear()
+        _ACTIVE_SEATS.clear()
+        for key in _BILLABLE_COUNTS:
+            _BILLABLE_COUNTS[key] = 0
 
 
 class _FileLock:

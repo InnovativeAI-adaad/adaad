@@ -209,6 +209,87 @@ _GATE_PROTECTED_PREFIXES: tuple[str, ...] = (
     "/api/nexus/mutate",
 )
 
+_PLAN_FEATURES: dict[str, frozenset[str]] = {
+    "free": frozenset({"governance_approvals"}),
+    "pro": frozenset({"governance_approvals", "replay_verifications", "mutation_epochs_executed"}),
+    "enterprise": frozenset({"governance_approvals", "replay_verifications", "mutation_epochs_executed"}),
+}
+
+_PLAN_LIMITS: dict[str, dict[str, int]] = {
+    "free": {
+        "active_users": 3,
+        "active_seats": 3,
+        "mutation_epochs_executed": 0,
+        "replay_verifications": 10,
+        "governance_approvals": 50,
+    },
+    "pro": {
+        "active_users": 25,
+        "active_seats": 25,
+        "mutation_epochs_executed": 200,
+        "replay_verifications": 250,
+        "governance_approvals": 1_000,
+    },
+    "enterprise": {
+        "active_users": 1_000_000,
+        "active_seats": 1_000_000,
+        "mutation_epochs_executed": 1_000_000,
+        "replay_verifications": 1_000_000,
+        "governance_approvals": 1_000_000,
+    },
+}
+
+
+def _resolve_plan(request: Request) -> str:
+    header_plan = (request.headers.get("x-adaad-plan") or "").strip().lower()
+    env_plan = (os.getenv("ADAAD_DEFAULT_PLAN", "enterprise") or "enterprise").strip().lower()
+    plan = header_plan or env_plan
+    if plan not in _PLAN_LIMITS:
+        return "free"
+    return plan
+
+
+def _resolve_enabled_features(plan: str, request: Request) -> set[str]:
+    features = set(_PLAN_FEATURES.get(plan, frozenset()))
+    header_override = (request.headers.get("x-adaad-features") or "").strip()
+    if header_override:
+        for item in header_override.split(","):
+            feature = item.strip()
+            if feature:
+                features.add(feature)
+    return features
+
+
+def _billable_event_for_request(request: Request) -> str:
+    path = request.url.path
+    if request.method == "POST" and path.startswith("/api/nexus/agents/") and path.endswith("/mutate"):
+        return "mutation_epochs_executed"
+    if request.method == "GET" and path.startswith("/api/audit/epochs/") and path.endswith("/replay-proof"):
+        return "replay_verifications"
+    if request.method == "POST" and path in {"/api/mutations/proposals", "/mutation/propose"}:
+        return "governance_approvals"
+    return ""
+
+
+def _entitlement_denied_response(
+    *,
+    reason: str,
+    plan: str,
+    event_name: str,
+    usage: dict[str, Any],
+    feature_required: str = "",
+) -> JSONResponse:
+    payload: dict[str, Any] = {
+        "detail": "entitlement_denied",
+        "reason": reason,
+        "plan": plan,
+        "event": event_name,
+        "usage": usage.get("counters", {}),
+    }
+    if feature_required:
+        payload["feature_required"] = feature_required
+    return JSONResponse(status_code=402, content=payload)
+
 
 @app.middleware("http")
 async def cryovant_gate_middleware(request: Request, call_next):
@@ -237,6 +318,82 @@ async def cryovant_gate_middleware(request: Request, call_next):
             )
 
     return await call_next(request)
+
+
+@app.middleware("http")
+async def metering_entitlements_middleware(request: Request, call_next):
+    path = request.url.path
+    if not path.startswith("/api/"):
+        return await call_next(request)
+    if path.startswith("/api/admin/usage"):
+        return await call_next(request)
+
+    user_id = (request.headers.get("x-adaad-user-id") or "").strip()
+    seat_id = (request.headers.get("x-adaad-seat-id") or "").strip()
+    plan = _resolve_plan(request)
+    features = _resolve_enabled_features(plan, request)
+    usage = metrics.billable_usage_snapshot()
+    limits = _PLAN_LIMITS[plan]
+    counters: dict[str, int] = dict(usage.get("counters", {}))
+    active_user_ids = set(usage.get("active_user_ids", []))
+    active_seat_ids = set(usage.get("active_seat_ids", []))
+
+    if user_id and counters.get("active_users", 0) >= limits["active_users"] and user_id not in active_user_ids:
+        metrics.log(event_type="entitlement_denied", payload={"reason": "active_users_limit", "plan": plan}, level="WARNING")
+        return _entitlement_denied_response(
+            reason="active_users_limit",
+            plan=plan,
+            event_name="active_users",
+            usage=usage,
+        )
+
+    if seat_id and counters.get("active_seats", 0) >= limits["active_seats"] and seat_id not in active_seat_ids:
+        metrics.log(event_type="entitlement_denied", payload={"reason": "active_seats_limit", "plan": plan}, level="WARNING")
+        return _entitlement_denied_response(
+            reason="active_seats_limit",
+            plan=plan,
+            event_name="active_seats",
+            usage=usage,
+        )
+
+    event_name = _billable_event_for_request(request)
+    if event_name:
+        if event_name not in features:
+            metrics.log(
+                event_type="entitlement_denied",
+                payload={"reason": "feature_disabled", "plan": plan, "event": event_name},
+                level="WARNING",
+            )
+            return _entitlement_denied_response(
+                reason="feature_disabled",
+                plan=plan,
+                event_name=event_name,
+                usage=usage,
+                feature_required=event_name,
+            )
+        if counters.get(event_name, 0) >= limits[event_name]:
+            metrics.log(
+                event_type="entitlement_denied",
+                payload={"reason": "plan_limit_reached", "plan": plan, "event": event_name},
+                level="WARNING",
+            )
+            return _entitlement_denied_response(
+                reason="plan_limit_reached",
+                plan=plan,
+                event_name=event_name,
+                usage=usage,
+            )
+
+    response = await call_next(request)
+    if response.status_code < 400:
+        metrics.register_billable_usage(event_name=event_name, user_id=user_id, seat_id=seat_id)
+        if event_name:
+            metrics.log(
+                event_type="billable_event_recorded",
+                payload={"event": event_name, "plan": plan},
+                level="INFO",
+            )
+    return response
 
 
 app.include_router(mutate_router)
@@ -2580,6 +2737,48 @@ class ProposalResponse(BaseModel):
     authority_level: str
     validation: dict
     queue_hash: str
+
+
+# ── GET /api/admin/usage* ───────────────────────────────────────────────────
+
+@app.get("/api/admin/usage")
+def admin_usage(auth_ctx: dict[str, Any] = Depends(require_audit_scope)) -> dict[str, Any]:
+    """Return billable meter counters and active entitlement plan defaults."""
+    usage = metrics.billable_usage_snapshot()
+    default_plan = (os.getenv("ADAAD_DEFAULT_PLAN", "enterprise") or "enterprise").strip().lower()
+    if default_plan not in _PLAN_LIMITS:
+        default_plan = "free"
+    return {
+        "schema_version": "1.0",
+        "authn": auth_ctx,
+        "data": {
+            "usage": usage,
+            "default_plan": default_plan,
+            "plan_limits": _PLAN_LIMITS,
+            "plan_features": {plan: sorted(features) for plan, features in _PLAN_FEATURES.items()},
+        },
+    }
+
+
+@app.get("/api/admin/usage/plan/{plan_id}")
+def admin_usage_plan(plan_id: str, auth_ctx: dict[str, Any] = Depends(require_audit_scope)) -> dict[str, Any]:
+    """Return plan-specific entitlement limits and current counters."""
+    normalized = plan_id.strip().lower()
+    if normalized not in _PLAN_LIMITS:
+        raise HTTPException(status_code=404, detail="plan_not_found")
+    usage = metrics.billable_usage_snapshot()
+    return {
+        "schema_version": "1.0",
+        "authn": auth_ctx,
+        "data": {
+            "plan": normalized,
+            "limits": _PLAN_LIMITS[normalized],
+            "features": sorted(_PLAN_FEATURES.get(normalized, frozenset())),
+            "usage_counters": usage.get("counters", {}),
+            "active_users": usage.get("active_user_ids", []),
+            "active_seats": usage.get("active_seat_ids", []),
+        },
+    }
 
 
 # ── GET /api/mutations ────────────────────────────────────────────────────────
