@@ -24,6 +24,28 @@ class _LawDecisionStub:
     failed_rules: list[dict[str, str]]
 
 
+def _checks_backed_law(ctx: dict[str, object]) -> _LawDecisionStub:
+    checks = list(ctx.get("checks") or [])
+    failed = [
+        {"rule_id": str(row.get("rule_id") or ""), "reason": str(row.get("reason") or "failed")}
+        for row in checks
+        if not bool(row.get("ok", False)) and str(row.get("rule_id") or "")
+    ]
+    if failed:
+        return _LawDecisionStub(
+            passed=False,
+            decision="fail",
+            reason_codes=["LAW_RULE_FAILED"] + [row["rule_id"] for row in failed],
+            failed_rules=failed,
+        )
+    return _LawDecisionStub(
+        passed=True,
+        decision="pass",
+        reason_codes=["LAW_PASS"],
+        failed_rules=[],
+    )
+
+
 def test_governance_gate_decision_schema_and_ledger_event() -> None:
     writes: list[tuple[str, dict[str, object]]] = []
 
