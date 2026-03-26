@@ -17,6 +17,13 @@ def _reg(dau=0.7, vol=0.2):
 
 
 class TestMarketFitnessIntegrator:
+    def test_enrich_uses_injected_now_fn_for_deterministic_timestamp(self):
+        integrator = MarketFitnessIntegrator(registry=_reg(), now_fn=lambda: 1234.5)
+        enriched = integrator.enrich({"epoch_id": "epoch-clock"})
+        assert enriched["market_signal_enriched_at"] == 1234.5
+        assert integrator.last_enrichment is not None
+        assert integrator.last_enrichment.enriched_at == 1234.5
+
     def test_enrich_injects_market_score(self):
         integrator = MarketFitnessIntegrator(registry=_reg())
         ctx = {"epoch_id": "epoch-1", "correctness_score": 0.8}
@@ -52,6 +59,11 @@ class TestMarketFitnessIntegrator:
         integrator.enrich({"epoch_id": "epoch-5"})
         assert integrator.last_enrichment is not None
         assert integrator.last_enrichment.adapter_count == 2
+
+    def test_enrich_default_api_behavior_without_now_fn(self):
+        integrator = MarketFitnessIntegrator(registry=_reg())
+        enriched = integrator.enrich({"epoch_id": "epoch-default-clock"})
+        assert isinstance(enriched["market_signal_enriched_at"], float)
 
     def test_enrichment_never_raises_on_broken_registry(self):
         class _BrokenRegistry:
