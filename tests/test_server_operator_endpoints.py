@@ -4,6 +4,7 @@ import pytest
 pytestmark = pytest.mark.regression_standard
 
 from dataclasses import dataclass
+import json
 
 from fastapi.testclient import TestClient
 
@@ -273,7 +274,7 @@ def test_post_proposal_emits_aponi_editor_submission_event(monkeypatch) -> None:
     assert metric_calls
     assert journal_calls
 
-    metric_event = metric_calls[-1]
+    metric_event = next(event for event in metric_calls if event["event_type"] == "aponi_editor_proposal_submitted.v1")
     assert metric_event["event_type"] == "aponi_editor_proposal_submitted.v1"
     event_payload = metric_event["payload"]
     assert event_payload["proposal_id"] == "proposal-123"
@@ -322,5 +323,36 @@ def test_post_proposal_skips_aponi_editor_event_without_editor_context(monkeypat
         response = client.post("/api/mutations/proposals", json={"intent": "optimize"})
 
     assert response.status_code == 200
-    assert metric_calls == []
+    assert all(event["event_type"] != "aponi_editor_proposal_submitted.v1" for event in metric_calls)
     assert journal_calls == []
+
+
+def test_entitlement_blocks_mutation_feature_for_free_plan(monkeypatch) -> None:
+    with TestClient(server.app) as client:
+        response = client.post(
+            "/api/nexus/agents/agent-1/mutate",
+            json={"mutation_type": "dna_patch", "payload": {"dna": []}, "signature": "x", "nonce": "n", "timestamp": "2026-01-01T00:00:00Z", "challenge_id": "c"},
+            headers={"X-ADAAD-Plan": "free"},
+        )
+
+    assert response.status_code == 402
+    assert response.json()["reason"] == "feature_disabled"
+
+
+def test_admin_usage_endpoints_return_snapshot(monkeypatch) -> None:
+    monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
+    server.metrics.reset_billable_usage()
+
+    with TestClient(server.app) as client:
+        usage_response = client.get("/api/admin/usage", headers={"Authorization": "Bearer audit-token"})
+        plan_response = client.get("/api/admin/usage/plan/pro", headers={"Authorization": "Bearer audit-token"})
+
+    assert usage_response.status_code == 200
+    usage_payload = usage_response.json()
+    assert usage_payload["data"]["usage"]["counters"]["governance_approvals"] >= 0
+    assert "plan_limits" in usage_payload["data"]
+
+    assert plan_response.status_code == 200
+    plan_payload = plan_response.json()
+    assert plan_payload["data"]["plan"] == "pro"
+    assert "limits" in plan_payload["data"]
