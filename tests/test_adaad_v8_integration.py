@@ -535,11 +535,30 @@ class TestRepoLedgerSync:
                 if line.strip()
             ]
             assert events[-1]["event_type"] == "WATCHDOG_POLL_FAILURE"
+            assert events[-1]["component"] == "RepoLedgerSyncWatchdog"
+            assert events[-1]["operation"] == "poll_loop_check_once"
             assert events[-1]["exception_type"] == "RuntimeError"
             assert events[-1]["exception_message"] == "boom"
+            assert events[-1]["exception_classification"] == "invariant_violation_exception"
             assert events[-1]["poll_interval_s"] == 1
             assert events[-1]["thread_name"]
             assert events[-1]["timestamp"]
+
+    def test_T_SYNC_06_poll_failure_environmental_classification(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            watchdog = RepoLedgerSyncWatchdog(
+                repo_root=tmp,
+                sync_events_path=str(Path(tmp, "sync_events.jsonl")),
+                state_path=str(Path(tmp, "sync_state.json")),
+            )
+            watchdog._handle_poll_failure(FileNotFoundError("missing ledger file"))
+            events = [
+                json.loads(line)
+                for line in Path(tmp, "sync_events.jsonl").read_text().splitlines()
+                if line.strip()
+            ]
+            assert events[-1]["exception_type"] == "FileNotFoundError"
+            assert events[-1]["exception_classification"] == "environmental_exception"
 
     def test_T_SYNC_05_repeated_poll_failures_set_monitoring_impaired_state(self):
         with tempfile.TemporaryDirectory() as tmp:

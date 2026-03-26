@@ -300,6 +300,20 @@ class TestEvaluateInbound:
         assert len(accepted) == 0
         assert len(broker.quarantined_proposals()) == 1
 
+    def test_raising_gate_emits_diagnostic_warning_audit(self) -> None:
+        events: List[tuple[str, dict[str, Any]]] = []
+        broker = _make_broker(
+            gate=_RaisingGate(),
+            audit=lambda et, payload: events.append((et, payload)),
+        )
+        broker.receive_proposal(_make_valid_envelope())
+        broker.evaluate_inbound_proposals()
+        warning_events = [payload for event_type, payload in events if event_type == "federation_mutation_diagnostic_warning.v1"]
+        assert warning_events
+        assert warning_events[0]["component"] == "FederationMutationBroker"
+        assert warning_events[0]["operation"] == "evaluate_inbound_proposals.destination_gate"
+        assert warning_events[0]["exception_type"] == "RuntimeError"
+
     def test_acceptance_digest_is_present(self) -> None:
         broker = _make_broker(gate=_ApproveGate())
         broker.receive_proposal(_make_valid_envelope())
@@ -479,6 +493,8 @@ def test_propagate_amendment_rolls_back_previously_applied_destinations() -> Non
     assert "applied_mutations" not in destinations[1]
     rollback_event = [entry for entry in events if entry[0] == "federated_amendment_rollback"]
     assert rollback_event
+    warning_events = [entry for entry in events if entry[0] == "federation_mutation_diagnostic_warning.v1"]
+    assert warning_events
 
 
 def test_propagate_amendment_destination_gate_remains_independent() -> None:

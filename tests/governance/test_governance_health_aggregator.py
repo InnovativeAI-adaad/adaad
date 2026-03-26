@@ -20,6 +20,7 @@ from runtime.governance.health_aggregator import (
     HEALTH_DEGRADED_THRESHOLD,
     JOURNAL_EVENT_DEGRADED,
     JOURNAL_EVENT_SNAPSHOT,
+    JOURNAL_EVENT_WARNING,
     SIGNAL_WEIGHTS,
     GovernanceHealthAggregator,
     HealthSnapshot,
@@ -305,3 +306,22 @@ def test_T8_01_25_snapshot_dataclass_serialises_to_dict():
     assert "health_score" in d
     assert "signal_breakdown" in d
     assert json.dumps(d)  # must be JSON-serialisable
+
+
+def test_T8_01_26_signal_collection_exception_emits_diagnostic_warning() -> None:
+    emitted = []
+    amendment_engine = MagicMock()
+    amendment_engine.list_pending.side_effect = RuntimeError("simulated collector failure")
+    agg = GovernanceHealthAggregator(
+        roadmap_amendment_engine=amendment_engine,
+        journal_emit=lambda t, p: emitted.append((t, p)),
+    )
+
+    snap = agg.compute("epoch-warning-01")
+    assert snap.signal_breakdown["amendment_gate_pass_rate"] == pytest.approx(0.0)
+    warning_payloads = [payload for event_type, payload in emitted if event_type == JOURNAL_EVENT_WARNING]
+    assert warning_payloads
+    assert warning_payloads[0]["component"] == "GovernanceHealthAggregator"
+    assert warning_payloads[0]["operation"] == "collect_amendment_rate"
+    assert warning_payloads[0]["epoch_id"] == "epoch-warning-01"
+    assert warning_payloads[0]["exception_type"] == "RuntimeError"

@@ -222,12 +222,18 @@ class RepoLedgerSyncWatchdog:
         timestamp = datetime.now(timezone.utc).isoformat()
         thread_name = threading.current_thread().name
         degraded = self._consecutive_poll_failures >= self.poll_failure_threshold
+        classification = self._classify_poll_exception(exc)
 
         event_payload = {
             "event_type": "WATCHDOG_POLL_FAILURE",
+            "component": "RepoLedgerSyncWatchdog",
+            "operation": "poll_loop_check_once",
+            "epoch_id": None,
+            "mutation_id": None,
             "consecutive_failures": self._consecutive_poll_failures,
             "exception_message": str(exc),
             "exception_type": type(exc).__name__,
+            "exception_classification": classification,
             "poll_interval_s": self.poll_interval_s,
             "thread_name": thread_name,
             "timestamp": timestamp,
@@ -253,11 +259,18 @@ class RepoLedgerSyncWatchdog:
                 "thread_name": thread_name,
                 "consecutive_failures": self._consecutive_poll_failures,
                 "watchdog_degraded": degraded,
+                "exception_classification": classification,
             },
         )
 
         with open(self.sync_events_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(event_payload, sort_keys=True) + "\n")
+
+    @staticmethod
+    def _classify_poll_exception(exc: Exception) -> str:
+        if isinstance(exc, (FileNotFoundError, PermissionError, TimeoutError, OSError)):
+            return "environmental_exception"
+        return "invariant_violation_exception"
 
     def _check_once(self) -> None:
         """One poll cycle: compare current disk state to baseline."""

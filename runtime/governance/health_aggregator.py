@@ -59,6 +59,7 @@ _WEIGHT_SUM_TOLERANCE: float = 1e-9
 
 JOURNAL_EVENT_SNAPSHOT  = "governance_health_snapshot.v1"
 JOURNAL_EVENT_DEGRADED  = "governance_health_degraded.v1"
+JOURNAL_EVENT_WARNING   = "governance_health_signal_warning.v1"
 
 # ---------------------------------------------------------------------------
 # Result types
@@ -273,14 +274,14 @@ class GovernanceHealthAggregator:
     def _collect_signals(self, epoch_id: str) -> Dict[str, float]:
         return {
             "avg_reviewer_reputation":          self._collect_reputation(epoch_id),
-            "amendment_gate_pass_rate":         self._collect_amendment_rate(),
-            "federation_divergence_clean":      self._collect_federation_clean(),
-            "epoch_health_score":               self._collect_epoch_health(),
-            "routing_health_score":             self._collect_routing_health(),           # Phase 23
-            "admission_rate_score":             self._collect_admission_rate(),           # Phase 26
-            "governance_debt_health_score":     self._collect_debt_health(),             # Phase 32
-            "certifier_rejection_rate_score":   self._collect_certifier_health(),        # Phase 33
-            "gate_approval_rate_score":         self._collect_gate_approval_health(),    # Phase 35
+            "amendment_gate_pass_rate":         self._collect_amendment_rate(epoch_id),
+            "federation_divergence_clean":      self._collect_federation_clean(epoch_id),
+            "epoch_health_score":               self._collect_epoch_health(epoch_id),
+            "routing_health_score":             self._collect_routing_health(epoch_id),           # Phase 23
+            "admission_rate_score":             self._collect_admission_rate(epoch_id),           # Phase 26
+            "governance_debt_health_score":     self._collect_debt_health(epoch_id),             # Phase 32
+            "certifier_rejection_rate_score":   self._collect_certifier_health(epoch_id),        # Phase 33
+            "gate_approval_rate_score":         self._collect_gate_approval_health(epoch_id),    # Phase 35
         }
 
     def _collect_reputation(self, epoch_id: str) -> float:
@@ -299,10 +300,16 @@ class GovernanceHealthAggregator:
                 return 0.0
             return min(1.0, max(0.0, sum(scores) / len(scores)))
         except Exception as exc:  # pragma: no cover
+            self._emit_signal_warning(
+                signal_id="avg_reviewer_reputation",
+                operation="collect_reputation",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning("GovernanceHealthAggregator: reputation collection error: %s", exc)
             return 0.0
 
-    def _collect_amendment_rate(self) -> float:
+    def _collect_amendment_rate(self, epoch_id: str) -> float:
         if self._amendment_engine is None:
             log.warning("GovernanceHealthAggregator: no amendment engine; amendment_gate_pass_rate=0.0")
             return 0.0
@@ -315,20 +322,32 @@ class GovernanceHealthAggregator:
                 return 1.0
             return min(1.0, max(0.0, 1.0 - (pending_count * 0.20)))
         except Exception as exc:  # pragma: no cover
+            self._emit_signal_warning(
+                signal_id="amendment_gate_pass_rate",
+                operation="collect_amendment_rate",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning("GovernanceHealthAggregator: amendment rate error: %s", exc)
             return 0.0
 
-    def _collect_federation_clean(self) -> float:
+    def _collect_federation_clean(self, epoch_id: str) -> float:
         if self._evidence_matrix is None:
             # Single-node: no federation configured — treat as clean (1.0)
             return 1.0
         try:
             return 1.0 if self._evidence_matrix.divergence_count == 0 else 0.0
         except Exception as exc:  # pragma: no cover
+            self._emit_signal_warning(
+                signal_id="federation_divergence_clean",
+                operation="collect_federation_clean",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning("GovernanceHealthAggregator: federation clean error: %s", exc)
             return 0.0
 
-    def _collect_epoch_health(self) -> float:
+    def _collect_epoch_health(self, epoch_id: str) -> float:
         if self._epoch_telemetry is None:
             log.warning("GovernanceHealthAggregator: no epoch telemetry; epoch_health_score=0.0")
             return 0.0
@@ -346,10 +365,16 @@ class GovernanceHealthAggregator:
                 return 0.0
             return min(1.0, max(0.0, healthy / total))
         except Exception as exc:  # pragma: no cover
+            self._emit_signal_warning(
+                signal_id="epoch_health_score",
+                operation="collect_epoch_health",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning("GovernanceHealthAggregator: epoch health error: %s", exc)
             return 0.0
 
-    def _collect_routing_health(self) -> float:
+    def _collect_routing_health(self, epoch_id: str) -> float:
         """Phase 23: Collect routing health signal from StrategyAnalyticsEngine.
 
         Default is 1.0 (full contribution) when no engine is wired — same
@@ -361,13 +386,19 @@ class GovernanceHealthAggregator:
             report = self._routing_engine.generate_report()
             return float(max(0.0, min(1.0, report.health_score)))
         except Exception as exc:
+            self._emit_signal_warning(
+                signal_id="routing_health_score",
+                operation="collect_routing_health",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning(
                 "GovernanceHealthAggregator: routing health collection failed: %s; defaulting to 1.0",
                 exc,
             )
             return 1.0
 
-    def _collect_admission_rate(self) -> float:
+    def _collect_admission_rate(self, epoch_id: str) -> float:
         """Phase 26: Collect admission rate signal from AdmissionRateTracker.
 
         Default is 1.0 (full contribution) when no tracker is wired — no
@@ -378,13 +409,19 @@ class GovernanceHealthAggregator:
         try:
             return float(max(0.0, min(1.0, self._admission_tracker.admission_rate_score())))
         except Exception as exc:
+            self._emit_signal_warning(
+                signal_id="admission_rate_score",
+                operation="collect_admission_rate",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning(
                 "GovernanceHealthAggregator: admission rate collection failed: %s; defaulting to 1.0",
                 exc,
             )
             return 1.0
 
-    def _collect_debt_health(self) -> float:
+    def _collect_debt_health(self, epoch_id: str) -> float:
         """Phase 32: Collect governance debt health signal from GovernanceDebtLedger.
 
         Normalises ``compound_debt_score`` into a ``[0.0, 1.0]`` health value:
@@ -412,13 +449,19 @@ class GovernanceHealthAggregator:
             score = max(0.0, 1.0 - compound / breach_threshold)
             return round(min(1.0, max(0.0, score)), 6)
         except Exception as exc:
+            self._emit_signal_warning(
+                signal_id="governance_debt_health_score",
+                operation="collect_debt_health",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning(
                 "GovernanceHealthAggregator: debt health collection failed: %s; defaulting to 1.0",
                 exc,
             )
             return 1.0
 
-    def _collect_certifier_health(self) -> float:
+    def _collect_certifier_health(self, epoch_id: str) -> float:
         """Phase 33: Collect certifier rejection rate from CertifierScanReader.
 
         Normalises the rejection rate into a ``[0.0, 1.0]`` health value:
@@ -439,13 +482,19 @@ class GovernanceHealthAggregator:
             rejection_rate = self._certifier_reader.rejection_rate()
             return round(min(1.0, max(0.0, 1.0 - float(rejection_rate))), 6)
         except Exception as exc:
+            self._emit_signal_warning(
+                signal_id="certifier_rejection_rate_score",
+                operation="collect_certifier_health",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning(
                 "GovernanceHealthAggregator: certifier health collection failed: %s; defaulting to 1.0",
                 exc,
             )
             return 1.0
 
-    def _collect_gate_approval_health(self) -> float:
+    def _collect_gate_approval_health(self, epoch_id: str) -> float:
         """Phase 35: Collect gate decision approval rate from GateDecisionReader.
 
         Score = ``approval_rate`` (fraction of GateDecision outcomes approved):
@@ -466,6 +515,12 @@ class GovernanceHealthAggregator:
             approval_rate = self._gate_decision_reader.approval_rate()
             return round(min(1.0, max(0.0, float(approval_rate))), 6)
         except Exception as exc:
+            self._emit_signal_warning(
+                signal_id="gate_approval_rate_score",
+                operation="collect_gate_approval_health",
+                epoch_id=epoch_id,
+                exc=exc,
+            )
             log.warning(
                 "GovernanceHealthAggregator: gate approval health collection failed: %s; defaulting to 1.0",
                 exc,
@@ -543,6 +598,33 @@ class GovernanceHealthAggregator:
             )
         except Exception as exc:  # pragma: no cover
             log.warning("GovernanceHealthAggregator: degraded journal emit failed: %s", exc)
+
+    def _emit_signal_warning(
+        self,
+        *,
+        signal_id: str,
+        operation: str,
+        epoch_id: str,
+        exc: Exception,
+    ) -> None:
+        classification = "environmental_exception"
+        if not isinstance(exc, (AttributeError, KeyError, TypeError, ValueError, OSError)):
+            classification = "invariant_violation_exception"
+        try:
+            self._journal_emit(
+                JOURNAL_EVENT_WARNING,
+                {
+                    "component": "GovernanceHealthAggregator",
+                    "operation": operation,
+                    "signal_id": signal_id,
+                    "epoch_id": epoch_id,
+                    "mutation_id": None,
+                    "exception_type": exc.__class__.__name__,
+                    "exception_classification": classification,
+                },
+            )
+        except Exception as warning_exc:  # pragma: no cover
+            log.warning("GovernanceHealthAggregator: warning journal emit failed: %s", warning_exc)
 
     # ------------------------------------------------------------------
     # Default journal emit
