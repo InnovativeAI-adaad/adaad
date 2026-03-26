@@ -502,7 +502,8 @@ adaad_pr_procession_contract:
       - founder_gpg_signoff_confirmed
       - ga_versioning_decision_documented
   missing_tags:
-    note: "v9.7.0–v9.10.0 and v9.14.0–v9.17.0 GPG-signed tag ceremonies required — Dustin local action C-02"
+    note: "v9.7.0–v9.10.0 and v9.14.0–v9.17.0 GPG-signed tag ceremonies required — Dustin local action C-02. 2026-03-26 sandbox evidence confirms no founder key present."
+    last_attempt_evidence: "artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md"
     ceremony_targets:
       - tag: v9.14.0
         sha: 5c32cf3

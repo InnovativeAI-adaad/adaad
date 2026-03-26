@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.24.0-phase91-audit-hardening",
+  "active_phase": "v9.24.1-phase91-post-ga-governance-hardening-sprint",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 90 INNOV-06 \u2014 Cryptographic Evolution Proof DAG (CEPD)",
+  "last_completed_phase": "Phase 90 INNOV-06 CEPD",
   "last_completed_pr": "feat/phase90-innov06-cepd",
   "last_gate_results": {
     "tier_0": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-24",
-  "last_sync_sha": "phase90-v9.24.0",
-  "next_pr": "Phase 91 \u2014 Post-GA Governance Hardening Sprint (v9.25.0)",
+  "last_sync_sha": "phase91-v9.24.1",
+  "next_pr": "Phase 91 \u2014 Post-GA Governance Hardening Sprint",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -381,7 +381,7 @@
     "v9.23.0-released",
     "v9.24.0-released"
   ],
-  "current_version": "9.24.0",
+  "current_version": "9.24.1",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -431,11 +431,11 @@
     "v9.23.0-released",
     "v9.24.0-released"
   ],
-  "software_version": "9.24.0",
-  "last_agent_state_sync_digest": "gsync-phase90-v9.24.0-sweep",
-  "version": "9.24.0",
-  "phase": 90,
-  "phase_label": "INNOV-06 CEPD",
+  "software_version": "9.24.1",
+  "last_agent_state_sync_digest": "gsync-phase91-v9.24.1-sweep",
+  "version": "9.24.1",
+  "phase": 91,
+  "phase_label": "Phase 91 \u2014 Post-GA Governance Hardening Sprint",
   "last_innovation": "INNOV-03",
   "acse_active": true,
   "tife_active": true
