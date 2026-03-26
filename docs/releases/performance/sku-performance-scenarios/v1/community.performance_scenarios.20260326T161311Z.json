@@ -1,0 +1,77 @@
+{
+  "baseline_version": "v1",
+  "concurrency": 8,
+  "evaluation": {
+    "checks": {
+      "api_p95_latency": true,
+      "governance_gate_throughput": true,
+      "ledger_retrieval": true,
+      "replay_verification_latency": true
+    },
+    "pass": true,
+    "sku": "community",
+    "targets": {
+      "api_p95_latency_max_ms": 40.0,
+      "governance_gate_throughput_min_eps": 180000.0,
+      "ledger_retrieval_p95_ms": 3.0,
+      "replay_verification_latency_p95_ms": 2.5
+    }
+  },
+  "generated_at_utc": "2026-03-26T16:13:11.917653+00:00",
+  "requests": 60,
+  "scenarios": {
+    "api_p95_latency_under_concurrent_load": {
+      "concurrency": 8,
+      "error_rate": 0.0,
+      "latency_p50_ms": 0.003,
+      "latency_p95_ms": 0.038,
+      "latency_p99_ms": 0.056,
+      "requests": 60,
+      "scenario": "api_p95_latency_under_concurrent_load",
+      "unit": "ms"
+    },
+    "governance_gate_throughput": {
+      "approved": 120000,
+      "samples": 150000,
+      "scenario": "governance_gate_throughput",
+      "throughput_eps": 2653988.01,
+      "unit": "evaluations_per_second"
+    },
+    "ledger_growth_and_retrieval_performance": {
+      "retrieval_p95_ms": 1.763,
+      "samples": [
+        {
+          "entries": 250,
+          "retrieval_last_100_ms": 0.411,
+          "retrieval_rows": 100,
+          "write_ms": 2.088
+        },
+        {
+          "entries": 1000,
+          "retrieval_last_100_ms": 1.763,
+          "retrieval_rows": 100,
+          "write_ms": 7.094
+        },
+        {
+          "entries": 2500,
+          "retrieval_last_100_ms": 4.462,
+          "retrieval_rows": 100,
+          "write_ms": 16.423
+        }
+      ],
+      "scenario": "ledger_growth_and_retrieval_performance",
+      "unit": "ms",
+      "write_p95_ms": 7.094
+    },
+    "replay_verification_latency": {
+      "latency_p50_ms": 0.006,
+      "latency_p95_ms": 0.009,
+      "latency_p99_ms": 0.024,
+      "samples": 600,
+      "scenario": "replay_verification_latency",
+      "unit": "ms"
+    }
+  },
+  "schema_version": "1.0.0",
+  "sku": "community"
+}
