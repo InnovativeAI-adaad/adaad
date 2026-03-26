@@ -40,6 +40,7 @@ from app.api.simulation import router as simulation_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
 from app.api.dependencies import require_audit_scope, require_gate_open
 from app.api.versioning import register_v1_aliases
+from runtime.api.extensions import extension_sdk_descriptor
 from runtime.innovations_router import router as innovations_router
 
 # ── Module-level runtime imports ─────────────────────────────────────────────
@@ -505,6 +506,13 @@ def api_version() -> Dict[str, Any]:
     banner accurately rather than relying on static protocol strings.
     """
     return _load_live_version()
+
+
+@app.get("/api/extensions/spec")
+def api_extension_spec() -> dict[str, Any]:
+    """Return the extension SDK descriptor for plugin integrators."""
+
+    return extension_sdk_descriptor()
 
 
 @app.get("/api/health")
