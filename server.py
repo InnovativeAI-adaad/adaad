@@ -39,6 +39,7 @@ from app.api.ui import router as ui_router
 from app.api.simulation import router as simulation_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
 from app.api.dependencies import require_audit_scope, require_gate_open
+from app.api.versioning import register_v1_aliases
 from runtime.innovations_router import router as innovations_router
 
 # ── Module-level runtime imports ─────────────────────────────────────────────
@@ -3284,6 +3285,10 @@ async def github_webhook(request: Request) -> dict[str, Any]:
 
     result = dispatch_event(event_type, payload)
     return result
+
+
+# Register API version aliases after all routes are wired.
+register_v1_aliases(app)
 
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
 
