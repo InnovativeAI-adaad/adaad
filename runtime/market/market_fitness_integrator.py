@@ -15,7 +15,9 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
+
+from runtime.governance.foundation import default_provider
 
 log = logging.getLogger(__name__)
 
@@ -54,11 +56,13 @@ class MarketFitnessIntegrator:
 
     def __init__(self, *, registry: Any = None, feed_registry: Any = None,
                  fitness_orchestrator: Any = None, journal_fn: Any = None,
-                 fallback_score: float = _FALLBACK_SCORE) -> None:
+                 fallback_score: float = _FALLBACK_SCORE,
+                 now_fn: Callable[[], float] | None = None) -> None:
         self._feed_registry        = feed_registry or registry
         self._fitness_orchestrator = fitness_orchestrator
         self._journal_fn           = journal_fn
         self._fallback             = fallback_score
+        self._now_fn               = now_fn or _default_now_fn
         self._last_record: Optional[MarketEnrichmentRecord] = None
         # Phase 13 / Track 11-B: running synthetic epoch counter (PR-13-B-01)
         self._consecutive_synthetic: int = 0
@@ -164,12 +168,13 @@ class MarketFitnessIntegrator:
 
     def enrich(self, context: Dict[str, Any]) -> Dict[str, Any]:
         score, digest, source, n = self._fetch_signal()
+        now = self._now_fn()
         enriched = dict(context)
         enriched["simulated_market_score"]       = score
         enriched["market_signal_lineage_digest"] = digest
         enriched["market_signal_source"]         = source
-        enriched["market_signal_enriched_at"]    = time.time()
-        record = MarketEnrichmentRecord(score, source, digest, time.time(), n)
+        enriched["market_signal_enriched_at"]    = now
+        record = MarketEnrichmentRecord(score, source, digest, now, n)
         self._last_record = record
         self._emit_journal(record, str(context.get("epoch_id", "unknown")))
         return enriched
@@ -234,6 +239,14 @@ class MarketFitnessIntegrator:
             })
         except Exception as exc:  # noqa: BLE001
             log.warning("MarketFitnessIntegrator: integrate journal -- %s", exc)
+
+
+def _default_now_fn() -> float:
+    """Resolve epoch timestamp from runtime provider when available."""
+    try:
+        return default_provider().now_utc().timestamp()
+    except Exception:  # noqa: BLE001
+        return time.time()
 
 
 __all__ = ["MarketFitnessIntegrator", "MarketEnrichmentRecord", "IntegrationResult"]
