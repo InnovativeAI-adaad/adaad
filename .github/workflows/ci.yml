@@ -246,6 +246,8 @@ jobs:
           requirements-file: requirements.dev.txt
       - name: Validate strict documentation snippets
         run: python scripts/validate_readme_alignment.py --format json
+      - name: Enforce VERSION/pyproject/docs version sync
+        run: python scripts/sync_versions.py --check
       - name: Validate manifest inventory alignment
         run: python scripts/validate_manifest_inventory.py --format json
       - name: Validate deterministic QR assets

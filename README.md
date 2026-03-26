@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.24.0 — 90 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.24.1 — 90 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 <img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
