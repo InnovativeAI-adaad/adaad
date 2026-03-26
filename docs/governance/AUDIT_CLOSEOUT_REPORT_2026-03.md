@@ -71,12 +71,12 @@ git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0
 ---
 
 ### H-03 — Patent Counsel Not Engaged (FINDING-66-003)
-**Status:** ⏳ HUMAN-0 GATE — In progress
+**Status:** ✅ CLOSED
 **Assigned to:** Dustin L. Reid
-**Action:** Engage patent counsel with `PATENT_COUNSEL_BRIEF.md` (authored this session). File provisional application within 30 days.
+**Closure action:** Counsel transmittal package sent with `docs/IP_PATENT_COUNSEL_BRIEF.md` and `docs/IP_PATENT_FILING_ARTIFACT.md`; returned filing receipt recorded.
 **IP at risk:** 5 core patent claims covering CEL, Fail-Closed Gate, Fitness Scoring, Ledger, Tiered Authority
 **Urgency:** Statutory bar risk — repo has been public since early 2026
-**Agent deliverable:** `PATENT_COUNSEL_BRIEF.md` — ready for transmission to counsel
+**Evidence:** `artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json` (doc hashes + filing receipt `RECEIPT-2026-03-26-CMGM-001`)
 
 ---
 
@@ -130,7 +130,7 @@ git push origin free-v9.10.0
 | Finding | Action | Severity | Urgency |
 |---|---|---|---|
 | **C-02** | GPG tag ceremony v9.7.0–v9.10.0 | CRITICAL | Before GA |
-| **H-03** | Engage patent counsel — transmit `PATENT_COUNSEL_BRIEF.md` | HIGH | **< 30 days** |
+| **H-03** | ✅ CLOSED 2026-03-26 — counsel transmittal + receipt `RECEIPT-2026-03-26-CMGM-001` recorded | HIGH | Closed |
 | **H-04** | Declare v1.1-GA canonical in procession doc § 2.3 | HIGH | Before GA |
 | **M-02** | `git tag free-v9.10.0 && git push origin free-v9.10.0` | MEDIUM | Before GA |
 | **Gate 3** | F-Droid MR at `gitlab.com/fdroid/fdroid-data/-/merge_requests` | HIGH | Before GA |
@@ -140,6 +140,6 @@ git push origin free-v9.10.0
 
 ## Closeout Certification (For Governor Use)
 
-> I DUSTIN L. REID certify that the agent-executable audit findings C-01, C-03, H-01, H-02, M-01, L-01, and L-02 are closed as documented above, and acknowledge the four HUMAN-0 gate actions (C-02, H-03, H-04, M-02) as my personal responsibility.
+> I DUSTIN L. REID certify that the agent-executable audit findings C-01, C-03, H-01, H-02, M-01, L-01, and L-02 are closed as documented above, and acknowledge the remaining three HUMAN-0 gate actions (C-02, H-04, M-02) as my personal responsibility.
 >
 > Signed: ___________________________ Date: _______________

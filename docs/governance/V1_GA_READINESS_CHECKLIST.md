@@ -139,7 +139,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | **C-02** | `git tag -s v9.7.0 v9.8.0 v9.9.0 v9.10.0 && git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0` | CRITICAL |
 | **H-04** | Declare v1.1-GA canonical in procession doc § 2.3; confirm Gate 4 GPG sign-off executed | HIGH |
 | **M-02** | `git tag free-v9.10.0 && git push origin free-v9.10.0` | MEDIUM |
-| **H-03** | Patent counsel — provisional application for constitutional mutation governance method | HIGH — time-sensitive |
+| **H-03** | ✅ CLOSED 2026-03-26 — counsel transmittal + filing receipt `RECEIPT-2026-03-26-CMGM-001` in governed artifact | HIGH — closed |
 | **Gate 3** | F-Droid MR at `gitlab.com/fdroid/fdroid-data/-/merge_requests` | HIGH |
 | **Gate 4** | Founder GPG-signed commit: `governance: v1.1-GA human sign-off — $(date)` | HARD BLOCK |
 

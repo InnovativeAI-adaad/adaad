@@ -40,8 +40,14 @@
       "title": "Patent filing: constitutional mutation governance method \u2014 pre-v1.1-GA deadline",
       "severity": "P1",
       "source": "Deep Dive \u00a72.2.3",
-      "status": "open",
-      "phase_target": "66"
+      "status": "resolved",
+      "phase_target": "66",
+      "resolved_phase": "66",
+      "resolved_date": "2026-03-26",
+      "closure_timestamp_utc": "2026-03-26T00:00:00Z",
+      "evidence_reference": "artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json",
+      "patent_filing_reference": "RECEIPT-2026-03-26-CMGM-001",
+      "patent_filing_date": "2026-03-26"
     },
     {
       "id": "FINDING-66-004",

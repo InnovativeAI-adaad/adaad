@@ -8,7 +8,7 @@
 **Status:** DRAFT — AWAITING HUMAN-0 RATIFICATION  
 **Date:** 2026-03-23  
 **Author:** ArchitectAgent  
-**Open Blocking Finding:** FINDING-66-003 (patent filing) — MUST close before any feature herein is published externally
+**Blocking Finding Status:** FINDING-66-003 (patent filing) — ✅ CLOSED 2026-03-26 (receipt `RECEIPT-2026-03-26-CMGM-001`)
 
 > **HUMAN-0 applies at every constitutional gate. No implementation PR opens without prior written sign-off from Dustin L. Reid.**
 > **No code generation. No artifact promotion. This document defines governance, architecture, and invariants only.**
@@ -563,15 +563,15 @@ The following new Hard-class invariants MUST be registered in the `InvariantsMat
 
 ---
 
-## Open Blocking Finding — FINDING-66-003
+## Resolved Blocking Finding — FINDING-66-003 (Closed 2026-03-26)
 
-**CEPD (INNOV-06) directly addresses FINDING-66-003 by producing the `CryptographicProofBundle` artifact required for patent prosecution of the constitutional mutation governance method.**
+**CEPD (INNOV-06) produced the `CryptographicProofBundle` artifact used in counsel transmittal, and FINDING-66-003 is now closed with recorded filing receipt evidence.**
 
-Sequencing requirement:
-1. CEPD MUST be implemented (v9.23.0)
-2. `CryptographicProofBundle` genesis export MUST be generated covering all mutations from epoch 0 to current
-3. `docs/IP_PATENT_FILING_ARTIFACT.md` MUST be updated with CEPD proof bundle hash before transmission to IP counsel
-4. Provisional application number MUST be returned and recorded in `governance_events.jsonl` as `FINDING-66-003 CLOSED`
+Closure record:
+1. CEPD implemented (v9.23.0) and proof bundle produced.
+2. Counsel package transmitted with `docs/IP_PATENT_COUNSEL_BRIEF.md` + `docs/IP_PATENT_FILING_ARTIFACT.md`.
+3. Filing receipt returned: `RECEIPT-2026-03-26-CMGM-001`.
+4. Governed evidence artifact committed: `artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json`.
 
 ---
 
