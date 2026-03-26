@@ -96,3 +96,12 @@ For governance-critical replay modes (`audit`/`strict`), boot must enforce:
 - mutable filesystem/network either disabled or explicitly allowlisted by environment contract.
 
 Enforcement path: `runtime.preflight.validate_boot_runtime_profile(...)` called from `app/main.py` during orchestrator boot before runtime initialization.
+
+## Tenant scope contract (API + ledger surfaces)
+
+- Tenant context is required for tenant-scoped API routes through `app/api/dependencies.py::require_tenant_context`, resolving `tenant_id` and `workspace_id` from request headers (`X-Tenant-Id`, `X-Workspace-Id`) or query parameters.
+- Governance and audit API routes that access ledger/evidence surfaces must enforce this context before execution, and reject malformed scope values.
+- Ledger-producing and ledger-reading adapters that participate in API request paths must use tenant partitioning (`runtime/tenancy.py::tenant_partition_path`) and tenant-bound filtering (`payload_in_tenant_scope`) so cross-tenant reads are fail-closed.
+- Tenant-scoped ledger files are stored under the canonical partition root:
+  - `security/ledger/tenants/<tenant_id>/<workspace_id>/...`
+- Record payloads written by tenant-aware adapters must include both `tenant_id` and `workspace_id` so replay and audit evidence can validate boundary integrity.
