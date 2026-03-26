@@ -328,6 +328,7 @@ def test_post_proposal_skips_aponi_editor_event_without_editor_context(monkeypat
 
 
 def test_entitlement_blocks_mutation_feature_for_free_plan(monkeypatch) -> None:
+    server.metrics.reset_conversion_funnel()
     with TestClient(server.app) as client:
         response = client.post(
             "/api/nexus/agents/agent-1/mutate",
@@ -337,11 +338,13 @@ def test_entitlement_blocks_mutation_feature_for_free_plan(monkeypatch) -> None:
 
     assert response.status_code == 402
     assert response.json()["reason"] == "feature_disabled"
+    assert response.json()["upgrade_prompt"]["recommended_plan"] == "pro"
 
 
 def test_admin_usage_endpoints_return_snapshot(monkeypatch) -> None:
     monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
     server.metrics.reset_billable_usage()
+    server.metrics.reset_conversion_funnel()
 
     with TestClient(server.app) as client:
         usage_response = client.get("/api/admin/usage", headers={"Authorization": "Bearer audit-token"})
@@ -350,9 +353,66 @@ def test_admin_usage_endpoints_return_snapshot(monkeypatch) -> None:
     assert usage_response.status_code == 200
     usage_payload = usage_response.json()
     assert usage_payload["data"]["usage"]["counters"]["governance_approvals"] >= 0
+    assert "conversion_funnel" in usage_payload["data"]
     assert "plan_limits" in usage_payload["data"]
 
     assert plan_response.status_code == 200
     plan_payload = plan_response.json()
     assert plan_payload["data"]["plan"] == "pro"
     assert "limits" in plan_payload["data"]
+    assert "conversion_funnel" in plan_payload["data"]
+
+
+def test_conversion_funnel_tracks_upgrade_and_activation_moments(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("ADAAD_AUDIT_TOKENS", json.dumps({"audit-token": ["audit:read"]}))
+    monkeypatch.setenv("ADAAD_HMAC_KEYS", json.dumps({"default": "dev-secret"}))
+    server.metrics.reset_billable_usage()
+    server.metrics.reset_conversion_funnel()
+
+    replay_file = tmp_path / "epoch-1.replay_manifest.v1.json"
+    replay_file.write_text(json.dumps({"epoch_id": "epoch-1", "proof": "ok"}), encoding="utf-8")
+    monkeypatch.setattr(server, "REPLAY_PROOFS_DIR", tmp_path)
+
+    with TestClient(server.app) as client:
+        denied = client.post(
+            "/api/nexus/agents/agent-1/mutate",
+            json={"mutation_type": "dna_patch", "payload": {"dna": []}, "signature": "x", "nonce": "n", "timestamp": "2026-01-01T00:00:00Z", "challenge_id": "c"},
+            headers={"X-ADAAD-Plan": "free"},
+        )
+        assert denied.status_code == 402
+
+        upgrade = client.post(
+            "/api/admin/usage/upgrade-intent",
+            headers={"Authorization": "Bearer audit-token"},
+            json={"plan": "pro", "reason": "feature_disabled", "surface": "paywall"},
+        )
+        assert upgrade.status_code == 200
+
+        runbook = client.post(
+            "/api/admin/runbooks/production/complete",
+            headers={"Authorization": "Bearer audit-token"},
+            json={"runbook_id": "go-live", "completed_by": "ops@innovative.ai"},
+        )
+        assert runbook.status_code == 200
+
+        replay = client.get(
+            "/api/audit/epochs/epoch-1/replay-proof",
+            headers={"Authorization": "Bearer audit-token", "X-ADAAD-Plan": "pro"},
+        )
+        assert replay.status_code == 200
+
+        collaboration = client.post(
+            "/api/mutations/proposals",
+            json={"intent": "optimize"},
+            headers={"X-ADAAD-Plan": "pro"},
+        )
+        assert collaboration.status_code == 200
+
+        usage = client.get("/api/admin/usage", headers={"Authorization": "Bearer audit-token"})
+        counters = usage.json()["data"]["conversion_funnel"]["counters"]
+
+    assert counters["paywall_prompt_presented"] == 1
+    assert counters["upgrade_prompt_engaged"] == 1
+    assert counters["first_governance_replay_proof"] == 1
+    assert counters["first_team_collaboration_event"] == 1
+    assert counters["first_production_runbook_completion"] == 1

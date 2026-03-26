@@ -280,15 +280,37 @@ def _entitlement_denied_response(
     usage: dict[str, Any],
     feature_required: str = "",
 ) -> JSONResponse:
+    recommended_plan = "pro"
+    if event_name in {"active_users", "active_seats"}:
+        recommended_plan = "enterprise" if plan == "pro" else "pro"
+    prompt = {
+        "title": "Upgrade required to continue",
+        "message": "This action exceeds your current entitlement. Upgrade to unlock access and maintain governance flow.",
+        "recommended_plan": recommended_plan,
+        "feature_required": feature_required or event_name,
+        "reason": reason,
+    }
     payload: dict[str, Any] = {
         "detail": "entitlement_denied",
         "reason": reason,
         "plan": plan,
         "event": event_name,
         "usage": usage.get("counters", {}),
+        "upgrade_prompt": prompt,
     }
     if feature_required:
         payload["feature_required"] = feature_required
+    metrics.register_conversion_stage("paywall_prompt_presented")
+    metrics.log(
+        event_type="conversion_paywall_prompt_presented",
+        payload={
+            "plan": plan,
+            "reason": reason,
+            "event": event_name,
+            "recommended_plan": recommended_plan,
+        },
+        level="INFO",
+    )
     return JSONResponse(status_code=402, content=payload)
 
 
@@ -334,6 +356,7 @@ async def metering_entitlements_middleware(request: Request, call_next):
     plan = _resolve_plan(request)
     features = _resolve_enabled_features(plan, request)
     usage = metrics.billable_usage_snapshot()
+    baseline_counters: dict[str, int] = dict(usage.get("counters", {}))
     limits = _PLAN_LIMITS[plan]
     counters: dict[str, int] = dict(usage.get("counters", {}))
     active_user_ids = set(usage.get("active_user_ids", []))
@@ -394,6 +417,13 @@ async def metering_entitlements_middleware(request: Request, call_next):
                 payload={"event": event_name, "plan": plan},
                 level="INFO",
             )
+            current_counters = metrics.billable_usage_snapshot().get("counters", {})
+            if event_name == "replay_verifications" and int(baseline_counters.get(event_name, 0)) == 0 and int(current_counters.get(event_name, 0)) == 1:
+                metrics.register_conversion_stage("first_governance_replay_proof")
+                metrics.log(event_type="conversion_first_governance_replay_proof", payload={"plan": plan}, level="INFO")
+            if event_name == "governance_approvals" and int(baseline_counters.get(event_name, 0)) == 0 and int(current_counters.get(event_name, 0)) == 1:
+                metrics.register_conversion_stage("first_team_collaboration_event")
+                metrics.log(event_type="conversion_first_team_collaboration_event", payload={"plan": plan}, level="INFO")
     return response
 
 
@@ -2761,6 +2791,7 @@ def admin_usage(auth_ctx: dict[str, Any] = Depends(require_audit_scope)) -> dict
         "authn": auth_ctx,
         "data": {
             "usage": usage,
+            "conversion_funnel": metrics.conversion_funnel_snapshot(),
             "default_plan": default_plan,
             "plan_limits": _PLAN_LIMITS,
             "plan_features": {plan: sorted(features) for plan, features in _PLAN_FEATURES.items()},
@@ -2783,10 +2814,51 @@ def admin_usage_plan(plan_id: str, auth_ctx: dict[str, Any] = Depends(require_au
             "limits": _PLAN_LIMITS[normalized],
             "features": sorted(_PLAN_FEATURES.get(normalized, frozenset())),
             "usage_counters": usage.get("counters", {}),
+            "conversion_funnel": metrics.conversion_funnel_snapshot(),
             "active_users": usage.get("active_user_ids", []),
             "active_seats": usage.get("active_seat_ids", []),
         },
     }
+
+
+@app.post("/api/admin/usage/upgrade-intent")
+def admin_usage_upgrade_intent(
+    payload: dict[str, Any] = Body(default_factory=dict),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+) -> dict[str, Any]:
+    """Record explicit upgrade CTA engagement for conversion funnel telemetry."""
+    metrics.register_conversion_stage("upgrade_prompt_engaged")
+    metrics.log(
+        event_type="conversion_upgrade_prompt_engaged",
+        payload={
+            "plan": str(payload.get("plan") or ""),
+            "reason": str(payload.get("reason") or ""),
+            "surface": str(payload.get("surface") or "unknown"),
+        },
+        level="INFO",
+    )
+    return {"ok": True, "authn": auth_ctx, "data": {"conversion_funnel": metrics.conversion_funnel_snapshot()}}
+
+
+@app.post("/api/admin/runbooks/production/complete")
+def admin_production_runbook_complete(
+    payload: dict[str, Any] = Body(default_factory=dict),
+    auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+) -> dict[str, Any]:
+    """Record completion of a production runbook step for conversion funnel analytics."""
+    funnel_before = metrics.conversion_funnel_snapshot().get("counters", {})
+    is_first_completion = int(funnel_before.get("first_production_runbook_completion", 0)) == 0
+    metrics.register_conversion_stage("first_production_runbook_completion")
+    metrics.log(
+        event_type="conversion_production_runbook_completed",
+        payload={
+            "runbook_id": str(payload.get("runbook_id") or "production-default"),
+            "completed_by": str(payload.get("completed_by") or ""),
+            "first_completion": is_first_completion,
+        },
+        level="INFO",
+    )
+    return {"ok": True, "authn": auth_ctx, "data": {"conversion_funnel": metrics.conversion_funnel_snapshot()}}
 
 
 # ── GET /api/mutations ────────────────────────────────────────────────────────
