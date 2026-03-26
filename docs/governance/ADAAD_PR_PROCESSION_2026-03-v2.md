@@ -132,8 +132,8 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 | F-Droid MR submission (manual) | Dustin (founder) — Gate 3 | ⏳ HUMAN-0: fork fdroid-data, copy YAML, open MR at `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` |
 | Founder GPG sign-off in ledger | Dustin (founder) — Gate 4 | ⏳ HUMAN-0: commit `governance: v1.1-GA human sign-off — 2026-03-20` with GPG |
 | GA versioning declaration documented | DEVADAAD | ✅ complete — this section (closes H-04, pending Dustin Gate 4 sign-off) |
-| GPG tags v9.7.0–v9.10.0 (C-02) | Dustin (founder) | ⏳ HUMAN-0: see audit closeout report for exact commands |
-| `free-v9.10.0` APK tag (M-02) | Dustin (founder) | ⏳ HUMAN-0: `git tag free-v9.10.0 && git push origin free-v9.10.0` |
+| GPG tags v9.7.0–v9.10.0 (C-02) | Dustin (founder) | ⏳ HUMAN-0: founder workstation ceremony still required; 2026-03-26 non-founder attempt evidence logged at `artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md` |
+| `free-v9.10.0` APK tag (M-02) | Dustin (founder) | ⏳ HUMAN-0: founder workstation ceremony still required; see `artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md` |
 | Patent counsel engagement (H-03) | Dustin (founder) | ⏳ HUMAN-0: use `docs/IP_PATENT_COUNSEL_BRIEF.md` + `docs/IP_PATENT_FILING_ARTIFACT.md` |
 | `governance_strict_release_gate.yml` terminal pass | CI | ⏳ unblocked after above human gates |
 
@@ -500,7 +500,8 @@ adaad_pr_procession_contract:
       - founder_gpg_signoff_confirmed
       - ga_versioning_decision_documented
   missing_tags:
-    note: "v9.7.0–v9.10.0 and v9.14.0–v9.17.0 GPG-signed tag ceremonies required — Dustin local action C-02"
+    note: "v9.7.0–v9.10.0 and v9.14.0–v9.17.0 GPG-signed tag ceremonies required — Dustin local action C-02. 2026-03-26 sandbox evidence confirms no founder key present."
+    last_attempt_evidence: "artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md"
     ceremony_targets:
       - tag: v9.14.0
         sha: 5c32cf3
