@@ -57,6 +57,7 @@ Deterministic replay-sensitive entry points now consume a shared provider abstra
 - Goal graph supports signed hot-reload via `GoalGraph.reload_goal_graph(...)` with Cryovant payload signature verification before activation.
 - MCP proposal writer runtime: `runtime/mcp/` deterministic FastAPI endpoints and hash-linked queue append flow.
 - Canonical governance event taxonomy/normalization: `runtime/governance/event_taxonomy.py`.
+- Serial and parallel governance gate paths now both pass canonical `checks` entries (`rule_id`, `ok`, `reason`) into founders-law enforcement to keep rule-surface evaluation parity while retaining legacy `failed_rules` compatibility in the parallel context payload.
 - Constitution resource governance + shared accounting: `runtime/governance/constitution.yaml`, `runtime/governance/resource_accounting.py`.
 - Replay attestation bundles: `runtime/evolution/replay_attestation.py` (signed replay-proof exports + offline verification helpers).
 - Replay divergence classification: `runtime/evolution/replay_divergence.py` emits deterministic reason codes (`missing_evidence`, `hash_mismatch`, `signature_mismatch`, `nondeterministic_field_detected`, `lineage_discontinuity`, `reconstructed_state_mismatch`) and signs replay manifests with canonical digest contracts.
