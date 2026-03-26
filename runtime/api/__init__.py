@@ -22,6 +22,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "BeastModeLoop": ("runtime.api.legacy_modes", "BeastModeLoop"),
     "DreamMode": ("runtime.api.legacy_modes", "DreamMode"),
     "MutationExecutor": ("runtime.api.mutation", "MutationExecutor"),
+    "extension_sdk_descriptor": ("runtime.api.extensions", "extension_sdk_descriptor"),
 }
 
 __all__ = sorted(_EXPORTS.keys())
@@ -39,6 +40,10 @@ def _resolve_module(module_name: str) -> Any:
         return module
     if module_name == "runtime.api.mutation":
         from runtime.api import mutation as module
+
+        return module
+    if module_name == "runtime.api.extensions":
+        from runtime.api import extensions as module
 
         return module
     raise ModuleNotFoundError(module_name)

@@ -220,6 +220,35 @@
       border-color: rgba(124,58,237,.35);
       background:linear-gradient(135deg, rgba(124,58,237,.26), rgba(59,130,246,.18));
     }
+    .mode-row{display:flex;gap:8px;flex-wrap:wrap}
+    .mode-chip{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:11px;
+      cursor:pointer;
+      transition:border-color .15s,color .15s,background .15s;
+    }
+    .mode-chip.active{
+      color:var(--text);
+      border-color:rgba(124,58,237,.45);
+      background:rgba(124,58,237,.18);
+    }
+    .checklist{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+    .check-item{
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px;
+      background:rgba(255,255,255,.02);
+      display:flex;gap:8px;align-items:flex-start;
+    }
+    .check-item .icon{font-size:13px;line-height:1.2}
+    .check-item .meta{font-size:11px;color:var(--muted);margin-top:2px}
+    .check-item.ok{border-color:rgba(34,197,94,.35)}
+    .check-item.warn{border-color:rgba(245,158,11,.35)}
+    .check-item.bad{border-color:rgba(239,68,68,.35)}
 
     .tabs{
       display:flex;gap:8px;flex-wrap:wrap;
@@ -521,6 +550,8 @@
     lastHandshake: null,
     lastGovernanceHealth: null,
     lastReviewerCalibration: null,
+    lastGovernanceEvidence: null,
+    readinessMode: "engineering",
     lastEpochMemory: null,
     lastRefreshAt: null,   // Phase 55: timestamp of last successful hardRefresh
 
@@ -825,6 +856,137 @@
     if (overlay) overlay.onclick = (e) => { if (e.target === overlay) closeKbdHelp(); };
     const helpBtn = $("#btnKbdHelp");
     if (helpBtn) helpBtn.onclick = openKbdHelp;
+  }
+
+  function modeLabel(mode){
+    if (mode === "engineering") return "Engineering setup mode";
+    if (mode === "security") return "Security/compliance review mode";
+    if (mode === "executive") return "Executive value mode";
+    return mode;
+  }
+
+  function evidenceValue(obj, ...keys){
+    for (const key of keys){
+      if (obj && obj[key] !== undefined && obj[key] !== null) return obj[key];
+    }
+    return null;
+  }
+
+  function computeReadinessChecklist(mode){
+    const ev = state.lastGovernanceEvidence || {};
+    const health = evidenceValue(ev.health?.data, "health_score");
+    const floor = evidenceValue(ev.health?.data, "constitutional_floor");
+    const routingValid = evidenceValue(ev.routingHealth?.data, "ledger_chain_valid");
+    const routingScore = evidenceValue(ev.routingHealth?.data, "health_score");
+    const admissionRate = evidenceValue(ev.admissionRate?.data, "admission_rate_score");
+    const admissionBlocked = evidenceValue(ev.admissionEnforcement?.data, "blocked");
+    const threatEscalation = evidenceValue(ev.threatScans?.data, "escalation_rate");
+    const debtBreached = evidenceValue(ev.debt?.data, "threshold_breached");
+    const debtScore = evidenceValue(ev.debt?.data, "compound_debt_score");
+
+    const hasEvidence = Object.keys(ev).length > 0;
+    const checks = [{
+      title: "Governance evidence endpoints reachable",
+      detail: hasEvidence ? `${Object.keys(ev).length} endpoint snapshots loaded` : "No live endpoint data loaded",
+      status: hasEvidence ? "ok" : "bad",
+    }];
+
+    if (mode === "engineering"){
+      checks.push({
+        title: "Routing ledger integrity",
+        detail: routingValid === null ? "routing-health unavailable" : `ledger_chain_valid=${routingValid}`,
+        status: routingValid === true ? "ok" : routingValid === null ? "warn" : "bad",
+      });
+      checks.push({
+        title: "Governance health baseline",
+        detail: health === null ? "health score unavailable" : `health_score=${Number(health).toFixed(3)}`,
+        status: health === null ? "warn" : health >= 0.60 ? "ok" : "bad",
+      });
+      checks.push({
+        title: "Admission pipeline signal",
+        detail: admissionRate === null ? "admission-rate unavailable" : `admission_rate_score=${Number(admissionRate).toFixed(3)}`,
+        status: admissionRate === null ? "warn" : admissionRate >= 0.50 ? "ok" : "warn",
+      });
+    }
+
+    if (mode === "security"){
+      checks.push({
+        title: "Constitutional floor enforced",
+        detail: floor === null ? "floor status unavailable" : `constitutional_floor=${floor}`,
+        status: floor === "enforced" ? "ok" : floor === null ? "warn" : "bad",
+      });
+      checks.push({
+        title: "Admission enforcement",
+        detail: admissionBlocked === null ? "admission-enforcement unavailable" : `blocked=${admissionBlocked}`,
+        status: admissionBlocked === false ? "ok" : admissionBlocked === null ? "warn" : "bad",
+      });
+      checks.push({
+        title: "Threat escalation pressure",
+        detail: threatEscalation === null ? "threat-scans unavailable" : `escalation_rate=${(Number(threatEscalation) * 100).toFixed(1)}%`,
+        status: threatEscalation === null ? "warn" : threatEscalation <= 0.20 ? "ok" : threatEscalation <= 0.40 ? "warn" : "bad",
+      });
+      checks.push({
+        title: "Governance debt threshold",
+        detail: debtBreached === null ? "governance debt unavailable" : `threshold_breached=${debtBreached} · debt=${Number(debtScore ?? 0).toFixed(3)}`,
+        status: debtBreached === false ? "ok" : debtBreached === null ? "warn" : "bad",
+      });
+    }
+
+    if (mode === "executive"){
+      checks.push({
+        title: "Readiness score signal",
+        detail: health === null ? "health score unavailable" : `health_score=${Number(health).toFixed(3)}`,
+        status: health === null ? "warn" : health >= 0.80 ? "ok" : health >= 0.60 ? "warn" : "bad",
+      });
+      checks.push({
+        title: "Delivery risk posture",
+        detail: debtBreached === null ? "governance debt unavailable" : `debt_breached=${debtBreached}`,
+        status: debtBreached === false ? "ok" : debtBreached === null ? "warn" : "bad",
+      });
+      checks.push({
+        title: "Operational routing confidence",
+        detail: routingScore === null ? "routing-health unavailable" : `routing_health_score=${Number(routingScore).toFixed(3)}`,
+        status: routingScore === null ? "warn" : routingScore >= 0.75 ? "ok" : routingScore >= 0.55 ? "warn" : "bad",
+      });
+    }
+    return checks;
+  }
+
+  function downloadReadinessReport(){
+    const mode = state.readinessMode;
+    const checks = computeReadinessChecklist(mode);
+    const ts = new Date().toISOString();
+    const okCount = checks.filter(c => c.status === "ok").length;
+    const warnCount = checks.filter(c => c.status === "warn").length;
+    const badCount = checks.filter(c => c.status === "bad").length;
+    const overall = badCount > 0 ? "BLOCKED" : warnCount > 0 ? "CONDITIONAL" : "READY";
+    const lines = [
+      "# Production Readiness Report",
+      "",
+      `- Generated: ${ts}`,
+      `- Mode: ${modeLabel(mode)}`,
+      `- Overall: ${overall}`,
+      `- Results: ${okCount} pass / ${warnCount} warning / ${badCount} blocked`,
+      "",
+      "## Guided Checklist",
+      ...checks.map((c, i) => `${i + 1}. [${c.status.toUpperCase()}] ${c.title} — ${c.detail}`),
+      "",
+      "## Evidence Snapshot",
+      "```json",
+      JSON.stringify(state.lastGovernanceEvidence || {}, null, 2),
+      "```",
+      "",
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown;charset=utf-8" });
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeMode = mode.replace(/[^a-z0-9_-]/gi, "_");
+    a.href = href;
+    a.download = `production-readiness-${safeMode}-${ts.slice(0,19).replaceAll(":","-")}.md`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
   }
 
   function setTab(tab){
@@ -1244,6 +1406,52 @@
       : `<span class="badge">unavailable</span>`;
     right.appendChild(card("Reviewer Calibration", "Reputation-weighted tier pressure (Phase 7)", rcBadge, rcBody));
 
+    // ── Role mode guided checklist + report export ───────────────────
+    const modeBody = document.createElement("div");
+    const checks = computeReadinessChecklist(state.readinessMode);
+    const okCount = checks.filter(c => c.status === "ok").length;
+    const warnCount = checks.filter(c => c.status === "warn").length;
+    const badCount = checks.filter(c => c.status === "bad").length;
+    const overall = badCount > 0 ? "BLOCKED" : warnCount > 0 ? "CONDITIONAL" : "READY";
+
+    const modeRow = document.createElement("div");
+    modeRow.className = "mode-row";
+    modeRow.innerHTML = `
+      <button class="mode-chip ${state.readinessMode === "engineering" ? "active" : ""}" data-mode="engineering">Engineering setup</button>
+      <button class="mode-chip ${state.readinessMode === "security" ? "active" : ""}" data-mode="security">Security/compliance</button>
+      <button class="mode-chip ${state.readinessMode === "executive" ? "active" : ""}" data-mode="executive">Executive value</button>
+    `;
+    modeBody.appendChild(modeRow);
+
+    const head = document.createElement("div");
+    head.style.cssText = "margin-top:10px;color:var(--muted);font-size:12px";
+    head.textContent = `${modeLabel(state.readinessMode)} · ${okCount} pass / ${warnCount} warning / ${badCount} blocked`;
+    modeBody.appendChild(head);
+
+    const checklist = document.createElement("div");
+    checklist.className = "checklist";
+    checklist.innerHTML = checks.map(c => `
+      <div class="check-item ${c.status}">
+        <div class="icon">${c.status === "ok" ? "✅" : c.status === "warn" ? "⚠️" : "❌"}</div>
+        <div>
+          <div>${escapeHtml(c.title)}</div>
+          <div class="meta">${escapeHtml(c.detail)}</div>
+        </div>
+      </div>
+    `).join("");
+    modeBody.appendChild(checklist);
+
+    const actionRow = document.createElement("div");
+    actionRow.style.cssText = "margin-top:12px;display:flex;gap:8px;flex-wrap:wrap";
+    actionRow.innerHTML = `
+      <button class="btn" id="btnRefreshEvidence">Refresh evidence</button>
+      <button class="btn primary" id="btnDownloadReadiness">Download production readiness report</button>
+    `;
+    modeBody.appendChild(actionRow);
+
+    right.appendChild(card("Production Readiness Flow", "Guided role modes + live governance evidence",
+      `<span class="badge ${overall === "READY" ? "ok" : overall === "CONDITIONAL" ? "warn" : "bad"}">${overall}</span>`, modeBody));
+
     // ── Refresh button ─────────────────────────────────────────────────
     const refreshRow = document.createElement("div");
     refreshRow.style.cssText = "margin-top:14px;display:flex;gap:8px";
@@ -1256,6 +1464,16 @@
     setTimeout(() => {
       const btn = document.getElementById("btnRefreshGov");
       if (btn) btn.onclick = () => fetchGovernanceData().then(() => { render(); toast("Governance updated", "", "ok", 2000); });
+      $$(".mode-chip").forEach(el => {
+        el.onclick = () => {
+          state.readinessMode = el.getAttribute("data-mode") || "engineering";
+          render();
+        };
+      });
+      const evidenceBtn = document.getElementById("btnRefreshEvidence");
+      if (evidenceBtn) evidenceBtn.onclick = () => fetchGovernanceEvidenceData().then(() => { render(); toast("Evidence refreshed", "", "ok", 2000); });
+      const dlBtn = document.getElementById("btnDownloadReadiness");
+      if (dlBtn) dlBtn.onclick = () => downloadReadinessReport();
     }, 0);
 
     return root;
@@ -1420,9 +1638,31 @@
       if (ghRes.ok) state.lastGovernanceHealth = await ghRes.json().catch(() => null);
     }catch(_){}
     try{
-      const rcRes = await fetch(`${state.baseUrl}/governance/reviewer-calibration`, { method:"GET" });
+      const rcRes = await fetch(`${state.baseUrl}/governance/reviewer-calibration?epoch_id=current`, { method:"GET" });
       if (rcRes.ok) state.lastReviewerCalibration = await rcRes.json().catch(() => null);
     }catch(_){}
+    await fetchGovernanceEvidenceData();
+  }
+
+  async function fetchGovernanceEvidenceData(){
+    const endpoints = [
+      ["health", "/governance/health"],
+      ["routingHealth", "/governance/routing-health"],
+      ["admissionRate", "/governance/admission-rate"],
+      ["admissionEnforcement", "/governance/admission-enforcement?risk_score=0.50"],
+      ["threatScans", "/governance/threat-scans?limit=20"],
+      ["debt", "/governance/debt?epoch_id=current"],
+    ];
+    const out = {};
+    for (const [key, path] of endpoints){
+      try{
+        const res = await fetch(`${state.baseUrl}${path}`, { method: "GET" });
+        if (res.ok){
+          out[key] = await res.json().catch(() => null);
+        }
+      }catch(_){}
+    }
+    state.lastGovernanceEvidence = out;
   }
 
   // Phase 54: memory data fetch — non-fatal, uses direct server path
