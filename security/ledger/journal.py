@@ -38,6 +38,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Protocol
 
 from runtime import metrics
 from runtime.governance.event_taxonomy import validate_event_type_for_agm_step
+from runtime.tenancy import payload_in_tenant_scope, tenant_partition_path
 from security.ledger import LEDGER_ROOT
 
 ELEMENT_ID = "Water"
@@ -178,28 +179,47 @@ def ensure_journal(
     return paths.journal_path
 
 
-def write_entry(agent_id: str, action: str, payload: Dict[str, str] | None = None) -> None:
-    ensure_ledger()
+def write_entry(
+    agent_id: str,
+    action: str,
+    payload: Dict[str, str] | None = None,
+    *,
+    tenant_context: Mapping[str, str] | None = None,
+) -> None:
+    ledger_path = tenant_partition_path(LEDGER_FILE, tenant_context)
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    if not ledger_path.exists():
+        ledger_path.touch()
+    tenant_payload = dict(payload or {})
+    if tenant_context:
+        tenant_payload.setdefault("tenant_id", str(tenant_context.get("tenant_id") or ""))
+        tenant_payload.setdefault("workspace_id", str(tenant_context.get("workspace_id") or ""))
     record = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "agent_id": agent_id,
         "action": action,
-        "payload": payload or {},
+        "payload": tenant_payload,
     }
-    with LEDGER_FILE.open("a", encoding="utf-8") as handle:
+    with ledger_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(record, ensure_ascii=False) + "\n")
     metrics.log(event_type="ledger_write", payload=record, level="INFO", element_id=ELEMENT_ID)
 
 
-def read_entries(limit: int = 50) -> List[Dict[str, str]]:
-    ensure_ledger()
-    lines = LEDGER_FILE.read_text(encoding="utf-8").splitlines()
+def read_entries(limit: int = 50, *, tenant_context: Mapping[str, str] | None = None) -> List[Dict[str, str]]:
+    ledger_path = tenant_partition_path(LEDGER_FILE, tenant_context)
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    if not ledger_path.exists():
+        ledger_path.touch()
+    lines = ledger_path.read_text(encoding="utf-8").splitlines()
     entries: List[Dict[str, str]] = []
     for line in lines[-limit:]:
         try:
-            entries.append(json.loads(line))
+            row = json.loads(line)
         except json.JSONDecodeError:
             continue
+        if tenant_context and not payload_in_tenant_scope(row, tenant_context):
+            continue
+        entries.append(row)
     return entries
 
 
@@ -513,12 +533,17 @@ def append_tx(
     *,
     journal_path: Path | None = None,
     journal_paths: JournalPaths | None = None,
+    tenant_context: Mapping[str, str] | None = None,
 ) -> Dict[str, object]:
     normalized_type = validate_event_type_for_agm_step(
         event_type=tx_type,
         agm_step=payload.get("agm_step") if isinstance(payload, dict) else None,
     )
-    paths = _resolve_journal_paths(journal_path=journal_path, journal_paths=journal_paths)
+    if journal_paths is not None:
+        paths = _resolve_journal_paths(journal_paths=journal_paths)
+    else:
+        resolved_journal_path = tenant_partition_path(journal_path or JOURNAL_PATH, tenant_context)
+        paths = _resolve_journal_paths(journal_path=resolved_journal_path)
     ensure_journal(journal_paths=paths)
     with _journal_append_lock(journal_paths=paths):
         prev, offset = _validated_last_hash(journal_paths=paths)
@@ -526,7 +551,10 @@ def append_tx(
             "tx": tx_id or f"TX-{normalized_type}-{time.strftime('%Y%m%d%H%M%S', time.gmtime())}",
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "type": normalized_type,
-            "payload": payload,
+            "payload": {
+                **payload,
+                **({"tenant_id": str(tenant_context.get("tenant_id") or ""), "workspace_id": str(tenant_context.get("workspace_id") or "")} if tenant_context else {}),
+            },
             "prev_hash": prev,
         }
         # JOURNAL-CACHE-DETERM-0: canonical JSON hash — byte-identical on replay.
