@@ -199,6 +199,51 @@ CI workflow edits that change **gate logic** (for example, conditions controllin
 
 For those PRs, explicitly check the governance-impact boxes in the PR template so classifier flags (`gov_policy_flag` / `gov_replay_flag`) force the stricter suites and review path.
 
+## Quarterly security review workflow (required)
+
+To enforce ongoing independent assurance for API/auth/governance surfaces, CI governance includes a quarterly security-review control workflow and remediation policy integration.
+
+### Workflow contract
+
+- Workflow file: `.github/workflows/security_quarterly_review.yml`.
+- Trigger model:
+  - scheduled quarterly run (`on.schedule`) as governance evidence heartbeat;
+  - manual dispatch (`workflow_dispatch`) for out-of-band reassessment;
+  - optional invocation during release hardening windows.
+- Minimum output artifacts:
+  - current-quarter independent penetration test summary;
+  - architecture review delta summary;
+  - finding register with severity labels and SLA due dates;
+  - attestation that unresolved Critical/High items were evaluated against release gating policy.
+
+### Severity-based remediation deadlines
+
+This workflow is policy-coupled to `docs/compliance/REMEDIATION_SLA.md`, which defines mandatory fix deadlines:
+
+- Critical: remediate within 7 calendar days (containment within 24 hours).
+- High: remediate within 14 calendar days.
+- Medium: remediate within 45 calendar days.
+- Low: remediate within 90 calendar days.
+
+Any overdue finding must be emitted as a fail-closed governance signal in CI reporting.
+
+### Release and governance effects
+
+- Open Critical/High findings beyond SLA block promotion/release unless a signed risk acceptance is recorded.
+- Quarterly review artifacts become required evidence for governance and compliance audits.
+- Security-review workflow status should be configured as required in branch/release protection where supported.
+
+### Public-facing disclosure policy
+
+The quarterly review workflow and associated compliance process follow coordinated public disclosure commitments:
+
+- acknowledge inbound vulnerability reports within 3 business days;
+- provide active investigation updates at least every 7 calendar days for High/Critical issues;
+- publish Critical/High advisories with a target of 30 days from confirmation (or sooner for active exploitation);
+- publish Medium findings in the next scheduled security bulletin cycle (target 90 days).
+
+Disclosure implementation details and exceptions are defined in `docs/compliance/REMEDIATION_SLA.md`.
+
 
 ## Local strict replay parity with CI
 
