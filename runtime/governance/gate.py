@@ -208,8 +208,14 @@ class GovernanceGate:
                 # Re-build with gate_mode='parallel' (frozen dataclass — use replace pattern)
                 import dataclasses as _dc
                 return _dc.replace(_pdecision, gate_mode="parallel")
-            except Exception:  # noqa: BLE001 — fall through to serial on any failure
-                pass
+            except Exception as exc:  # noqa: BLE001 — controlled fallback to serial
+                fallback_payload = {
+                    "mutation_id": mutation_id,
+                    "trust_mode": trust_mode,
+                    "exception_type": type(exc).__name__,
+                    "fallback_mode": "serial",
+                }
+                self._tx_writer("governance_parallel_fallback.v1", fallback_payload)
 
         ordered_axis = sorted(axis_results, key=lambda item: (item.axis, item.rule_id))
         law_context = {

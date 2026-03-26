@@ -169,3 +169,62 @@ def test_declared_policy_artifacts_map_to_registered_runtime_checks() -> None:
     declared = declared_policy_artifact_rule_ids()
     registered = registered_runtime_check_ids()
     assert declared == registered
+
+
+def test_governance_gate_parallel_fallback_emits_telemetry_and_continues_serial() -> None:
+    writes: list[tuple[str, dict[str, object]]] = []
+
+    gate = GovernanceGate(
+        law_enforcer=lambda _ctx: _LawDecisionStub(
+            passed=True,
+            decision="pass",
+            reason_codes=["pass"],
+            failed_rules=[],
+        ),
+        tx_writer=lambda tx_type, payload: writes.append((tx_type, payload)) or {"type": tx_type, "payload": payload},
+    )
+
+    decision = gate.approve_mutation(
+        mutation_id="governance-gate-parallel-fallback-1",
+        trust_mode="audit",
+        axis_results=[GateAxisResult(axis="ledger_integrity", rule_id="rule.ledger", ok=True, reason="ok")],
+        parallel=True,
+    )
+
+    assert decision.gate_mode == "serial"
+    assert decision.approved is True
+    assert [entry[0] for entry in writes] == [
+        "governance_parallel_fallback.v1",
+        "governance_gate_decision.v1",
+    ]
+    assert writes[0][1] == {
+        "mutation_id": "governance-gate-parallel-fallback-1",
+        "trust_mode": "audit",
+        "exception_type": "ImportError",
+        "fallback_mode": "serial",
+    }
+
+
+def test_governance_gate_parallel_fallback_write_failure_is_fail_closed() -> None:
+    def _tx_writer(tx_type: str, payload: dict[str, object]) -> dict[str, object]:
+        if tx_type == "governance_parallel_fallback.v1":
+            raise RuntimeError("telemetry write failed")
+        return {"type": tx_type, "payload": payload}
+
+    gate = GovernanceGate(
+        law_enforcer=lambda _ctx: _LawDecisionStub(
+            passed=True,
+            decision="pass",
+            reason_codes=["pass"],
+            failed_rules=[],
+        ),
+        tx_writer=_tx_writer,
+    )
+
+    with pytest.raises(RuntimeError, match="telemetry write failed"):
+        gate.approve_mutation(
+            mutation_id="governance-gate-parallel-fallback-2",
+            trust_mode="audit",
+            axis_results=[GateAxisResult(axis="ledger_integrity", rule_id="rule.ledger", ok=True, reason="ok")],
+            parallel=True,
+        )
