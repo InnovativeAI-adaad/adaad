@@ -52,7 +52,7 @@ must be tracked but do not block the implementation PR opening.
 |---|---|---|---|---|
 | **FINDING-AUDIT-C02** | 🔴 CRITICAL | OPEN — Dustin (HUMAN-0 only) | Dustin (local git) | GPG-sign tags v9.7.0–v9.10.0 at exact SHAs (see §2.1). Latest non-founder attempt evidence: `artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md` (`No secret key`). |
 | **FINDING-AUDIT-C03** | 🔴 CRITICAL | OPEN — Phase 77 | Dustin + Claude | GitHub App governance — Phase 77 primary scope (see §4) |
-| **FINDING-66-003** | 🔴 P1 | OPEN — legal | Dustin (counsel) | Patent provisional filing — clock running since v1.1-GA |
+| **FINDING-66-003** | 🔴 P1 | ✅ CLOSED — 2026-03-26 | Dustin (counsel) | Counsel transmittal complete; filing receipt `RECEIPT-2026-03-26-CMGM-001` recorded in governed artifact |
 | **FINDING-AUDIT-H04** | 🟡 HIGH | OPEN — Dustin | Dustin | GA versioning clarification (v1.0.0-GA vs v1.1-GA) |
 | `CONSTITUTION_VERSION = "0.7.0"` | 🟡 HIGH | NEW | Claude (Phase 77) | Runtime code constant still reads 0.7.0; doc header fixed to 0.9.0 in state-align PR; code must follow |
 | free-v9.11.0 tag | 🟡 MEDIUM | OPEN | Dustin | `git tag free-v9.11.0 && git push origin free-v9.11.0` triggers APK/PWA pipeline |

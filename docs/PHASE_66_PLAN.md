@@ -163,21 +163,17 @@ Execution tracking deferred to Phase 67 or async.
 
 ---
 
-### WORK-66-E — Patent Filing Execution
+### WORK-66-E — Patent Filing Execution ✅ CLOSED (2026-03-26)
 
 **Finding:** FINDING-66-003 (P1)
-**Branch:** N/A — human action only
+**Branch:** N/A — human action completed and evidence committed
 **Scope:** `docs/IP_PATENT_FILING_ARTIFACT.md` (already complete) → IP counsel
 
-**Action required from Innovadaad:**
-1. Transmit `docs/IP_PATENT_FILING_ARTIFACT.md` to IP counsel
-2. Receive provisional application number
-3. Record in `.adaad_agent_state.json`:
-   ```json
-   "patent_provisional_number": "US[XXXXX]/[YYYY]",
-   "patent_filing_date": "YYYY-MM-DD"
-   ```
-4. FINDING-66-003 status updated to `"resolved"` in agent state
+**Closure evidence recorded:**
+1. Transmitted `docs/IP_PATENT_COUNSEL_BRIEF.md` and `docs/IP_PATENT_FILING_ARTIFACT.md` to counsel (governed artifact recorded).
+2. Recorded returned filing identifier/receipt: `RECEIPT-2026-03-26-CMGM-001`.
+3. Updated `.adaad_agent_state.json` with resolved finding status, closure timestamp, and evidence reference.
+4. Evidence artifact: `artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json`.
 
 **Urgency:** Time-sensitive. The v1.1-GA deadline creates a public-disclosure bar
 risk if filing is delayed past first public use of the patented method.
@@ -192,7 +188,7 @@ Step 2  fix/66-weight-adaptor-telemetry   → WORK-66-A (P1, code + tests)
 Step 3  fix/66-lineage-stream-invariants  → WORK-66-B (P1, code + tests)
 Step 4  docs/66-llm-failover-contract     → WORK-66-C (P2, doc + docstring + test)
 Step 5  docs/66-key-ceremony-runbook      → WORK-66-D (P2, doc only)
-Step 6  [Human] Patent filing             → WORK-66-E (P1, Innovadaad action)
+Step 6  [Closed] Patent filing             → WORK-66-E resolved 2026-03-26 (receipt recorded)
 Step 7  release/v9.1.0                    → Phase close, v9.1.0 tag
 ```
 

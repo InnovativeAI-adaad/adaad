@@ -1,0 +1,27 @@
+{
+  "event_type": "patent_counsel_transmittal_receipt.v1",
+  "finding_id": "FINDING-66-003",
+  "status": "resolved",
+  "transmitted_at_utc": "2026-03-26T00:00:00Z",
+  "recipient": {
+    "organization": "Patent Counsel",
+    "contact": "Dustin L. Reid (founder liaison)",
+    "channel": "governed transmittal package"
+  },
+  "documents_transmitted": [
+    {
+      "path": "docs/IP_PATENT_COUNSEL_BRIEF.md",
+      "sha256": "8488f9b3bb0ef6d0f7addcd782a7366d1da52cb745d6873fdfdcc0bd5c68fcb3"
+    },
+    {
+      "path": "docs/IP_PATENT_FILING_ARTIFACT.md",
+      "sha256": "0ec6793aadd148076291c35ab23f492e7b78b9ff72b7521ec950c1c818485e22"
+    }
+  ],
+  "filing_reference": {
+    "type": "counsel_receipt",
+    "identifier": "RECEIPT-2026-03-26-CMGM-001",
+    "noted_as": "returned filing identifier pending USPTO provisional number assignment"
+  },
+  "evidence_reference": "artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json"
+}
