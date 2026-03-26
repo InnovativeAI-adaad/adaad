@@ -4,13 +4,9 @@
 from __future__ import annotations
 
 import argparse
-import base64
-import hashlib
-import hmac
 import json
 import logging
 import os
-import time
 from contextlib import asynccontextmanager
 from json import JSONDecodeError
 from pathlib import Path
@@ -28,51 +24,28 @@ from runtime.mcp.rejection_explainer import explain_rejection
 from runtime.mcp.tools_registry import tools_list_response
 from runtime.mcp import evolution_pipeline_tools
 from security import cryovant
+from security.unified_auth import require_action
 
 LOG = logging.getLogger(__name__)
 
 
-def _b64url_decode(value: str) -> bytes:
-    padding = "=" * (-len(value) % 4)
-    return base64.urlsafe_b64decode((value + padding).encode("utf-8"))
-
-
-def _verify_jwt(request: Request) -> None:
+def _authorize_request(request: Request) -> None:
     if request.url.path == "/health":
         return
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="missing_jwt")
-    token = auth.split(" ", 1)[1].strip()
+    action = "read" if request.method.upper() in {"GET", "HEAD", "OPTIONS"} else "write"
     try:
-        header_b64, payload_b64, signature_b64 = token.split(".")
-    except ValueError as exc:
+        require_action(request.headers.get("Authorization"), action=action)
+    except HTTPException as exc:
+        detail = str(exc.detail)
+        if detail == "invalid_token":
+            detail = "invalid_jwt"
+        if detail == "expired_token":
+            detail = "expired_jwt"
         LOG.warning(
-            "JWT validation failed: malformed token",
-            extra={"reason_code": "invalid_jwt", "error_type": type(exc).__name__},
+            "mcp_authz_failed",
+            extra={"reason_code": detail, "status_code": exc.status_code, "method": request.method},
         )
-        raise HTTPException(status_code=401, detail="invalid_jwt") from exc
-
-    try:
-        message = f"{header_b64}.{payload_b64}".encode("utf-8")
-        secret = os.environ.get("ADAAD_MCP_JWT_SECRET", "").encode("utf-8")
-        if not secret:
-            raise HTTPException(status_code=401, detail="jwt_secret_unconfigured")
-        expected = base64.urlsafe_b64encode(hmac.new(secret, message, hashlib.sha256).digest()).decode("utf-8").rstrip("=")
-        if not hmac.compare_digest(expected, signature_b64):
-            raise HTTPException(status_code=401, detail="invalid_jwt")
-        payload = json.loads(_b64url_decode(payload_b64))
-        exp = int(payload.get("exp", 0) or 0)
-        if exp <= 0 or exp < int(time.time()):
-            raise HTTPException(status_code=401, detail="expired_jwt")
-    except HTTPException:
-        raise
-    except (ValueError, JSONDecodeError, UnicodeDecodeError, base64.binascii.Error) as exc:
-        LOG.warning(
-            "JWT validation failed",
-            extra={"reason_code": "invalid_jwt", "error_type": type(exc).__name__},
-        )
-        raise HTTPException(status_code=401, detail="invalid_jwt") from exc
+        raise HTTPException(status_code=exc.status_code, detail=detail) from exc
 
 
 @asynccontextmanager
@@ -98,7 +71,7 @@ def create_app(
     @app.middleware("http")
     async def jwt_middleware(request: Request, call_next):
         try:
-            _verify_jwt(request)
+            _authorize_request(request)
         except HTTPException as exc:
             return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
         return await call_next(request)
