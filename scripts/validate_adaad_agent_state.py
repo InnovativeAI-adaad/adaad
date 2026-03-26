@@ -63,7 +63,26 @@ def _validate_state(payload: dict[str, Any]) -> list[str]:
             if value not in ALLOWED_GATE_RESULTS:
                 errors.append(f"last_gate_results.{tier}:invalid_status")
 
-    for key in ("open_findings", "value_checkpoints_reached", "pending_evidence_rows"):
+    open_findings = payload.get("open_findings")
+    if not isinstance(open_findings, list):
+        errors.append("open_findings:expected_list")
+    else:
+        for item in open_findings:
+            if isinstance(item, str):
+                if not item.strip():
+                    errors.append("open_findings:expected_non_empty_string_or_object_entries")
+                    break
+                continue
+            if isinstance(item, dict):
+                finding_id = item.get("id")
+                if not isinstance(finding_id, str) or not finding_id.strip():
+                    errors.append("open_findings:object_entry_missing_non_empty_id")
+                    break
+                continue
+            errors.append("open_findings:expected_non_empty_string_or_object_entries")
+            break
+
+    for key in ("value_checkpoints_reached", "pending_evidence_rows"):
         value = payload.get(key)
         if not isinstance(value, list) or any(not isinstance(item, str) or not item for item in value):
             errors.append(f"{key}:expected_list_of_non_empty_strings")
