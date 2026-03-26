@@ -24,6 +24,28 @@ class _LawDecisionStub:
     failed_rules: list[dict[str, str]]
 
 
+def _checks_backed_law(ctx: dict[str, object]) -> _LawDecisionStub:
+    checks = list(ctx.get("checks") or [])
+    failed = [
+        {"rule_id": str(row.get("rule_id") or ""), "reason": str(row.get("reason") or "failed")}
+        for row in checks
+        if not bool(row.get("ok", False)) and str(row.get("rule_id") or "")
+    ]
+    if failed:
+        return _LawDecisionStub(
+            passed=False,
+            decision="fail",
+            reason_codes=["LAW_RULE_FAILED"] + [row["rule_id"] for row in failed],
+            failed_rules=failed,
+        )
+    return _LawDecisionStub(
+        passed=True,
+        decision="pass",
+        reason_codes=["LAW_PASS"],
+        failed_rules=[],
+    )
+
+
 def test_governance_gate_decision_schema_and_ledger_event() -> None:
     writes: list[tuple[str, dict[str, object]]] = []
 
@@ -169,3 +191,88 @@ def test_declared_policy_artifacts_map_to_registered_runtime_checks() -> None:
     declared = declared_policy_artifact_rule_ids()
     registered = registered_runtime_check_ids()
     assert declared == registered
+
+
+def test_serial_and_parallel_have_identical_approval_outcome_for_same_axes() -> None:
+    gate = GovernanceGate(
+        law_enforcer=_checks_backed_law,
+        tx_writer=lambda _tx_type, _payload: {},
+    )
+    axis_results = [
+        GateAxisResult(axis="constitution", rule_id="rule.constitution", ok=True, reason="ok"),
+        GateAxisResult(axis="ledger", rule_id="rule.ledger", ok=True, reason="ok"),
+    ]
+
+    serial = gate.approve_mutation(
+        mutation_id="governance-gate-serial-parity-1",
+        trust_mode="standard",
+        axis_results=axis_results,
+        parallel=False,
+    )
+    parallel = gate.approve_mutation(
+        mutation_id="governance-gate-serial-parity-1",
+        trust_mode="standard",
+        axis_results=axis_results,
+        parallel=True,
+    )
+
+    assert serial.approved == parallel.approved
+
+
+def test_serial_and_parallel_have_identical_failed_rule_ids_when_blocked() -> None:
+    gate = GovernanceGate(
+        law_enforcer=_checks_backed_law,
+        tx_writer=lambda _tx_type, _payload: {},
+    )
+    axis_results = [
+        GateAxisResult(axis="constitution", rule_id="rule.constitution", ok=False, reason="invalid_clause"),
+        GateAxisResult(axis="ledger", rule_id="rule.ledger", ok=False, reason="hash_mismatch"),
+    ]
+
+    serial = gate.approve_mutation(
+        mutation_id="governance-gate-serial-parity-2",
+        trust_mode="standard",
+        axis_results=axis_results,
+        parallel=False,
+    )
+    parallel = gate.approve_mutation(
+        mutation_id="governance-gate-serial-parity-2",
+        trust_mode="standard",
+        axis_results=axis_results,
+        parallel=True,
+    )
+
+    serial_failed_ids = sorted(row["rule_id"] for row in serial.failed_rules)
+    parallel_failed_ids = sorted(row["rule_id"] for row in parallel.failed_rules)
+    assert serial.approved is False
+    assert parallel.approved is False
+    assert serial_failed_ids == parallel_failed_ids
+
+
+def test_human_override_behavior_is_unchanged_in_parallel_mode() -> None:
+    gate = GovernanceGate(
+        law_enforcer=_checks_backed_law,
+        tx_writer=lambda _tx_type, _payload: {},
+    )
+    axis_results = [GateAxisResult(axis="ledger", rule_id="rule.ledger", ok=False, reason="corrupt")]
+
+    serial = gate.approve_mutation(
+        mutation_id="governance-gate-serial-parity-3",
+        trust_mode="standard",
+        axis_results=axis_results,
+        human_override=True,
+        parallel=False,
+    )
+    parallel = gate.approve_mutation(
+        mutation_id="governance-gate-serial-parity-3",
+        trust_mode="standard",
+        axis_results=axis_results,
+        human_override=True,
+        parallel=True,
+    )
+
+    assert serial.approved is True
+    assert parallel.approved is True
+    assert serial.decision == parallel.decision == "override_pass"
+    assert "human_override" in serial.reason_codes
+    assert "human_override" in parallel.reason_codes

@@ -184,10 +184,19 @@ class ParallelGovernanceGate:
         failed = [r for r in axis_results if not r.ok]
         reason_codes = [r.reason for r in failed]
         failed_rules = [{"axis": r.axis, "rule_id": r.rule_id} for r in failed]
+        checks = [
+            {
+                "rule_id": item.rule_id,
+                "ok": item.ok,
+                "reason": item.reason,
+            }
+            for item in axis_results
+        ]
 
         law_context = {
             "mutation_id": mutation_id,
             "trust_mode": trust_mode,
+            "checks": checks,
             "failed_rules": failed_rules,
             "human_override": human_override,
         }
@@ -197,11 +206,22 @@ class ParallelGovernanceGate:
             for code in law_decision.reason_codes:
                 if code not in reason_codes:
                     reason_codes.append(code)
+            existing_failed_rule_ids = {str(rule.get("rule_id", "")) for rule in failed_rules}
             for rule in law_decision.failed_rules:
+                rule_id = str(rule.get("rule_id", ""))
+                if rule_id in existing_failed_rule_ids:
+                    continue
                 if rule not in failed_rules:
                     failed_rules.append(rule)
+                    existing_failed_rule_ids.add(rule_id)
 
-        approved = (not failed) and law_decision.passed or (human_override and law_decision.passed)
+        approved = (not failed) and law_decision.passed
+        decision = "approve" if approved else "reject"
+        if human_override and not approved:
+            approved = True
+            decision = "override_pass"
+            if "human_override" not in reason_codes:
+                reason_codes.append("human_override")
 
         decision_payload = {
             "mutation_id": mutation_id,
@@ -220,7 +240,7 @@ class ParallelGovernanceGate:
 
         decision = GateDecision(
             approved=approved,
-            decision="approve" if approved else "reject",
+            decision=decision,
             mutation_id=mutation_id,
             trust_mode=trust_mode,
             reason_codes=sorted(reason_codes),
