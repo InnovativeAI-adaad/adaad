@@ -39,6 +39,7 @@ from app.api.ui import router as ui_router
 from app.api.simulation import router as simulation_router
 from app.github_app import dispatch_event, verify_webhook_signature  # ADAADchat
 from app.api.dependencies import require_audit_scope, require_gate_open
+from app.api.versioning import register_v1_aliases
 from runtime.innovations_router import router as innovations_router
 
 # ── Module-level runtime imports ─────────────────────────────────────────────
@@ -1981,8 +1982,11 @@ def governance_aponi_panel(
 
 
 @app.get("/api/governance/parallel-gate/probe-library", response_model=ParallelGateProbeLibraryResponse)
-def api_parallel_gate_probe_library() -> ParallelGateProbeLibraryResponse:
+def api_parallel_gate_probe_library(
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
+) -> ParallelGateProbeLibraryResponse:
     """Return the canonical probe library for the parallel governance gate."""
+    _ = tenant_ctx
     total = sum(len(rules) for rules in _PARALLEL_GATE_PROBE_LIBRARY.values())
     return {
         "ok": True,
@@ -1993,8 +1997,12 @@ def api_parallel_gate_probe_library() -> ParallelGateProbeLibraryResponse:
 
 
 @app.post("/api/governance/parallel-gate/evaluate", response_model=ParallelGateEvaluateResponse)
-def api_parallel_gate_evaluate(request: ParallelGateEvaluateRequest) -> ParallelGateEvaluateResponse:
+def api_parallel_gate_evaluate(
+    request: ParallelGateEvaluateRequest,
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
+) -> ParallelGateEvaluateResponse:
     """Evaluate governance axes concurrently and return a merged decision."""
+    _ = tenant_ctx
     import time as _time
     import hashlib as _hl
     import json as _json
@@ -2647,6 +2655,7 @@ def system_intelligence() -> dict:
 def _handle_proposal(
     payload: dict,
     request: Request,
+    tenant_ctx: dict[str, str],
 ) -> dict:
     """Core proposal handler — validate, queue, optionally emit Aponi editor event."""
     req_obj, validation = validate_proposal(payload)
@@ -2668,11 +2677,14 @@ def _handle_proposal(
             },
             "endpoint_path": str(request.url.path),
             "timestamp": ts,
+            "tenant_id": tenant_ctx["tenant_id"],
+            "workspace_id": tenant_ctx["workspace_id"],
         }
         metrics.log(event_type="aponi_editor_proposal_submitted.v1", payload=event_payload)
         journal.append_tx(
             tx_type="aponi_editor_proposal_submitted.v1",
             payload=event_payload,
+            tenant_context=tenant_ctx,
         )
 
     return ProposalResponse(
@@ -2685,7 +2697,10 @@ def _handle_proposal(
 
 
 @app.post("/api/mutations/proposals")
-async def post_proposal(request: Request) -> dict:
+async def post_proposal(
+    request: Request,
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
+) -> dict:
     # H-06: token-bucket rate limiting per source IP (ADAAD_PROPOSAL_RATE_LIMIT, default 10/min).
     source_ip = (request.client.host if request.client else "unknown")
     allowed, rate_info = _get_proposal_limiter().check(source_ip)
@@ -2705,13 +2720,16 @@ async def post_proposal(request: Request) -> dict:
             },
         )
     payload = await request.json()
-    return _handle_proposal(payload, request)
+    return _handle_proposal(payload, request, tenant_ctx)
 
 
 @app.post("/mutation/propose")
-async def post_proposal_alias(request: Request) -> dict:
+async def post_proposal_alias(
+    request: Request,
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
+) -> dict:
     payload = await request.json()
-    return _handle_proposal(payload, request)
+    return _handle_proposal(payload, request, tenant_ctx)
 
 
 # ── GET /api/lint/preview ─────────────────────────────────────────────────────
@@ -2751,6 +2769,7 @@ def audit_replay_proof(
     epoch_id: str,
     redaction: str | None = Query(default=None),
     auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
 ) -> dict[str, Any]:
     """Return the replay attestation proof bundle for an epoch.
 
@@ -2765,6 +2784,12 @@ def audit_replay_proof(
         bundle: dict[str, Any] = json.loads(proof_file.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise HTTPException(status_code=500, detail="proof_read_error") from exc
+    proof_tenant = bundle.get("tenant") if isinstance(bundle.get("tenant"), dict) else {}
+    proof_tenant_id = str(bundle.get("tenant_id") or proof_tenant.get("tenant_id") or "").strip()
+    proof_workspace_id = str(bundle.get("workspace_id") or proof_tenant.get("workspace_id") or "").strip()
+    if proof_tenant_id and proof_workspace_id:
+        if proof_tenant_id != tenant_ctx["tenant_id"] or proof_workspace_id != tenant_ctx["workspace_id"]:
+            raise HTTPException(status_code=403, detail="tenant_scope_mismatch")
 
     # Redact signature values when redaction=sensitive
     if redaction == "sensitive" and "signatures" in bundle:
@@ -2794,6 +2819,7 @@ def audit_replay_proof(
 def audit_epoch_lineage(
     epoch_id: str,
     auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
 ) -> dict[str, Any]:
     """Return lineage events and journal entries for an epoch.
 
@@ -2802,11 +2828,11 @@ def audit_epoch_lineage(
                expected_epoch_digest, journal_entries}}
     """
     authn = auth_ctx
-    ledger = LineageLedgerV2()
+    ledger = LineageLedgerV2(tenant_context=tenant_ctx)
     lineage = ledger.read_epoch(epoch_id)
     lineage_digest = ledger.compute_incremental_epoch_digest(epoch_id)
     expected = ledger.get_expected_epoch_digest(epoch_id) or ""
-    journal_entries = journal.read_entries(limit=200)
+    journal_entries = journal.read_entries(limit=200, tenant_context=tenant_ctx)
     return {
         "schema_version": "1.0",
         "authn": authn,
@@ -2846,6 +2872,7 @@ def _redact_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
 def audit_bundle(
     bundle_id: str,
     auth_ctx: dict[str, Any] = Depends(require_audit_scope),
+    tenant_ctx: dict[str, str] = Depends(require_tenant_context),
 ) -> dict[str, Any]:
     """Return a forensic evidence bundle with validation results.
 
@@ -2854,6 +2881,12 @@ def audit_bundle(
     """
     authn = auth_ctx
     raw_bundle, bundle_path = _load_bundle(bundle_id)
+    bundle_tenant = raw_bundle.get("tenant") if isinstance(raw_bundle.get("tenant"), dict) else {}
+    bundle_tenant_id = str(raw_bundle.get("tenant_id") or bundle_tenant.get("tenant_id") or "").strip()
+    bundle_workspace_id = str(raw_bundle.get("workspace_id") or bundle_tenant.get("workspace_id") or "").strip()
+    if bundle_tenant_id and bundle_workspace_id:
+        if bundle_tenant_id != tenant_ctx["tenant_id"] or bundle_workspace_id != tenant_ctx["workspace_id"]:
+            raise HTTPException(status_code=403, detail="tenant_scope_mismatch")
     builder = EvidenceBundleBuilder(export_dir=FORENSIC_EXPORT_DIR)
     validation = builder.validate_bundle(raw_bundle)
     return {
@@ -3284,6 +3317,10 @@ async def github_webhook(request: Request) -> dict[str, Any]:
 
     result = dispatch_event(event_type, payload)
     return result
+
+
+# Register API version aliases after all routes are wired.
+register_v1_aliases(app)
 
 app.mount("/", SPAStaticFiles(directory=str(APONI_DIR), html=True, index_path=INDEX), name="aponi")
 

@@ -1,0 +1,5668 @@
+{
+  "components": {
+    "schemas": {
+      "FastPathCheckpointLink": {
+        "additionalProperties": false,
+        "properties": {
+          "chain_digest": {
+            "title": "Chain Digest",
+            "type": "string"
+          },
+          "chain_version": {
+            "title": "Chain Version",
+            "type": "string"
+          },
+          "epoch_id": {
+            "title": "Epoch Id",
+            "type": "string"
+          },
+          "predecessor_digest": {
+            "title": "Predecessor Digest",
+            "type": "string"
+          }
+        },
+        "required": [
+          "epoch_id",
+          "chain_digest",
+          "predecessor_digest",
+          "chain_version"
+        ],
+        "title": "FastPathCheckpointLink",
+        "type": "object"
+      },
+      "FastPathCheckpointVerifyResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "chain_length": {
+            "title": "Chain Length",
+            "type": "integer"
+          },
+          "chain_version": {
+            "title": "Chain Version",
+            "type": "string"
+          },
+          "genesis_digest": {
+            "title": "Genesis Digest",
+            "type": "string"
+          },
+          "head_digest": {
+            "title": "Head Digest",
+            "type": "string"
+          },
+          "integrity": {
+            "title": "Integrity",
+            "type": "boolean"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/FastPathCheckpointLink"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "chain_version",
+          "genesis_digest",
+          "head_digest",
+          "chain_length",
+          "integrity",
+          "links"
+        ],
+        "title": "FastPathCheckpointVerifyResponse",
+        "type": "object"
+      },
+      "FastPathEntropyGateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "estimated_bits": {
+            "default": 0,
+            "title": "Estimated Bits",
+            "type": "integer"
+          },
+          "mutation_id": {
+            "default": "unknown",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "title": "Sources",
+            "type": "array"
+          },
+          "strict": {
+            "default": true,
+            "title": "Strict",
+            "type": "boolean"
+          }
+        },
+        "title": "FastPathEntropyGateRequest",
+        "type": "object"
+      },
+      "FastPathEntropyGateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "denied": {
+            "title": "Denied",
+            "type": "boolean"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "result": {
+            "$ref": "#/components/schemas/FastPathEntropyResult"
+          }
+        },
+        "required": [
+          "ok",
+          "denied",
+          "result"
+        ],
+        "title": "FastPathEntropyGateResponse",
+        "type": "object"
+      },
+      "FastPathEntropyResult": {
+        "additionalProperties": false,
+        "properties": {
+          "budget_bits": {
+            "title": "Budget Bits",
+            "type": "integer"
+          },
+          "estimated_bits": {
+            "title": "Estimated Bits",
+            "type": "integer"
+          },
+          "gate_digest": {
+            "title": "Gate Digest",
+            "type": "string"
+          },
+          "gate_version": {
+            "title": "Gate Version",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "ALLOW",
+              "WARN",
+              "DENY"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "reason",
+          "gate_digest",
+          "gate_version",
+          "estimated_bits",
+          "budget_bits"
+        ],
+        "title": "FastPathEntropyResult",
+        "type": "object"
+      },
+      "FastPathRoutePreviewDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "decision_digest": {
+            "title": "Decision Digest",
+            "type": "string"
+          },
+          "mutation_id": {
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "route_version": {
+            "title": "Route Version",
+            "type": "string"
+          },
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mutation_id",
+          "tier",
+          "reasons",
+          "decision_digest",
+          "route_version"
+        ],
+        "title": "FastPathRoutePreviewDecision",
+        "type": "object"
+      },
+      "FastPathRoutePreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "files_touched": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 256,
+            "title": "Files Touched",
+            "type": "array"
+          },
+          "intent": {
+            "default": "",
+            "maxLength": 256,
+            "title": "Intent",
+            "type": "string"
+          },
+          "loc_added": {
+            "default": 0,
+            "title": "Loc Added",
+            "type": "integer"
+          },
+          "loc_deleted": {
+            "default": 0,
+            "title": "Loc Deleted",
+            "type": "integer"
+          },
+          "mutation_id": {
+            "default": "unknown",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "risk_tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 64,
+            "title": "Risk Tags",
+            "type": "array"
+          }
+        },
+        "title": "FastPathRoutePreviewRequest",
+        "type": "object"
+      },
+      "FastPathRoutePreviewResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "$ref": "#/components/schemas/FastPathRoutePreviewDecision"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/FastPathRoutePreviewSummary"
+          }
+        },
+        "required": [
+          "ok",
+          "summary",
+          "decision"
+        ],
+        "title": "FastPathRoutePreviewResponse",
+        "type": "object"
+      },
+      "FastPathRoutePreviewSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "require_human_review": {
+            "title": "Require Human Review",
+            "type": "boolean"
+          },
+          "skip_heavy_scoring": {
+            "title": "Skip Heavy Scoring",
+            "type": "boolean"
+          },
+          "tier": {
+            "title": "Tier",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tier",
+          "skip_heavy_scoring",
+          "require_human_review"
+        ],
+        "title": "FastPathRoutePreviewSummary",
+        "type": "object"
+      },
+      "FastPathStatsEntropyThresholds": {
+        "additionalProperties": false,
+        "properties": {
+          "budget_bits": {
+            "title": "Budget Bits",
+            "type": "integer"
+          },
+          "deny_bits": {
+            "title": "Deny Bits",
+            "type": "integer"
+          },
+          "warn_bits": {
+            "title": "Warn Bits",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "warn_bits",
+          "deny_bits",
+          "budget_bits"
+        ],
+        "title": "FastPathStatsEntropyThresholds",
+        "type": "object"
+      },
+      "FastPathStatsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "entropy_thresholds": {
+            "$ref": "#/components/schemas/FastPathStatsEntropyThresholds"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "route_config": {
+            "$ref": "#/components/schemas/FastPathStatsRouteConfig"
+          },
+          "versions": {
+            "$ref": "#/components/schemas/FastPathStatsVersions"
+          }
+        },
+        "required": [
+          "ok",
+          "versions",
+          "entropy_thresholds",
+          "route_config"
+        ],
+        "title": "FastPathStatsResponse",
+        "type": "object"
+      },
+      "FastPathStatsRouteConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "elevated_intent_keywords": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Elevated Intent Keywords",
+            "type": "array"
+          },
+          "elevated_path_prefixes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Elevated Path Prefixes",
+            "type": "array"
+          },
+          "tiers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Tiers",
+            "type": "object"
+          },
+          "trivial_op_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Trivial Op Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tiers",
+          "elevated_path_prefixes",
+          "elevated_intent_keywords",
+          "trivial_op_types"
+        ],
+        "title": "FastPathStatsRouteConfig",
+        "type": "object"
+      },
+      "FastPathStatsVersions": {
+        "additionalProperties": false,
+        "properties": {
+          "checkpoint_chain": {
+            "title": "Checkpoint Chain",
+            "type": "string"
+          },
+          "entropy_gate": {
+            "title": "Entropy Gate",
+            "type": "string"
+          },
+          "fast_path_scorer": {
+            "title": "Fast Path Scorer",
+            "type": "string"
+          },
+          "route_optimizer": {
+            "title": "Route Optimizer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "route_optimizer",
+          "entropy_gate",
+          "fast_path_scorer",
+          "checkpoint_chain"
+        ],
+        "title": "FastPathStatsVersions",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "MutationOp": {
+        "properties": {
+          "op": {
+            "enum": [
+              "add",
+              "replace",
+              "remove"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "op",
+          "path"
+        ],
+        "title": "MutationOp",
+        "type": "object"
+      },
+      "MutationRequest": {
+        "properties": {
+          "challenge_id": {
+            "title": "Challenge Id",
+            "type": "string"
+          },
+          "mutation_type": {
+            "const": "dna_patch",
+            "default": "dna_patch",
+            "title": "Mutation Type",
+            "type": "string"
+          },
+          "nonce": {
+            "title": "Nonce",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/MutationOp"
+              },
+              "type": "array"
+            },
+            "propertyNames": {
+              "const": "dna"
+            },
+            "title": "Payload",
+            "type": "object"
+          },
+          "signature": {
+            "title": "Signature",
+            "type": "string"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "payload",
+          "signature",
+          "nonce",
+          "timestamp",
+          "challenge_id"
+        ],
+        "title": "MutationRequest",
+        "type": "object"
+      },
+      "ParallelGateAxisResult": {
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "title": "Axis",
+            "type": "string"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "number"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "axis",
+          "rule_id",
+          "ok",
+          "reason",
+          "duration_ms"
+        ],
+        "title": "ParallelGateAxisResult",
+        "type": "object"
+      },
+      "ParallelGateAxisSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Axis",
+            "type": "string"
+          },
+          "ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ok"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rule_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "axis",
+          "rule_id"
+        ],
+        "title": "ParallelGateAxisSpec",
+        "type": "object"
+      },
+      "ParallelGateDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "axis_results": {
+            "items": {
+              "$ref": "#/components/schemas/ParallelGateAxisResult"
+            },
+            "maxItems": 20,
+            "title": "Axis Results",
+            "type": "array"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "reject"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "decision_id": {
+            "title": "Decision Id",
+            "type": "string"
+          },
+          "failed_rules": {
+            "items": {
+              "$ref": "#/components/schemas/ParallelGateFailedRule"
+            },
+            "maxItems": 20,
+            "title": "Failed Rules",
+            "type": "array"
+          },
+          "gate_version": {
+            "title": "Gate Version",
+            "type": "string"
+          },
+          "human_override": {
+            "title": "Human Override",
+            "type": "boolean"
+          },
+          "mutation_id": {
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "trust_mode": {
+            "title": "Trust Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approved",
+          "decision",
+          "mutation_id",
+          "trust_mode",
+          "decision_id",
+          "human_override",
+          "gate_version"
+        ],
+        "title": "ParallelGateDecision",
+        "type": "object"
+      },
+      "ParallelGateEvaluateRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "axis_specs": {
+            "items": {
+              "$ref": "#/components/schemas/ParallelGateAxisSpec"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Axis Specs",
+            "type": "array"
+          },
+          "human_override": {
+            "default": false,
+            "title": "Human Override",
+            "type": "boolean"
+          },
+          "mutation_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "trust_mode": {
+            "default": "standard",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Trust Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mutation_id",
+          "axis_specs"
+        ],
+        "title": "ParallelGateEvaluateRequest",
+        "type": "object"
+      },
+      "ParallelGateEvaluateResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "axis_count": {
+            "title": "Axis Count",
+            "type": "integer"
+          },
+          "decision": {
+            "$ref": "#/components/schemas/ParallelGateDecision"
+          },
+          "gate_version": {
+            "title": "Gate Version",
+            "type": "string"
+          },
+          "max_workers": {
+            "title": "Max Workers",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "wall_elapsed_ms": {
+            "title": "Wall Elapsed Ms",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ok",
+          "decision",
+          "wall_elapsed_ms",
+          "gate_version",
+          "max_workers",
+          "axis_count"
+        ],
+        "title": "ParallelGateEvaluateResponse",
+        "type": "object"
+      },
+      "ParallelGateFailedRule": {
+        "additionalProperties": false,
+        "properties": {
+          "axis": {
+            "title": "Axis",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "axis",
+          "rule_id"
+        ],
+        "title": "ParallelGateFailedRule",
+        "type": "object"
+      },
+      "ParallelGateProbeDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "default_ok": {
+            "title": "Default Ok",
+            "type": "boolean"
+          },
+          "default_reason": {
+            "title": "Default Reason",
+            "type": "string"
+          },
+          "rule_id": {
+            "title": "Rule Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule_id",
+          "default_ok",
+          "default_reason"
+        ],
+        "title": "ParallelGateProbeDefinition",
+        "type": "object"
+      },
+      "ParallelGateProbeLibraryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "axes": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ParallelGateProbeDefinition"
+              },
+              "type": "array"
+            },
+            "title": "Axes",
+            "type": "object"
+          },
+          "gate_version": {
+            "title": "Gate Version",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "total_probes": {
+            "title": "Total Probes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok",
+          "axes",
+          "total_probes",
+          "gate_version"
+        ],
+        "title": "ParallelGateProbeLibraryResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "_SimulationRunRequest": {
+        "properties": {
+          "dsl_text": {
+            "default": "",
+            "title": "Dsl Text",
+            "type": "string"
+          },
+          "epoch_data_map": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Epoch Data Map"
+          },
+          "epoch_ids": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Epoch Ids",
+            "type": "array"
+          }
+        },
+        "title": "_SimulationRunRequest",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "InnovativeAI-adaad Unified Server",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/agents": {
+      "get": {
+        "operationId": "_lambda__api_agents_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "agents",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "<Lambda>"
+      }
+    },
+    "/api/audit/bundles/{bundle_id}": {
+      "get": {
+        "description": "Return a forensic evidence bundle with validation results.\n\nRequires audit:read scope.\nResponse: {schema_version, authn, data: {bundle_id, bundle_path, bundle, validation}}",
+        "operationId": "audit_bundle_api_audit_bundles__bundle_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Audit Bundle Api Audit Bundles  Bundle Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Bundle"
+      }
+    },
+    "/api/audit/epochs/{epoch_id}/lineage": {
+      "get": {
+        "description": "Return lineage events and journal entries for an epoch.\n\nRequires audit:read scope.\nResponse: {schema_version, authn, data: {epoch_id, lineage, lineage_digest,\n           expected_epoch_digest, journal_entries}}",
+        "operationId": "audit_epoch_lineage_api_audit_epochs__epoch_id__lineage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Audit Epoch Lineage Api Audit Epochs  Epoch Id  Lineage Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Epoch Lineage"
+      }
+    },
+    "/api/audit/epochs/{epoch_id}/replay-proof": {
+      "get": {
+        "description": "Return the replay attestation proof bundle for an epoch.\n\nRequires audit:read scope. When redaction=sensitive, strips signature values.\nResponse: {schema_version, authn, data: {epoch_id, bundle_path, bundle, verification}}",
+        "operationId": "audit_replay_proof_api_audit_epochs__epoch_id__replay_proof_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redaction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Redaction"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Audit Replay Proof Api Audit Epochs  Epoch Id  Replay Proof Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit Replay Proof"
+      }
+    },
+    "/api/changes": {
+      "get": {
+        "operationId": "_lambda__api_changes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "changes",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "<Lambda>"
+      }
+    },
+    "/api/constitution/status": {
+      "get": {
+        "description": "Return current constitution version, policy hash, and boot sanity check.",
+        "operationId": "constitution_status_api_constitution_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Constitution Status Api Constitution Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Constitution Status"
+      }
+    },
+    "/api/epochs": {
+      "get": {
+        "description": "List all epoch IDs with digest integrity summary.",
+        "operationId": "operator_epochs_api_epochs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "title": "Response Operator Epochs Api Epochs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Operator Epochs"
+      }
+    },
+    "/api/fast-path/checkpoint-chain/verify": {
+      "get": {
+        "description": "Verify the fast-path checkpoint chain integrity.",
+        "operationId": "api_fast_path_checkpoint_chain_verify_api_fast_path_checkpoint_chain_verify_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathCheckpointVerifyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Fast Path Checkpoint Chain Verify"
+      }
+    },
+    "/api/fast-path/entropy-gate": {
+      "post": {
+        "description": "Evaluate entropy gate verdict for a mutation candidate.",
+        "operationId": "api_fast_path_entropy_gate_api_fast_path_entropy_gate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FastPathEntropyGateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathEntropyGateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Fast Path Entropy Gate"
+      }
+    },
+    "/api/fast-path/route-preview": {
+      "post": {
+        "description": "Preview the routing tier for a mutation candidate.",
+        "operationId": "api_fast_path_route_preview_api_fast_path_route_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FastPathRoutePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathRoutePreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Fast Path Route Preview"
+      }
+    },
+    "/api/fast-path/stats": {
+      "get": {
+        "description": "Return fast-path intelligence subsystem version and configuration.",
+        "operationId": "api_fast_path_stats_api_fast_path_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Fast Path Stats"
+      }
+    },
+    "/api/governance/parallel-gate/evaluate": {
+      "post": {
+        "description": "Evaluate governance axes concurrently and return a merged decision.",
+        "operationId": "api_parallel_gate_evaluate_api_governance_parallel_gate_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParallelGateEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParallelGateEvaluateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Parallel Gate Evaluate"
+      }
+    },
+    "/api/governance/parallel-gate/probe-library": {
+      "get": {
+        "description": "Return the canonical probe library for the parallel governance gate.",
+        "operationId": "api_parallel_gate_probe_library_api_governance_parallel_gate_probe_library_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParallelGateProbeLibraryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Parallel Gate Probe Library"
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Health Api Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/api/kpis": {
+      "get": {
+        "operationId": "_lambda__api_kpis_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "kpis",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "<Lambda>"
+      }
+    },
+    "/api/lint/preview": {
+      "get": {
+        "description": "Return deterministic lint annotations for a proposed code change.",
+        "operationId": "lint_preview_api_lint_preview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "target_path",
+            "required": true,
+            "schema": {
+              "title": "Target Path",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "python_content",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Python Content",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metadata",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "title": "Metadata",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Lint Preview Api Lint Preview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lint Preview"
+      }
+    },
+    "/api/mutations": {
+      "get": {
+        "description": "List all mutation bundle events from the lineage ledger.",
+        "operationId": "operator_mutations_api_mutations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "title": "Response Operator Mutations Api Mutations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Operator Mutations"
+      }
+    },
+    "/api/mutations/proposals": {
+      "post": {
+        "operationId": "post_proposal_api_mutations_proposals_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Post Proposal Api Mutations Proposals Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Proposal"
+      }
+    },
+    "/api/nexus/agents": {
+      "get": {
+        "operationId": "nexus_agents_api_nexus_agents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Nexus Agents Api Nexus Agents Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Nexus Agents"
+      }
+    },
+    "/api/nexus/agents/{agent_id}/mutate": {
+      "post": {
+        "operationId": "mutate_agent_api_nexus_agents__agent_id__mutate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Mutate Agent Api Nexus Agents  Agent Id  Mutate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mutate Agent"
+      }
+    },
+    "/api/nexus/handshake": {
+      "get": {
+        "operationId": "nexus_handshake_api_nexus_handshake_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Nexus Handshake Api Nexus Handshake Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Nexus Handshake"
+      }
+    },
+    "/api/nexus/health": {
+      "get": {
+        "operationId": "nexus_health_api_nexus_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Nexus Health Api Nexus Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Nexus Health"
+      }
+    },
+    "/api/nexus/protocol": {
+      "get": {
+        "operationId": "nexus_protocol_api_nexus_protocol_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Nexus Protocol Api Nexus Protocol Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Nexus Protocol"
+      }
+    },
+    "/api/status": {
+      "get": {
+        "operationId": "api_status_mock_disabled_api_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Api Status Mock Disabled Api Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Status Mock Disabled"
+      }
+    },
+    "/api/suggestions": {
+      "get": {
+        "operationId": "_lambda__api_suggestions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "suggestions",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "<Lambda>"
+      }
+    },
+    "/api/system/intelligence": {
+      "get": {
+        "description": "Return routed intelligence decision with determinism and mutation rate.",
+        "operationId": "system_intelligence_api_system_intelligence_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response System Intelligence Api System Intelligence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "System Intelligence"
+      }
+    },
+    "/api/tree": {
+      "get": {
+        "operationId": "_lambda__api_tree_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "tree",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "<Lambda>"
+      }
+    },
+    "/api/v1/agents": {
+      "get": {
+        "operationId": "v1__lambda__api_v1_agents_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "agents",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 <Lambda>",
+        "x-adaad-original-path": "/api/agents",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/audit/bundles/{bundle_id}": {
+      "get": {
+        "description": "Return a forensic evidence bundle with validation results.\n\nRequires audit:read scope.\nResponse: {schema_version, authn, data: {bundle_id, bundle_path, bundle, validation}}",
+        "operationId": "v1_audit_bundle_api_v1_audit_bundles__bundle_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Audit Bundle Api V1 Audit Bundles  Bundle Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Audit Bundle",
+        "x-adaad-original-path": "/api/audit/bundles/{bundle_id}",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/audit/epochs/{epoch_id}/lineage": {
+      "get": {
+        "description": "Return lineage events and journal entries for an epoch.\n\nRequires audit:read scope.\nResponse: {schema_version, authn, data: {epoch_id, lineage, lineage_digest,\n           expected_epoch_digest, journal_entries}}",
+        "operationId": "v1_audit_epoch_lineage_api_v1_audit_epochs__epoch_id__lineage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Audit Epoch Lineage Api V1 Audit Epochs  Epoch Id  Lineage Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Audit Epoch Lineage",
+        "x-adaad-original-path": "/api/audit/epochs/{epoch_id}/lineage",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/audit/epochs/{epoch_id}/replay-proof": {
+      "get": {
+        "description": "Return the replay attestation proof bundle for an epoch.\n\nRequires audit:read scope. When redaction=sensitive, strips signature values.\nResponse: {schema_version, authn, data: {epoch_id, bundle_path, bundle, verification}}",
+        "operationId": "v1_audit_replay_proof_api_v1_audit_epochs__epoch_id__replay_proof_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redaction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Redaction"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Audit Replay Proof Api V1 Audit Epochs  Epoch Id  Replay Proof Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Audit Replay Proof",
+        "x-adaad-original-path": "/api/audit/epochs/{epoch_id}/replay-proof",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/changes": {
+      "get": {
+        "operationId": "v1__lambda__api_v1_changes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "changes",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 <Lambda>",
+        "x-adaad-original-path": "/api/changes",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/constitution/status": {
+      "get": {
+        "description": "Return current constitution version, policy hash, and boot sanity check.",
+        "operationId": "v1_constitution_status_api_v1_constitution_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Constitution Status Api V1 Constitution Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Constitution Status",
+        "x-adaad-original-path": "/api/constitution/status",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/epochs": {
+      "get": {
+        "description": "List all epoch IDs with digest integrity summary.",
+        "operationId": "v1_operator_epochs_api_v1_epochs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "title": "Response V1 Operator Epochs Api V1 Epochs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Operator Epochs",
+        "x-adaad-original-path": "/api/epochs",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/fast-path/checkpoint-chain/verify": {
+      "get": {
+        "description": "Verify the fast-path checkpoint chain integrity.",
+        "operationId": "v1_api_fast_path_checkpoint_chain_verify_api_v1_fast_path_checkpoint_chain_verify_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathCheckpointVerifyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Api Fast Path Checkpoint Chain Verify",
+        "x-adaad-original-path": "/api/fast-path/checkpoint-chain/verify",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/fast-path/entropy-gate": {
+      "post": {
+        "description": "Evaluate entropy gate verdict for a mutation candidate.",
+        "operationId": "v1_api_fast_path_entropy_gate_api_v1_fast_path_entropy_gate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FastPathEntropyGateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathEntropyGateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Api Fast Path Entropy Gate",
+        "x-adaad-original-path": "/api/fast-path/entropy-gate",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/fast-path/route-preview": {
+      "post": {
+        "description": "Preview the routing tier for a mutation candidate.",
+        "operationId": "v1_api_fast_path_route_preview_api_v1_fast_path_route_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FastPathRoutePreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathRoutePreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Api Fast Path Route Preview",
+        "x-adaad-original-path": "/api/fast-path/route-preview",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/fast-path/stats": {
+      "get": {
+        "description": "Return fast-path intelligence subsystem version and configuration.",
+        "operationId": "v1_api_fast_path_stats_api_v1_fast_path_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastPathStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Api Fast Path Stats",
+        "x-adaad-original-path": "/api/fast-path/stats",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/governance/parallel-gate/evaluate": {
+      "post": {
+        "description": "Evaluate governance axes concurrently and return a merged decision.",
+        "operationId": "v1_api_parallel_gate_evaluate_api_v1_governance_parallel_gate_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParallelGateEvaluateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParallelGateEvaluateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Api Parallel Gate Evaluate",
+        "x-adaad-original-path": "/api/governance/parallel-gate/evaluate",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/governance/parallel-gate/probe-library": {
+      "get": {
+        "description": "Return the canonical probe library for the parallel governance gate.",
+        "operationId": "v1_api_parallel_gate_probe_library_api_v1_governance_parallel_gate_probe_library_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParallelGateProbeLibraryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Api Parallel Gate Probe Library",
+        "x-adaad-original-path": "/api/governance/parallel-gate/probe-library",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "operationId": "v1_health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Health Api V1 Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Health",
+        "x-adaad-original-path": "/api/health",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/kpis": {
+      "get": {
+        "operationId": "v1__lambda__api_v1_kpis_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "kpis",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 <Lambda>",
+        "x-adaad-original-path": "/api/kpis",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/lint/preview": {
+      "get": {
+        "description": "Return deterministic lint annotations for a proposed code change.",
+        "operationId": "v1_lint_preview_api_v1_lint_preview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "target_path",
+            "required": true,
+            "schema": {
+              "title": "Target Path",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "python_content",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Python Content",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metadata",
+            "required": false,
+            "schema": {
+              "default": "{}",
+              "title": "Metadata",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Lint Preview Api V1 Lint Preview Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Lint Preview",
+        "x-adaad-original-path": "/api/lint/preview",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/mutations": {
+      "get": {
+        "description": "List all mutation bundle events from the lineage ledger.",
+        "operationId": "v1_operator_mutations_api_v1_mutations_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {},
+                  "title": "Response V1 Operator Mutations Api V1 Mutations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Operator Mutations",
+        "x-adaad-original-path": "/api/mutations",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/mutations/proposals": {
+      "post": {
+        "operationId": "v1_post_proposal_api_v1_mutations_proposals_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Post Proposal Api V1 Mutations Proposals Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Post Proposal",
+        "x-adaad-original-path": "/api/mutations/proposals",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/nexus/agents": {
+      "get": {
+        "operationId": "v1_nexus_agents_api_v1_nexus_agents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Nexus Agents Api V1 Nexus Agents Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Nexus Agents",
+        "x-adaad-original-path": "/api/nexus/agents",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/nexus/agents/{agent_id}/mutate": {
+      "post": {
+        "operationId": "v1_mutate_agent_api_v1_nexus_agents__agent_id__mutate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MutationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Mutate Agent Api V1 Nexus Agents  Agent Id  Mutate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Mutate Agent",
+        "x-adaad-original-path": "/api/nexus/agents/{agent_id}/mutate",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/nexus/handshake": {
+      "get": {
+        "operationId": "v1_nexus_handshake_api_v1_nexus_handshake_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Nexus Handshake Api V1 Nexus Handshake Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Nexus Handshake",
+        "x-adaad-original-path": "/api/nexus/handshake",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/nexus/health": {
+      "get": {
+        "operationId": "v1_nexus_health_api_v1_nexus_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Nexus Health Api V1 Nexus Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Nexus Health",
+        "x-adaad-original-path": "/api/nexus/health",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/nexus/protocol": {
+      "get": {
+        "operationId": "v1_nexus_protocol_api_v1_nexus_protocol_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Nexus Protocol Api V1 Nexus Protocol Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Nexus Protocol",
+        "x-adaad-original-path": "/api/nexus/protocol",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/status": {
+      "get": {
+        "operationId": "v1_api_status_mock_disabled_api_v1_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Api Status Mock Disabled Api V1 Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Api Status Mock Disabled",
+        "x-adaad-original-path": "/api/status",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/suggestions": {
+      "get": {
+        "operationId": "v1__lambda__api_v1_suggestions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "suggestions",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 <Lambda>",
+        "x-adaad-original-path": "/api/suggestions",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/system/intelligence": {
+      "get": {
+        "description": "Return routed intelligence decision with determinism and mutation rate.",
+        "operationId": "v1_system_intelligence_api_v1_system_intelligence_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 System Intelligence Api V1 System Intelligence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 System Intelligence",
+        "x-adaad-original-path": "/api/system/intelligence",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/tree": {
+      "get": {
+        "operationId": "v1__lambda__api_v1_tree_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "default": "tree",
+              "title": "N"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 <Lambda>",
+        "x-adaad-original-path": "/api/tree",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/version": {
+      "get": {
+        "description": "Live version snapshot \u2014 no auth required, no gate check.\n\nReturns adaad_version, constitution_version, last_sync_sha, last_sync_date.\nThe Aponi UI fetches this on every hardRefresh to display the version\nbanner accurately rather than relying on static protocol strings.",
+        "operationId": "v1_api_version_api_v1_version_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Api Version Api V1 Version Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Api Version",
+        "x-adaad-original-path": "/api/version",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/version": {
+      "get": {
+        "description": "Live version snapshot \u2014 no auth required, no gate check.\n\nReturns adaad_version, constitution_version, last_sync_sha, last_sync_date.\nThe Aponi UI fetches this on every hardRefresh to display the version\nbanner accurately rather than relying on static protocol strings.",
+        "operationId": "api_version_api_version_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Api Version Api Version Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Version"
+      }
+    },
+    "/economic/market-fitness": {
+      "get": {
+        "description": "GET /economic/market-fitness\n\nReturns the current composite market-fitness score from the live\nMarketFitnessIntegrator pipeline. Includes feed registry status,\ncomposite score, signal freshness, and integration metadata.\n\nConstitutional invariants:\n- Never raises; always returns a valid envelope (ok=True).\n- composite_score is 0.0 when no live feeds are configured.\n- signal_source reflects the active feed backend (synthetic/live).\n- Fail-safe: on any internal error returns ok=True with degraded=True.",
+        "operationId": "get_economic_market_fitness_economic_market_fitness_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Economic Market Fitness Economic Market Fitness Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Economic Market Fitness"
+      }
+    },
+    "/evidence/{bundle_id}": {
+      "get": {
+        "description": "Forensic evidence bundle \u2014 flat response for Aponi dashboard and operator API.",
+        "operationId": "evidence_bundle_evidence__bundle_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bundle_id",
+            "required": true,
+            "schema": {
+              "title": "Bundle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redaction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Redaction"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Evidence Bundle Evidence  Bundle Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Evidence Bundle"
+      }
+    },
+    "/evolution/market-fitness-bridge": {
+      "get": {
+        "description": "GET /evolution/market-fitness-bridge\n\nReturns the live MarketSignalAdapter \u2192 EconomicFitnessEvaluator bridge status.\n\nConstitutional invariants (Phase 46):\n- Never raises; always returns a valid envelope.\n- ``wired`` is True iff a live MarketSignalAdapter is injected into the evaluator.\n- When wired, includes the most recent signal snapshot and bridge statistics.\n- Fail-safe: on any internal error, returns ``ok=True`` with ``wired=False``.",
+        "operationId": "market_fitness_bridge_status_evolution_market_fitness_bridge_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Market Fitness Bridge Status Evolution Market Fitness Bridge Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Market Fitness Bridge Status"
+      }
+    },
+    "/governance/admission-audit": {
+      "get": {
+        "description": "Return recent AdmissionDecision records from the audit ledger. Read-only.\n\nPhase 29 extension: enforcement verdict fields (escalation_mode, blocked,\nblock_reason, verdict_digest) are included in each record that was emitted\nvia AdmissionAuditLedger.emit(decision, verdict=...).\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of records to return (most recent).\nband : str, optional\n    Filter by admission_band: \"green\" | \"amber\" | \"red\" | \"halt\".\nadmitted_only : bool, default False\n    When True, return only admitted==True records.\nblocked_only : bool, default False\n    When True, return only records where blocked==True (enforcement arc).\n\nResponse fields (data)\n----------------------\nrecords              list \u2014 admission audit records (chronological)\ntotal_in_window      int  \u2014 number of records returned\nadmission_rate       float \u2014 admitted/total ratio across all records\nband_frequency       dict  \u2014 band \u2192 count across all records\nblocked_count        int  \u2014 count of blocked==True records (Phase 29)\nenforcement_rate     float \u2014 fraction of records with enforcement data (Phase 29)\nescalation_breakdown dict  \u2014 escalation_mode \u2192 count (Phase 29)\nledger_version       str   \u2014 \"29.0\"",
+        "operationId": "governance_admission_audit_governance_admission_audit_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "band",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Band"
+            }
+          },
+          {
+            "in": "query",
+            "name": "admitted_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Admitted Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "blocked_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Blocked Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Admission Audit Governance Admission Audit Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Admission Audit"
+      }
+    },
+    "/governance/admission-enforcement": {
+      "get": {
+        "description": "Return AdmissionBandEnforcer verdict for a mutation with the given risk_score.\n\nExtends Phase 25 admission-status with escalation-mode resolution:\nwhen ADAAD_SEVERITY_ESCALATIONS contains\n{\"admission_band_enforcement\": \"blocking\"}, HALT-band verdicts set\nblocked=True, surfacing an emergency-stop signal to callers.\n\nQuery parameters\n----------------\nrisk_score : float, default 0.50\n    Mutation risk score [0.0, 1.0]. Clamped if out of range.\n\nResponse fields (data)\n----------------------\nescalation_mode   \"advisory\" | \"blocking\"\nblocked           bool \u2014 True only when mode=blocking AND band=halt\nblock_reason      str \u2014 human-readable reason when blocked; empty otherwise\nverdict_digest    sha256 hex \u2014 deterministic over (decision_digest, blocked, block_reason)\nenforcer_version  \"28.0\"\ndecision          full AdmissionDecision payload (same as /admission-status)",
+        "operationId": "governance_admission_enforcement_governance_admission_enforcement_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "risk_score",
+            "required": false,
+            "schema": {
+              "default": 0.5,
+              "title": "Risk Score",
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Admission Enforcement Governance Admission Enforcement Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Admission Enforcement"
+      }
+    },
+    "/governance/admission-rate": {
+      "get": {
+        "description": "Return AdmissionRateReport from the global AdmissionRateTracker. Read-only.\n\nResponse fields (data)\n----------------------\nadmission_rate_score   float \u2014 rolling admission rate \u2208 [0.0, 1.0]\nadmitted_count         int   \u2014 admitted decisions in window\ntotal_count            int   \u2014 total decisions in window\nepochs_in_window       int   \u2014 distinct epochs contributing to window\nmax_epochs             int   \u2014 configured rolling-window size\nreport_digest          str   \u2014 sha256-prefixed deterministic digest\ntracker_version        str   \u2014 \"26.0\"",
+        "operationId": "governance_admission_rate_governance_admission_rate_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Admission Rate Governance Admission Rate Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Admission Rate"
+      }
+    },
+    "/governance/admission-status": {
+      "get": {
+        "description": "Return advisory AdmissionDecision for a mutation with the given risk_score.\n\nEvaluates whether a mutation candidate with ``risk_score`` would be admitted\nto the evolution pipeline given the current governance health score.\n\nQuery parameters\n----------------\nrisk_score : float, default 0.50\n    Mutation risk score \u2208 [0.0, 1.0].  Clamped if out of range.\n\nResponse fields (data)\n----------------------\nhealth_score          float \u2014 current governance composite h \u2208 [0.0, 1.0]\nmutation_risk_score   float \u2014 clamped input risk_score\nadmission_band        \"green\" | \"amber\" | \"red\" | \"halt\"\nrisk_threshold        float \u2014 exclusive upper bound for admission in current band\nadmitted              bool \u2014 True when mutation would be admitted\nadmits_all            bool \u2014 True only in green band\nepoch_paused          bool \u2014 advisory epoch-pause flag (h < 0.40)\ndeferral_reason       str | null \u2014 reason when not admitted\nadvisory_only         true (structural invariant)\ndecision_digest       sha256-prefixed deterministic digest\ncontroller_version    \"25.0\"",
+        "operationId": "governance_admission_status_governance_admission_status_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "risk_score",
+            "required": false,
+            "schema": {
+              "default": 0.5,
+              "title": "Risk Score",
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Admission Status Governance Admission Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Admission Status"
+      }
+    },
+    "/governance/advisory-rule": {
+      "get": {
+        "description": "PR-08: GET /governance/advisory-rule\n\nReturns the active advisory governance rule status including the\nconstitutional floor, reviewer_calibration advisory rule state,\nand current enforcement posture. Advisory rules inform but never block.\n\nConstitutional invariants:\n- Advisory rules produce ADVISORY severity events only (never BLOCKING).\n- constitutional_floor is always >= 1 reviewer regardless of this rule.",
+        "operationId": "governance_advisory_rule_governance_advisory_rule_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Advisory Rule Governance Advisory Rule Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Advisory Rule"
+      }
+    },
+    "/governance/aponi-panel": {
+      "get": {
+        "description": "PR-09: GET /governance/aponi-panel\n\nReturns the Aponi operator panel summary: reviewer reputation ledger\nsnapshot, review pressure status, scoring engine version, tier\ncalibration, and constitutional floor enforcement \u2014 all in one\nconsolidated response for the Aponi dashboard panel.\n\nThis is the ADAAD-7 integration endpoint that wires the feedback loop\nenterprise buyers require: reputation \u2192 pressure \u2192 scoring \u2192 calibration.",
+        "operationId": "governance_aponi_panel_governance_aponi_panel_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Aponi Panel Governance Aponi Panel Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Aponi Panel"
+      }
+    },
+    "/governance/certifier-scans": {
+      "get": {
+        "description": "Return recent GateCertifier scan records from the audit ledger. Read-only.\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of records to return (most recent).\nrejected_only : bool, default False\n    When True, only return REJECTED scan records.\n\nResponse fields (data)\n----------------------\nrecords                 list  \u2014 certifier scan records (chronological)\ntotal_in_window         int   \u2014 number of records returned\nrejection_rate          float \u2014 fraction of all scans that were REJECTED\ncertification_rate      float \u2014 fraction of all scans that were CERTIFIED\nmutation_blocked_count  int   \u2014 scans where mutation_blocked=True\nfail_closed_count       int   \u2014 scans where fail_closed=True\nescalation_breakdown    dict  \u2014 escalation_level \u2192 count\nledger_version          str   \u2014 \"33.0\"\n\nAuthority invariant\n-------------------\nThis endpoint is read-only and advisory.  It never approves or blocks\nmutations.  GovernanceGate retains sole mutation-approval authority.",
+        "operationId": "governance_certifier_scans_governance_certifier_scans_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rejected_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Rejected Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Certifier Scans Governance Certifier Scans Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Certifier Scans"
+      }
+    },
+    "/governance/certify": {
+      "post": {
+        "description": "Run GateCertifier security scan on a named runtime file. Read-only governance check.\n\nRequest body (JSON)\n-------------------\nfile_path : str  (required)\n    Relative path to the Python file to certify (e.g. \"runtime/governance/gate.py\").\n    Must be within the repo root. Absolute paths and path traversal are rejected.\nmetadata : dict  (optional)\n    Arbitrary key-value pairs to attach to the certification result.\n    Sensitive key \"cryovant_token\" is stripped from the response.\n\nResponse fields (data)\n----------------------\nstatus          \"CERTIFIED\" | \"REJECTED\"\npassed          bool\nfile            str   \u2014 canonicalised relative file path\nescalation      str   \u2014 \"advisory\" | \"warning\" | \"critical\"\nmutation_blocked bool  \u2014 True when canon law marks this violation as mutation-blocking\nfail_closed     bool  \u2014 True when canon law triggers fail-closed policy\nchecks          dict  \u2014 per-check booleans (imports, token, ast, auth)\nhash            str   \u2014 sha256 of file content (when accessible)\ngenerated_at    str   \u2014 ISO timestamp",
+        "operationId": "governance_certify_governance_certify_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Request",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Certify Governance Certify Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Certify"
+      }
+    },
+    "/governance/debt": {
+      "get": {
+        "description": "Return the current GovernanceDebtLedger snapshot. Read-only.\n\nReads the last persisted debt snapshot from the evolution loop's ledger\n(if available) and returns a safe-default snapshot when no epoch data exists.\n\nQuery parameters\n----------------\nepoch_id : str, default \"current\"\n    Epoch identifier for display; used only when constructing a live snapshot.\n\nResponse fields (data)\n----------------------\nepoch_id                str   \u2014 epoch identifier\ncompound_debt_score     float \u2014 accumulated weighted warning debt (decayed)\nbreach_threshold        float \u2014 threshold at which debt triggers alert (default 3.0)\nthreshold_breached      bool  \u2014 True when compound_debt_score >= breach_threshold\nwarning_count           int   \u2014 number of warning verdicts in last accumulation\nwarning_weighted_sum    float \u2014 sum of weighted warnings in last epoch\ndecayed_prior_debt      float \u2014 prior compound debt after decay applied\napplied_decay_epochs    int   \u2014 number of epochs since last accumulation\nwarning_rules           list  \u2014 sorted list of rule names that triggered warnings\nsnapshot_hash           str   \u2014 sha256 deterministic hash of this snapshot\ndebt_ledger_schema      str   \u2014 \"1.0\"",
+        "operationId": "governance_debt_governance_debt_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "epoch_id",
+            "required": false,
+            "schema": {
+              "default": "current",
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Debt Governance Debt Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Debt"
+      }
+    },
+    "/governance/gate-decisions": {
+      "get": {
+        "description": "Return recent GovernanceGate decision records from the audit ledger. Read-only.\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of records to return (most recent).\ndenied_only : bool, default False\n    When True, only return DENIED decision records.\n\nResponse fields (data)\n----------------------\nrecords                 list  \u2014 gate decision records (chronological)\ntotal_in_window         int   \u2014 number of records returned\napproval_rate           float \u2014 fraction of all decisions that were approved\nrejection_rate          float \u2014 fraction of all decisions that were denied\nhuman_override_count    int   \u2014 decisions where human override was applied\ndecision_breakdown      dict  \u2014 decision outcome \u2192 count\nfailed_rules_frequency  dict  \u2014 rule_id \u2192 count of failures\ntrust_mode_breakdown    dict  \u2014 trust_mode \u2192 count\nledger_version          str   \u2014 \"35.0\"\n\nAuthority invariant\n-------------------\nThis endpoint is read-only and advisory.  It never approves or blocks\nmutations.  GovernanceGate retains sole mutation-approval authority.",
+        "operationId": "governance_gate_decisions_governance_gate_decisions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "denied_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Denied Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Gate Decisions Governance Gate Decisions Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Gate Decisions"
+      }
+    },
+    "/governance/health": {
+      "get": {
+        "description": "Return current and rolling governance health score.\n\nResponse fields\n---------------\nhealth_score          float \u2014 current epoch h \u2208 [0.0, 1.0]\nstatus                str   \u2014 'green' | 'amber' | 'red'\nsignal_breakdown      dict  \u2014 per-signal raw values\nweight_snapshot_digest str  \u2014 sha256 of canonical weight vector\nconstitution_version  str\nscoring_algorithm_version str\ndegraded              bool  \u2014 h < 0.60\nconstitutional_floor  str   \u2014 always 'enforced'",
+        "operationId": "governance_health_governance_health_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "epoch_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Epoch Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Health Governance Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Health"
+      }
+    },
+    "/governance/mutation-ledger": {
+      "get": {
+        "description": "Return recent MutationLedger entries from the hash-chained audit ledger. Read-only.\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of entries to return (most recent first).\npromoted_only : bool, default False\n    When True, only return entries where promoted=True.\n\nResponse fields (data)\n----------------------\nentries                 list  \u2014 mutation ledger records (most recent first)\ntotal_in_window         int   \u2014 number of entries returned\ntotal_entries           int   \u2014 total entries in the ledger\npromoted_count          int   \u2014 count of entries where promoted=True\nlast_hash               str   \u2014 sha256-prefixed hash of the last record\nledger_version          str   \u2014 \"1.0\"\n\nAuthority invariant\n-------------------\nThis endpoint is read-only and advisory.  It never approves or blocks\nmutations.  GovernanceGate retains sole mutation-approval authority.",
+        "operationId": "governance_mutation_ledger_governance_mutation_ledger_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "promoted_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Promoted Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Mutation Ledger Governance Mutation Ledger Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Mutation Ledger"
+      }
+    },
+    "/governance/pressure-history": {
+      "get": {
+        "description": "Return paginated PressureAdjustment ledger history. Read-only.\n\nQuery params\n------------\npressure_tier  \u2014 filter by tier (\"none\", \"elevated\", \"critical\")\nlimit          \u2014 max records (1\u2013500, default 100)\noffset         \u2014 pagination offset (default 0)\n\nResponse fields (data)\n----------------------\nrecords         list of ledger records (newest-first)\ntotal_queried   int \u2014 records returned\ntier_frequency  dict \u2014 {tier: count} across all ledger entries\nledger_active   bool\nledger_path     str | null",
+        "operationId": "governance_pressure_history_governance_pressure_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pressure_tier",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pressure Tier"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Pressure History Governance Pressure History Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Pressure History"
+      }
+    },
+    "/governance/review-pressure": {
+      "get": {
+        "description": "Return advisory PressureAdjustment based on current governance health. Read-only.\n\nResponse fields (data)\n----------------------\nhealth_score          float \u2014 current governance composite h \u2208 [0.0, 1.0]\nhealth_band           \"green\" | \"amber\" | \"red\"\npressure_tier         \"none\" | \"elevated\" | \"critical\"\nproposed_tier_config  dict \u2014 tier \u2192 {base_count, min_count, max_count}\nbaseline_tier_config  dict \u2014 DEFAULT_TIER_CONFIG snapshot\nadjusted_tiers        list[str] \u2014 tiers with raised min_count\nadvisory_only         true (structural invariant)\nadjustment_digest     sha256-prefixed digest\nadaptor_version       \"24.0\"",
+        "operationId": "governance_review_pressure_governance_review_pressure_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Review Pressure Governance Review Pressure Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Review Pressure"
+      }
+    },
+    "/governance/reviewer-calibration": {
+      "get": {
+        "operationId": "governance_reviewer_calibration_governance_reviewer_calibration_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "epoch_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Epoch Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "reviewer_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Reviewer Ids"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Reviewer Calibration Governance Reviewer Calibration Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Reviewer Calibration"
+      }
+    },
+    "/governance/reviewer-reputation-ledger": {
+      "get": {
+        "description": "Return recent reviewer reputation ledger entries. Read-only.\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of entries to return (most recent first).\nepoch_id : str | None, default None\n    When supplied, filter entries to the specified governance epoch.\n\nResponse fields (data)\n----------------------\nentries                 list  \u2014 ledger entries (most recent first)\ntotal_in_window         int   \u2014 number of entries returned\ntotal_entries           int   \u2014 total entries in the ledger\ndecision_breakdown      dict  \u2014 decision type \u2192 count\nchain_integrity_valid   bool  \u2014 True when hash chain passes verification\nledger_digest           str   \u2014 sha256-prefixed digest over full chain\nledger_format_version   str   \u2014 \"1.0\"\n\nAuthority invariant\n-------------------\nThis endpoint is read-only and advisory.  It never approves or blocks\nmutations.  GovernanceGate retains sole mutation-approval authority.",
+        "operationId": "governance_reviewer_reputation_ledger_governance_reviewer_reputation_ledger_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "epoch_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Epoch Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Reviewer Reputation Ledger Governance Reviewer Reputation Ledger Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Reviewer Reputation Ledger"
+      }
+    },
+    "/governance/routing-health": {
+      "get": {
+        "description": "Return RoutingHealthReport as a governed response. Read-only.\n\nQuery params\n------------\nwindow_size  \u2014 rolling window size (10\u201310000, default 100)\n\nResponse fields (data)\n----------------------\nstatus              \"green\" | \"amber\" | \"red\"\nhealth_score        float 0\u20131\nstrategy_stats      list of StrategyWindowStats dicts\ndominant_strategy   str | null\ndominant_share      float\nstale_strategy_ids  list[str]\ndrift_max           float\nwindow_size         int\ntotal_decisions     int\nwindow_decisions    int\nledger_chain_valid  bool\nreport_digest       sha256 prefixed string\navailable           bool",
+        "operationId": "governance_routing_health_governance_routing_health_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "window_size",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 10000,
+              "minimum": 10,
+              "title": "Window Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Routing Health Governance Routing Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Routing Health"
+      }
+    },
+    "/governance/scoring-engine": {
+      "get": {
+        "description": "PR-06: GET /governance/scoring-engine\n\nReturns the deterministic mutation scoring engine status and recent\nscoring ledger entries. Includes algorithm version, severity weights,\nand composite score distribution from recent mutation evaluations.\n\nConstitutional invariants:\n- scoring is deterministic (DET-ALL-0); algorithm_version is pinned.\n- Never raises; always returns a valid envelope.",
+        "operationId": "governance_scoring_engine_governance_scoring_engine_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Scoring Engine Governance Scoring Engine Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Scoring Engine"
+      }
+    },
+    "/governance/threat-scans": {
+      "get": {
+        "description": "Return recent ThreatMonitor scan records from the audit ledger. Read-only.\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of records to return (most recent).\nrecommendation : str, optional\n    Filter by recommendation: \"continue\" | \"escalate\" | \"halt\".\ntriggered_only : bool, default False\n    When True, only return scans where at least one detector triggered.\n\nResponse fields (data)\n----------------------\nrecords                 list  \u2014 threat scan records (chronological)\ntotal_in_window         int   \u2014 number of records returned\ntriggered_rate          float \u2014 fraction of scans with triggered_count >= 1\nescalation_rate         float \u2014 fraction of scans with recommendation != 'continue'\navg_risk_score          float \u2014 mean risk_score across all records\nrecommendation_breakdown dict  \u2014 recommendation \u2192 count\nrisk_level_breakdown     dict  \u2014 risk_level \u2192 count\nledger_version           str   \u2014 \"30.0\"",
+        "operationId": "governance_threat_scans_governance_threat_scans_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recommendation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Recommendation"
+            }
+          },
+          {
+            "in": "query",
+            "name": "triggered_only",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Triggered Only",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Threat Scans Governance Threat Scans Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Threat Scans"
+      }
+    },
+    "/governance/tier-calibration": {
+      "get": {
+        "description": "PR-07: GET /governance/tier-calibration\n\nReturns current reviewer tier calibration thresholds and constitutional\nfloor enforcement status. The constitutional floor (min 1 human reviewer)\nis enforced as a hard invariant \u2014 this endpoint surfaces it for audit.\n\nConstitutional invariants:\n- Constitutional floor (min_count >= 1) is never overridden.\n- advisory_only: true \u2014 this endpoint never modifies tier config.",
+        "operationId": "governance_tier_calibration_governance_tier_calibration_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Tier Calibration Governance Tier Calibration Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Tier Calibration"
+      }
+    },
+    "/innovations/federation-map": {
+      "get": {
+        "description": "Federated Evolution Map: cross-repo event galaxy data.\n\nFED-MAP-READONLY-0: read-only. No side effects.\nORACLE-AUTH-0: requires audit:read bearer token.\n\nReturns stars (repos), paths (mutation flows), divergence flares.",
+        "operationId": "federation_map_innovations_federation_map_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Federation Map Innovations Federation Map Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Federation Map",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/oracle": {
+      "get": {
+        "description": "ADAAD Oracle: deterministic Q&A over evolutionary history.\n\nORACLE-AUTH-0: requires audit:read bearer token.\nORACLE-DETERM-0: equal q + ledger state \u2192 equal answer.\nORACLE-PERSIST-0: every query appends one record to OracleLedger.\n\nQuery examples:\n  ?q=divergence          \u2014 last 10 divergence events\n  ?q=rejected            \u2014 last 20 rejected mutations\n  ?q=performance         \u2014 agent contribution ranking",
+        "operationId": "oracle_query_innovations_oracle_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "divergence",
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "horizon",
+            "required": false,
+            "schema": {
+              "default": 120,
+              "title": "Horizon",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seed_input",
+            "required": false,
+            "schema": {
+              "default": "oracle-vision",
+              "title": "Seed Input",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Oracle Query Innovations Oracle Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Oracle Query",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/oracle/history": {
+      "get": {
+        "description": "Replay past oracle answers from the persistence ledger.\n\nORACLE-REPLAY-0: read-only; returns JSONL records in append order.\nORACLE-AUTH-0: requires audit:read bearer token.\n\nReturns the last *limit* oracle records sorted oldest-first so callers\ncan verify determinism of repeated queries.",
+        "operationId": "oracle_history_innovations_oracle_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Oracle History Innovations Oracle History Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Oracle History",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/personality-profiles": {
+      "get": {
+        "description": "Return persisted personality profiles + deterministic epoch impact history.",
+        "operationId": "personality_profiles_innovations_personality_profiles_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Personality Profiles Innovations Personality Profiles Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Personality Profiles",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds": {
+      "get": {
+        "description": "List all registered Capability Seeds (Tier-2 nodes with SEED-REG-0 tag).\n\nORACLE-AUTH-0: requires audit:read bearer token.",
+        "operationId": "list_seeds_innovations_seeds_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Seeds Innovations Seeds Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Seeds",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds/promoted": {
+      "get": {
+        "description": "List Capability Seeds in the promotion queue (Phase 72).\n\nSEED-PROMO-HUMAN-0: all entries have status=pending_human_review.\n                    This endpoint is advisory only; no action is taken.\nSEED-PROMO-ORDER-0: entries returned oldest-first (FIFO enqueue order).\nORACLE-AUTH-0:      requires audit:read bearer token.",
+        "operationId": "list_promoted_seeds_innovations_seeds_promoted_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Promoted Seeds Innovations Seeds Promoted Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Promoted Seeds",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds/promoted/{seed_id}/inject": {
+      "post": {
+        "description": "Prepare an epoch context dict with an approved seed's ProposalRequest (Phase 75).\n\nSEED-REVIEW-AUTH-0: requires audit:write bearer token scope.\nSEED-CEL-0:         canonical injection via inject_seed_proposal_into_context().\nSEED-CEL-AUDIT-0:   SeedCELInjectionEvent written to lineage ledger.\nSEED-CEL-HUMAN-0:   returned context is advisory \u2014 pass to run_epoch(context=).\n\nRequest body (optional)::\n\n    {\n      \"epoch_id\":     \"ep-156\",\n      \"base_context\": { ...optional existing epoch context... }\n    }\n\nReturns the context dict ready for ``LiveWiredCEL.run_epoch(context=ctx)``.",
+        "operationId": "inject_seed_into_epoch_innovations_seeds_promoted__seed_id__inject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seed_id",
+            "required": true,
+            "schema": {
+              "title": "Seed Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Inject Seed Into Epoch Innovations Seeds Promoted  Seed Id  Inject Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Inject Seed Into Epoch",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds/promoted/{seed_id}/propose": {
+      "post": {
+        "description": "Generate a ProposalRequest from an approved seed (Phase 74).\n\nSEED-REVIEW-AUTH-0: requires audit:write bearer token scope.\nSEED-PROP-0:        seed must have status='approved' in promotion queue.\nSEED-PROP-HUMAN-0:  returned ProposalRequest is advisory only \u2014 no mutation\n                    is applied without GovernanceGate + HUMAN-0.\nSEED-PROP-LEDGER-0: SeedProposalEvent written to lineage ledger before return.\nSEED-PROP-BUS-0:    seed_proposal_generated bus frame emitted after ledger write.\n\nRequest body (optional)::\n\n    { \"epoch_id\": \"ep-156\" }\n\nReturns the ProposalRequest fields (cycle_id, strategy_id, context) and an\nadvisory notice confirming no mutation is applied automatically.",
+        "operationId": "generate_seed_proposal_innovations_seeds_promoted__seed_id__propose_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seed_id",
+            "required": true,
+            "schema": {
+              "title": "Seed Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Generate Seed Proposal Innovations Seeds Promoted  Seed Id  Propose Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate Seed Proposal",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds/promoted/{seed_id}/review": {
+      "post": {
+        "description": "Record a human review decision for a promoted seed (Phase 73).\n\nSEED-REVIEW-AUTH-0:  requires audit:write bearer token scope.\nSEED-REVIEW-HUMAN-0: operator_id must be non-empty \u2014 no self-approval.\nSEED-REVIEW-0:       decision written to lineage ledger before status change.\nSEED-REVIEW-IDEM-0:  reviewing an already-terminal seed is a no-op.\nSEED-REVIEW-BUS-0:   bus frame emitted after ledger write.\n\nRequest body::\n\n    {\n      \"status\":      \"approved\" | \"rejected\",\n      \"operator_id\": \"dustin\",\n      \"notes\":       \"optional free-text rationale\"\n    }",
+        "operationId": "review_promoted_seed_innovations_seeds_promoted__seed_id__review_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seed_id",
+            "required": true,
+            "schema": {
+              "title": "Seed Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Review Promoted Seed Innovations Seeds Promoted  Seed Id  Review Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Promoted Seed",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds/register": {
+      "post": {
+        "description": "Register Capability Seeds in the lineage ledger.\n\nSEED-REG-0: all seeds registered as Tier-2 nodes.\nSEED-IDEM-0: re-registering an existing seed_id is idempotent.\nORACLE-AUTH-0: requires audit:read bearer token.\n\nRequest body: list of seed objects:\n  [{\"seed_id\": \"...\", \"intent\": \"...\", \"scaffold\": \"...\",\n    \"author\": \"...\", \"lane\": \"governance\"}]",
+        "operationId": "register_seeds_innovations_seeds_register_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Seeds"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Register Seeds Innovations Seeds Register Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Seeds",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/seeds/{seed_id}/cel-outcome": {
+      "post": {
+        "description": "Record the outcome of a CEL epoch that ran with an injected seed proposal (Phase 76).\n\nSEED-REVIEW-AUTH-0:   requires audit:write bearer token scope.\nSEED-OUTCOME-0:       canonical outcome recording via record_cel_outcome().\nSEED-OUTCOME-LINK-0:  seed_id, cycle_id, epoch_id are all required.\nSEED-OUTCOME-AUDIT-0: SeedCELOutcomeEvent written to lineage ledger before return.\nSEED-OUTCOME-IDEM-0:  duplicate (seed_id, cycle_id) returns existing record.\n\nRequest body::\n\n    {\n      \"cycle_id\":       \"sha256hex...\",\n      \"epoch_id\":       \"ep-157\",\n      \"outcome_status\": \"success\" | \"partial\" | \"failed\" | \"skipped\",\n      \"fitness_delta\":  0.042,        (optional, default 0.0)\n      \"mutation_count\": 3,            (optional, default 0)\n      \"notes\":          \"...\"         (optional)\n    }",
+        "operationId": "record_seed_cel_outcome_innovations_seeds__seed_id__cel_outcome_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seed_id",
+            "required": true,
+            "schema": {
+              "title": "Seed Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Body",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Record Seed Cel Outcome Innovations Seeds  Seed Id  Cel Outcome Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record Seed Cel Outcome",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/innovations/story-mode": {
+      "get": {
+        "description": "Aponi Story Mode: CEL evidence ledger as narrative arc timeline.\n\nSTORY-LEDGER-0: reads ledger, never writes.\nORACLE-AUTH-0: requires audit:read bearer token.",
+        "operationId": "story_mode_innovations_story_mode_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "horizon",
+            "required": false,
+            "schema": {
+              "default": 120,
+              "title": "Horizon",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seed_input",
+            "required": false,
+            "schema": {
+              "default": "story-vision",
+              "title": "Seed Input",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Story Mode Innovations Story Mode Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Story Mode",
+        "tags": [
+          "innovations"
+        ]
+      }
+    },
+    "/intelligence/epoch-memory": {
+      "get": {
+        "description": "GET /intelligence/epoch-memory\n\nReturns the current EpochMemoryStore window and LearningSignal derived\nfrom cross-epoch history.\n\nConstitutional invariants (Phase 52):\n- Read-only; no side effects on GovernanceGate or any mutation path.\n- Requires ``audit:read`` scope (same as all governance read endpoints).\n- Fail-safe: on any internal error returns ``ok=True`` with empty signal.\n- Learning signal is ADVISORY only; label surfaced in response payload.\n\nQuery params:\n    n (int, optional): Limit window to the n most recent entries.",
+        "operationId": "get_epoch_memory_intelligence_epoch_memory_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "n",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "N"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Epoch Memory Intelligence Epoch Memory Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Epoch Memory"
+      }
+    },
+    "/metrics/review-quality": {
+      "get": {
+        "description": "Return review latency distribution from the metrics tail.\n\nScans metrics entries for governance_review_quality events and\ncomputes latency distribution statistics.",
+        "operationId": "review_quality_metrics_metrics_review_quality_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sla_seconds",
+            "required": false,
+            "schema": {
+              "default": 86400,
+              "minimum": 1,
+              "title": "Sla Seconds",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Review Quality Metrics Metrics Review Quality Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Quality Metrics"
+      }
+    },
+    "/mutation/propose": {
+      "post": {
+        "operationId": "post_proposal_alias_mutation_propose_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Post Proposal Alias Mutation Propose Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Proposal Alias"
+      }
+    },
+    "/simulation/results/{run_id}": {
+      "get": {
+        "description": "GET /simulation/results/{run_id} \u2014 retrieve simulation result by run ID.",
+        "operationId": "simulation_results_simulation_results__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Simulation Results Simulation Results  Run Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Simulation Results"
+      }
+    },
+    "/simulation/run": {
+      "post": {
+        "description": "POST /simulation/run \u2014 simulate governance evaluation, no ledger writes.",
+        "operationId": "simulation_run_simulation_run_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/_SimulationRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Simulation Run Simulation Run Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Simulation Run"
+      }
+    },
+    "/telemetry/analytics": {
+      "get": {
+        "operationId": "telemetry_analytics_telemetry_analytics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "window_size",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 10000,
+              "minimum": 10,
+              "title": "Window Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Telemetry Analytics Telemetry Analytics Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Telemetry Analytics"
+      }
+    },
+    "/telemetry/decisions": {
+      "get": {
+        "operationId": "telemetry_decisions_telemetry_decisions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "strategy_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Strategy Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Telemetry Decisions Telemetry Decisions Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Telemetry Decisions"
+      }
+    },
+    "/telemetry/strategy/{strategy_id}": {
+      "get": {
+        "operationId": "telemetry_strategy_detail_telemetry_strategy__strategy_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "strategy_id",
+            "required": true,
+            "schema": {
+              "title": "Strategy Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "window_size",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 10000,
+              "minimum": 10,
+              "title": "Window Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Telemetry Strategy Detail Telemetry Strategy  Strategy Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Telemetry Strategy Detail"
+      }
+    },
+    "/ui/aponi/{asset_path}": {
+      "get": {
+        "description": "Serve individual Aponi assets at /ui/aponi/<path>.\n\nPath-traversal protection: rejects any path that resolves outside APONI_DIR.",
+        "operationId": "serve_aponi_asset_ui_aponi__asset_path__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_path",
+            "required": true,
+            "schema": {
+              "title": "Asset Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Serve Aponi Asset"
+      }
+    },
+    "/ui/developer/ADAADdev/{asset_path}": {
+      "get": {
+        "description": "Serve Whale.Dic developer assets at /ui/developer/ADAADdev/<path>.\n\nWhale.Dic \u00b7 ADAADinside\u2122 developer tool",
+        "operationId": "serve_whaledic_asset_ui_developer_ADAADdev__asset_path__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "asset_path",
+            "required": true,
+            "schema": {
+              "title": "Asset Path",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Serve Whaledic Asset"
+      }
+    },
+    "/webhook/github": {
+      "post": {
+        "description": "ADAADchat GitHub App webhook endpoint (App ID: 3013088).\n\nVerifies HMAC-SHA256 signature and dispatches to the ADAAD governance\naudit trail.  Endpoint: POST /webhook/github",
+        "operationId": "github_webhook_webhook_github_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Github Webhook Webhook Github Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Github Webhook"
+      }
+    }
+  }
+}
