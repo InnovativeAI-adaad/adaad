@@ -180,6 +180,7 @@ Constitutional governance should not depend on cloud infrastructure. ADAAD's saf
 | **Phase 89** | **◈ CEL live — real proposals through the full loop — March 22, 2026** |
 | **Phase 90** | **🧭 INNOV-06 CEPD — cryptographic evolution proof DAG — March 23, 2026** |
 | **Phase 91** | **🛡 Audit hardening — senior audit pass and release v9.24.1 — March 24, 2026** |
+| **Phase 92** | **🔴 INNOV-08 AFRT — Adversarial Fitness Red Team — v9.25.0 — planned** |
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
