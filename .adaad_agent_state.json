@@ -1,25 +1,25 @@
 {
-  "active_phase": "v9.24.1-phase91-post-ga-governance-hardening-sprint",
+  "active_phase": "v9.24.1-phase91-complete",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 90 INNOV-06 CEPD",
-  "last_completed_pr": "feat/phase90-innov06-cepd",
+  "last_completed_phase": "Phase 91 — Post-GA Governance Hardening Sprint + LSME (INNOV-07)",
+  "last_completed_pr": "fix/phase91-audit-5patch",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-03-24",
+  "last_invocation": "2026-03-27",
   "last_sync_sha": "phase91-v9.24.1",
-  "next_pr": "Phase 91 \u2014 Post-GA Governance Hardening Sprint",
+  "next_pr": "Phase 92 — INNOV-08 Invariant Discovery Engine (v9.25.0)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
       "title": "LLM failover strategy undocumented",
       "severity": "P2",
-      "source": "Deep Dive \u00a74.7",
+      "source": "Deep Dive §4.7",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -29,7 +29,7 @@
       "id": "FINDING-66-002",
       "title": "WeightAdaptor telemetry record not published (prediction_accuracy progression)",
       "severity": "P1",
-      "source": "Deep Dive \u00a74.4",
+      "source": "Deep Dive §4.4",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -37,9 +37,9 @@
     },
     {
       "id": "FINDING-66-003",
-      "title": "Patent filing: constitutional mutation governance method \u2014 pre-v1.1-GA deadline",
+      "title": "Patent filing: constitutional mutation governance method — pre-v1.1-GA deadline",
       "severity": "P1",
-      "source": "Deep Dive \u00a72.2.3",
+      "source": "Deep Dive §2.2.3",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -53,7 +53,7 @@
       "id": "FINDING-66-004",
       "title": "Governance Key Ceremony (PR-01): 2-of-3 Ed25519 threshold not yet executed",
       "severity": "P2",
-      "source": "Deep Dive \u00a7VI Medium Term",
+      "source": "Deep Dive §VI Medium Term",
       "status": "runbook_delivered",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -64,7 +64,7 @@
       "id": "FINDING-66-005",
       "title": "LineageLedgerV2 O(n) fix (C-04/PR-PERF-01): streaming verification + _verified_tail_hash",
       "severity": "P1",
-      "source": "Deep Dive \u00a73.5 / \u00a7VI Medium Term",
+      "source": "Deep Dive §3.5 / §VI Medium Term",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -379,7 +379,15 @@
     "v9.21.0-released",
     "v9.22.0-released",
     "v9.23.0-released",
-    "v9.24.0-released"
+    "v9.24.0-released",
+    "v9.24.1-released",
+    "phase91-lsme-0-enforced",
+    "phase91-lsme-1-enforced",
+    "phase91-audit-5patch-merged",
+    "phase91-human0-attested",
+    "phase91-world-first-shadow-execution",
+    "phase91-lsme-complete",
+    "phase91-audit-hardening-complete"
   ],
   "current_version": "9.24.1",
   "completed_milestones": [
@@ -429,14 +437,28 @@
     "phase90-human0-ratified",
     "phase90-innov06-cepd-implemented",
     "v9.23.0-released",
-    "v9.24.0-released"
+    "v9.24.0-released",
+    "phase91-plan-authored",
+    "phase91-human0-ratified",
+    "phase91-innov07-lsme-implemented",
+    "v9.24.1-released",
+    "phase91-lsme-complete",
+    "phase91-audit-hardening-complete"
   ],
   "software_version": "9.24.1",
-  "last_agent_state_sync_digest": "gsync-phase91-v9.24.1-sweep",
+  "last_agent_state_sync_digest": "gsync-phase91-v9.24.1-sweep-2026-03-27",
   "version": "9.24.1",
   "phase": 91,
-  "phase_label": "Phase 91 \u2014 Post-GA Governance Hardening Sprint",
-  "last_innovation": "INNOV-03",
+  "phase_label": "Phase 91 — Audit Hardening + LSME (INNOV-07)",
+  "last_innovation": "INNOV-07",
   "acse_active": true,
-  "tife_active": true
+  "tife_active": true,
+  "human0_signoffs": [
+    {
+      "date": "2026-03-27",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 91 state sync, CHANGELOG backfill, Phase 92 plan authoring, Innovations index update",
+      "session_digest": "gsync-phase91-v9.24.1-sweep-2026-03-27"
+    }
+  ]
 }
