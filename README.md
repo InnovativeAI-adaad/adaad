@@ -8,9 +8,9 @@
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.27.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/93_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_93-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.27.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/94_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_94-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
-[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C680_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/9_Innovations-Shipped_·_22_Roadmap-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Invariants](https://img.shields.io/badge/21_Hard--Class-Invariants-ff4466?style=flat-square&labelColor=0d1117)
+[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C680_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/10_Innovations-Shipped_·_20_Roadmap-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Invariants](https://img.shields.io/badge/27_Hard--Class-Invariants-ff4466?style=flat-square&labelColor=0d1117)
 
 <br/>
 
@@ -54,7 +54,7 @@ Here's the sequence every proposed change goes through:
 
 **2. Adversarial red-team** — A dedicated Red Team Agent tries to break the proposal. It finds the code paths the proposing agent didn't cover and generates up to five targeted adversarial cases against them. If the proposal fails, it's returned to the proposer. It does not advance. *(INNOV-08 — the first system to do this as a constitutional gate.)*
 
-**3. Constitutional scoring** — The proposal is measured against 21 runtime-enforced constitutional rules. These aren't guidelines. If a rule is violated, the epoch halts.
+**3. Constitutional scoring** — The proposal is measured against 27 runtime-enforced constitutional rules. These aren't guidelines. If a rule is violated, the epoch halts.
 
 **4. Shadow execution** — The mutation runs in a zero-write shadow harness against real traffic patterns. Divergence, error rate, and latency are all measured. Regression on any signal blocks promotion. *(INNOV-07)*
 
@@ -94,7 +94,7 @@ Here's the sequence every proposed change goes through:
 | GPG-sign Tier 0 changes | Generate mutation proposals via Claude |
 | Approve seed promotions | Red-team challenge every proposal before scoring |
 | Set constitutional rules | Shadow-execute mutations in zero-write harness |
-| Tag version ceremonies | Score against 21 constitutional rules |
+| Tag version ceremonies | Score against 27 constitutional rules |
 | Ratify new invariants | Hash-chain every decision into the ledger |
 | Patent and IP decisions | Build cryptographic evolution proof DAGs |
 | GA sign-off | Mine failure patterns and propose new invariants |
@@ -155,6 +155,18 @@ Before any mutation is scored and gated, it runs in a zero-write shadow harness 
 
 Every mutation proposal is now challenged by a dedicated Red Team Agent before governance scoring. The Red Team finds code paths the proposing agent didn't cover and fires targeted adversarial cases against them. Proposals that fail are returned. The Red Team is constitutionally incapable of approving anything — its only outputs are PASS or RETURNED. First governed AI evolution system to use adversarial peer-review as a constitutional gate.
 
+---
+
+### 🎨 March 27, 2026 — Aesthetic Fitness as a Constitutional Signal (Phase 93 · INNOV-09)
+
+Code readability is now a first-class fitness dimension. ADAAD scores every mutation candidate across five AST-derived axes — function length, identifier entropy, nesting depth, comment density, and cyclomatic complexity — and incorporates the result as a weighted governance signal. Technical debt is now measurable, bounded, and constitutionally enforced. First autonomous evolution system to treat code aesthetics as a governed, weighted fitness signal with Hard-class invariants.
+
+---
+
+### 🧬 March 28, 2026 — Morphogenetic Memory (Phase 94 · INNOV-10)
+
+ADAAD now carries a formally encoded, cryptographically anchored self-model: the `IdentityLedger`, containing 8 founding `IdentityStatement`s (IS-001..IS-008) authored by ArchitectAgent and attested by HUMAN-0. Before every mutation proposal is generated, the `IdentityContextInjector` (Phase 0d) consults the ledger and injects an `identity_consistency_score` into the epoch context. Proposals that contradict what the system believes itself to be are flagged — even if they pass every correctness test, fitness score, and governance rule. The question no prior gate could ask: *is this mutation consistent with what this system believes itself to be?* First autonomous AI evolution system to consult a formally encoded self-model as a pre-proposal governance surface.
+
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Why you can trust the claims
@@ -165,7 +177,7 @@ Every property below is mechanically enforced at runtime. Not policy. Not docume
 
 **Deterministic replay** — Any prior epoch can be re-run from its original inputs and produce byte-identical results. No `datetime.now()`, no `random.random()` in constitutional paths. Enforced by invariant.
 
-**Constitutional gate** — 21 runtime-enforced rules in `constitution.yaml v0.9.0`. If a mutation violates a rule, the epoch halts. There is no configuration option that changes this.
+**Constitutional gate** — 27 runtime-enforced rules in `constitution.yaml v0.9.0`. If a mutation violates a rule, the epoch halts. There is no configuration option that changes this.
 
 **Adversarial red-team gate** — Every mutation is challenged before fitness scoring (INNOV-08). The agent cannot approve mutations — structural enforcement in code, not policy.
 
@@ -196,7 +208,7 @@ Not prototypes. Each shipped with a full constitutional test suite, human govern
 | INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Mutations run in a zero-write shadow harness against real traffic before promotion |
 | INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
 | INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability scored as a constitutionally-bounded fitness dimension — first system to treat aesthetics as a governed signal |
-| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained HUMAN-0-gated IdentityLedger encodes the system self-model — consulted pre-proposal to detect identity drift |
+| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained HUMAN-0-gated IdentityLedger encodes the system’s self-model — consulted pre-proposal to detect identity drift |
 
 20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
@@ -314,9 +326,9 @@ The full provenance chain from proposal to outcome is cryptographically linked v
 <summary><b>What are the 9 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-09 shipped across v9.18.0–v9.26.0 (Phases 87–93): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), and Aesthetic Fitness Signal (AFIT).
+INNOV-01 through INNOV-10 shipped across v9.18.0–v9.27.0 (Phases 87–94): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), and Morphogenetic Memory (MMEM).
 
-22 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
 
 <details>
