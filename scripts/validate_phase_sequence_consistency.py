@@ -2,17 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 """Validate active phase/PR alignment and canonical-spec consistency across active docs.
 
-Updated for v3.0.0: validator is now phase-agnostic (previously hardcoded to Phase 5).
-It reads the active phase from .adaad_agent_state.json and validates that AGENTS.md
-(next) heading and next_pr are internally consistent — without requiring a specific
-phase number to be active.
+Updated for v3.0.0: validator is phase-agnostic and reads the active progression
+from the machine-checkable automation contract block in
+`docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`.
 """
 
 from __future__ import annotations
 
 import json
 import re
-import subprocess
 from pathlib import Path
 
 AGENTS_PATH = Path("AGENTS.md")
@@ -80,72 +78,98 @@ def _validate_canonical_spec_claims(errors: list[str]) -> None:
                     )
 
 
-def _extract_phase6_pr_sequence(text: str) -> list[str]:
-    sequence: list[str] = []
-    for match in re.finditer(r"\bPR-PHASE6-(\d{2})\b", text):
-        pr_id = f"PR-PHASE6-{match.group(1)}"
-        if pr_id not in sequence:
-            sequence.append(pr_id)
-    return sequence
+def _extract_active_progression_contract(text: str) -> tuple[list[str], str | None]:
+    """Return ordered phase ids and expected next_pr from automation contract block."""
+    block_match = re.search(
+        r"```yaml\n(adaad_pr_procession_contract:\n.*?\n)```",
+        text,
+        flags=re.DOTALL,
+    )
+    if not block_match:
+        return [], None
+
+    block_text = block_match.group(1)
+
+    ordered_phase_ids: list[str] = []
+    in_ordered_phase_ids = False
+    for line in block_text.splitlines():
+        if re.match(r"^\s*ordered_phase_ids:\s*$", line):
+            in_ordered_phase_ids = True
+            continue
+        if in_ordered_phase_ids:
+            phase_match = re.match(r"^\s*-\s*(phase\d+)\s*$", line)
+            if phase_match:
+                ordered_phase_ids.append(phase_match.group(1))
+                continue
+            if re.match(r"^\s*\w[\w_]*:\s*", line):
+                in_ordered_phase_ids = False
+
+    expected_next_match = re.search(
+        r"^\s*expected_next_pr:\s*\"([^\"]+)\"\s*$",
+        block_text,
+        flags=re.MULTILINE,
+    )
+    expected_next_pr = expected_next_match.group(1).strip() if expected_next_match else None
+
+    return ordered_phase_ids, expected_next_pr
 
 
-def _highest_merged_phase6_index(git_log_text: str) -> int:
-    indices = [int(match.group(1)) for match in re.finditer(r"PR-PHASE6-(\d{2})", git_log_text)]
-    if not indices:
-        return 0
-    return max(indices)
+def _extract_phase_number(phase_ref: str) -> int | None:
+    match = re.search(r"phase\s*(\d+)", phase_ref, flags=re.IGNORECASE)
+    return int(match.group(1)) if match else None
 
 
-def _validate_state_next_pr_not_merged(errors: list[str], next_pr: str) -> None:
+def _validate_state_next_pr_matches_active_progression(errors: list[str], next_pr: str) -> None:
     if not PROCESSION_PATH.exists():
         errors.append(f"missing canonical procession file: {PROCESSION_PATH}")
         return
 
-    sequence = _extract_phase6_pr_sequence(PROCESSION_PATH.read_text(encoding="utf-8"))
-    if not sequence:
-        errors.append("canonical procession file does not define any PR-PHASE6 sequence")
+    ordered_phase_ids, expected_next_pr = _extract_active_progression_contract(
+        PROCESSION_PATH.read_text(encoding="utf-8")
+    )
+    if not ordered_phase_ids:
+        errors.append("canonical procession file does not define ordered_phase_ids in contract")
+        return
+    if not expected_next_pr:
+        errors.append("canonical procession file does not define state_alignment.expected_next_pr")
         return
 
-    try:
-        git_log_text = subprocess.check_output(
-            ["git", "log", "--oneline", "--decorate"],
-            text=True,
-            stderr=subprocess.STDOUT,
+    expected_phase_number = _extract_phase_number(expected_next_pr)
+    if expected_phase_number is None:
+        errors.append(
+            "canonical procession file expected_next_pr is not in 'Phase <N> — ...' format"
         )
-    except subprocess.CalledProcessError as exc:
-        errors.append(f"unable to read git merge history: {exc.output.strip()}")
         return
 
-    merged_cutoff = _highest_merged_phase6_index(git_log_text)
-    merged_prs = {pr for pr in sequence if int(pr.rsplit("-", maxsplit=1)[-1]) <= merged_cutoff}
+    shipped_phase_numbers = {
+        int(match.group(1))
+        for phase_id in ordered_phase_ids
+        if (match := re.fullmatch(r"phase(\d+)", phase_id))
+    }
 
     if next_pr.upper() in {"NONE", "N/A", "NA", "COMPLETED"}:
-        if merged_cutoff < int(sequence[-1].rsplit("-", maxsplit=1)[-1]):
-            expected_next = next(
-                pr
-                for pr in sequence
-                if int(pr.rsplit("-", maxsplit=1)[-1]) > merged_cutoff
-            )
-            errors.append(
-                f"state next_pr={next_pr!r} but canonical sequence has pending PR {expected_next}"
-            )
+        errors.append(
+            f"state next_pr={next_pr!r} but canonical contract expects {expected_next_pr!r}"
+        )
         return
 
-    if next_pr in merged_prs:
+    observed_phase_number = _extract_phase_number(next_pr)
+    if observed_phase_number is None:
         errors.append(
-            f"state next_pr={next_pr!r} regresses to an already merged canonical PR"
+            f"state next_pr={next_pr!r} is not in the canonical 'Phase <N> — ...' format"
+        )
+        return
+
+    if observed_phase_number in shipped_phase_numbers and observed_phase_number < expected_phase_number:
+        errors.append(
+            f"state next_pr={next_pr!r} regresses to already shipped phase {observed_phase_number}; "
+            f"expected phase {expected_phase_number}"
         )
 
-    if next_pr.startswith("PR-PHASE6-"):
-        expected_next = None
-        for pr in sequence:
-            if int(pr.rsplit("-", maxsplit=1)[-1]) > merged_cutoff:
-                expected_next = pr
-                break
-        if expected_next and next_pr != expected_next:
-            errors.append(
-                f"state next_pr={next_pr!r} is not serial; expected {expected_next!r}"
-            )
+    if observed_phase_number != expected_phase_number:
+        errors.append(
+            f"state next_pr={next_pr!r} is not serial; expected {expected_next_pr!r}"
+        )
 
 
 def main() -> int:
@@ -169,7 +193,6 @@ def main() -> int:
     if not state_next_pr:
         errors.append(".adaad_agent_state.json: next_pr is empty")
 
-
     # Optional AGENTS.md alignment checks apply only when a "(next)" section exists.
     if active_phase_label and agents_next_heading:
         if active_phase_label.lower() not in agents_next_heading.lower():
@@ -184,7 +207,7 @@ def main() -> int:
             f"AGENTS next table first PR={agents_next_pr!r}"
         )
 
-    _validate_state_next_pr_not_merged(errors, state_next_pr)
+    _validate_state_next_pr_matches_active_progression(errors, state_next_pr)
 
     _validate_canonical_spec_claims(errors)
 
