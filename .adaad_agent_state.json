@@ -1,10 +1,10 @@
 {
-  "active_phase": "v9.24.1-phase91-complete",
+  "active_phase": "phase93_complete",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 91 — Post-GA Governance Hardening Sprint + LSME (INNOV-07)",
-  "last_completed_pr": "fix/phase91-audit-5patch",
+  "last_completed_phase": "Phase 93 — Aesthetic Fitness Signal (INNOV-09)",
+  "last_completed_pr": "feature/phase93-afit-engine",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -12,8 +12,8 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-03-27",
-  "last_sync_sha": "phase91-v9.24.1",
-  "next_pr": "Phase 94 — INNOV-10 roadmap execution",
+  "last_sync_sha": "ca3cc42",
+  "next_pr": "PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -448,8 +448,8 @@
   "software_version": "9.24.1",
   "last_agent_state_sync_digest": "gsync-phase91-v9.24.1-sweep-2026-03-27",
   "version": "9.24.1",
-  "phase": 91,
-  "phase_label": "Phase 91 — Audit Hardening + LSME (INNOV-07)",
+  "phase": 93,
+  "phase_label": "Phase 93 — Aesthetic Fitness Signal (INNOV-09)",
   "last_innovation": "INNOV-07",
   "acse_active": true,
   "tife_active": true,
