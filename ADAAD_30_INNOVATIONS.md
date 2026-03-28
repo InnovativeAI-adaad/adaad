@@ -6,18 +6,18 @@
 **Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-09 shipped (v9.18.0–v9.26.0). Items 10–30 are next-wave roadmap.
 **Canonical current/next:** Current = **Phase 93 / v9.26.0** (INNOV-09 shipped), Next = **Phase 94 / INNOV-10 roadmap execution**.
 
-| Range | Status |
-|---|---|
-| INNOV-01 CSAP | ✅ Shipped v9.18.0 — Phase 87 |
-| INNOV-02 ACSE | ✅ Shipped v9.19.0 — Phase 87 |
-| INNOV-03 TIFE | ✅ Shipped v9.20.0 — Phase 87 |
-| INNOV-04 SCDD | ✅ Shipped v9.21.0 — Phase 88 |
-| INNOV-05 AOEP | ✅ Shipped v9.22.0 — Phase 89 |
-| INNOV-06 CEPD | ✅ Shipped v9.23.0 — Phase 90 |
-| INNOV-07 LSME | ✅ Shipped v9.24.0 — Phase 91 |
-| INNOV-08 AFRT | ✅ Shipped v9.25.0 — Phase 92 |
-| INNOV-09 AFIT | ✅ Shipped v9.26.0 — Phase 93 |
-| INNOV-10 through INNOV-30 | 📋 Roadmap — sequenced for Phases 94+ |
+| Range | Status | Evidence links |
+|---|---|---|
+| INNOV-01 CSAP | ✅ Shipped v9.18.0 — Phase 87 | [Artifact](artifacts/governance/phase83/track_a_sign_off.json) · [Closure ledger](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · [Claims row `phase87-innov01-csap-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-02 ACSE | ✅ Shipped v9.19.0 — Phase 87 | [Artifact](artifacts/governance/phase84/track_a_sign_off.json) · [Closure ledger](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · [Claims row `phase87-innov02-acse-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-03 TIFE | ✅ Shipped v9.20.0 — Phase 87 | [Closure ledger](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · [Claims row `phase87-innov03-tife-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-04 SCDD | ✅ Shipped v9.21.0 — Phase 88 | [Artifact](artifacts/governance/phase88/phase88_sign_off.json) · [Closure ledger](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · [Claims row `phase88-innov04-scdd-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-05 AOEP | ✅ Shipped v9.22.0 — Phase 89 | [Artifact](artifacts/governance/phase89/phase89_sign_off.json) · [Closure ledger](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · [Claims row `phase89-innov05-aoep-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-06 CEPD | ✅ Shipped v9.23.0 — Phase 90 | [Artifact](artifacts/governance/phase90/phase90_sign_off.json) · [Closure record](docs/governance/AUDIT_CLOSEOUT_REPORT_2026-03.md#finding-66-003--ip-closure-and-evidence-chain) · [Claims row `phase90-innov06-cepd-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-07 LSME | ✅ Shipped v9.24.0 — Phase 91 | [Artifact](artifacts/governance/phase91/phase91_sign_off.json) · [Closure ledger](docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md#milestone-history-context) · [Claims row `phase91-innov07-lsme-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-08 AFRT | ✅ Shipped v9.25.0 — Phase 92 | [Artifact](artifacts/governance/phase92/phase92_sign_off.json) · [Closure record](docs/plans/PHASE_92_PLAN.md) · [Claims row `phase92-innov08-afrt-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-09 AFIT | ✅ Shipped v9.26.0 — Phase 93 | [Artifact](artifacts/governance/phase93/phase93_sign_off.json) · [Closure record](docs/plans/PHASE_93_CLOSURE.md) · [Claims row `phase93-innov09-afit-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-10 through INNOV-30 | 📋 Roadmap — sequenced for Phases 94+ | [Roadmap anchor](docs/plans/PHASE_94_PLAN.md) |
 
 ---
 
@@ -32,6 +32,9 @@ These 30 innovations make ADAAD categorically different — not just better, but
 ## Category I — Constitutional Intelligence
 
 ### 1. Invariant Discovery Engine
+
+> **Status:** ✅ **Shipped** — Phase 87, v9.18.0 · Evidence: [artifacts/governance/phase83/track_a_sign_off.json](artifacts/governance/phase83/track_a_sign_off.json) · Closure: [docs/governance/V1_GA_READINESS_CHECKLIST.md](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · Claims: [`phase87-innov01-csap-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A subsystem that watches failed mutations, finds the failure patterns, and *proposes new constitutional rules* to prevent that class of failure permanently.
 
 Right now, constitutional rules are written by humans during phase planning. This flips it: when the `FailurePatternMiner` detects that a specific mutation pattern fails governance 80% of the time, it generates a draft rule — formally structured in the existing `constitution.yaml` format — and submits it as an amendment proposal through the `HUMAN-0` gate.
@@ -45,6 +48,9 @@ The system discovers its own laws from its own failure history. Nothing like thi
 ---
 
 ### 2. Constitutional Tension Resolver
+
+> **Status:** ✅ **Shipped** — Phase 87, v9.19.0 · Evidence: [artifacts/governance/phase84/track_a_sign_off.json](artifacts/governance/phase84/track_a_sign_off.json) · Closure: [docs/governance/V1_GA_READINESS_CHECKLIST.md](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · Claims: [`phase87-innov02-acse-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A reasoning engine that detects when two active constitutional rules produce contradictory verdicts on the same mutation, and escalates the contradiction as a first-class governance event rather than silently letting one rule win.
 
 Currently if `rule_A` blocks a mutation and `rule_B` would pass it, the blocking rule wins. That's correct behavior. But the contradiction — two rules that disagree — is never recorded, never analyzed, never resolved. Over time this creates constitutional drift where some rules effectively become dead letters because they're always overridden.
@@ -56,6 +62,9 @@ The Tension Resolver maintains a `ConstitutionalTensionLedger`: every time two r
 ---
 
 ### 3. Graduated Invariant Promotion
+
+> **Status:** ✅ **Shipped** — Phase 87, v9.20.0 · Closure: [docs/governance/V1_GA_READINESS_CHECKLIST.md](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · Claims: [`phase87-innov03-tife-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A lifecycle for constitutional invariants that mirrors the mutation lifecycle. Rules start as `advisory`, graduate to `warning`, and eventually earn `blocking` status — based on how many times they've fired correctly versus how many false positives they've produced.
 
 A new constitutional rule that blocks too many good mutations gets automatically demoted back to `advisory` pending human review. A rule that has a perfect precision record over 50 epochs gets promoted to `blocking` automatically.
@@ -67,6 +76,9 @@ The constitution evolves its own enforcement strength based on empirical evidenc
 ---
 
 ### 4. Intent Preservation Verifier
+
+> **Status:** ✅ **Shipped** — Phase 88, v9.21.0 · Evidence: [artifacts/governance/phase88/phase88_sign_off.json](artifacts/governance/phase88/phase88_sign_off.json) · Closure: [docs/governance/V1_GA_READINESS_CHECKLIST.md](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · Claims: [`phase88-innov04-scdd-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A subsystem that, given a mutation proposal and the `intent` field that described what the proposer wanted to achieve, verifies *after mutation* whether the intent was actually realized.
 
 Currently the `intent` field on `MutationRequest` is recorded and forgotten. The fitness engine measures what changed, not whether what changed matches what was intended. A mutation that sets out to "improve throughput" but actually "reduces complexity with no throughput change" passes all current gates.
@@ -80,6 +92,9 @@ The Intent Preservation Verifier runs post-mutation: it reads the original `inte
 ## Category II — Fitness Beyond Correctness
 
 ### 5. Temporal Regret Scorer
+
+> **Status:** ✅ **Shipped** — Phase 89, v9.22.0 · Evidence: [artifacts/governance/phase89/phase89_sign_off.json](artifacts/governance/phase89/phase89_sign_off.json) · Closure: [docs/governance/V1_GA_READINESS_CHECKLIST.md](docs/governance/V1_GA_READINESS_CHECKLIST.md#phase-87-to-90-shipped-innovation-closure) · Claims: [`phase89-innov05-aoep-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A fitness signal that measures not how good a mutation looked at the time, but how good it still looks N epochs later.
 
 Every mutation that was accepted gets a `regret_score` computed at epoch+10, epoch+25, and epoch+50: the difference between its predicted fitness impact at acceptance time and its measured fitness contribution at that later epoch. A mutation that looked great and stayed great has regret=0. A mutation that looked great but degraded the system over time has high regret.
@@ -91,6 +106,9 @@ The `WeightAdaptor` uses regret scores to down-weight the criteria that led to r
 ---
 
 ### 6. Counterfactual Fitness Simulation
+
+> **Status:** ✅ **Shipped** — Phase 90, v9.23.0 · Evidence: [artifacts/governance/phase90/phase90_sign_off.json](artifacts/governance/phase90/phase90_sign_off.json) · Closure: [docs/governance/AUDIT_CLOSEOUT_REPORT_2026-03.md](docs/governance/AUDIT_CLOSEOUT_REPORT_2026-03.md#finding-66-003--ip-closure-and-evidence-chain) · Claims: [`phase90-innov06-cepd-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** Before accepting a mutation, simulate what would have happened if the system had *not* made the last 5 accepted mutations, and score the current proposal against that counterfactual baseline.
 
 The idea: the system might be in a local optimum because its recent mutations created it. A mutation that looks mediocre relative to the current state might be excellent relative to the counterfactual state. And a mutation that looks excellent might only look that way because recent mutations opened an artificially easy target.
@@ -102,6 +120,9 @@ Uses the existing `BaselineStore` and `LineageLedgerV2` to reconstruct the count
 ---
 
 ### 7. Epistemic Confidence Decay
+
+> **Status:** ✅ **Shipped** — Phase 91, v9.24.0 · Evidence: [artifacts/governance/phase91/phase91_sign_off.json](artifacts/governance/phase91/phase91_sign_off.json) · Closure: [docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md](docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md#milestone-history-context) · Claims: [`phase91-innov07-lsme-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** Every fitness signal has a `confidence` value that decays over time as the system state diverges from the state in which the signal was observed.
 
 Currently a fitness weight learned in epoch 10 is applied with the same confidence in epoch 200, even though the system has changed radically. This is like using a map from 10 years ago in a city that's been rebuilt.
@@ -114,7 +135,7 @@ Currently a fitness weight learned in epoch 10 is applied with the same confiden
 
 ### 8. Adversarial Fitness Red Team
 
-> **Status:** ✅ **Shipped** — Phase 92, v9.25.0 · Evidence: `artifacts/governance/phase92/phase92_sign_off.json`
+> **Status:** ✅ **Shipped** — Phase 92, v9.25.0 · Evidence: [artifacts/governance/phase92/phase92_sign_off.json](artifacts/governance/phase92/phase92_sign_off.json) · Closure: [docs/plans/PHASE_92_PLAN.md](docs/plans/PHASE_92_PLAN.md) · Claims: [`phase92-innov08-afrt-shipped` row](docs/comms/claims_evidence_matrix.md)
 
 **What it is:** A dedicated red-team agent whose only job is to try to break any mutation that the main agents propose, specifically looking for edge cases the proposer didn't consider.
 
@@ -127,7 +148,7 @@ A mutation accepted by the Red Team Agent has been stress-tested beyond its own 
 ---
 
 ### 9. Aesthetic Fitness Signal
-> **Status:** ✅ **Shipped** — Phase 93, v9.26.0 · Evidence: `artifacts/governance/phase93/phase93_sign_off.json` · Closure: `docs/plans/PHASE_93_CLOSURE.md`
+> **Status:** ✅ **Shipped** — Phase 93, v9.26.0 · Evidence: [artifacts/governance/phase93/phase93_sign_off.json](artifacts/governance/phase93/phase93_sign_off.json) · Closure: [docs/plans/PHASE_93_CLOSURE.md](docs/plans/PHASE_93_CLOSURE.md) · Claims: [`phase93-innov09-afit-shipped` row](docs/comms/claims_evidence_matrix.md)
 
 **What it is:** A fitness dimension measuring code readability, naming quality, and structural clarity — not just correctness and performance.
 
