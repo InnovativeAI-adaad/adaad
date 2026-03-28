@@ -563,6 +563,45 @@ The following new Hard-class invariants MUST be registered in the `InvariantsMat
 
 ---
 
+
+## Phase 94 Governance-Facing Acceptance (Innovation Continuation)
+
+This acceptance section governs any Phase 94 implementation PR that extends or operationalizes the innovation surfaces defined in this plan. It is fail-closed and applies in addition to all constitutional and HUMAN-0 requirements already defined above.
+
+### Determinism Invariants (Mandatory)
+
+1. No entropy source may be introduced in `runtime/`, `security/`, `adaad/`, or innovation gate logic unless it is explicitly declared in the repository allowlist contract (`ENTROPY_ALLOWLIST`) with governance rationale and replay justification.
+2. Seed derivation must be deterministic from immutable inputs only (for example: lineage digest + epoch identifier).
+3. Determinism lint violations are merge-blocking defects; “best effort” determinism is non-compliant.
+
+### Replay Invariants and Digest Behavior (Mandatory)
+
+1. Given identical repository state, config, and replay seed, strict replay output must be byte-stable.
+2. Expected digest behavior: replay digest values for governed evidence artifacts must match the baseline digest for the same mutation/evidence context; any unexpected digest drift is treated as replay divergence.
+3. Replay evidence must remain hash-chain verifiable; missing, reordered, or non-verifiable replay artifacts are non-compliant.
+
+### Failure Conditions that MUST Block Merge
+
+Phase 94 PRs are **not merge-eligible** if any of the following occur:
+
+- Determinism lint failure or unauthorized entropy introduction.
+- Strict replay failure or replay digest divergence without an approved constitutional migration path.
+- Any Tier 0 or Tier 1 required gate failure.
+- Tier 2 gate failure when Tier 2 is required by PR tier/flags.
+- Missing or incomplete governance evidence required by CI and release-evidence validators.
+
+### Tier 0/1/2 Gate Mapping (from `docs/governance/ci-gating.md`)
+
+| Tier | Required governance expectation for Phase 94 acceptance | CI gating policy mapping |
+|---|---|---|
+| Tier 0 (always-on baseline) | Must pass baseline contract checks before merge consideration. | `schema-validation`, `determinism-lint`, `confidence-fast` always run. |
+| Tier 1 (standard required suites) | Must pass full repository quality/governance suites for merge eligibility. | Includes full test/governance/evidence alignment controls in standard CI governance flow. |
+| Tier 2 (escalated critical controls) | Mandatory for critical tier or governance/replay-sensitive changes; all escalated checks must pass with zero failures. | `strict-replay`, `evidence-suite`, and `promotion-suite` are conditionally required based on classifier tier and governance-impact flags. |
+
+Phase 94 acceptance is complete only when all applicable tiers report pass status with deterministic evidence consistency and zero unresolved blocking findings.
+
+---
+
 ## Resolved Blocking Finding — FINDING-66-003 (Closed 2026-03-26)
 
 **CEPD (INNOV-06) produced the `CryptographicProofBundle` artifact used in counsel transmittal, and FINDING-66-003 is now closed with recorded filing receipt evidence.**

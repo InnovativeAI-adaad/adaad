@@ -71,8 +71,8 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Notes | Status |
 |---|---|---|
-| F-Droid MR submitted | `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **Dustin** |
-| F-Droid MR URL recorded | `android/fdroid/com.innovativeai.adaad.yml` | ⏳ blocked on above |
+| F-Droid MR submitted | `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **HUMAN-0 required** — agent attempt at `2026-03-28T07:20:58Z` redirected to GitLab sign-in; see `artifacts/governance/phase93/fdroid_manual_submission_attempt_2026-03-28.json` |
+| F-Droid MR URL recorded | `android/fdroid/com.innovativeai.adaad.yml` | ⏳ blocked pending authenticated founder MR creation |
 | APK pipeline triggered | `git tag free-v9.10.0 && git push origin free-v9.10.0` (M-02) | ⏳ **Dustin** |
 | `INSTALL_ANDROID.md` links valid | | ✅ |
 | Obtainium config valid | `android/obtainium.json` | ✅ |

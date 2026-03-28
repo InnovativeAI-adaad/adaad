@@ -536,7 +536,7 @@ adaad_pr_procession_contract:
   state_alignment:
     expected_active_phase: "Phase 93 COMPLETE · v9.26.0"
     expected_last_completed_pr: "feature/phase93-afit-engine"
-    expected_next_pr: "Phase 94 — INNOV-10 roadmap execution"
+    expected_next_pr: "PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -587,14 +587,14 @@ A validator comparing this document to `.adaad_agent_state.json` should fail if:
 2. `last_completed_pr` is not `feature/phase93-afit-engine`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
-5. `expected_next_pr` is not `Phase 94 — INNOV-10 roadmap execution`
+5. `expected_next_pr` is not `PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)`
 
 ---
 
 
 ## 3.2 Changelog
 
-- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 93 complete / v9.26.0**. This update removes duplicated preflight predicates and keeps `state_alignment` expectations aligned to **Phase 94 — INNOV-10 roadmap execution**.
+- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 93 complete / v9.26.0**. This update removes duplicated preflight predicates and keeps `state_alignment` expectations aligned to **PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)**.
 
 
 ## 4) Phase 52+ Planning Guidance
