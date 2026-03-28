@@ -401,7 +401,11 @@
     "phase93-afit-determ-0-enforced",
     "phase93-afit-bound-0-enforced",
     "phase93-afit-weight-0-enforced",
-    "phase93-world-first-aesthetic-fitness"
+    "phase93-world-first-aesthetic-fitness",
+    "v9.25.0-gpg-signed",
+    "v9.26.0-gpg-signed",
+    "phase92-gpg-ceremony-complete",
+    "phase93-gpg-ceremony-complete"
   ],
   "current_version": "9.26.0",
   "completed_milestones": [
@@ -470,7 +474,7 @@
     "phase93-audit-hardening-complete"
   ],
   "software_version": "9.26.0",
-  "last_agent_state_sync_digest": "gsync-phase93-v9.26.0-alignment-2026-03-28",
+  "last_agent_state_sync_digest": "gpg-ceremony-v9.25.0-v9.26.0-2026-03-28",
   "version": "9.26.0",
   "phase": 94,
   "phase_label": "Phase 94 \u2014 Morphogenetic Memory (INNOV-10)",
@@ -495,6 +499,21 @@
       "governor": "DUSTIN L REID",
       "scope": "Phase 93 \u2192 94 state alignment: version 9.26.0, agent_state sync, pyproject alignment, report_version sync, README branch closure, GPG tag ceremony authorization",
       "session_digest": "gsync-phase93-v9.26.0-alignment-2026-03-28"
+    },
+    {
+      "date": "2026-03-28",
+      "governor": "DUSTIN L REID",
+      "scope": "GPG tag ceremony \u2014 v9.25.0 (b3384b9) and v9.26.0 (fb67119) signed with key 4C95E2F99A775335B1CF3DAF247B015A1CCD95F6 and force-pushed to remote",
+      "session_digest": "gpg-ceremony-v9.25.0-v9.26.0-2026-03-28",
+      "gpg_key": "4C95E2F99A775335B1CF3DAF247B015A1CCD95F6",
+      "tags_signed": [
+        "v9.25.0",
+        "v9.26.0"
+      ],
+      "tag_shas": {
+        "v9.25.0": "b3384b9",
+        "v9.26.0": "fb67119"
+      }
     }
   ]
 }
