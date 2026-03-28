@@ -38,6 +38,20 @@ def _load_documents(repo_root: Path, docs_config: dict[str, str]) -> dict[str, t
 
 
 def _extract_phase_sequence(text: str) -> list[int] | None:
+    shipped_phases = [
+        int(match.group("phase"))
+        for match in re.finditer(
+            r'^\|\s*(?P<phase>\d+)\s*\|\s*[^|]+\|\s*[^|]+\|\s*shipped\s*\|$',
+            text,
+            flags=re.MULTILINE | re.IGNORECASE,
+        )
+    ]
+    if shipped_phases:
+        unique_shipped = sorted(set(shipped_phases))
+        if unique_shipped == list(range(unique_shipped[0], unique_shipped[-1] + 1)):
+            return unique_shipped
+        return shipped_phases
+
     match = re.search(r"(\d+\s*→\s*\d+(?:\s*→\s*\d+)+)", text)
     if not match:
         return None
@@ -72,6 +86,18 @@ def _extract_next_pr(text: str) -> str | None:
         return next_line_match.group("next")
     match = re.search(r"PR-[A-Z0-9]+(?:-[A-Z0-9]+)*", text)
     return match.group(0) if match else None
+
+
+def _extract_phase_from_next_identifier(value: str | None) -> int | None:
+    if not value:
+        return None
+    pr_id_match = re.search(r"PR-PHASE(?P<phase>\d+)-\d+", value, flags=re.IGNORECASE)
+    if pr_id_match:
+        return int(pr_id_match.group("phase"))
+    phase_label_match = re.search(r"\bPhase\s+(?P<phase>\d+)\b", value, flags=re.IGNORECASE)
+    if phase_label_match:
+        return int(phase_label_match.group("phase"))
+    return None
 
 
 def _extract_pr_ids(text: str) -> list[str]:
@@ -225,10 +251,14 @@ def validate(repo_root: Path, rules_path: Path) -> list[ValidationError]:
         )
 
     ci_pr_ids = _extract_pr_ids(ci_text)
-    if ci_pr_ids and canonical["next_pr"] not in ci_pr_ids:
+    ci_declares_next_pr = bool(
+        re.search(r"\b(next\s+pr|expected_next_pr)\b", ci_text, flags=re.IGNORECASE) or len(set(ci_pr_ids)) == 1
+    )
+    canonical_ci_pr_matches = [pr_id for pr_id in ci_pr_ids if _extract_phase_from_next_identifier(pr_id) == canonical_next_phase]
+    if ci_declares_next_pr and ci_pr_ids and canonical_next_pr not in ci_pr_ids and not canonical_ci_pr_matches:
         errors.append(
             ValidationError(
-                f"{docs['ci_gating'][0]} references conflicting next PR set: expected to include {canonical['next_pr']} got {sorted(set(ci_pr_ids))}"
+                f"{docs['ci_gating'][0]} references conflicting next PR set: expected to include {canonical_next_pr} got {sorted(set(ci_pr_ids))}"
             )
         )
 
@@ -239,7 +269,7 @@ def validate(repo_root: Path, rules_path: Path) -> list[ValidationError]:
         if not state_alignment_next.startswith(expected_prefix) and _extract_legacy_pr_id(state_alignment_next) is None:
             errors.append(
                 ValidationError(
-                    f"{docs['procession_v2'][0]} prose next phase mismatch: expected state_alignment.expected_next_pr to start with {expected_prefix!r} got {state_alignment_next!r}"
+                    f"{docs['procession_v2'][0]} prose next phase mismatch: expected state_alignment.expected_next_pr phase {prose_next_phase!r} got {state_alignment_next!r}"
                 )
             )
 
