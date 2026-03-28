@@ -6,7 +6,6 @@ Test IDs: T11-B-01 through T11-B-05
 """
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -101,11 +100,11 @@ def test_t11_b_01d_none_bandit_rec_uses_landscape():
 # T11-B-02: EvolutionLoop stores bandit_selector kwarg
 # ---------------------------------------------------------------------------
 
-def test_t11_b_02_evolution_loop_stores_bandit_selector():
+def test_t11_b_02_evolution_loop_stores_bandit_selector(tmp_path: Path):
     """T11-B-02: EvolutionLoop.__init__ accepts and stores bandit_selector kwarg."""
     from runtime.evolution.evolution_loop import EvolutionLoop
 
-    path = Path(tempfile.mktemp(suffix=".json"))
+    path = tmp_path / "bandit_state.json"
     sel = AgentBanditSelector(state_path=path)
 
     loop = EvolutionLoop(api_key="test", bandit_selector=sel)
@@ -123,11 +122,11 @@ def test_t11_b_02b_none_bandit_selector_stored_by_default():
 # T11-B-03: EvolutionLoop Phase 0d calls bandit_selector.recommend
 # ---------------------------------------------------------------------------
 
-def test_t11_b_03_phase_0d_calls_recommend_and_passes_to_landscape(monkeypatch):
+def test_t11_b_03_phase_0d_calls_recommend_and_passes_to_landscape(monkeypatch, tmp_path: Path):
     """T11-B-03: EvolutionLoop calls bandit.recommend() and passes result to landscape.recommended_agent()."""
     from runtime.evolution.evolution_loop import EvolutionLoop
 
-    path = Path(tempfile.mktemp(suffix=".json"))
+    path = tmp_path / "bandit_state.json"
     mock_bandit = MagicMock(spec=AgentBanditSelector)
     mock_bandit.recommend.return_value = _active_rec("beast", confidence=0.90)
 

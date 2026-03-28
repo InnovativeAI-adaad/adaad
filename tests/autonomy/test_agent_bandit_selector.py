@@ -33,7 +33,11 @@ from runtime.autonomy.agent_bandit_selector import (
 # ---------------------------------------------------------------------------
 
 def _fresh_selector(strategy: str = "ucb1", tmp_path: Path = None) -> AgentBanditSelector:
-    path = (tmp_path / "bandit_state.json") if tmp_path else Path(tempfile.mktemp(suffix=".json"))
+    if tmp_path:
+        path = tmp_path / "bandit_state.json"
+    else:
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as handle:
+            path = Path(handle.name)
     return AgentBanditSelector(strategy=strategy, state_path=path)
 
 
@@ -102,15 +106,15 @@ def test_t11_a_02b_thompson_high_reward_arm_preferred():
 # T11-A-03: Arm initialization
 # ---------------------------------------------------------------------------
 
-def test_t11_a_03_fresh_selector_has_all_agents():
+def test_t11_a_03_fresh_selector_has_all_agents(tmp_path: Path):
     """T11-A-03: Fresh selector initialises arms for all three personas."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     assert set(sel._arms.keys()) == {"architect", "dream", "beast"}
 
 
-def test_t11_a_03b_fresh_arms_zero_state():
+def test_t11_a_03b_fresh_arms_zero_state(tmp_path: Path):
     """T11-A-03b: Fresh arms have pull_count=0, reward_mass=0, loss_mass=0."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     for arm in sel._arms.values():
         assert arm.pull_count  == 0
         assert arm.reward_mass == 0.0
@@ -121,9 +125,9 @@ def test_t11_a_03b_fresh_arms_zero_state():
 # T11-A-04: update() — reward accumulation
 # ---------------------------------------------------------------------------
 
-def test_t11_a_04_update_accumulates_reward():
+def test_t11_a_04_update_accumulates_reward(tmp_path: Path):
     """T11-A-04: update() increments pull_count, reward_mass, and loss_mass correctly."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     sel.update(agent="architect", reward=0.8, epoch_id="e001")
     arm = sel._arms["architect"]
     assert arm.pull_count   == 1
@@ -131,9 +135,9 @@ def test_t11_a_04_update_accumulates_reward():
     assert arm.loss_mass    == pytest.approx(0.2)
 
 
-def test_t11_a_04b_reward_clamped_to_unit_interval():
+def test_t11_a_04b_reward_clamped_to_unit_interval(tmp_path: Path):
     """T11-A-04b: Rewards are clamped to [0, 1] — over/under values safe."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     sel.update(agent="dream", reward=1.5, epoch_id="e001")
     sel.update(agent="dream", reward=-0.3, epoch_id="e002")
     arm = sel._arms["dream"]
@@ -145,9 +149,9 @@ def test_t11_a_04b_reward_clamped_to_unit_interval():
 # T11-A-05: reset_arm()
 # ---------------------------------------------------------------------------
 
-def test_t11_a_05_reset_arm_clears_state():
+def test_t11_a_05_reset_arm_clears_state(tmp_path: Path):
     """T11-A-05: reset_arm() clears pull_count, reward_mass, loss_mass to zero."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     _feed_rewards(sel, "beast", [0.7, 0.6, 0.8])
     sel.reset_arm(agent="beast")
     arm = sel._arms["beast"]
@@ -160,23 +164,23 @@ def test_t11_a_05_reset_arm_clears_state():
 # T11-A-06: Cold-start / is_active
 # ---------------------------------------------------------------------------
 
-def test_t11_a_06_cold_start_is_not_active():
+def test_t11_a_06_cold_start_is_not_active(tmp_path: Path):
     """T11-A-06: Fresh selector (0 pulls) is_active=False."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     assert sel.is_active is False
 
 
-def test_t11_a_06b_becomes_active_after_min_pulls():
+def test_t11_a_06b_becomes_active_after_min_pulls(tmp_path: Path):
     """T11-A-06b: is_active=True once total_pulls >= MIN_PULLS_FOR_ACTIVATION."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     for i in range(MIN_PULLS_FOR_ACTIVATION):
         sel.update(agent="architect", reward=0.5, epoch_id=f"e{i:03d}")
     assert sel.is_active is True
 
 
-def test_t11_a_06c_recommend_returns_is_active_false_when_cold():
+def test_t11_a_06c_recommend_returns_is_active_false_when_cold(tmp_path: Path):
     """T11-A-06c: recommend() returns is_active=False below activation threshold."""
-    sel = _fresh_selector()
+    sel = _fresh_selector(tmp_path=tmp_path)
     rec = sel.recommend(epoch_id="e001")
     assert rec.is_active is False
 
@@ -185,9 +189,9 @@ def test_t11_a_06c_recommend_returns_is_active_false_when_cold():
 # T11-A-07: UCB1 selects highest-reward arm when warm
 # ---------------------------------------------------------------------------
 
-def test_t11_a_07_ucb1_selects_dominant_arm():
+def test_t11_a_07_ucb1_selects_dominant_arm(tmp_path: Path):
     """T11-A-07: UCB1 recommends the arm with dominant reward after sufficient pulls."""
-    sel = _fresh_selector(strategy="ucb1")
+    sel = _fresh_selector(strategy="ucb1", tmp_path=tmp_path)
     # Force enough pulls to pass activation; make architect clearly best
     _feed_rewards(sel, "architect", [0.9, 0.95, 0.85])
     _feed_rewards(sel, "dream",     [0.2, 0.25, 0.15])
@@ -203,9 +207,9 @@ def test_t11_a_07_ucb1_selects_dominant_arm():
 # T11-A-08: Thompson Sampling selects high-reward arm on average
 # ---------------------------------------------------------------------------
 
-def test_t11_a_08_thompson_sampling_selects_high_reward_arm():
+def test_t11_a_08_thompson_sampling_selects_high_reward_arm(tmp_path: Path):
     """T11-A-08: Thompson sampling predominantly selects the highest-reward arm."""
-    sel = _fresh_selector(strategy="thompson")
+    sel = _fresh_selector(strategy="thompson", tmp_path=tmp_path)
     _feed_rewards(sel, "architect", [0.95] * 10)
     _feed_rewards(sel, "dream",     [0.10] * 10)
     _feed_rewards(sel, "beast",     [0.10] * 10)
