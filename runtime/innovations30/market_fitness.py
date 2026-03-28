@@ -51,6 +51,80 @@ class MarketConditionedFitness:
         values = [s.value for s in self._signals.values()]
         return round(sum(values) / len(values), 4)
 
+    # ── MARKET-HALT-0: Halt invariant ─────────────────────────────────────
+    # Invariant: synthetic market fitness fallback must be bounded.
+    # If fewer than MIN_SIGNALS active signals are present, the market
+    # fitness layer becomes unconstrained — every mutation gets the same
+    # neutral score, defeating anti-drift protection.  When this condition
+    # is detected, mutations are blocked until real signals are registered.
+    # [MARKET-HALT-0] fail-closed: no signals → block, not allow.
+
+    MIN_SIGNALS: int = 1   # constitutional minimum; raise to 3+ in production
+
+    def halt_if_unconstrained(self) -> tuple[bool, str]:
+        """Check MARKET-HALT-0: insufficient signals = halt (fail-closed).
+
+        Returns:
+            (should_halt: bool, reason: str)
+            should_halt=True means mutations must be blocked until signals
+            are registered.  Callers must treat this as blocking, not advisory.
+        """
+        active = [
+            s for s in self._signals.values()
+            if time.time() - s.timestamp < 86400 * 7  # 7-day active window
+        ]
+        if len(active) < self.MIN_SIGNALS:
+            reason = (
+                f"[MARKET-HALT-0] Insufficient market signals: "
+                f"{len(active)} active (minimum: {self.MIN_SIGNALS}). "
+                f"Market fitness is unconstrained. Mutations halted until "
+                f"at least {self.MIN_SIGNALS} signal(s) are registered via "
+                f"register_signal(). This is a fail-closed constitutional gate."
+            )
+            return True, reason
+        return False, "ok"
+
+    def signal_summary(self) -> dict:
+        """Return structured summary of current signal state."""
+        active = [
+            s for s in self._signals.values()
+            if time.time() - s.timestamp < 86400 * 7
+        ]
+        stale = [
+            s for s in self._signals.values()
+            if time.time() - s.timestamp >= 86400 * 7
+        ]
+        improving = sum(1 for s in active if s.direction > 0)
+        degrading  = sum(1 for s in active if s.direction < 0)
+        stable     = sum(1 for s in active if s.direction == 0)
+        should_halt, halt_reason = self.halt_if_unconstrained()
+
+        return {
+            "total_registered": len(self._signals),
+            "active_7d": len(active),
+            "stale": len(stale),
+            "improving": improving,
+            "degrading": degrading,
+            "stable": stable,
+            "market_health_score": self.market_health_score(),
+            "halt_invariant_triggered": should_halt,
+            "halt_reason": halt_reason if should_halt else None,
+            "min_signals_required": self.MIN_SIGNALS,
+        }
+
+    def direction_trend(self, window_days: int = 7) -> str:
+        """Overall market direction: 'improving' | 'degrading' | 'stable'."""
+        cutoff = time.time() - 86400 * window_days
+        recent = [s for s in self._signals.values() if s.timestamp >= cutoff]
+        if not recent:
+            return "stable"
+        avg = sum(s.direction * s.weight for s in recent) / len(recent)
+        if avg > 0.05:
+            return "improving"
+        if avg < -0.05:
+            return "degrading"
+        return "stable"
+
     def _load(self) -> None:
         if not self.signals_path.exists():
             return
@@ -69,4 +143,9 @@ class MarketConditionedFitness:
             f.write(json.dumps(dataclasses.asdict(signal)) + "\n")
 
 
-__all__ = ["MarketConditionedFitness", "ExternalSignal"]
+__all__ = [
+    "MarketConditionedFitness",
+    "ExternalSignal",
+    # Invariant codes surfaced as module-level constants for CI assertion
+    # MARKET-HALT-0 is enforced via MarketConditionedFitness.halt_if_unconstrained()
+]

@@ -150,6 +150,21 @@ class InnovationsPipeline:
             "curiosity":             CuriosityEngine(d/"curiosity_state.json"),
             "mirror_test":           MirrorTestEngine(d/"mirror_test_state.jsonl"),
         }
+
+        # ── [INNOV-COMPLETE-0] Boot completeness gate ─────────────────────
+        # All component slots must be populated before marking _initialized.
+        # Fail-closed: partial pipeline cannot accept mutations.
+        expected_components = len(self.component_names())
+        actual_components   = len(self._components)
+        if actual_components < expected_components:
+            missing_keys = set(self.component_names()) - set(self._components)
+            raise RuntimeError(
+                f"[INNOV-COMPLETE-0] InnovationsPipeline boot FAILED: "
+                f"{actual_components}/{expected_components} components initialised. "
+                f"Missing keys: {sorted(missing_keys)}. "
+                f"System cannot accept mutations with incomplete innovation set."
+            )
+
         self._initialized = True
 
     def evaluate_mutation(
