@@ -280,7 +280,7 @@ Findings are reported as `ConstitutionalStressReport` entries: which combination
 Currently `GovernanceDebtLedger` tracks debt and `GovernanceHealthAggregator` reports degradation. But there's no mechanism for when debt is catastrophic. The Bankruptcy Protocol defines a `GOVERNANCE_CRITICAL_THRESHOLD` beyond which the system enters structured remediation:
 
 1. All new mutation proposals suspended for N epochs
-2. `RemedationAgent` activates — only allowed to propose mutations that directly reduce governance debt
+2. `RemediationAgent` activates — only allowed to propose mutations that directly reduce governance debt
 3. Human governor receives a structured remediation plan with acceptance criteria
 4. Normal operation resumes only when health score returns above `0.60` for 5 consecutive epochs
 
