@@ -2,6 +2,104 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.27.0] — 2026-03-28 — Phase 94 · INNOV-10 Morphogenetic Memory (MMEM)
+
+**Branch:** `feature/phase94-mmem-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-28
+**Tests:** T94-MMEM-01..33 (33/33 PASS)
+**Evidence:** `artifacts/governance/phase94/identity_ledger_attestation.json` · ILA-94-2026-03-28-001
+
+### World-First: Formally Encoded Architectural Self-Model as a Pre-Proposal Governance Primitive
+
+ADAAD is the first autonomous AI evolution system to consult a formally encoded,
+cryptographically anchored, human-authored self-model as a pre-proposal governance
+surface in its evolution loop.
+
+The problem MMEM solves is distinct from anything GovernanceGate or FitnessEngineV2
+addresses: *identity drift* — the gradual erosion of a system's founding purpose through
+a sequence of individually governance-approved but collectively identity-eroding mutations.
+A mutation can pass every correctness test, score highly on all fitness dimensions, survive
+adversarial red-teaming, and still violate what the system believes itself to be.
+
+MMEM answers the question no prior gate could ask: **is this mutation consistent with
+what this system believes itself to be?**
+
+### New Module: `runtime/memory/identity_ledger.py`
+
+- `IdentityLedger` — hash-chained, HUMAN-0-gated, append-only store of `IdentityStatement` objects
+- `IdentityStatement` — dataclass with deterministic `statement_hash` computed via `_compute_hash`
+  on `__post_init__`; fields: `statement_id`, `category`, `statement`, `author`, `epoch_id`,
+  `predecessor_hash`, `statement_hash`, `human_signoff_token`, `rationale`
+- `IdentityLedger.check()` — MMEM-0 outer guard; read-only (MMEM-READONLY-0); never raises
+- `IdentityLedger.append()` — MMEM-LEDGER-0: validates `attestation_token` before any state mutation
+- `IdentityLedger.verify_chain()` — O(n) chain integrity; raises `ChainIntegrityError` on discontinuity
+- `IdentityLedger.load_genesis()` — classmethod; deserialises genesis seed; builds internal chain from scratch
+- `_compute_hash()` — deterministic SHA-256: `sha256(json.dumps({id, predecessor, statement}, sort_keys=True))`;
+  result prefixed `sha256:`; no datetime/random/uuid4 (MMEM-DETERM-0)
+- `_score_consistency()` — keyword/anti-pattern heuristic scoring per category; returns `(score, violated_ids)`
+- 9 statement categories: `purpose`, `architectural_intent`, `human_authority`, `lineage`,
+  `failure_mode`, `active_goal`, `value`, `capability`, `boundary`
+- 3 exception types: `ChainIntegrityError`, `IdentityAppendWithoutAttestationError`, `IdentityLedgerLoadError`
+
+### New Module: `runtime/memory/identity_context_injector.py`
+
+- `IdentityContextInjector.inject()` — MMEM-WIRE-0: never raises; sets `context.identity_consistency_score`
+  and `context.identity_violated_statements` on `CodebaseContext` before Phase 1
+- `_build_intent()` — derives `mutation_intent` from context fields (`file_path`, `description`, `mutation_type`)
+- `_build_diff()` — derives `diff_summary` from `before_source`/`after_source`
+- `InjectionResult` — dataclass with `consistency_score`, `violated_statements`, `fallback_used`, `notes`
+
+### New Module: `runtime/lineage/lineage_ledger_v2.py`
+
+- `LineageLedgerV2` — second-generation hash-chained lineage store
+- `record_proposal()`, `record_approval()`, `record_deployment()` — typed event recording
+- `attach_identity_result()` — Phase 94 MMEM enrichment: co-commits `IdentityConsistencyResult`
+  to an existing lineage event, making the identity signal part of the immutable audit trail
+- `semantic_proximity_score()` — Phase 94 stub; semantic embedding deferred to Phase 95
+- `verify_chain()` — O(n) chain integrity for lineage events
+- `LineageEvent` — includes `identity_consistency_score` and `identity_violated_statements` fields
+
+### Modified: `runtime/evolution/evolution_loop.py`
+
+- Phase 0d wiring added: `IdentityContextInjector.inject()` called before Phase 1 (propose)
+- `self._identity_injector = None` slot added to `__init__` (MMEM-WIRE-0: optional, fail-open)
+- Outer try/except around Phase 0d ensures epoch never blocked by MMEM error
+
+### Governance Artifact: `artifacts/governance/phase94/identity_ledger_seed.json`
+
+- 8 genesis IdentityStatements (IS-001..IS-008) authored by ArchitectAgent, attested by HUMAN-0
+- Terminal chain hash: `3f570614801293539bfa8d2ff4ae17e6eb65ab7adfc38e0110c0badcce84e5b4`
+- Attestation: ILA-94-2026-03-28-001 · Dustin L. Reid · 2026-03-28
+
+| ID | Category | Statement (condensed) |
+|---|---|---|
+| IS-001 | purpose | ADAAD exists to demonstrate autonomous AI evolution is safe, auditable, and governable. |
+| IS-002 | architectural_intent | ADAAD is a governed evolution engine, not a code generator. The pipeline is the product. |
+| IS-003 | human_authority | HUMAN-0 holds inviolable authority over constitutional evolution, identity statements, release promotion. |
+| IS-004 | lineage | Every mutation has a traceable cryptographic proof chain from proposal to deployment. |
+| IS-005 | failure_mode | ADAAD fails closed. Governance errors are never silent. |
+| IS-006 | active_goal | ADAAD is completing 30 world-first innovations in governed autonomous evolution. |
+| IS-007 | architectural_intent | Constitution = rules. GovernanceGate = enforcement. IdentityLedger = identity. Non-substitutable. |
+| IS-008 | active_goal | ADAAD targets enterprise-grade trust: SOC 2 auditability, patent-grade novelty, cryptographic evidence chains. |
+
+### Constitutional Invariants Introduced (6 new Hard-class invariants)
+
+| Invariant | Rule |
+|---|---|
+| `MMEM-0` | `IdentityLedger.check()` MUST never raise. Any failure MUST return `fallback_used=True`. Epoch is never blocked. |
+| `MMEM-CHAIN-0` | Every `IdentityStatement` MUST carry the SHA-256 hash of its predecessor. Discontinuity raises `ChainIntegrityError`. |
+| `MMEM-READONLY-0` | `check()` is READ-ONLY. No append, modify, or delete of ledger state in the check path. |
+| `MMEM-WIRE-0` | `run_epoch()` MUST call `IdentityContextInjector` before Phase 1. Failure never blocks the epoch. |
+| `MMEM-LEDGER-0` | `append()` without `attestation_token` raises `IdentityAppendWithoutAttestationError` before any state mutation. |
+| `MMEM-DETERM-0` | Identical `(statement_id, statement, predecessor_hash)` → identical `statement_hash`. No datetime/random/uuid4. |
+
+**Total Hard-class invariants (cumulative):** CSAP-0/1, ACSE-0/1, TIFE-0, SCDD-0, AOEP-0,
+CEPD-0/1, LSME-0/1, AFRT-0/GATE-0/INTEL-0/LEDGER-0/CASES-0/DETERM-0,
+AFIT-0/DETERM-0/BOUND-0/WEIGHT-0,
+MMEM-0/CHAIN-0/READONLY-0/WIRE-0/LEDGER-0/DETERM-0 — **27 invariants**
+
+---
+
 ## [9.26.0] — 2026-03-27 — Phase 93 · INNOV-09 Aesthetic Fitness Signal (AFIT)
 
 **Branch:** `feature/phase93-afit-engine`

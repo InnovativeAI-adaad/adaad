@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.26.0 — 93 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.27.0 — 94 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 <img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
@@ -175,13 +175,13 @@ Every property below is mechanically enforced at runtime. Not policy. Not docume
 
 **Human authority is structural** — Your signing key is required for Tier 0 changes. The system cannot bypass this. It is not a configuration option.
 
-**17 Hard-class invariants** — Runtime rules that cannot be disabled, configured around, or violated without the epoch aborting. 17 hard stops, all enforced.
+**27 Hard-class invariants** — Runtime rules that cannot be disabled, configured around, or violated without the epoch aborting. 27 hard stops, all enforced.
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/SECURITY_INVARIANTS_MATRIX.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 8 shipped world-first innovations
+## 9 shipped world-first innovations
 
 Not prototypes. Each shipped with a full constitutional test suite, human governor sign-off, and a hash-chained evidence artifact.
 
@@ -195,8 +195,10 @@ Not prototypes. Each shipped with a full constitutional test suite, human govern
 | INNOV-06 | Cryptographic Evolution Proof DAG (CEPD) | 90 | Full lineage Merkle-rooted and independently verifiable. Legal-grade provenance. |
 | INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Mutations run in a zero-write shadow harness against real traffic before promotion |
 | INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
+| INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability scored as a constitutionally-bounded fitness dimension — first system to treat aesthetics as a governed signal |
+| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained HUMAN-0-gated IdentityLedger encodes the system self-model — consulted pre-proposal to detect identity drift |
 
-22 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -309,7 +311,7 @@ The full provenance chain from proposal to outcome is cryptographically linked v
 </details>
 
 <details>
-<summary><b>What are the 8 shipped innovations?</b></summary>
+<summary><b>What are the 9 shipped innovations?</b></summary>
 <br/>
 
 INNOV-01 through INNOV-09 shipped across v9.18.0–v9.26.0 (Phases 87–93): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), and Aesthetic Fitness Signal (AFIT).
