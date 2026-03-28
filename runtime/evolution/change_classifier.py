@@ -149,19 +149,14 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
     ops = request.get("ops") or []
     targets = request.get("targets") or []
 
-    if targets:
-        return ChangeDecision(
-            classification="FUNCTIONAL_CHANGE",
-            run_mutation=True,
-            run_fitness=True,
-            run_resign=True,
-            reason="targets_present_requires_full_cycle",
-        )
-
     if not isinstance(ops, Sequence) or not ops:
-        return ChangeDecision("NON_FUNCTIONAL_CHANGE", False, False, False, "no_ops")
+        ops = []
+    if not isinstance(targets, Sequence) or not targets:
+        targets = []
+    if not ops and not targets:
+        return ChangeDecision("NON_FUNCTIONAL_CHANGE", False, False, False, "no_ops_or_targets")
 
-    if all(isinstance(op, Mapping) and str(op.get("path") or "") in _ALLOWED_METADATA_PATHS for op in ops):
+    if ops and all(isinstance(op, Mapping) and str(op.get("path") or "") in _ALLOWED_METADATA_PATHS for op in ops):
         return ChangeDecision(
             classification="NON_FUNCTIONAL_CHANGE",
             run_mutation=False,
@@ -170,10 +165,8 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
             reason="allowed_metadata_only",
         )
 
-    for op in ops:
-        if not isinstance(op, Mapping):
-            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unknown_op_shape")
-        file_candidate = op.get("file") or op.get("target") or op.get("filepath")
+    def _classify_op(op: Mapping[str, Any], default_file: str = "") -> ChangeDecision | None:
+        file_candidate = op.get("file") or op.get("target") or op.get("filepath") or default_file
         path_candidate = str(op.get("path") or "")
 
         file_name = file_candidate.strip() if isinstance(file_candidate, str) else ""
@@ -184,7 +177,7 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
             in_docs_dir = any(part == "docs" for part in Path(file_name).parts)
             starts_with_comment_marker = Path(file_name).name.startswith("#")
             if ext in _DOCUMENTATION_EXTENSIONS or in_docs_dir or starts_with_comment_marker:
-                continue
+                return None
 
             if Path(file_name).name == "dna.json" and path_candidate and path_candidate not in _ALLOWED_METADATA_PATHS:
                 return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "non_metadata_path_change")
@@ -192,7 +185,7 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
         if not isinstance(file_candidate, str) or not file_candidate.strip():
             if path_candidate and path_candidate not in _ALLOWED_METADATA_PATHS:
                 return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "non_metadata_path_change")
-            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unscoped_op_change")
+            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unscoped_change")
 
         try:
             path = resolve_agent_scoped_path(agent_path, file_name)
@@ -200,14 +193,36 @@ def classify_mutation_change(agent_path: Path, mutation_request: Mapping[str, An
             return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "path_outside_agent_root")
         if ext == ".py":
             old_src = path.read_text(encoding="utf-8") if path.exists() else ""
-            new_src = op.get("content") or op.get("value")
+            new_src = op.get("content") or op.get("source") or op.get("code") or op.get("value")
             if isinstance(new_src, str) and is_doc_change(old_src, new_src):
-                continue
+                return None
             old_ast = _parse_ast(old_src)
             new_ast = _parse_ast(new_src) if isinstance(new_src, str) else None
             if old_ast is not None and new_ast is not None and not is_functional_change(old_ast, new_ast):
-                continue
+                return None
         return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "ast_or_code_change")
+
+    for op in ops:
+        if not isinstance(op, Mapping):
+            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unknown_op_shape")
+        decision = _classify_op(op)
+        if decision is not None:
+            return decision
+
+    for target in targets:
+        if not isinstance(target, Mapping):
+            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unknown_target_shape")
+        target_path = target.get("path")
+        target_file = target_path.strip() if isinstance(target_path, str) else ""
+        target_ops = target.get("ops")
+        if not isinstance(target_ops, Sequence) or not target_ops:
+            return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "target_missing_ops")
+        for target_op in target_ops:
+            if not isinstance(target_op, Mapping):
+                return ChangeDecision("FUNCTIONAL_CHANGE", True, True, True, "unknown_target_op_shape")
+            decision = _classify_op(target_op, default_file=target_file)
+            if decision is not None:
+                return decision
 
     return ChangeDecision("NON_FUNCTIONAL_CHANGE", False, False, False, "documentation_comment_or_metadata_change")
 

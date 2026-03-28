@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
@@ -249,6 +250,16 @@ class EvolutionKernel:
                     "metadata_last_mutation": metadata.get("last_mutation"),
                 },
             )
+            cycle_event = self._emit_cycle_outcome(
+                agent_id=str(agent.get("agent_id") or ""),
+                change_classification=change_decision.classification,
+                change_reason=change_decision.reason,
+                execution_result={"status": "skipped_non_functional"},
+                fitness_result={"accepted": False, "score": None},
+                certificate_result={"status": "skipped", "reason": "non_functional_change"},
+                mutation_payload=mutation.get("request") or mutation,
+                cosmetic_only=True,
+            )
             return {
                 "status": "metadata_only",
                 "agent_id": agent.get("agent_id"),
@@ -260,11 +271,22 @@ class EvolutionKernel:
                     "version": metadata.get("version"),
                     "last_mutation": metadata.get("last_mutation"),
                 },
+                "cycle_outcome_event": cycle_event,
                 "kernel_path": True,
             }
         mutation_payload = mutation.get("request") or mutation
         validation = self.validate_mutation(None, mutation_payload)
         if not validation.get("valid"):
+            cycle_event = self._emit_cycle_outcome(
+                agent_id=str(agent.get("agent_id") or ""),
+                change_classification=change_decision.classification,
+                change_reason=change_decision.reason,
+                execution_result={"status": "rejected", "reason": "policy_invalid"},
+                fitness_result={"accepted": False, "score": None},
+                certificate_result={"status": "skipped", "reason": "validation_failed"},
+                mutation_payload=mutation_payload,
+                rejected=True,
+            )
             return {
                 "status": "rejected",
                 "reason": "policy_invalid",
@@ -272,6 +294,7 @@ class EvolutionKernel:
                 **validation,
                 "change_classification": change_decision.classification,
                 "change_reason": change_decision.reason,
+                "cycle_outcome_event": cycle_event,
             }
 
         forecast = self.fitness_evaluator.forecast(
@@ -279,6 +302,16 @@ class EvolutionKernel:
             agent_type=str((agent.get("meta") or {}).get("type") or "unknown"),
         )
         if not forecast.get("forecast_passed"):
+            cycle_event = self._emit_cycle_outcome(
+                agent_id=str(agent.get("agent_id") or ""),
+                change_classification=change_decision.classification,
+                change_reason=change_decision.reason,
+                execution_result={"status": "rejected", "reason": "forecast_gate_failed"},
+                fitness_result={"accepted": False, "score": forecast.get("forecast_score")},
+                certificate_result={"status": "skipped", "reason": "forecast_gate_failed"},
+                mutation_payload=mutation_payload,
+                rejected=True,
+            )
             return {
                 "status": "rejected",
                 "reason": "forecast_gate_failed",
@@ -286,6 +319,7 @@ class EvolutionKernel:
                 "forecast": forecast,
                 "change_classification": change_decision.classification,
                 "change_reason": change_decision.reason,
+                "cycle_outcome_event": cycle_event,
                 "kernel_path": True,
             }
 
@@ -299,6 +333,16 @@ class EvolutionKernel:
         else:
             certificate_result = {"status": "skipped", "reason": "fitness_not_accepted"}
 
+        cycle_event = self._emit_cycle_outcome(
+            agent_id=str(agent.get("agent_id") or ""),
+            change_classification=change_decision.classification,
+            change_reason=change_decision.reason,
+            execution_result=execution_result,
+            fitness_result=fitness_result,
+            certificate_result=certificate_result,
+            mutation_payload=mutation_payload,
+        )
+
         return {
             **execution_result,
             "agent_id": agent.get("agent_id"),
@@ -306,6 +350,7 @@ class EvolutionKernel:
             "certificate": certificate_result,
             "change_classification": change_decision.classification,
             "change_reason": change_decision.reason,
+            "cycle_outcome_event": cycle_event,
             "kernel_path": True,
         }
 
