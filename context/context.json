@@ -1,8 +1,8 @@
 {
   "active": {
-    "version": "v9.11.0",
-    "phase": "Phase 76 COMPLETE · v9.11.0",
-    "expected_next_pr_identifier": "PR-77-PLAN (Phase 77 — direction to be proposed by ArchitectAgent and human-approved)"
+    "version": "v9.25.0",
+    "phase": "Phase 90 COMPLETE · v9.24.0",
+    "expected_next_pr_identifier": "PR-PHASE91-01 (Phase 91 — Post-GA Governance Hardening Sprint)"
   },
   "module_ownership": [
     {
@@ -95,40 +95,69 @@
   "ci_tier_mapping": {
     "docs": {
       "description": "Docs-only or markdown-only scope.",
-      "required_gates": ["Tier 0", "Docs validation"]
+      "required_gates": [
+        "Tier 0",
+        "Docs validation"
+      ]
     },
     "low": {
       "description": "Tests-only or minimal non-governance maintenance scope.",
-      "required_gates": ["Tier 0", "Tier 1"]
+      "required_gates": [
+        "Tier 0",
+        "Tier 1"
+      ]
     },
     "standard": {
       "description": "Default product changes without critical governance/runtime triggers.",
-      "required_gates": ["Tier 0", "Tier 1"]
+      "required_gates": [
+        "Tier 0",
+        "Tier 1"
+      ]
     },
     "critical": {
       "description": "Governance/runtime/security or policy/replay-impact changes.",
-      "required_gates": ["Tier 0", "Tier 1", "Tier 2", "Tier 3"]
+      "required_gates": [
+        "Tier 0",
+        "Tier 1",
+        "Tier 2",
+        "Tier 3"
+      ]
     }
   },
   "integration_points": [
     {
       "name": "QR",
-      "paths": ["docs/assets/qr/registry.json", "scripts/generate_qr_assets.py", "scripts/validate_qr_registry.py"],
+      "paths": [
+        "docs/assets/qr/registry.json",
+        "scripts/generate_qr_assets.py",
+        "scripts/validate_qr_registry.py"
+      ],
       "source_doc": "docs/assets/qr/README.md"
     },
     {
       "name": "Whale.Dic",
-      "paths": ["ui/developer/ADAADdev/whaledic.html", "ui/README.md", "docs/evidence/whaledic-integration-evidence.md"],
+      "paths": [
+        "ui/developer/ADAADdev/whaledic.html",
+        "ui/README.md",
+        "docs/evidence/whaledic-integration-evidence.md"
+      ],
       "source_doc": "ui/README.md"
     },
     {
       "name": "service_worker",
-      "paths": ["docs/sw.js", "docs/install.html"],
+      "paths": [
+        "docs/sw.js",
+        "docs/install.html"
+      ],
       "source_doc": "docs/install.html"
     },
     {
       "name": "ledger",
-      "paths": ["security/ledger/journal.py", "security/ledger/lineage_v2.py", "docs/governance/ledger_event_contract.md"],
+      "paths": [
+        "security/ledger/journal.py",
+        "security/ledger/lineage_v2.py",
+        "docs/governance/ledger_event_contract.md"
+      ],
       "source_doc": "docs/governance/ledger_event_contract.md"
     }
   ]

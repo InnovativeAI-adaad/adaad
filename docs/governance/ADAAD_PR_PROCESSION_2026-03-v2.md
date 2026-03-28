@@ -4,7 +4,7 @@
 > **Canonical source (automation sequence control):** This document is the controlling source for **Phase 51+ PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
-**Last reviewed:** 2026-03-24
+**Last reviewed:** 2026-03-28
 **Milestone:** `v9.24.0` (Phase 90 complete — Cryptographic Evolution Proof DAG)
 
 ---
@@ -54,7 +54,7 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 ### 1A.1 Sequence order (authoritative)
 
 ```text
-57 → 58 → 59 → 60 → 61 → 62 → 63 → 64 → 65 → 66 → 67 → 68 → 69 → 70 → 71 → 72 → 73 → 74 → 75 → 76 → 77 → 78 → 79
+57 → 58 → 59 → 60 → 61 → 62 → 63 → 64 → 65 → 66 → 67 → 68 → 69 → 70 → 71 → 72 → 73 → 74 → 75 → 76 → 77 → 78 → 79 → 80 → 81 → 82 → 83 → 84 → 85 → 86 → 87 → 88 → 89 → 90
 ```
 
 ### 1A.2 Phase status + dependency table
@@ -146,10 +146,10 @@ adaad_pr_procession_contract:
   schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase86_complete"
-  milestone: "v9.17.0"
-  last_state_align: "2026-03-21"
-  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-21 (phases 81–86)"
+  active_phase: "phase90_complete"
+  milestone: "v9.24.0"
+  last_state_align: "2026-03-28"
+  state_align_authority: "ADAAD governance contract reconciliation — 2026-03-28 (phases 87–90 alignment)"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -186,6 +186,10 @@ adaad_pr_procession_contract:
     - phase84
     - phase85
     - phase86
+    - phase87
+    - phase88
+    - phase89
+    - phase90
   phase_nodes:
     phase47:
       ci_tier: standard
@@ -473,10 +477,34 @@ adaad_pr_procession_contract:
           title: "VERSION/CHANGELOG/procession close"
           pr: PR-86-03
           status: complete
+    phase87:
+      ci_tier: constitutional
+      depends_on: ["phase86"]
+      status: merged
+      version: "v9.18.0"
+      title: "Foundational Security and Growth Phase"
+    phase88:
+      ci_tier: constitutional
+      depends_on: ["phase87"]
+      status: merged
+      version: "v9.19.0"
+      title: "INNOV-01 CSAP"
+    phase89:
+      ci_tier: constitutional
+      depends_on: ["phase88"]
+      status: merged
+      version: "v9.22.0"
+      title: "INNOV-02–05 constitutional innovation bundle"
+    phase90:
+      ci_tier: constitutional
+      depends_on: ["phase89"]
+      status: merged
+      version: "v9.24.0"
+      title: "INNOV-06 Cryptographic Evolution Proof DAG"
   state_alignment:
     expected_active_phase: "Phase 90 COMPLETE · v9.24.0"
-    expected_last_completed_pr: "feat/phase86-cel-fitness-wiring"
-    expected_next_pr: "Phase 87 — direction pending governor ratification"
+    expected_last_completed_pr: "Phase 90 — INNOV-06 CEPD (v9.24.0)"
+    expected_next_pr: "PR-PHASE91-01 (Phase 91 — Post-GA Governance Hardening Sprint)"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -524,12 +552,18 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feat/phase-79-multi-gen-lineage`
+2. `last_completed_pr` is not `Phase 90 — INNOV-06 CEPD (v9.24.0)`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
-5. `expected_next_pr` is not `Phase 80 — KMS/HSM production key wiring + Compound Evolution`
+5. `expected_next_pr` is not `PR-PHASE91-01 (Phase 91 — Post-GA Governance Hardening Sprint)`
 
 ---
+
+
+## 3.2 Changelog
+
+- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 90 complete / v9.24.0**. This update removes stale Phase 80/87 preflight predicates and aligns `state_alignment` expectations with the active summary table and next-phase pointer.
+
 
 ## 4) Phase 52+ Planning Guidance
 
