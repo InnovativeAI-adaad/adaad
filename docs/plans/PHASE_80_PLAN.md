@@ -104,8 +104,8 @@ Gate:   HUMAN-0 squash merge ceremony required
 
 | Action | Command / Detail | Finding |
 |---|---|---|
-| GPG tag v9.7.0–v9.10.0 | `git tag -s v9.7.0 v9.8.0 v9.9.0 v9.10.0 && git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0` (HUMAN-0 founder workstation only; sandbox attempt failed `No secret key`) | C-02 |
-| `free-v9.10.0` APK tag | `git tag free-v9.10.0 && git push origin free-v9.10.0` (HUMAN-0 founder workstation only; see `artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md`) | M-02 |
+| GPG tag v9.7.0–v9.10.0 | `git tag -s v9.7.0 v9.8.0 v9.9.0 v9.10.0 && git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0` (HUMAN-0 founder workstation only; latest sandbox evidence `artifacts/governance/phase93/HUMAN0_TAG_VERIFICATION_2026-03-28.txt` shows release SHAs absent and no `origin` remote) | C-02 |
+| `free-v9.10.0` APK tag | `git tag free-v9.10.0 && git push origin free-v9.10.0` (local tag created in sandbox; founder workstation push still required; see `artifacts/governance/phase93/HUMAN0_TAG_VERIFICATION_2026-03-28.txt`) | M-02 |
 | F-Droid MR submission | `gitlab.com/fdroid/fdroid-data/-/merge_requests` — use prepared YAML | Gate 3 |
 | v1.1-GA GPG sign-off commit | `governance: v1.1-GA human sign-off — 2026-03-20` | Gate 4 |
 | Patent counsel engagement | Provision filing using `IP_PATENT_FILING_ARTIFACT.md` | H-03 |

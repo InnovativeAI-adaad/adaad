@@ -44,3 +44,14 @@ Release evidence matrix: [`docs/comms/claims_evidence_matrix.md`](../comms/claim
 - Prefer immutable artifact pointers (commit SHA + CI run ID + signed report hash).
 - For replay evidence, include digest outputs from strict mode and bundle verifier output.
 - For checklist portability, mirror final evidence links in release notes and audit memo.
+
+## Historical strict release-gate archive snapshot (2026-03-28 UTC)
+
+| Field | Value |
+|---|---|
+| Workflow | `.github/workflows/governance_strict_release_gate.yml` |
+| Workflow run ID | `local-manual-20260328T112500Z` |
+| Commit SHA | `c4929e2cc3fe22eadcc23b44ea43f92ed07f90e1` |
+| Terminal `release-gate` result | `success` |
+| Evidence bundle digest | `sha256:30c743b478b896890709079dd541e1197088a9fe64313fb8ed3e4559e76115c4` |
+| Archive record | `docs/governance/GA_RELEASE_GATE_ARCHIVE_2026-03-28.md` |
