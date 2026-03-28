@@ -134,6 +134,8 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 
 Deterministic next-PR resolution rule for this roadmap slice: **the only valid next phase is the first row whose predecessor phase is `shipped` and whose own status is not `shipped`.**
 
+Execution manifest for this roadmap slice: `docs/plans/PHASE_94_114_EXECUTION_MANIFEST.md` (branch map, gate checklist, evidence/closure checklist, and per-phase tracker).
+
 ## 2) Active Planning — v1.0.0-GA Gate
 
 ### 2.1 What v1.0.0-GA means
