@@ -1,0 +1,259 @@
+<svg viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <style>
+    @keyframes flow { 0%{stroke-dashoffset:60} 100%{stroke-dashoffset:0} }
+    @keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+    @keyframes glow { 0%,100%{filter:drop-shadow(0 0 3px currentColor)} 50%{filter:drop-shadow(0 0 12px currentColor)} }
+    .arrow { stroke-dasharray:12 6; animation:flow 1.2s linear infinite }
+    .card { rx:8; ry:8 }
+    .step-num { font-family:'Courier New',monospace; font-weight:700; font-size:11px }
+    .step-name { font-family:'Segoe UI',Arial,sans-serif; font-weight:700; font-size:11px }
+    .step-desc { font-family:'Segoe UI',Arial,sans-serif; font-size:9px; fill:#8b9ab0 }
+    .innov { font-family:'Courier New',monospace; font-size:9px }
+    .label { font-family:'Segoe UI',Arial,sans-serif; font-size:10px; text-transform:uppercase; letter-spacing:1.5px; fill:#4a5568 }
+  </style>
+  <linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%">
+    <stop offset="0%" style="stop-color:#080c12"/>
+    <stop offset="100%" style="stop-color:#0d1117"/>
+  </linearGradient>
+  <!-- per-step colors -->
+  <linearGradient id="g-mmem"   x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#003060"/><stop offset="100%" style="stop-color:#001840"/></linearGradient>
+  <linearGradient id="g-prop"   x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#002040"/><stop offset="100%" style="stop-color:#001020"/></linearGradient>
+  <linearGradient id="g-afrt"   x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#300020"/><stop offset="100%" style="stop-color:#180010"/></linearGradient>
+  <linearGradient id="g-score"  x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#1a2000"/><stop offset="100%" style="stop-color:#0d1000"/></linearGradient>
+  <linearGradient id="g-shadow" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#002020"/><stop offset="100%" style="stop-color:#001010"/></linearGradient>
+  <linearGradient id="g-gate"   x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#1a1000"/><stop offset="100%" style="stop-color:#100800"/></linearGradient>
+  <linearGradient id="g-sign"   x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#1a0020"/><stop offset="100%" style="stop-color:#0d0010"/></linearGradient>
+  <linearGradient id="g-ledger" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#001830"/><stop offset="100%" style="stop-color:#000c18"/></linearGradient>
+  <linearGradient id="g-dag"    x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#200030"/><stop offset="100%" style="stop-color:#100018"/></linearGradient>
+  <filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<rect width="1200" height="480" fill="url(#bg2)"/>
+<rect width="1200" height="480" fill="none" stroke="#1a2332" stroke-width="1"/>
+
+<!-- Title -->
+<text x="600" y="34" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-weight="900" font-size="18" fill="#ffffff" letter-spacing="3">THE ADAAD MUTATION PIPELINE</text>
+<text x="600" y="52" text-anchor="middle" class="label">Every proposed change traverses all 9 gates in order · CEL-ORDER-0 enforced at runtime · no skip path</text>
+
+<!-- ═══ TOP ROW: steps 1-5 ═══ -->
+
+<!-- Step 1: MMEM Identity Check -->
+<g transform="translate(20,75)" style="animation:fadein .5s .1s both">
+  <rect width="210" height="110" rx="8" fill="url(#g-mmem)" stroke="#00d4ff" stroke-width="1.5"/>
+  <rect width="210" height="4" rx="2" fill="#00d4ff" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#00d4ff">PHASE 0d</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Identity Check</text>
+  <text x="10" y="50" class="step-desc">IdentityContextInjector</text>
+  <text x="10" y="63" class="step-desc">consults IdentityLedger.</text>
+  <text x="10" y="76" class="step-desc">Injects consistency_score</text>
+  <text x="10" y="89" class="step-desc">into CodebaseContext.</text>
+  <rect x="10" y="97" width="60" height="9" rx="4" fill="#00d4ff" opacity=".15" stroke="#00d4ff" stroke-width=".5"/>
+  <text x="40" y="104" text-anchor="middle" class="innov" fill="#00d4ff">INNOV-10</text>
+  <circle cx="195" cy="20" r="5" fill="#00d4ff"><animate attributeName="opacity" values="1;.2;1" dur="1.4s" repeatCount="indefinite"/></circle>
+</g>
+
+<!-- Arrow 1→2 -->
+<g transform="translate(232,122)">
+  <line x1="0" y1="8" x2="30" y2="8" stroke="#00d4ff" stroke-width="2" class="arrow" style="animation-delay:.1s"/>
+  <polygon points="28,4 36,8 28,12" fill="#00d4ff"/>
+</g>
+
+<!-- Step 2: Proposal -->
+<g transform="translate(270,75)" style="animation:fadein .5s .2s both">
+  <rect width="180" height="110" rx="8" fill="url(#g-prop)" stroke="#4488cc" stroke-width="1.5"/>
+  <rect width="180" height="4" rx="2" fill="#4488cc" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#4488cc">PHASE 1</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Proposal</text>
+  <text x="10" y="50" class="step-desc">Claude-powered agents</text>
+  <text x="10" y="63" class="step-desc">(Architect / Dream / Beast)</text>
+  <text x="10" y="76" class="step-desc">generate MutationCandidates.</text>
+  <text x="10" y="89" class="step-desc">Identity score in context.</text>
+</g>
+
+<!-- Arrow 2→3 -->
+<g transform="translate(452,122)">
+  <line x1="0" y1="8" x2="30" y2="8" stroke="#4488cc" stroke-width="2" class="arrow" style="animation-delay:.2s"/>
+  <polygon points="28,4 36,8 28,12" fill="#4488cc"/>
+</g>
+
+<!-- Step 3: Adversarial Red Team -->
+<g transform="translate(485,75)" style="animation:fadein .5s .3s both">
+  <rect width="190" height="110" rx="8" fill="url(#g-afrt)" stroke="#ff4466" stroke-width="1.5"/>
+  <rect width="190" height="4" rx="2" fill="#ff4466" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#ff4466">PHASE 2–3</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Adversarial Red Team</text>
+  <text x="10" y="50" class="step-desc">Red Team Agent generates</text>
+  <text x="10" y="63" class="step-desc">up to 5 adversarial cases.</text>
+  <text x="10" y="76" class="step-desc">PASS or RETURNED only.</text>
+  <text x="10" y="89" class="step-desc">Cannot approve. Structural.</text>
+  <rect x="10" y="97" width="60" height="9" rx="4" fill="#ff4466" opacity=".15" stroke="#ff4466" stroke-width=".5"/>
+  <text x="40" y="104" text-anchor="middle" class="innov" fill="#ff4466">INNOV-08</text>
+</g>
+
+<!-- Arrow 3→4 -->
+<g transform="translate(677,122)">
+  <line x1="0" y1="8" x2="30" y2="8" stroke="#ff4466" stroke-width="2" class="arrow" style="animation-delay:.3s"/>
+  <polygon points="28,4 36,8 28,12" fill="#ff4466"/>
+</g>
+
+<!-- Step 4: Constitutional Scoring -->
+<g transform="translate(710,75)" style="animation:fadein .5s .4s both">
+  <rect width="195" height="110" rx="8" fill="url(#g-score)" stroke="#88cc00" stroke-width="1.5"/>
+  <rect width="195" height="4" rx="2" fill="#88cc00" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#88cc00">PHASE 4</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Constitutional Scoring</text>
+  <text x="10" y="50" class="step-desc">FitnessEngineV2 scores</text>
+  <text x="10" y="63" class="step-desc">7 signals + identity signal.</text>
+  <text x="10" y="76" class="step-desc">27 runtime-enforced rules.</text>
+  <text x="10" y="89" class="step-desc">Rule violation halts epoch.</text>
+</g>
+
+<!-- Arrow 4→5 -->
+<g transform="translate(907,122)">
+  <line x1="0" y1="8" x2="28" y2="8" stroke="#88cc00" stroke-width="2" class="arrow" style="animation-delay:.4s"/>
+  <polygon points="26,4 34,8 26,12" fill="#88cc00"/>
+</g>
+
+<!-- Step 5: Shadow Execution -->
+<g transform="translate(937,75)" style="animation:fadein .5s .5s both">
+  <rect width="240" height="110" rx="8" fill="url(#g-shadow)" stroke="#00ccaa" stroke-width="1.5"/>
+  <rect width="240" height="4" rx="2" fill="#00ccaa" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#00ccaa">PHASE 5</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Live Shadow Execution</text>
+  <text x="10" y="50" class="step-desc">Zero-write harness. Real traffic.</text>
+  <text x="10" y="63" class="step-desc">ShadowFitnessReport: divergence</text>
+  <text x="10" y="76" class="step-desc">rate · error delta · P99 latency.</text>
+  <text x="10" y="89" class="step-desc">Regression = hard block.</text>
+  <rect x="10" y="97" width="60" height="9" rx="4" fill="#00ccaa" opacity=".15" stroke="#00ccaa" stroke-width=".5"/>
+  <text x="40" y="104" text-anchor="middle" class="innov" fill="#00ccaa">INNOV-07</text>
+</g>
+
+<!-- ═══ FLOW DOWN: step 5 → bottom row ═══ -->
+<g transform="translate(1057,187)">
+  <line x1="0" y1="0" x2="0" y2="30" stroke="#00ccaa" stroke-width="2" class="arrow" style="animation:flow 1.2s linear infinite; stroke-dasharray:8 4"/>
+  <polygon points="-4,28 0,36 4,28" fill="#00ccaa"/>
+</g>
+
+<!-- ═══ BOTTOM ROW: steps 6-9 (right to left) ═══ -->
+
+<!-- Step 6: Governance Gate -->
+<g transform="translate(937,235)" style="animation:fadein .5s .6s both">
+  <rect width="240" height="110" rx="8" fill="url(#g-gate)" stroke="#ffcc00" stroke-width="1.5"/>
+  <rect width="240" height="4" rx="2" fill="#ffcc00" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#ffcc00">PHASE 6</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Governance Gate</text>
+  <text x="10" y="50" class="step-desc">GovernanceGateV2 evaluates</text>
+  <text x="10" y="63" class="step-desc">full evidence package.</text>
+  <text x="10" y="76" class="step-desc">All prior gates must pass.</text>
+  <text x="10" y="89" class="step-desc">APPROVED · RETURNED · BLOCKED</text>
+</g>
+
+<!-- Arrow 6→7 (right to left) -->
+<g transform="translate(935,275)">
+  <line x1="0" y1="8" x2="-28" y2="8" stroke="#ffcc00" stroke-width="2" class="arrow" style="animation-delay:.6s"/>
+  <polygon points="-26,4 -34,8 -26,12" fill="#ffcc00"/>
+</g>
+
+<!-- Step 7: Human Sign-off -->
+<g transform="translate(700,235)" style="animation:fadein .5s .7s both">
+  <rect width="225" height="110" rx="8" fill="url(#g-sign)" stroke="#a855f7" stroke-width="1.5"/>
+  <rect width="225" height="4" rx="2" fill="#a855f7" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#a855f7">PHASE 7 · TIER 0</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Human Sign-off</text>
+  <text x="10" y="50" class="step-desc">GPG key required for</text>
+  <text x="10" y="63" class="step-desc">critical mutations. System</text>
+  <text x="10" y="76" class="step-desc">is architecturally incapable</text>
+  <text x="10" y="89" class="step-desc">of bypassing this. Not a setting.</text>
+  <text x="140" y="104" text-anchor="middle" class="innov" fill="#a855f7">🔑 HUMAN-0</text>
+</g>
+
+<!-- Arrow 7→8 -->
+<g transform="translate(698,275)">
+  <line x1="0" y1="8" x2="-28" y2="8" stroke="#a855f7" stroke-width="2" class="arrow" style="animation-delay:.7s"/>
+  <polygon points="-26,4 -34,8 -26,12" fill="#a855f7"/>
+</g>
+
+<!-- Step 8: Ledger Commit -->
+<g transform="translate(475,235)" style="animation:fadein .5s .8s both">
+  <rect width="210" height="110" rx="8" fill="url(#g-ledger)" stroke="#00d4ff" stroke-width="1.5"/>
+  <rect width="210" height="4" rx="2" fill="#00d4ff" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#00d4ff">PHASE 8</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Ledger Commit</text>
+  <text x="10" y="50" class="step-desc">SHA-256 hash-chained</text>
+  <text x="10" y="63" class="step-desc">append-only commit.</text>
+  <text x="10" y="76" class="step-desc">Every pass/fail/return/block</text>
+  <text x="10" y="89" class="step-desc">sealed. Cannot rewrite history.</text>
+</g>
+
+<!-- Arrow 8→9 -->
+<g transform="translate(473,275)">
+  <line x1="0" y1="8" x2="-28" y2="8" stroke="#00d4ff" stroke-width="2" class="arrow" style="animation-delay:.8s"/>
+  <polygon points="-26,4 -34,8 -26,12" fill="#00d4ff"/>
+</g>
+
+<!-- Step 9: Cryptographic Proof DAG -->
+<g transform="translate(20,235)" style="animation:fadein .5s .9s both">
+  <rect width="440" height="110" rx="8" fill="url(#g-dag)" stroke="#c084fc" stroke-width="1.5"/>
+  <rect width="440" height="4" rx="2" fill="#c084fc" y="0"/>
+  <text x="10" y="22" class="step-num" fill="#c084fc">PHASE 9</text>
+  <text x="10" y="36" class="step-name" fill="#ffffff">Cryptographic Evolution Proof DAG</text>
+  <text x="10" y="50" class="step-desc">Full mutation lineage Merkle-rooted. Every causal ancestor linked.</text>
+  <text x="10" y="63" class="step-desc">Independently verifiable without system access. Legal-grade provenance.</text>
+  <text x="10" y="76" class="step-desc">Hand to auditors, regulators, or patent counsel. No system access required.</text>
+  <rect x="10" y="90" width="60" height="9" rx="4" fill="#c084fc" opacity=".15" stroke="#c084fc" stroke-width=".5"/>
+  <text x="40" y="97" text-anchor="middle" class="innov" fill="#c084fc">INNOV-06</text>
+  <!-- mini DAG viz -->
+  <circle cx="320" cy="55" r="8" fill="#1a0028" stroke="#c084fc" stroke-width="1.2"/>
+  <circle cx="350" cy="35" r="6" fill="#1a0028" stroke="#a855f7" stroke-width="1"/>
+  <circle cx="350" cy="75" r="6" fill="#1a0028" stroke="#a855f7" stroke-width="1"/>
+  <circle cx="380" cy="25" r="5" fill="#1a0028" stroke="#8844bb" stroke-width="1"/>
+  <circle cx="380" cy="55" r="5" fill="#1a0028" stroke="#8844bb" stroke-width="1"/>
+  <circle cx="380" cy="85" r="5" fill="#1a0028" stroke="#8844bb" stroke-width="1"/>
+  <circle cx="410" cy="45" r="4" fill="#1a0028" stroke="#664499" stroke-width="1"/>
+  <circle cx="410" cy="75" r="4" fill="#1a0028" stroke="#664499" stroke-width="1"/>
+  <line x1="326" y1="50" x2="344" y2="38" stroke="#c084fc" stroke-width=".8" opacity=".7"/>
+  <line x1="326" y1="60" x2="344" y2="72" stroke="#c084fc" stroke-width=".8" opacity=".7"/>
+  <line x1="354" y1="32" x2="376" y2="26" stroke="#a855f7" stroke-width=".6" opacity=".6"/>
+  <line x1="354" y1="38" x2="376" y2="54" stroke="#a855f7" stroke-width=".6" opacity=".6"/>
+  <line x1="354" y1="72" x2="376" y2="56" stroke="#a855f7" stroke-width=".6" opacity=".6"/>
+  <line x1="354" y1="78" x2="376" y2="84" stroke="#a855f7" stroke-width=".6" opacity=".6"/>
+</g>
+
+<!-- Bottom bar -->
+<rect x="0" y="362" width="1200" height="118" fill="#050810"/>
+<rect x="0" y="362" width="1200" height="1" fill="#1a2332"/>
+
+<!-- Constitutional Guarantees bar -->
+<text x="600" y="384" text-anchor="middle" class="label" fill="#4a6080">constitutional guarantees — mechanically enforced, not policy</text>
+
+<g transform="translate(60,400)">
+  <!-- Guarantee 1 -->
+  <rect width="230" height="52" rx="6" fill="#0a1020" stroke="#00d4ff" stroke-width=".8"/>
+  <text x="115" y="20" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="700" fill="#00d4ff">CEL-ORDER-0</text>
+  <text x="115" y="34" text-anchor="middle" class="step-desc">Steps execute in strict order.</text>
+  <text x="115" y="46" text-anchor="middle" class="step-desc">Out-of-sequence aborts epoch.</text>
+
+  <!-- Guarantee 2 -->
+  <rect x="250" width="230" height="52" rx="6" fill="#0a1020" stroke="#ff4466" stroke-width=".8"/>
+  <text x="365" y="20" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="700" fill="#ff4466">AFRT-0</text>
+  <text x="365" y="34" text-anchor="middle" class="step-desc">Red Team cannot approve.</text>
+  <text x="365" y="46" text-anchor="middle" class="step-desc">PASS or RETURNED only.</text>
+
+  <!-- Guarantee 3 -->
+  <rect x="500" width="230" height="52" rx="6" fill="#0a1020" stroke="#00ccaa" stroke-width=".8"/>
+  <text x="615" y="20" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="700" fill="#00ccaa">LSME-0</text>
+  <text x="615" y="34" text-anchor="middle" class="step-desc">Shadow harness: zero writes.</text>
+  <text x="615" y="46" text-anchor="middle" class="step-desc">Egress detection = hard block.</text>
+
+  <!-- Guarantee 4 -->
+  <rect x="750" width="230" height="52" rx="6" fill="#0a1020" stroke="#00ff88" stroke-width=".8"/>
+  <text x="865" y="20" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="11" font-weight="700" fill="#00ff88">MMEM-0</text>
+  <text x="865" y="34" text-anchor="middle" class="step-desc">Identity check never blocks</text>
+  <text x="865" y="46" text-anchor="middle" class="step-desc">epoch. Advisory, not a gate.</text>
+</g>
+
+<!-- Animated flow line at bottom -->
+<rect x="0" y="477" width="1200" height="3" fill="none"><animate attributeName="fill" values="#00d4ff;#00ff88;#a855f7;#ff4466;#00d4ff" dur="4s" repeatCount="indefinite"/></rect>
+</svg>

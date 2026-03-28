@@ -2,27 +2,8 @@
 
 <!-- AUTO-UPDATED: version hero regenerates on every merge to main -->
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.27.0 — 94 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.27.0 — 94 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
-
-<br/>
-
-<img src="docs/assets/readme/adaad-logo-shield.png" width="180" alt="ADAAD Shield Logo"/>
-
-<br/><br/>
-
-# ADAAD
-### *Autonomous Device-Anchored Adaptive Development*
-
-**AI that governs its own evolution — with you in control.**
-
-<br/>
-
-[![Version](https://img.shields.io/badge/ADAAD-v9.27.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/94_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_94-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
-
-[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C680_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/10_Innovations-Shipped_·_20_Roadmap-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Invariants](https://img.shields.io/badge/27_Hard--Class-Invariants-ff4466?style=flat-square&labelColor=0d1117)
-
-<br/>
 
 **[⚡ Quickstart](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
 
@@ -30,8 +11,6 @@
 
 <br/>
 
-<!-- AUTO-UPDATED: live status regenerates every 15 minutes via GitHub Actions -->
-<img src="docs/assets/readme/adaad-live-status.svg" width="100%" alt="ADAAD Live Status"/>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -53,9 +32,7 @@ ADAAD is built to solve this at the architectural level.
 
 ## What ADAAD actually does
 
-<div align="center">
-<img src="docs/assets/readme/adaad-brand-banner.png" width="100%" alt="ADAAD — Auditable · Deterministic · Automated"/>
-</div>
+<img src="docs/assets/readme/adaad-pipeline-animated.svg" width="100%" alt="ADAAD Mutation Pipeline — 9 governed steps"/>
 
 <br/>
 
@@ -243,9 +220,7 @@ Every property below is mechanically enforced at runtime. Not policy. Not docume
 
 ## World's firsts — with verifiable evidence
 
-<div align="center">
-<img src="docs/assets/readme/adaad-worlds-firsts.png" width="80%" alt="World's Firsts ADAAD Can Claim"/>
-</div>
+<img src="docs/assets/readme/adaad-innovations-animated.svg" width="100%" alt="10 World-First Innovations — Shipped"/>
 
 <br/>
 
@@ -456,7 +431,7 @@ For due diligence data room access, see the [Data Room Index](docs/strategy/DATA
 
 <div align="center">
 
-<img src="docs/assets/readme/adaad-infographic.png" width="90%" alt="ADAAD — The Dawn of Governed Autonomy"/>
+<img src="docs/assets/readme/adaad-collage.png" width="90%" alt="ADAAD — Auditable · Deterministic · Automated · Autonomous Device-Anchored Adaptive Development"/>
 
 <br/><br/>
 
