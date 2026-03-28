@@ -71,6 +71,7 @@
 | [governance/STRICT_REPLAY_INVARIANTS.md](governance/STRICT_REPLAY_INVARIANTS.md) | Replay invariant contracts for test suite |
 | [testing/monolith_test_domain_mapping.md](testing/monolith_test_domain_mapping.md) | Test file to module domain mapping |
 | [governance/fitness_spec_v1.md](governance/fitness_spec_v1.md) | FitnessEngine v1 specification (reference for v2 delta) |
+| [comms/repo_deep_audit_thesis_2026-03-28.md](comms/repo_deep_audit_thesis_2026-03-28.md) | Latest full audit/thesis deep-run execution snapshot and gate outcomes |
 
 </details>
 
