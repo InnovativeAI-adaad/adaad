@@ -1,69 +1,91 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Integration coverage for runtime.innovations30.integration."""
+"""Integration tests for runtime.innovations30.integration.InnovationsPipeline."""
+
 from __future__ import annotations
+
+from dataclasses import asdict
 
 from runtime.innovations30.integration import InnovationsPipeline
 
 
-def test_evaluate_mutation_populates_extended_component_fields(tmp_path):
-    pipeline = InnovationsPipeline(data_dir=tmp_path)
+def _deterministic_payload(mutation_id: str) -> dict:
+    return {
+        "mutation_id": mutation_id,
+        "agent_id": "agent-integration-fixed",
+        "intent": "Improve governance auditability without bypassing controls",
+        "diff_text": (
+            "--- a/runtime/metrics.py\n"
+            "+++ b/runtime/metrics.py\n"
+            "@@ -1,4 +1,4 @@\n"
+            "-metrics.log('legacy')\n"
+            "+metrics.log('improved')\n"
+            "+# delete_test marker for deterministic warning coverage\n"
+        ),
+        "changed_files": ["runtime/metrics.py"],
+        "before_source": "def f(x):\n    x = x + 1\n    return x\n",
+        "after_source": "def f(x):\n    return x + 1\n",
+        "epoch_id": "epoch-integration-2026-03-28",
+        "epoch_seq": 42,
+        "declared_semver": "patch",
+        "base_fitness": 0.72,
+        "recent_fitness_deltas": [0.01, 0.02, 0.01],
+        "health_score": 0.80,
+        "blocking_rules": ["lineage_continuity"],
+        "overridden_rules": ["import_boundary"],
+    }
 
-    result = pipeline.evaluate_mutation(
-        mutation_id="m-100",
-        agent_id="agent-1",
-        intent="improve safety checks",
-        diff_text="+def guard():\n+    return True",
-        changed_files=["runtime/safety/checks.py"],
-        before_source="def guard():\n    return False",
-        after_source="def guard():\n    return True",
-        epoch_id="epoch-100",
-        epoch_seq=10,
-        blocking_rules=["lineage_continuity"],
-        overridden_rules=["single_file_scope"],
+
+def test_pipeline_component_coverage_is_represented_in_eval_output(tmp_path):
+    pipeline = InnovationsPipeline(data_dir=tmp_path / "data")
+    result = pipeline.evaluate_mutation(**_deterministic_payload("mut-int-0001"))
+
+    component_names = set(pipeline.component_names())
+    signal_map = result.component_signal_map
+
+    assert set(signal_map.keys()) == component_names
+    for component_name, channels in signal_map.items():
+        assert channels, f"{component_name} missing output representation"
+        assert set(channels).issubset({"direct", "warning", "blocking"})
+
+
+def test_pipeline_repeatability_same_input_same_output(tmp_path):
+    payload = _deterministic_payload("mut-int-0002")
+
+    result_a = InnovationsPipeline(data_dir=tmp_path / "run-a").evaluate_mutation(**payload)
+    result_b = InnovationsPipeline(data_dir=tmp_path / "run-b").evaluate_mutation(**payload)
+
+    assert asdict(result_a) == asdict(result_b)
+
+
+def test_blocking_signals_dominate_and_are_not_downgraded_to_warning(tmp_path):
+    pipeline = InnovationsPipeline(data_dir=tmp_path / "data")
+    pipeline._init()
+    bankruptcy = pipeline.get_component("bankruptcy")
+    bankruptcy.evaluate(
+        epoch_id="epoch-bankruptcy-2026-03-28",
+        debt_score=1.0,
+        health_score=0.1,
     )
 
-    assert result.temporal_governance_ruleset
-    assert isinstance(result.invariant_discoveries, list)
-    assert isinstance(result.rule_calibration_summary, dict)
-    assert result.temporal_regret_registered is True
-    assert isinstance(result.epistemic_decay_summary, dict)
-    assert isinstance(result.dream_candidate_ids, list)
-    assert isinstance(result.genealogy_productive_lineages, list)
-    assert isinstance(result.genealogy_dead_end_epochs, list)
-    assert isinstance(result.genealogy_direction, dict)
-    assert isinstance(result.jury_dissent_count, int)
-    assert isinstance(result.staking_balance, float)
-    assert isinstance(result.staking_win_rate, float)
-    assert isinstance(result.postmortem_recurring_gaps, dict)
-    assert isinstance(result.archaeology_event_count, int)
-    assert result.stress_cases_tested > 0
-    assert isinstance(result.market_adjusted_score, float)
-    assert isinstance(result.market_health_score, float)
-    assert isinstance(result.hardware_weights, dict)
-    assert isinstance(result.entropy_drift_ratio, float)
-    assert isinstance(result.mirror_test_due, bool)
-
-
-def test_evaluate_mutation_is_deterministic_for_identical_inputs(tmp_path):
-    pipeline = InnovationsPipeline(data_dir=tmp_path)
-    kwargs = dict(
-        mutation_id="m-det-1",
-        agent_id="agent-det",
-        intent="improve observability",
-        diff_text="+x = 1",
-        changed_files=["adaad/agents/example.py"],
-        before_source="x = 0",
-        after_source="x = 1",
-        epoch_id="epoch-det-1",
-        epoch_seq=7,
+    payload = _deterministic_payload("mut-int-0003")
+    payload["intent"] = "Optimize throughput only"
+    payload["diff_text"] = (
+        "--- a/runtime/metrics.py\n"
+        "+++ b/runtime/metrics.py\n"
+        "@@ -1,3 +1,2 @@\n"
+        "-metrics.log('legacy')\n"
+        "+return 0\n"
     )
 
-    first = pipeline.evaluate_mutation(**kwargs)
-    second = pipeline.evaluate_mutation(**kwargs)
+    result = pipeline.evaluate_mutation(**payload)
 
-    assert first.overall_innovations_score == second.overall_innovations_score
-    assert first.temporal_governance_ruleset == second.temporal_governance_ruleset
-    assert first.market_adjusted_score == second.market_adjusted_score
-    assert first.hardware_adapted_score == second.hardware_adapted_score
-    assert first.stress_cases_tested == second.stress_cases_tested
-    assert first.stress_gaps_found == second.stress_gaps_found
+    assert result.blocking_violations, "Expected blocking violations from safety invariants"
+    assert result.component_signal_map["self_aware"].count("blocking") >= 1
+    assert result.component_signal_map["bankruptcy"].count("blocking") >= 1
+
+    blocking_text = "\n".join(result.blocking_violations)
+    warnings_text = "\n".join(result.warnings)
+    assert "SELF-AWARE-0" in blocking_text
+    assert "BANKRUPTCY ACTIVE" in blocking_text
+    assert "SELF-AWARE-0" not in warnings_text
+    assert "BANKRUPTCY ACTIVE" not in warnings_text

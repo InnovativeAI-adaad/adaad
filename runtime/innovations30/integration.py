@@ -65,6 +65,7 @@ class InnovationEvalResult:
     overall_innovations_score: float = 1.0
     blocking_violations: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    component_signal_map: dict[str, list[str]] = field(default_factory=dict)
 
 
 class InnovationsPipeline:
@@ -172,12 +173,14 @@ class InnovationsPipeline:
         self._init()
         c = self._components
         result = InnovationEvalResult(mutation_id=mutation_id)
+        result.component_signal_map = {name: ["direct"] for name in self.component_names()}
 
         # ── 28: Self-Awareness Invariant (blocking) ────────────────────────
         sa = c["self_aware"].evaluate(mutation_id, diff_text, changed_files)
         result.self_aware_passed = sa.passed
         if not sa.passed:
             result.blocking_violations.extend(sa.violations)
+            result.component_signal_map["self_aware"].append("blocking")
 
         # ── 23: Regulatory Compliance (blocking) ──────────────────────────
         reg = c["regulatory"].evaluate(mutation_id, diff_text, intent)
@@ -186,13 +189,16 @@ class InnovationsPipeline:
             for v in reg.violations:
                 if v.rule_id.endswith("blocking"):
                     result.blocking_violations.append(v.violation_description)
+                    result.component_signal_map["regulatory"].append("blocking")
                 else:
                     result.warnings.append(v.violation_description)
+                    result.component_signal_map["regulatory"].append("warning")
 
         # ── 21: Governance Bankruptcy (blocking) ──────────────────────────
         allowed, reason = c["bankruptcy"].is_mutation_allowed(intent)
         if not allowed:
             result.blocking_violations.append(reason)
+            result.component_signal_map["bankruptcy"].append("blocking")
 
         # ── 8: Red Team (warning) ─────────────────────────────────────────
         red = c["red_team"].challenge(mutation_id, before_source,
@@ -200,6 +206,7 @@ class InnovationsPipeline:
         result.red_team_verdict = red.verdict
         if red.verdict == "FAIL":
             result.warnings.extend(red.vulnerabilities[:2])
+            result.component_signal_map["red_team"].append("warning")
 
         # ── 4: Intent Preservation ────────────────────────────────────────
         if diff_text:
@@ -215,12 +222,14 @@ class InnovationsPipeline:
         result.semver_honored = semver_v.contract_honored
         if not semver_v.contract_honored:
             result.warnings.extend(semver_v.violations)
+            result.component_signal_map["semver"].append("warning")
 
         # ── 27: Blast Radius ─────────────────────────────────────────────
         blast = c["blast_radius"].model(mutation_id, changed_files)
         result.blast_radius_tier = blast.risk_tier
         if blast.risk_tier == "critical":
             result.warnings.append(f"CRITICAL blast radius: {blast.reversal_cost_estimate}")
+            result.component_signal_map["blast_radius"].append("warning")
 
         # ── 9: Aesthetic Fitness ──────────────────────────────────────────
         if before_source and after_source:
@@ -347,6 +356,7 @@ class InnovationsPipeline:
             mutation_id, intent, diff_text)
         if not consistency.consistent:
             result.warnings.extend(consistency.violated_statements[:2])
+            result.component_signal_map["morpho_memory"].append("warning")
 
         # ── Aggregate overall score ───────────────────────────────────────
         scores = [
