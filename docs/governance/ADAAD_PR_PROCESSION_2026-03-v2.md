@@ -104,7 +104,7 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 
 > **v8/v9 sequencing source of truth:** This document controls active constitutional PR sequencing and status across the v8.x and v9.x release lines. `ROADMAP.md` mirrors this state for human-facing roadmap context and must remain aligned.
 
-- **Current:** Phase 93 complete (v9.26.0 — INNOV-09 AFIT). Next: **Phase 94** — INNOV-10 roadmap start.
+- **Current:** Phase 93 complete (v9.26.0 — INNOV-09 AFIT). Next: **Phase 94 — INNOV-10 roadmap execution**.
 
 ### 1A.4 Innovation→Phase index (remaining roadmap; deterministic predecessor linkage)
 
@@ -168,6 +168,8 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 | `free-v9.10.0` APK tag (M-02) | Dustin (founder) | ⏳ HUMAN-0: `git tag free-v9.10.0 && git push origin free-v9.10.0` |
 | Patent counsel engagement (H-03) | Dustin (founder) | ✅ CLOSED 2026-03-26: transmittal + filing receipt `RECEIPT-2026-03-26-CMGM-001` in `artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json` |
 | `governance_strict_release_gate.yml` terminal pass | CI | ⏳ unblocked after above human gates |
+
+**Open GA blockers (canonical): 4** (`F-Droid MR submission`, `founder GPG sign-off`, `founder tag ceremony backfill`, `governance strict release gate terminal pass`).
 
 ---
 
@@ -556,11 +558,13 @@ adaad_pr_procession_contract:
       note: "patent counsel transmittal completed; filing receipt captured as RECEIPT-2026-03-26-CMGM-001"
   v1_ga_gate:
     status: "in_progress"
-    canonical_ga_tag: "v1.1-GA (DECLARED — v1.0.0-GA superseded, Phase 80 Track B — FINDING-H04 closed pending Gate 4 sign-off)"
+    canonical_ga_tag: "v1.1-GA (DECLARED — v1.0.0-GA superseded, Phase 80 Track B — declaration documented; founder Gate 4 sign-off pending)"
+    blocker_count_open: 4
     blocking_items:
-      - fdroid_submission_recorded
+      - fdroid_mr_submission_manual_step
       - founder_gpg_signoff_confirmed
-      - ga_versioning_decision_documented
+      - founder_tag_ceremony_backfill
+      - governance_strict_release_gate_terminal_pass
   missing_tags:
     note: "v9.7.0–v9.10.0 and v9.14.0–v9.17.0 GPG-signed tag ceremonies required — Dustin local action C-02. 2026-03-26 sandbox evidence confirms no founder key present."
     last_attempt_evidence: "artifacts/governance/phase91/HUMAN0_TAG_CEREMONY_2026-03-26.md"

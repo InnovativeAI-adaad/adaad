@@ -17,7 +17,7 @@
 > Internal architecture, API contracts, configuration, evidence artifacts, and test coverage for **ADAAD v9.26.0 · Phase 93 (INNOV-09 AFIT shipped)**. For user-facing setup see [QUICKSTART.md](../QUICKSTART.md). For the 23 rules see [CONSTITUTION.md](CONSTITUTION.md). For build-agent protocol see [AGENTS.md](../AGENTS.md).
 >
 > **Last reviewed:** 2026-03-28
-> **Current/Next:** Current = Phase 93 (v9.26.0), Next = Phase 94 roadmap execution.
+> **Current/Next:** Current = Phase 93 (v9.26.0), Next = Phase 94 — INNOV-10 roadmap execution.
 
 <br/>
 
