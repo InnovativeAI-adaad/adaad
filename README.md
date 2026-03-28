@@ -10,7 +10,7 @@
 
 [![Version](https://img.shields.io/badge/ADAAD-v9.26.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/92_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_92-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
-[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C680_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/8_Innovations-Shipped_·_22_Roadmap-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Invariants](https://img.shields.io/badge/17_Hard--Class-Invariants-ff4466?style=flat-square&labelColor=0d1117)
+[![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C680_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/9_Innovations-Shipped_·_21_Roadmap-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Invariants](https://img.shields.io/badge/17_Hard--Class-Invariants-ff4466?style=flat-square&labelColor=0d1117)
 
 <br/>
 
@@ -187,7 +187,7 @@ Every property below is mechanically enforced at runtime. Not policy. Not docume
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 8 shipped world-first innovations
+## 9 shipped world-first innovations
 
 Not prototypes. Each shipped with a full constitutional test suite, human governor sign-off, and a hash-chained evidence artifact.
 
@@ -200,9 +200,10 @@ Not prototypes. Each shipped with a full constitutional test suite, human govern
 | INNOV-05 | Autonomous Organ Emergence (AOEP) | 89 | ADAAD can propose entirely new architectural organs to address capability gaps — requires human ratification |
 | INNOV-06 | Cryptographic Evolution Proof DAG (CEPD) | 90 | Full lineage Merkle-rooted and independently verifiable. Legal-grade provenance. |
 | INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Mutations run in a zero-write shadow harness against real traffic before promotion |
-| INNOV-09 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
+| INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
+| INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | ADAAD scores readability, naming quality, and structural clarity as a first-class fitness dimension |
 
-22 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+21 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -315,12 +316,12 @@ The full provenance chain from proposal to outcome is cryptographically linked v
 </details>
 
 <details>
-<summary><b>What are the 8 shipped innovations?</b></summary>
+<summary><b>What are the 9 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-09 shipped across v9.18.0–v9.26.0 (Phases 87–92): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), and Adversarial Fitness Red Team (AFRT).
+INNOV-01 through INNOV-09 shipped across v9.18.0–v9.26.0 (Phases 87–93): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), and Aesthetic Fitness Signal (AFIT).
 
-22 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+21 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
 
 <details>
