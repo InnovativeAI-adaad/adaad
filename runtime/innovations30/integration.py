@@ -18,10 +18,22 @@ class InnovationEvalResult:
     invariant_discoveries: list[str] = field(default_factory=list)
     constitutional_tensions: list[str] = field(default_factory=list)
     rule_promotion_recommendations: list[dict] = field(default_factory=list)
+    rule_calibration_summary: dict[str, Any] = field(default_factory=dict)
     intent_realization_score: float = 1.0
+    temporal_governance_ruleset: dict[str, str] = field(default_factory=dict)
+    entropy_drift_ratio: float = 0.0
+    entropy_requires_double_signoff: bool = False
     # Fitness
     temporal_regret_registered: bool = False
+    temporal_regret_avg_25: float = 0.0
+    temporal_regret_high_count: int = 0
     counterfactual_adjusted_score: float = 0.0
+    market_adjusted_score: float = 0.0
+    market_health_score: float = 1.0
+    hardware_adapted_score: float = 0.0
+    hardware_profile: str = ""
+    hardware_weights: dict[str, float] = field(default_factory=dict)
+    epistemic_decay_summary: dict[str, Any] = field(default_factory=dict)
     red_team_verdict: str = "PASS"
     aesthetic_score: float = 0.5
     # Safety
@@ -29,8 +41,24 @@ class InnovationEvalResult:
     regulatory_passed: bool = True
     semver_honored: bool = True
     blast_radius_tier: str = "low"
+    mirror_test_due: bool = False
+    mirror_last_score: float | None = None
+    mirror_requires_calibration: bool = False
+    stress_cases_tested: int = 0
+    stress_gaps_found: int = 0
     # Governance
     jury_verdict: str | None = None
+    jury_dissent_count: int = 0
+    staking_balance: float = 0.0
+    staking_win_rate: float = 1.0
+    emergent_role: str | None = None
+    postmortem_recurring_gaps: dict[str, int] = field(default_factory=dict)
+    archaeology_timeline_digest: str | None = None
+    archaeology_event_count: int = 0
+    dream_candidate_ids: list[str] = field(default_factory=list)
+    genealogy_productive_lineages: list[str] = field(default_factory=list)
+    genealogy_dead_end_epochs: list[str] = field(default_factory=list)
+    genealogy_direction: dict[str, float] = field(default_factory=dict)
     curiosity_active: bool = False
     curiosity_inverted_fitness: float | None = None
     # Aggregated
@@ -103,6 +131,7 @@ class InnovationsPipeline:
             "dream_state":           DreamStateEngine(d/"dream_candidates.jsonl"),
             "genealogy":             MutationGenealogyAnalyzer(d/"genealogy_vectors.jsonl"),
             "jury":                  ConstitutionalJury(d/"jury_decisions.jsonl"),
+            "is_high_stakes":        is_high_stakes,
             "staking":               ReputationStakingLedger(d/"reputation_stakes.jsonl",
                                                                d/"agent_wallets.json"),
             "emergent_roles":        EmergentRoleSpecializer(d/"emergent_roles.json"),
@@ -185,6 +214,9 @@ class InnovationsPipeline:
                 mutation_id, agent_id, intent, diff_text, epoch_id)
             result.intent_realization_score = intent_r.realization_score
 
+        # ── 18: Temporal Governance (structured) ──────────────────────────
+        result.temporal_governance_ruleset = c["temporal_gov"].get_adjusted_ruleset(health_score)
+
         # ── 24: Semantic Version Enforcer (warning) ───────────────────────
         semver_v = c["semver"].verify(mutation_id, declared_semver, diff_text)
         result.semver_honored = semver_v.contract_honored
@@ -210,6 +242,32 @@ class InnovationsPipeline:
             recent_fitness_deltas or [])
         result.counterfactual_adjusted_score = cf.adjusted_proposal_score
 
+        # ── 22: Market-conditioned Fitness ────────────────────────────────
+        result.market_adjusted_score = c["market_fitness"].adjust_fitness(
+            result.counterfactual_adjusted_score, mutation_id)
+        result.market_health_score = c["market_fitness"].market_health_score()
+
+        # ── 25: Hardware-adaptive Fitness ─────────────────────────────────
+        result.hardware_weights = c["hw_fitness"].adapted_weights()
+        result.hardware_profile = c["hw_fitness"].profile_description()
+        result.hardware_adapted_score = c["hw_fitness"].score_with_profile({
+            "correctness_score": 1.0 if result.self_aware_passed else 0.0,
+            "efficiency_score": result.aesthetic_score,
+            "policy_compliance_score": 1.0 if result.regulatory_passed else 0.0,
+            "goal_alignment_score": result.intent_realization_score,
+            "simulated_market_score": result.market_adjusted_score,
+        })
+
+        # ── 26: Constitutional Entropy Budget ─────────────────────────────
+        entropy = c["entropy_budget"].check_drift(
+            current_rule_names=sorted(result.temporal_governance_ruleset.keys()),
+            current_epoch_seq=epoch_seq,
+        )
+        result.entropy_drift_ratio = entropy.drift_ratio
+        result.entropy_requires_double_signoff = entropy.requires_double_signoff
+        if entropy.requires_double_signoff:
+            result.warnings.append("Constitutional drift requires double HUMAN-0 signoff.")
+
         # ── 29: Curiosity Engine ──────────────────────────────────────────
         result.curiosity_active = c["curiosity"].in_curiosity
         if result.curiosity_active:
@@ -220,6 +278,78 @@ class InnovationsPipeline:
             tensions = c["tension_resolver"].record_verdict(
                 mutation_id, epoch_id, blocking_rules, overridden_rules)
             result.constitutional_tensions = [t.digest for t in tensions]
+
+        # ── 1: Invariant Discovery (structured) ───────────────────────────
+        pending_rules = c["invariant_discovery"].pending_rules()
+        result.invariant_discoveries = [r.digest for r in pending_rules]
+
+        # ── 3: Graduated Invariants (structured) ──────────────────────────
+        result.rule_promotion_recommendations = c["graduated_invariants"].recommend_changes()
+        result.rule_calibration_summary = c["graduated_invariants"].calibration_summary()
+
+        # ── 5: Temporal Regret (structured) ───────────────────────────────
+        if epoch_id:
+            c["regret_scorer"].register_acceptance(
+                mutation_id=mutation_id,
+                epoch_seq=epoch_seq,
+                predicted_fitness=result.market_adjusted_score,
+            )
+            result.temporal_regret_registered = True
+        result.temporal_regret_avg_25 = c["regret_scorer"].avg_regret(offset=25)
+        result.temporal_regret_high_count = len(c["regret_scorer"].high_regret_mutations(offset=25))
+        if result.temporal_regret_high_count > 0:
+            result.warnings.append("Temporal regret hotspots detected.")
+
+        # ── 7: Epistemic Decay (structured) ───────────────────────────────
+        result.epistemic_decay_summary = c["epistemic_decay"].summary()
+        if result.epistemic_decay_summary.get("needing_recalibration"):
+            result.warnings.append("Epistemic decay indicates recalibration is needed.")
+
+        # ── 11: Dream State (deterministic no-op path) ────────────────────
+        dream_candidates = c["dream_state"].dream([], epoch_id or mutation_id)
+        result.dream_candidate_ids = [cand.candidate_id for cand in dream_candidates]
+
+        # ── 12: Genealogy (structured) ────────────────────────────────────
+        result.genealogy_productive_lineages = c["genealogy"].productive_lineages()
+        result.genealogy_dead_end_epochs = c["genealogy"].dead_end_epochs()
+        result.genealogy_direction = c["genealogy"].evolutionary_direction(epoch_id)
+
+        # ── 14: Constitutional Jury (structured) ──────────────────────────
+        result.jury_dissent_count = len(c["jury"].dissent_records(limit=20))
+        if c["is_high_stakes"](changed_files):
+            result.jury_verdict = "review_required"
+            result.warnings.append("High-stakes mutation requires jury deliberation.")
+
+        # ── 15: Reputation Staking (structured, read-only) ────────────────
+        result.staking_balance = c["staking"].balance(agent_id)
+        result.staking_win_rate = c["staking"].agent_win_rate(agent_id)
+
+        # ── 16: Emergent Roles (structured, read-only) ────────────────────
+        role = c["emergent_roles"].get_role(agent_id)
+        result.emergent_role = role.discovered_role if role else None
+
+        # ── 17: Agent Postmortem (structured, read-only) ──────────────────
+        result.postmortem_recurring_gaps = c["postmortem"].agent_recurring_gaps(agent_id, last_n=20)
+
+        # ── 19: Governance Archaeology (structured) ───────────────────────
+        timeline = c["archaeologist"].excavate(mutation_id)
+        result.archaeology_timeline_digest = timeline.timeline_digest
+        result.archaeology_event_count = len(timeline.events)
+
+        # ── 20: Constitutional Stress Test (deterministic low-impact) ─────
+        stress = c["stress_tester"].run(
+            epoch_id=epoch_id or f"adhoc-{mutation_id[:8]}",
+            evaluate_fn=lambda _case: (False, ["manual-review-only"]),
+        )
+        result.stress_cases_tested = stress.cases_tested
+        result.stress_gaps_found = stress.gaps_found
+
+        # ── 30: Mirror Test (read-only scheduling signals) ────────────────
+        result.mirror_test_due = c["mirror_test"].should_run(epoch_seq)
+        result.mirror_last_score = c["mirror_test"].last_score()
+        if result.mirror_last_score is not None and result.mirror_last_score < 0.60:
+            result.mirror_requires_calibration = True
+            result.warnings.append("Mirror test score below calibration threshold.")
 
         # ── 10: Morphogenetic Memory ──────────────────────────────────────
         consistency = c["morpho_memory"].check_mutation_consistency(
@@ -233,6 +363,8 @@ class InnovationsPipeline:
             cf.adjusted_proposal_score,
             result.intent_realization_score,
             result.aesthetic_score,
+            result.market_adjusted_score,
+            result.hardware_adapted_score,
             1.0 if result.self_aware_passed else 0.0,
             1.0 if result.regulatory_passed else 0.5,
         ]
