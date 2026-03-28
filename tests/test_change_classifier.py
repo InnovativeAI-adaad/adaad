@@ -108,6 +108,78 @@ class ChangeClassifierTest(unittest.TestCase):
             decision = classify_mutation_change(agent_path, request)
             self.assertNotEqual(decision.reason, "path_outside_agent_root")
 
+    def test_classify_targets_comment_only_change_non_functional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            source_file = agent_path / "agent.py"
+            source_file.write_text("x = 1\n", encoding="utf-8")
+            request = {
+                "targets": [
+                    {
+                        "path": "agent.py",
+                        "ops": [
+                            {
+                                "op": "replace",
+                                "source": "# comment only\nx = 1\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.classification, "NON_FUNCTIONAL_CHANGE")
+            self.assertFalse(decision.run_mutation)
+            self.assertFalse(decision.run_fitness)
+            self.assertFalse(decision.run_resign)
+
+    def test_classify_targets_docstring_only_change_non_functional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            source_file = agent_path / "agent.py"
+            source_file.write_text('def run(input=None):\n    """old docs"""\n    return {"ok": True}\n', encoding="utf-8")
+            request = {
+                "targets": [
+                    {
+                        "path": "agent.py",
+                        "ops": [
+                            {
+                                "op": "replace",
+                                "content": 'def run(input=None):\n    """new docs"""\n    return {"ok": True}\n',
+                            }
+                        ],
+                    }
+                ]
+            }
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.classification, "NON_FUNCTIONAL_CHANGE")
+            self.assertFalse(decision.run_mutation)
+            self.assertFalse(decision.run_fitness)
+            self.assertFalse(decision.run_resign)
+
+    def test_classify_targets_logic_change_functional(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            agent_path = Path(tmpdir)
+            source_file = agent_path / "agent.py"
+            source_file.write_text("def run(input=None):\n    return 1\n", encoding="utf-8")
+            request = {
+                "targets": [
+                    {
+                        "path": "agent.py",
+                        "ops": [
+                            {
+                                "op": "replace",
+                                "content": "def run(input=None):\n    return 2\n",
+                            }
+                        ],
+                    }
+                ]
+            }
+            decision = classify_mutation_change(agent_path, request)
+            self.assertEqual(decision.classification, "FUNCTIONAL_CHANGE")
+            self.assertTrue(decision.run_mutation)
+            self.assertTrue(decision.run_fitness)
+            self.assertTrue(decision.run_resign)
+
 
 if __name__ == "__main__":
     unittest.main()
