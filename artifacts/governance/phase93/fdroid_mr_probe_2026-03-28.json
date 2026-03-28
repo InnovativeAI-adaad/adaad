@@ -1,0 +1,12 @@
+{
+  "artifact_type": "fdroid_mr_probe.v1",
+  "timestamp_utc": "2026-03-28T12:40:00Z",
+  "actor": "ADAAD agent",
+  "target_project": "gitlab.com/fdroid/fdroiddata",
+  "target_endpoint": "https://gitlab.com/fdroid/fdroid-data/-/merge_requests",
+  "public_api_endpoint": "https://gitlab.com/api/v4/projects/36528/merge_requests?scope=all&search=adaad",
+  "result": "no_public_adaad_mr_found",
+  "http_status": 200,
+  "notes": "Public MR search returned an empty array. Creating an MR still requires authenticated HUMAN-0 action from a founder-controlled GitLab account.",
+  "status": "PENDING_HUMAN_0"
+}

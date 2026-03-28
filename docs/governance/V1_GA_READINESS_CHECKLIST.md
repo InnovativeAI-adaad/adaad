@@ -71,7 +71,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Notes | Status |
 |---|---|---|
-| F-Droid MR submitted | `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **HUMAN-0 required** — agent attempt at `2026-03-28T07:20:58Z` redirected to GitLab sign-in; see `artifacts/governance/phase93/fdroid_manual_submission_attempt_2026-03-28.json` |
+| F-Droid MR submitted | `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` | ⏳ **HUMAN-0 required** — authenticated submission still pending; latest probe artifact `artifacts/governance/phase93/fdroid_mr_probe_2026-03-28.json` reports no public ADAAD MR |
 | F-Droid MR URL recorded | `android/fdroid/com.innovativeai.adaad.yml` | ⏳ blocked pending authenticated founder MR creation |
 | APK pipeline triggered | `git tag free-v9.10.0 && git push origin free-v9.10.0` (M-02) | ⏳ **Dustin** |
 | `INSTALL_ANDROID.md` links valid | | ✅ |
@@ -86,9 +86,9 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | Check | Notes | Status |
 |---|---|---|
 | Founder reviews this checklist | All gates inspected by Dustin L. Reid | ⏳ |
-| Founder GPG-signed commit to ledger | `governance: v1.1-GA human sign-off — [DATE]` | ⏳ |
+| Founder GPG-signed commit to ledger | `governance: v1.1-GA human sign-off — [DATE]` | ⚠️ PARTIAL — required message commit located at `0f1e471`, but signature status remains `N`; see `artifacts/governance/phase93/founder_signoff_commit_verification_2026-03-28.json` |
 | Sign-off SHA recorded in procession doc § 2.3 | | ⏳ |
-| v1.1-GA canonical declaration committed | | ⏳ |
+| v1.1-GA canonical declaration committed | | ✅ declaration present in procession §2.3; founder signature attestation still pending |
 
 > **HUMAN-0:** This gate cannot be automated, delegated to an agent, or skipped.
 
@@ -126,7 +126,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Artifact | Status |
 |---|---|---|
-| `governance_strict_release_gate.yml` terminal `release-gate` job passes | Fires on `v1.1-GA` tag push | ✅ PASS (local mirror run archived 2026-03-28) |
+| `governance_strict_release_gate.yml` terminal `release-gate` job passes | Fires on `v1.1-GA` tag push | ✅ PASS (local mirror run archived + reconfirmed 2026-03-28) |
 
 **Gate 6: ✅ CLEARED — strict release gate evidence archived (2026-03-28 UTC).**
 
@@ -140,6 +140,7 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 | Terminal `release-gate` result | `success` (`All required governance strict release-gate jobs passed.`) |
 | Evidence bundle digest | `sha256:30c743b478b896890709079dd541e1197088a9fe64313fb8ed3e4559e76115c4` |
 | Archive record | `docs/governance/GA_RELEASE_GATE_ARCHIVE_2026-03-28.md` |
+| Reconfirmation record | `docs/governance/GA_RELEASE_GATE_RECONFIRM_2026-03-28.md` |
 
 ---
 

@@ -1,0 +1,13 @@
+{
+  "artifact_type": "founder_signoff_commit_verification.v1",
+  "timestamp_utc": "2026-03-28T12:42:00Z",
+  "required_commit_message": "governance: v1.1-GA human sign-off — 2026-03-20",
+  "commit": {
+    "sha": "0f1e471dd6a998d28ab2194c7fa48ca419488683",
+    "author": "dreezy-6 <ogbj316@gmail.com>",
+    "signature_status": "N",
+    "signature_meaning": "no GPG signature detected by git"
+  },
+  "status": "PARTIAL",
+  "notes": "Required commit message is present in history, but signature verification is not yet satisfied in this environment. Founder workstation must produce and push a signed attestation commit if signature is required."
+}

@@ -163,15 +163,15 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 | Item | Owner | Status |
 |---|---|---|
 | F-Droid MR preparation (YAML) | DEVADAAD | ✅ complete — `android/fdroid/com.innovativeai.adaad.yml` updated to v9.14.0 |
-| F-Droid MR submission (manual) | Dustin (founder) — Gate 3 | ⏳ HUMAN-0: fork fdroid-data, copy YAML, open MR at `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` |
-| Founder GPG sign-off in ledger | Dustin (founder) — Gate 4 | ⏳ HUMAN-0: commit `governance: v1.1-GA human sign-off — 2026-03-20` with GPG |
+| F-Droid MR submission (manual) | Dustin (founder) — Gate 3 | ⏳ HUMAN-0: authenticated GitLab submission still required; latest public probe artifact `artifacts/governance/phase93/fdroid_mr_probe_2026-03-28.json` found no public ADAAD MR yet |
+| Founder GPG sign-off in ledger | Dustin (founder) — Gate 4 | ⚠️ PARTIAL: required commit message located at SHA `0f1e471dd6a998d28ab2194c7fa48ca419488683`, but git signature status is `N` in current evidence (`artifacts/governance/phase93/founder_signoff_commit_verification_2026-03-28.json`) |
 | GA versioning declaration documented | DEVADAAD | ✅ complete — this section (closes H-04, pending Dustin Gate 4 sign-off) |
 | GPG tags v9.7.0–v9.10.0 (C-02) | Dustin (founder) | ⏳ HUMAN-0: latest attempt logged in `artifacts/governance/phase93/HUMAN0_TAG_VERIFICATION_2026-03-28.txt`; release SHAs absent in sandbox and no `origin` remote, so founder workstation ceremony still required |
 | `free-v9.10.0` APK tag (M-02) | Dustin (founder) | ⏳ HUMAN-0: local tag created in sandbox; founder workstation must push `free-v9.10.0` to remote (see phase93 verification artifact) |
 | Patent counsel engagement (H-03) | Dustin (founder) | ✅ CLOSED 2026-03-26: transmittal + filing receipt `RECEIPT-2026-03-26-CMGM-001` in `artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json` |
-| `governance_strict_release_gate.yml` terminal pass | CI | ✅ PASS — archived run `local-manual-20260328T112500Z` on SHA `c4929e2cc3fe22eadcc23b44ea43f92ed07f90e1`; terminal `release-gate` result `success`; evidence digest `sha256:30c743b478b896890709079dd541e1197088a9fe64313fb8ed3e4559e76115c4` |
+| `governance_strict_release_gate.yml` terminal pass | CI | ✅ PASS (reconfirmed 2026-03-28 UTC) — archived run `local-manual-20260328T112500Z` on SHA `c4929e2cc3fe22eadcc23b44ea43f92ed07f90e1`; terminal `release-gate` result `success`; evidence digest `sha256:30c743b478b896890709079dd541e1197088a9fe64313fb8ed3e4559e76115c4`; reconfirmation record `docs/governance/GA_RELEASE_GATE_RECONFIRM_2026-03-28.md` |
 
-**Open GA blockers (canonical): 4** (`F-Droid MR submission`, `founder GPG sign-off`, `founder tag ceremony backfill`, `governance strict release gate terminal pass`).
+**Open GA blockers (canonical): 3** (`F-Droid MR submission`, `founder GPG sign-off`, `founder tag ceremony backfill`).
 
 ---
 
