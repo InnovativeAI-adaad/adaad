@@ -265,6 +265,30 @@ class EvolutionKernel:
                 raise RuntimeError(f"agent_not_found:{agent_id}")
 
         agent = self.load_agent(target_agent_path)
+        trigger_signal = self._load_previous_cycle_signal(str(agent.get("agent_id") or ""))
+        trigger_decision = self._should_mutate(
+            previous_failed=bool(trigger_signal.get("previous_failed")),
+            previous_quarantined=bool(trigger_signal.get("previous_quarantined")),
+            latest_fitness_score=float(trigger_signal.get("latest_fitness_score", 1.0) or 1.0),
+            latest_fitness_threshold=float(trigger_signal.get("latest_fitness_threshold", 0.7) or 0.7),
+            manual_trigger=manual_trigger,
+        )
+        metrics.log(
+            event_type="mutation_trigger_decision",
+            payload={
+                "agent_id": agent.get("agent_id"),
+                **trigger_decision,
+            },
+        )
+        if not bool(trigger_decision.get("should_mutate")):
+            return {
+                "status": "skipped",
+                "reason": "mutation_not_triggered_policy",
+                "agent_id": agent.get("agent_id"),
+                "trigger_evidence": trigger_decision,
+                "kernel_path": True,
+            }
+
         mutation = self.propose_mutation(agent)
         change_decision = classify_mutation_change(target_agent_path, mutation.get("request") or mutation)
         if not change_decision.run_mutation:
