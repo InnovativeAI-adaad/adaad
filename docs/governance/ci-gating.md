@@ -501,6 +501,8 @@ for `ROADMAP.md` and `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` using f
 
 **Fail condition:** Missing anchors, unmet dependency state, or evidence-validation failure aborts with no writes.
 
+> Current canonical progression pointer: `PR-PHASE91-01` (Phase 91 — Post-GA Governance Hardening Sprint).
+
 ---
 
 ### Formal Amendment Model Check Gate
