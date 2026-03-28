@@ -55,6 +55,8 @@ MAX_TOKENS     = 2048
 VALID_AGENTS     = {"architect", "dream", "beast"}
 VALID_MUT_TYPES  = {"structural", "behavioral", "performance", "coverage", "experimental"}
 CANONICAL_AGENT_ORDER: Tuple[str, ...] = ("architect", "dream", "beast")
+CONTEXT_HASH_V2_HEX_LEN: int = 16
+CONTEXT_HASH_V1_HEX_LEN: int = 8
 
 PROPOSAL_SCHEMA = """
 Return ONLY a JSON array. No markdown, no preamble. Each element must have:
@@ -183,9 +185,9 @@ class CodebaseContext:
     soulbound_annotation: Optional[str] = None
     learning_context:     Optional[str] = None  # Phase 52: cross-epoch learning signal
 
-    def context_hash(self) -> str:
-        """Stable 8-hex-char hash of the codebase state for lineage tracing."""
-        payload = json.dumps(
+    def _canonical_context_payload(self) -> str:
+        """Deterministic JSON payload used for context hash derivation."""
+        return json.dumps(
             {
                 "files": sorted(self.file_summaries.keys()),
                 "failures": sorted(self.recent_failures),
@@ -193,7 +195,16 @@ class CodebaseContext:
             },
             sort_keys=True,
         )
-        return hashlib.md5(payload.encode()).hexdigest()[:8]
+
+    def context_hash_legacy(self) -> str:
+        """Legacy 8-hex MD5 context hash retained for compatibility reads/migrations."""
+        payload = self._canonical_context_payload()
+        return hashlib.md5(payload.encode()).hexdigest()[:CONTEXT_HASH_V1_HEX_LEN]
+
+    def context_hash(self) -> str:
+        """Stable 16-hex SHA-256-derived context hash for lineage tracing."""
+        payload = self._canonical_context_payload()
+        return hashlib.sha256(payload.encode()).hexdigest()[:CONTEXT_HASH_V2_HEX_LEN]
 
     def as_prompt_block(self) -> str:
         """Format context as a human-readable block for injection into prompts."""
