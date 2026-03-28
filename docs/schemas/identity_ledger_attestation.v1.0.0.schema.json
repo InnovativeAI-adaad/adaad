@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IdentityLedgerAttestation",
+  "description": "HUMAN-0 attestation record required for every IdentityLedger.ratify() call. Enforces MMEM-0.",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "attestation_id",
+    "governor",
+    "human0_digest",
+    "attested_date",
+    "ledger_id",
+    "statement_ids_attested",
+    "terminal_chain_hash_attested",
+    "scope"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version — must match identity_ledger_attestation.vX.Y.Z",
+      "const": "1.0.0"
+    },
+    "attestation_id": {
+      "type": "string",
+      "description": "Unique attestation identifier. Format: ILA-{phase}-{date}-{seq}",
+      "pattern": "^ILA-[0-9]+-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$"
+    },
+    "governor": {
+      "type": "string",
+      "description": "Full name of attesting governor. Must match HUMAN-0 record.",
+      "const": "DUSTIN L REID"
+    },
+    "human0_digest": {
+      "type": "string",
+      "description": "Non-null attestation digest — SHA-256 of canonical attestation payload. Presence enforces MMEM-0.",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "attested_date": {
+      "type": "string",
+      "description": "ISO 8601 date of attestation",
+      "format": "date"
+    },
+    "ledger_id": {
+      "type": "string",
+      "description": "Identifier of the IdentityLedger being attested"
+    },
+    "statement_ids_attested": {
+      "type": "array",
+      "description": "List of IdentityStatement IDs covered by this attestation",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "terminal_chain_hash_attested": {
+      "type": "string",
+      "description": "The terminal chain_hash value the governor is attesting to. Must match IdentityLedger state at ratify() time.",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scope": {
+      "type": "string",
+      "description": "Human-readable description of what is being attested"
+    },
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Optional governor notes"
+    }
+  },
+  "additionalProperties": false
+}
