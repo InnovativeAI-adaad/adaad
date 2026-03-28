@@ -156,7 +156,85 @@ class EvolutionKernel:
             return True
         return bool(fitness_result.get("passed"))
 
-    def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
+    @staticmethod
+    def _read_jsonl(path: Path) -> list[Dict[str, Any]]:
+        if not path.exists():
+            return []
+        rows: list[Dict[str, Any]] = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            try:
+                parsed = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(parsed, dict):
+                rows.append(parsed)
+        return rows
+
+    def _load_previous_cycle_signal(self, agent_id: str) -> Dict[str, Any]:
+        records = self._read_jsonl(metrics.METRICS_PATH)
+        previous_failed = False
+        previous_quarantined = False
+        latest_fitness_score = 1.0
+        latest_fitness_threshold = 0.7
+
+        for record in records:
+            payload = record.get("payload")
+            if not isinstance(payload, Mapping):
+                continue
+            payload_agent_id = str(payload.get("agent_id") or payload.get("agent") or "")
+            if payload_agent_id != agent_id:
+                continue
+            status = str(payload.get("status") or payload.get("result_status") or "").strip().lower()
+            reason = str(payload.get("reason") or "").strip().lower()
+            event_type = str(record.get("event") or "").strip().lower()
+            if status in {"failed", "error", "rejected"} or "failed" in reason:
+                previous_failed = True
+            if status == "quarantined" or "quarantined" in reason:
+                previous_quarantined = True
+            if event_type in {"fitness_scored", "fitness_scored_v2"}:
+                latest_fitness_score = float(payload.get("score", latest_fitness_score) or latest_fitness_score)
+                latest_fitness_threshold = float(payload.get("fitness_threshold", latest_fitness_threshold) or latest_fitness_threshold)
+
+        return {
+            "previous_failed": previous_failed,
+            "previous_quarantined": previous_quarantined,
+            "latest_fitness_score": round(latest_fitness_score, 6),
+            "latest_fitness_threshold": round(latest_fitness_threshold, 6),
+        }
+
+    @staticmethod
+    def _should_mutate(
+        *,
+        previous_failed: bool,
+        previous_quarantined: bool,
+        latest_fitness_score: float,
+        latest_fitness_threshold: float,
+        manual_trigger: bool,
+    ) -> Dict[str, Any]:
+        below_threshold = float(latest_fitness_score) < float(latest_fitness_threshold)
+        should_mutate = bool(manual_trigger or previous_failed or previous_quarantined or below_threshold)
+        trigger_reason = "healthy_no_trigger"
+        if manual_trigger:
+            trigger_reason = "manual_trigger"
+        elif previous_failed or previous_quarantined:
+            trigger_reason = "previous_cycle_unhealthy"
+        elif below_threshold:
+            trigger_reason = "fitness_below_threshold"
+
+        return {
+            "should_mutate": should_mutate,
+            "trigger_reason": trigger_reason,
+            "previous_failed": previous_failed,
+            "previous_quarantined": previous_quarantined,
+            "latest_fitness_score": round(float(latest_fitness_score), 6),
+            "latest_fitness_threshold": round(float(latest_fitness_threshold), 6),
+            "manual_trigger": bool(manual_trigger),
+            "fitness_below_threshold": below_threshold,
+        }
+
+    def run_cycle(self, agent_id: Optional[str] = None, *, manual_trigger: bool = False) -> Dict[str, Any]:
         """Run one mutation cycle, preferring compatibility adapter when explicitly selected."""
         if self.compatibility_adapter is not None and agent_id is None:
             return self.compatibility_adapter.run_cycle(agent_id)
@@ -176,6 +254,30 @@ class EvolutionKernel:
                 raise RuntimeError(f"agent_not_found:{agent_id}")
 
         agent = self.load_agent(target_agent_path)
+        trigger_signal = self._load_previous_cycle_signal(str(agent.get("agent_id") or ""))
+        trigger_decision = self._should_mutate(
+            previous_failed=bool(trigger_signal.get("previous_failed")),
+            previous_quarantined=bool(trigger_signal.get("previous_quarantined")),
+            latest_fitness_score=float(trigger_signal.get("latest_fitness_score", 1.0) or 1.0),
+            latest_fitness_threshold=float(trigger_signal.get("latest_fitness_threshold", 0.7) or 0.7),
+            manual_trigger=manual_trigger,
+        )
+        metrics.log(
+            event_type="mutation_trigger_decision",
+            payload={
+                "agent_id": agent.get("agent_id"),
+                **trigger_decision,
+            },
+        )
+        if not bool(trigger_decision.get("should_mutate")):
+            return {
+                "status": "skipped",
+                "reason": "mutation_not_triggered_policy",
+                "agent_id": agent.get("agent_id"),
+                "trigger_evidence": trigger_decision,
+                "kernel_path": True,
+            }
+
         mutation = self.propose_mutation(agent)
         change_decision = classify_mutation_change(target_agent_path, mutation.get("request") or mutation)
         if not change_decision.run_mutation:

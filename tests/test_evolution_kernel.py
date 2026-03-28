@@ -23,6 +23,12 @@ class EvolutionKernelTest(unittest.TestCase):
         (self.agent_dir / "meta.json").write_text(json.dumps({"name": "agent-x"}), encoding="utf-8")
         (self.agent_dir / "dna.json").write_text(json.dumps({"traits": []}), encoding="utf-8")
         (self.agent_dir / "certificate.json").write_text(json.dumps({"signature": "cryovant-dev-seed"}), encoding="utf-8")
+        self.trigger_signal = {
+            "previous_failed": False,
+            "previous_quarantined": False,
+            "latest_fitness_score": 0.2,
+            "latest_fitness_threshold": 0.7,
+        }
 
     def test_load_agent_reads_metadata_triplet(self) -> None:
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
@@ -50,6 +56,7 @@ class EvolutionKernelTest(unittest.TestCase):
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=adapter)
 
         with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
             mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
@@ -73,6 +80,7 @@ class EvolutionKernelTest(unittest.TestCase):
 
         with (
             mock.patch("runtime.evolution.evolution_kernel.iter_agent_dirs", return_value=[self.agent_dir.resolve()]),
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
             mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
@@ -92,6 +100,7 @@ class EvolutionKernelTest(unittest.TestCase):
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=adapter)
 
         with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
             mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.1, "forecast_gate_threshold": 0.45, "forecast_passed": False, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:1"}}),
@@ -153,6 +162,7 @@ class EvolutionKernelTest(unittest.TestCase):
     def test_run_cycle_skips_sign_when_execution_rejected(self) -> None:
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
         with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
             mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
@@ -169,6 +179,7 @@ class EvolutionKernelTest(unittest.TestCase):
     def test_run_cycle_skips_sign_when_fitness_not_accepted(self) -> None:
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
         with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
             mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
@@ -185,6 +196,7 @@ class EvolutionKernelTest(unittest.TestCase):
     def test_run_cycle_signs_when_fitness_policy_accepted(self) -> None:
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
         with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}),
             mock.patch.object(kernel, "validate_mutation", return_value={"valid": True, "policy_valid": True, "mutation_has_ops": True, "errors": []}),
             mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_score": 0.8, "forecast_gate_threshold": 0.45, "forecast_passed": True, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:ok"}}),
@@ -208,6 +220,7 @@ class EvolutionKernelTest(unittest.TestCase):
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=adapter)
 
         with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=self.trigger_signal),
             mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "set", "path": "/last_mutation", "value": "x"}]}}),
             mock.patch("runtime.evolution.evolution_kernel.classify_mutation_change") as classify,
             mock.patch("runtime.evolution.evolution_kernel.apply_metadata_updates", return_value={"mutation_count": 2, "version": 3, "last_mutation": "2025-01-01T00:00:00Z"}) as metadata,
@@ -228,7 +241,7 @@ class EvolutionKernelTest(unittest.TestCase):
             mutation_count=2,
             metadata_last_mutation="2025-01-01T00:00:00Z",
         )
-        metrics_log.assert_called_once_with(
+        metrics_log.assert_any_call(
             event_type="cosmetic_update_only",
             payload={
                 "agent_id": "agent-x",
@@ -238,12 +251,88 @@ class EvolutionKernelTest(unittest.TestCase):
                 "metadata_last_mutation": "2025-01-01T00:00:00Z",
             },
         )
+        self.assertEqual(metrics_log.call_count, 2)
         execute.assert_not_called()
         evaluate.assert_not_called()
         sign.assert_not_called()
         self.assertEqual(result["status"], "metadata_only")
         self.assertEqual(result["change_classification"], "NON_FUNCTIONAL_CHANGE")
         self.assertTrue(result["cosmetic_only"])
+
+    def test_run_cycle_mutation_trigger_below_threshold_runs(self) -> None:
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
+        trigger_signal = {
+            "previous_failed": False,
+            "previous_quarantined": False,
+            "latest_fitness_score": 0.3,
+            "latest_fitness_threshold": 0.7,
+        }
+        with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=trigger_signal),
+            mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}) as propose,
+            mock.patch.object(kernel, "validate_mutation", return_value={"valid": True}),
+            mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_passed": False, "forecast_score": 0.1, "forecast_gate_threshold": 0.45, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:1"}}),
+        ):
+            result = kernel.run_cycle("agent-x")
+        propose.assert_called_once()
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "forecast_gate_failed")
+
+    def test_run_cycle_mutation_trigger_previous_failure_runs(self) -> None:
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
+        trigger_signal = {
+            "previous_failed": True,
+            "previous_quarantined": False,
+            "latest_fitness_score": 0.9,
+            "latest_fitness_threshold": 0.7,
+        }
+        with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=trigger_signal),
+            mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}) as propose,
+            mock.patch.object(kernel, "validate_mutation", return_value={"valid": True}),
+            mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_passed": False, "forecast_score": 0.1, "forecast_gate_threshold": 0.45, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:1"}}),
+        ):
+            result = kernel.run_cycle("agent-x")
+        propose.assert_called_once()
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "forecast_gate_failed")
+
+    def test_run_cycle_mutation_trigger_manual_runs(self) -> None:
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
+        trigger_signal = {
+            "previous_failed": False,
+            "previous_quarantined": False,
+            "latest_fitness_score": 0.9,
+            "latest_fitness_threshold": 0.7,
+        }
+        with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=trigger_signal),
+            mock.patch.object(kernel, "propose_mutation", return_value={"request": {"agent_id": "agent-x", "ops": [{"op": "dna.add_trait"}]}}) as propose,
+            mock.patch.object(kernel, "validate_mutation", return_value={"valid": True}),
+            mock.patch.object(kernel.fitness_evaluator, "forecast", return_value={"forecast_passed": False, "forecast_score": 0.1, "forecast_gate_threshold": 0.45, "policy_profile": {}, "policy_artifact": {"version": "mutation_policy_profile.v1", "hash": "sha256:1"}}),
+        ):
+            result = kernel.run_cycle("agent-x", manual_trigger=True)
+        propose.assert_called_once()
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "forecast_gate_failed")
+
+    def test_run_cycle_mutation_trigger_healthy_skips(self) -> None:
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
+        trigger_signal = {
+            "previous_failed": False,
+            "previous_quarantined": False,
+            "latest_fitness_score": 0.91,
+            "latest_fitness_threshold": 0.7,
+        }
+        with (
+            mock.patch.object(kernel, "_load_previous_cycle_signal", return_value=trigger_signal),
+            mock.patch.object(kernel, "propose_mutation") as propose,
+        ):
+            result = kernel.run_cycle("agent-x")
+        propose.assert_not_called()
+        self.assertEqual(result["status"], "skipped")
+        self.assertEqual(result["reason"], "mutation_not_triggered_policy")
+        self.assertEqual(result["trigger_evidence"]["trigger_reason"], "healthy_no_trigger")
 
 
 if __name__ == "__main__":
