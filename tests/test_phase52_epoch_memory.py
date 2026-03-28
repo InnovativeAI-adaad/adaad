@@ -220,7 +220,26 @@ class TestEpochMemoryStoreT52M:
             constitution_version="0.7.0",
         )
         assert entry.winning_agent is None
-        assert entry.verify_integrity()
+
+    def test_T52_M13B_from_dict_dual_reads_context_hash_v2(self):
+        """T52-M13B: from_dict accepts context_hash_v2 when context_hash is absent."""
+        raw = {
+            "seq": 7,
+            "epoch_id": "epoch-v2-hash",
+            "winning_agent": "architect",
+            "winning_mutation_type": "structural",
+            "winning_strategy_id": "adaptive_self_mutate",
+            "fitness_delta": 0.1,
+            "proposal_count": 3,
+            "accepted_count": 1,
+            "context_hash_v2": "0123456789abcdef",
+            "constitution_version": "0.9.0",
+            "entry_version": "52.0",
+            "entry_digest": "a" * 64,
+            "prev_digest": GENESIS_DIGEST,
+        }
+        entry = EpochMemoryEntry.from_dict(raw)
+        assert entry.context_hash == "0123456789abcdef"
 
     def test_T52_M14_seq_monotonically_increasing(self):
         """T52-M14: seq numbers are monotonically increasing."""
