@@ -107,6 +107,34 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 
 - **Current:** Phase 93 complete (v9.26.0 — INNOV-09 AFIT). Next: **Phase 94** — INNOV-10 roadmap start.
 
+### 1A.4 Innovation→Phase index (remaining roadmap; deterministic predecessor linkage)
+
+| Phase | Innovation ID | Target version | Dependency (explicit predecessor) | Status |
+|---|---|---|---|---|
+| 94 | INNOV-10 — Morphogenetic Memory | v9.27.0 | Phase 93 | planned |
+| 95 | INNOV-11 — Cross-Epoch Dream State | v9.28.0 | Phase 94 | planned |
+| 96 | INNOV-12 — Mutation Genealogy Visualization | v9.29.0 | Phase 95 | planned |
+| 97 | INNOV-13 — Institutional Memory Transfer | v9.30.0 | Phase 96 | planned |
+| 98 | INNOV-14 — Constitutional Jury System | v9.31.0 | Phase 97 | planned |
+| 99 | INNOV-15 — Agent Reputation Staking | v9.32.0 | Phase 98 | planned |
+| 100 | INNOV-16 — Emergent Role Specialization | v9.33.0 | Phase 99 | planned |
+| 101 | INNOV-17 — Agent Post-Mortem Interviews | v9.34.0 | Phase 100 | planned |
+| 102 | INNOV-18 — Temporal Governance Windows | v9.35.0 | Phase 101 | planned |
+| 103 | INNOV-19 — Governance Archaeology Mode | v9.36.0 | Phase 102 | planned |
+| 104 | INNOV-20 — Constitutional Stress Testing | v9.37.0 | Phase 103 | planned |
+| 105 | INNOV-21 — Governance Debt Bankruptcy Protocol | v9.38.0 | Phase 104 | planned |
+| 106 | INNOV-22 — Market-Conditioned Fitness | v9.39.0 | Phase 105 | planned |
+| 107 | INNOV-23 — Regulatory Compliance Layer | v9.40.0 | Phase 106 | planned |
+| 108 | INNOV-24 — Semantic Version Promises | v9.41.0 | Phase 107 | planned |
+| 109 | INNOV-25 — Hardware-Adaptive Fitness | v9.42.0 | Phase 108 | planned |
+| 110 | INNOV-26 — Constitutional Entropy Budget | v9.43.0 | Phase 109 | planned |
+| 111 | INNOV-27 — Mutation Blast Radius Modeling | v9.44.0 | Phase 110 | planned |
+| 112 | INNOV-28 — Self-Awareness Invariant | v9.45.0 | Phase 111 | planned |
+| 113 | INNOV-29 — Curiosity-Driven Exploration with Hard Stops | v9.46.0 | Phase 112 | planned |
+| 114 | INNOV-30 — The Mirror Test | v9.47.0 | Phase 113 | planned |
+
+Deterministic next-PR resolution rule for this roadmap slice: **the only valid next phase is the first row whose predecessor phase is `shipped` and whose own status is not `shipped`.**
+
 ## 2) Active Planning — v1.0.0-GA Gate
 
 ### 2.1 What v1.0.0-GA means
