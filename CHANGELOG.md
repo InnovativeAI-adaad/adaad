@@ -2,6 +2,76 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.25.0] — 2026-03-27 — Phase 92 · INNOV-08 Adversarial Fitness Red Team (AFRT)
+
+**Branch:** `feature/phase92-afrt-engine` + `feature/phase92-afrt-cel-integration` + `feature/phase92-release-sweep`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-27
+**PRs merged:** #567 (CEL integration), #568 (AFRT engine core)
+**Tests:** T92-AFRT-01..23 (23/23 PASS) + T92-CEL-01..07 (7/7 PASS) = **30/30 PASS**
+
+### World-First: Constitutionally-Governed Adversarial Peer-Review as a CEL Gate
+
+ADAAD now subjects every mutation proposal to targeted adversarial falsification by a
+dedicated Red Team Agent *before* GovernanceGateV2 scoring — the first governed autonomous
+evolution system to embed adversarial peer-review as a constitutional gate in its evolution loop.
+
+Where LSME (Phase 91) validates *behaviour under execution*, AFRT generates *targeted
+adversarial test cases* against proposals, specifically probing coverage paths the proposing
+agent did not exercise. A mutation that survives the Red Team has been stress-tested beyond
+its own suite.
+
+### New — Track A: Core AFRT Engine (`runtime/evolution/afrt_engine.py`)
+
+- `AdversarialRedTeamAgent.evaluate()` — full red-team pipeline: CodeIntel query →
+  adversarial case generation → sandbox execution → verdict → ledger commit → report return
+- `AdversarialCaseGenerator` — deterministic 1–5 adversarial cases per proposal, derived
+  from CodeIntelModel uncovered path surfaces (AFRT-INTEL-0 / AFRT-DETERM-0)
+- `RedTeamFindingsReport` — structured falsification result: PASS or RETURNED verdict,
+  adversarial case set, failure cases, report hash, trace_committed flag
+- `RedTeamLedgerEvent` — LineageLedgerV2 event committed *before* result returned (AFRT-LEDGER-0)
+- `_DefaultSandboxRunner` — read-only sandbox executor with deterministic outcome seam
+- `CELStepOrderViolation` / `AFRTEngineError` — constitutional exception types
+- `_compute_report_hash()` / `_deterministic_case_id()` — AFRT-DETERM-0 compliant hash helpers
+
+### New — Track B: Aponi AFRT Dashboard (`ui/aponi/afrt_panel.js`)
+
+- Real-time `AFRT_VERDICT` WebSocket subscription with 5s reconnect + 8s poll fallback
+- Rolling 30-finding feed: PASS/RETURNED verdict badges, per-finding adversarial case expansion
+- Ledger commit status badges (AFRT-LEDGER-0 trace_committed indicator)
+- AFRT-0 constitutional violation alert: any `approval_emitted=true` triggers hard alert
+- Stats bar: total evaluated, PASS count, RETURNED count, live pass-rate %
+- All 6 AFRT invariants rendered in constitutional footer
+
+### CEL Wiring (Track A — `runtime/evolution/constitutional_evolution_loop.py`)
+
+- AFRT-GATE inserted as **CEL Step 10** in the 16-step dispatch table (CEL-ORDER-0)
+- Executes after PARETO-SELECT (Step 9) and before GOVERNANCE-GATE (Step 11)
+- Graceful degradation: `afrt_agent=None` logs warning and passes — preserves pre-Phase-92 test compatibility
+
+### Constitutional Invariants Introduced (6 new Hard-class invariants)
+
+| Invariant | Rule |
+|---|---|
+| `AFRT-0` | Red Team NEVER emits approval. `approval_emitted` is structurally False on every report. |
+| `AFRT-GATE-0` | AFRT evaluates after LSME (Step 6) and before GovernanceGateV2. Any other ordering raises `CELStepOrderViolation`. |
+| `AFRT-INTEL-0` | Adversarial cases MUST be sourced from `CodeIntelModel.get_uncovered_paths()`. Cases without CodeIntel data are inadmissible. |
+| `AFRT-LEDGER-0` | `RedTeamLedgerEvent` MUST be committed to `LineageLedgerV2` before the report is returned (ledger-first principle). |
+| `AFRT-CASES-0` | Generator MUST produce 1–5 cases per proposal. Zero cases = engine failure, abort epoch. |
+| `AFRT-DETERM-0` | Identical proposal + CodeIntel snapshot → identical adversarial case set. No `datetime.now()`, `random`, or `uuid4()` in case-generation path. |
+
+### Governance Artifacts
+
+- `artifacts/governance/phase92/phase92_sign_off.json` — HUMAN-0 ratification record
+
+### IP Claim (INNOV-08)
+
+World-first: constitutionally-governed adversarial peer-review gate in an autonomous AI
+evolution loop. A dedicated Red Team Agent performs targeted falsification of mutation
+proposals — probing coverage gaps the proposing agent did not exercise — before governance
+scoring. Constitutionally incapable of approving mutations (AFRT-0 structural invariant).
+
+---
+
 ## [9.24.1] — 2026-03-24 — Phase 91 Audit Hardening · Senior Audit Pass
 
 **Branch:** `fix/phase91-audit-5patch`

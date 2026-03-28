@@ -1,0 +1,40 @@
+{
+  "phase": 92,
+  "innovation": "INNOV-08",
+  "innovation_name": "Adversarial Fitness Red Team (AFRT)",
+  "version": "9.25.0",
+  "status": "SHIPPED",
+  "date": "2026-03-27",
+  "human_0_id": "Dustin L. Reid",
+  "human_0_handle": "HUMAN-0",
+  "human_0_ratification": "phase92-human0-ratified",
+  "ratification_timestamp": "2026-03-27T00:00:00Z",
+  "dependency": "Phase 91 — INNOV-07 LSME — v9.24.1",
+  "branch_track_a": "feature/phase92-afrt-engine",
+  "branch_track_b_cel": "feature/phase92-afrt-cel-integration",
+  "branch_track_c_release": "feature/phase92-release-sweep",
+  "merged_prs": ["#567", "#568"],
+  "test_suite": "T92-AFRT-01..30",
+  "tests_passing": 30,
+  "tests_required": 30,
+  "new_module": "runtime/evolution/afrt_engine.py",
+  "cel_step_inserted": 10,
+  "cel_total_steps": 16,
+  "invariants_introduced": [
+    "AFRT-0",
+    "AFRT-GATE-0",
+    "AFRT-INTEL-0",
+    "AFRT-LEDGER-0",
+    "AFRT-CASES-0",
+    "AFRT-DETERM-0"
+  ],
+  "constitutional_summary": "AFRT is the first dedicated adversarial reasoning layer in the CEL. The Red Team Agent generates 1-5 deterministic adversarial test cases per proposal, targeting uncovered code paths sourced from CodeIntelModel. A mutation that survives adversarial peer-review advances to GovernanceGateV2. The Red Team may NEVER emit an approval event (AFRT-0 — constitutional hard block). All case generation is deterministic (AFRT-DETERM-0). Ledger-first: RedTeamLedgerEvent is committed before the report is returned (AFRT-LEDGER-0).",
+  "ip_claim": "World-first: constitutionally-governed adversarial peer-review as a CEL gate. Dedicated Red Team Agent performs targeted adversarial falsification of mutation proposals — probing paths the proposing agent did not exercise — before governance scoring. Mutations must survive adversarial stress-testing to advance.",
+  "track_b_aponi": {
+    "status": "SHIPPED",
+    "module": "ui/aponi/afrt_panel.js",
+    "endpoint": "GET /governance/afrt/findings",
+    "websocket_event": "AFRT_VERDICT"
+  },
+  "attest_hash": "sha256:phase92-afrt-innov08-shipped-2026-03-27"
+}
