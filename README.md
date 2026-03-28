@@ -355,3 +355,6 @@ For due diligence data room access, see the [Data Room Index](docs/strategy/DATA
 **[⚡ Get Started](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)**
 
 </div>
+
+
+Canonical spec: `docs/governance/ARCHITECT_SPEC_v3.1.0.md`.
