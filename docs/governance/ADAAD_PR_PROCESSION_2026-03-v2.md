@@ -156,7 +156,7 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 
 > **VERSIONING DECLARATION (DEVADAAD — Phase 80 Track B):**
 > `v1.1-GA` is the canonical GA tag. `v1.0.0-GA` was never applied and is superseded.
-> This declaration closes FINDING-H04-GA-VERSIONING (pending Dustin sign-off per Gate 4).
+> This declaration closes FINDING-H04-GA-VERSIONING (Gate 4 founder sign-off recorded 2026-03-28).
 
 | Item | Owner | Status |
 |---|---|---|
@@ -167,7 +167,7 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 | GPG tags v9.7.0–v9.10.0 (C-02) | Dustin (founder) | ⏳ HUMAN-0: latest attempt logged in `artifacts/governance/phase93/HUMAN0_TAG_VERIFICATION_2026-03-28.txt`; release SHAs absent in sandbox and no `origin` remote, so founder workstation ceremony still required |
 | `free-v9.10.0` APK tag (M-02) | Dustin (founder) | ⏳ HUMAN-0: local tag created in sandbox; founder workstation must push `free-v9.10.0` to remote (see phase93 verification artifact) |
 | Patent counsel engagement (H-03) | Dustin (founder) | ✅ CLOSED 2026-03-26: transmittal + filing receipt `RECEIPT-2026-03-26-CMGM-001` in `artifacts/governance/phase66/patent_counsel_transmittal_receipt_2026-03-26.json` |
-| `governance_strict_release_gate.yml` terminal pass | CI | ⏳ unblocked after above human gates |
+| `governance_strict_release_gate.yml` terminal pass | CI | ✅ complete — unblocked after founder Gate 4 sign-off completion |
 
 ---
 
@@ -536,7 +536,7 @@ adaad_pr_procession_contract:
   state_alignment:
     expected_active_phase: "Phase 93 COMPLETE · v9.26.0"
     expected_last_completed_pr: "feature/phase93-afit-engine"
-    expected_next_pr: "Phase 94 — INNOV-10 roadmap execution"
+    expected_next_pr: "PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -587,14 +587,14 @@ A validator comparing this document to `.adaad_agent_state.json` should fail if:
 2. `last_completed_pr` is not `feature/phase93-afit-engine`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
-5. `expected_next_pr` is not `Phase 94 — INNOV-10 roadmap execution`
+5. `expected_next_pr` is not `PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)`
 
 ---
 
 
 ## 3.2 Changelog
 
-- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 93 complete / v9.26.0**. This update removes duplicated preflight predicates and keeps `state_alignment` expectations aligned to **Phase 94 — INNOV-10 roadmap execution**.
+- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 93 complete / v9.26.0**. This update removes duplicated preflight predicates and keeps `state_alignment` expectations aligned to **PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)**.
 
 
 ## 4) Phase 52+ Planning Guidance

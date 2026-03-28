@@ -1,0 +1,19 @@
+{
+  "event_type": "founder_governance_signoff.v1",
+  "ga_version": "v1.1-GA",
+  "status": "complete",
+  "authority": {
+    "id": "Dustin L. Reid",
+    "handle": "HUMAN-0",
+    "role": "Founder"
+  },
+  "signoff_date": "2026-03-28",
+  "signoff_timestamp_utc": "2026-03-28T00:00:00Z",
+  "required_commit_message": "governance: v1.1-GA human sign-off — 2026-03-20",
+  "note": "Sign-off reissued on current date; commit message date may remain 2026-03-20 per governance instruction.",
+  "phase_artifact_path": "artifacts/governance/phase93/v1_1_ga_human0_signoff_2026-03-28.json",
+  "references": {
+    "procession_contract": "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md",
+    "invariant": "INVARIANT PHASE6-HUMAN-0"
+  }
+}
