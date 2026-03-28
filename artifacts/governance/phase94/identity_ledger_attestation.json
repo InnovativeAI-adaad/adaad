@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "attestation_id": "ILA-94-2026-03-28-001",
+  "governor": "DUSTIN L REID",
+  "human0_digest": "3559e44649d4a56952248c70a3a31ffe22aa5d1d4c892895ef41f3e0692f7c0d",
+  "attested_date": "2026-03-28",
+  "ledger_id": "identity-ledger-genesis",
+  "statement_ids_attested": [
+    "IS-001",
+    "IS-002",
+    "IS-003",
+    "IS-004",
+    "IS-005",
+    "IS-006",
+    "IS-007",
+    "IS-008"
+  ],
+  "terminal_chain_hash_attested": "3f570614801293539bfa8d2ff4ae17e6eb65ab7adfc38e0110c0badcce84e5b4",
+  "scope": "Phase 94 genesis IdentityLedger seed \u2014 8 founding IdentityStatements covering purpose, architectural intent (x2), human authority, lineage, failure mode, active goals (x2). Pre-v9.27.0 MMEM-0 enforcement baseline.",
+  "notes": "Genesis attestation. All 8 statements authored by ArchitectAgent and reviewed/attested by HUMAN-0. This attestation record is required for IdentityLedger.ratify() to accept the genesis seed without raising IdentityAppendWithoutAttestationError."
+}
