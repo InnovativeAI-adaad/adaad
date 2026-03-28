@@ -1,11 +1,15 @@
 # Phase 92 — INNOV-08: Adversarial Fitness Red Team
-## ArchitectAgent Proposal | Governor Ratification Package
+## ArchitectAgent Proposal | Governor Ratification Package (Closed)
 
 **Prepared by:** Claude (ArchitectAgent role, DUSTADAAD environment)
 **Prepared:** 2026-03-27
+**Last reviewed:** 2026-03-28
 **Governor:** Dustin L. Reid — HUMAN-0
 **Base version:** v9.24.1 (Phase 91 complete — Audit Hardening + LSME INNOV-07)
-**Target release:** v9.25.0
+**Target release:** v9.25.0 (shipped)
+**Current canonical state:** Phase 93 complete — v9.26.0 (INNOV-09 AFIT shipped)
+**Current/Next pointer:** Current = Phase 93 (v9.26.0), Next = Phase 94 (INNOV-10 roadmap)
+**Phase 92 closure artifact:** `artifacts/governance/phase92/phase92_sign_off.json`
 **Authority:** `CONSTITUTION.md v0.9.0` → `ARCHITECTURE_CONTRACT.md`
 **HUMAN-0 gate:** This plan requires governor ratification before PR-92-01 may open.
 **Source specification:** `ADAAD_30_INNOVATIONS.md §8 — Adversarial Fitness Red Team`
@@ -201,7 +205,7 @@ class AdversarialRedTeamAgent:
 ```
 Phase 91 (LSME INNOV-07) ✅
   └─ Phase 92 (AFRT INNOV-08) ← this plan
-       └─ Phase 93 (INNOV-09 — TBD from 30 Innovations roadmap)
+       └─ Phase 93 (INNOV-09 AFIT) ✅ shipped v9.26.0 — see `docs/plans/PHASE_93_CLOSURE.md`
 ```
 
 AFRT depends on:
