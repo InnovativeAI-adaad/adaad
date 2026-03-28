@@ -1729,4 +1729,31 @@ World-first constitutionally-governed adversarial peer-review gate in an autonom
 
 **Total Hard-class invariants (cumulative):** CSAP-0/1, ACSE-0/1, TIFE-0, SCDD-0, AOEP-0, CEPD-0/1, LSME-0/1, AFRT-0/GATE-0/INTEL-0/LEDGER-0/CASES-0/DETERM-0 — **17 invariants**
 
-**Next:** Phase 93 — INNOV-09 (to be proposed)
+**Next:** Phase 93 — INNOV-09 · Aesthetic Fitness Signal (AFIT) → v9.26.0
+
+---
+
+### Phase 93 — INNOV-09 · Aesthetic Fitness Signal (AFIT)
+
+**Status:** ✅ shipped (v9.26.0) · **Dependency:** Phase 92 INNOV-08 AFRT merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-27) · **Tests:** T93-AFIT-01..33 (33/33 PASS) · **Evidence:** `artifacts/governance/phase93/phase93_sign_off.json`
+
+World-first autonomous evolution system to treat code aesthetics as a constitutionally-bounded first-class fitness signal. The `AestheticFitnessScorer` evaluates code readability, naming quality, and structural clarity via five orthogonal AST dimensions — because technical debt compounds, and cognitive complexity degrades future mutation quality and audit legibility.
+
+**New module:** `runtime/evolution/aesthetic_fitness.py`
+
+- `AestheticFitnessScorer.score(source)` — full pipeline: AST parse → 5 sub-signals → composite → `AestheticFitnessReport`; never raises (AFIT-0)
+- `AestheticSubScores` — frozen per-dimension breakdown, each in [0.0, 1.0]
+- Five sub-signals: `function_length_score` (≤ 15 lines ideal), `name_entropy_score` (identifier length threshold), `nesting_depth_score` (max depth per function), `comment_ratio_score` (density relative to cyclomatic), `cyclomatic_score` (inverse McCabe)
+- `AFIT-DETERM-0`: identical source → identical report; no randomness in scoring path
+
+**Modified:** `runtime/evolution/fitness_v2.py`
+
+- `aesthetic_fitness` added as 7th signal in `_SIGNAL_KEYS`; default weight `0.05`
+- `FitnessContext.aesthetic_fitness: float = 0.5` (neutral default)
+- `FitnessScores.aesthetic_fitness` output field + `to_dict()` inclusion
+
+**Invariants introduced:** `AFIT-0`, `AFIT-DETERM-0`, `AFIT-BOUND-0`, `AFIT-WEIGHT-0` (4 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 21
+
+**Next:** Phase 94 — INNOV-10 (to be proposed)

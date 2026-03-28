@@ -30,6 +30,7 @@ _COMPOSITE_FLOOR: float = 0.0
 _COMPOSITE_CEILING: float = 1.0
 
 # Signal keys in fixed canonical order (required for FIT-DET-0).
+# Phase 93 (INNOV-09 AFIT): aesthetic_fitness added as 7th signal.
 _SIGNAL_KEYS: tuple[str, ...] = (
     "test_fitness",
     "complexity_fitness",
@@ -37,16 +38,20 @@ _SIGNAL_KEYS: tuple[str, ...] = (
     "governance_compliance",
     "architectural_fitness",
     "determinism_fitness",
+    "aesthetic_fitness",   # INNOV-09 — Phase 93
 )
 
 # Default weights (must sum to 1.0; each in [0.05, 0.70]).
+# Phase 93: aesthetic_fitness introduced at 0.05; prior six signals
+# rebalanced proportionally to absorb the 0.05 reduction.
 _DEFAULT_WEIGHTS: Dict[str, float] = {
-    "test_fitness": 0.30,
-    "complexity_fitness": 0.20,
-    "performance_fitness": 0.15,
-    "governance_compliance": 0.15,
-    "architectural_fitness": 0.12,
-    "determinism_fitness": 0.08,
+    "test_fitness":          0.28,
+    "complexity_fitness":    0.19,
+    "performance_fitness":   0.14,
+    "governance_compliance": 0.14,
+    "architectural_fitness": 0.11,
+    "determinism_fitness":   0.09,
+    "aesthetic_fitness":     0.05,   # AFIT-WEIGHT-0: range [0.05, 0.30]
 }
 
 # code_pressure is a modifier (−0.05 × net_node_additions), not a signal weight.
@@ -138,6 +143,9 @@ class FitnessContext:
     # FIT-ARCH-0: only consumed when _architecture_active=True in engine
     architectural_fitness: float = 0.5
     determinism_fitness: float = 1.0
+    # INNOV-09 Phase 93: aesthetic readability score from AestheticFitnessScorer.
+    # Defaults to 0.5 (neutral) — AFIT-0 fallback semantics when source unavailable.
+    aesthetic_fitness: float = 0.5
     # Code pressure: net AST node additions (positive = additions, negative = deletions)
     net_node_additions: int = 0
     # Replay result for FIT-DIV-0
@@ -169,6 +177,7 @@ class FitnessScores:
     governance_compliance: float
     architectural_fitness: float
     determinism_fitness: float
+    aesthetic_fitness: float          # INNOV-09 Phase 93
     code_pressure_adjustment: float
     composite_score: float
     # FIT-DIV-0 override flag
@@ -187,6 +196,7 @@ class FitnessScores:
             "governance_compliance": self.governance_compliance,
             "architectural_fitness": self.architectural_fitness,
             "determinism_fitness": self.determinism_fitness,
+            "aesthetic_fitness": self.aesthetic_fitness,
             "code_pressure_adjustment": self.code_pressure_adjustment,
             "composite_score": self.composite_score,
             "determinism_override": self.determinism_override,
@@ -279,6 +289,7 @@ class FitnessEngineV2:
             "governance_compliance": _clamp(context.governance_compliance),
             "architectural_fitness": _clamp(context.architectural_fitness),
             "determinism_fitness": _clamp(context.determinism_fitness),
+            "aesthetic_fitness": _clamp(context.aesthetic_fitness),   # INNOV-09
         }
 
         # ------------------------------------------------------------------ #
@@ -332,6 +343,7 @@ class FitnessEngineV2:
             governance_compliance=raw_signals["governance_compliance"],
             architectural_fitness=raw_signals["architectural_fitness"],
             determinism_fitness=raw_signals["determinism_fitness"],
+            aesthetic_fitness=raw_signals["aesthetic_fitness"],
             code_pressure_adjustment=code_pressure_adjustment,
             composite_score=composite,
             determinism_override=determinism_override,

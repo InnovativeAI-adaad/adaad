@@ -2,6 +2,60 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.26.0] — 2026-03-27 — Phase 93 · INNOV-09 Aesthetic Fitness Signal (AFIT)
+
+**Branch:** `feature/phase93-afit-engine`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-27
+**Tests:** T93-AFIT-01..33 (33/33 PASS)
+**Evidence:** `artifacts/governance/phase93/phase93_sign_off.json`
+
+### World-First: Code Aesthetics as a Constitutionally-Bounded Fitness Signal
+
+ADAAD now evaluates code readability, naming quality, and structural clarity as a
+first-class fitness dimension — the first autonomous evolution system to treat code
+aesthetics as a constitutionally-governed, weighted signal in its fitness engine.
+
+Technical debt is measurable. A system optimising only for test coverage and performance
+will systematically accumulate cognitive complexity that makes future mutations harder and
+audit trails less readable. AFIT captures this with five orthogonal AST dimensions.
+
+### New Module: `runtime/evolution/aesthetic_fitness.py`
+
+- `AestheticFitnessScorer.score(source)` — full scoring pipeline: AST parse →
+  5 sub-signal computation → composite → `AestheticFitnessReport`; never raises (AFIT-0)
+- `AestheticSubScores` — frozen breakdown of all five dimensions, each in [0.0, 1.0]
+- `AestheticFitnessReport` — deterministic output with `algorithm_version` for replay
+- Five sub-signals:
+  - `function_length_score` — shorter functions score higher; ideal ≤ 15 lines
+  - `name_entropy_score` — fraction of identifiers meeting min-length threshold (≥ 3 chars)
+  - `nesting_depth_score` — lower average max-nesting-depth scores higher; cap at depth 6
+  - `comment_ratio_score` — comment density relative to cyclomatic complexity
+  - `cyclomatic_score` — inverse of average McCabe complexity per function
+
+### Modified: `runtime/evolution/fitness_v2.py`
+
+- `aesthetic_fitness` added as 7th signal in `_SIGNAL_KEYS` (canonical order preserved)
+- `_DEFAULT_WEIGHTS` rebalanced — `aesthetic_fitness: 0.05`; six prior signals
+  proportionally adjusted; weights sum exactly to 1.0
+- `FitnessContext.aesthetic_fitness: float = 0.5` — neutral default (AFIT-0 fallback semantics)
+- `FitnessScores.aesthetic_fitness` — output field + `to_dict()` inclusion
+- `FitnessEngineV2.score()` — `aesthetic_fitness` wired into `raw_signals` dict
+
+### Constitutional Invariants Introduced (4 new Hard-class invariants)
+
+| Invariant | Rule |
+|---|---|
+| `AFIT-0` | `AestheticFitnessScorer.score()` MUST never raise. Any failure MUST return fallback report with `score=0.5` and `fallback_used=True`. |
+| `AFIT-DETERM-0` | Identical source string → identical `AestheticFitnessReport`. No `datetime.now()`, `random`, or `uuid4()` in the scoring path. |
+| `AFIT-BOUND-0` | All sub-scores MUST be in [0.0, 1.0] before composite weighting. Composite score MUST be in [0.0, 1.0]. |
+| `AFIT-WEIGHT-0` | `aesthetic_fitness` weight in `FitnessConfig` MUST be in [0.05, 0.30]. Below 0.05 is noise; above 0.30 over-weights style over correctness. |
+
+**Total Hard-class invariants (cumulative):** CSAP-0/1, ACSE-0/1, TIFE-0, SCDD-0, AOEP-0,
+CEPD-0/1, LSME-0/1, AFRT-0/GATE-0/INTEL-0/LEDGER-0/CASES-0/DETERM-0,
+AFIT-0/DETERM-0/BOUND-0/WEIGHT-0 — **21 invariants**
+
+---
+
 ## [9.25.0] — 2026-03-27 — Phase 92 · INNOV-08 Adversarial Fitness Red Team (AFRT)
 
 **Branch:** `feature/phase92-afrt-engine` + `feature/phase92-afrt-cel-integration` + `feature/phase92-release-sweep`

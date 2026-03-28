@@ -1,14 +1,14 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.25.0 — 92 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.26.0 — 93 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 <img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
 
 <br/>
 
-[![Version](https://img.shields.io/badge/ADAAD-v9.25.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/92_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_92-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
+[![Version](https://img.shields.io/badge/ADAAD-v9.26.0-000?style=for-the-badge&labelColor=0d1117&color=00d4ff)](https://github.com/InnovativeAI-adaad/ADAAD/releases)&nbsp;[![Phases](https://img.shields.io/badge/92_Phases-Complete-000?style=for-the-badge&labelColor=0d1117&color=00ff88)](ROADMAP.md)&nbsp;[![Self‑Evolution](https://img.shields.io/badge/◈_Self--Evolution-LIVE_·_Phase_92-000?style=for-the-badge&labelColor=0d1117&color=ff4466)](ROADMAP.md)&nbsp;[![License](https://img.shields.io/badge/License-Apache_2.0-000?style=for-the-badge&labelColor=0d1117&color=a855f7)](LICENSE)
 
 [![CI](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml/badge.svg)](https://github.com/InnovativeAI-adaad/ADAAD/actions/workflows/ci.yml)&nbsp;![Tests](https://img.shields.io/badge/5%2C680_Tests-Passing-00ff88?style=flat-square&labelColor=0d1117)&nbsp;![Innovations](https://img.shields.io/badge/8_Innovations-Shipped_·_22_Roadmap-00d4ff?style=flat-square&labelColor=0d1117)&nbsp;![Invariants](https://img.shields.io/badge/17_Hard--Class-Invariants-ff4466?style=flat-square&labelColor=0d1117)
 
@@ -151,6 +151,12 @@ Before any mutation is scored and gated, it runs in a zero-write shadow harness 
 
 ---
 
+### 🎨 March 27, 2026 — Code Aesthetics as a Fitness Signal (Phase 93 · INNOV-09)
+
+ADAAD now scores code readability, naming quality, and structural clarity as a first-class fitness dimension. Five AST-derived sub-signals — function length, identifier entropy, nesting depth, comment density, and cyclomatic complexity — combine into an `aesthetic_fitness` score weighted at 5% in the fitness engine. Technical debt accumulates silently; AFIT makes it measurable and selection-pressure-addressable. First autonomous evolution system to treat code beauty as a constitutionally-bounded fitness signal.
+
+---
+
 ### ⚔ March 27, 2026 — Adversarial Red Team as a Constitutional Gate (Phase 92 · INNOV-08)
 
 Every mutation proposal is now challenged by a dedicated Red Team Agent before governance scoring. The Red Team finds code paths the proposing agent didn't cover and fires targeted adversarial cases against them. Proposals that fail are returned. The Red Team is constitutionally incapable of approving anything — its only outputs are PASS or RETURNED. First governed AI evolution system to use adversarial peer-review as a constitutional gate.
@@ -194,7 +200,7 @@ Not prototypes. Each shipped with a full constitutional test suite, human govern
 | INNOV-05 | Autonomous Organ Emergence (AOEP) | 89 | ADAAD can propose entirely new architectural organs to address capability gaps — requires human ratification |
 | INNOV-06 | Cryptographic Evolution Proof DAG (CEPD) | 90 | Full lineage Merkle-rooted and independently verifiable. Legal-grade provenance. |
 | INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Mutations run in a zero-write shadow harness against real traffic before promotion |
-| INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
+| INNOV-09 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
 
 22 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
@@ -312,7 +318,7 @@ The full provenance chain from proposal to outcome is cryptographically linked v
 <summary><b>What are the 8 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-08 shipped across v9.18.0–v9.25.0 (Phases 87–92): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), and Adversarial Fitness Red Team (AFRT).
+INNOV-01 through INNOV-09 shipped across v9.18.0–v9.26.0 (Phases 87–92): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), and Adversarial Fitness Red Team (AFRT).
 
 22 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
