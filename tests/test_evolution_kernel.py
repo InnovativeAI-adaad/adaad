@@ -1,5 +1,3 @@
-import pytest
-pytestmark = pytest.mark.regression_standard
 # SPDX-License-Identifier: Apache-2.0
 
 import json
@@ -8,7 +6,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 from runtime.evolution.evolution_kernel import EvolutionKernel
+
+pytestmark = pytest.mark.regression_standard
 
 
 class EvolutionKernelTest(unittest.TestCase):
@@ -23,6 +25,35 @@ class EvolutionKernelTest(unittest.TestCase):
         (self.agent_dir / "meta.json").write_text(json.dumps({"name": "agent-x"}), encoding="utf-8")
         (self.agent_dir / "dna.json").write_text(json.dumps({"traits": []}), encoding="utf-8")
         (self.agent_dir / "certificate.json").write_text(json.dumps({"signature": "cryovant-dev-seed"}), encoding="utf-8")
+        (self.agent_dir / "__init__.py").write_text(
+            """
+AGENT_ID = "agent-x"
+VERSION = "1.0.0"
+CAPABILITIES = []
+GOAL_SCHEMA = {}
+OUTPUT_SCHEMA = {}
+SPAWN_POLICY = {}
+
+def get_agent_manifest() -> dict:
+    return {}
+
+def run_goal(goal) -> dict:
+    return {"goal": goal}
+
+def info() -> dict:
+    return {"agent": "agent-x"}
+
+def run(input=None) -> dict:
+    return {"input": input}
+
+def mutate(src: str) -> str:
+    return src
+
+def score(output: dict) -> float:
+    return 1.0
+""",
+            encoding="utf-8",
+        )
 
     def test_load_agent_reads_metadata_triplet(self) -> None:
         kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
@@ -244,6 +275,91 @@ class EvolutionKernelTest(unittest.TestCase):
         self.assertEqual(result["status"], "metadata_only")
         self.assertEqual(result["change_classification"], "NON_FUNCTIONAL_CHANGE")
         self.assertTrue(result["cosmetic_only"])
+
+    def test_run_cycle_rejects_when_agent_contract_missing_required_function(self) -> None:
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
+        (self.agent_dir / "__init__.py").write_text(
+            """
+AGENT_ID = "agent-x"
+VERSION = "1.0.0"
+CAPABILITIES = []
+GOAL_SCHEMA = {}
+OUTPUT_SCHEMA = {}
+SPAWN_POLICY = {}
+
+def get_agent_manifest() -> dict:
+    return {}
+
+def run_goal(goal) -> dict:
+    return {"goal": goal}
+
+def info() -> dict:
+    return {"agent": "agent-x"}
+
+def run(input=None) -> dict:
+    return {"input": input}
+
+def score(output: dict) -> float:
+    return 1.0
+""",
+            encoding="utf-8",
+        )
+
+        with (
+            mock.patch("runtime.evolution.evolution_kernel.metrics.log") as metrics_log,
+            mock.patch.object(kernel, "propose_mutation") as propose,
+        ):
+            result = kernel.run_cycle("agent-x")
+
+        propose.assert_not_called()
+        metrics_log.assert_called_once()
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "agent_contract_violation")
+        self.assertEqual(result["violations"][0]["message"], "Missing mutate")
+
+    def test_run_cycle_rejects_when_agent_contract_signature_mismatch(self) -> None:
+        kernel = EvolutionKernel(agents_root=self.agents_root, lineage_dir=self.lineage_dir, compatibility_adapter=mock.Mock())
+        (self.agent_dir / "__init__.py").write_text(
+            """
+AGENT_ID = "agent-x"
+VERSION = "1.0.0"
+CAPABILITIES = []
+GOAL_SCHEMA = {}
+OUTPUT_SCHEMA = {}
+SPAWN_POLICY = {}
+
+def get_agent_manifest() -> dict:
+    return {}
+
+def run_goal(goal) -> dict:
+    return {"goal": goal}
+
+def info() -> dict:
+    return {"agent": "agent-x"}
+
+def run(payload=None) -> dict:
+    return {"input": payload}
+
+def mutate(src: str) -> str:
+    return src
+
+def score(output: dict) -> float:
+    return 1.0
+""",
+            encoding="utf-8",
+        )
+
+        with (
+            mock.patch("runtime.evolution.evolution_kernel.metrics.log") as metrics_log,
+            mock.patch.object(kernel, "propose_mutation") as propose,
+        ):
+            result = kernel.run_cycle("agent-x")
+
+        propose.assert_not_called()
+        metrics_log.assert_called_once()
+        self.assertEqual(result["status"], "rejected")
+        self.assertEqual(result["reason"], "agent_contract_violation")
+        self.assertTrue(any(v["message"] == "def run(input=None) -> dict:" for v in result["violations"]))
 
 
 if __name__ == "__main__":

@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
+from adaad.agents.discovery import resolve_agent_module_entrypoint
+from adaad.core.agent_contract import AgentContractViolation, validate_agent_module
 from runtime.api.agents import (
     MutationEngine,
     MutationRequest,
@@ -156,6 +158,52 @@ class EvolutionKernel:
             return True
         return bool(fitness_result.get("passed"))
 
+    @staticmethod
+    def _agent_contract_signature_violations(violations: list[AgentContractViolation]) -> list[dict[str, str]]:
+        required_signatures = {
+            "def info() -> dict:",
+            "def run(input=None) -> dict:",
+            "def mutate(src: str) -> str:",
+            "def score(output: dict) -> float:",
+        }
+        required_missing = {"Missing info", "Missing run", "Missing mutate", "Missing score"}
+        selected = [
+            {"code": violation.code, "message": violation.message}
+            for violation in violations
+            if violation.message in required_signatures or violation.message in required_missing
+        ]
+        return selected
+
+    def _validate_agent_cycle_contract(self, target_agent_path: Path, agent_id: str) -> Dict[str, Any] | None:
+        entrypoint = resolve_agent_module_entrypoint(target_agent_path)
+        if entrypoint is None:
+            payload = {
+                "status": "rejected",
+                "reason": "agent_contract_violation",
+                "agent_id": agent_id,
+                "module_path": None,
+                "violations": [{"code": "missing_symbol", "message": "Missing agent module entrypoint"}],
+                "kernel_path": True,
+            }
+            metrics.log(event_type="agent_contract_violation", payload=payload)
+            return payload
+
+        root = self.agents_root.resolve().parents[1]
+        result = validate_agent_module(entrypoint.resolve().relative_to(root), root)
+        relevant_violations = self._agent_contract_signature_violations(result.violations)
+        if relevant_violations:
+            payload = {
+                "status": "rejected",
+                "reason": "agent_contract_violation",
+                "agent_id": agent_id,
+                "module_path": str(result.module_path),
+                "violations": relevant_violations,
+                "kernel_path": True,
+            }
+            metrics.log(event_type="agent_contract_violation", payload=payload)
+            return payload
+        return None
+
     def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """Run one mutation cycle, preferring compatibility adapter when explicitly selected."""
         if self.compatibility_adapter is not None and agent_id is None:
@@ -176,6 +224,10 @@ class EvolutionKernel:
                 raise RuntimeError(f"agent_not_found:{agent_id}")
 
         agent = self.load_agent(target_agent_path)
+        contract_violation = self._validate_agent_cycle_contract(target_agent_path, str(agent.get("agent_id") or ""))
+        if contract_violation is not None:
+            return contract_violation
+
         mutation = self.propose_mutation(agent)
         change_decision = classify_mutation_change(target_agent_path, mutation.get("request") or mutation)
         if not change_decision.run_mutation:
