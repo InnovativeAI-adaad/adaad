@@ -16,6 +16,8 @@ from unittest.mock import patch, MagicMock
 
 from runtime.autonomy.ai_mutation_proposer import (
     CANONICAL_AGENT_ORDER,
+    CONTEXT_HASH_V1_HEX_LEN,
+    CONTEXT_HASH_V2_HEX_LEN,
     CodebaseContext,
     _parse_proposals,
     propose_mutations,
@@ -133,6 +135,29 @@ def test_context_hash_set_in_candidate() -> None:
     ):
         result = propose_mutations("architect", ctx, api_key="test-key")
     assert all(len(c.source_context_hash) > 0 for c in result)
+
+
+def test_context_hash_is_deterministic_for_same_context() -> None:
+    ctx = _make_context()
+    first = ctx.context_hash()
+    second = ctx.context_hash()
+    assert first == second
+
+
+def test_context_hash_uses_sha256_short_hex_width() -> None:
+    ctx = _make_context()
+    digest = ctx.context_hash()
+    assert len(digest) == CONTEXT_HASH_V2_HEX_LEN
+    assert all(ch in "0123456789abcdef" for ch in digest)
+
+
+def test_context_hash_v2_width_differs_from_legacy_md5_width() -> None:
+    ctx = _make_context()
+    legacy = ctx.context_hash_legacy()
+    v2 = ctx.context_hash()
+    assert len(legacy) == CONTEXT_HASH_V1_HEX_LEN
+    assert len(v2) == CONTEXT_HASH_V2_HEX_LEN
+    assert legacy != v2
 
 
 def test_propose_all_agents_returns_all_keys() -> None:

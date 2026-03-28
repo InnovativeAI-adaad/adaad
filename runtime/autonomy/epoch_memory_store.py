@@ -43,7 +43,7 @@ Storage format (JSONL, UTF-8):
         "fitness_delta":      <float> — post-epoch fitness change (may be 0.0)
         "proposal_count":     <int>   — total proposals evaluated this epoch
         "accepted_count":     <int>   — proposals that passed GovernanceGate
-        "context_hash":       <str>   — 8-hex CodebaseContext.context_hash()
+        "context_hash":       <str>   — short deterministic CodebaseContext context hash
         "constitution_version": <str>
         "entry_digest":       <str>   — SHA-256 of canonical entry fields
         "prev_digest":        <str>   — SHA-256 of previous entry (or GENESIS_DIGEST)
@@ -227,6 +227,12 @@ class EpochMemoryEntry:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "EpochMemoryEntry":
+        # Dual-read compatibility:
+        # - legacy rows persisted `context_hash` (historically 8-hex MD5-derived)
+        # - transitional/future rows may carry `context_hash_v2` (SHA-256-derived short hash)
+        context_hash = str(d.get("context_hash", ""))
+        if not context_hash:
+            context_hash = str(d.get("context_hash_v2", ""))
         return cls(
             seq=int(d["seq"]),
             epoch_id=str(d["epoch_id"]),
@@ -236,7 +242,7 @@ class EpochMemoryEntry:
             fitness_delta=float(d.get("fitness_delta", 0.0)),
             proposal_count=int(d.get("proposal_count", 0)),
             accepted_count=int(d.get("accepted_count", 0)),
-            context_hash=str(d.get("context_hash", "")),
+            context_hash=context_hash,
             constitution_version=str(d.get("constitution_version", "0.9.0")),
             entry_version=str(d.get("entry_version", _ENTRY_VERSION)),
             entry_digest=str(d["entry_digest"]),

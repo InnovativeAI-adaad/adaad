@@ -38,13 +38,56 @@ class FailingAttestationLedger(VirtualLedgerWriter):
         return super().write_event(event)
 
 
-def test_parse_trigger_supports_simulation_action() -> None:
-    request = parse_trigger("ADAAD simulate")
+@pytest.mark.parametrize(
+    ("raw_command", "expected_action"),
+    [
+        ("ADAAD run", "run"),
+        ("ADAAD status", "status"),
+        ("ADAAD audit", "audit"),
+        ("ADAAD retry", "retry"),
+        ("ADAAD preflight", "preflight"),
+        ("ADAAD verify", "verify"),
+        ("ADAAD dry-run", "dry_run"),
+        ("ADAAD simulate", "simulate"),
+    ],
+)
+def test_parse_trigger_accepts_supported_actions(raw_command: str, expected_action: str) -> None:
+    request = parse_trigger(raw_command)
 
     assert request.principal == "ADAAD"
-    assert request.action == "simulate"
-    assert request.simulation is True
+    assert request.action == expected_action
+    assert request.action in ALLOWED_ACTIONS
+    assert request.simulation is (expected_action == "simulate")
     assert request.merge_authority is False
+
+
+def test_parse_trigger_rejects_unknown_action() -> None:
+    with pytest.raises(ValueError, match="unsupported_action"):
+        parse_trigger("ADAAD unsupported-action")
+
+
+def test_parse_trigger_defaults_to_run_when_action_is_omitted() -> None:
+    request = parse_trigger("DEVADAAD")
+
+    assert request.principal == "DEVADAAD"
+    assert request.action == "run"
+    assert request.simulation is False
+    assert request.merge_authority is True
+
+
+def test_run_status_payload_uses_canonical_action_name(tmp_path: Path) -> None:
+    ledger = VirtualLedgerWriter()
+    orchestrator = AdaadTriggerOrchestrator(
+        repo_root=tmp_path,
+        ledger_writer=ledger,
+        git_mutation_adapter=RecordingGitAdapter(),
+    )
+
+    envelope = orchestrator.run("ADAAD dry-run", scenario="dependency_blocked")
+
+    assert envelope["request"].action == "dry_run"
+    assert envelope["ledger"]["event_type"] == "adaad_orchestration_attempt.v1"
+    assert ledger.events[-1]["payload"]["action"] == "dry_run"
 
 
 def test_virtual_ledger_writer_validates_required_schema_keys() -> None:
