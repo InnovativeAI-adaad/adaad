@@ -53,6 +53,8 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .top-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .top-link{font-family:var(--font-mono);font-size:10px;color:var(--text3);text-decoration:none;padding:4px 10px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg3);transition:all 0.15s}
 .top-link:hover{color:var(--text);border-color:var(--border2)}
+.top-btn{font-family:var(--font-ui);font-size:10px;font-weight:700;color:var(--text);padding:4px 9px;border-radius:var(--r);border:1px solid rgba(0,217,255,0.2);background:var(--whale-dim);cursor:pointer;transition:all 0.15s}
+.top-btn:hover{background:rgba(0,217,255,0.15);border-color:rgba(0,217,255,0.35)}
 .sb-sect{padding:14px 12px 4px;font-family:var(--font-ui);font-size:8px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--text3)}
 .sb-item{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:1px 6px;border-radius:var(--r);font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.12s}
 .sb-item:hover{color:var(--text);background:var(--bg3)}
@@ -126,6 +128,33 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .pdiv{height:1px;background:var(--border);margin:0 18px}
 .debt-row{display:flex;align-items:center;gap:5px;padding:2px 2px;font-family:var(--font-mono);font-size:9px}
+.flight-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:8px}
+.flight-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:11px}
+.flight-title{font-family:var(--font-ui);font-size:10px;font-weight:700;margin-bottom:6px}
+.flight-items{display:flex;flex-direction:column;gap:6px}
+.flight-item{display:flex;gap:7px;align-items:flex-start;font-size:10px;color:var(--text2)}
+.flight-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0;background:var(--whale)}
+.flight-dot.g{background:var(--green)}
+.flight-dot.a{background:var(--amber)}
+.flight-score{font-family:var(--font-ui);font-size:30px;font-weight:800;line-height:1;color:var(--whale)}
+.flight-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:3px}
+.insight-list{display:flex;flex-direction:column;gap:5px}
+.insight-row{padding:8px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg3);display:flex;gap:8px;align-items:flex-start}
+.insight-k{font-family:var(--font-mono);font-size:9px;color:var(--whale);width:90px;flex-shrink:0}
+.insight-v{font-size:10px;color:var(--text2)}
+.shell.focus .sidebar,.shell.focus .dork-pane{display:none}
+.shell.focus{grid-template-columns:1fr}
+.pal-wrap{position:fixed;inset:0;background:rgba(4,6,13,0.75);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;z-index:30;padding-top:80px}
+.pal{width:min(700px,88vw);background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden;box-shadow:0 16px 60px rgba(0,0,0,0.45)}
+.pal-head{padding:10px;border-bottom:1px solid var(--border)}
+.pal-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 9px;color:var(--text);font-family:var(--font-body);font-size:12px;outline:none}
+.pal-list{max-height:360px;overflow-y:auto;padding:7px}
+.pal-item{display:flex;align-items:center;justify-content:space-between;padding:8px 9px;border-radius:8px;cursor:pointer}
+.pal-item:hover{background:var(--whale-dim)}
+.pal-name{font-family:var(--font-ui);font-size:11px}
+.pal-key{font-family:var(--font-mono);font-size:9px;color:var(--text3)}
+@media (max-width:1200px){.shell{grid-template-columns:200px 1fr}.dork-pane{display:none}.flight-grid{grid-template-columns:1fr}}
+@media (max-width:840px){.shell{grid-template-columns:1fr}.sidebar{display:none}.top-pills{display:none}.stat-grid,.agent-grid{grid-template-columns:1fr}}
 /* DORK */
 .dork-hdr{padding:10px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
 .dork-title{font-family:var(--font-ui);font-size:13px;font-weight:800;color:var(--whale);letter-spacing:-0.3px}
@@ -184,6 +213,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <div class="pill"><span id="p-ready">Readiness: \u2014</span></div>
   </div>
   <div class="top-right">
+    <button class="top-btn" onclick="toggleFocus()">Focus</button>
+    <button class="top-btn" onclick="openPalette()">⌘K</button>
+    <button class="top-btn" onclick="exportSnapshot()">Export</button>
     <a class="top-link" href="/ui/aponi/index.html">\u2190 Aponi</a>
     <a class="top-link" href="https://github.com/InnovativeAI-adaad/ADAAD" target="_blank" rel="noreferrer">GitHub \u2197</a>
   </div>
@@ -244,6 +276,27 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <div class="cs">
       <div class="cs-title">Recent Mutations</div>
       <div class="mut-list" id="ml-overview"><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div></div>
+    </div>
+    <div class="pdiv"></div>
+    <div class="cs">
+      <div class="cs-title">Strategic Flight Plan</div>
+      <div class="flight-grid">
+        <div class="flight-card">
+          <div class="flight-title">High-leverage Objectives</div>
+          <div class="flight-items" id="flight-items"><div class="sk" style="height:14px"></div><div class="sk" style="height:14px"></div><div class="sk" style="height:14px"></div></div>
+        </div>
+        <div class="flight-card">
+          <div class="flight-score" id="flight-score">—</div>
+          <div class="flight-sub">execution confidence index</div>
+          <div class="rp-bar-w" style="margin-top:8px"><div class="rp-bar" id="flight-bar" style="width:0%"></div></div>
+          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap" id="flight-tags"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pdiv"></div>
+    <div class="cs">
+      <div class="cs-title">Strategic Insights</div>
+      <div class="insight-list" id="insight-list"><div class="sk" style="height:28px"></div><div class="sk" style="height:28px"></div></div>
     </div>
     <div class="pdiv"></div>
     <div class="cs">
@@ -330,12 +383,28 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 </aside>
 </div>
 
+<div class="pal-wrap" id="palette-wrap" onclick="closePalette(event)">
+  <div class="pal">
+    <div class="pal-head"><input class="pal-inp" id="pal-inp" placeholder="Run command: replay, agents, refresh, focus..." oninput="renderPalette(this.value)" /></div>
+    <div class="pal-list" id="pal-list"></div>
+  </div>
+</div>
+
 <script>
 const ROUTES={governance:'/api/governance/status',mutations:'/api/mutations/recent?limit=20',replay:'/api/replay/score',epoch:'/api/epoch/current',agents:'/api/agents/health',ledger:'/api/ledger/entries?limit=50',whRecent:'/api/webhooks/recent?limit=20',whStream:'/api/webhooks/stream',readiness:'/api/release/readiness',ledgerLog:'/api/ledger/log'};
 const DEBT=[{id:'DEBT-001',s:'CLOSED'},{id:'DEBT-002',s:'CLOSED'},{id:'DEBT-003',s:'CLOSED'},{id:'DEBT-004',s:'CLOSED'},{id:'DEBT-005',s:'CLOSED'},{id:'DEBT-006',s:'CLOSED'},{id:'DEBT-007',s:'CLOSED'},{id:'DEBT-008',s:'CLOSED'},{id:'DEBT-009',s:'CLOSED'},{id:'DEBT-010',s:'CLOSED'},{id:'DEBT-011',s:'CLOSED'}];
 const MOCK={governance:{ok:true,locked:false,constitution_version:'v0.9.0',mutation_enabled:true,replay_mode:'audit',tier:'NOMINAL',gate_checks:['constitution_version','key_rotation','ledger_integrity','mutation_engine','warm_pool','architect_invariants','platform_resources']},mutations:{ok:true,mutations:[{event:'mutation_approved_constitutional',agent:'architect',epoch:12,sha:'a3f1b2c',action:'mutation_approved_constitutional'},{event:'mutation_rejected_constitutional',agent:'beast',epoch:12,sha:'9b2e7a1',action:'mutation_rejected_constitutional'},{event:'mutation_approved_constitutional',agent:'dream',epoch:12,sha:'c7d4e9f',action:'mutation_approved_constitutional'}],total:47},replay:{ok:true,score:1.0,divergence:0,mode:'audit'},epoch:{ok:true,epoch:12,phase:'mutation'},agents:{ok:true,agents:{architect:{status:'healthy',proposals:124,approved:98,rejected:26},dream:{status:'healthy',tasks:31,safe_boots:2},beast:{status:'healthy',validated:47,blocked:0}}},ledger:{ok:true,entries:[{ts:'2026-03-14T22:48:01Z',agent:'architect',action:'mutation_approved_constitutional',epoch:12,sha:'a3f1b2c8d9e4f',status:'approved'},{ts:'2026-03-14T22:44:17Z',agent:'beast',action:'mutation_rejected_constitutional',epoch:12,sha:'9b2e7a1c4f8d3',status:'rejected'},{ts:'2026-03-14T22:41:55Z',agent:'dream',action:'mutation_approved_constitutional',epoch:12,sha:'c7d4e9f2a1b8c',status:'approved'},{ts:'2026-03-14T22:38:02Z',agent:'system',action:'replay_verified',epoch:12,sha:'f1a3c9d7e2b4f',status:'ok'},{ts:'2026-03-14T22:35:40Z',agent:'system',action:'orchestrator_ready',epoch:12,sha:'8e2d5c1a9f4b7',status:'ok'}],count:5},webhooks:{ok:true,events:[{event:'github_webhook_push',repo:'InnovativeAI-adaad/ADAAD',ts:'22:48:01'},{event:'github_webhook_pull_request',repo:'InnovativeAI-adaad/ADAAD',ts:'22:44:17'},{event:'github_webhook_check_run',repo:'InnovativeAI-adaad/ADAAD',ts:'22:41:55'}],total:11},readiness:{ok:true,readiness_score:0.98,gate_ok:true,replay_score:1.0,blockers:[]}};
 const TOKEN_CAP=16000,TOKEN_WARN=12000,HK='whaledic_v2_conv';
 let conv=[],totalTok=0,streaming=false,rs=null,missing=new Set(),reqTs=[],ledgerOff=0,whCount=0;
+const CMDS=[
+  {name:'Go to Overview',key:'1',fn:()=>showView('overview')},
+  {name:'Go to Mutations',key:'2',fn:()=>showView('mutations')},
+  {name:'Go to Agents',key:'3',fn:()=>showView('agents')},
+  {name:'Go to Replay',key:'4',fn:()=>showView('replay')},
+  {name:'Refresh Intelligence',key:'R',fn:()=>refreshAll()},
+  {name:'Toggle Focus Mode',key:'F',fn:()=>toggleFocus()},
+  {name:'Export Runtime Snapshot',key:'E',fn:()=>exportSnapshot()}
+];
 function esc(v){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function bus(t,d){const e=document.getElementById('ebus');e.textContent=`[${new Date().toISOString().slice(11,19)}] ${t}::${d}\n${e.textContent}`.slice(0,1500)}
 function fmt(m){return m.replace(/```([\s\S]*?)```/g,'<pre>$1</pre>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}
@@ -355,7 +424,18 @@ function renderAgents(data){const ag=data?.agents??{architect:{status:'unknown'}
 function renderLedger(data,app=false){const en=data?.entries??[];const tb=document.getElementById('ledger-tbody');const rows=en.map(e=>{const st=e.status??(e.action?.includes('rejected')?'rejected':e.action?.includes('approved')?'approved':'ok');const tc=st==='approved'||st==='ok'?'tag-g':st==='rejected'?'tag-r':'tag-w';const sha=e.sha??e.hash??'\u2014';return`<tr><td>${esc(String(e.ts??e.timestamp??'\u2014').slice(0,19))}</td><td>${esc(e.agent??'\u2014')}</td><td>${esc(e.action??e.event??'\u2014')}</td><td>${esc(String(e.epoch??'\u2014'))}</td><td style="color:var(--whale)">${esc(String(sha).slice(0,14))}</td><td><span class="tag ${tc}">${esc(st)}</span></td></tr>`;}).join('');if(app)tb.insertAdjacentHTML('beforeend',rows||'');else tb.innerHTML=rows||`<tr><td colspan="6" style="color:var(--text3);font-family:var(--font-mono);font-size:9px;padding:10px">No ledger entries.</td></tr>`;}
 function renderWH(data,tid){const ev=data?.events??[];const el=document.getElementById(tid);el.innerHTML=ev.slice().reverse().map(e=>{const t=String(e.event??'\u2014').replace('github_webhook_','');return`<div class="wh-row"><span class="wh-type">${esc(t)}</span><span class="wh-desc">${esc(e.repo??e.repository??'\u2014')}</span><span class="wh-ts">${esc(e.ts??e.timestamp??'\u2014')}</span><span class="tag tag-g">\u2713</span></div>`;}).join('')||`<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);padding:8px">No events yet.</div>`;whCount=data?.total??ev.length;document.getElementById('sb-wh').textContent=whCount;}
 function renderReplay(r){const ep=rs?.epoch?.epoch??12;document.getElementById('rp-manifests').innerHTML=[{name:`audit__epoch-${ep}__${new Date().toISOString().slice(0,16)}Z.json`,score:r?.score??1.0,ok:(r?.divergence??0)===0},{name:`audit__epoch-${ep-1}__2026-03-14T18:21Z.json`,score:1.0,ok:true},{name:`audit__epoch-${ep-2}__2026-03-13T09:05Z.json`,score:1.0,ok:true}].map(m=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border-radius:var(--r);font-family:var(--font-mono);font-size:9px;"><span style="color:var(--whale);flex:1">${esc(m.name)}</span><span class="tag ${m.ok?'tag-g':'tag-r'}">${m.ok?'ok':'DIVERGE'}</span><span style="color:var(--text3)">score: ${m.score.toFixed(3)}</span></div>`).join('');}
-async function refreshAll(){const [g,m,r,ep,ag,ld,wh,rd]=await Promise.all([safe('governance','governance'),safe('mutations','mutations'),safe('replay','replay'),safe('epoch','epoch'),safe('agents','agents'),safe('ledger','ledger'),safe('webhooks','whRecent'),safe('readiness','readiness')]);rs={gov:g,muts:m,rep:r,epoch:ep,agents:ag,ledger:ld,wh:wh,ready:rd};renderPills(g,r,ep,rd);renderRuntime(g,ep);renderStats(r,rd,ep);renderGate(g);renderMuts(m,'ml-overview');renderMuts(m,'ml-full');renderAgents(ag);renderLedger(ld);renderWH(wh,'wh-overview');renderWH(wh,'wh-full');renderReplay(r);renderDebt();bus('refresh','all panels ok');}
+function renderFlightPlan(g,m,r,rd){const items=[{tone:'g',txt:`Lock replay at ${(r?.score??0).toFixed(3)} and keep divergence at ${r?.divergence??0}.`},{tone:'w',txt:`Mutations queued: ${m?.total??0}. Prioritize constitutional approvals before exploration.`},{tone:'a',txt:`Readiness ${(Math.round((rd?.readiness_score??0)*100))}% with ${(rd?.blockers?.length??0)} blockers — close blockers before release gate.`},{tone:'g',txt:`Governance tier ${g?.tier??'—'}: maintain zero regression on gate checks.`}];
+  document.getElementById('flight-items').innerHTML=items.map(i=>`<div class="flight-item"><span class="flight-dot ${i.tone}"></span><span>${esc(i.txt)}</span></div>`).join('');
+  const confidence=Math.max(0,Math.min(100,Math.round((((r?.score??0)*0.45)+((rd?.readiness_score??0)*0.45)+((g?.locked?0.2:1)*0.1))*100)));
+  document.getElementById('flight-score').textContent=confidence;
+  document.getElementById('flight-bar').style.width=confidence+'%';
+  document.getElementById('flight-tags').innerHTML=`<span class="tag tag-w">tier: ${esc(g?.tier??'—')}</span><span class="tag tag-g">divergence: ${esc(String(r?.divergence??'—'))}</span><span class="tag tag-p">queue: ${esc(String(m?.total??0))}</span>`;
+}
+function renderInsights(g,m,r,rd,ag){const agents=ag?.agents??{};const health=Object.entries(agents).map(([k,v])=>`${k}:${v.status??'unknown'}`).join(' · ');
+  const insights=[{k:'GATE',v:g?.locked?'Gate is LOCKED — hold mutations and resolve blocker checks first.':'All governance checks currently PASS — safe to continue staged execution.'},{k:'REPLAY',v:`Replay score ${(r?.score??0).toFixed(3)} in ${r?.mode??'—'} mode; divergence ${(r?.divergence??0)}.`},{k:'AGENTS',v:`Triad health snapshot: ${health||'unavailable'}.`},{k:'DELIVERY',v:(rd?.blockers?.length??0)?`Release blockers: ${(rd?.blockers||[]).join(', ')}.`:'No release blockers reported. Momentum is clear for next promotion step.'},{k:'MUTATION',v:`Recent mutation events: ${(m?.mutations||[]).slice(-3).map(x=>x.event).join(', ')||'none'}.`}];
+  document.getElementById('insight-list').innerHTML=insights.map(i=>`<div class="insight-row"><span class="insight-k">${esc(i.k)}</span><span class="insight-v">${esc(i.v)}</span></div>`).join('');
+}
+async function refreshAll(){const [g,m,r,ep,ag,ld,wh,rd]=await Promise.all([safe('governance','governance'),safe('mutations','mutations'),safe('replay','replay'),safe('epoch','epoch'),safe('agents','agents'),safe('ledger','ledger'),safe('webhooks','whRecent'),safe('readiness','readiness')]);rs={gov:g,muts:m,rep:r,epoch:ep,agents:ag,ledger:ld,wh:wh,ready:rd};renderPills(g,r,ep,rd);renderRuntime(g,ep);renderStats(r,rd,ep);renderGate(g);renderMuts(m,'ml-overview');renderMuts(m,'ml-full');renderAgents(ag);renderLedger(ld);renderWH(wh,'wh-overview');renderWH(wh,'wh-full');renderReplay(r);renderFlightPlan(g,m,r,rd);renderInsights(g,m,r,rd,ag);renderDebt();bus('refresh','all panels ok');}
 async function loadMoreLedger(){ledgerOff+=50;const d=await apiFetch(`${ROUTES.ledger}&offset=${ledgerOff}`,MOCK.ledger);renderLedger(d,true);}
 function simWH(){const t=['push','pull_request','check_run','issue_comment','pull_request_review'];const type=t[Math.floor(Math.random()*t.length)];const ts=new Date().toLocaleTimeString();['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);const row=document.createElement('div');row.className='wh-row';row.innerHTML=`<span class="wh-type">${type}</span><span class="wh-desc">InnovativeAI-adaad/ADAAD</span><span class="wh-ts">${ts}</span><span class="tag tag-a">sim</span>`;el.insertBefore(row,el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;bus('wh_sim',type);}
 function startSSE(){try{const src=new EventSource(ROUTES.whStream);src.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='connected'){bus('sse','connected');return;}const row=document.createElement('div');row.className='wh-row';const t=String(d.event??'\u2014').replace('github_webhook_','');row.innerHTML=`<span class="wh-type">${esc(t)}</span><span class="wh-desc">${esc(d.repo??'\u2014')}</span><span class="wh-ts">live</span><span class="tag tag-w">sse</span>`;['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);el.insertBefore(row.cloneNode(true),el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;}catch(_){}};src.onerror=()=>{bus('sse_err','stream closed');src.close()};}catch(e){bus('sse_unavail',e.message);}}
@@ -367,6 +447,13 @@ async function sendDork(){const inp=document.getElementById('dinp');const msg=in
 function dorkPrompt(t){document.getElementById('dinp').value=t;sendDork();}
 function dorkKD(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDork();}}
 function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,72)+'px';}
+function toggleFocus(){document.querySelector('.shell').classList.toggle('focus');bus('mode',document.querySelector('.shell').classList.contains('focus')?'focus_on':'focus_off');}
+function openPalette(){document.getElementById('palette-wrap').style.display='flex';renderPalette('');setTimeout(()=>document.getElementById('pal-inp').focus(),20);}
+function closePalette(e){if(e&&e.target&&e.target.id!=='palette-wrap')return;document.getElementById('palette-wrap').style.display='none';}
+function renderPalette(q){const query=(q||'').toLowerCase().trim();const list=document.getElementById('pal-list');const rows=CMDS.filter(c=>!query||c.name.toLowerCase().includes(query)).map((c,i)=>`<div class="pal-item" onclick="runCmd(${i})"><span class="pal-name">${esc(c.name)}</span><span class="pal-key">${esc(c.key)}</span></div>`).join('');list.innerHTML=rows||'<div class="pal-item"><span class="pal-name">No commands</span><span class="pal-key">—</span></div>';}
+function runCmd(i){const cmd=CMDS[i];if(!cmd)return;cmd.fn();closePalette({target:{id:'palette-wrap'}});}
+function exportSnapshot(){if(!rs){bus('export','skipped_no_state');return;}const payload={ts:new Date().toISOString(),runtime:rs};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`whaledic_snapshot_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),200);bus('export','runtime_snapshot_saved');}
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}if(e.key==='Escape')closePalette({target:{id:'palette-wrap'}});if(e.key==='f'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT'){toggleFocus();}});
 restoreConv();renderDebt();refreshAll();startSSE();setInterval(refreshAll,30000);
 </script>
 </body>
