@@ -20,8 +20,10 @@ Constitutional invariants:
   CEL-SELF-DISC-0       Self-discovery runs post-epoch at SELF_DISC_FREQUENCY cadence (Phase 86).
   CEL-SELF-DISC-NONBLOCK-0  Self-discovery failure never blocks epoch completion (Phase 86).
   SELF-DISC-HUMAN-0     No self-discovered invariant enters CONSTITUTION.md without HUMAN-0.
+  AFRT-GATE-0           AFRT evaluation must occur after LSME (Step 6) and PARETO-SELECT
+                        (Step 9) and before GovernanceGateV2 (Step 11). (Phase 92)
 
-15-Step Sequence (CEL-ORDER-0) — Phase 86:
+16-Step Sequence (CEL-ORDER-0) — Phase 92: Step 10 AFRT-GATE inserted:
   Step  1 — MODEL-DRIFT-CHECK      Verify CodeIntelModel determinism; block on drift.
   Step  2 — LINEAGE-SNAPSHOT       Capture LineageEngine state hash for chain integrity.
   Step  3 — FITNESS-BASELINE       Compute FitnessEngineV2 baseline composite score.
@@ -29,7 +31,7 @@ Constitutional invariants:
   Step  5 — AST-SCAN               StaticScanner + GovernanceGateV2 pre-flight (AST-SAFE-0,
                                    AST-IMPORT-0, AST-COMPLEX-0).
   Step  6 — SANDBOX-EXECUTE        Execute proposals in sandbox container (dry_run flag
-                                   respected); record sandbox_container_id.
+                                   respected); LSME wired here (LSME-GATE-0 / LSME-GATE-1).
   Step  7 — REPLAY-VERIFY          Deterministic replay of sandbox; record
                                    replay_verification_hash; block on SANDBOX-DIV-0.
   Step  8 — FITNESS-SCORE          Score all sandbox results: FitnessOrchestrator (real composite)
@@ -38,14 +40,18 @@ Constitutional invariants:
   Step  9 — PARETO-SELECT          Multi-objective Pareto frontier selection via
                                    ParetoCompetitionOrchestrator. Replaces scalar score > 0.5
                                    threshold. Frontier written to ledger (CEL-PARETO-0).
-  Step 10 — GOVERNANCE-GATE-V2     Full GovernanceGateV2 evaluation (all 5 Phase 63 rules).
-  Step 11 — GOVERNANCE-GATE        Existing GovernanceGate (all 16 pre-Phase-63 rules);
+  Step 10 — AFRT-GATE              Adversarial Fitness Red Team evaluation (INNOV-08).
+                                   AdversarialRedTeamAgent generates 1–5 targeted adversarial
+                                   cases from CodeIntel uncovered paths; RETURNED verdict blocks
+                                   epoch; PASS advances to GovernanceGateV2. (Phase 92)
+  Step 11 — GOVERNANCE-GATE-V2     Full GovernanceGateV2 evaluation (all 5 Phase 63 rules).
+  Step 12 — GOVERNANCE-GATE        Existing GovernanceGate (all 16 pre-Phase-63 rules);
                                    GATE-V2-EXISTING-0 compliance check.
-  Step 12 — LINEAGE-REGISTER       Register surviving mutations in LineageEngine.
-  Step 13 — PROMOTION-DECISION     Write PromotionEvent; suppressed in SANDBOX_ONLY mode.
-  Step 14 — EPOCH-EVIDENCE-WRITE   Assemble and write EvolutionEvidence to ledger;
+  Step 13 — LINEAGE-REGISTER       Register surviving mutations in LineageEngine.
+  Step 14 — PROMOTION-DECISION     Write PromotionEvent; suppressed in SANDBOX_ONLY mode.
+  Step 15 — EPOCH-EVIDENCE-WRITE   Assemble and write EvolutionEvidence to ledger;
                                    compute predecessor_hash; chain validated.
-  Step 15 — STATE-ADVANCE          Advance epoch counter; update exploration/exploitation
+  Step 16 — STATE-ADVANCE          Advance epoch counter; update exploration/exploitation
                                    state; emit epoch_complete.v1 journal event.
 
 Post-epoch (non-blocking, outside step sequence):
@@ -244,6 +250,8 @@ class ConstitutionalEvolutionLoop:
         pareto_competition_orchestrator: Any = _UNSET,
         self_discovery_loop: Any = _UNSET,
         self_disc_frequency: int = SELF_DISC_FREQUENCY,
+        # Phase 92 — AFRT gate (INNOV-08); pass None to disable (e.g. pre-Phase-92 tests)
+        afrt_agent: Any = _UNSET,
     ) -> None:
         self._run_mode = run_mode
         self._dry_run = run_mode == RunMode.SANDBOX_ONLY
@@ -290,6 +298,21 @@ class ConstitutionalEvolutionLoop:
         self._pareto_orchestrator = pareto_competition_orchestrator
         self._self_discovery_loop = self_discovery_loop
         self._self_disc_frequency = self_disc_frequency
+
+        # Phase 92 — AFRT agent lazy wiring (INNOV-08 / AFRT-GATE-0)
+        if afrt_agent is _UNSET:
+            try:
+                from runtime.evolution.afrt_engine import AdversarialRedTeamAgent
+                from runtime.code_intel import CodeIntelModel
+                from runtime.lineage.lineage_ledger_v2 import LineageLedgerV2
+                afrt_agent = AdversarialRedTeamAgent(
+                    code_intel_model=CodeIntelModel(),
+                    ledger=LineageLedgerV2(),
+                )
+            except Exception:  # noqa: BLE001
+                afrt_agent = None  # graceful degradation: AFRT step logs warning, passes
+        self._afrt_agent = afrt_agent
+
         self._epoch_seq: int = 0
 
     # ------------------------------------------------------------------ #
@@ -323,7 +346,7 @@ class ConstitutionalEvolutionLoop:
             "predecessor_hash": self._cel_ledger.chain_tip,
         }
 
-        # 15-step dispatch table (CEL-ORDER-0) — Phase 86: step 9 PARETO-SELECT inserted
+        # 16-step dispatch table (CEL-ORDER-0) — Phase 92: step 10 AFRT-GATE inserted
         steps = [
             (1,  "MODEL-DRIFT-CHECK",    self._step_01_model_drift_check),
             (2,  "LINEAGE-SNAPSHOT",     self._step_02_lineage_snapshot),
@@ -334,12 +357,13 @@ class ConstitutionalEvolutionLoop:
             (7,  "REPLAY-VERIFY",        self._step_07_replay_verify),
             (8,  "FITNESS-SCORE",        self._step_08_fitness_score),
             (9,  "PARETO-SELECT",        self._step_09_pareto_select),
-            (10, "GOVERNANCE-GATE-V2",   self._step_09_governance_gate_v2),
-            (11, "GOVERNANCE-GATE",      self._step_10_governance_gate),
-            (12, "LINEAGE-REGISTER",     self._step_11_lineage_register),
-            (13, "PROMOTION-DECISION",   self._step_12_promotion_decision),
-            (14, "EPOCH-EVIDENCE-WRITE", self._step_13_epoch_evidence_write),
-            (15, "STATE-ADVANCE",        self._step_14_state_advance),
+            (10, "AFRT-GATE",            self._step_10_afrt_gate),
+            (11, "GOVERNANCE-GATE-V2",   self._step_09_governance_gate_v2),
+            (12, "GOVERNANCE-GATE",      self._step_10_governance_gate),
+            (13, "LINEAGE-REGISTER",     self._step_11_lineage_register),
+            (14, "PROMOTION-DECISION",   self._step_12_promotion_decision),
+            (15, "EPOCH-EVIDENCE-WRITE", self._step_13_epoch_evidence_write),
+            (16, "STATE-ADVANCE",        self._step_14_state_advance),
         ]
 
         for step_num, step_name, step_fn in steps:
@@ -792,6 +816,100 @@ class ConstitutionalEvolutionLoop:
             state["pareto_error"] = str(exc)
             return CELStepResult(step_number=n, step_name=name, outcome=StepOutcome.PASS,
                                  detail={"fallback": True, "error": str(exc)})
+
+    def _step_10_afrt_gate(
+        self, n: int, name: str, state: Dict[str, Any]
+    ) -> CELStepResult:
+        """Step 10 — AFRT-GATE (Phase 92 / INNOV-08).
+
+        Adversarial Fitness Red Team evaluation.  Invokes AdversarialRedTeamAgent
+        for each proposal on the Pareto frontier.  A RETURNED verdict from any
+        proposal is a hard block (CEL-BLOCK-0).
+
+        AFRT-GATE-0: this step executes AFTER PARETO-SELECT (Step 9) and BEFORE
+        GOVERNANCE-GATE-V2 (Step 11).  Any deviation is a CELStepOrderViolation.
+
+        Graceful degradation: if _afrt_agent is None (pre-Phase-92 environments
+        or import failure), step logs a WARNING and passes through without blocking.
+        """
+        if self._afrt_agent is None:
+            import logging as _log
+            _log.getLogger(__name__).warning(
+                "AFRT-GATE: afrt_agent unavailable — step bypassed (pre-Phase-92 mode). "
+                "AFRT-GATE-0 not enforced in this run."
+            )
+            state["afrt_bypassed"] = True
+            return CELStepResult(
+                step_number=n, step_name=name, outcome=StepOutcome.PASS,
+                detail={"afrt_bypassed": True, "reason": "afrt_agent_unavailable"},
+            )
+
+        epoch_id = state["epoch_id"]
+        pareto_ids: List[str] = state.get("pareto_frontier_ids", [])
+        proposals = state.get("context", {}).get("proposals", [])
+
+        # Map proposals to pareto frontier (fall back to all proposals)
+        frontier_proposals = [
+            p for p in proposals
+            if (getattr(p, "id", None) or (p.get("id") if isinstance(p, dict) else None))
+            in pareto_ids
+        ] if pareto_ids and proposals else proposals
+
+        if not frontier_proposals:
+            # No proposals to evaluate — trivial pass (nothing survived to this step)
+            state["afrt_verdict"] = "NO_PROPOSALS"
+            return CELStepResult(
+                step_number=n, step_name=name, outcome=StepOutcome.PASS,
+                detail={"afrt_verdict": "NO_PROPOSALS", "evaluated": 0},
+            )
+
+        returned_proposals: List[str] = []
+        afrt_reports = []
+
+        for proposal in frontier_proposals:
+            try:
+                report = self._afrt_agent.evaluate(proposal, epoch_id)
+                afrt_reports.append(report)
+                from runtime.evolution.afrt_engine import RedTeamVerdict
+                if report.verdict == RedTeamVerdict.RETURNED:
+                    pid = report.proposal_id
+                    returned_proposals.append(pid)
+            except Exception as exc:  # noqa: BLE001
+                # Engine failure is a hard block (AFRT-CASES-0 / AFRT-LEDGER-0)
+                return CELStepResult(
+                    step_number=n, step_name=name, outcome=StepOutcome.BLOCKED,
+                    reason="AFRT_ENGINE_FAILURE",
+                    detail={"exception": str(exc)},
+                )
+
+        state["afrt_reports"] = afrt_reports
+        state["afrt_returned_proposals"] = returned_proposals
+
+        if returned_proposals:
+            state["afrt_verdict"] = "RETURNED"
+            return CELStepResult(
+                step_number=n, step_name=name, outcome=StepOutcome.BLOCKED,
+                reason="AFRT_RETURNED",
+                detail={
+                    "afrt_verdict": "RETURNED",
+                    "returned_proposals": returned_proposals,
+                    "evaluated": len(afrt_reports),
+                    "note": (
+                        "One or more proposals returned by Red Team. "
+                        "Inspect RedTeamFindingsReport for uncovered path failures."
+                    ),
+                },
+            )
+
+        state["afrt_verdict"] = "PASS"
+        return CELStepResult(
+            step_number=n, step_name=name, outcome=StepOutcome.PASS,
+            detail={
+                "afrt_verdict": "PASS",
+                "evaluated": len(afrt_reports),
+                "all_survived": True,
+            },
+        )
 
     def _step_09_governance_gate_v2(
         self, n: int, name: str, state: Dict[str, Any]
