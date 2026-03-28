@@ -1,0 +1,54 @@
+# HUMAN-0 tag verification attempt
+timestamp_utc=2026-03-28T07:22:04Z
+branch=work
+head=c4929e2cc3fe22eadcc23b44ea43f92ed07f90e1
+
+## pre-checks
+$ gpg --list-secret-keys --keyid-format LONG
+
+$ git remote -v
+
+## signed tag ceremony commands
+$ git tag -s v9.7.0 0fab652219cd6ca4e7832d81fb512f298d0812a6 -m "Phase 72: Seed Promotion Queue + Graduation UI (v9.7.0)"
+fatal: bad object type.
+$ git tag -s v9.8.0 93911830513d41422b7d676829c15ea59fec7c9c -m "Phase 73: Seed Review Decision + Governance Wire (v9.8.0)"
+fatal: bad object type.
+$ git tag -s v9.9.0 b783a4a0f14a1eddc0a133f81e8d31c07e76ea68 -m "Phase 74: Seed-to-Proposal Bridge (v9.9.0)"
+fatal: bad object type.
+$ git tag -s v9.10.0 4abfe5fc1611d49e5386dd803ee8bf656e1bdb06 -m "Phase 75: Seed Proposal CEL Injection (v9.10.0)"
+fatal: bad object type.
+$ git push origin v9.7.0 v9.8.0 v9.9.0 v9.10.0
+error: src refspec v9.7.0 does not match any
+error: src refspec v9.8.0 does not match any
+error: src refspec v9.9.0 does not match any
+error: src refspec v9.10.0 does not match any
+error: failed to push some refs to 'origin'
+
+## free tag ceremony
+$ git tag free-v9.10.0
+$ git push origin free-v9.10.0
+fatal: 'origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+
+## verification
+$ git tag --list 'v9.7.0' 'v9.8.0' 'v9.9.0' 'v9.10.0' 'free-v9.10.0'
+free-v9.10.0
+
+$ git tag -v v9.7.0
+error: tag 'v9.7.0' not found.
+
+$ git tag -v v9.8.0
+error: tag 'v9.8.0' not found.
+
+$ git tag -v v9.9.0
+error: tag 'v9.9.0' not found.
+
+$ git tag -v v9.10.0
+error: tag 'v9.10.0' not found.
+
+$ git tag -v free-v9.10.0
+error: free-v9.10.0: cannot verify a non-tag object of type commit.
+
