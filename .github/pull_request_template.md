@@ -1,6 +1,12 @@
 ## Description
 Briefly describe the change and why it is needed.
 
+## Phase execution metadata (required for phased PRs)
+- Phase identifier: `PR-PHASEXX-YY` (or `N/A` for non-phase work)
+- Lane declaration: `<governance | runtime | security | evidence | docs>`
+- CI tier declaration: `<docs | low | standard | constitutional | critical>`
+- Dependency declaration: `depends on Phase <N> (shipped)`
+
 ## Type of change
 - [ ] Bug fix
 - [ ] New feature
