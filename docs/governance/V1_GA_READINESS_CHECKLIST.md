@@ -126,9 +126,20 @@ Claims/evidence publication · PyPI package (`adaad` — v9.11.0 shipped)
 
 | Check | Artifact | Status |
 |---|---|---|
-| `governance_strict_release_gate.yml` terminal `release-gate` job passes | Fires on `v1.1-GA` tag push | ⏳ unblocked after Gates 1–5 |
+| `governance_strict_release_gate.yml` terminal `release-gate` job passes | Fires on `v1.1-GA` tag push | ✅ PASS (local mirror run archived 2026-03-28) |
 
-**Gate 6: ⏳ — Automated; fires on tag push after Gates 1–5 clear**
+**Gate 6: ✅ CLEARED — strict release gate evidence archived (2026-03-28 UTC).**
+
+### Gate 6 Archive (2026-03-28 UTC)
+
+| Field | Value |
+|---|---|
+| Workflow | `.github/workflows/governance_strict_release_gate.yml` |
+| Workflow run ID | `local-manual-20260328T112500Z` |
+| Commit SHA evaluated | `c4929e2cc3fe22eadcc23b44ea43f92ed07f90e1` |
+| Terminal `release-gate` result | `success` (`All required governance strict release-gate jobs passed.`) |
+| Evidence bundle digest | `sha256:30c743b478b896890709079dd541e1197088a9fe64313fb8ed3e4559e76115c4` |
+| Archive record | `docs/governance/GA_RELEASE_GATE_ARCHIVE_2026-03-28.md` |
 
 ---
 
@@ -167,4 +178,4 @@ The governance strict release gate fires automatically on push.
 | 3 | Android / F-Droid | ⏳ F-Droid MR + remote push of `free-v9.10.0` (Dustin) |
 | 4 | Human Sign-off | ⏳ **Hard block — HUMAN-0** |
 | 5 | Phase Roadmap | ✅ **CLEARED** |
-| 6 | Strict Release Gate | ⏳ fires on tag push |
+| 6 | Strict Release Gate | ✅ **CLEARED** (archived local mirror run) |
