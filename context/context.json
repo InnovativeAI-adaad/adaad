@@ -1,8 +1,8 @@
 {
   "active": {
     "version": "v9.25.0",
-    "phase": "Phase 90 COMPLETE · v9.24.0",
-    "expected_next_pr_identifier": "PR-PHASE91-01 (Phase 91 — Post-GA Governance Hardening Sprint)"
+    "phase": "Phase 93 COMPLETE · v9.26.0",
+    "expected_next_pr_identifier": "PR-PHASE94-01 (Phase 94 — INNOV-10 Morphogenetic Memory)"
   },
   "module_ownership": [
     {
