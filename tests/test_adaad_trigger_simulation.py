@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from app.orchestration.adaad_trigger import (
-    ALLOWED_ACTIONS,
     AdaadTriggerOrchestrator,
+    GitMutationAdapter,
     LedgerSchemaError,
     VirtualLedgerWriter,
     parse_trigger,
@@ -338,3 +338,99 @@ def test_devadaad_merge_is_blocked_when_attestation_write_fails(tmp_path: Path) 
     assert envelope["merge_result"]["status"] == "blocked"
     assert git_adapter.operations == ["stage"]
     assert "merge_attestation: FAIL" in envelope["output"]
+
+
+def test_git_mutation_adapter_maps_stage_timeout_with_stream_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter = GitMutationAdapter(repo_root=tmp_path)
+
+    def _timeout(*args, **kwargs):  # type: ignore[no-untyped-def]
+        raise subprocess.TimeoutExpired(
+            cmd=["git", "add", "-A"],
+            timeout=2,
+            output="staged-output",
+            stderr="staged-error",
+        )
+
+    monkeypatch.setattr(subprocess, "run", _timeout)
+
+    with pytest.raises(RuntimeError, match="git_command_timeout:git_add") as excinfo:
+        adapter.stage(simulation=False)
+
+    assert "stdout=staged-output" in str(excinfo.value)
+    assert "stderr=staged-error" in str(excinfo.value)
+
+
+def test_merge_timeout_blocks_status_and_prevents_success_reporting(tmp_path: Path) -> None:
+    class TimeoutOnMergeAdapter:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def stage(self, *, simulation: bool) -> dict[str, object]:
+            self.calls.append("stage")
+            return {"status": "executed", "simulation": simulation, "operation": "git_add"}
+
+        def merge(self, *, simulation: bool, verified_sha: str, merge_target_sha: str) -> dict[str, object]:
+            self.calls.append("merge")
+            raise RuntimeError("git_command_timeout:git_merge:stderr=merge stalled")
+
+    git_adapter = TimeoutOnMergeAdapter()
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path, git_mutation_adapter=git_adapter)
+
+    envelope = orchestrator.run(
+        "DEVADAAD",
+        scenario="merge_ready",
+        replay_verification={
+            "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
+            "bundle_digest": "sha256:" + ("d" * 64),
+            "verification_result": "pass",
+            "verified_sha": "c" * 40,
+            "merge_target_sha": "c" * 40,
+            "schema_valid": True,
+            "signature_valid": True,
+            "divergence": False,
+        },
+    )
+
+    assert envelope["status"] == "blocked"
+    assert envelope["blocked_reason"].startswith("git_command_timeout:git_merge")
+    assert envelope["merge_result"]["status"] == "blocked"
+    assert envelope["stage_result"]["status"] == "blocked"
+    assert git_adapter.calls == ["stage", "merge"]
+
+
+def test_stage_timeout_blocks_before_merge_and_reports_blocked_state(tmp_path: Path) -> None:
+    class TimeoutOnStageAdapter:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def stage(self, *, simulation: bool) -> dict[str, object]:
+            self.calls.append("stage")
+            raise RuntimeError("git_command_timeout:git_add:stderr=stage stalled")
+
+        def merge(self, *, simulation: bool, verified_sha: str, merge_target_sha: str) -> dict[str, object]:
+            self.calls.append("merge")
+            return {"status": "executed", "simulation": simulation, "operation": "git_merge"}
+
+    git_adapter = TimeoutOnStageAdapter()
+    orchestrator = AdaadTriggerOrchestrator(repo_root=tmp_path, git_mutation_adapter=git_adapter)
+
+    envelope = orchestrator.run(
+        "DEVADAAD",
+        scenario="merge_ready",
+        replay_verification={
+            "manifest_path": "security/replay_manifests/verified-sha.replay_manifest.v1.json",
+            "bundle_digest": "sha256:" + ("d" * 64),
+            "verification_result": "pass",
+            "verified_sha": "c" * 40,
+            "merge_target_sha": "c" * 40,
+            "schema_valid": True,
+            "signature_valid": True,
+            "divergence": False,
+        },
+    )
+
+    assert envelope["status"] == "blocked"
+    assert envelope["blocked_reason"].startswith("git_command_timeout:git_add")
+    assert envelope["stage_result"]["status"] == "blocked"
+    assert envelope["merge_result"]["status"] == "skipped"
+    assert git_adapter.calls == ["stage"]
