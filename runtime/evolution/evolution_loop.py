@@ -287,6 +287,10 @@ class EvolutionLoop:
         # Wired lazily; if not injected, Phase 0d is skipped and Phase 0 falls back
         # to FitnessLandscape win-rate heuristic (backwards-compatible).
         self._bandit_selector: Optional[AgentBanditSelector] = bandit_selector
+        # Phase 94 (INNOV-10): IdentityContextInjector — MMEM wiring (MMEM-WIRE-0).
+        # Consulted as Phase 0d before Phase 1 (proposal). Optional; skipped silently
+        # if not injected. Failure never blocks run_epoch (MMEM-WIRE-0).
+        self._identity_injector = None
         # Phase 12 / Track 11-D: MarketFitnessIntegrator — live market signal
         # propagation into EpochResult.
         # Phase 22 (PR-22-02): default-on — if not explicitly injected, a
@@ -551,6 +555,22 @@ class EvolutionLoop:
                     # else: injection skipped silently; mismatch event already emitted
             except Exception:  # noqa: BLE001
                 pass
+
+        # Phase 0d — IdentityContextInjector (MMEM-WIRE-0 · INNOV-10 Phase 94)
+        # Consults the IdentityLedger and injects identity_consistency_score +
+        # identity_violated_statements into CodebaseContext before Phase 1.
+        # Exception-isolated: injector failure NEVER blocks the epoch.
+        # Constitutional invariant: advisory only in Phase 94 — does not veto proposals.
+        if self._identity_injector is not None:
+            try:
+                _mmem_result = self._identity_injector.inject(
+                    context, epoch_id=epoch_id
+                )
+                context.identity_consistency_score = _mmem_result.consistency_score
+                context.identity_violated_statements = _mmem_result.violated_statements
+            except Exception:  # noqa: BLE001  MMEM-WIRE-0: never block
+                context.identity_consistency_score = 1.0
+                context.identity_violated_statements = []
 
         # Phase 52: Learning signal pre-epoch enrichment
         # Derive advisory LearningSignal from EpochMemoryStore window and inject

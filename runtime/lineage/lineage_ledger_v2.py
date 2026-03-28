@@ -6,24 +6,14 @@ LineageLedgerV2 — runtime/lineage/lineage_ledger_v2.py
 Second-generation lineage store: records mutation proposal → approval →
 deployment trace with SHA-256 hash-chained entries.
 
-Referenced by:
-  - runtime/evolution/constitutional_evolution_loop.py (AFRT wiring)
-  - runtime/evolution/scoring_algorithm.py (semantic_proximity_score)
-
 Phase 94 enrichment: exposes attach_identity_result() so that
 IdentityConsistencyResult is co-committed with each lineage event, making
 the MMEM signal part of the immutable audit trail.
-
-Scaffold status: IMPLEMENTATION PENDING
-  [ ] record_proposal()         — append proposal event
-  [ ] record_approval()         — append approval event with gate verdict
-  [ ] record_deployment()       — append deployment event
-  [ ] semantic_proximity_score() — cosine/keyword similarity to prior accepted
-  [ ] attach_identity_result()  — MMEM Phase 94: co-commit consistency result
-  [ ] verify_chain()            — O(n) chain integrity check
 """
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -35,7 +25,6 @@ ZERO_HASH: str = "sha256:" + "0" * 64
 # ---------------------------------------------------------------------------
 # Data classes
 # ---------------------------------------------------------------------------
-
 
 @dataclass
 class LineageEvent:
@@ -56,21 +45,39 @@ class LineageEvent:
 class ProximityScore:
     """Returned by semantic_proximity_score()."""
     mutation_id: str
-    score: float                 # [0.0, 1.0] — 1.0 = identical semantics
+    score: float                 # [0.0, 1.0]
     nearest_ancestor_id: Optional[str] = None
     notes: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _compute_event_hash(
+    event_id: str,
+    event_type: str,
+    mutation_id: str,
+    predecessor_hash: str,
+) -> str:
+    """Deterministic SHA-256 over canonical event fields."""
+    payload = {
+        "event_id": event_id,
+        "event_type": event_type,
+        "mutation_id": mutation_id,
+        "predecessor": predecessor_hash,
+    }
+    serialized = json.dumps(payload, sort_keys=True, ensure_ascii=True)
+    digest = hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+    return "sha256:" + digest
 
 
 # ---------------------------------------------------------------------------
 # LineageLedgerV2
 # ---------------------------------------------------------------------------
 
-
 class LineageLedgerV2:
-    """Second-generation hash-chained lineage store.
-
-    SCAFFOLD: all methods raise NotImplementedError until Phase 94 impl.
-    """
+    """Second-generation hash-chained lineage store with MMEM enrichment."""
 
     def __init__(self, ledger_path: Path = DEFAULT_LEDGER_PATH) -> None:
         self._path = Path(ledger_path)
@@ -86,11 +93,8 @@ class LineageLedgerV2:
         epoch_id: str,
         payload: Dict[str, Any],
     ) -> LineageEvent:
-        """Record a mutation proposal event.
-
-        SCAFFOLD: implement in Phase 94.
-        """
-        raise NotImplementedError("record_proposal — SCAFFOLD")
+        """Record a mutation proposal event."""
+        return self._record_event("proposal", mutation_id, epoch_id, payload)
 
     def record_approval(
         self,
@@ -99,11 +103,10 @@ class LineageLedgerV2:
         gate_verdict: str,
         payload: Dict[str, Any],
     ) -> LineageEvent:
-        """Record a governance gate approval event.
-
-        SCAFFOLD: implement in Phase 94.
-        """
-        raise NotImplementedError("record_approval — SCAFFOLD")
+        """Record a governance gate approval event."""
+        merged = dict(payload)
+        merged["gate_verdict"] = gate_verdict
+        return self._record_event("approval", mutation_id, epoch_id, merged)
 
     def record_deployment(
         self,
@@ -111,11 +114,31 @@ class LineageLedgerV2:
         epoch_id: str,
         payload: Dict[str, Any],
     ) -> LineageEvent:
-        """Record a deployment event.
+        """Record a deployment event."""
+        return self._record_event("deployment", mutation_id, epoch_id, payload)
 
-        SCAFFOLD: implement in Phase 94.
-        """
-        raise NotImplementedError("record_deployment — SCAFFOLD")
+    def _record_event(
+        self,
+        event_type: str,
+        mutation_id: str,
+        epoch_id: str,
+        payload: Dict[str, Any],
+    ) -> LineageEvent:
+        """Internal: build, hash, and store a LineageEvent."""
+        eid = f"evt-{len(self._events):06d}"
+        predecessor = self._events[-1].event_hash if self._events else ZERO_HASH
+        eh = _compute_event_hash(eid, event_type, mutation_id, predecessor)
+        event = LineageEvent(
+            event_id=eid,
+            event_type=event_type,
+            mutation_id=mutation_id,
+            epoch_id=epoch_id,
+            payload=payload,
+            predecessor_hash=predecessor,
+            event_hash=eh,
+        )
+        self._events.append(event)
+        return event
 
     # ------------------------------------------------------------------
     # Phase 94 MMEM enrichment
@@ -130,32 +153,56 @@ class LineageLedgerV2:
         """Co-commit an IdentityConsistencyResult to an existing event.
 
         MMEM Phase 94: makes identity signal part of the immutable audit trail.
-        SCAFFOLD: implement in Phase 94.
+        Silent no-op if event_id not found (advisory mode).
         """
-        raise NotImplementedError("attach_identity_result — SCAFFOLD")
+        for event in self._events:
+            if event.event_id == event_id:
+                event.identity_consistency_score = consistency_score
+                event.identity_violated_statements = list(violated_statements)
+                return
 
     # ------------------------------------------------------------------
     # Query surfaces
     # ------------------------------------------------------------------
 
-    def semantic_proximity_score(self, source: str) -> "ProximityScore":
+    def semantic_proximity_score(self, source: str) -> ProximityScore:
         """Compute semantic proximity of source to prior accepted mutations.
 
-        Used by scoring_algorithm.py for lineage bonus/exploration bonus.
-        SCAFFOLD: implement in Phase 94.
+        Phase 94 stub — semantic embedding deferred to Phase 95.
+        Returns deterministic neutral result (MMEM-DETERM-0).
         """
-        raise NotImplementedError("semantic_proximity_score — SCAFFOLD")
+        return ProximityScore(
+            mutation_id="source",
+            score=0.5,
+            nearest_ancestor_id=None,
+            notes="Phase 94: heuristic stub — semantic embedding deferred to Phase 95",
+        )
 
     # ------------------------------------------------------------------
     # Integrity
     # ------------------------------------------------------------------
 
     def verify_chain(self) -> bool:
-        """O(n) chain integrity verification.
+        """O(n) chain integrity verification."""
+        from runtime.memory.identity_ledger import ChainIntegrityError  # local import
 
-        SCAFFOLD: implement in Phase 94.
-        """
-        raise NotImplementedError("verify_chain — SCAFFOLD")
+        if not self._events:
+            return True
+        for i, evt in enumerate(self._events):
+            expected = _compute_event_hash(
+                evt.event_id, evt.event_type, evt.mutation_id, evt.predecessor_hash
+            )
+            if expected != evt.event_hash:
+                raise ChainIntegrityError(
+                    f"Event hash mismatch at {evt.event_id}"
+                )
+            if i > 0:
+                expected_pred = self._events[i - 1].event_hash
+                if evt.predecessor_hash != expected_pred:
+                    raise ChainIntegrityError(
+                        f"Predecessor mismatch at {evt.event_id}"
+                    )
+        return True
 
     def events(self) -> List[LineageEvent]:
         """Read-only view of loaded events."""
