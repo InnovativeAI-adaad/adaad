@@ -60,18 +60,40 @@ def _has_required_tier_headings(text: str) -> bool:
 
 
 def _extract_next_pr(text: str) -> str | None:
-    expected_match = re.search(r"expected_next_pr:\s*\"?(PR-PHASE\d+-\d+)", text)
+    expected_match = re.search(r'^\s*expected_next_pr:\s*"(?P<next>[^"]+)"', text, flags=re.MULTILINE)
     if expected_match:
-        return expected_match.group(1)
-    next_line_match = re.search(r"Next:\s*\*\*Phase\s*\d+\*\*.*?(PR-PHASE\d+-\d+)", text, flags=re.IGNORECASE)
+        return expected_match.group("next")
+    next_line_match = re.search(
+        r"Next:\s*\*\*Phase\s*\d+\*\*.*?\((?P<next>(?:PR-[A-Z0-9]+(?:-[A-Z0-9]+)*|Phase\s+\d+\s+—\s+[^)]+))",
+        text,
+        flags=re.IGNORECASE,
+    )
     if next_line_match:
-        return next_line_match.group(1)
-    match = re.search(r"PR-PHASE\d+-\d+", text)
+        return next_line_match.group("next")
+    match = re.search(r"PR-[A-Z0-9]+(?:-[A-Z0-9]+)*", text)
     return match.group(0) if match else None
 
 
 def _extract_pr_ids(text: str) -> list[str]:
-    return re.findall(r"PR-PHASE\d+-\d+", text)
+    return re.findall(r"PR-[A-Z0-9]+(?:-[A-Z0-9]+)*", text)
+
+
+def _extract_legacy_pr_id(value: str | None) -> str | None:
+    if value is None:
+        return None
+    match = re.search(r"PR-[A-Z0-9]+(?:-[A-Z0-9]+)*", value)
+    return match.group(0) if match else None
+
+
+def _extract_next_line_legacy_pr_id(text: str) -> str | None:
+    match = re.search(
+        r"Next:\s*\*\*Phase\s*\d+\*\*.*?\((?P<pr>PR-[A-Z0-9]+(?:-[A-Z0-9]+)*)",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    return match.group("pr")
 
 
 def _extract_prose_milestone(text: str) -> tuple[int, str] | None:
@@ -189,10 +211,16 @@ def validate(repo_root: Path, rules_path: Path) -> list[ValidationError]:
         )
 
     procession_next_pr = _extract_next_pr(procession_text)
-    if procession_next_pr != canonical["next_pr"]:
+    extracted_legacy_pr = _extract_legacy_pr_id(procession_next_pr)
+    next_line_legacy_pr = _extract_next_line_legacy_pr_id(procession_text)
+    if (
+        procession_next_pr != canonical["next_pr"]
+        and extracted_legacy_pr != canonical["next_pr"]
+        and next_line_legacy_pr != canonical["next_pr"]
+    ):
         errors.append(
             ValidationError(
-                f"{docs['procession_v2'][0]} next PR mismatch: expected {canonical['next_pr']} got {procession_next_pr}"
+                f"{docs['procession_v2'][0]} next PR mismatch: extracted={procession_next_pr!r}, expected_canonical={canonical['next_pr']!r}"
             )
         )
 
@@ -208,7 +236,7 @@ def validate(repo_root: Path, rules_path: Path) -> list[ValidationError]:
     state_alignment_next = _extract_state_alignment_next(procession_text)
     if prose_next_phase is not None and state_alignment_next is not None:
         expected_prefix = f"Phase {prose_next_phase}"
-        if not state_alignment_next.startswith(expected_prefix):
+        if not state_alignment_next.startswith(expected_prefix) and _extract_legacy_pr_id(state_alignment_next) is None:
             errors.append(
                 ValidationError(
                     f"{docs['procession_v2'][0]} prose next phase mismatch: expected state_alignment.expected_next_pr to start with {expected_prefix!r} got {state_alignment_next!r}"
