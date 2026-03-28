@@ -1,0 +1,11 @@
+{
+  "artifact_type": "fdroid_manual_submission_attempt.v1",
+  "timestamp_utc": "2026-03-28T07:20:58Z",
+  "actor": "ADAAD agent",
+  "target_endpoint": "https://gitlab.com/fdroid/fdroid-data/-/merge_requests",
+  "metadata_file": "android/fdroid/com.innovativeai.adaad.yml",
+  "attempt_result": "blocked_authentication_required",
+  "details": "Submission endpoint redirects to GitLab sign-in. Manual authenticated HUMAN-0 action is required to fork fdroid-data and open the MR.",
+  "mr_url": null,
+  "status": "PENDING_HUMAN_0"
+}
