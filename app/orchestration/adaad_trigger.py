@@ -15,6 +15,11 @@ from runtime.api.governance_events import (
 )
 
 
+GIT_READ_TIMEOUT_S = 5
+GIT_MUTATION_TIMEOUT_S = 15
+GIT_ERROR_OUTPUT_MAX_CHARS = 240
+
+
 @dataclass(frozen=True)
 class GateResult:
     tier: str
@@ -92,7 +97,7 @@ class GitMutationAdapter:
     def stage(self, *, simulation: bool) -> dict[str, Any]:
         if simulation:
             return {"status": "skipped", "simulation": True, "operation": "git_add"}
-        subprocess.run(["git", "add", "-A"], cwd=self.repo_root, check=True)
+        self._run_git_mutation("git_add", ["git", "add", "-A"])
         return {"status": "executed", "simulation": False, "operation": "git_add"}
 
     def merge(
@@ -110,10 +115,9 @@ class GitMutationAdapter:
             raise ValueError("merge_target_mismatch_verified_sha")
 
         pre_merge_head_sha = self._git_stdout("git", "rev-parse", "HEAD")
-        subprocess.run(
+        self._run_git_mutation(
+            "git_merge",
             ["git", "merge", "--no-ff", "--no-edit", normalized_merge_target_sha],
-            cwd=self.repo_root,
-            check=True,
         )
         merge_commit_sha = self._git_stdout("git", "rev-parse", "HEAD")
         return {
@@ -133,14 +137,56 @@ class GitMutationAdapter:
         return self._git_stdout("git", "rev-parse", "--verify", normalized_revision).lower()
 
     def _git_stdout(self, *args: str) -> str:
-        completed = subprocess.run(
-            list(args),
-            cwd=self.repo_root,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        try:
+            completed = subprocess.run(
+                list(args),
+                cwd=self.repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=GIT_READ_TIMEOUT_S,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(self._timeout_error("git_read", exc)) from exc
         return completed.stdout.strip()
+
+    def _run_git_mutation(self, operation: str, args: list[str]) -> None:
+        try:
+            subprocess.run(
+                args,
+                cwd=self.repo_root,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=GIT_MUTATION_TIMEOUT_S,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(self._timeout_error(operation, exc)) from exc
+
+    @staticmethod
+    def _timeout_error(operation: str, exc: subprocess.TimeoutExpired) -> str:
+        context = GitMutationAdapter._format_stream_context(exc.stdout, exc.stderr)
+        if context:
+            return f"git_command_timeout:{operation}:{context}"
+        return f"git_command_timeout:{operation}"
+
+    @staticmethod
+    def _format_stream_context(stdout: str | bytes | None, stderr: str | bytes | None) -> str:
+        def _normalize(value: str | bytes | None) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, bytes):
+                return value.decode("utf-8", errors="replace")
+            return value
+
+        fragments: list[str] = []
+        stdout_text = _normalize(stdout).strip()
+        stderr_text = _normalize(stderr).strip()
+        if stdout_text:
+            fragments.append(f"stdout={stdout_text[:GIT_ERROR_OUTPUT_MAX_CHARS]}")
+        if stderr_text:
+            fragments.append(f"stderr={stderr_text[:GIT_ERROR_OUTPUT_MAX_CHARS]}")
+        return " | ".join(fragments)
 
 
 class AdaadTriggerOrchestrator:
@@ -313,11 +359,34 @@ class AdaadTriggerOrchestrator:
             }
         )
 
-        stage_result = self._git.stage(simulation=request.simulation)
         status = "blocked" if blocked_reason or not scenario_pass or not gate_pass or not replay_gate_pass else "ready"
-        merge_result = {"status": "skipped", "simulation": request.simulation, "operation": "git_merge"}
+        stage_result = {
+            "status": "skipped",
+            "reason": "blocked",
+            "simulation": request.simulation,
+            "operation": "git_add",
+        }
+        merge_result = {
+            "status": "skipped",
+            "reason": "blocked",
+            "simulation": request.simulation,
+            "operation": "git_merge",
+        }
         attestation_result: dict[str, Any] | None = None
         attestation_attempted = False
+
+        if status == "ready":
+            try:
+                stage_result = self._git.stage(simulation=request.simulation)
+            except RuntimeError as exc:
+                blocked_reason = str(exc)
+                status = "blocked"
+                stage_result = {
+                    "status": "blocked",
+                    "simulation": request.simulation,
+                    "operation": "git_add",
+                    "detail": str(exc),
+                }
 
         if request.merge_authority and status == "ready":
             attestation_attempted = True
@@ -337,9 +406,28 @@ class AdaadTriggerOrchestrator:
                     "detail": str(exc),
                 }
             else:
-                merge_result = self._git.merge(simulation=request.simulation)
-        elif not request.merge_authority:
-            merge_result = self._git.merge(simulation=request.simulation)
+                try:
+                    merge_result = self._git.merge(
+                        simulation=request.simulation,
+                        verified_sha=verified_sha,
+                        merge_target_sha=merge_target_sha,
+                    )
+                except RuntimeError as exc:
+                    blocked_reason = str(exc)
+                    status = "blocked"
+                    merge_result = {
+                        "status": "blocked",
+                        "simulation": request.simulation,
+                        "operation": "git_merge",
+                        "detail": str(exc),
+                    }
+                    if stage_result.get("status") == "executed":
+                        stage_result = {
+                            "status": "blocked",
+                            "simulation": request.simulation,
+                            "operation": "git_add",
+                            "detail": f"partial_mutation_blocked:{exc}",
+                        }
 
         output_lines = [
             "[ADAAD ORIENT]",
@@ -347,9 +435,9 @@ class AdaadTriggerOrchestrator:
             f"Action: {request.action}",
             "simulation=true" if request.simulation else "simulation=false",
             f"Scenario: {scenario}",
-            f"Status: {decision['status']}",
-            f"Decision: {'allow' if decision['allow_git_mutations'] else 'deny'}",
-            f"Repository mutation: {'mutated' if decision['mutated_repository_state'] else 'not_mutated'}",
+            f"Status: {status}",
+            f"Decision: {'allow' if status == 'ready' else 'deny'}",
+            f"Repository mutation: {'mutated' if status == 'ready' and not request.simulation else 'not_mutated'}",
         ]
 
         for name in gate_names:
@@ -360,12 +448,12 @@ class AdaadTriggerOrchestrator:
             attestation_status = "PASS" if attestation_result else "FAIL" if attestation_attempted else "SKIP"
             output_lines.append(f"merge_attestation: {attestation_status}")
 
-        if decision["blocked_reason"]:
-            output_lines.append(f"Blocked reason: {decision['blocked_reason']}")
+        if blocked_reason:
+            output_lines.append(f"Blocked reason: {blocked_reason}")
 
         return {
             "request": request,
-            "status": decision["status"],
+            "status": status,
             "simulation": request.simulation,
             "scenario": scenario,
             "blocked_reason": blocked_reason,
@@ -424,7 +512,7 @@ class AdaadTriggerOrchestrator:
                 {"status": "skipped", "reason": "blocked", "simulation": request.simulation, "operation": "git_merge"},
             )
         stage_result = self._git.stage(simulation=request.simulation)
-        merge_result = self._git.merge(simulation=request.simulation)
+        merge_result = self._git.merge(simulation=request.simulation, verified_sha="", merge_target_sha="")
         return stage_result, merge_result
 
     @staticmethod
