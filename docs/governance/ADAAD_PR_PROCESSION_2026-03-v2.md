@@ -7,7 +7,6 @@
 **Last reviewed:** 2026-03-28
 **Milestone:** `v9.26.0` (Phase 93 complete — INNOV-09 Aesthetic Fitness Signal)
 **Canonical evidence anchor:** `artifacts/governance/phase93/phase93_sign_off.json` (SHA-256 `62b8f7b329202785fcb4a09e1e70f53778fff7565a07c7e0d6172d8225af68f3`) + merge SHA `ca3cc42`
-**Milestone:** `v9.24.0` (Phase 90 complete — Cryptographic Evolution Proof DAG)
 
 ---
 
@@ -183,10 +182,6 @@ adaad_pr_procession_contract:
   milestone: "v9.26.0"
   last_state_align: "2026-03-28"
   state_align_authority: "Dustin L. Reid — HUMAN-0 ratification artifacts phase92/phase93 + merge SHA ca3cc42"
-  active_phase: "phase90_complete"
-  milestone: "v9.24.0"
-  last_state_align: "2026-03-28"
-  state_align_authority: "ADAAD governance contract reconciliation — 2026-03-28 (phases 87–90 alignment)"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -542,9 +537,6 @@ adaad_pr_procession_contract:
     expected_active_phase: "Phase 93 COMPLETE · v9.26.0"
     expected_last_completed_pr: "feature/phase93-afit-engine"
     expected_next_pr: "Phase 94 — INNOV-10 roadmap execution"
-    expected_active_phase: "Phase 90 COMPLETE · v9.24.0"
-    expected_last_completed_pr: "Phase 90 — INNOV-06 CEPD (v9.24.0)"
-    expected_next_pr: "PR-PHASE91-01 (Phase 91 — Post-GA Governance Hardening Sprint)"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -596,17 +588,13 @@ A validator comparing this document to `.adaad_agent_state.json` should fail if:
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
 5. `expected_next_pr` is not `Phase 94 — INNOV-10 roadmap execution`
-2. `last_completed_pr` is not `Phase 90 — INNOV-06 CEPD (v9.24.0)`
-3. Any `phase_nodes.*.status` diverges from this contract
-4. `blocked_reason` is non-null
-5. `expected_next_pr` is not `PR-PHASE91-01 (Phase 91 — Post-GA Governance Hardening Sprint)`
 
 ---
 
 
 ## 3.2 Changelog
 
-- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 90 complete / v9.24.0**. This update removes stale Phase 80/87 preflight predicates and aligns `state_alignment` expectations with the active summary table and next-phase pointer.
+- **2026-03-28:** Corrected procession contract state alignment to a single canonical checkpoint at **Phase 93 complete / v9.26.0**. This update removes duplicated preflight predicates and keeps `state_alignment` expectations aligned to **Phase 94 — INNOV-10 roadmap execution**.
 
 
 ## 4) Phase 52+ Planning Guidance
