@@ -1706,3 +1706,27 @@ World-first constitutionally-governed shadow execution of mutations against live
 7/7 innovations shipped: CSAP ✅ · ACSE ✅ · TIFE ✅ · SCDD ✅ · AOEP ✅ · CEPD ✅ · LSME ✅
 
 **Total new Hard-class invariants:** CSAP-0, CSAP-1, ACSE-0, ACSE-1, TIFE-0, SCDD-0, AOEP-0, CEPD-0, CEPD-1, LSME-0, LSME-1 (11 invariants)
+
+---
+
+### Phase 92 — INNOV-08 · Adversarial Fitness Red Team (AFRT)
+
+**Status:** ✅ shipped (v9.25.0) · **Dependency:** Phase 91 INNOV-07 LSME merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-27) · **Tests:** T92-AFRT-01..23 + T92-CEL-01..07 (30/30 PASS) · **Evidence:** `artifacts/governance/phase92/phase92_sign_off.json`
+
+World-first constitutionally-governed adversarial peer-review gate in an autonomous AI evolution loop. A dedicated Red Team Agent performs targeted falsification of mutation proposals — probing coverage gaps the proposing agent did not exercise — before GovernanceGateV2 scoring.
+
+**New module:** `runtime/evolution/afrt_engine.py`
+- `AdversarialRedTeamAgent.evaluate()` — full red-team pipeline: CodeIntel → case generation → sandbox → verdict → ledger commit → report
+- `AdversarialCaseGenerator` — 1–5 deterministic adversarial cases per proposal (AFRT-CASES-0 / AFRT-DETERM-0)
+- `RedTeamFindingsReport` — PASS or RETURNED verdict; structurally incapable of emitting approval (AFRT-0)
+- `RedTeamLedgerEvent` — ledger-first commit before result returned (AFRT-LEDGER-0)
+
+**New UI:** `ui/aponi/afrt_panel.js` — real-time AFRT findings dashboard with WebSocket live stream, per-finding adversarial case expansion, ledger commit badges, AFRT-0 violation alerts.
+
+**CEL wiring:** AFRT-GATE inserted as Step 10 in the 16-step dispatch (CEL-ORDER-0). Executes after PARETO-SELECT (Step 9), before GOVERNANCE-GATE (Step 11).
+
+**Invariants introduced:** `AFRT-0`, `AFRT-GATE-0`, `AFRT-INTEL-0`, `AFRT-LEDGER-0`, `AFRT-CASES-0`, `AFRT-DETERM-0` (6 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** CSAP-0/1, ACSE-0/1, TIFE-0, SCDD-0, AOEP-0, CEPD-0/1, LSME-0/1, AFRT-0/GATE-0/INTEL-0/LEDGER-0/CASES-0/DETERM-0 — **17 invariants**
+
+**Next:** Phase 93 — INNOV-09 (to be proposed)
