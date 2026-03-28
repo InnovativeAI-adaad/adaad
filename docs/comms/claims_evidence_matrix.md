@@ -2,11 +2,14 @@
 
 <!-- AUTHORITATIVE_EVIDENCE_MATRIX -->
 
+**Last reviewed:** 2026-03-28
+
 This matrix maps major external/public claims to objective, versioned repository artifacts. Release/governance announcements are blocked until every required entry is marked `Complete` with resolvable evidence links.
 
 | Claim ID | External claim | Objective evidence artifacts (must resolve in-repo) | Artifact path | Status |
 | --- | --- | --- | --- | --- |
 | `ci-status-requirements` | "All required CI checks pass before governance/public-readiness promotion." | [CI workflow definition](../../.github/workflows/ci.yml); [determinism lint workflow](../../.github/workflows/determinism_lint.yml) | `.github/workflows/ci.yml, .github/workflows/determinism_lint.yml` | Complete |
+| `phase93-innov09-afit-shipped` | "INNOV-09 Aesthetic Fitness Signal shipped in Phase 93 (v9.26.0) with HUMAN-0 ratification, deterministic invariant set, and release evidence artifact." | [Phase 93 sign-off artifact](../../artifacts/governance/phase93/phase93_sign_off.json); [Phase 93 closure record](../plans/PHASE_93_CLOSURE.md); [Version pin](../../VERSION); [Merge commit record](../../CHANGELOG.md) | `artifacts/governance/phase93/phase93_sign_off.json, docs/plans/PHASE_93_CLOSURE.md, VERSION, CHANGELOG.md` | Complete |
 | `pr3h-acceptance-evidence-gate` | "PR-3H acceptance closure requires checkpoint tamper escalation and entropy triage replay fixture coverage with machine-readable CI audit output." | [PR-3H acceptance tests](../../tests/acceptance/pr3h/test_pr3h_acceptance.py); [PR-3H entropy triage fixtures](../../tests/acceptance/pr3h/fixtures/entropy_triage_replay_cases.json); [PR-3H validation script](../../scripts/validate_pr3h_acceptance.py); [CI gating policy](../governance/ci-gating.md); [PR-3H machine-readable audit artifact](../../artifacts/pr3h_acceptance_audit.json); [PR-3H CI execution evidence](../../artifacts/ci/pr3h_acceptance_ci_evidence.json) | `tests/acceptance/pr3h/test_pr3h_acceptance.py, tests/acceptance/pr3h/fixtures/entropy_triage_replay_cases.json` | Complete |
 | `replay-proof-outputs` | "Replay behavior is reproducible and auditable." | [Replay audit boot CI check](../../.github/workflows/ci.yml#L89); [Determinism replay tests](../../tests/determinism/test_replay_equivalence.py) | `.github/workflows/ci.yml#L89, tests/determinism/test_replay_equivalence.py` | Complete |
 | `replay-state-machine-pure-layer` | "Replay preflight invariant decisions are computed in a pure state machine with fail-closed halt classification output and characterization coverage." | [Replay state machine module](../../runtime/evolution/replay_state_machine.py); [Replay runtime adapter wiring](../../runtime/evolution/runtime.py); [State-machine characterization tests](../../tests/evolution/test_replay_state_machine.py) | `runtime/evolution/replay_state_machine.py, runtime/evolution/runtime.py, tests/evolution/test_replay_state_machine.py` | Complete |

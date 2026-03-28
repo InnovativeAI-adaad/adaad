@@ -4,8 +4,9 @@
 > **Canonical source (automation sequence control):** This document is the controlling source for **Phase 51+ PR order and closure state**, dependency graph, CI tier, and status used by ADAAD automation. It supersedes `ADAAD_PR_PROCESSION_2026-03.md` (Phase 6 era, now archived).
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
-**Last reviewed:** 2026-03-24
-**Milestone:** `v9.24.0` (Phase 90 complete — Cryptographic Evolution Proof DAG)
+**Last reviewed:** 2026-03-28
+**Milestone:** `v9.26.0` (Phase 93 complete — INNOV-09 Aesthetic Fitness Signal)
+**Canonical evidence anchor:** `artifacts/governance/phase93/phase93_sign_off.json` (SHA-256 `62b8f7b329202785fcb4a09e1e70f53778fff7565a07c7e0d6172d8225af68f3`) + merge SHA `ca3cc42`
 
 ---
 
@@ -95,12 +96,15 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 | 88 | v9.19.0 | Phase 87 INNOV-01 CSAP | shipped |
 | 89 | v9.22.0 | Phase 88–89 INNOV-02–05 | shipped |
 | 90 | v9.24.0 | Phase 90 INNOV-06 CEPD | shipped |
+| 91 | v9.24.1 | Phase 91 INNOV-07 LSME + audit hardening | shipped |
+| 92 | v9.25.0 | Phase 92 INNOV-08 AFRT | shipped |
+| 93 | v9.26.0 | Phase 93 INNOV-09 AFIT | shipped |
 
 ### 1A.3 Dependency pointer
 
 > **v8/v9 sequencing source of truth:** This document controls active constitutional PR sequencing and status across the v8.x and v9.x release lines. `ROADMAP.md` mirrors this state for human-facing roadmap context and must remain aligned.
 
-- **Current:** Phase 90 complete (v9.24.0 — INNOV-06 CEPD). Next: **Phase 91** — Post-GA Governance Hardening Sprint.
+- **Current:** Phase 93 complete (v9.26.0 — INNOV-09 AFIT). Next: **Phase 94** — INNOV-10 roadmap start.
 
 ## 2) Active Planning — v1.0.0-GA Gate
 
@@ -146,10 +150,10 @@ adaad_pr_procession_contract:
   schema_version: "2.1"
   source_of_truth: "docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md"
   supersedes: "docs/governance/ADAAD_PR_PROCESSION_2026-03.md"
-  active_phase: "phase86_complete"
-  milestone: "v9.17.0"
-  last_state_align: "2026-03-21"
-  state_align_authority: "Dustin L. Reid — governor sign-off 2026-03-21 (phases 81–86)"
+  active_phase: "phase93_complete"
+  milestone: "v9.26.0"
+  last_state_align: "2026-03-28"
+  state_align_authority: "Dustin L. Reid — HUMAN-0 ratification artifacts phase92/phase93 + merge SHA ca3cc42"
   ordered_phase_ids:
     - phase47
     - phase48
@@ -474,9 +478,9 @@ adaad_pr_procession_contract:
           pr: PR-86-03
           status: complete
   state_alignment:
-    expected_active_phase: "Phase 90 COMPLETE · v9.24.0"
-    expected_last_completed_pr: "feat/phase86-cel-fitness-wiring"
-    expected_next_pr: "Phase 87 — direction pending governor ratification"
+    expected_active_phase: "Phase 93 COMPLETE · v9.26.0"
+    expected_last_completed_pr: "feature/phase93-afit-engine"
+    expected_next_pr: "Phase 94 — INNOV-10 roadmap execution"
     blocked_reason_must_be_null: true
   open_findings:
     - id: FINDING-C03-GITHUB-APP
@@ -524,10 +528,10 @@ adaad_pr_procession_contract:
 A validator comparing this document to `.adaad_agent_state.json` should fail if:
 
 1. `active_phase` does not match `expected_active_phase`
-2. `last_completed_pr` is not `feat/phase-79-multi-gen-lineage`
+2. `last_completed_pr` is not `feature/phase93-afit-engine`
 3. Any `phase_nodes.*.status` diverges from this contract
 4. `blocked_reason` is non-null
-5. `expected_next_pr` is not `Phase 80 — KMS/HSM production key wiring + Compound Evolution`
+5. `expected_next_pr` is not `Phase 94 — INNOV-10 roadmap execution`
 
 ---
 
