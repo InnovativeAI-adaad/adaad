@@ -32,6 +32,14 @@ class TriggerRequest:
     merge_authority: bool
 
 
+ACTION_ALIASES: dict[str, str] = {
+    "dry-run": "dry_run",
+}
+ALLOWED_ACTIONS: frozenset[str] = frozenset(
+    {"run", "status", "audit", "retry", "preflight", "verify", "dry_run", "simulate"}
+)
+
+
 def parse_trigger(raw_command: str) -> TriggerRequest:
     tokens = [token for token in raw_command.strip().split() if token]
     if not tokens:
@@ -41,7 +49,12 @@ def parse_trigger(raw_command: str) -> TriggerRequest:
     if principal not in {"ADAAD", "DEVADAAD"}:
         raise ValueError("unsupported_trigger")
 
-    action = tokens[1].lower() if len(tokens) > 1 else "run"
+    action = "run"
+    if len(tokens) > 1:
+        raw_action = tokens[1].lower()
+        action = ACTION_ALIASES.get(raw_action, raw_action)
+        if action not in ALLOWED_ACTIONS:
+            raise ValueError("unsupported_action")
     simulation = action == "simulate"
     return TriggerRequest(
         raw_command=raw_command,
