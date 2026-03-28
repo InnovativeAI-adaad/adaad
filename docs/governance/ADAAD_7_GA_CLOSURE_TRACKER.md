@@ -4,6 +4,10 @@ This document preserves the completed ADAAD-7 / v1.1-GA closure controls as a hi
 
 > Current sequencing and roadmap execution are tracked in [`ADAAD_PR_PROCESSION_2026-03-v2.md`](./ADAAD_PR_PROCESSION_2026-03-v2.md) and [`ROADMAP.md`](../../ROADMAP.md).
 >
+> **Canonical live state pointer:** Current = **Phase 93** (`v9.26.0`, INNOV-09 AFIT shipped). Next = **Phase 94 — INNOV-10 roadmap execution**.
+>
+> **Canonical GA blocker count:** **4 open blockers** (as defined in the v2 procession contract).
+>
 > Use this file for historical evidence traceability only; do not treat it as the active forward plan.
 
 Primary execution plan: [`ADAAD_7_EXECUTION_PLAN.md`](../archive/ADAAD_7_EXECUTION_PLAN.md)

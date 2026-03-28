@@ -4,9 +4,13 @@
 
 ---
 
-## What ships today — v9.24.0
+## What ships today — v9.26.0
 
-Phase 90 (INNOV-06 CEPD) is complete. ADAAD now produces cryptographically linked proof DAGs of its full evolutionary lineage — every mutation node bound to all causal ancestors via Merkle root, independently verifiable without system access. All 7 innovations from the HUMAN-0 ratified Phase 87 Innovation Architecture Plan have shipped (v9.18.0–v9.24.0), including Constitutional Self-Amendment, Adversarial Stress Engine, Temporal Invariant Forecasting, Semantic Drift Detection, Autonomous Organ Emergence, Cryptographic Evolution Proof DAG, and Live Shadow Mutation Execution.
+Phase 93 (INNOV-09 AFIT) is complete. ADAAD now includes cryptographically linked proof DAG lineage, live shadow mutation execution, adversarial red-team fitness gating, and aesthetic fitness scoring as a constitutionally bounded first-class signal. Innovations INNOV-01 through INNOV-09 are shipped across v9.18.0–v9.26.0 (Phases 87–93), with deterministic evidence artifacts recorded per phase closure.
+
+**Current/Next:** Current = **Phase 93** (`v9.26.0`, INNOV-09 AFIT shipped). Next = **Phase 94 — INNOV-10 roadmap execution**.
+
+**GA blockers (canonical): 4 open** — F-Droid MR submission (manual), founder GPG sign-off, founder tag ceremony backfill, and strict release gate terminal pass.
 
 | Subsystem | Status | Description |
 |-----------|--------|-------------|
@@ -1756,4 +1760,4 @@ World-first autonomous evolution system to treat code aesthetics as a constituti
 
 **Total Hard-class invariants (cumulative):** 21
 
-**Next:** Phase 94 — INNOV-10 (to be proposed)
+**Next:** Phase 94 — INNOV-10 roadmap execution
