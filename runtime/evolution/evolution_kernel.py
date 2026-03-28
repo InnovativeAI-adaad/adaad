@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
+from runtime.api.app_layer import push_to_dashboard
 from runtime.api.agents import (
     MutationEngine,
     MutationRequest,
@@ -157,84 +159,93 @@ class EvolutionKernel:
         return bool(fitness_result.get("passed"))
 
     @staticmethod
-    def _read_jsonl(path: Path) -> list[Dict[str, Any]]:
-        if not path.exists():
-            return []
-        rows: list[Dict[str, Any]] = []
-        for line in path.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            try:
-                parsed = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(parsed, dict):
-                rows.append(parsed)
-        return rows
-
-    def _load_previous_cycle_signal(self, agent_id: str) -> Dict[str, Any]:
-        records = self._read_jsonl(metrics.METRICS_PATH)
-        previous_failed = False
-        previous_quarantined = False
-        latest_fitness_score = 1.0
-        latest_fitness_threshold = 0.7
-
-        for record in records:
-            payload = record.get("payload")
-            if not isinstance(payload, Mapping):
-                continue
-            payload_agent_id = str(payload.get("agent_id") or payload.get("agent") or "")
-            if payload_agent_id != agent_id:
-                continue
-            status = str(payload.get("status") or payload.get("result_status") or "").strip().lower()
-            reason = str(payload.get("reason") or "").strip().lower()
-            event_type = str(record.get("event") or "").strip().lower()
-            if status in {"failed", "error", "rejected"} or "failed" in reason:
-                previous_failed = True
-            if status == "quarantined" or "quarantined" in reason:
-                previous_quarantined = True
-            if event_type in {"fitness_scored", "fitness_scored_v2"}:
-                latest_fitness_score = float(payload.get("score", latest_fitness_score) or latest_fitness_score)
-                latest_fitness_threshold = float(payload.get("fitness_threshold", latest_fitness_threshold) or latest_fitness_threshold)
-
-        return {
-            "previous_failed": previous_failed,
-            "previous_quarantined": previous_quarantined,
-            "latest_fitness_score": round(latest_fitness_score, 6),
-            "latest_fitness_threshold": round(latest_fitness_threshold, 6),
-        }
+    def _lineage_linkage(agent_id: str, mutation_payload: Mapping[str, Any], execution_result: Mapping[str, Any]) -> Dict[str, Any]:
+        mutation_id = (
+            mutation_payload.get("mutation_id")
+            or execution_result.get("mutation_id")
+            or execution_result.get("cycle_id")
+        )
+        if mutation_id:
+            return {"lineage_linkage_type": "mutation_id", "lineage_linkage": str(mutation_id)}
+        canonical_payload = json.dumps(
+            {
+                "agent_id": agent_id,
+                "mutation": dict(mutation_payload),
+                "execution": dict(execution_result),
+            },
+            sort_keys=True,
+        )
+        linkage = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
+        return {"lineage_linkage_type": "deterministic_hash", "lineage_linkage": f"sha256:{linkage}"}
 
     @staticmethod
-    def _should_mutate(
+    def _disposition_for_outcome(
         *,
-        previous_failed: bool,
-        previous_quarantined: bool,
-        latest_fitness_score: float,
-        latest_fitness_threshold: float,
-        manual_trigger: bool,
+        execution_status: str,
+        execution_succeeded: bool,
+        fitness_accepted: bool,
+        rejected: bool,
+        cosmetic_only: bool,
+    ) -> str:
+        if cosmetic_only:
+            return "cosmetic_only"
+        if rejected:
+            return "rejected"
+        if execution_succeeded and fitness_accepted:
+            return "promoted"
+        if execution_succeeded and not fitness_accepted:
+            return "quarantined"
+        if execution_status in {"failed", "error"}:
+            return "failed"
+        return "rejected"
+
+    def _emit_cycle_outcome(
+        self,
+        *,
+        agent_id: str,
+        change_classification: str,
+        change_reason: str,
+        execution_result: Mapping[str, Any],
+        fitness_result: Mapping[str, Any],
+        certificate_result: Mapping[str, Any],
+        mutation_payload: Mapping[str, Any],
+        rejected: bool = False,
+        cosmetic_only: bool = False,
     ) -> Dict[str, Any]:
-        below_threshold = float(latest_fitness_score) < float(latest_fitness_threshold)
-        should_mutate = bool(manual_trigger or previous_failed or previous_quarantined or below_threshold)
-        trigger_reason = "healthy_no_trigger"
-        if manual_trigger:
-            trigger_reason = "manual_trigger"
-        elif previous_failed or previous_quarantined:
-            trigger_reason = "previous_cycle_unhealthy"
-        elif below_threshold:
-            trigger_reason = "fitness_below_threshold"
-
-        return {
-            "should_mutate": should_mutate,
-            "trigger_reason": trigger_reason,
-            "previous_failed": previous_failed,
-            "previous_quarantined": previous_quarantined,
-            "latest_fitness_score": round(float(latest_fitness_score), 6),
-            "latest_fitness_threshold": round(float(latest_fitness_threshold), 6),
-            "manual_trigger": bool(manual_trigger),
-            "fitness_below_threshold": below_threshold,
+        execution_status = str(execution_result.get("status") or "not_executed")
+        execution_succeeded = self._execution_succeeded(execution_result)
+        fitness_accepted = self._fitness_accepted(fitness_result)
+        certificate_status = str(certificate_result.get("status") or ("signed" if certificate_result else "not_attempted"))
+        disposition = self._disposition_for_outcome(
+            execution_status=execution_status,
+            execution_succeeded=execution_succeeded,
+            fitness_accepted=fitness_accepted,
+            rejected=rejected,
+            cosmetic_only=cosmetic_only,
+        )
+        linkage = self._lineage_linkage(agent_id, mutation_payload, execution_result)
+        event_payload: Dict[str, Any] = {
+            "schema_version": "evolution.cycle_outcome.v1",
+            "agent_id": agent_id,
+            "change_classification": change_classification,
+            "change_reason": change_reason,
+            "execution_status": execution_status,
+            "execution_succeeded": execution_succeeded,
+            "fitness_score": fitness_result.get("score"),
+            "fitness_accepted": fitness_accepted,
+            "certificate_status": certificate_status,
+            "certificate_signed": certificate_status not in {"skipped", "not_attempted", ""},
+            "signing_status": certificate_status,
+            "disposition": disposition,
+            "promote_disposition": disposition,
+            "cosmetic_only": cosmetic_only,
+            **linkage,
         }
+        metrics.log(event_type="evolution_cycle_outcome", payload=event_payload)
+        push_to_dashboard("evolution_cycle_outcome", event_payload)
+        return event_payload
 
-    def run_cycle(self, agent_id: Optional[str] = None, *, manual_trigger: bool = False) -> Dict[str, Any]:
+    def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """Run one mutation cycle, preferring compatibility adapter when explicitly selected."""
         if self.compatibility_adapter is not None and agent_id is None:
             return self.compatibility_adapter.run_cycle(agent_id)
@@ -299,6 +310,16 @@ class EvolutionKernel:
                     "metadata_last_mutation": metadata.get("last_mutation"),
                 },
             )
+            cycle_event = self._emit_cycle_outcome(
+                agent_id=str(agent.get("agent_id") or ""),
+                change_classification=change_decision.classification,
+                change_reason=change_decision.reason,
+                execution_result={"status": "skipped_non_functional"},
+                fitness_result={"accepted": False, "score": None},
+                certificate_result={"status": "skipped", "reason": "non_functional_change"},
+                mutation_payload=mutation.get("request") or mutation,
+                cosmetic_only=True,
+            )
             return {
                 "status": "metadata_only",
                 "agent_id": agent.get("agent_id"),
@@ -310,11 +331,22 @@ class EvolutionKernel:
                     "version": metadata.get("version"),
                     "last_mutation": metadata.get("last_mutation"),
                 },
+                "cycle_outcome_event": cycle_event,
                 "kernel_path": True,
             }
         mutation_payload = mutation.get("request") or mutation
         validation = self.validate_mutation(None, mutation_payload)
         if not validation.get("valid"):
+            cycle_event = self._emit_cycle_outcome(
+                agent_id=str(agent.get("agent_id") or ""),
+                change_classification=change_decision.classification,
+                change_reason=change_decision.reason,
+                execution_result={"status": "rejected", "reason": "policy_invalid"},
+                fitness_result={"accepted": False, "score": None},
+                certificate_result={"status": "skipped", "reason": "validation_failed"},
+                mutation_payload=mutation_payload,
+                rejected=True,
+            )
             return {
                 "status": "rejected",
                 "reason": "policy_invalid",
@@ -322,6 +354,7 @@ class EvolutionKernel:
                 **validation,
                 "change_classification": change_decision.classification,
                 "change_reason": change_decision.reason,
+                "cycle_outcome_event": cycle_event,
             }
 
         forecast = self.fitness_evaluator.forecast(
@@ -329,6 +362,16 @@ class EvolutionKernel:
             agent_type=str((agent.get("meta") or {}).get("type") or "unknown"),
         )
         if not forecast.get("forecast_passed"):
+            cycle_event = self._emit_cycle_outcome(
+                agent_id=str(agent.get("agent_id") or ""),
+                change_classification=change_decision.classification,
+                change_reason=change_decision.reason,
+                execution_result={"status": "rejected", "reason": "forecast_gate_failed"},
+                fitness_result={"accepted": False, "score": forecast.get("forecast_score")},
+                certificate_result={"status": "skipped", "reason": "forecast_gate_failed"},
+                mutation_payload=mutation_payload,
+                rejected=True,
+            )
             return {
                 "status": "rejected",
                 "reason": "forecast_gate_failed",
@@ -336,6 +379,7 @@ class EvolutionKernel:
                 "forecast": forecast,
                 "change_classification": change_decision.classification,
                 "change_reason": change_decision.reason,
+                "cycle_outcome_event": cycle_event,
                 "kernel_path": True,
             }
 
@@ -349,6 +393,16 @@ class EvolutionKernel:
         else:
             certificate_result = {"status": "skipped", "reason": "fitness_not_accepted"}
 
+        cycle_event = self._emit_cycle_outcome(
+            agent_id=str(agent.get("agent_id") or ""),
+            change_classification=change_decision.classification,
+            change_reason=change_decision.reason,
+            execution_result=execution_result,
+            fitness_result=fitness_result,
+            certificate_result=certificate_result,
+            mutation_payload=mutation_payload,
+        )
+
         return {
             **execution_result,
             "agent_id": agent.get("agent_id"),
@@ -356,6 +410,7 @@ class EvolutionKernel:
             "certificate": certificate_result,
             "change_classification": change_decision.classification,
             "change_reason": change_decision.reason,
+            "cycle_outcome_event": cycle_event,
             "kernel_path": True,
         }
 
