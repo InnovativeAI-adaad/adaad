@@ -1,10 +1,20 @@
 <div align="center">
 
+<!-- AUTO-UPDATED: version hero regenerates on every merge to main -->
 <!-- ADAAD_VERSION_HERO:START -->
 <img src="docs/assets/readme/adaad-version-hero.svg" width="100%" alt="ADAAD v9.27.0 — 94 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
-<img src="docs/assets/adaad-hero.svg" width="100%" alt="ADAAD — Autonomous Development & Adaptation Architecture"/>
+<br/>
+
+<img src="docs/assets/readme/adaad-logo-shield.png" width="180" alt="ADAAD Shield Logo"/>
+
+<br/><br/>
+
+# ADAAD
+### *Autonomous Device-Anchored Adaptive Development*
+
+**AI that governs its own evolution — with you in control.**
 
 <br/>
 
@@ -18,17 +28,14 @@
 
 </div>
 
+<br/>
+
+<!-- AUTO-UPDATED: live status regenerates every 15 minutes via GitHub Actions -->
+<img src="docs/assets/readme/adaad-live-status.svg" width="100%" alt="ADAAD Live Status"/>
+
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-<div align="center">
-
-## AI that governs its own evolution — with you in control.
-
-**ADAAD proposes changes to itself, red-team tests them, scores them against constitutional rules,<br/>runs them in a zero-write shadow harness, and requires your sign-off before anything critical ships.**
-
-</div>
-
-<br/>
+---
 
 ## The problem every AI developer hits eventually
 
@@ -46,25 +53,35 @@ ADAAD is built to solve this at the architectural level.
 
 ## What ADAAD actually does
 
+<div align="center">
+<img src="docs/assets/readme/adaad-brand-banner.png" width="100%" alt="ADAAD — Auditable · Deterministic · Automated"/>
+</div>
+
+<br/>
+
 ADAAD is a **constitutionally governed evolution runtime** for AI systems. It manages how an AI system proposes, evaluates, and applies changes to itself — under a framework of rules that cannot be bypassed, with a ledger of decisions that cannot be altered, and with your authority over anything critical wired in at the architecture level.
 
 Here's the sequence every proposed change goes through:
 
-**1. Proposal** — A mutation is proposed by an AI agent (Claude-powered). It specifies what changes and why.
+**1. Identity check** — Before any proposal is generated, the `IdentityContextInjector` consults the `IdentityLedger` — a hash-chained, HUMAN-0-attested self-model — and injects an `identity_consistency_score`. Mutations that contradict what the system believes itself to be are flagged before they're ever written. *(INNOV-10)*
 
-**2. Adversarial red-team** — A dedicated Red Team Agent tries to break the proposal. It finds the code paths the proposing agent didn't cover and generates up to five targeted adversarial cases against them. If the proposal fails, it's returned to the proposer. It does not advance. *(INNOV-08 — the first system to do this as a constitutional gate.)*
+**2. Proposal** — A mutation is proposed by an AI agent (Claude-powered). It specifies what changes and why.
 
-**3. Constitutional scoring** — The proposal is measured against 27 runtime-enforced constitutional rules. These aren't guidelines. If a rule is violated, the epoch halts.
+**3. Adversarial red-team** — A dedicated Red Team Agent tries to break the proposal. It finds the code paths the proposing agent didn't cover and generates up to five targeted adversarial cases against them. If the proposal fails, it's returned to the proposer. It does not advance. *(INNOV-08 — the first system to do this as a constitutional gate.)*
 
-**4. Shadow execution** — The mutation runs in a zero-write shadow harness against real traffic patterns. Divergence, error rate, and latency are all measured. Regression on any signal blocks promotion. *(INNOV-07)*
+**4. Constitutional scoring** — The proposal is measured against 27 runtime-enforced constitutional rules. These aren't guidelines. If a rule is violated, the epoch halts.
 
-**5. Governance gate** — A final constitutional gate evaluates the full evidence package. Nothing passes here that hasn't cleared every prior step.
+**5. Shadow execution** — The mutation runs in a zero-write shadow harness against real traffic patterns. Divergence, error rate, and latency are all measured. Regression on any signal blocks promotion. *(INNOV-07)*
 
-**6. Your sign-off** — For Tier 0 changes, your GPG key is required. The system is architecturally incapable of promoting critical mutations without it. This is not a setting. It is wired into the code.
+**6. Governance gate** — A final constitutional gate evaluates the full evidence package. Nothing passes here that hasn't cleared every prior step.
 
-**7. Ledger commit** — Every decision — pass, fail, returned, blocked — is SHA-256 hash-chained into an append-only ledger. One altered entry breaks every subsequent hash. You cannot rewrite history.
+**7. Your sign-off** — For Tier 0 changes, your GPG key is required. The system is architecturally incapable of promoting critical mutations without it. This is not a setting. It is wired into the code.
 
-**8. Cryptographic proof** — The full lineage of the mutation is Merkle-rooted into the Cryptographic Evolution Proof DAG, linking it to every causal ancestor. Independently verifiable. No system access required. *(INNOV-06)*
+**8. Ledger commit** — Every decision — pass, fail, returned, blocked — is SHA-256 hash-chained into an append-only ledger. One altered entry breaks every subsequent hash. You cannot rewrite history.
+
+**9. Cryptographic proof** — The full lineage of the mutation is Merkle-rooted into the Cryptographic Evolution Proof DAG, linking it to every causal ancestor. Independently verifiable. No system access required. *(INNOV-06)*
+
+<br/>
 
 <table>
 <tr>
@@ -90,16 +107,17 @@ Here's the sequence every proposed change goes through:
 <br/>
 
 | **What only you can do** | **What ADAAD handles autonomously** |
-|---|---|
-| GPG-sign Tier 0 changes | Generate mutation proposals via Claude |
-| Approve seed promotions | Red-team challenge every proposal before scoring |
-| Set constitutional rules | Shadow-execute mutations in zero-write harness |
-| Tag version ceremonies | Score against 27 constitutional rules |
-| Ratify new invariants | Hash-chain every decision into the ledger |
-| Patent and IP decisions | Build cryptographic evolution proof DAGs |
-| GA sign-off | Mine failure patterns and propose new invariants |
+|:---|:---|
+| 🔑 GPG-sign Tier 0 changes | 🤖 Generate mutation proposals via Claude |
+| 🌱 Approve seed promotions | ⚔️ Red-team challenge every proposal before scoring |
+| 📜 Set constitutional rules | 🛡 Shadow-execute mutations in zero-write harness |
+| 🏷 Tag version ceremonies | ⚖️ Score against 27 constitutional rules |
+| ⚙️ Ratify new invariants | ⛓ Hash-chain every decision into the ledger |
+| 🧬 Amend IdentityLedger statements | 🔬 Consult self-model before every proposal (MMEM) |
+| 📋 Patent and IP decisions | 🗺 Build cryptographic evolution proof DAGs |
+| ✅ GA sign-off | 🔍 Mine failure patterns and propose new invariants |
 
-Your role is setting the rules and signing what matters. The system handles everything else.
+*Your role is setting the rules and signing what matters. The system handles everything else.*
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -107,15 +125,43 @@ Your role is setting the rules and signing what matters. The system handles ever
 
 <img src="docs/assets/adaad-architecture.svg" width="100%" alt="ADAAD Architecture"/>
 
-ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed change. Each step is ordered, gated, and evidenced. There is no skip path. The CEL-ORDER-0 invariant enforces this at runtime — steps that execute out of sequence abort the epoch.
+ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed change. Each step is ordered, gated, and evidenced. There is no skip path. The `CEL-ORDER-0` invariant enforces this at runtime — steps that execute out of sequence abort the epoch.
 
 Three AI agents — **Architect** (structural reasoning), **Dream** (mutation generation), and **Beast** (performance pressure) — each apply constitutional rules at different steps. No single agent can approve a change. The governance gate is the only path forward.
+
+<br/>
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="33%">
+<img src="docs/assets/readme/agent_architect.svg" width="120" alt="Architect Agent"/><br/>
+<b>Architect</b><br/><sub>Structural reasoning · Long-term maintainability · Constitutional alignment</sub>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/agent_dream.svg" width="120" alt="Dream Agent"/><br/>
+<b>Dream</b><br/><sub>Creative mutation generation · Experimental approaches · Capability exploration</sub>
+</td>
+<td align="center" width="33%">
+<img src="docs/assets/readme/agent_beast.svg" width="120" alt="Beast Agent"/><br/>
+<b>Beast</b><br/><sub>Performance pressure · Efficiency optimisation · Bottleneck elimination</sub>
+</td>
+</tr>
+</table>
+
+</div>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Proven milestones — not roadmap promises
 
 These events happened. The evidence is hash-chained in the ledger.
+
+<!-- AUTO-UPDATED: phase progress regenerates on every merge to main -->
+<img src="docs/assets/readme/adaad-phase-progress.svg" width="100%" alt="ADAAD Phase Progress"/>
+
+<br/>
 
 ### ⛓ March 13, 2026 — First autonomous self-evolution (Phase 65)
 
@@ -171,34 +217,63 @@ ADAAD now carries a formally encoded, cryptographically anchored self-model: the
 
 ## Why you can trust the claims
 
-Every property below is mechanically enforced at runtime. Not policy. Not documentation. Enforced.
+Every property below is mechanically enforced at runtime. Not policy. Not documentation. **Enforced.**
 
-**Tamper-evident ledger** — Every event is SHA-256 hash-chained. Alter one entry and every subsequent hash breaks. History cannot be rewritten, and any attempt is immediately detectable.
+**⛓ Tamper-evident ledger** — Every event is SHA-256 hash-chained. Alter one entry and every subsequent hash breaks. History cannot be rewritten, and any attempt is immediately detectable.
 
-**Deterministic replay** — Any prior epoch can be re-run from its original inputs and produce byte-identical results. No `datetime.now()`, no `random.random()` in constitutional paths. Enforced by invariant.
+**♻️ Deterministic replay** — Any prior epoch can be re-run from its original inputs and produce byte-identical results. No `datetime.now()`, no `random.random()` in constitutional paths. Enforced by invariant.
 
-**Constitutional gate** — 27 runtime-enforced rules in `constitution.yaml v0.9.0`. If a mutation violates a rule, the epoch halts. There is no configuration option that changes this.
+**📜 Constitutional gate** — 27 runtime-enforced rules in `constitution.yaml v0.9.0`. If a mutation violates a rule, the epoch halts. There is no configuration option that changes this.
 
-**Adversarial red-team gate** — Every mutation is challenged before fitness scoring (INNOV-08). The agent cannot approve mutations — structural enforcement in code, not policy.
+**⚔️ Adversarial red-team gate** — Every mutation is challenged before fitness scoring (INNOV-08). The agent cannot approve mutations — structural enforcement in code, not policy.
 
-**Shadow execution gate** — Every mutation runs in a zero-write harness (INNOV-07) before live promotion. Write or egress detection is a hard block.
+**🛡 Shadow execution gate** — Every mutation runs in a zero-write harness (INNOV-07) before live promotion. Write or egress detection is a hard block.
 
-**Cryptographic lineage** — Full evolutionary history is Merkle-rooted in a proof DAG (INNOV-06). Independently verifiable by any third party.
+**🔬 Identity gate** — Every mutation is checked against the system's encoded self-model before proposals are even generated (INNOV-10). Identity drift is flagged at the root.
 
-**Human authority is structural** — Your signing key is required for Tier 0 changes. The system cannot bypass this. It is not a configuration option.
+**🗺 Cryptographic lineage** — Full evolutionary history is Merkle-rooted in a proof DAG (INNOV-06). Independently verifiable by any third party.
 
-**27 Hard-class invariants** — Runtime rules that cannot be disabled, configured around, or violated without the epoch aborting. 27 hard stops, all enforced.
+**🔑 Human authority is structural** — Your signing key is required for Tier 0 changes. The system cannot bypass this. It is not a configuration option.
+
+**🚧 27 Hard-class invariants** — Runtime rules that cannot be disabled, configured around, or violated without the epoch aborting. 27 hard stops, all enforced.
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/SECURITY_INVARIANTS_MATRIX.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 9 shipped world-first innovations
+## World's firsts — with verifiable evidence
+
+<div align="center">
+<img src="docs/assets/readme/adaad-worlds-firsts.png" width="80%" alt="World's Firsts ADAAD Can Claim"/>
+</div>
+
+<br/>
+
+Each claim below is backed by a hash-chained governance artifact in the ledger — not a press release.
+
+| Claim | Evidence |
+|:---|:---|
+| First autonomous self-evolving codebase with constitutional governance | Phase 65 · March 13, 2026 |
+| First 16-step Constitutional Evolution Loop with enforced ordering | `CEL-ORDER-0` · Phase 64 |
+| First non-bypassable GovernanceGate (`GOV-SOLE-0`) | Phase 63 |
+| First hash-chained evidence ledger for AI mutation decisions | Phase 61 |
+| First multi-agent mutation ecosystem (Architect + Dream + Beast) | Phase 57 |
+| First human-governed innovation pipeline (Seed → CEL → Ledger) | Phase 75 |
+| First cryptographic evolution proof DAG (Merkle-rooted lineage) | INNOV-06 · Phase 90 |
+| First live shadow mutation execution gate | INNOV-07 · Phase 91 |
+| First adversarial red-team as a constitutional gate | INNOV-08 · Phase 92 |
+| First aesthetic fitness signal as a governed dimension | INNOV-09 · Phase 93 |
+| First morphogenetic self-model as a pre-proposal governance surface | INNOV-10 · Phase 94 |
+| First AI evolution system built by a single founder, zero team | Dustin L. Reid · InnovativeAI LLC |
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
+## 10 shipped world-first innovations
 
 Not prototypes. Each shipped with a full constitutional test suite, human governor sign-off, and a hash-chained evidence artifact.
 
 | # | Innovation | Phase | What it does |
-|---|---|---|---|
+|:---:|:---|:---:|:---|
 | INNOV-01 | Constitutional Self-Amendment (CSAP) | 87 | ADAAD can propose amendments to its own rules — subject to unconditional human ratification |
 | INNOV-02 | Adversarial Constitutional Stress (ACSE) | 87 | A dedicated agent stress-tests the constitution by attempting to violate every rule |
 | INNOV-03 | Temporal Invariant Forecasting (TIFE) | 87 | The system predicts which invariants are likely to be violated in future epochs before they fail |
@@ -208,9 +283,26 @@ Not prototypes. Each shipped with a full constitutional test suite, human govern
 | INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Mutations run in a zero-write shadow harness against real traffic before promotion |
 | INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | A Red Team Agent challenges every proposal with targeted adversarial cases before governance scoring |
 | INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability scored as a constitutionally-bounded fitness dimension — first system to treat aesthetics as a governed signal |
-| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained HUMAN-0-gated IdentityLedger encodes the system’s self-model — consulted pre-proposal to detect identity drift |
+| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained HUMAN-0-gated `IdentityLedger` encodes the system's self-model — consulted pre-proposal to detect identity drift |
 
 20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
+## Live system stats
+
+<!-- AUTO-UPDATED: stats card regenerates on every merge to main -->
+<div align="center">
+<img src="docs/assets/readme/adaad-stats-card.svg" width="100%" alt="ADAAD Live Stats"/>
+</div>
+
+<br/>
+
+<div align="center">
+
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/InnovativeAI-adaad/adaad?style=flat-square&labelColor=0d1117&color=00d4ff&label=Commits%2Fmonth)&nbsp;![GitHub last commit](https://img.shields.io/github/last-commit/InnovativeAI-adaad/adaad?style=flat-square&labelColor=0d1117&color=00ff88&label=Last%20commit)&nbsp;![GitHub repo size](https://img.shields.io/github/repo-size/InnovativeAI-adaad/adaad?style=flat-square&labelColor=0d1117&color=a855f7&label=Repo%20size)&nbsp;![GitHub issues](https://img.shields.io/github/issues/InnovativeAI-adaad/adaad?style=flat-square&labelColor=0d1117&color=ff4466&label=Open%20issues)
+
+</div>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -238,10 +330,12 @@ print(f'Epoch complete · {result.mutations_applied} applied · {result.epoch_ev
 
 ## Runs anywhere — including a $200 Android phone
 
+<img src="docs/assets/adaad-quick-start-platforms.svg" width="100%" alt="Platform support"/>
+
 ADAAD runs on any hardware that runs Python. Constitutional governance should not depend on cloud infrastructure. If your "governed" system only stays safe with cloud KMS and Kubernetes, those safety properties are on loan from your provider. ADAAD's are yours.
 
 | Platform | Method |
-|---|---|
+|:---|:---|
 | Linux / macOS | `pip install adaad` |
 | Windows | `pip install adaad` (WSL2 for sandbox) |
 | Android (Termux) | [TERMUX_SETUP.md](TERMUX_SETUP.md) |
@@ -255,7 +349,7 @@ ADAAD runs on any hardware that runs Python. Constitutional governance should no
 ADAAD ships a complete commercial documentation suite alongside the open-source core.
 
 | Resource | What it is |
-|---|---|
+|:---|:---|
 | [Pricing Model](docs/commercial/PRICING_MODEL.md) | Seat-based, usage-based, and hybrid SKUs |
 | [Procurement Fast-Lane](docs/commercial/procurement_fastlane/DAY0_PROCUREMENT_FASTLANE_CHECKLIST.md) | Day-0 checklist, DPA/MSA fallback clauses, security Q&A — designed for 5-day close |
 | [SLO / SLA Sheet](docs/commercial/procurement_fastlane/SLA_SLO_SHEET.md) | Reliability targets and support tier commitments |
@@ -299,7 +393,7 @@ CI tests whether known code passes known assertions. ADAAD governs whether chang
 
 You can delete your CI history. You cannot alter ADAAD's ledger.
 
-ADAAD actively challenges its own proposals via adversarial red-team agents (INNOV-08) and runs them through zero-write shadow execution (INNOV-07) before they reach production. No CI system does this. No CI system has constitutional rules it's bound by. No CI system produces a cryptographic proof of its evolutionary lineage.
+ADAAD actively challenges its own proposals via adversarial red-team agents (INNOV-08), checks them against its encoded self-model (INNOV-10), and runs them through zero-write shadow execution (INNOV-07) before they reach production. No CI system does this. No CI system has constitutional rules it's bound by. No CI system produces a cryptographic proof of its evolutionary lineage.
 </details>
 
 <details>
@@ -314,6 +408,17 @@ Shipped in Phase 92 (INNOV-08) as the first dedicated adversarial reasoning laye
 </details>
 
 <details>
+<summary><b>What is Morphogenetic Memory?</b></summary>
+<br/>
+
+MMEM (INNOV-10, Phase 94) is a formally encoded architectural self-model: a hash-chained, HUMAN-0-gated, append-only `IdentityLedger` containing founding `IdentityStatement`s that define what ADAAD believes itself to be.
+
+Before every epoch's proposals are generated, the `IdentityContextInjector` consults the ledger and injects an `identity_consistency_score` into the `CodebaseContext`. This score is available to all downstream stages — ProposalEngine, FitnessEngineV2, GovernanceGateV2.
+
+The biological analogy is precise: just as morphogenetic memory in a differentiating cell tells it to resist becoming something else, MMEM tells the evolution loop to flag mutations that push the system away from its founding identity — even when they pass every governance rule. It answers the question no prior gate could ask: *is this mutation consistent with what this system believes itself to be?*
+</details>
+
+<details>
 <summary><b>What is the Seed Lifecycle Pipeline?</b></summary>
 <br/>
 
@@ -323,7 +428,7 @@ The full provenance chain from proposal to outcome is cryptographically linked v
 </details>
 
 <details>
-<summary><b>What are the 9 shipped innovations?</b></summary>
+<summary><b>What are the 10 shipped innovations?</b></summary>
 <br/>
 
 INNOV-01 through INNOV-10 shipped across v9.18.0–v9.27.0 (Phases 87–94): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), and Morphogenetic Memory (MMEM).
@@ -351,6 +456,10 @@ For due diligence data room access, see the [Data Room Index](docs/strategy/DATA
 
 <div align="center">
 
+<img src="docs/assets/readme/adaad-infographic.png" width="90%" alt="ADAAD — The Dawn of Governed Autonomy"/>
+
+<br/><br/>
+
 **Built by [Innovative AI LLC](https://github.com/InnovativeAI-adaad) · Governor: Dustin L. Reid**
 
 *The next wave of AI isn't AI that writes your code.*
@@ -360,5 +469,9 @@ For due diligence data room access, see the [Data Room Index](docs/strategy/DATA
 <br/>
 
 **[⚡ Get Started](QUICKSTART.md)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)**
+
+<br/>
+
+*Build without limits. Govern without compromise.*
 
 </div>
