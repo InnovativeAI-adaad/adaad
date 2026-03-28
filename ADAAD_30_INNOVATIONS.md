@@ -2,7 +2,7 @@
 
 **Author:** Claude (ArchitectAgent)  
 **Date:** March 22, 2026 · **Status updated:** March 27, 2026  
-**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-07 shipped (v9.18.0–v9.24.1). INNOV-08 planned (Phase 92, v9.25.0). Items 9–30 are next-wave roadmap.
+**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-08 shipped (v9.18.0–v9.25.0). INNOV-09 shipped (Phase 93, v9.26.0). Items 10–30 are next-wave roadmap.
 
 | Range | Status |
 |---|---|
@@ -13,8 +13,9 @@
 | INNOV-05 AOEP | ✅ Shipped v9.22.0 — Phase 89 |
 | INNOV-06 CEPD | ✅ Shipped v9.23.0 — Phase 90 |
 | INNOV-07 LSME | ✅ Shipped v9.24.0 — Phase 91 |
-| INNOV-08 AFRT | 🔵 Planned v9.25.0 — Phase 92 (plan authored 2026-03-27) |
-| INNOV-09 through INNOV-30 | 📋 Roadmap — sequenced for Phases 93+ |
+| INNOV-08 AFRT | ✅ Shipped v9.25.0 — Phase 92 |
+| INNOV-09 AFIT | ✅ Shipped v9.26.0 — Phase 93 |
+| INNOV-10 through INNOV-30 | 📋 Roadmap — sequenced for Phases 94+ |
 
 ---
 
@@ -111,7 +112,7 @@ Currently a fitness weight learned in epoch 10 is applied with the same confiden
 
 ### 8. Adversarial Fitness Red Team
 
-> **Status:** 🔵 **Planned** — Phase 92, v9.25.0 · Plan: `docs/plans/PHASE_92_PLAN.md` · HUMAN-0 ratification required
+> **Status:** ✅ **Shipped** — Phase 92, v9.25.0 · Evidence: `artifacts/governance/phase92/phase92_sign_off.json`
 
 **What it is:** A dedicated red-team agent whose only job is to try to break any mutation that the main agents propose, specifically looking for edge cases the proposer didn't consider.
 
