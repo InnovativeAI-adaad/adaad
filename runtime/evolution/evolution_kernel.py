@@ -8,7 +8,8 @@ import hashlib
 from pathlib import Path
 from typing import Any, Dict, Mapping, Optional
 
-from runtime.api.app_layer import push_to_dashboard
+from adaad.agents.discovery import resolve_agent_module_entrypoint
+from adaad.core.agent_contract import AgentContractViolation, validate_agent_module
 from runtime.api.agents import (
     MutationEngine,
     MutationRequest,
@@ -159,91 +160,50 @@ class EvolutionKernel:
         return bool(fitness_result.get("passed"))
 
     @staticmethod
-    def _lineage_linkage(agent_id: str, mutation_payload: Mapping[str, Any], execution_result: Mapping[str, Any]) -> Dict[str, Any]:
-        mutation_id = (
-            mutation_payload.get("mutation_id")
-            or execution_result.get("mutation_id")
-            or execution_result.get("cycle_id")
-        )
-        if mutation_id:
-            return {"lineage_linkage_type": "mutation_id", "lineage_linkage": str(mutation_id)}
-        canonical_payload = json.dumps(
-            {
-                "agent_id": agent_id,
-                "mutation": dict(mutation_payload),
-                "execution": dict(execution_result),
-            },
-            sort_keys=True,
-        )
-        linkage = hashlib.sha256(canonical_payload.encode("utf-8")).hexdigest()
-        return {"lineage_linkage_type": "deterministic_hash", "lineage_linkage": f"sha256:{linkage}"}
-
-    @staticmethod
-    def _disposition_for_outcome(
-        *,
-        execution_status: str,
-        execution_succeeded: bool,
-        fitness_accepted: bool,
-        rejected: bool,
-        cosmetic_only: bool,
-    ) -> str:
-        if cosmetic_only:
-            return "cosmetic_only"
-        if rejected:
-            return "rejected"
-        if execution_succeeded and fitness_accepted:
-            return "promoted"
-        if execution_succeeded and not fitness_accepted:
-            return "quarantined"
-        if execution_status in {"failed", "error"}:
-            return "failed"
-        return "rejected"
-
-    def _emit_cycle_outcome(
-        self,
-        *,
-        agent_id: str,
-        change_classification: str,
-        change_reason: str,
-        execution_result: Mapping[str, Any],
-        fitness_result: Mapping[str, Any],
-        certificate_result: Mapping[str, Any],
-        mutation_payload: Mapping[str, Any],
-        rejected: bool = False,
-        cosmetic_only: bool = False,
-    ) -> Dict[str, Any]:
-        execution_status = str(execution_result.get("status") or "not_executed")
-        execution_succeeded = self._execution_succeeded(execution_result)
-        fitness_accepted = self._fitness_accepted(fitness_result)
-        certificate_status = str(certificate_result.get("status") or ("signed" if certificate_result else "not_attempted"))
-        disposition = self._disposition_for_outcome(
-            execution_status=execution_status,
-            execution_succeeded=execution_succeeded,
-            fitness_accepted=fitness_accepted,
-            rejected=rejected,
-            cosmetic_only=cosmetic_only,
-        )
-        linkage = self._lineage_linkage(agent_id, mutation_payload, execution_result)
-        event_payload: Dict[str, Any] = {
-            "schema_version": "evolution.cycle_outcome.v1",
-            "agent_id": agent_id,
-            "change_classification": change_classification,
-            "change_reason": change_reason,
-            "execution_status": execution_status,
-            "execution_succeeded": execution_succeeded,
-            "fitness_score": fitness_result.get("score"),
-            "fitness_accepted": fitness_accepted,
-            "certificate_status": certificate_status,
-            "certificate_signed": certificate_status not in {"skipped", "not_attempted", ""},
-            "signing_status": certificate_status,
-            "disposition": disposition,
-            "promote_disposition": disposition,
-            "cosmetic_only": cosmetic_only,
-            **linkage,
+    def _agent_contract_signature_violations(violations: list[AgentContractViolation]) -> list[dict[str, str]]:
+        required_signatures = {
+            "def info() -> dict:",
+            "def run(input=None) -> dict:",
+            "def mutate(src: str) -> str:",
+            "def score(output: dict) -> float:",
         }
-        metrics.log(event_type="evolution_cycle_outcome", payload=event_payload)
-        push_to_dashboard("evolution_cycle_outcome", event_payload)
-        return event_payload
+        required_missing = {"Missing info", "Missing run", "Missing mutate", "Missing score"}
+        selected = [
+            {"code": violation.code, "message": violation.message}
+            for violation in violations
+            if violation.message in required_signatures or violation.message in required_missing
+        ]
+        return selected
+
+    def _validate_agent_cycle_contract(self, target_agent_path: Path, agent_id: str) -> Dict[str, Any] | None:
+        entrypoint = resolve_agent_module_entrypoint(target_agent_path)
+        if entrypoint is None:
+            payload = {
+                "status": "rejected",
+                "reason": "agent_contract_violation",
+                "agent_id": agent_id,
+                "module_path": None,
+                "violations": [{"code": "missing_symbol", "message": "Missing agent module entrypoint"}],
+                "kernel_path": True,
+            }
+            metrics.log(event_type="agent_contract_violation", payload=payload)
+            return payload
+
+        root = self.agents_root.resolve().parents[1]
+        result = validate_agent_module(entrypoint.resolve().relative_to(root), root)
+        relevant_violations = self._agent_contract_signature_violations(result.violations)
+        if relevant_violations:
+            payload = {
+                "status": "rejected",
+                "reason": "agent_contract_violation",
+                "agent_id": agent_id,
+                "module_path": str(result.module_path),
+                "violations": relevant_violations,
+                "kernel_path": True,
+            }
+            metrics.log(event_type="agent_contract_violation", payload=payload)
+            return payload
+        return None
 
     def run_cycle(self, agent_id: Optional[str] = None) -> Dict[str, Any]:
         """Run one mutation cycle, preferring compatibility adapter when explicitly selected."""
@@ -265,29 +225,9 @@ class EvolutionKernel:
                 raise RuntimeError(f"agent_not_found:{agent_id}")
 
         agent = self.load_agent(target_agent_path)
-        trigger_signal = self._load_previous_cycle_signal(str(agent.get("agent_id") or ""))
-        trigger_decision = self._should_mutate(
-            previous_failed=bool(trigger_signal.get("previous_failed")),
-            previous_quarantined=bool(trigger_signal.get("previous_quarantined")),
-            latest_fitness_score=float(trigger_signal.get("latest_fitness_score", 1.0) or 1.0),
-            latest_fitness_threshold=float(trigger_signal.get("latest_fitness_threshold", 0.7) or 0.7),
-            manual_trigger=manual_trigger,
-        )
-        metrics.log(
-            event_type="mutation_trigger_decision",
-            payload={
-                "agent_id": agent.get("agent_id"),
-                **trigger_decision,
-            },
-        )
-        if not bool(trigger_decision.get("should_mutate")):
-            return {
-                "status": "skipped",
-                "reason": "mutation_not_triggered_policy",
-                "agent_id": agent.get("agent_id"),
-                "trigger_evidence": trigger_decision,
-                "kernel_path": True,
-            }
+        contract_violation = self._validate_agent_cycle_contract(target_agent_path, str(agent.get("agent_id") or ""))
+        if contract_violation is not None:
+            return contract_violation
 
         mutation = self.propose_mutation(agent)
         change_decision = classify_mutation_change(target_agent_path, mutation.get("request") or mutation)
