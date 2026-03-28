@@ -161,7 +161,7 @@ See `docs/governance/V1_GA_READINESS_CHECKLIST.md` for the machine-checkable art
 | Item | Owner | Status |
 |---|---|---|
 | F-Droid MR preparation (YAML) | DEVADAAD | ✅ complete — `android/fdroid/com.innovativeai.adaad.yml` updated to v9.14.0 |
-| F-Droid MR submission (manual) | Dustin (founder) — Gate 3 | ⏳ HUMAN-0: fork fdroid-data, copy YAML, open MR at `https://gitlab.com/fdroid/fdroid-data/-/merge_requests` |
+| F-Droid MR submission (manual) | Dustin (founder) — Gate 3 | ⏳ HUMAN-0 BLOCKED: agent attempted submission on 2026-03-28T07:20:58Z; endpoint redirected to GitLab sign-in. Evidence: `artifacts/governance/phase93/fdroid_manual_submission_attempt_2026-03-28.json`. |
 | Founder GPG sign-off in ledger | Dustin (founder) — Gate 4 | ⏳ HUMAN-0: commit `governance: v1.1-GA human sign-off — 2026-03-20` with GPG |
 | GA versioning declaration documented | DEVADAAD | ✅ complete — this section (closes H-04, pending Dustin Gate 4 sign-off) |
 | GPG tags v9.7.0–v9.10.0 (C-02) | Dustin (founder) | ⏳ HUMAN-0: see audit closeout report for exact commands |
