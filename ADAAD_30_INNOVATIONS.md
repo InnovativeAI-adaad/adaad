@@ -393,6 +393,10 @@ Low mirror test scores trigger a `ConstitutionalCalibrationEpoch` — a dedicate
 
 ## Implementation Priority Stack
 
+> **Governance note:** This ranking is **strategic prioritization only**. It does **not** authorize execution order changes and cannot override predecessor/phase sequence gates defined in `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`.
+>
+> **Operational lock:** Execution remains phase-locked. Current shipped milestone is **Phase 93**; next executable item is **Phase 94 / INNOV-10**. Any out-of-order implementation requires an explicit governance amendment before work begins.
+
 | Priority | Innovation | Why First |
 |----------|-----------|-----------|
 | 1 | **30 — Mirror Test** | Immediately measurable from existing data |
