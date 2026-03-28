@@ -142,7 +142,13 @@ python -m pytest -q tests/test_preflight_import_smoke.py
 
 ## Active phase
 
-Phase 6 — Autonomous Roadmap Self-Amendment is active (target v3.1.0). New PRs should reference `PR-PHASE6-*` IDs and follow the Phase 6 acceptance criteria in `ROADMAP.md`.
+Current checkpoint: **Phase 93 shipped (v9.26.0)**.
+
+Next phase: **Phase 94 (INNOV-10)**.
+
+For new governed work, use the current PR ID convention from `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` (for example, `PR-PHASE94-01`) rather than legacy `PR-PHASE6-*` identifiers.
+
+Automation sequencing is controlled by `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`; treat that v2 procession file as the canonical source for PR order and closure state.
 
 ---
 
