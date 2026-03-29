@@ -285,7 +285,7 @@ cd adaad
 python onboard.py
 ```
 
-`onboard.py` sets up your environment, validates governance schemas, and runs a governed dry-run. Safe to re-run any time.
+`onboard.py` sets up your environment, validates governance schemas, and runs a governed dry-run. Safe to re-run any time. It will install core dependencies but **not** the `server.py` specific ones.
 
 **What success looks like:**
 ```
@@ -299,6 +299,30 @@ python onboard.py
   Run an epoch        python -m app.main --verbose
   Strict replay       python -m app.main --replay strict --verbose
 ```
+
+### Local Development Server
+
+To run the ADAAD API server for local development and access the UI dashboards (Aponi, Whale.Dic), follow these steps:
+
+1.  **Install server dependencies:**
+    ```bash
+    pip install -r requirements.server.txt
+    ```
+
+2.  **Run the server (authentication disabled for dev):**
+    For a seamless local development experience, the server can be run with API authentication temporarily disabled via the `ADAAD_AUDIT_TOKENS` environment variable. This allows the UI to fetch data without needing bearer tokens.
+    ```bash
+    ADAAD_AUDIT_TOKENS="" uvicorn server:app --host 127.0.0.1 --port 8000
+    ```
+    (You can run this in the background using `nohup ... &` or similar if you need to continue using the terminal.)
+
+3.  **Access the UI dashboards:**
+    Open your web browser and navigate to:
+    *   **Developer Whale.Dic (Dork):** `http://127.0.0.1:8000/ui/developer/ADAADdev/whaledic.html`
+    *   **Aponi Dashboard:** `http://127.0.0.1:8000/ui/aponi/index.html`
+
+    If you wish to use the Dork AI assistant, click the gear icon (⚙) in the UI and provide your Anthropic API key. This key is stored only in your browser's session.
+
 
 ### Deterministic environment (reproducible evidence hashes)
 
