@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whale.Dic - Dork Assistant</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --primary-color: #bb86fc;
+            --secondary-color: #03dac6;
+            --text-color: #e0e0e0;
+            --border-color: #333;
+            --panel-bg: #1e1e1e;
+        }
+        body {
+            font-family: 'SF Mono', 'Fira Code', 'monospace', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        .logo { font-size: 1.5rem; font-weight: bold; }
+        .logo span { color: var(--primary-color); }
+        .header-item { color: #888; }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+        .panel h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        #search-input {
+            width: calc(100% - 22px);
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #222;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        .dork-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .dork-button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border: 1px solid var(--secondary-color);
+            background-color: transparent;
+            color: var(--secondary-color);
+            cursor: pointer;
+            border-radius: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dork-button:hover {
+            background-color: var(--secondary-color);
+            color: var(--bg-color);
+        }
+        .main-footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div class="logo">Whale<span>.</span>Dic</div>
+            <div class="header-item"><a href="aponi.html" style="color: #888; text-decoration: none;">Aponi</a> · ADAADinside™ · Dork Assistant</div>
+        </header>
+
+        <div class="panel" id="dork-assistant">
+            <h3>ADAAD Oracle Dork</h3>
+            <input type="text" id="search-input" placeholder="I’m dork — your ADAADinside™ runtime intelligence interface.">
+            <div class="dork-buttons">
+                <button class="dork-button" data-dork="gate status">gate status</button>
+                <button class="dork-button" data-dork="last mutation">last mutation</button>
+                <button class="dork-button" data-dork="replay">replay</button>
+                <button class="dork-button" data-dork="agents">agents</button>
+                <button class="dork-button" data-dork="blockers">blockers</button>
+                <button class="dork-button" data-dork="filetype:pdf">filetype:pdf</button>
+                <button class="dork-button" data-dork='intitle:"index of"'>intitle:"index of"</button>
+                <button class="dork-button" data-dork="site:github.com">site:github.com</button>
+                <button class="dork-button" data-dork='inurl:login'>inurl:login</button>
+                <button class="dork-button" data-dork='filetype:sql "dump"'>SQL Dumps</button>
+            </div>
+        </div>
+        <footer class="main-footer">
+            <p>Enter a query and press Enter to search.</p>
+        </footer>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const dorkButtons = document.querySelectorAll('.dork-button');
+
+        const performSearch = () => {
+            const query = searchInput.value.trim();
+            if (query) {
+                const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                window.open(searchUrl, '_blank');
+            }
+        };
+
+        searchInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        dorkButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const dork = button.dataset.dork || button.textContent;
+                searchInput.value = `${searchInput.value.trim()} ${dork}`.trim();
+                searchInput.focus();
+            });
+        });
+    </script>
+</body>
+</html>
