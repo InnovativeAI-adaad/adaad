@@ -2,6 +2,45 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.28.0] — 2026-03-29 — Phase 95 · Oracle×Dork Alignment · Free LLM · State Bus
+
+**Branch:** `feature/phase95-oracle-dork-alignment`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-29
+**Evidence:** `artifacts/governance/phase95/identity_ledger_attestation.json` · ILA-95-2026-03-29-001
+
+### Phase 95: Oracle x Dork — Free LLM, Constitutional Intelligence, Bidirectional Bridge
+
+ADAAD's two AI operator surfaces fully aligned. All paid API dependencies eliminated.
+dork powered by Groq free tier + Ollama local + DorkEngine deterministic fallback.
+Oracle lifted to 12-chip, 5-section structured intelligence surface with state bus relay.
+
+#### dork (Whale.Dic) — Phase 95 Lift
+- **Groq free tier** primary: llama-3.3-70b-versatile, real SSE streaming, 14,400 req/day
+- **Ollama local** secondary: localhost:11434, full streaming, zero cost, configurable model
+- **DorkEngine** fallback: deterministic constitutional rule engine, instant, always-available
+- **Provider config modal**: switch Groq / Ollama / DorkEngine at runtime with key entry
+- **Constitutional system prompt (CCB)**: gate, epoch, replay, agents, oracle context every query
+- **Enhanced markdown (fmtMd)**: tables, headings, SHA/epoch refs, gate status coloring
+- **Dynamic state-aware chips**: reflect live gate locks, blockers, open findings
+- **Oracle bridge chip**: one-click Oracle context relay via ADAAD_STATE_BUS
+- **ADAAD_STATE_BUS (L1)**: frozen shared state, updated every refreshAll()
+- **Streaming cursor + word-reveal**: animated block cursor, 16ms/word DorkEngine fallback
+
+#### Oracle (Aponi) — Phase 95 Lift
+- **12 chips in 3 groups**: Evolution History, Governance Signal, Strategic Intelligence
+- **5-section structured renderer**: Classification, Primary Signal (word-reveal), Constitutional Assessment, Vision Projection, Send-to-Dork button
+- **Governance context injection (ORACLE-CONTEXT-0)**: epoch_id + gate_ok on every API call
+- **ADAAD_STATE_BUS relay (BRIDGE-STATE-0)**: Oracle answer written to shared bus for Dork
+- **Send-to-Dork button**: one-click Oracle-to-Dork handoff
+- **Click-to-replay history**: restore answer from cache without re-fetch
+- **Severity dot coloring**: divergence=amber, gate-violations=red, others=cyan
+
+#### Invariants Asserted (10 new)
+ORACLE-CONTEXT-0, ORACLE-RENDER-0, ORACLE-STREAM-0, ORACLE-AUDIT-0,
+DORK-CONST-0, DORK-FREE-0, DORK-STREAM-0, DORK-AUDIT-0, BRIDGE-STATE-0, BRIDGE-FREE-0
+
+---
+
 ## [9.27.0] — 2026-03-28 — Phase 94 · INNOV-10 Morphogenetic Memory (MMEM)
 
 **Branch:** `feature/phase94-mmem-impl`
