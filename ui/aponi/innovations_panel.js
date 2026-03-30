@@ -929,6 +929,132 @@
   }
 
   // ── Oracle ──────────────────────────────────────────────────────────
+  // ── Phase 95: Oracle Intelligence Lift ─────────────────────────
+  // ORACLE-RENDER-0: structured 5-section renderer (no raw JSON)
+  // ORACLE-STREAM-0: word-reveal simulation, first token <400ms
+  // ORACLE-CONTEXT-0: epoch_id + gate_ok injected on every query
+  // BRIDGE-STATE-0: Oracle→Dork relay via window.ADAAD_STATE_BUS
+  const ORACLE_CHIPS = [
+    // Group: Evolution History
+    { label: "divergence",       query: "divergence",                    group: "evolution" },
+    { label: "rejected",         query: "rejected mutations",            group: "evolution" },
+    { label: "fitness delta",    query: "fitness delta history",         group: "evolution" },
+    { label: "capability path",  query: "capability path evolution",     group: "evolution" },
+    // Group: Governance Signal
+    { label: "gate violations",  query: "gate violations history",       group: "governance" },
+    { label: "epoch health",     query: "epoch health summary",          group: "governance" },
+    { label: "constitutional",   query: "constitutional compliance",     group: "governance" },
+    { label: "replay integrity", query: "replay integrity analysis",     group: "governance" },
+    // Group: Strategic Intelligence
+    { label: "performance",      query: "performance",                   group: "strategy" },
+    { label: "contributed",      query: "contributed",                   group: "strategy" },
+    { label: "what-if horizon",  query: "what-if horizon projection",    group: "strategy" },
+    { label: "seed outcome",     query: "seed graduation outcome",       group: "strategy" },
+  ];
+
+  function renderOracleAnswer(resultEl, data) {
+    const ans = data.answer || {};
+    const vp  = data.vision_projection || null;
+    const bus = window.ADAAD_STATE_BUS || {};
+
+    // Section 1: Query Classification
+    const s1 = document.createElement("div");
+    s1.style.cssText = "margin-bottom:10px;display:flex;align-items:center;gap:8px";
+    const qt = ans.query_type || "generic";
+    const conf = ans.confidence_score != null ? Math.round(ans.confidence_score * 100) : null;
+    s1.innerHTML = `<span style="font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 8px;border-radius:8px;background:rgba(255,229,127,0.1);color:rgba(255,229,127,0.9);border:1px solid rgba(255,229,127,0.2)">${escHtml(qt)}</span>` +
+      (conf != null ? `<div style="flex:1;height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden"><div style="height:100%;width:${conf}%;background:rgba(255,229,127,0.6);border-radius:2px"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,229,127,0.5)">${conf}%</span>` : "");
+
+    // Section 2: Primary Signal (word-reveal stream)
+    const s2 = document.createElement("div");
+    s2.style.cssText = "font-size:12px;color:rgba(255,255,255,0.8);line-height:1.65;margin-bottom:10px;min-height:36px";
+
+    // Section 3: Constitutional Assessment
+    const s3 = document.createElement("div");
+    s3.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:9px;padding:5px 8px;border-radius:6px;margin-bottom:10px";
+    const gateOk = bus.governance ? bus.governance.gate_ok : true;
+    if (!gateOk) {
+      s3.style.background = "rgba(255,74,110,0.08)";
+      s3.style.border = "1px solid rgba(255,74,110,0.2)";
+      s3.style.color = "#ff4a6e";
+      s3.textContent = "⚠ Gate is currently LOCKED — answer reflects pre-lock state";
+    } else {
+      s3.style.background = "rgba(45,235,168,0.06)";
+      s3.style.border = "1px solid rgba(45,235,168,0.15)";
+      s3.style.color = "#2deba8";
+      s3.textContent = "✓ Answer is within constitutional scope";
+    }
+
+    // Section 4: Vision Projection
+    const s4 = document.createElement("div");
+    if (vp) {
+      s4.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(0,229,255,0.5);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:5px">Vision Projection</div>`;
+      const bands = [
+        { label: "best",  value: vp.best_case  ?? vp.best  ?? null, color: "#2deba8" },
+        { label: "base",  value: vp.base_case  ?? vp.base  ?? null, color: "#00d9ff" },
+        { label: "worst", value: vp.worst_case ?? vp.worst ?? null, color: "#f5c842" },
+      ].filter(b => b.value != null);
+      bands.forEach(b => {
+        const pct = Math.round(Math.min(1, Math.max(0, b.value)) * 100);
+        s4.insertAdjacentHTML("beforeend",
+          `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-family:'JetBrains Mono',monospace;font-size:9px">` +
+          `<span style="color:rgba(255,255,255,0.4);width:36px">${b.label}</span>` +
+          `<div style="flex:1;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden">` +
+          `<div style="height:100%;width:${pct}%;background:${b.color};border-radius:2px;transition:width 0.6s ease"></div></div>` +
+          `<span style="color:${b.color};width:32px;text-align:right">${pct}%</span></div>`
+        );
+      });
+      if (vp.dead_ends && vp.dead_ends.length) {
+        s4.insertAdjacentHTML("beforeend",
+          `<div style="margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(255,74,110,0.6)">dead-ends: ` +
+          vp.dead_ends.map(d => `<span style="background:rgba(255,74,110,0.08);border:1px solid rgba(255,74,110,0.2);border-radius:4px;padding:1px 5px">${escHtml(d)}</span>`).join(" ") + `</div>`
+        );
+      }
+      s4.style.marginBottom = "10px";
+    }
+
+    // Section 5: "Send to Dork" bridge button
+    const s5 = document.createElement("div");
+    s5.style.cssText = "display:flex;gap:8px;align-items:center;margin-top:4px";
+    const dorkBtn = document.createElement("button");
+    dorkBtn.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 9px;border-radius:6px;border:1px solid rgba(0,217,255,0.2);background:rgba(0,217,255,0.06);color:rgba(0,217,255,0.7);cursor:pointer;transition:all 0.15s";
+    dorkBtn.textContent = "🐳 Send to Dork";
+    dorkBtn.onmouseover = () => { dorkBtn.style.background="rgba(0,217,255,0.12)";dorkBtn.style.color="#00d9ff"; };
+    dorkBtn.onmouseout  = () => { dorkBtn.style.background="rgba(0,217,255,0.06)";dorkBtn.style.color="rgba(0,217,255,0.7)"; };
+    dorkBtn.onclick = () => {
+      if (ans._isDemo) return;
+      const summary = (ans.message || "").slice(0, 200);
+      window.open(`whaledic.html?dork_seed=${encodeURIComponent(summary)}`, "_blank");
+    };
+    s5.appendChild(dorkBtn);
+    if (bus.epoch && bus.epoch.id) {
+      const epBadge = document.createElement("span");
+      epBadge.style.cssText = "font-family:'JetBrains Mono',monospace;font-size:8px;color:rgba(245,200,66,0.5);padding:1px 5px;border-radius:4px;background:rgba(245,200,66,0.06);border:1px solid rgba(245,200,66,0.15)";
+      epBadge.textContent = bus.epoch.id;
+      s5.appendChild(epBadge);
+    }
+
+    resultEl.innerHTML = "";
+    resultEl.appendChild(s1);
+    resultEl.appendChild(s2);
+    resultEl.appendChild(s3);
+    if (vp) resultEl.appendChild(s4);
+    resultEl.appendChild(s5);
+
+    // Word-reveal stream on s2 (ORACLE-STREAM-0)
+    const msg = ans.message || ans.answer || (ans._isDemo ? ans.message : "No primary signal returned.");
+    if (msg) {
+      const words = msg.split(" ");
+      let i = 0;
+      const tick = () => {
+        if (i >= words.length) return;
+        s2.textContent += (i > 0 ? " " : "") + words[i++];
+        setTimeout(tick, 18);
+      };
+      setTimeout(tick, 0);
+    }
+  }
+
   function renderOracle() {
     const wrap = h("div", {class: "inno-wrap"});
 
@@ -938,28 +1064,31 @@
       h("div", {class: "inno-card-icon", style:"background:rgba(255,229,127,0.1);"}, "🔮"),
       "ADAAD Oracle"
     ));
-    hdr.appendChild(h("span", {class: "inno-status live"}, "v9.3"));
+    hdr.appendChild(h("span", {class: "inno-status live"}, "v9.28 · Phase 95"));
     card.appendChild(hdr);
 
     const body = h("div", {class: "inno-card-body"});
 
-    // Pre-set query chips
-    const chips = h("div", {class: "oracle-chips"});
-    ["divergence", "rejected", "performance", "contributed"].forEach(q => {
-      const chip = h("div", {class: "oracle-chip"}, q);
+    // 12 chips in 3 groups (ORACLE-RENDER-0)
+    const chipsWrap = h("div", {class: "oracle-chips"});
+    const groupColors = { evolution: "rgba(255,229,127,0.7)", governance: "rgba(255,74,110,0.7)", strategy: "rgba(0,229,255,0.7)" };
+    ORACLE_CHIPS.forEach(c => {
+      const chip = h("div", {class: "oracle-chip"}, c.label);
+      chip.style.borderColor = groupColors[c.group] ? groupColors[c.group].replace("0.7","0.2") : "";
       chip.addEventListener("click", () => {
-        input.value = q;
-        innState.oracleQuery = q;
+        input.value = c.query;
+        innState.oracleQuery = c.query;
+        runOracle();
       });
-      chips.appendChild(chip);
+      chipsWrap.appendChild(chip);
     });
-    body.appendChild(chips);
+    body.appendChild(chipsWrap);
 
     // Input row
     const inputRow = h("div", {class: "oracle-input-row"});
     const input = h("input", {
       class: "oracle-input",
-      placeholder: "divergence · rejected · performance · contributed…",
+      placeholder: "divergence · fitness delta · gate violations · what-if horizon…",
       value: innState.oracleQuery || "",
     });
     input.addEventListener("input", e => { innState.oracleQuery = e.target.value; });
@@ -969,22 +1098,17 @@
     inputRow.appendChild(btn);
     body.appendChild(inputRow);
 
-    // Result area
+    // Result area — Phase 95: structured 5-section renderer
     const resultEl = h("div", {class: "oracle-result"});
     if (innState.oracleLoading) {
-      const loader = h("div", {class: "oracle-loading"},
-        h("div", {class: "oracle-spinner"}),
-        "Consulting the oracle…"
-      );
-      resultEl.appendChild(loader);
+      resultEl.innerHTML = `<div class="oracle-loading"><div class="oracle-spinner"></div>Consulting the oracle…</div>`;
     } else if (innState.oracleResult) {
-      resultEl.textContent = JSON.stringify(innState.oracleResult, null, 2);
+      renderOracleAnswer(resultEl, { answer: innState.oracleResult, vision_projection: innState.oracleVision });
     }
     body.appendChild(resultEl);
-    if (innState.oracleVision) body.appendChild(renderVisionSummary(innState.oracleVision));
     card.appendChild(body);
 
-    // ── Phase 72: Oracle History (ORACLE-REPLAY-0) ──────────────────
+    // ── Oracle History — Phase 95 enhanced ──────────────────────
     const histCard = h("div", {class: "inno-card", style:"margin-top:12px;"});
     const histHdr  = h("div", {class: "inno-card-header"});
     histHdr.appendChild(h("div", {class: "inno-card-title"},
@@ -1004,7 +1128,7 @@
     (async () => {
       try {
         const data = await apiFetch("/innovations/oracle/history?limit=20");
-        const records = (data.records || []).slice().reverse(); // newest first
+        const records = (data.records || []).slice().reverse();
         histStatus.textContent = `${records.length} records`;
         histList.innerHTML = "";
         if (!records.length) {
@@ -1013,15 +1137,28 @@
         }
         records.forEach(rec => {
           const row = h("div", {class: "oracle-hist-row"});
+          row.style.cursor = "pointer";
           const ts  = rec.ts ? rec.ts.slice(0, 19).replace("T", " ") : "—";
           const qType = rec.answer && rec.answer.query_type ? rec.answer.query_type : "generic";
+          // Phase 95: severity dot coloring
+          const dotColor = qType === "divergence" ? "#f5c842" : qType === "gate-violations" ? "#ff4a6e" : "#00d9ff";
           const score = rec.vision_trajectory_score != null
-            ? `  ·  traj: ${(rec.vision_trajectory_score * 100).toFixed(1)}%`
-            : "";
+            ? `  ·  traj: ${(rec.vision_trajectory_score * 100).toFixed(1)}%` : "";
           row.innerHTML =
+            `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor};margin-right:6px;flex-shrink:0"></span>` +
             `<span class="oracle-hist-q">${escHtml(rec.query || "—")}</span>` +
             `<span class="oracle-hist-meta">${escHtml(qType)}${escHtml(score)}</span>` +
             `<span class="oracle-hist-ts">${escHtml(ts)}</span>`;
+          // Click-to-replay (ORACLE-AUDIT-0)
+          row.addEventListener("click", () => {
+            input.value = rec.query || "";
+            innState.oracleQuery = rec.query || "";
+            if (rec.answer) {
+              innState.oracleResult = rec.answer;
+              innState.oracleVision = rec.vision_projection || null;
+              renderOracleAnswer(resultEl, { answer: rec.answer, vision_projection: rec.vision_projection });
+            }
+          });
           histList.appendChild(row);
         });
       } catch (_) {
@@ -1032,20 +1169,50 @@
     wrap.appendChild(card);
 
     async function runOracle() {
-      const q = input.value.trim() || "divergence";
+      const q = (input.value.trim()) || "divergence";
       innState.oracleQuery = q;
       innState.oracleLoading = true;
       resultEl.innerHTML = `<div class="oracle-loading"><div class="oracle-spinner"></div>Consulting the oracle…</div>`;
+
+      // Phase 95 ORACLE-CONTEXT-0: inject governance context params
+      const bus = window.ADAAD_STATE_BUS || {};
+      const epochId   = (bus.epoch && bus.epoch.id) || "";
+      const gateOk    = bus.governance ? bus.governance.gate_ok : true;
+      const repScore  = bus.replay ? bus.replay.score : "";
+      const activePhase = (bus.phase_context && bus.phase_context.active_phase) || "";
+      const url = `/innovations/oracle?q=${encodeURIComponent(q)}&limit=100&horizon=120&seed_input=aponi-oracle` +
+        `&epoch_id=${encodeURIComponent(epochId)}&gate_ok=${gateOk}&replay_score=${repScore}&active_phase=${encodeURIComponent(activePhase)}`;
+
       try {
-        const data = await apiFetch(`/innovations/oracle?q=${encodeURIComponent(q)}&limit=100&horizon=120&seed_input=aponi-oracle`);
+        const data = await apiFetch(url);
         innState.oracleResult = data.answer;
         innState.oracleVision = data.vision_projection || null;
-        resultEl.textContent = JSON.stringify(data.answer, null, 2);
+        renderOracleAnswer(resultEl, data);
+
+        // Phase 95 BRIDGE-STATE-0: write to ADAAD_STATE_BUS for Dork
+        if (typeof window.ADAAD_STATE_BUS !== "undefined") {
+          const summary = data.answer && data.answer.message ? data.answer.message.slice(0, 200) : "";
+          const patch = {
+            oracle_last_query: q.slice(0, 120),
+            oracle_last_query_type: (data.answer && data.answer.query_type) || "generic",
+            oracle_last_answer_summary: summary,
+            oracle_last_at_iso: new Date().toISOString(),
+          };
+          if (window.ADAAD_STATE_BUS) {
+            window.ADAAD_STATE_BUS = Object.freeze({ ...window.ADAAD_STATE_BUS, ...patch });
+          } else {
+            window.ADAAD_STATE_BUS = Object.freeze(patch);
+          }
+        }
       } catch(e) {
-        // Fallback demo data
-        innState.oracleResult = { query_type: "demo", message: "Oracle endpoint not reachable. Start the ADAAD server to connect.", query: q };
+        // Demo fallback — structured render
+        const demoAns = {
+          query_type: "demo", confidence_score: null, _isDemo: true,
+          message: "Oracle endpoint not reachable. Start the ADAAD server to connect live evolutionary intelligence.",
+        };
+        innState.oracleResult = demoAns;
         innState.oracleVision = null;
-        resultEl.textContent = JSON.stringify(innState.oracleResult, null, 2);
+        renderOracleAnswer(resultEl, { answer: demoAns, vision_projection: null });
       }
       innState.oracleLoading = false;
     }
