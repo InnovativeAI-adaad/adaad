@@ -1,0 +1,29 @@
+{
+  "phase": 97,
+  "pr_id": "PR-PHASE97-01",
+  "title": "Phase 97 — INNOV-12 Mutation Genealogy Visualization (MGV)",
+  "version": "9.30.0",
+  "human_0": "Dustin L. Reid",
+  "ratification_date": "2026-03-31",
+  "attestation_ref": "ILA-97-2026-03-31-001",
+  "innovation": "INNOV-12",
+  "innovation_name": "Mutation Genealogy Visualization (MGV)",
+  "new_module": "runtime/innovations30/mutation_genealogy.py",
+  "new_classes": [
+    "MutationGenealogyAnalyzer",
+    "PropertyInheritanceVector"
+  ],
+  "new_invariants": [
+    "MGV-0",
+    "MGV-DETERM-0",
+    "MGV-PERSIST-0"
+  ],
+  "cumulative_invariants": 37,
+  "tests": "T97-MGV-01..30 (30/30 PASS)",
+  "test_module": "tests/innovations/test_phase97_mgv.py",
+  "finding_97_001": "RESOLVED — T97-MGV-04 mock target corrected from builtins.open to runtime.innovations30.mutation_genealogy.Path.open (module uses Path.open not builtins.open)",
+  "dependency": "Phase 96 — INNOV-11 DSTE — v9.29.0",
+  "lane": "innovations",
+  "tier": "constitutional",
+  "timestamp_utc": "2026-03-31T00:00:00Z"
+}
