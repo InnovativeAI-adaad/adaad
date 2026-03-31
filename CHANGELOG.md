@@ -2,6 +2,48 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.29.0] — 2026-03-30 — Phase 96 · INNOV-11 Cross-Epoch Dream State Engine (DSTE)
+
+**Branch:** `feature/phase96-dste-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-30
+**Tests:** T96-DSTE-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase96/identity_ledger_attestation.json` · ILA-96-2026-03-30-001
+
+### Phase 96: INNOV-11 — Cross-Epoch Dream State Engine (DSTE)
+
+World-first constitutionally-governed cross-epoch mutation memory consolidation. Between active
+epochs, the DreamStateEngine replays successful past mutations in novel cross-epoch combinations
+to surface improvement candidates not discoverable within any single epoch — memory consolidation
+for autonomous software evolution.
+
+#### New module: `runtime/innovations30/dream_state.py` (full constitutional upgrade from scaffold)
+
+- `DreamStateEngine.dream(epoch_memory, epoch_id, seed)` — full pipeline: gate-0 → seed-rng →
+  novelty filter → ceiling cap → ledger commit → gate-1 → DreamStateReport
+- `DreamCandidate` — immutable; genesis_digest is sha256(sorted source_epochs + id)
+- `DreamLedgerEvent` — chained governance record; committed before candidates returned (DSTE-0)
+- `DreamStateReport` — HUMAN-0 evidence artifact; structurally incapable of verdict='APPROVED'
+- `evaluate_dream_gate_0()` — pre-execution: seed check (DSTE-1) + quorum check (DSTE-3)
+- `evaluate_dream_gate_1()` — post-execution: ledger-first (DSTE-0) + ceiling (DSTE-6)
+- `DreamGateViolation` — Hard-class violation exception; epoch aborts on this
+
+#### Invariants introduced (7 new Hard-class)
+DSTE-0 (ledger-first), DSTE-1 (determinism/seed), DSTE-2 (novelty floor ≥ 0.30),
+DSTE-3 (pool quorum ≥ 3), DSTE-4 (chain integrity), DSTE-5 (no-write between epochs),
+DSTE-6 (candidate ceiling ≤ 5)
+
+**Total Hard-class invariants (cumulative):** 34
+
+#### Findings resolved
+- FINDING-96-001 (P1): agent state drift — corrected from `phase94_complete/9.27.0`
+  to `phase95_complete/9.28.0` as branch initialization step
+
+- PR ID: `PR-PHASE96-01`
+- Title: Phase 96 — INNOV-11 Cross-Epoch Dream State Engine (DSTE)
+- Lane/Tier: `innovations` / `constitutional`
+- Evidence refs: `phase96-dste-impl-v9.29.0`
+
+
 ## [9.28.0] — 2026-03-29 — Phase 95 · Oracle×Dork Alignment · Free LLM · State Bus
 
 **Branch:** `feature/phase95-oracle-dork-alignment`
