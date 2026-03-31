@@ -1,0 +1,41 @@
+{
+  "report_id": "DSR-epoch001-2026-03-30T00:00:00+00:00",
+  "phase": 96,
+  "innovation": "INNOV-11",
+  "epoch_id": "epoch-001",
+  "candidates": [
+    {
+      "candidate_id": "DREAM-epoch001-00",
+      "source_epochs": [
+        "epoch-094",
+        "epoch-088"
+      ],
+      "combined_intent": "Dream combination: refactor + optimize (strat-refactor\u2192strat-optimize)",
+      "recombined_ops": [
+        {
+          "op": "dream_combine",
+          "source_a": "epoch-094",
+          "source_b": "epoch-088",
+          "mutation_type_a": "refactor",
+          "mutation_type_b": "optimize"
+        }
+      ],
+      "predicted_fitness": 0.868,
+      "novelty_score": 0.5,
+      "genesis_digest": "sha256:placeholder"
+    }
+  ],
+  "ledger_event_id": "DSTE-epoch001-0000",
+  "invariants_passed": [
+    "DSTE-0",
+    "DSTE-1",
+    "DSTE-2",
+    "DSTE-3",
+    "DSTE-4",
+    "DSTE-5",
+    "DSTE-6"
+  ],
+  "invariants_failed": [],
+  "verdict": "PASS",
+  "timestamp_utc": "2026-03-30T00:00:00Z"
+}
