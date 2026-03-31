@@ -4,11 +4,11 @@
 
 ---
 
-## What ships today — v9.26.0
+## What ships today — v9.30.0
 
-Phase 93 (INNOV-09 AFIT) is complete. ADAAD now includes cryptographically linked proof DAG lineage, live shadow mutation execution, adversarial red-team fitness gating, and aesthetic fitness scoring as a constitutionally bounded first-class signal. Innovations INNOV-01 through INNOV-09 are shipped across v9.18.0–v9.26.0 (Phases 87–93), with deterministic evidence artifacts recorded per phase closure.
+Phase 97 (INNOV-12 MGV) is complete. ADAAD now annotates every mutation lineage graph edge with a `PropertyInheritanceVector` — four orthogonal fitness deltas and a deterministic digest — enabling population-genetics-level analysis: productive lineages, evolutionary dead-ends, and cumulative directional drift. Innovations INNOV-01 through INNOV-12 are shipped across v9.18.0–v9.30.0 (Phases 87–97), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 93** (`v9.26.0`, INNOV-09 AFIT shipped). Next = **Phase 94 — INNOV-10 roadmap execution**.
+**Current/Next:** Current = **Phase 97** (`v9.30.0`, INNOV-12 MGV shipped). Next = **Phase 98 — INNOV-13 roadmap execution**.
 
 **GA blockers (canonical): 4 open** — F-Droid MR submission (manual), founder GPG sign-off, founder tag ceremony backfill, and strict release gate terminal pass.
 
@@ -1829,3 +1829,15 @@ World-first constitutionally-governed cross-epoch mutation memory consolidation.
 **Finding resolved:** FINDING-96-001 (P1) — agent state drift corrected (phase94/9.27.0 → phase95/9.28.0)
 
 **Next:** Phase 97 — INNOV-12 roadmap execution
+
+### Phase 97 — INNOV-12 · Mutation Genealogy Visualization (MGV)
+
+**Status:** ✅ shipped (v9.30.0) · **Dependency:** Phase 96 INNOV-11 DSTE merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-31) · **Tests:** T97-MGV-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase97/phase97_sign_off.json` · ILA-97-2026-03-31-001
+
+- `PropertyInheritanceVector` — four-axis fitness delta annotation per lineage edge; deterministic sha256 digest (MGV-DETERM-0); `net_improvement` average; `is_dead_end` threshold at -0.05
+- `MutationGenealogyAnalyzer` — append-only JSONL ledger via Path.open (MGV-PERSIST-0); `productive_lineages()`; `dead_end_epochs()`; `evolutionary_direction()`
+- `_load()` — fail-open; corrupt lines silently skipped (MGV-0)
+- FINDING-97-001 RESOLVED — T97-MGV-04 mock target corrected: `builtins.open` → `Path.open`
+- Hard-class invariants cumulative: **37** (MGV-0, MGV-DETERM-0, MGV-PERSIST-0 introduced)
+
+**Next:** Phase 98 — INNOV-13 · Institutional Memory Transfer
