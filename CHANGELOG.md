@@ -1,5 +1,42 @@
 # CHANGELOG
 
+## [9.32.0] — 2026-04-01 — Phase 99 · INNOV-14 Constitutional Jury System (CJS)
+
+**Branch:** `feature/phase99-cjs-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T99-CJS-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase99/phase99_sign_off.json` · ILA-99-2026-04-01-001
+
+### Phase 99: INNOV-14 — Constitutional Jury System (CJS)
+
+World-first governed multi-agent jury deliberation for autonomous mutation promotion
+decisions. `ConstitutionalJury.deliberate()` convenes 3 independent evaluators with
+deterministic seeds derived from mutation_id only. 2-of-3 quorum determines
+`majority_verdict`. Dissenting verdicts are ledgered before return, feeding
+`InvariantDiscoveryEngine` for ongoing constitutional rule derivation.
+
+#### New module: `runtime/innovations30/constitutional_jury.py`
+
+- `ConstitutionalJury` — `deliberate()` sole evaluation authority (CJS-0); quorum guard
+  at construction (CJS-QUORUM-0); `_persist()` / `_record_dissent()` Path.open
+  append-only (CJS-PERSIST-0); `dissent_records()` / `verdict_ledger()` fail-open
+- `JuryDecision` — `decision_digest` = sha256(mutation_id:majority_verdict:
+  approve_count:jury_size) (CJS-DETERM-0); stores `jury_size` for replay fidelity
+- `JurorVerdict` — per-juror evaluation with deterministic `random_seed` (CJS-DETERM-0)
+- `ConstitutionalJuryConfigError` — raised when jury_size < JURY_SIZE at construction
+- `is_high_stakes(changed_files)` — CJS-0 routing predicate over HIGH_STAKES_PATHS
+
+#### Constitutional invariants introduced
+
+- **CJS-0** — deliberate() is sole authority for HIGH_STAKES_PATHS mutation evaluation
+- **CJS-QUORUM-0** — majority requires >= 2-of-3 approve; ties default to reject
+- **CJS-DETERM-0** — decision_digest and seeds are fully deterministic from mutation_id
+- **CJS-DISSENT-0** — dissenting verdicts written to dissent ledger before return
+- **CJS-PERSIST-0** — _persist() and _record_dissent() use Path.open append-only
+
+- Hard-class invariants cumulative: **46** (CJS-0 through CJS-PERSIST-0 introduced)
+
+
 Generated deterministically from merged governance metadata.
 
 ## [9.30.0] — 2026-03-31 — Phase 97 · INNOV-12 Mutation Genealogy Visualization (MGV)
