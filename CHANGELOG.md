@@ -1,5 +1,41 @@
 # CHANGELOG
 
+## [9.33.0] — 2026-04-01 — Phase 100 · INNOV-15 Agent Reputation Staking (ARS)
+
+**Branch:** `feature/phase100-ars-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T100-ARS-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase100/phase100_sign_off.json` · ILA-100-2026-04-01-001
+
+### Phase 100: INNOV-15 — Agent Reputation Staking (ARS)
+
+World-first skin-in-the-game economics for autonomous code evolution agents.
+`ReputationStakingLedger` converts hollow proposals into costly commitments: agents
+stake credits before mutation promotion; governance failure burns the full stake
+(STAKE-BURN-0); pass with measured fitness improvement rewards with a 1.5x multiplier.
+Accumulated win-rate shapes agent selection pressure over time.
+
+#### New module: `runtime/innovations30/reputation_staking.py`
+
+- `ReputationStakingLedger` — `register_agent()`, `stake()` with balance gate and cap
+  (STAKE-0/STAKE-CAP-0); `resolve()` with burn-or-reward logic (STAKE-BURN-0);
+  `_persist()` Path.open append-only (STAKE-PERSIST-0); `_load()` fail-open
+- `StakeRecord` — `stake_digest` = full sha256(agent_id:mutation_id:epoch_id:staked_amount)
+  (STAKE-DETERM-0); `outcome` transitions: pending → passed | failed
+- `InsufficientStakeError` — raised when balance < MIN_STAKE (STAKE-0)
+- `StakeAlreadyResolvedError` — raised on double-resolution (STAKE-BURN-0)
+
+#### Constitutional invariants introduced
+
+- **STAKE-0** — agent balance must be >= MIN_STAKE before stake() commits
+- **STAKE-CAP-0** — staked amount capped at 20% of pre-stake balance per proposal
+- **STAKE-BURN-0** — resolve(passed=False) burns 100% of stake; no return path
+- **STAKE-DETERM-0** — stake_digest is full sha256, no datetime/random/uuid4
+- **STAKE-PERSIST-0** — Path.open("a") append-only; wallet writes use sort_keys=True
+
+- Hard-class invariants cumulative: **51** (STAKE-0 through STAKE-PERSIST-0 introduced)
+
+
 ## [9.32.0] — 2026-04-01 — Phase 99 · INNOV-14 Constitutional Jury System (CJS)
 
 **Branch:** `feature/phase99-cjs-impl`
