@@ -1,9 +1,9 @@
 {
-  "active_phase": "phase97_complete",
+  "active_phase": "v9.30.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 97 — INNOV-12 Mutation Genealogy Visualization (MGV)",
+  "last_completed_phase": "Phase 97 \u00b7 INNOV-12 Mutation Genealogy Visualization (MGV)",
   "last_completed_pr": "feature/phase97-mgv-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -11,15 +11,15 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-03-30",
-  "last_sync_sha": "pending-merge",
-  "next_pr": "PR-PHASE98-01 (Phase 98 — INNOV-13)",
+  "last_invocation": "2026-04-01",
+  "last_sync_sha": "e48a946",
+  "next_pr": "PR-PHASE98-01 (Phase 98 \u2014 INNOV-13 Institutional Memory Transfer)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
       "title": "LLM failover strategy undocumented",
       "severity": "P2",
-      "source": "Deep Dive §4.7",
+      "source": "Deep Dive \u00a74.7",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -29,7 +29,7 @@
       "id": "FINDING-66-002",
       "title": "WeightAdaptor telemetry record not published (prediction_accuracy progression)",
       "severity": "P1",
-      "source": "Deep Dive §4.4",
+      "source": "Deep Dive \u00a74.4",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -37,9 +37,9 @@
     },
     {
       "id": "FINDING-66-003",
-      "title": "Patent filing: constitutional mutation governance method — pre-v1.1-GA deadline",
+      "title": "Patent filing: constitutional mutation governance method \u2014 pre-v1.1-GA deadline",
       "severity": "P1",
-      "source": "Deep Dive §2.2.3",
+      "source": "Deep Dive \u00a72.2.3",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -53,7 +53,7 @@
       "id": "FINDING-66-004",
       "title": "Governance Key Ceremony (PR-01): 2-of-3 Ed25519 threshold not yet executed",
       "severity": "P2",
-      "source": "Deep Dive §VI Medium Term",
+      "source": "Deep Dive \u00a7VI Medium Term",
       "status": "runbook_delivered",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -64,7 +64,7 @@
       "id": "FINDING-66-005",
       "title": "LineageLedgerV2 O(n) fix (C-04/PR-PERF-01): streaming verification + _verified_tail_hash",
       "severity": "P1",
-      "source": "Deep Dive §3.5 / §VI Medium Term",
+      "source": "Deep Dive \u00a73.5 / \u00a7VI Medium Term",
       "status": "resolved",
       "phase_target": "66",
       "resolved_phase": "66",
@@ -502,13 +502,36 @@
     "phase94-innov10-mmem-implemented",
     "v9.27.0-released",
     "phase94-mmem-complete",
-    "phase94-audit-hardening-complete"
+    "phase94-audit-hardening-complete",
+    "phase95-plan-authored",
+    "phase95-human0-ratified",
+    "phase95-oracle-dork-alignment-implemented",
+    "phase95-free-llm-groq-ollama-dorkengine",
+    "phase95-state-bus-bridge-complete",
+    "v9.28.0-released",
+    "phase95-complete",
+    "phase96-plan-authored",
+    "phase96-human0-ratified",
+    "phase96-innov11-dste-implemented",
+    "phase96-dste-0-enforced",
+    "phase96-dste-world-first-cross-epoch-dream",
+    "v9.29.0-released",
+    "phase96-complete",
+    "phase97-plan-authored",
+    "phase97-human0-ratified",
+    "phase97-innov12-mgv-implemented",
+    "phase97-mgv-0-enforced",
+    "phase97-mgv-determ-0-enforced",
+    "phase97-mgv-persist-0-enforced",
+    "phase97-world-first-mutation-genealogy",
+    "v9.30.0-released",
+    "phase97-complete"
   ],
   "software_version": "9.30.0",
-  "last_agent_state_sync_digest": "phase94-mmem-complete-v9.27.0-2026-03-28",
+  "last_agent_state_sync_digest": "gsync-phase97-v9.30.0-full-cascade-2026-04-01",
   "version": "9.30.0",
   "phase": 98,
-  "phase_label": "Phase 98 — TBD (INNOV-13)",
+  "phase_label": "Phase 98 \u2014 TBD (INNOV-13)",
   "last_innovation": "INNOV-11",
   "acse_active": true,
   "tife_active": true,
@@ -522,19 +545,19 @@
     {
       "date": "2026-03-28",
       "governor": "DUSTIN L REID",
-      "scope": "Phase 93 state sync — agent_state v9.26.0, README overhaul merge, report_version update, Phase 94 readiness declaration",
+      "scope": "Phase 93 state sync \u2014 agent_state v9.26.0, README overhaul merge, report_version update, Phase 94 readiness declaration",
       "session_digest": "gsync-phase93-v9.26.0-sweep-2026-03-28"
     },
     {
       "date": "2026-03-28",
       "governor": "DUSTIN L REID",
-      "scope": "Phase 93 → 94 state alignment: version 9.26.0, agent_state sync, pyproject alignment, report_version sync, README branch closure, GPG tag ceremony authorization",
+      "scope": "Phase 93 \u2192 94 state alignment: version 9.26.0, agent_state sync, pyproject alignment, report_version sync, README branch closure, GPG tag ceremony authorization",
       "session_digest": "gsync-phase93-v9.26.0-alignment-2026-03-28"
     },
     {
       "date": "2026-03-28",
       "governor": "DUSTIN L REID",
-      "scope": "GPG tag ceremony — v9.25.0 (b3384b9) and v9.26.0 (fb67119) signed with key 4C95E2F99A775335B1CF3DAF247B015A1CCD95F6 and force-pushed to remote",
+      "scope": "GPG tag ceremony \u2014 v9.25.0 (b3384b9) and v9.26.0 (fb67119) signed with key 4C95E2F99A775335B1CF3DAF247B015A1CCD95F6 and force-pushed to remote",
       "session_digest": "gpg-ceremony-v9.25.0-v9.26.0-2026-03-28",
       "gpg_key": "4C95E2F99A775335B1CF3DAF247B015A1CCD95F6",
       "tags_signed": [
@@ -549,14 +572,35 @@
     {
       "date": "2026-03-28",
       "governor": "DUSTIN L REID",
-      "scope": "Phase 94 plan ratification — INNOV-10 Morphogenetic Memory — PR-PHASE94-01 authorized to open",
+      "scope": "Phase 94 plan ratification \u2014 INNOV-10 Morphogenetic Memory \u2014 PR-PHASE94-01 authorized to open",
       "session_digest": "phase94-plan-authored-2026-03-28"
     },
     {
       "date": "2026-03-28",
       "governor": "DUSTIN L REID",
-      "scope": "Phase 94 MMEM implementation — INNOV-10 Morphogenetic Memory — 33/33 tests green — 6 Hard-class invariants — v9.27.0 release",
+      "scope": "Phase 94 MMEM implementation \u2014 INNOV-10 Morphogenetic Memory \u2014 33/33 tests green \u2014 6 Hard-class invariants \u2014 v9.27.0 release",
       "session_digest": "phase94-mmem-impl-2026-03-28"
+    },
+    {
+      "date": "2026-03-29",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 95 Oracle\u00d7Dork Alignment \u2014 Free LLM (Groq/Ollama/DorkEngine) \u00b7 State Bus \u00b7 Bidirectional Bridge \u00b7 v9.28.0 release",
+      "session_digest": "phase95-oracle-dork-alignment-2026-03-29",
+      "attestation_ref": "ILA-95-2026-03-29-001"
+    },
+    {
+      "date": "2026-03-30",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 96 INNOV-11 Cross-Epoch Dream State Engine (DSTE) \u2014 30/30 tests green \u2014 7 DSTE invariants \u2014 v9.29.0 release \u2014 FINDING-96-001 resolved",
+      "session_digest": "phase96-dste-impl-2026-03-30",
+      "attestation_ref": "ILA-96-2026-03-30-001"
+    },
+    {
+      "date": "2026-03-31",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 97 INNOV-12 Mutation Genealogy Visualization (MGV) \u2014 30/30 tests green \u2014 3 MGV invariants \u2014 37 cumulative Hard-class invariants \u2014 v9.30.0 release",
+      "session_digest": "phase97-mgv-impl-2026-03-31",
+      "attestation_ref": "ILA-97-2026-03-31-001"
     }
   ]
 }
