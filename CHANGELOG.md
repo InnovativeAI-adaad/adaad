@@ -1,5 +1,41 @@
 # CHANGELOG
 
+## [9.31.0] — 2026-04-01 — Phase 98 · INNOV-13 Institutional Memory Transfer (IMT)
+
+**Branch:** `feature/phase98-imt-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T98-IMT-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase98/phase98_sign_off.json` · ILA-98-2026-04-01-001
+
+### Phase 98: INNOV-13 — Institutional Memory Transfer (IMT)
+
+World-first cryptographically governed cross-instance knowledge transfer for autonomous
+software evolution engines. `InstitutionalMemoryTransfer` exports the accumulated engineering
+wisdom of an ADAAD instance as a signed `KnowledgeBundle`, then imports it on fresh hardware
+under chain-of-custody governance — the system's intelligence outlives its deployment.
+
+#### New module: `runtime/innovations30/knowledge_transfer.py`
+
+- `KnowledgeBundle` — immutable knowledge snapshot; `bundle_hash` = sha256(canonical-json);
+  `create()` deterministic; `to_bytes()`/`from_bytes()` gzip roundtrip; `verify_integrity()`;
+  `verify_signature(key)` HMAC-SHA256 comparison (IMT-VERIFY-0)
+- `InstitutionalMemoryTransfer` — `export_bundle()` sorted-key iteration (IMT-DETERM-0);
+  `sign_bundle()` sole signing surface (IMT-0); `import_bundle()` signature + integrity gate
+  before any write (IMT-VERIFY-0); `_record_chain_event()` Path.open append-only to
+  `governance_events.jsonl` on every outcome (IMT-CHAIN-0)
+- `TransferVerificationError` — raised on unsigned or tampered bundle
+- `TransferIntegrityError` — raised on bundle_hash mismatch
+
+#### Constitutional invariants introduced
+
+- **IMT-0** — KnowledgeBundle MUST be HMAC-SHA256 signed before transmission
+- **IMT-VERIFY-0** — import_bundle() MUST verify signature before any knowledge state write
+- **IMT-CHAIN-0** — every import event (success or rejection) recorded in governance_events.jsonl
+- **IMT-DETERM-0** — canonical JSON serialization throughout; no datetime.now()/random/uuid4
+
+- Hard-class invariants cumulative: **41** (IMT-0, IMT-VERIFY-0, IMT-CHAIN-0, IMT-DETERM-0 introduced)
+
+
 Generated deterministically from merged governance metadata.
 
 ## [9.30.0] — 2026-03-31 — Phase 97 · INNOV-12 Mutation Genealogy Visualization (MGV)

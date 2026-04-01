@@ -1,0 +1,32 @@
+{
+  "phase": 98,
+  "pr_id": "PR-PHASE98-01",
+  "title": "Phase 98 \u2014 INNOV-13 Institutional Memory Transfer (IMT)",
+  "version": "9.31.0",
+  "human_0": "Dustin L. Reid",
+  "ratification_date": "2026-04-01",
+  "attestation_ref": "ILA-98-2026-04-01-001",
+  "innovation": "INNOV-13",
+  "innovation_name": "Institutional Memory Transfer (IMT)",
+  "new_module": "runtime/innovations30/knowledge_transfer.py",
+  "new_classes": [
+    "InstitutionalMemoryTransfer",
+    "KnowledgeBundle",
+    "TransferResult",
+    "TransferVerificationError",
+    "TransferIntegrityError"
+  ],
+  "new_invariants": [
+    "IMT-0",
+    "IMT-VERIFY-0",
+    "IMT-CHAIN-0",
+    "IMT-DETERM-0"
+  ],
+  "cumulative_invariants": 41,
+  "tests": "T98-IMT-01..30 (30/30 PASS)",
+  "test_module": "tests/innovations/test_phase98_imt.py",
+  "dependency": "Phase 97 \u2014 INNOV-12 MGV \u2014 v9.30.0",
+  "lane": "innovations",
+  "tier": "constitutional",
+  "timestamp_utc": "2026-04-01T00:00:00Z"
+}

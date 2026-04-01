@@ -1,10 +1,10 @@
 {
-  "active_phase": "v9.30.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.31.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 97 \u00b7 INNOV-12 Mutation Genealogy Visualization (MGV)",
-  "last_completed_pr": "feature/phase97-mgv-impl",
+  "last_completed_phase": "Phase 98 \u00b7 INNOV-13 Institutional Memory Transfer (IMT)",
+  "last_completed_pr": "feature/phase98-imt-impl",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -13,7 +13,7 @@
   },
   "last_invocation": "2026-04-01",
   "last_sync_sha": "e48a946",
-  "next_pr": "PR-PHASE98-01 (Phase 98 \u2014 INNOV-13 Institutional Memory Transfer)",
+  "next_pr": "PR-PHASE99-01 (Phase 99 \u2014 INNOV-14 Constitutional Jury System)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -432,7 +432,7 @@
     "phase94-human0-attested",
     "phase94-mmem-complete"
   ],
-  "current_version": "9.30.0",
+  "current_version": "9.31.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -525,14 +525,24 @@
     "phase97-mgv-persist-0-enforced",
     "phase97-world-first-mutation-genealogy",
     "v9.30.0-released",
-    "phase97-complete"
+    "phase97-complete",
+    "phase98-plan-authored",
+    "phase98-human0-ratified",
+    "phase98-innov13-imt-implemented",
+    "phase98-imt-0-enforced",
+    "phase98-imt-verify-0-enforced",
+    "phase98-imt-chain-0-enforced",
+    "phase98-imt-determ-0-enforced",
+    "phase98-world-first-cryptographic-knowledge-transfer",
+    "v9.31.0-released",
+    "phase98-complete"
   ],
-  "software_version": "9.30.0",
-  "last_agent_state_sync_digest": "gsync-phase97-v9.30.0-full-cascade-2026-04-01",
-  "version": "9.30.0",
-  "phase": 98,
-  "phase_label": "Phase 98 \u2014 TBD (INNOV-13)",
-  "last_innovation": "INNOV-11",
+  "software_version": "9.31.0",
+  "last_agent_state_sync_digest": "gsync-phase98-v9.31.0-full-2026-04-01",
+  "version": "9.31.0",
+  "phase": 99,
+  "phase_label": "Phase 99 \u2014 INNOV-14 Constitutional Jury System",
+  "last_innovation": "INNOV-13",
   "acse_active": true,
   "tife_active": true,
   "human0_signoffs": [
@@ -601,6 +611,13 @@
       "scope": "Phase 97 INNOV-12 Mutation Genealogy Visualization (MGV) \u2014 30/30 tests green \u2014 3 MGV invariants \u2014 37 cumulative Hard-class invariants \u2014 v9.30.0 release",
       "session_digest": "phase97-mgv-impl-2026-03-31",
       "attestation_ref": "ILA-97-2026-03-31-001"
+    },
+    {
+      "date": "2026-04-01",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 98 INNOV-13 Institutional Memory Transfer (IMT) \u2014 30/30 tests green \u2014 4 IMT invariants \u2014 41 cumulative Hard-class invariants \u2014 v9.31.0 release",
+      "session_digest": "phase98-imt-impl-2026-04-01",
+      "attestation_ref": "ILA-98-2026-04-01-001"
     }
   ]
 }
