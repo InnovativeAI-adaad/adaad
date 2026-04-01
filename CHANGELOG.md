@@ -1,39 +1,40 @@
 # CHANGELOG
 
-## [9.31.0] — 2026-04-01 — Phase 98 · INNOV-13 Institutional Memory Transfer (IMT)
+## [9.32.0] — 2026-04-01 — Phase 99 · INNOV-14 Constitutional Jury System (CJS)
 
-**Branch:** `feature/phase98-imt-impl`
+**Branch:** `feature/phase99-cjs-impl`
 **HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
-**Tests:** T98-IMT-01..30 (30/30 PASS)
-**Evidence:** `artifacts/governance/phase98/phase98_sign_off.json` · ILA-98-2026-04-01-001
+**Tests:** T99-CJS-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase99/phase99_sign_off.json` · ILA-99-2026-04-01-001
 
-### Phase 98: INNOV-13 — Institutional Memory Transfer (IMT)
+### Phase 99: INNOV-14 — Constitutional Jury System (CJS)
 
-World-first cryptographically governed cross-instance knowledge transfer for autonomous
-software evolution engines. `InstitutionalMemoryTransfer` exports the accumulated engineering
-wisdom of an ADAAD instance as a signed `KnowledgeBundle`, then imports it on fresh hardware
-under chain-of-custody governance — the system's intelligence outlives its deployment.
+World-first governed multi-agent jury deliberation for autonomous mutation promotion
+decisions. `ConstitutionalJury.deliberate()` convenes 3 independent evaluators with
+deterministic seeds derived from mutation_id only. 2-of-3 quorum determines
+`majority_verdict`. Dissenting verdicts are ledgered before return, feeding
+`InvariantDiscoveryEngine` for ongoing constitutional rule derivation.
 
-#### New module: `runtime/innovations30/knowledge_transfer.py`
+#### New module: `runtime/innovations30/constitutional_jury.py`
 
-- `KnowledgeBundle` — immutable knowledge snapshot; `bundle_hash` = sha256(canonical-json);
-  `create()` deterministic; `to_bytes()`/`from_bytes()` gzip roundtrip; `verify_integrity()`;
-  `verify_signature(key)` HMAC-SHA256 comparison (IMT-VERIFY-0)
-- `InstitutionalMemoryTransfer` — `export_bundle()` sorted-key iteration (IMT-DETERM-0);
-  `sign_bundle()` sole signing surface (IMT-0); `import_bundle()` signature + integrity gate
-  before any write (IMT-VERIFY-0); `_record_chain_event()` Path.open append-only to
-  `governance_events.jsonl` on every outcome (IMT-CHAIN-0)
-- `TransferVerificationError` — raised on unsigned or tampered bundle
-- `TransferIntegrityError` — raised on bundle_hash mismatch
+- `ConstitutionalJury` — `deliberate()` sole evaluation authority (CJS-0); quorum guard
+  at construction (CJS-QUORUM-0); `_persist()` / `_record_dissent()` Path.open
+  append-only (CJS-PERSIST-0); `dissent_records()` / `verdict_ledger()` fail-open
+- `JuryDecision` — `decision_digest` = sha256(mutation_id:majority_verdict:
+  approve_count:jury_size) (CJS-DETERM-0); stores `jury_size` for replay fidelity
+- `JurorVerdict` — per-juror evaluation with deterministic `random_seed` (CJS-DETERM-0)
+- `ConstitutionalJuryConfigError` — raised when jury_size < JURY_SIZE at construction
+- `is_high_stakes(changed_files)` — CJS-0 routing predicate over HIGH_STAKES_PATHS
 
 #### Constitutional invariants introduced
 
-- **IMT-0** — KnowledgeBundle MUST be HMAC-SHA256 signed before transmission
-- **IMT-VERIFY-0** — import_bundle() MUST verify signature before any knowledge state write
-- **IMT-CHAIN-0** — every import event (success or rejection) recorded in governance_events.jsonl
-- **IMT-DETERM-0** — canonical JSON serialization throughout; no datetime.now()/random/uuid4
+- **CJS-0** — deliberate() is sole authority for HIGH_STAKES_PATHS mutation evaluation
+- **CJS-QUORUM-0** — majority requires >= 2-of-3 approve; ties default to reject
+- **CJS-DETERM-0** — decision_digest and seeds are fully deterministic from mutation_id
+- **CJS-DISSENT-0** — dissenting verdicts written to dissent ledger before return
+- **CJS-PERSIST-0** — _persist() and _record_dissent() use Path.open append-only
 
-- Hard-class invariants cumulative: **41** (IMT-0, IMT-VERIFY-0, IMT-CHAIN-0, IMT-DETERM-0 introduced)
+- Hard-class invariants cumulative: **46** (CJS-0 through CJS-PERSIST-0 introduced)
 
 
 Generated deterministically from merged governance metadata.
