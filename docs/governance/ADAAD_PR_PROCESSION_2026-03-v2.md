@@ -5,7 +5,7 @@
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
 **Last reviewed:** 2026-03-28
-**Milestone:** `v9.26.0` (Phase 93 complete — INNOV-09 Aesthetic Fitness Signal)
+**Milestone:** `v9.33.0` (Phase 101 complete — INNOV-16 Emergent Role Specialization (ERS))
 **Canonical evidence anchor:** `artifacts/governance/phase93/phase93_sign_off.json` (SHA-256 `62b8f7b329202785fcb4a09e1e70f53778fff7565a07c7e0d6172d8225af68f3`) + merge SHA `ca3cc42`
 
 ---

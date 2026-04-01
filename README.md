@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.29.0 — 96 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.33.0 — 101 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 **[⚡ Quickstart](#quickstart)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
@@ -645,7 +645,7 @@ It answers the question no prior gate could ask: *is this mutation consistent wi
 <summary><b>What are the 10 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-11 shipped across v9.18.0–v9.29.0 (Phases 87–96): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), and Morphogenetic Memory (MMEM).
+INNOV-01 through INNOV-16 shipped across v9.18.0–v9.33.0 (Phases 87–101): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), and Morphogenetic Memory (MMEM).
 
 20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
@@ -668,11 +668,11 @@ Start with the [Trust Center](TRUST_CENTER.md). The [Procurement Fast-Lane packa
 
 ## Roadmap
 
-**Short term** — Phase 97 (INNOV-12), MMEM-VETO-0 veto threshold calibration, semantic embedding upgrade for identity consistency scoring, Aponi DSTE panel implementation.
+**Short term** — Phase 102 (INNOV-17), post-mortem interview loop wiring, Aponi panel for jury deliberation (CJS), AEO endpoint provisioning.
 
 **Mid term** — FitnessEngineV2 8th signal integration (identity_consistency), MMEM amendment protocol, device-anchored mobile runtime, reproducible packaging.
 
-**Long term** — Cross-device federation with deterministic consensus, MMEM-VETO full enforcement, Phase 100 milestone.
+**Long term** — Cross-device federation with deterministic consensus, GA v1.1 readiness, Phase 114 milestone (30-innovation pipeline completion).
 
 → [Full roadmap](ROADMAP.md) · [30 Innovations specification](ADAAD_30_INNOVATIONS.md)
 

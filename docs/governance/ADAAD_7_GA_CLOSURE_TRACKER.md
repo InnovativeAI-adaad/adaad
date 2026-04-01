@@ -4,7 +4,7 @@ This document preserves the completed ADAAD-7 / v1.1-GA closure controls as a hi
 
 > Current sequencing and roadmap execution are tracked in [`ADAAD_PR_PROCESSION_2026-03-v2.md`](./ADAAD_PR_PROCESSION_2026-03-v2.md) and [`ROADMAP.md`](../../ROADMAP.md).
 >
-> **Canonical live state pointer:** Current = **Phase 93** (`v9.26.0`, INNOV-09 AFIT shipped). Next = **Phase 94 — INNOV-10 roadmap execution**.
+> **Canonical live state pointer:** Current = **Phase 101** (`v9.33.0`, INNOV-16 Emergent Role Specialization (ERS) shipped). Next = **Phase 102 — INNOV-17 Agent Post-Mortem Interviews**.
 >
 > **Canonical GA blocker count:** **3 open blockers** (as defined in the v2 procession contract).
 >
