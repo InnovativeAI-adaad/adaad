@@ -193,6 +193,7 @@ def test_imt_19_chain_event_uses_path_open(imt, signed_bundle):
         try:
             imt.import_bundle(signed_bundle, {}, KEY)
         except Exception:
+            # Ignore any errors from import_bundle; this test only verifies Path.open usage.
             pass
         mocked.assert_called()
 
