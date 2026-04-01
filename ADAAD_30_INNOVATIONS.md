@@ -1,4 +1,4 @@
-# ADAAD — 30 Innovations That Make It the Greatest AI Loop Ever
+# ADAAD — 30 Architectural Design Goals That Make It the Greatest AI Loop Ever
 
 **Author:** Claude (ArchitectAgent)  
 **Date:** March 22, 2026 · **Status updated:** March 28, 2026  
