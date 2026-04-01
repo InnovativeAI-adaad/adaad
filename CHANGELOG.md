@@ -2,6 +2,91 @@
 
 Generated deterministically from merged governance metadata.
 
+## [9.30.0] — 2026-03-31 — Phase 97 · INNOV-12 Mutation Genealogy Visualization (MGV)
+
+**Branch:** `feature/phase97-mgv-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-31
+**Tests:** T97-MGV-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase97/phase97_sign_off.json` · ILA-97-2026-03-31-001
+
+### Phase 97: INNOV-12 — Mutation Genealogy Visualization (MGV)
+
+World-first evolutionary fitness tracking at the lineage level, not the individual mutation level.
+`MutationGenealogyAnalyzer` annotates every edge in the mutation lineage graph with a
+`PropertyInheritanceVector` — four orthogonal fitness deltas (correctness, efficiency, governance,
+fitness) plus a deterministic sha256 digest — enabling population-genetics-level analysis of
+software mutation history: productive lineages, evolutionary dead-ends, and cumulative directional
+drift across any ancestry path.
+
+#### New module: `runtime/innovations30/mutation_genealogy.py`
+
+- `PropertyInheritanceVector` — immutable edge annotation; four fitness deltas; deterministic
+  `digest` property (sha256, no RNG/datetime/uuid4); `net_improvement` four-axis average;
+  `is_dead_end` threshold gate at -0.05
+- `MutationGenealogyAnalyzer` — append-only JSONL ledger (Path.open); `record_inheritance()`;
+  `productive_lineages(min_improvement=0.05)`; `dead_end_epochs()`; `evolutionary_direction()`
+- `_load()` — fail-open: corrupt lines silently skipped, analyzer never blocked (MGV-0)
+- `_persist()` — Path.open append mode, never builtins.open (MGV-PERSIST-0)
+
+#### Invariants introduced (3 new Hard-class)
+- `MGV-0` — _load() MUST never raise; any parse failure silently skipped; analyzer always available
+- `MGV-DETERM-0` — digest MUST be deterministic: sha256(parent:child:net_improvement:.4f)[:16]; no RNG/datetime/uuid4
+- `MGV-PERSIST-0` — _persist() MUST use Path.open append mode; no direct builtins.open call; append-only
+
+**Total Hard-class invariants (cumulative):** 37
+
+#### Findings resolved
+- FINDING-97-001 (P2): T97-MGV-04 mock target — corrected from `builtins.open` to
+  `runtime.innovations30.mutation_genealogy.Path.open` (module uses `Path.open`, not builtins)
+
+- PR ID: `PR-PHASE97-01`
+- Title: Phase 97 — INNOV-12 Mutation Genealogy Visualization (MGV)
+- Lane/Tier: `innovations` / `constitutional`
+- Evidence refs: `phase97-innov12-mgv-shipped` · `ILA-97-2026-03-31-001`
+
+
+## [9.29.0] — 2026-03-30 — Phase 96 · INNOV-11 Cross-Epoch Dream State Engine (DSTE)
+
+**Branch:** `feature/phase96-dste-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-03-30
+**Tests:** T96-DSTE-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase96/identity_ledger_attestation.json` · ILA-96-2026-03-30-001
+
+### Phase 96: INNOV-11 — Cross-Epoch Dream State Engine (DSTE)
+
+World-first constitutionally-governed cross-epoch mutation memory consolidation. Between active
+epochs, the DreamStateEngine replays successful past mutations in novel cross-epoch combinations
+to surface improvement candidates not discoverable within any single epoch — memory consolidation
+for autonomous software evolution.
+
+#### New module: `runtime/innovations30/dream_state.py` (full constitutional upgrade from scaffold)
+
+- `DreamStateEngine.dream(epoch_memory, epoch_id, seed)` — full pipeline: gate-0 → seed-rng →
+  novelty filter → ceiling cap → ledger commit → gate-1 → DreamStateReport
+- `DreamCandidate` — immutable; genesis_digest is sha256(sorted source_epochs + id)
+- `DreamLedgerEvent` — chained governance record; committed before candidates returned (DSTE-0)
+- `DreamStateReport` — HUMAN-0 evidence artifact; structurally incapable of verdict='APPROVED'
+- `evaluate_dream_gate_0()` — pre-execution: seed check (DSTE-1) + quorum check (DSTE-3)
+- `evaluate_dream_gate_1()` — post-execution: ledger-first (DSTE-0) + ceiling (DSTE-6)
+- `DreamGateViolation` — Hard-class violation exception; epoch aborts on this
+
+#### Invariants introduced (7 new Hard-class)
+DSTE-0 (ledger-first), DSTE-1 (determinism/seed), DSTE-2 (novelty floor ≥ 0.30),
+DSTE-3 (pool quorum ≥ 3), DSTE-4 (chain integrity), DSTE-5 (no-write between epochs),
+DSTE-6 (candidate ceiling ≤ 5)
+
+**Total Hard-class invariants (cumulative):** 34
+
+#### Findings resolved
+- FINDING-96-001 (P1): agent state drift — corrected from `phase94_complete/9.27.0`
+  to `phase95_complete/9.28.0` as branch initialization step
+
+- PR ID: `PR-PHASE96-01`
+- Title: Phase 96 — INNOV-11 Cross-Epoch Dream State Engine (DSTE)
+- Lane/Tier: `innovations` / `constitutional`
+- Evidence refs: `phase96-dste-impl-v9.29.0`
+
+
 ## [9.28.0] — 2026-03-29 — Phase 95 · Oracle×Dork Alignment · Free LLM · State Bus
 
 **Branch:** `feature/phase95-oracle-dork-alignment`

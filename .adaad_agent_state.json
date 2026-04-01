@@ -1,19 +1,19 @@
 {
-  "active_phase": "phase94_complete",
+  "active_phase": "phase97_complete",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 94 — Morphogenetic Memory (INNOV-10)",
-  "last_completed_pr": "feature/phase94-mmem-impl",
+  "last_completed_phase": "Phase 97 — INNOV-12 Mutation Genealogy Visualization (MGV)",
+  "last_completed_pr": "feature/phase97-mgv-impl",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-03-28",
-  "last_sync_sha": "3c93c2c",
-  "next_pr": "PR-PHASE95-01 (Phase 95 — INNOV-11)",
+  "last_invocation": "2026-03-30",
+  "last_sync_sha": "pending-merge",
+  "next_pr": "PR-PHASE98-01 (Phase 98 — INNOV-13)",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -164,6 +164,16 @@
       "resolved_phase": "91",
       "resolved_date": "2026-03-24",
       "evidence_branch": "fix/phase91-audit-5patch"
+    },
+    {
+      "id": "FINDING-96-001",
+      "title": "Agent state drift: phase94_complete/9.27.0 vs actual phase95/9.28.0",
+      "severity": "P1",
+      "source": "Phase 96 proactive scan",
+      "status": "resolved",
+      "phase_target": "96",
+      "resolved_phase": "96",
+      "resolved_date": "2026-03-30"
     }
   ],
   "pending_evidence_rows": [],
@@ -422,7 +432,7 @@
     "phase94-human0-attested",
     "phase94-mmem-complete"
   ],
-  "current_version": "9.27.0",
+  "current_version": "9.30.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -494,12 +504,12 @@
     "phase94-mmem-complete",
     "phase94-audit-hardening-complete"
   ],
-  "software_version": "9.27.0",
+  "software_version": "9.30.0",
   "last_agent_state_sync_digest": "phase94-mmem-complete-v9.27.0-2026-03-28",
-  "version": "9.27.0",
-  "phase": 95,
-  "phase_label": "Phase 95 — TBD (INNOV-11)",
-  "last_innovation": "INNOV-10",
+  "version": "9.30.0",
+  "phase": 98,
+  "phase_label": "Phase 98 — TBD (INNOV-13)",
+  "last_innovation": "INNOV-11",
   "acse_active": true,
   "tife_active": true,
   "human0_signoffs": [

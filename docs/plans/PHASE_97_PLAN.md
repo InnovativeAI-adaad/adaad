@@ -1,41 +1,53 @@
-# Phase 97 Plan — INNOV-13: Institutional Memory Transfer
+# Phase 97 Plan — INNOV-12: Mutation Genealogy Visualization (MGV)
+
+> **Status: ✅ EXECUTED & CLOSED — 2026-03-31**
+> Evidence: `artifacts/governance/phase97/phase97_sign_off.json` · ILA-97-2026-03-31-001
 
 ## Objective
-Deliver **INNOV-13 (Institutional Memory Transfer)** as a governed phase increment with deterministic implementation sequencing, constitutional gate coverage, and release evidence alignment.
+Deliver **INNOV-12 (Mutation Genealogy Visualization)** as a governed phase increment with
+deterministic implementation sequencing, constitutional gate coverage, and release evidence
+alignment.
 
 ## Dependency Chain
-- Immediate predecessor: **Phase 96** (must be merged before any Phase 97 source writes).
-- Innovation lineage: `INNOV-12` → `INNOV-13` within `ADAAD_30_INNOVATIONS.md` phase roadmap (INNOV-10..30 mapped to Phases 94..114).
-- Release dependency: target version **v9.30.0** follows predecessor semantic progression.
-- Deterministic next-PR linkage: `state_alignment.expected_next_pr` resolves to `Phase 97` only when Phase 96 status is `shipped`.
+- Immediate predecessor: **Phase 96** — INNOV-11 DSTE — v9.29.0 ✅ merged
+- Innovation lineage: `INNOV-11` → `INNOV-12` within `ADAAD_30_INNOVATIONS.md`
+- Release: **v9.30.0**
+- Predecessor gate satisfied: `state_alignment.expected_next_pr` resolved to Phase 97
 
-## Invariants
-- **HUMAN-0**: non-delegable governor sign-off required for phase ratification and release promotion.
-- **REPLAY-0**: identical inputs produce identical governance and replay outputs.
-- **GATE-0**: governance gate remains sole promotion authority.
-- **PHASE-97-SEQ-0**: predecessor linkage is explicit and linear (`Phase 96` → `Phase 97`).
-- **EVIDENCE-97-0**: no closure without complete claims-evidence row and resolvable artifacts.
+## Invariants (all verified)
+- **HUMAN-0**: Dustin L. Reid — ratified 2026-03-31
+- **REPLAY-0**: identical inputs produce identical digest via MGV-DETERM-0
+- **GATE-0**: governance gate sole promotion authority
+- **PHASE-97-SEQ-0**: Phase 96 → Phase 97 linear linkage enforced
+- **EVIDENCE-97-0**: complete claims-evidence row and all artifacts present
 
-## Tier Classification (Gate Applicability)
-- **Tier 0 (always-on baseline):** required preflight and per-file verification.
-- **Tier 1 (standard gate stack):** full test suite, governance tests, artifact verification, evidence validation.
-- **Tier 2 (escalated):** required (critical governance/runtime innovation surface).
-- **Tier 3 (PR completeness):** required (evidence row, docs/runbook alignment, CI tier declaration, lane declaration).
-- **Tier M (merge-specific):** required only under `DEVADAAD` trigger.
+## Tier Classification — all tiers passed
+- **Tier 0:** preflight + per-file verification ✅
+- **Tier 1:** full test suite, governance tests, artifact verification ✅
+- **Tier 2:** constitutional invariant tests, replay determinism ✅
+- **Tier 3:** evidence row complete, docs aligned, CI tier declared ✅
+- **Tier M:** merge attestation, agent-state sync, version bump, changelog ✅
 
-## Acceptance Tests
-- Phase-specific pytest module(s) covering innovation behavior and failure-mode assertions.
-- Determinism and replay verification for all new ledger/reasoning paths.
-- Governance invariant tests proving HUMAN-0 and gate ordering are preserved.
-- Regression check: no pre-existing failures introduced versus base SHA.
+## Delivery
+- **New module:** `runtime/innovations30/mutation_genealogy.py`
+  - `PropertyInheritanceVector` — four-axis fitness delta edge annotation + deterministic digest
+  - `MutationGenealogyAnalyzer` — append-only JSONL ledger; productive_lineages(),
+    dead_end_epochs(), evolutionary_direction()
+- **Test suite:** `tests/innovations/test_phase97_mgv.py` — T97-MGV-01..30 (30/30 PASS)
+- **Invariants introduced:** MGV-0, MGV-DETERM-0, MGV-PERSIST-0 (cumulative Hard-class: 37)
+- **Finding resolved:** FINDING-97-001 — T97-MGV-04 mock corrected builtins.open → Path.open
 
-## Evidence Artifacts Required
-- `artifacts/governance/phase97/track_a_sign_off.json`
-- `artifacts/governance/phase97/replay_digest.txt`
-- `artifacts/governance/phase97/tier_summary.json`
-- `docs/comms/claims_evidence_matrix.md` row updated to `Complete` for Phase 97 / INNOV-13.
+## Evidence Artifacts (all present)
+- `artifacts/governance/phase97/phase97_sign_off.json` ✅
+- `artifacts/governance/phase97/track_a_sign_off.json` ✅
+- `artifacts/governance/phase97/replay_digest.txt` ✅
+- `artifacts/governance/phase97/tier_summary.json` ✅
+- `docs/comms/claims_evidence_matrix.md` row `phase97-innov12-mgv-shipped` ✅
 
 ## HUMAN-0 Checkpoints
-1. **Plan ratification checkpoint:** governor approves this plan before PR open.
-2. **Pre-merge checkpoint:** governor validates gate stack summary and evidence completeness.
-3. **Release checkpoint:** governor records signed ledger attestation for `v9.30.0`.
+1. **Plan ratification:** ✅ governor approved before implementation
+2. **Pre-merge gate:** ✅ governor validated tier stack and evidence
+3. **Release checkpoint:** ⏳ governor records signed ledger attestation for `v9.30.0` (Track B)
+
+## Next
+**Phase 98 — INNOV-13 Institutional Memory Transfer → v9.31.0**

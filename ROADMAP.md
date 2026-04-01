@@ -4,11 +4,11 @@
 
 ---
 
-## What ships today — v9.26.0
+## What ships today — v9.30.0
 
-Phase 93 (INNOV-09 AFIT) is complete. ADAAD now includes cryptographically linked proof DAG lineage, live shadow mutation execution, adversarial red-team fitness gating, and aesthetic fitness scoring as a constitutionally bounded first-class signal. Innovations INNOV-01 through INNOV-09 are shipped across v9.18.0–v9.26.0 (Phases 87–93), with deterministic evidence artifacts recorded per phase closure.
+Phase 97 (INNOV-12 MGV) is complete. ADAAD now annotates every mutation lineage graph edge with a `PropertyInheritanceVector` — four orthogonal fitness deltas and a deterministic digest — enabling population-genetics-level analysis: productive lineages, evolutionary dead-ends, and cumulative directional drift. Innovations INNOV-01 through INNOV-12 are shipped across v9.18.0–v9.30.0 (Phases 87–97), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 93** (`v9.26.0`, INNOV-09 AFIT shipped). Next = **Phase 94 — INNOV-10 roadmap execution**.
+**Current/Next:** Current = **Phase 97** (`v9.30.0`, INNOV-12 MGV shipped). Next = **Phase 98 — INNOV-13 roadmap execution**.
 
 **GA blockers (canonical): 4 open** — F-Droid MR submission (manual), founder GPG sign-off, founder tag ceremony backfill, and strict release gate terminal pass.
 
@@ -1761,3 +1761,83 @@ World-first autonomous evolution system to treat code aesthetics as a constituti
 **Total Hard-class invariants (cumulative):** 21
 
 **Next:** Phase 94 — INNOV-10 roadmap execution
+
+---
+
+### Phase 94 — INNOV-10 · Morphogenetic Memory (MMEM)
+
+**Status:** ✅ shipped (v9.27.0) · **Dependency:** Phase 93 INNOV-09 AFIT merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-28) · **Tests:** T94-MMEM-01..33 (33/33 PASS) · **Evidence:** `artifacts/governance/phase94/identity_ledger_attestation.json` · ILA-94-2026-03-28-001
+
+World-first constitutionally-governed self-model that every mutation proposal must consult before submission. The system maintains a hash-chained identity ledger — a cryptographic record of its own architectural decisions — and detects identity drift at the root: before a mutation proposal can enter the governance queue, it must demonstrate consistency with the system's established identity.
+
+**New module:** `runtime/innovations30/morphogenetic_memory.py`
+- `MorphogeneticMemory.record_identity_statement()` — append identity statement to chained ledger
+- `MorphogeneticMemory.check_consistency()` — pre-proposal identity drift detection
+- `IdentityLedgerEvent` — chained governance record with `prev_event_hash`
+- `semantic_proximity_score()` — Phase 94 stub; full semantic embedding deferred
+
+**Invariants introduced:** `MMEM-0`, `MMEM-1`, `MMEM-2`, `MMEM-3` (4 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 25
+
+**Next:** Phase 95 — Oracle×Dork Alignment
+
+---
+
+### Phase 95 — Oracle×Dork Alignment · Free LLM · State Bus
+
+**Status:** ✅ shipped (v9.28.0) · **Dependency:** Phase 94 MMEM merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-29) · **Evidence:** `artifacts/governance/phase95/identity_ledger_attestation.json` · ILA-95-2026-03-29-001
+
+ADAAD's two AI operator surfaces fully aligned. All paid API dependencies eliminated. Dork powered by Groq free tier + Ollama local + DorkEngine deterministic fallback. Oracle lifted to 12-chip, 5-section structured intelligence surface with state bus relay.
+
+**Modified:** `ui/whaledic/` (Dork), `ui/aponi/` (Oracle)
+- Groq free tier primary (llama-3.3-70b-versatile, SSE streaming, 14,400 req/day)
+- Ollama local secondary (localhost:11434, zero cost)
+- DorkEngine deterministic fallback (constitutional rule engine, always available)
+- ADAAD_STATE_BUS (L1): frozen shared state, updated every refreshAll()
+- Oracle bridge chip: one-click Oracle context relay to Dork
+
+**Invariants introduced:** `ORACLE-CONTEXT-0`, `ORACLE-RENDER-0`, `ORACLE-STREAM-0`, `ORACLE-AUDIT-0`, `DORK-CONST-0`, `DORK-FREE-0`, `DORK-STREAM-0`, `DORK-AUDIT-0`, `BRIDGE-STATE-0`, `BRIDGE-FREE-0` (10 new Hard-class invariants — asserted in UI layer)
+
+**Total Hard-class invariants (cumulative):** 27 (runtime) + UI-layer assertions
+
+**Next:** Phase 96 — INNOV-11 · Cross-Epoch Dream State Engine (DSTE)
+
+---
+
+### Phase 96 — INNOV-11 · Cross-Epoch Dream State Engine (DSTE)
+
+**Status:** ✅ shipped (v9.29.0) · **Dependency:** Phase 95 Oracle×Dork merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-30) · **Tests:** T96-DSTE-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase96/identity_ledger_attestation.json` · ILA-96-2026-03-30-001
+
+World-first constitutionally-governed cross-epoch mutation memory consolidation. Between active epochs, the DreamStateEngine replays successful past mutations in novel cross-epoch combinations to surface improvement candidates not discoverable within any single epoch — analogous to offline synaptic replay in biological memory systems.
+
+**Upgraded module:** `runtime/innovations30/dream_state.py` (full constitutional promotion from scaffold)
+- `DreamStateEngine.dream(epoch_memory, epoch_id, seed)` — full pipeline: gate-0 → seeded-rng → novelty-filter → ceiling-cap → ledger-commit → gate-1 → `DreamStateReport`
+- `DreamCandidate` — immutable; `genesis_digest` is sha256(sorted source_epochs + id)
+- `DreamLedgerEvent` — chained governance record; committed before candidates returned (DSTE-0)
+- `DreamStateReport` — HUMAN-0 evidence artifact; structurally incapable of `verdict='APPROVED'`
+- `evaluate_dream_gate_0()` — pre-execution: seed (DSTE-1) + quorum (DSTE-3)
+- `evaluate_dream_gate_1()` — post-execution: ledger-first (DSTE-0) + ceiling (DSTE-6)
+- `DreamGateViolation` — Hard-class violation exception; epoch aborts on raise
+
+**CEL integration:** Step 16 — `DREAM-CONSOLIDATION` fires post-EPOCH-CLOSE when pool ≥ DREAM_QUORUM (3). Outputs `DreamCandidates` injected into next-epoch `mutation_seed_pool`.
+
+**Invariants introduced:** `DSTE-0`, `DSTE-1`, `DSTE-2`, `DSTE-3`, `DSTE-4`, `DSTE-5`, `DSTE-6` (7 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 34
+
+**Finding resolved:** FINDING-96-001 (P1) — agent state drift corrected (phase94/9.27.0 → phase95/9.28.0)
+
+**Next:** Phase 97 — INNOV-12 roadmap execution
+
+### Phase 97 — INNOV-12 · Mutation Genealogy Visualization (MGV)
+
+**Status:** ✅ shipped (v9.30.0) · **Dependency:** Phase 96 INNOV-11 DSTE merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-03-31) · **Tests:** T97-MGV-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase97/phase97_sign_off.json` · ILA-97-2026-03-31-001
+
+- `PropertyInheritanceVector` — four-axis fitness delta annotation per lineage edge; deterministic sha256 digest (MGV-DETERM-0); `net_improvement` average; `is_dead_end` threshold at -0.05
+- `MutationGenealogyAnalyzer` — append-only JSONL ledger via Path.open (MGV-PERSIST-0); `productive_lineages()`; `dead_end_epochs()`; `evolutionary_direction()`
+- `_load()` — fail-open; corrupt lines silently skipped (MGV-0)
+- FINDING-97-001 RESOLVED — T97-MGV-04 mock target corrected: `builtins.open` → `Path.open`
+- Hard-class invariants cumulative: **37** (MGV-0, MGV-DETERM-0, MGV-PERSIST-0 introduced)
+
+**Next:** Phase 98 — INNOV-13 · Institutional Memory Transfer
