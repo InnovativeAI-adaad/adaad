@@ -1,0 +1,36 @@
+{
+  "phase": 98,
+  "innovation": "INNOV-13",
+  "innovation_name": "Institutional Memory Transfer (IMT)",
+  "version": "9.31.0",
+  "status": "COMPLETE",
+  "date": "2026-04-01",
+  "human_0_id": "Dustin L. Reid",
+  "human_0_handle": "HUMAN-0",
+  "human_0_ratification": "phase98-human0-ratified",
+  "ratification_timestamp": "2026-04-01T00:00:00Z",
+  "dependency": "Phase 97 \u2014 INNOV-12 MGV \u2014 v9.30.0",
+  "branch": "feature/phase98-imt-impl",
+  "new_module": "runtime/innovations30/knowledge_transfer.py",
+  "modified_modules": [],
+  "test_suite": "T98-IMT-01..30",
+  "tests_passing": 30,
+  "tests_required": 30,
+  "invariants_introduced": [
+    "IMT-0",
+    "IMT-VERIFY-0",
+    "IMT-CHAIN-0",
+    "IMT-DETERM-0"
+  ],
+  "invariant_descriptions": {
+    "IMT-0": "KnowledgeBundle MUST be cryptographically signed (HMAC-SHA256) before transmission. Unsigned bundles are rejected by import_bundle() via TransferVerificationError.",
+    "IMT-VERIFY-0": "import_bundle() MUST verify HMAC signature against signing_key before any knowledge state write. Verification failure raises TransferVerificationError.",
+    "IMT-CHAIN-0": "Every import event (success or rejection) MUST be recorded in the chain-of-custody ledger (governance_events.jsonl) with full bundle provenance before return. Uses Path.open \u2014 never builtins.open.",
+    "IMT-DETERM-0": "Bundle serialization is deterministic: canonical JSON (sort_keys=True), sha256, no datetime.now(), no random, no uuid4. Identical source state produces identical bundle_hash and signature."
+  },
+  "pre_existing_failures_on_main": 0,
+  "failures_on_branch": 0,
+  "regressions_introduced": 0,
+  "cumulative_hard_invariants": 41,
+  "notes": "Innovation #13 \u2014 Institutional Memory Transfer. KnowledgeBundle exports engineering wisdom (knowledge_snapshot) from a source ADAAD instance. InstitutionalMemoryTransfer.sign_bundle() applies HMAC-SHA256 provenance. import_bundle() enforces signature verification and integrity check before any write, then records a chain-of-custody event in governance_events.jsonl. World-first: cryptographically governed cross-instance knowledge transfer for autonomous software evolution engines."
+}
