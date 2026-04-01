@@ -16,7 +16,6 @@ import pytest
 from runtime.innovations30.knowledge_transfer import (
     InstitutionalMemoryTransfer,
     KnowledgeBundle,
-    TransferResult,
     TransferVerificationError,
     TransferIntegrityError,
     _compute_hmac,
