@@ -1,0 +1,24 @@
+ADAAD Replay Digest — Phase NNN — vX.XX.0
+==========================================
+Innovation:    INNOV-NN — [Full Name]
+Date:          YYYY-MM-DD
+Governor:      DUSTIN L REID
+Session:       phaseNNN-abbr-impl-YYYY-MM-DD
+
+Replay inputs:
+  base_sha:    PLACEHOLDER_BASE_SHA
+  branch:      feat/phaseNNN-innovNN-<name>
+  test_mark:   phaseNNN
+
+Replay outputs:
+  tests_run:   30
+  tests_pass:  30
+  tests_fail:  0
+  duration_s:  PLACEHOLDER
+
+Digest chain:
+  inputs_hash:  sha256:PLACEHOLDER
+  outputs_hash: sha256:PLACEHOLDER
+  chain_digest: sha256:PLACEHOLDER
+
+Verified by:   ADAAD governance gate v2
