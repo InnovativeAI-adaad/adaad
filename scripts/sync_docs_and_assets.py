@@ -70,11 +70,14 @@ def _load_state() -> dict[str, Any]:
     # Count cumulative invariants from governance artifact if available
     hard = 56  # fallback — updated on each phase
     phase_dirs = list((ROOT / "artifacts/governance").glob("phase*"))
+
+    def _phase_number_from_path(p: Path) -> int:
+        """Extract numeric phase identifier from a governance phase directory name."""
+        m = re.search(r"\d+", p.name)
+        return int(m.group()) if m else 0
+
     if phase_dirs:
-        latest_phase_dir = max(
-            phase_dirs,
-            key=lambda p: int(m.group()) if (m := re.search(r"\d+", p.name)) else 0,
-        )
+        latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
         sign_off = latest_phase_dir / f"{latest_phase_dir.name}_sign_off.json"
         if sign_off.exists():
             try:
@@ -115,7 +118,7 @@ def _patch_file(
     for pattern, replacement in patches:
         repl = replacement.format(**ctx)
         if pattern.startswith("REGEX:"):
-            regex = pattern[len("REGEX:") :]
+            regex = pattern.removeprefix("REGEX:")
             new = re.sub(regex, repl, content)
         else:
             new = content.replace(pattern, repl)
