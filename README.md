@@ -37,7 +37,7 @@ These are not documentation claims. They are runtime-enforced invariants. Violat
 | Identity check never blocks an epoch | Fail-open with fallback score injection | `MMEM-0` |
 | Critical mutations require GPG-signed human key | Architecturally enforced — not a config option | `HUMAN-0` |
 | Import boundaries block unauthorized dependencies | Static enforcement — violations block merge | `AST-IMPORT-0` |
-| All 34 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 34 invariants |
+| All 57 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 57 invariants |
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md)
 
