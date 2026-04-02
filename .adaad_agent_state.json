@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.34.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.35.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 101 \u00b7 INNOV-16 Emergent Role Specialization (ERS)",
+  "last_completed_phase": "Phase 102 \u00b7 INNOV-17 Agent Post-Mortem Interviews (APM)",
   "last_completed_pr": "feature/phase101-ers-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -12,7 +12,7 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-04-02",
-  "last_sync_sha": "4a8544f",
+  "last_sync_sha": "7b87795",
   "next_pr": "PR-PHASE102-01 (Phase 102 \u2014 INNOV-17 Agent Post-Mortem Interviews)",
   "open_findings": [
     {
@@ -571,8 +571,8 @@
     "v9.34.0-released",
     "phase101-complete"
   ],
-  "software_version": "9.34.0",
-  "last_agent_state_sync_digest": "gsync-a9f6b939e8b114e2",
+  "software_version": "9.35.0",
+  "last_agent_state_sync_digest": "gsync-7f7bccb435978860",
   "version": "9.34.0",
   "phase": 102,
   "phase_label": "Phase 102 \u2014 INNOV-17 Agent Post-Mortem Interviews",
