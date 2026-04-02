@@ -7,10 +7,13 @@ surface: markdown badges, SVG assets, shields.io badge URLs, alt-text, facing
 docs, and governance pointers.
 
 Constitutional invariants
-  DOCSYNC-0      All surfaces must reflect VERSION after a successful run.
-  DOCSYNC-DETERM-0 Identical VERSION + state inputs → identical outputs.
-  DOCSYNC-IDEM-0 Re-running on an already-synced repo emits zero file writes.
-  DOCSYNC-CLOSED-0 Any unresolvable state file exits non-zero (no silent drift).
+  DOCSYNC-0         All surfaces must reflect VERSION after a successful run.
+  DOCSYNC-DETERM-0  Identical VERSION + state inputs → identical outputs.
+  DOCSYNC-IDEM-0    Re-running on an already-synced repo emits zero file writes.
+                    This is achieved by only writing files when their content
+                    would change (patching and SVG regeneration are content-
+                    checked), so a no-op run produces no filesystem writes.
+  DOCSYNC-CLOSED-0  Any unresolvable state file exits non-zero (no silent drift).
 
 Usage
   python3 scripts/sync_docs_and_assets.py [--dry-run] [--verbose]
