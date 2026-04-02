@@ -196,7 +196,7 @@ def _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY):
   <rect x="40" y="100" width="180" height="32" rx="6" fill="#f5c84222"/>
   <text x="52" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase {PHASE} \xb7 {INNOV_N} Innovations</text>
   <rect x="234" y="100" width="185" height="32" rx="6" fill="#ff446622"/>
-  <text x="246" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#ff4466">{HARD} Hard-class Invariants</text>
+  <text x="246" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#ff4466">{HARD} Hard-Class Invariants</text>
   <rect x="433" y="100" width="90" height="32" rx="6" fill="#00ff8822"/>
   <circle cx="451" cy="116" r="5" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
   <text x="463" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#00ff88">LIVE</text>
