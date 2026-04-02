@@ -76,6 +76,9 @@ def _load_state() -> dict[str, Any]:
         m = re.search(r"\d+", p.name)
         return int(m.group()) if m else 0
 
+
+        latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
+
     if phase_dirs:
         latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
         sign_off = latest_phase_dir / f"{latest_phase_dir.name}_sign_off.json"
