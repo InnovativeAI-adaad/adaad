@@ -225,7 +225,7 @@ def test_cjs_25_persist_uses_path_open(jury, mutation_id):
 
 def test_cjs_26_record_dissent_uses_path_open(jury, mutation_id):
     """CJS-PERSIST-0: _record_dissent uses Path.open not builtins.open."""
-    verdicts = [_make_verdict(f"j-{i}", mutation_id, "reject" if i == 2 else "approve")
+    verdicts = [_make_verdict(f"j-{i}", mutation_id, "reject" if i == 2 else "approve", 0)
                 for i in range(3)]
     with patch("runtime.innovations30.constitutional_jury.Path.open",
                mock_open()) as mocked:
