@@ -10,9 +10,9 @@
     </linearGradient>
   </defs>
   <rect width="800" height="200" rx="12" fill="url(#heroBg)" stroke="#21262d" stroke-width="1"/>
-  <text x="40" y="85" font-family="'SF Mono',monospace" font-size="52" font-weight="900" fill="url(#vGrad)">v9.33.0</text>
+  <text x="40" y="85" font-family="'SF Mono',monospace" font-size="52" font-weight="900" fill="url(#vGrad)">v9.35.0</text>
   <rect x="40" y="100" width="180" height="32" rx="6" fill="#f5c84222"/>
-  <text x="52" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase 101 · 15 Innovations</text>
+  <text x="52" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase 102 · 17 Innovations</text>
   <rect x="234" y="100" width="185" height="32" rx="6" fill="#ff446622"/>
   <text x="246" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#ff4466">51 Hard-class Invariants</text>
   <rect x="433" y="100" width="90" height="32" rx="6" fill="#00ff8822"/>

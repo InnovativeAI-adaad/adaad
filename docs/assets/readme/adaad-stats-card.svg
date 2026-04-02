@@ -7,7 +7,7 @@
   </defs>
   <rect width="800" height="120" rx="8" fill="url(#bg)" stroke="#30363d" stroke-width="1"/>
   <text x="24" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">VERSION</text>
-  <text x="24" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#00d4ff">v9.33.0</text>
+  <text x="24" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#00d4ff">v9.35.0</text>
   <text x="180" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">PHASE</text>
   <text x="180" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#f5c842">101</text>
   <text x="310" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">INNOVATIONS</text>
