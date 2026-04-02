@@ -115,7 +115,7 @@ def _patch_file(
 
     content = original = path.read_text()
     changes = 0
-    for pattern, replacement in patches:
+            regex = pattern.removeprefix("REGEX:")
         repl = replacement.format(**ctx)
         if pattern.startswith("REGEX:"):
             regex = pattern.removeprefix("REGEX:")
