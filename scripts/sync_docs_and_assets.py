@@ -143,7 +143,7 @@ def _regenerate_svg(path: Path, ctx: dict[str, Any], dry_run: bool = False) -> i
         "adaad-stats-card": _svg_stats_card(V, PHASE, INNOV_N, HARD, TODAY),
         "adaad-version-hero": _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY),
         "adaad-live-status": _svg_live_status(V, PHASE, INNOV_N, HARD, TODAY),
-        "adaad-hero": _svg_live_status(V, PHASE, INNOV_N, HARD, TODAY),
+        "adaad-hero": _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY),
     }
 
     if name not in svg_map:
