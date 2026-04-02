@@ -36,7 +36,6 @@ ROOT = Path(__file__).resolve().parents[1]
 # Each entry: (file, list_of_(regex_or_literal, replacement_template))
 # {V} = version  {PHASE} = phase  {INNOV} = innovation count  {HARD} = hard invariants
 
-MARKDOWN_PATCHES: list[tuple[Path, list[tuple[str, str]]]] = []
 SVG_SURFACES: list[Path] = [
     ROOT / "docs/assets/readme/adaad-stats-card.svg",
     ROOT / "docs/assets/readme/adaad-version-hero.svg",
