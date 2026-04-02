@@ -76,6 +76,9 @@ def _load_state() -> dict[str, Any]:
         m = re.search(r"\d+", p.name)
         return int(m.group()) if m else 0
 
+
+        latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
+
     if phase_dirs:
         latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
         sign_off = latest_phase_dir / f"{latest_phase_dir.name}_sign_off.json"
@@ -115,7 +118,7 @@ def _patch_file(
 
     content = original = path.read_text()
     changes = 0
-    for pattern, replacement in patches:
+            regex = pattern.removeprefix("REGEX:")
         repl = replacement.format(**ctx)
         if pattern.startswith("REGEX:"):
             regex = pattern.removeprefix("REGEX:")
