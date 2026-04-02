@@ -29,6 +29,9 @@ import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ── Invariant constants ───────────────────────────────────────────────────────
 SPECIALIZATION_WINDOW: int = 50          # ERS-WINDOW-0
@@ -256,15 +259,18 @@ class EmergentRoleSpecializer:
             for k, v in data.get("profiles", {}).items():
                 try:
                     self._profiles[k] = AgentBehaviorProfile(**v)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    # Fail-open for corrupt profile entries: skip invalid records.
+                    logger.debug("Skipping corrupt profile entry %r in %s: %s", k, self.state_path, exc)
             for k, v in data.get("discovered_roles", {}).items():
                 try:
                     self._discovered_roles[k] = EmergentRole(**v)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                except Exception as exc:
+                    # Fail-open for corrupt role entries: skip invalid records.
+                    logger.debug("Skipping corrupt discovered_role entry %r in %s: %s", k, self.state_path, exc)
+        except Exception as exc:
+            # Fail-open for unreadable/corrupt state file: ignore and start fresh.
+            logger.debug("Failed to load ERS state from %s; ignoring corrupt state: %s", self.state_path, exc)
 
     def _save(self) -> None:
         """ERS-PERSIST-0: write state with sort_keys=True via Path.open("w")."""
