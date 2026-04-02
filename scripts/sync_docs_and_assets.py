@@ -69,12 +69,12 @@ def _load_state() -> dict[str, Any]:
 
     # Count cumulative invariants from governance artifact if available
     hard = 56  # fallback — updated on each phase
-    latest_phase_dir = max(
-        (ROOT / "artifacts/governance").glob("phase*"),
-        key=lambda p: int(m.group()) if (m := re.search(r"\d+", p.name)) else 0,
-        default=None,
-    )
-    if latest_phase_dir:
+    phase_dirs = list((ROOT / "artifacts/governance").glob("phase*"))
+    if phase_dirs:
+        latest_phase_dir = max(
+            phase_dirs,
+            key=lambda p: int(m.group()) if (m := re.search(r"\d+", p.name)) else 0,
+        )
         sign_off = latest_phase_dir / f"{latest_phase_dir.name}_sign_off.json"
         if sign_off.exists():
             try:
