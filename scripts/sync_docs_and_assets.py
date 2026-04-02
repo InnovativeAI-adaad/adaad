@@ -239,7 +239,7 @@ def _build_markdown_patches(ctx: dict[str, Any]) -> list[tuple[Path, list[tuple[
         (ROOT / "docs/README.md", [
             ("REGEX:\\*\\*ADAAD v[\\d.]+ · Phase \\d+ \\([^)]+\\)\\*\\*",
              f"**ADAAD v{V} · Phase {PHASE} (INNOV-{INNOV_N} shipped)**"),
-            ("REGEX:Current = Phase \\d+ \\(v[\\d.]+\\), Next = Phase \\d+[^.]+\\.",
+            ("REGEX:Current = Phase \\d+ \\(v[\\d.]+\\), Next = Phase \\d+[^.]*\\.",
              f"Current = Phase {PHASE} (v{V}), Next = Phase {PHASE + 1} — INNOV-{INNOV_N + 1}."),
             ("REGEX:ADAAD v[\\d.]+ Runtime",
              f"ADAAD v{V} Runtime"),
