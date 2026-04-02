@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## [9.34.0] — 2026-04-01 — Phase 101 · INNOV-16 Emergent Role Specialization (ERS)
+
+**Branch:** `feature/phase101-ers-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T101-ERS-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase101/phase101_sign_off.json` · ILA-101-2026-04-01-001
+
+### Phase 101: INNOV-16 — Emergent Role Specialization (ERS)
+
+World-first data-driven emergent role discovery for autonomous code evolution agents.
+`EmergentRoleSpecializer.discover_roles()` classifies agents into named archetypes
+purely from accumulated behavioral evidence — no manual assignment. Two evidence gates
+enforce quality: agents must accumulate >= 50 epochs (ERS-WINDOW-0) and achieve >= 0.65
+target-type dominance (ERS-THRESHOLD-0) before a role is emitted.
+
+#### New module: `runtime/innovations30/emergent_roles.py`
+
+- `EmergentRoleSpecializer` — `record_behavior()` accumulates observations;
+  `discover_roles()` sole assignment authority (ERS-0), window + threshold gated
+  (ERS-WINDOW-0/ERS-THRESHOLD-0), sorted iteration (ERS-DETERM-0); `_save()` / `_load()`
+  fail-open (ERS-PERSIST-0)
+- `AgentBehaviorProfile` — `dominant_target` / `dominant_strategy` deterministic
+  max (alphabetic tie-break); `specialization_score` = max_count/total; `avg_risk`;
+  `avg_fitness_delta` — all pure properties, no entropy (ERS-DETERM-0)
+- `EmergentRole` — 5 named archetypes: structural_architect, test_coverage_guardian,
+  performance_optimizer, safety_hardener, adaptive_explorer; fallback: emergent_{strategy}
+
+#### Constitutional invariants introduced
+
+- **ERS-0** — discover_roles() is sole role-assignment authority; no manual assignment
+- **ERS-WINDOW-0** — role not emitted before SPECIALIZATION_WINDOW (50) epochs
+- **ERS-THRESHOLD-0** — role not emitted below SPECIALIZATION_THRESHOLD (0.65) score
+- **ERS-DETERM-0** — classification deterministic; no datetime.now()/random/uuid4
+- **ERS-PERSIST-0** — _save() Path.open("w") sort_keys=True; _load() fail-open
+
+- Hard-class invariants cumulative: **56** (ERS-0 through ERS-PERSIST-0 introduced)
+
+
 ## [9.33.0] — 2026-04-01 — Phase 100 · INNOV-15 Agent Reputation Staking (ARS)
 
 **Branch:** `feature/phase100-ars-impl`

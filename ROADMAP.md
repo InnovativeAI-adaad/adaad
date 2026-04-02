@@ -8,7 +8,7 @@
 
 Phase 97 (INNOV-12 MGV) is complete. ADAAD now annotates every mutation lineage graph edge with a `PropertyInheritanceVector` — four orthogonal fitness deltas and a deterministic digest — enabling population-genetics-level analysis: productive lineages, evolutionary dead-ends, and cumulative directional drift. Innovations INNOV-01 through INNOV-12 are shipped across v9.18.0–v9.30.0 (Phases 87–97), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 100** (`v9.33.0`, INNOV-15 ARS shipped). Next = **Phase 101 — INNOV-16 Emergent Role Specialization**.
+**Current/Next:** Current = **Phase 101** (`v9.34.0`, INNOV-16 ERS shipped). Next = **Phase 102 — INNOV-17 Agent Post-Mortem Interviews**.
 
 **GA blockers (canonical): 4 open** — F-Droid MR submission (manual), founder GPG sign-off, founder tag ceremony backfill, and strict release gate terminal pass.
 
@@ -1838,6 +1838,6 @@ World-first constitutionally-governed cross-epoch mutation memory consolidation.
 - `MutationGenealogyAnalyzer` — append-only JSONL ledger via Path.open (MGV-PERSIST-0); `productive_lineages()`; `dead_end_epochs()`; `evolutionary_direction()`
 - `_load()` — fail-open; corrupt lines silently skipped (MGV-0)
 - FINDING-97-001 RESOLVED — T97-MGV-04 mock target corrected: `builtins.open` → `Path.open`
-- Hard-class invariants cumulative: **51** (STAKE-0 through STAKE-PERSIST-0 introduced in Phase 100)
+- Hard-class invariants cumulative: **56** (ERS-0 through ERS-PERSIST-0 introduced in Phase 101)
 
-**Next:** Phase 101 — INNOV-16 · Emergent Role Specialization
+**Next:** Phase 102 — INNOV-17 · Agent Post-Mortem Interviews
