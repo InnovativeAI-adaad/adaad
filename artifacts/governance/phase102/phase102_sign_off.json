@@ -1,0 +1,28 @@
+{
+  "phase": 102,
+  "innovation": "INNOV-17",
+  "innovation_name": "Agent Post-Mortem Interviews (APM)",
+  "version": "9.35.0",
+  "branch": "feature/phase102-apm-impl",
+  "date": "2026-04-02",
+  "human_0_gate": "Dustin L. Reid",
+  "human_0_ratification": "phase102-human0-ratified",
+  "ledger_event_id": "ILA-102-2026-04-02-001",
+  "tests_pass": 30,
+  "tests_fail": 0,
+  "xfail": 0,
+  "invariants_introduced": [
+    "APM-0",
+    "APM-DETERM-0",
+    "APM-PERSIST-0",
+    "APM-GAP-0",
+    "APM-LOAD-0",
+    "APM-CHAIN-0"
+  ],
+  "cumulative_hard_class_invariants": 57,
+  "evidence_hash": "sha256:81604ec87c7a6793",
+  "predecessor": "Phase 101 \u2014 INNOV-16 ERS \u2014 v9.34.0",
+  "successor": "Phase 103 \u2014 INNOV-18 Temporal Governance Windows \u2014 v9.36.0",
+  "world_first_claim": "Constitutional-governed post-mortem interviews for autonomous mutation agents \u2014 structured failure reasoning feeding back into evolutionary selection pressure.",
+  "status": "COMPLETE"
+}
