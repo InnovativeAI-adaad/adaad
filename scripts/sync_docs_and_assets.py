@@ -69,12 +69,12 @@ def _load_state() -> dict[str, Any]:
 
     # Count cumulative invariants from governance artifact if available
     hard = 56  # fallback — updated on each phase
-    latest_phase_dir = max(
-        (ROOT / "artifacts/governance").glob("phase*"),
-        key=lambda p: int(m.group()) if (m := re.search(r"\d+", p.name)) else 0,
-        default=None,
-    )
-    if latest_phase_dir:
+    phase_dirs = list((ROOT / "artifacts/governance").glob("phase*"))
+    if phase_dirs:
+        latest_phase_dir = max(
+            phase_dirs,
+            key=lambda p: int(m.group()) if (m := re.search(r"\d+", p.name)) else 0,
+        )
         sign_off = latest_phase_dir / f"{latest_phase_dir.name}_sign_off.json"
         if sign_off.exists():
             try:
@@ -114,8 +114,8 @@ def _patch_file(
     changes = 0
     for pattern, replacement in patches:
         repl = replacement.format(**ctx)
-        if "REGEX:" in pattern:
-            regex = pattern.replace("REGEX:", "")
+        if pattern.startswith("REGEX:"):
+            regex = pattern[len("REGEX:") :]
             new = re.sub(regex, repl, content)
         else:
             new = content.replace(pattern, repl)
@@ -239,7 +239,7 @@ def _build_markdown_patches(ctx: dict[str, Any]) -> list[tuple[Path, list[tuple[
         (ROOT / "docs/README.md", [
             ("REGEX:\\*\\*ADAAD v[\\d.]+ · Phase \\d+ \\([^)]+\\)\\*\\*",
              f"**ADAAD v{V} · Phase {PHASE} (INNOV-{INNOV_N} shipped)**"),
-            ("REGEX:Current = Phase \\d+ \\(v[\\d.]+\\), Next = Phase \\d+[^.]+\\.",
+            ("REGEX:Current = Phase \\d+ \\(v[\\d.]+\\), Next = Phase \\d+[^.]*\\.",
              f"Current = Phase {PHASE} (v{V}), Next = Phase {PHASE + 1} — INNOV-{INNOV_N + 1}."),
             ("REGEX:ADAAD v[\\d.]+ Runtime",
              f"ADAAD v{V} Runtime"),
