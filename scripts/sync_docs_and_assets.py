@@ -259,7 +259,6 @@ def _build_markdown_patches(ctx: dict[str, Any]) -> list[tuple[Path, list[tuple[
             ("REGEX:\\*\\*Canonical live state pointer:\\*\\* Current = \\*\\*Phase \\d+\\*\\* \\(`v[\\d.]+`[^)]+\\)\\. Next = \\*\\*Phase \\d+[^*]+\\*\\*\\.",
              f"**Canonical live state pointer:** Current = **Phase {PHASE}** (`v{V}`, INNOV-{INNOV_N} ERS shipped). Next = **Phase {PHASE + 1} — INNOV-{INNOV_N + 1}**."),
         ]),
-        (ROOT / "governance/report_version.json", []),  # handled by sync_versions.py
     ]
 
 
