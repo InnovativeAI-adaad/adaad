@@ -68,7 +68,7 @@ def _load_state() -> dict[str, Any]:
     hard = 56  # fallback — updated on each phase
     latest_phase_dir = max(
         (ROOT / "artifacts/governance").glob("phase*"),
-        key=lambda p: int(re.search(r"\d+", p.name).group() or "0"),
+        key=lambda p: int(m.group()) if (m := re.search(r"\d+", p.name)) else 0,
         default=None,
     )
     if latest_phase_dir:
