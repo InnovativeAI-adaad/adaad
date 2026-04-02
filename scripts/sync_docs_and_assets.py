@@ -62,7 +62,8 @@ def _load_state() -> dict[str, Any]:
 
     phase = state.get("phase", 0)
     last_innov = state.get("last_innovation", "INNOV-0")
-    innov_num = int(re.search(r"\d+", last_innov).group()) if re.search(r"\d+", last_innov) else 0
+    innov_match = re.search(r"\d+", last_innov)
+    innov_num = int(innov_match.group()) if innov_match else 0
 
     # Count cumulative invariants from governance artifact if available
     hard = 56  # fallback — updated on each phase
