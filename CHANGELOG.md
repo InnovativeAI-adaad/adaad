@@ -1,5 +1,46 @@
 # CHANGELOG
 
+## [9.35.0] — 2026-04-01 — Phase 102 · INNOV-17 Agent Post-Mortem Interviews (APM)
+
+**Branch:** `feature/phase102-apm-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T102-APM-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase102/phase102_sign_off.json` · ILA-102-2026-04-01-001
+
+### Phase 102: INNOV-17 — Agent Post-Mortem Interviews (APM)
+
+World-first constitutional-governed post-mortem interviews for autonomous mutation agents.
+`AgentPostMortemSystem.conduct_interview()` forces agents to articulate why they believed
+a rejected mutation would pass, what constitutional gap they missed, and what correction
+they would apply next time. These interviews are persisted to an append-only JSONL ledger
+and fed back via `agent_recurring_gaps()` as calibration inputs to agent selection pressure.
+
+#### New module: `runtime/innovations30/agent_postmortem.py`
+
+- `AgentPostMortemSystem` — `conduct_interview()` sole entry point (APM-0); synthesizes
+  `agent_self_assessment` from intent+strategy; maps `rejection_reasons` to structured
+  `identified_gap` strings (APM-GAP-0); `_persist()` Path.open append-only (APM-PERSIST-0);
+  `agent_recurring_gaps()` fail-open on missing/corrupt ledger (APM-LOAD-0)
+- `AgentReasoningEntry` — `entry_digest` = `sha256:` + sha256(agent_id:mutation_id:
+  identified_gap)[:16]; no RNG/datetime/uuid4 (APM-DETERM-0); carries agent_id, mutation_id,
+  epoch_id, rejection_reasons, entry_digest (APM-CHAIN-0)
+- Gap taxonomy: lineage → "Insufficient lineage chain verification"; entropy → "Entropy budget
+  miscalculated"; scope → "Mutation scope exceeded single-file boundary"; ast → "AST validity
+  issues not caught pre-submission"; replay → "Replay determinism requirements not met";
+  other → "Constitutional rule violated: {reason}"
+
+#### Constitutional invariants introduced
+
+- **APM-0** — conduct_interview() is the sole entry point for post-mortem creation
+- **APM-DETERM-0** — entry_digest is sha256(agent_id:mutation_id:identified_gap)[:16], prefixed "sha256:"; no RNG/datetime/uuid4
+- **APM-PERSIST-0** — _persist() uses Path.open("a") append mode; builtins.open() forbidden; parent mkdir precedes every write
+- **APM-GAP-0** — identified_gap MUST be a non-empty string; empty/whitespace is a Hard failure before persist
+- **APM-LOAD-0** — agent_recurring_gaps() is fail-open; corrupt JSONL lines silently skipped; never raises on partial ledger corruption
+- **APM-CHAIN-0** — every entry MUST carry agent_id, mutation_id, epoch_id, rejection_reasons (non-empty), entry_digest; missing any field is a Hard failure
+
+- Hard-class invariants cumulative: **57** (APM-0 through APM-CHAIN-0 introduced)
+
+
 ## [9.34.0] — 2026-04-01 — Phase 101 · INNOV-16 Emergent Role Specialization (ERS)
 
 **Branch:** `feature/phase101-ers-impl`

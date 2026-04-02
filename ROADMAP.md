@@ -4,13 +4,13 @@
 
 ---
 
-## What ships today — v9.30.0
+## What ships today — v9.35.0
 
-Phase 97 (INNOV-12 MGV) is complete. ADAAD now annotates every mutation lineage graph edge with a `PropertyInheritanceVector` — four orthogonal fitness deltas and a deterministic digest — enabling population-genetics-level analysis: productive lineages, evolutionary dead-ends, and cumulative directional drift. Innovations INNOV-01 through INNOV-12 are shipped across v9.18.0–v9.30.0 (Phases 87–97), with deterministic evidence artifacts recorded per phase closure.
+Phase 102 (INNOV-17 APM) is complete. ADAAD now conducts structured post-mortem interviews with agents after governance rejection — forcing agents to articulate why they believed a mutation would pass, what constitutional gap they missed, and what correction they would apply. These interviews are persisted to an append-only ledger and feed back into agent selection pressure via `agent_recurring_gaps()`. Innovations INNOV-01 through INNOV-17 are shipped across v9.18.0–v9.35.0 (Phases 87–102), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 101** (`v9.34.0`, INNOV-16 ERS shipped). Next = **Phase 102 — INNOV-17 Agent Post-Mortem Interviews**.
+**Current/Next:** Current = **Phase 102** (`v9.35.0`, INNOV-17 APM shipped). Next = **Phase 103 — INNOV-18 Temporal Governance Windows**.
 
-**GA blockers (canonical): 4 open** — F-Droid MR submission (manual), founder GPG sign-off, founder tag ceremony backfill, and strict release gate terminal pass.
+**GA blockers (canonical): 1 open** — FINDING-66-004 (Governance Key Ceremony: 2-of-3 Ed25519 threshold not yet executed — runbook delivered, ceremony deferred).
 
 | Subsystem | Status | Description |
 |-----------|--------|-------------|
