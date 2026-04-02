@@ -36,7 +36,6 @@ ROOT = Path(__file__).resolve().parents[1]
 # Each entry: (file, list_of_(regex_or_literal, replacement_template))
 # {V} = version  {PHASE} = phase  {INNOV} = innovation count  {HARD} = hard invariants
 
-MARKDOWN_PATCHES: list[tuple[Path, list[tuple[str, str]]]] = []
 SVG_SURFACES: list[Path] = [
     ROOT / "docs/assets/readme/adaad-stats-card.svg",
     ROOT / "docs/assets/readme/adaad-version-hero.svg",
@@ -143,7 +142,7 @@ def _regenerate_svg(path: Path, ctx: dict[str, Any], dry_run: bool = False) -> i
         "adaad-stats-card": _svg_stats_card(V, PHASE, INNOV_N, HARD, TODAY),
         "adaad-version-hero": _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY),
         "adaad-live-status": _svg_live_status(V, PHASE, INNOV_N, HARD, TODAY),
-        "adaad-hero": _svg_live_status(V, PHASE, INNOV_N, HARD, TODAY),
+        "adaad-hero": _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY),
     }
 
     if name not in svg_map:
@@ -259,7 +258,6 @@ def _build_markdown_patches(ctx: dict[str, Any]) -> list[tuple[Path, list[tuple[
             ("REGEX:\\*\\*Canonical live state pointer:\\*\\* Current = \\*\\*Phase \\d+\\*\\* \\(`v[\\d.]+`[^)]+\\)\\. Next = \\*\\*Phase \\d+[^*]+\\*\\*\\.",
              f"**Canonical live state pointer:** Current = **Phase {PHASE}** (`v{V}`, INNOV-{INNOV_N} ERS shipped). Next = **Phase {PHASE + 1} — INNOV-{INNOV_N + 1}**."),
         ]),
-        (ROOT / "governance/report_version.json", []),  # handled by sync_versions.py
     ]
 
 
