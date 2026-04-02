@@ -36,7 +36,8 @@ def _unanimous_approve_fn(mutation_id: str, seed: str) -> JurorVerdict:
     return _make_verdict(seed, mutation_id, "approve", seed)
 
 def _unanimous_reject_fn(mutation_id: str, seed: str) -> JurorVerdict:
-    return _make_verdict(seed, mutation_id, "reject", seed)
+    juror_id = f"juror-{mutation_id}"
+    return _make_verdict(juror_id, mutation_id, "reject", seed)
 
 def _split_fn(mutation_id: str, seed: str) -> JurorVerdict:
     """2 approve, 1 reject — majority approve, dissent present."""
