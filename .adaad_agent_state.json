@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.41.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.42.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 108 \u00b7 INNOV-23 Constitutional Epoch Sentinel",
+  "last_completed_phase": "Phase 109 \u00b7 INNOV-24 SVP",
   "last_completed_pr": "feature/phase101-ers-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -12,7 +12,7 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-04-03",
-  "last_sync_sha": "4b12fd5",
+  "last_sync_sha": "901b8da",
   "next_pr": "PR-PHASE94-01 (Phase 94 \u2014 INNOV-10 Morphogenetic Memory)",
   "open_findings": [
     {
@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.41.0",
+  "current_version": "9.42.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.41.0",
-  "last_agent_state_sync_digest": "gsync-7dd414dc3a8ff977",
+  "software_version": "9.42.0",
+  "last_agent_state_sync_digest": "gsync-7d99a34e9b5671b4",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",
