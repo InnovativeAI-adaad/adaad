@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.35.0 — 102 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.36.0 — 103 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 **[⚡ Quickstart](#quickstart)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
@@ -37,7 +37,7 @@ These are not documentation claims. They are runtime-enforced invariants. Violat
 | Identity check never blocks an epoch | Fail-open with fallback score injection | `MMEM-0` |
 | Critical mutations require GPG-signed human key | Architecturally enforced — not a config option | `HUMAN-0` |
 | Import boundaries block unauthorized dependencies | Static enforcement — violations block merge | `AST-IMPORT-0` |
-| All 57 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 57 invariants |
+| All 66 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 66 invariants |
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md)
 
@@ -645,7 +645,7 @@ It answers the question no prior gate could ask: *is this mutation consistent wi
 <summary><b>What are the 10 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-17 shipped across v9.18.0–v9.35.0 (Phases 87–102): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), and Agent Post-Mortem Interviews (APM).
+INNOV-01 through INNOV-18 shipped across v9.18.0–v9.36.0 (Phases 87–102): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), and Agent Post-Mortem Interviews (APM), and Temporal Governance Windows (TGOV).
 
 20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
@@ -668,7 +668,7 @@ Start with the [Trust Center](TRUST_CENTER.md). The [Procurement Fast-Lane packa
 
 ## Roadmap
 
-**Short term** — Phase 103 (INNOV-18 Temporal Governance Windows), Aponi panel for jury deliberation (CJS), AEO endpoint provisioning.
+**Short term** — Phase 104 (INNOV-19), Aponi panel for jury deliberation (CJS), AEO endpoint provisioning.
 
 **Mid term** — FitnessEngineV2 8th signal integration (identity_consistency), MMEM amendment protocol, device-anchored mobile runtime, reproducible packaging.
 

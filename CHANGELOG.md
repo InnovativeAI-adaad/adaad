@@ -1,3 +1,51 @@
+## [9.36.0] — 2026-04-03 — Phase 103 · INNOV-18 Temporal Governance Windows
+
+**Branch:** `feature/phase103-tgov-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T103-TGOV-01..32 (32/32 PASS)
+**Evidence:** `artifacts/governance/phase103/phase103_sign_off.json` · ILA-103-2026-04-03-001
+
+### Phase 103: INNOV-18 — Temporal Governance Windows (TGOV)
+
+World-first health-adaptive constitutional governance engine.
+`TemporalGovernanceEngine.get_adjusted_ruleset()` dynamically modulates rule severity
+based on live system health — softening non-critical rules during high-health epochs and
+hardening all rules during system degradation. `ast_validity` is permanently `blocking`
+regardless of health state (fail-safe anchor).
+
+#### Module: `runtime/innovations30/temporal_governance.py` (extended)
+
+- `GovernanceWindow` — dataclass carrying `baseline_severity`, `high_health_severity`,
+  `low_health_severity`, and configurable `high_health_threshold` (0.85) / `low_health_threshold` (0.60)
+- `TemporalGovernanceEngine` — `get_adjusted_ruleset(health_score)` sole entry point for
+  severity resolution; `log_adjustment()` appends SHA-256-chained entries (TGOV-CHAIN-0);
+  `audit_trail()` is fail-open — corrupt JSONL lines silently skipped (TGOV-CORRUPT-SKIP-0);
+  `health_trend()` returns "improving" | "degrading" | "stable" from log history (TGOV-HEALTH-0);
+  `export_window_config()` exports structured window metadata with `innovation=18` (TGOV-EXPORT-0)
+- `DEFAULT_WINDOWS` — five constitutional rules: lineage_continuity, single_file_scope,
+  ast_validity, entropy_budget, replay_determinism
+
+#### New REST endpoint: `GET /governance/temporal/windows`
+
+Returns `adjusted_ruleset`, `window_config`, `health_trend`, and last 10 chained audit entries.
+
+#### New Aponi panel: `ui/aponi/tgov_panel.js`
+
+Live health bar, severity table, GovernanceWindow configuration cards, SHA-256 chain audit trail.
+Auto-refresh every 10 s. INNOV-18 · Phase 103.
+
+#### Constitutional invariants introduced (9 new — Hard-class cumulative: 66)
+
+- **TGOV-0** — effective_severity() never raises; unknown rules return "blocking"
+- **TGOV-CHAIN-0** — log entries carry SHA-256 digest linked to prev entry; genesis anchor = "genesis"
+- **TGOV-CORRUPT-SKIP-0** — audit_trail() silently skips corrupt JSONL lines; never raises
+- **TGOV-FAIL-0** — unregistered rule → "blocking" (fail-closed gate, no exceptions)
+- **TGOV-DETERM-0** — identical health score → identical adjusted ruleset (no RNG)
+- **TGOV-PERSIST-0** — log_adjustment() uses Path.open("a") append mode; parent auto-created
+- **TGOV-HEALTH-0** — health_trend() returns exactly one of "improving" | "degrading" | "stable"
+- **TGOV-EXPORT-0** — export_window_config() always carries innovation=18 and window_count
+- **TGOV-WINDOW-0** — GovernanceWindow: score ≥ high_threshold → high_sev; score < low_threshold → low_sev; else baseline
+
 # CHANGELOG
 
 ## [9.35.0] — 2026-04-01 — Phase 102 · INNOV-17 Agent Post-Mortem Interviews (APM)

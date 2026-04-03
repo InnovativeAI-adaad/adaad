@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "governance_sign_off",
+  "phase": 103,
+  "innovation_id": "INNOV-18",
+  "innovation_name": "Temporal Governance Windows",
+  "version": "9.36.0",
+  "tag": "v9.36.0",
+  "ila_ref": "ILA-103-2026-04-03-001",
+  "ratified_by": "DUSTIN L REID",
+  "ratified_date": "2026-04-03",
+  "branch": "feature/phase103-tgov-impl",
+  "test_suite": "T103-TGOV-01..32",
+  "tests_total": 32,
+  "tests_passed": 32,
+  "tests_failed": 0,
+  "constitutional_invariants": [
+    "TGOV-0",
+    "TGOV-CHAIN-0",
+    "TGOV-CORRUPT-SKIP-0",
+    "TGOV-FAIL-0",
+    "TGOV-DETERM-0",
+    "TGOV-PERSIST-0",
+    "TGOV-HEALTH-0",
+    "TGOV-EXPORT-0",
+    "TGOV-WINDOW-0"
+  ],
+  "hard_class_invariants_added": 9,
+  "hard_class_invariants_cumulative": 66,
+  "deliverables": [
+    "runtime/innovations30/temporal_governance.py",
+    "tests/test_phase103_tgov.py",
+    "ui/aponi/tgov_panel.js",
+    "server.py: GET /governance/temporal/windows"
+  ],
+  "gate_decisions": {
+    "implementation_complete": true,
+    "tests_green": true,
+    "endpoint_wired": true,
+    "aponi_panel_delivered": true,
+    "changelog_updated": true,
+    "roadmap_updated": true,
+    "version_bumped": true
+  },
+  "summary": "World-first health-adaptive constitutional governance: rule severity adjusts dynamically as system health rises and falls. TGOV-FAIL-0 guarantees unknown rules default to blocking (fail-closed). SHA-256 chained audit log (TGOV-CHAIN-0) provides tamper-evident history of every health-score-driven adjustment. Five GovernanceWindows govern lineage_continuity, single_file_scope, ast_validity, entropy_budget, and replay_determinism — with ast_validity permanently blocking regardless of health state.",
+  "ip_claims": [
+    "Health-score-gated constitutional rule severity modulation with fail-closed default",
+    "Append-only SHA-256 hash-chained temporal governance audit log with genesis anchor",
+    "Deterministic multi-band threshold classification (HIGH/BASELINE/LOW) for autonomous governance rules"
+  ]
+}
