@@ -88,7 +88,7 @@
 
 <!-- Version pill -->
 <rect x="197" y="190" width="130" height="26" rx="13" fill="#0d1117" stroke="#00d4ff" stroke-width="1.2"/>
-<text x="262" y="207" text-anchor="middle" font-family="'Courier New',monospace" font-size="12" fill="#00d4ff" font-weight="700">v9.41.0  LIVE</text>
+<text x="262" y="207" text-anchor="middle" font-family="'Courier New',monospace" font-size="12" fill="#00d4ff" font-weight="700">v9.42.0  LIVE</text>
 <circle cx="210" cy="203" r="4" fill="#00ff88"><animate attributeName="opacity" values="1;0.2;1" dur="1.2s" repeatCount="indefinite"/></circle>
 
 <!-- Stat cards row -->
@@ -167,7 +167,7 @@
     <rect width="360" height="28" rx="5" fill="#001a00" stroke="#00ff88" stroke-width="1"/>
     <circle cx="14" cy="14" r="5" fill="#00ff88"><animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.4;1" dur="1s" repeatCount="indefinite"/></circle>
     <text x="26" y="19" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#00ff88" font-weight="600">Constitutional Evolution Loop LIVE</text>
-    <text x="280" y="19" font-family="'Courier New',monospace" font-size="10" fill="#00ff88">v9.41.0</text>
+    <text x="280" y="19" font-family="'Courier New',monospace" font-size="10" fill="#00ff88">v9.42.0</text>
   </g>
 
   <!-- Governance badge -->

@@ -1,3 +1,21 @@
+## [9.42.0] — 2026-04-03 — Phase 109 · INNOV-24 SVP
+
+**Branch:** `feature/phase109-svp-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T109-SVP-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase109/phase109_sign_off.json` · `artifacts/governance/phase109/phase109_replay_digest.json` · ILA-109-2026-04-03-001
+
+### Server Endpoint Additions
+- `GET /governance/svp/{epoch_id}`
+- `POST /governance/svp/ratify`
+
+### Deliverables
+- `runtime/innovations30/sovereign_validation_plane.py` — INNOV-24 SVP implementation
+- `tests/test_phase109_svp.py` — T109-SVP-01..30 (30/30 PASS)
+- `artifacts/governance/phase109/` — release evidence bundle
+
+---
+
 ## [9.41.0] — 2026-04-03 — Phase 108 · INNOV-23 Constitutional Epoch Sentinel
 
 **Branch:** `feature/phase108-ces-impl`
