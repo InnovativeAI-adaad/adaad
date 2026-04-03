@@ -2180,6 +2180,44 @@ def governance_aponi_panel(
     return result
 
 
+@app.get("/governance/temporal/windows")
+def governance_temporal_windows(
+    epoch_id: str = "current",
+    health_score: float = 0.75,
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-18: GET /governance/temporal/windows
+
+    Returns the health-adjusted temporal governance ruleset for the given
+    epoch and health_score.  Exposes:
+      - adjusted_ruleset   — {rule_name: effective_severity} at current health
+      - window_config      — full GovernanceWindow configuration export
+      - health_trend       — "improving" | "degrading" | "stable"
+      - audit_trail        — last 10 log entries (with chain digests)
+
+    Constitutional invariants:
+      TGOV-FAIL-0    — unknown rules default to "blocking" (fail-closed)
+      TGOV-CHAIN-0   — each audit entry carries sha256-chained digest
+      TGOV-EXPORT-0  — window_config carries innovation=18 metadata
+    """
+    _ = auth_ctx
+    from runtime.innovations30.temporal_governance import TemporalGovernanceEngine
+    eng = TemporalGovernanceEngine()
+    adjusted = eng.get_adjusted_ruleset(health_score)
+    eng.log_adjustment(epoch_id, health_score)
+    return {
+        "ok": True,
+        "innovation": 18,
+        "innovation_name": "TemporalGovernanceWindows",
+        "epoch_id": epoch_id,
+        "health_score": round(health_score, 4),
+        "adjusted_ruleset": adjusted,
+        "window_config": eng.export_window_config(),
+        "health_trend": eng.health_trend(),
+        "audit_trail": eng.audit_trail(limit=10),
+    }
+
+
 @app.get("/api/governance/parallel-gate/probe-library", response_model=ParallelGateProbeLibraryResponse)
 def api_parallel_gate_probe_library(
     tenant_ctx: dict[str, str] = Depends(require_tenant_context),
