@@ -599,7 +599,7 @@
   ],
   "software_version": "9.38.0",
   "last_agent_state_sync_digest": "gsync-5d6402dff0f5519a",
-  "version": "9.38.0",
+  "version": "9.39.0",
   "phase": 105,
   "phase_label": "Phase 105 \u2014 INNOV-20 Constitutional Stress Testing",
   "last_innovation": "INNOV-20",
@@ -738,6 +738,23 @@
       "attestation_ref": "ILA-105-2026-04-03-001"
     }
   ],
-  "current_phase": 105,
-  "next_phase": 106
+  "current_phase": 106,
+  "next_phase": 106,
+  "last_phase_completed": 106,
+  "constitutional_invariants": {
+    "hard_class_count": 91,
+    "cumulative": 91
+  },
+  "phases_completed": [
+    106
+  ],
+  "innovations_shipped": {
+    "INNOV-21": {
+      "phase": 106,
+      "module": "governance_bankruptcy.py",
+      "version": "9.39.0",
+      "hard_invariants": 8,
+      "tests": "30/30"
+    }
+  }
 }

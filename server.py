@@ -2278,6 +2278,70 @@ def governance_stress_test(
         return {"ok": False, "error": str(exc), "innovation": 20}
 
 
+# ── INNOV-21: GET /governance/bankruptcy/{epoch_id} ──────────────────────────
+@app.get("/governance/bankruptcy/{epoch_id}")
+def governance_bankruptcy(
+    epoch_id: str,
+    debt_score: float = 0.0,
+    health_score: float = 1.0,
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-21: GET /governance/bankruptcy/{epoch_id}
+
+    Evaluates the Governance Debt Bankruptcy Protocol for the given epoch.
+    If debt_score >= BANKRUPTCY_THRESHOLD a declaration is persisted to the
+    append-only JSONL ledger and returned. Always returns remediation_progress
+    and chain integrity status.
+
+    Returns:
+      - in_bankruptcy       — bool: protocol currently active
+      - declaration         — BankruptcyDeclaration if newly declared, else null
+      - remediation_progress — current streak / discharge status
+      - chain_valid          — bool: ledger chain integrity verified
+      - chain_detail         — human-readable chain verification message
+
+    Constitutional invariants enforced:
+      GBP-0           — GBP_VERSION present and non-empty
+      GBP-THRESH-0    — threshold in (0.0, 1.0) exclusive
+      GBP-HEALTH-0    — health_target < threshold
+      GBP-PERSIST-0   — events appended to JSONL ledger, never overwritten
+      GBP-CHAIN-0     — every entry chain-linked via prev_digest
+      GBP-DISCHARGE-0 — _load() discharge supersession; discharged ≠ active
+      GBP-GATE-0      — empty mutation_intent raises GBPViolation
+      GBP-IMMUT-0     — discharged epoch_id cannot be re-activated
+    """
+    _ = auth_ctx
+    from dataclasses import asdict
+    from runtime.innovations30.governance_bankruptcy import (
+        GovernanceBankruptcyProtocol,
+        GBPViolation,
+        GBP_VERSION,
+    )
+
+    try:
+        gbp = GovernanceBankruptcyProtocol()
+        declaration = gbp.evaluate(epoch_id, debt_score, health_score)
+        chain_valid, chain_detail = gbp.verify_chain()
+        return {
+            "ok": True,
+            "innovation": 21,
+            "innovation_name": "GovernanceBankruptcyProtocol",
+            "gbp_version": GBP_VERSION,
+            "epoch_id": epoch_id,
+            "in_bankruptcy": gbp.in_bankruptcy,
+            "declaration": asdict(declaration) if declaration else None,
+            "remediation_progress": gbp.remediation_progress(),
+            "chain_valid": chain_valid,
+            "chain_detail": chain_detail,
+            "invariants": [
+                "GBP-0", "GBP-THRESH-0", "GBP-HEALTH-0", "GBP-PERSIST-0",
+                "GBP-CHAIN-0", "GBP-DISCHARGE-0", "GBP-GATE-0", "GBP-IMMUT-0",
+            ],
+        }
+    except GBPViolation as exc:
+        return {"ok": False, "error": str(exc), "innovation": 21}
+
+
 @app.get("/governance/temporal/windows")
 def governance_temporal_windows(
     epoch_id: str = "current",
