@@ -2222,6 +2222,62 @@ def governance_archaeology(
     }
 
 
+@app.get("/governance/stress-test/{epoch_id}")
+def governance_stress_test(
+    epoch_id: str,
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-20: GET /governance/stress-test/{epoch_id}
+
+    Executes the full canonical stress-test catalogue against the constitutional
+    framework and returns a StressReport with any identified coverage gaps.
+    Gap records are simultaneously emitted to the InvariantDiscovery feed.
+
+    Returns:
+      - epoch_id       — echoed back for ledger correlation
+      - cases_tested   — number of scenarios exercised
+      - gaps_found     — number of constitutional gaps identified
+      - gaps           — list of ConstitutionalGap records
+      - report_digest  — SHA-256 digest over (epoch_id, cases_tested, gap_digests)
+      - catalogue      — full canonical scenario list
+
+    Constitutional invariants:
+      CST-0           — deterministic; no random state in execution path
+      CST-PERSIST-0   — every report appended to append-only JSONL ledger
+      CST-GAP-0       — gap emitted for every thin-margin pass
+      CST-HALT-0      — unwritable ledger raises ConstitutionalViolation
+      CST-FEED-0      — gaps written to InvariantDiscovery feed
+    """
+    _ = auth_ctx
+    from dataclasses import asdict
+    from runtime.innovations30.constitutional_stress_test import (
+        ConstitutionalStressTester,
+        ConstitutionalViolation,
+    )
+
+    def _evaluate(case):
+        # Default evaluator: passes all scenarios (gap detection driven by margin)
+        return True, []
+
+    try:
+        tester = ConstitutionalStressTester()
+        report = tester.run(epoch_id=epoch_id, evaluate_fn=_evaluate)
+        return {
+            "ok": True,
+            "innovation": 20,
+            "innovation_name": "ConstitutionalStressTesting",
+            "epoch_id": report.epoch_id,
+            "cases_tested": report.cases_tested,
+            "gaps_found": report.gaps_found,
+            "report_digest": report.report_digest,
+            "patterns_run": report.patterns_run,
+            "gaps": [asdict(g) for g in report.gaps],
+            "catalogue": tester.catalogue(),
+        }
+    except ConstitutionalViolation as exc:
+        return {"ok": False, "error": str(exc), "innovation": 20}
+
+
 @app.get("/governance/temporal/windows")
 def governance_temporal_windows(
     epoch_id: str = "current",

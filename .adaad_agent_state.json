@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.37.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.38.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 104 \u00b7 INNOV-19 Governance Archaeology Mode",
+  "last_completed_phase": "Phase 105 \u00b7 INNOV-20 Constitutional Stress Testing",
   "last_completed_pr": "feature/phase101-ers-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -441,9 +441,12 @@
     "phase94-world-first-morphogenetic-memory",
     "v9.27.0-released",
     "phase94-human0-attested",
-    "phase94-mmem-complete"
+    "phase94-mmem-complete",
+    "v9.38.0-released",
+    "phase105-cst-complete",
+    "phase105-world-first-adversarial-constitution-stress"
   ],
-  "current_version": "9.37.0",
+  "current_version": "9.38.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -582,14 +585,24 @@
     "v9.30.0-gpg-signed",
     "v9.32.0-gpg-signed",
     "v9.35.0-gpg-signed",
-    "gpg-backlog-ceremony-complete"
+    "gpg-backlog-ceremony-complete",
+    "phase105-plan-authored",
+    "phase105-human0-ratified",
+    "phase105-innov20-cst-implemented",
+    "phase105-cst-0-enforced",
+    "phase105-cst-persist-0-enforced",
+    "phase105-cst-gap-0-enforced",
+    "phase105-cst-scenario-0-enforced",
+    "phase105-world-first-adversarial-constitution-stress",
+    "v9.38.0-released",
+    "phase105-complete"
   ],
-  "software_version": "9.37.0",
+  "software_version": "9.38.0",
   "last_agent_state_sync_digest": "gsync-a845a90e6104a52f",
-  "version": "9.35.0",
-  "phase": 102,
-  "phase_label": "Phase 102 \u2014 INNOV-17 Agent Post-Mortem Interviews",
-  "last_innovation": "INNOV-16",
+  "version": "9.38.0",
+  "phase": 105,
+  "phase_label": "Phase 105 \u2014 INNOV-20 Constitutional Stress Testing",
+  "last_innovation": "INNOV-20",
   "acse_active": true,
   "tife_active": true,
   "human0_signoffs": [
@@ -716,8 +729,15 @@
         "v9.35.0": "7b87795"
       },
       "verification": "12/12 Good signature [ultimate]"
+    },
+    {
+      "date": "2026-04-03",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 105 INNOV-20 Constitutional Stress Testing (CST) \u2014 30/30 tests green \u2014 8 CST invariants \u2014 83 cumulative Hard-class invariants \u2014 v9.38.0 release",
+      "session_digest": "phase105-cst-impl-2026-04-03",
+      "attestation_ref": "ILA-105-2026-04-03-001"
     }
   ],
-  "current_phase": 102,
-  "next_phase": 103
+  "current_phase": 105,
+  "next_phase": 106
 }

@@ -1,3 +1,27 @@
+## [9.38.0] — 2026-04-03 — Phase 105 · INNOV-20 Constitutional Stress Testing
+
+**Branch:** `feature/phase105-cst-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T105-CST-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase105/phase105_sign_off.json` · ILA-105-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/constitutional_stress_test.py` — promoted from scaffold to full constitutional implementation
+- `tests/test_phase105_cst.py` — T105-CST-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/stress-test/{epoch_id}`
+- `ui/aponi/cst_panel.js` — scenario catalogue browser + gap explorer panel
+- `artifacts/governance/phase105/` — 4 governance artifacts
+
+### Constitutional Invariants (8 new · cumulative: 83 Hard-class)
+`CST-0` · `CST-PERSIST-0` · `CST-GAP-0` · `CST-DIGEST-0` · `CST-FEED-0` · `CST-SCENARIO-0` · `CST-HALT-0` · `CST-DETERM-0`
+
+### IP Claims
+- Adversarial constitutional stress testing with margin-calibrated scenario catalogue for autonomous AI governance gap detection
+- Append-only gap ledger with InvariantDiscovery feed emission enabling self-reinforcing constitutional rule discovery
+- Deterministic SHA-256 digest chain over stress report records providing tamper-evident governance coverage audit trail
+
+---
+
 ## [9.37.0] — 2026-04-03 — Phase 104 · INNOV-19 Governance Archaeology Mode
 
 **Branch:** `feature/phase104-gam-impl`
