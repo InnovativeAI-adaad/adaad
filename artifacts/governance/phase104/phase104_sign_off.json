@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "governance_sign_off",
+  "phase": 104,
+  "innovation_id": "INNOV-19",
+  "innovation_name": "Governance Archaeology Mode",
+  "version": "9.37.0",
+  "tag": "v9.37.0",
+  "ila_ref": "ILA-104-2026-04-03-001",
+  "ratified_by": "DUSTIN L REID",
+  "ratified_date": "2026-04-03",
+  "branch": "feature/phase104-gam-impl",
+  "test_suite": "T104-GAM-01..30",
+  "tests_total": 30,
+  "tests_passed": 30,
+  "tests_failed": 0,
+  "constitutional_invariants": [
+    "GAM-0", "GAM-CHAIN-0", "GAM-DETERM-0", "GAM-SORT-0",
+    "GAM-FAIL-OPEN-0", "GAM-PARSE-0", "GAM-OUTCOME-0",
+    "GAM-EXPORT-0", "GAM-VERIFY-0"
+  ],
+  "hard_class_invariants_added": 9,
+  "hard_class_invariants_cumulative": 75,
+  "deliverables": [
+    "runtime/innovations30/governance_archaeology.py (promoted from scaffold)",
+    "tests/test_phase104_gam.py",
+    "ui/aponi/gam_panel.js",
+    "server.py: GET /governance/archaeology/{mutation_id}"
+  ],
+  "gate_decisions": {
+    "implementation_complete": true,
+    "tests_green": true,
+    "endpoint_wired": true,
+    "aponi_panel_delivered": true,
+    "changelog_updated": true,
+    "roadmap_updated": true,
+    "version_bumped": true
+  },
+  "summary": "World-first cryptographically-verified mutation decision timeline reconstruction. excavate() scans distributed ledgers and assembles a complete chronological DecisionEvent list for any mutation_id. SHA-256 digest chain (GAM-CHAIN-0) provides tamper-evident provenance. Fail-open design (GAM-FAIL-OPEN-0) ensures corrupt ledger lines never block archaeology. verify_chain() enables instant tamper detection.",
+  "ip_claims": [
+    "Distributed ledger scan with cryptographic timeline digest for autonomous AI mutation provenance",
+    "SHA-256 chained decision archaeology with stable timestamp-sorted event reconstruction",
+    "Fail-open multi-root ledger excavation with terminal-event outcome resolution"
+  ]
+}

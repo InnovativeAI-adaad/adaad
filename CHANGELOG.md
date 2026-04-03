@@ -1,3 +1,55 @@
+## [9.37.0] — 2026-04-03 — Phase 104 · INNOV-19 Governance Archaeology Mode
+
+**Branch:** `feature/phase104-gam-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T104-GAM-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase104/phase104_sign_off.json` · ILA-104-2026-04-03-001
+
+### Phase 104: INNOV-19 — Governance Archaeology Mode (GAM)
+
+World-first cryptographically-verified mutation decision timeline reconstruction.
+`GovernanceArchaeologist.excavate()` scans all distributed ledgers and assembles
+a complete chronological `DecisionEvent` list for any mutation_id — from first
+`proposed` event through every governance gate to final `approved`/`rejected`/
+`promoted`/`rolled_back` outcome.
+
+#### Module: `runtime/innovations30/governance_archaeology.py` (promoted from scaffold)
+
+- `DecisionEvent` — carries event_type, timestamp, epoch_id, mutation_id, actor,
+  outcome, details, ledger_hash; `to_dict()` is JSON-serializable
+- `MutationTimeline` — carries timeline_digest (GAM-CHAIN-0), chain_verified,
+  final_outcome (GAM-OUTCOME-0); accessors: proposal_event, governance_events,
+  human_events, terminal_event
+- `GovernanceArchaeologist` — `excavate()` sole entry point (GAM-0); scans `.jsonl`
+  files across all ledger_roots; `_parse_event()` returns None for non-matching
+  records (GAM-PARSE-0); fail-open throughout (GAM-FAIL-OPEN-0); events sorted
+  ascending by timestamp, empty timestamp sorts first (GAM-SORT-0);
+  `verify_chain()` re-computes digest for tamper detection (GAM-VERIFY-0);
+  `export_timeline()` emits innovation=19 metadata (GAM-EXPORT-0)
+- `_TERMINAL_EVENT_TYPES` — frozenset{approved, rejected, promoted, rolled_back}
+
+#### New REST endpoint: `GET /governance/archaeology/{mutation_id}`
+
+Returns timeline, final_outcome, timeline_digest, chain_verified, event_count, export.
+
+#### New Aponi panel: `ui/aponi/gam_panel.js`
+
+Interactive mutation_id search, outcome badge, SHA-256 chain indicator, chronological
+event list, JSON export download. INNOV-19 · Phase 104.
+
+#### Constitutional invariants introduced (9 new — Hard-class cumulative: 75)
+
+- **GAM-0** — excavate() is the sole entry point; never raises on absent/empty ledger
+- **GAM-CHAIN-0** — timeline_digest = "sha256:" + sha256(json.dumps(event_types)); prefixed
+- **GAM-DETERM-0** — identical ledger state + mutation_id → identical digest; no RNG
+- **GAM-SORT-0** — events sorted ascending by timestamp; empty timestamp sorts first
+- **GAM-FAIL-OPEN-0** — corrupt JSONL lines silently skipped; no exception from excavate()
+- **GAM-PARSE-0** — _parse_event() returns None for non-matching records; never raises
+- **GAM-OUTCOME-0** — final_outcome from last terminal event; defaults "unknown"
+- **GAM-EXPORT-0** — export_timeline() always carries innovation=19 and timeline_digest
+- **GAM-VERIFY-0** — verify_chain() re-computes digest; returns bool; never raises
+
+
 ## [9.36.0] — 2026-04-03 — Phase 103 · INNOV-18 Temporal Governance Windows
 
 **Branch:** `feature/phase103-tgov-impl`
