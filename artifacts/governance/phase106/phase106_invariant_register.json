@@ -1,0 +1,58 @@
+{
+  "phase": 106,
+  "version": "9.39.0",
+  "module": "runtime/innovations30/governance_bankruptcy.py",
+  "innovation": "INNOV-21",
+  "invariants": [
+    {
+      "code": "GBP-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "GBP_VERSION present and non-empty; asserted at import"
+    },
+    {
+      "code": "GBP-THRESH-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "BANKRUPTCY_THRESHOLD in (0.0,1.0) exclusive; enforced at construction"
+    },
+    {
+      "code": "GBP-HEALTH-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "REMEDIATION_HEALTH_TARGET < BANKRUPTCY_THRESHOLD; enforced at construction"
+    },
+    {
+      "code": "GBP-PERSIST-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "Every declaration event appended to append-only JSONL; 'a' mode only"
+    },
+    {
+      "code": "GBP-CHAIN-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "Each ledger entry carries prev_digest; chain verified via hmac.compare_digest"
+    },
+    {
+      "code": "GBP-DISCHARGE-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "_load() discharge supersession: last ledger entry per epoch_id wins"
+    },
+    {
+      "code": "GBP-GATE-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "Empty mutation_intent raises GBPViolation; blank-intent bypass is constitutional violation"
+    },
+    {
+      "code": "GBP-IMMUT-0",
+      "tier": 1,
+      "class": "Hard",
+      "description": "Discharged epoch_id may not be re-activated; raises GBPViolation on attempt"
+    }
+  ],
+  "cumulative_hard_class": 91,
+  "prior_cumulative": 83
+}

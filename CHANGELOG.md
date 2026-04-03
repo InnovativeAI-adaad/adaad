@@ -1,3 +1,30 @@
+## [9.39.0] — 2026-04-03 — Phase 106 · INNOV-21 Governance Bankruptcy Protocol
+
+**Branch:** `feature/phase106-gbp-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T106-GBP-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase106/phase106_sign_off.json` · ILA-106-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/governance_bankruptcy.py` — promoted from scaffold to full constitutional implementation
+- `tests/test_phase106_gbp.py` — T106-GBP-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/bankruptcy/{epoch_id}`
+- `artifacts/governance/phase106/` — 4 governance artifacts
+
+### Findings Resolved
+- `FINDING-GBP-SCAFFOLD-01` (P1): governance_bankruptcy.py scaffold missing typed exception, chain-link, and discharge supersession — all closed
+
+### Constitutional Invariants (8 new · cumulative: 91 Hard-class)
+`GBP-0` · `GBP-THRESH-0` · `GBP-HEALTH-0` · `GBP-PERSIST-0` · `GBP-CHAIN-0` · `GBP-DISCHARGE-0` · `GBP-GATE-0` · `GBP-IMMUT-0`
+
+### IP Claims
+- Governance debt bankruptcy state machine with bounded entry/exit criteria and monotonic discharge progression
+- Chain-linked append-only JSONL ledger with SHA-256 digest chain and `hmac.compare_digest` tamper detection
+- Discharge supersession protocol: last ledger entry per epoch_id is authoritative; stale re-activation is constitutionally blocked
+- Constitutional gate: blank-intent mutation bypass during bankruptcy is a `GBPViolation`, not a pass
+
+---
+
 ## [9.38.0] — 2026-04-03 — Phase 105 · INNOV-20 Constitutional Stress Testing
 
 **Branch:** `feature/phase105-cst-impl`
