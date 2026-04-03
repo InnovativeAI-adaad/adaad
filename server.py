@@ -2342,6 +2342,73 @@ def governance_bankruptcy(
         return {"ok": False, "error": str(exc), "innovation": 21}
 
 
+# ── INNOV-23: GET /governance/sentinel/{epoch_id} ───────────────────────────
+@app.get("/governance/sentinel/{epoch_id}")
+def governance_sentinel(
+    epoch_id: str,
+    metrics: str = "",
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-23: GET /governance/sentinel/{epoch_id}
+
+    Ticks the Constitutional Epoch Sentinel for the given epoch.
+    metrics is an optional comma-separated list of channel=value pairs
+    (e.g. "debt_score=0.82,health_delta=0.75"). Returns all advisories
+    emitted this tick plus aggregate sentinel status.
+
+    Constitutional invariants enforced:
+      CES-0, CES-WATCH-0, CES-THRESH-0, CES-EMIT-0,
+      CES-PERSIST-0, CES-CHAIN-0, CES-GATE-0, CES-DETERM-0
+    """
+    _ = auth_ctx
+    from dataclasses import asdict as _asdict
+    from runtime.innovations30.constitutional_epoch_sentinel import (
+        ConstitutionalEpochSentinel,
+        SentinelChannel,
+        CESViolation,
+        CES_VERSION,
+    )
+    try:
+        ces = ConstitutionalEpochSentinel()
+        # Register default governance channels if none loaded from ledger
+        if ces.sentinel_status()["registered_channels"] == 0:
+            ces.register_channel(SentinelChannel(
+                "governance_debt", warning_threshold=0.70, violation_threshold=0.90))
+            ces.register_channel(SentinelChannel(
+                "invariant_violation_rate", warning_threshold=0.15, violation_threshold=0.30))
+        # Parse optional metric pairs
+        metric_map: dict[str, float] = {}
+        if metrics:
+            for pair in metrics.split(","):
+                pair = pair.strip()
+                if "=" in pair:
+                    k, v = pair.split("=", 1)
+                    try:
+                        metric_map[k.strip()] = float(v.strip())
+                    except ValueError:
+                        pass
+        emitted = ces.tick(epoch_id, metric_map)
+        chain_valid, chain_detail = ces.verify_chain()
+        return {
+            "ok": True,
+            "innovation": 23,
+            "innovation_name": "ConstitutionalEpochSentinel",
+            "ces_version": CES_VERSION,
+            "epoch_id": epoch_id,
+            "advisories_emitted": [_asdict(a) for a in emitted],
+            "advisory_count": len(emitted),
+            "status": ces.sentinel_status(),
+            "chain_valid": chain_valid,
+            "chain_detail": chain_detail,
+            "invariants": [
+                "CES-0", "CES-WATCH-0", "CES-THRESH-0", "CES-EMIT-0",
+                "CES-PERSIST-0", "CES-CHAIN-0", "CES-GATE-0", "CES-DETERM-0",
+            ],
+        }
+    except CESViolation as exc:
+        return {"ok": False, "error": str(exc), "innovation": 23}
+
+
 # ── INNOV-22: GET /governance/conflict/{mutation_id} ─────────────────────────
 @app.get("/governance/conflict/{mutation_id}")
 def governance_conflict(

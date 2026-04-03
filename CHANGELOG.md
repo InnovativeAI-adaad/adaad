@@ -1,3 +1,27 @@
+## [9.41.0] — 2026-04-03 — Phase 108 · INNOV-23 Constitutional Epoch Sentinel
+
+**Branch:** `feature/phase108-ces-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T108-CES-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase108/phase108_sign_off.json` · ILA-108-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/constitutional_epoch_sentinel.py` — INNOV-23 Constitutional Epoch Sentinel
+- `tests/test_phase108_ces.py` — T108-CES-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/sentinel/{epoch_id}`
+- `artifacts/governance/phase108/` — 4 governance artifacts
+
+### Constitutional Invariants (8 new · cumulative: 107 Hard-class)
+`CES-0` · `CES-WATCH-0` · `CES-THRESH-0` · `CES-EMIT-0` · `CES-PERSIST-0` · `CES-CHAIN-0` · `CES-GATE-0` · `CES-DETERM-0`
+
+### IP Claims
+- First anticipatory constitutional primitive: governed early-warning emission before Hard-class invariant breach
+- Warning corridor detection with margin_remaining telemetry enabling pre-violation governance intervention
+- Multi-channel atomic tick architecture: all SentinelChannels evaluated per tick (CES-WATCH-0)
+- Chain-linked advisory ledger with hmac.compare_digest tamper detection
+
+---
+
 ## [9.40.0] — 2026-04-03 — Phase 107 · INNOV-22 Mutation Conflict Framework
 
 **Branch:** `feature/phase107-mcf-impl`

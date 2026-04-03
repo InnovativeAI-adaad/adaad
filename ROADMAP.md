@@ -1864,3 +1864,24 @@ World-first constitutionally-governed concurrent mutation conflict detection and
 
 **Next:** Phase 108 — to be planned
 
+### Phase 108 — INNOV-23 · Constitutional Epoch Sentinel (CES)
+
+**Status:** ✅ shipped (v9.41.0) · **Dependency:** Phase 107 MCF merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-03) · **Tests:** T108-CES-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase108/phase108_sign_off.json` · ILA-108-2026-04-03-001
+
+World-first anticipatory constitutional primitive. Prior innovations fire at breach; the Sentinel fires *before* breach. When any registered metric enters its warning corridor (>= warning_threshold, < violation_threshold), a governed SentinelAdvisory is emitted and chain-linked to the append-only ledger before the metric crosses into Hard-class violation territory.
+
+**Module:** `runtime/innovations30/constitutional_epoch_sentinel.py`
+- `SentinelChannel` — carries channel_name, warning_threshold, violation_threshold, current_value; CES-THRESH-0 enforced at register_channel()
+- `ConstitutionalEpochSentinel.tick(epoch_id, metrics)` — CES-GATE-0 + CES-WATCH-0 + CES-EMIT-0; all channels evaluated atomically
+- `SentinelAdvisory` — carries margin_remaining, chain-linked advisory_digest (CES-DETERM-0), prev_digest (CES-CHAIN-0)
+- `verify_chain()` — tamper detection via hmac.compare_digest across full ledger replay
+- `acknowledge(digest)` — clears advisory from pending list
+
+**Endpoint:** `GET /governance/sentinel/{epoch_id}`
+
+**Invariants introduced:** `CES-0`, `CES-WATCH-0`, `CES-THRESH-0`, `CES-EMIT-0`, `CES-PERSIST-0`, `CES-CHAIN-0`, `CES-GATE-0`, `CES-DETERM-0` (8 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 107
+
+**Next:** Phase 109 — to be planned
+
