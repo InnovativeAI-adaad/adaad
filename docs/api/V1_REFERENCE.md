@@ -17,6 +17,12 @@
 ## Governance & Fast-Path (v1 aliases)
 All existing `/api/governance/...` and `/api/fast-path/...` routes are exposed as `/api/v1/governance/...` and `/api/v1/fast-path/...` aliases.
 
+Notable governance read endpoints include:
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/v1/governance/semver/{mutation_id}` | `GET` | Returns Semantic Version Promises (SVP) contract status, latest verdict, audit history, and deterministic breaking-change analysis summary |
+
 ## OpenAPI Schema
 The complete machine-readable reference is committed at:
 
