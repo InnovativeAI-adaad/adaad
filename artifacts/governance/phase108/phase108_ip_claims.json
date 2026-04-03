@@ -1,0 +1,12 @@
+{
+  "ila_id": "ILA-108-2026-04-03-001",
+  "phase": 108,
+  "innovation": "INNOV-23",
+  "date": "2026-04-03",
+  "claims": [
+    "First anticipatory constitutional primitive: governed early-warning emission before Hard-class invariant breach, enabling pre-violation governance intervention",
+    "Warning corridor detection: SentinelAdvisory emitted when metric >= warning_threshold with margin_remaining = violation_threshold - metric_value",
+    "Multi-channel tick architecture: ConstitutionalEpochSentinel evaluates all registered SentinelChannels in a single atomic tick call (CES-WATCH-0)",
+    "Chain-linked advisory ledger with hmac.compare_digest tamper detection enabling deterministic replay of all proximity-warning events"
+  ]
+}

@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.40.0 — 107 Phases Complete — LIVE"/>
+<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.41.0 — 108 Phases Complete — LIVE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 **[⚡ Quickstart](#quickstart)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
@@ -37,7 +37,7 @@ These are not documentation claims. They are runtime-enforced invariants. Violat
 | Identity check never blocks an epoch | Fail-open with fallback score injection | `MMEM-0` |
 | Critical mutations require GPG-signed human key | Architecturally enforced — not a config option | `HUMAN-0` |
 | Import boundaries block unauthorized dependencies | Static enforcement — violations block merge | `AST-IMPORT-0` |
-| All 99 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 99 invariants |
+| All 107 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 107 invariants |
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md)
 
@@ -226,15 +226,15 @@ Every property below is mechanically enforced at runtime.
 
 **🔑 Human authority is structural** — GPG key required for Tier 0. Not configurable. `HUMAN-0`.
 
-**🚧 99 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
+**🚧 107 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 22 shipped world-first innovations
+## 23 shipped world-first innovations
 
-<img src="docs/assets/readme/adaad-innovations-animated.svg" width="100%" alt="22 World-First Innovations — Shipped"/>
+<img src="docs/assets/readme/adaad-innovations-animated.svg" width="100%" alt="23 World-First Innovations — Shipped"/>
 
 <details>
 <summary><b>Full innovation index</b></summary>
@@ -253,7 +253,7 @@ Every property below is mechanically enforced at runtime.
 | INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability as a constitutionally-bounded, weighted fitness dimension |
 | INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained self-model consulted pre-proposal · detects identity drift at root |
 
-8 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+7 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
 </details>
 
@@ -645,9 +645,9 @@ It answers the question no prior gate could ask: *is this mutation consistent wi
 <summary><b>What are the 10 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-22 shipped across v9.18.0–v9.40.0 (Phases 87–107): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), and Agent Post-Mortem Interviews (APM), and Temporal Governance Windows (TGOV), and Governance Archaeology Mode (GAM).
+INNOV-01 through INNOV-23 shipped across v9.18.0–v9.41.0 (Phases 87–108): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), and Agent Post-Mortem Interviews (APM), and Temporal Governance Windows (TGOV), and Governance Archaeology Mode (GAM).
 
-8 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+7 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
 
 <details>
