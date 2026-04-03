@@ -1,0 +1,12 @@
+{
+  "ila_id": "ILA-107-2026-04-03-001",
+  "phase": 107,
+  "innovation": "INNOV-22",
+  "date": "2026-04-03",
+  "claims": [
+    "Constitutional mutation conflict detection via deterministic frozenset intersection with HMAC-chain-linked tamper-evident JSONL ledger",
+    "Severity-stratified conflict resolution: auto-resolve for low/medium, mandatory HUMAN-0 escalation advisory for high/critical",
+    "Stable conflict_digest over sorted mutation_id pair and overlap paths enabling deterministic cross-epoch replay verification",
+    "EscalationAdvisory emission and acknowledgement lifecycle enforcing HUMAN-0 gate before high/critical conflict resolution"
+  ]
+}

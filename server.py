@@ -2342,6 +2342,66 @@ def governance_bankruptcy(
         return {"ok": False, "error": str(exc), "innovation": 21}
 
 
+# ── INNOV-22: GET /governance/conflict/{mutation_id} ─────────────────────────
+@app.get("/governance/conflict/{mutation_id}")
+def governance_conflict(
+    mutation_id: str,
+    peer_mutation_id: str = "",
+    target_paths: str = "",
+    peer_paths: str = "",
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-22: GET /governance/conflict/{mutation_id}
+
+    Analyses whether two concurrent mutations have overlapping target paths.
+    If peer_mutation_id and path lists are provided, a conflict analysis is
+    performed and the result persisted to the append-only JSONL ledger.
+    Without peer params, returns the current conflict summary.
+
+    Constitutional invariants enforced:
+      MCF-0, MCF-DETECT-0, MCF-SEVERITY-0, MCF-PERSIST-0,
+      MCF-CHAIN-0, MCF-RESOLVE-0, MCF-GATE-0, MCF-DETERM-0
+    """
+    _ = auth_ctx
+    from dataclasses import asdict as _asdict
+    from runtime.innovations30.mutation_conflict_framework import (
+        MutationConflictFramework,
+        MCFViolation,
+        MCF_VERSION,
+    )
+    try:
+        mcf = MutationConflictFramework()
+        conflict_record = None
+        conflict_detected = False
+        if peer_mutation_id and target_paths and peer_paths:
+            paths_a = [p.strip() for p in target_paths.split(",") if p.strip()]
+            paths_b = [p.strip() for p in peer_paths.split(",") if p.strip()]
+            record = mcf.analyze(mutation_id, peer_mutation_id, paths_a, paths_b)
+            if record:
+                conflict_detected = True
+                conflict_record = _asdict(record)
+        chain_valid, chain_detail = mcf.verify_chain()
+        return {
+            "ok": True,
+            "innovation": 22,
+            "innovation_name": "MutationConflictFramework",
+            "mcf_version": MCF_VERSION,
+            "mutation_id": mutation_id,
+            "conflict_detected": conflict_detected,
+            "conflict_record": conflict_record,
+            "summary": mcf.conflict_summary(),
+            "pending_escalations": len(mcf.pending_escalations()),
+            "chain_valid": chain_valid,
+            "chain_detail": chain_detail,
+            "invariants": [
+                "MCF-0", "MCF-DETECT-0", "MCF-SEVERITY-0", "MCF-PERSIST-0",
+                "MCF-CHAIN-0", "MCF-RESOLVE-0", "MCF-GATE-0", "MCF-DETERM-0",
+            ],
+        }
+    except MCFViolation as exc:
+        return {"ok": False, "error": str(exc), "innovation": 22}
+
+
 @app.get("/governance/temporal/windows")
 def governance_temporal_windows(
     epoch_id: str = "current",
