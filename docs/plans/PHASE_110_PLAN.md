@@ -1,11 +1,11 @@
-# Phase 110 Plan — INNOV-26: Constitutional Entropy Budget
+# Phase 110 Plan — INNOV-25: Hardware-Adaptive Fitness
 
 ## Objective
-Deliver **INNOV-26 (Constitutional Entropy Budget)** as a governed phase increment with deterministic implementation sequencing, constitutional gate coverage, and release evidence alignment.
+Deliver **INNOV-25 (Hardware-Adaptive Fitness)** as a governed phase increment with deterministic implementation sequencing, constitutional gate coverage, and release evidence alignment.
 
 ## Dependency Chain
 - Immediate predecessor: **Phase 109** (must be merged before any Phase 110 source writes).
-- Innovation lineage: `INNOV-25` → `INNOV-26` within `ADAAD_30_INNOVATIONS.md` phase roadmap (INNOV-10..30 mapped to Phases 94..114).
+- Innovation lineage: `INNOV-24` → `INNOV-25` within `ADAAD_30_INNOVATIONS.md` phase roadmap (INNOV-10..30 mapped to Phases 94..114).
 - Release dependency: target version **v9.43.0** follows predecessor semantic progression.
 - Deterministic next-PR linkage: `state_alignment.expected_next_pr` resolves to `Phase 110` only when Phase 109 status is `shipped`.
 
@@ -33,7 +33,7 @@ Deliver **INNOV-26 (Constitutional Entropy Budget)** as a governed phase increme
 - `artifacts/governance/phase110/track_a_sign_off.json`
 - `artifacts/governance/phase110/replay_digest.txt`
 - `artifacts/governance/phase110/tier_summary.json`
-- `docs/comms/claims_evidence_matrix.md` row updated to `Complete` for Phase 110 / INNOV-26.
+- `docs/comms/claims_evidence_matrix.md` row updated to `Complete` for Phase 110 / INNOV-25.
 
 ## HUMAN-0 Checkpoints
 1. **Plan ratification checkpoint:** governor approves this plan before PR open.

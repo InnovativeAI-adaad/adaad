@@ -1,11 +1,11 @@
-# Phase 109 Plan — INNOV-25: Hardware-Adaptive Fitness
+# Phase 109 Plan — INNOV-24: Semantic Version Promises
 
 ## Objective
-Deliver **INNOV-25 (Hardware-Adaptive Fitness)** as a governed phase increment with deterministic implementation sequencing, constitutional gate coverage, and release evidence alignment.
+Deliver **INNOV-24 (Semantic Version Promises)** as a governed phase increment with deterministic implementation sequencing, constitutional gate coverage, and release evidence alignment.
 
 ## Dependency Chain
 - Immediate predecessor: **Phase 108** (must be merged before any Phase 109 source writes).
-- Innovation lineage: `INNOV-24` → `INNOV-25` within `ADAAD_30_INNOVATIONS.md` phase roadmap (INNOV-10..30 mapped to Phases 94..114).
+- Innovation lineage: `INNOV-23` → `INNOV-24` within `ADAAD_30_INNOVATIONS.md` phase roadmap (INNOV-10..30 mapped to Phases 94..114).
 - Release dependency: target version **v9.42.0** follows predecessor semantic progression.
 - Deterministic next-PR linkage: `state_alignment.expected_next_pr` resolves to `Phase 109` only when Phase 108 status is `shipped`.
 
@@ -33,7 +33,7 @@ Deliver **INNOV-25 (Hardware-Adaptive Fitness)** as a governed phase increment w
 - `artifacts/governance/phase109/track_a_sign_off.json`
 - `artifacts/governance/phase109/replay_digest.txt`
 - `artifacts/governance/phase109/tier_summary.json`
-- `docs/comms/claims_evidence_matrix.md` row updated to `Complete` for Phase 109 / INNOV-25.
+- `docs/comms/claims_evidence_matrix.md` row updated to `Complete` for Phase 109 / INNOV-24.
 
 ## HUMAN-0 Checkpoints
 1. **Plan ratification checkpoint:** governor approves this plan before PR open.

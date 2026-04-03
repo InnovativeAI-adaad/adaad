@@ -1862,7 +1862,7 @@ World-first constitutionally-governed concurrent mutation conflict detection and
 
 **Total Hard-class invariants (cumulative):** 99
 
-**Next:** Phase 109 — INNOV-24 · to be planned
+**Next:** Phase 109 — INNOV-24 · Semantic Version Promises (SVP)
 
 ### Phase 108 — INNOV-23 · Constitutional Epoch Sentinel (CES)
 
@@ -1883,5 +1883,5 @@ World-first anticipatory constitutional primitive. Prior innovations fire at bre
 
 **Total Hard-class invariants (cumulative):** 107
 
-**Next:** Phase 109 — to be planned
+**Next:** Phase 109 — INNOV-24 · Semantic Version Promises (SVP)
 
