@@ -342,7 +342,7 @@
   - `ADAAD_ENV=dev CRYOVANT_DEV_MODE=1 ADAAD_FORCE_DETERMINISTIC_PROVIDER=1 ADAAD_DETERMINISTIC_SEED=ci-strict-replay PYTHONPATH=. python -m app.main --verify-replay --replay strict`
 - **Movement rule:** Do not advance to Phase 108 until Tier 0/1/2 + evidence row + merge are all complete for Phase 107.
 
-### Phase 108 — INNOV-24 — Semantic Version Promises (v9.41.0)
+### Phase 108 — INNOV-23 — Constitutional Epoch Sentinel (v9.41.0)
 - **Dependency gate:** Phase 107 must be merged/shipped before source writes for Phase 108.
 - **Required artifacts:**
   - `artifacts/governance/phase108/track_a_sign_off.json`
@@ -363,7 +363,7 @@
   - `ADAAD_ENV=dev CRYOVANT_DEV_MODE=1 ADAAD_FORCE_DETERMINISTIC_PROVIDER=1 ADAAD_DETERMINISTIC_SEED=ci-strict-replay PYTHONPATH=. python -m app.main --verify-replay --replay strict`
 - **Movement rule:** Do not advance to Phase 109 until Tier 0/1/2 + evidence row + merge are all complete for Phase 108.
 
-### Phase 109 — INNOV-25 — Hardware-Adaptive Fitness (v9.42.0)
+### Phase 109 — INNOV-24 — Semantic Version Promises (v9.42.0)
 - **Dependency gate:** Phase 108 must be merged/shipped before source writes for Phase 109.
 - **Required artifacts:**
   - `artifacts/governance/phase109/track_a_sign_off.json`
@@ -384,7 +384,7 @@
   - `ADAAD_ENV=dev CRYOVANT_DEV_MODE=1 ADAAD_FORCE_DETERMINISTIC_PROVIDER=1 ADAAD_DETERMINISTIC_SEED=ci-strict-replay PYTHONPATH=. python -m app.main --verify-replay --replay strict`
 - **Movement rule:** Do not advance to Phase 110 until Tier 0/1/2 + evidence row + merge are all complete for Phase 109.
 
-### Phase 110 — INNOV-26 — Constitutional Entropy Budget (v9.43.0)
+### Phase 110 — INNOV-25 — Hardware-Adaptive Fitness (v9.43.0)
 - **Dependency gate:** Phase 109 must be merged/shipped before source writes for Phase 110.
 - **Required artifacts:**
   - `artifacts/governance/phase110/track_a_sign_off.json`
@@ -405,7 +405,7 @@
   - `ADAAD_ENV=dev CRYOVANT_DEV_MODE=1 ADAAD_FORCE_DETERMINISTIC_PROVIDER=1 ADAAD_DETERMINISTIC_SEED=ci-strict-replay PYTHONPATH=. python -m app.main --verify-replay --replay strict`
 - **Movement rule:** Do not advance to Phase 111 until Tier 0/1/2 + evidence row + merge are all complete for Phase 110.
 
-### Phase 111 — INNOV-27 — Mutation Blast Radius Modeling (v9.44.0)
+### Phase 111 — INNOV-26 — Constitutional Entropy Budget (v9.44.0)
 - **Dependency gate:** Phase 110 must be merged/shipped before source writes for Phase 111.
 - **Required artifacts:**
   - `artifacts/governance/phase111/track_a_sign_off.json`

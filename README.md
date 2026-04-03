@@ -40,6 +40,7 @@ These are not documentation claims. They are runtime-enforced invariants. Violat
 | All 107 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 107 invariants |
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md)
+→ [Active canonical spec](docs/governance/ARCHITECT_SPEC_v3.1.0.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 

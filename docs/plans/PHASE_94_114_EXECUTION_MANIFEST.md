@@ -34,7 +34,7 @@ All phases in this manifest execute in lane: `constitutional-innovation`.
 | 105 | INNOV-20 — Constitutional Stress Testing | `feat/phase105-innov20-constitutional-stress-testing` | Phase 104 | v9.38.0 | 📋 roadmap |
 | 106 | INNOV-21 — Governance Debt Bankruptcy Protocol | `feat/phase106-innov21-governance-debt-bankruptcy-protocol` | Phase 105 | v9.39.0 | 📋 roadmap |
 | 107 | INNOV-22 — Market-Conditioned Fitness | `feat/phase107-innov22-market-conditioned-fitness` | Phase 106 | v9.40.0 | 📋 roadmap |
-| 108 | INNOV-23 — Regulatory Compliance Layer | `feat/phase108-innov23-regulatory-compliance-layer` | Phase 107 | v9.41.0 | 📋 roadmap |
+| 108 | INNOV-23 — Constitutional Epoch Sentinel | `feat/phase108-innov23-constitutional-epoch-sentinel` | Phase 107 | v9.41.0 | 📋 roadmap |
 | 109 | INNOV-24 — Semantic Version Promises | `feat/phase109-innov24-semantic-version-promises` | Phase 108 | v9.42.0 | 📋 roadmap |
 | 110 | INNOV-25 — Hardware-Adaptive Fitness | `feat/phase110-innov25-hardware-adaptive-fitness` | Phase 109 | v9.43.0 | 📋 roadmap |
 | 111 | INNOV-26 — Constitutional Entropy Budget | `feat/phase111-innov26-constitutional-entropy-budget` | Phase 110 | v9.44.0 | 📋 roadmap |
