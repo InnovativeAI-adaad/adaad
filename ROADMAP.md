@@ -1841,3 +1841,26 @@ World-first constitutionally-governed cross-epoch mutation memory consolidation.
 - Hard-class invariants cumulative: **56** (ERS-0 through ERS-PERSIST-0 introduced in Phase 101)
 
 **Next:** Phase 102 — INNOV-17 · Agent Post-Mortem Interviews
+
+### Phase 107 — INNOV-22 · Mutation Conflict Framework (MCF)
+
+**Status:** ✅ shipped (v9.40.0) · **Dependency:** Phase 106 GBP merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-03) · **Tests:** T107-MCF-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase107/phase107_sign_off.json` · ILA-107-2026-04-03-001
+
+World-first constitutionally-governed concurrent mutation conflict detection and severity-stratified resolution. When two mutations target overlapping code regions, the MCF detects the conflict via deterministic frozenset intersection, classifies severity by overlap density ratio, auto-resolves low/medium conflicts, and escalates high/critical to HUMAN-0 advisory before any resolution is recorded.
+
+**Module:** `runtime/innovations30/mutation_conflict_framework.py`
+- `ConflictRecord` — carries mutation_ids, overlap_paths, severity, resolution, chain-linked conflict_digest (MCF-DETERM-0)
+- `MutationConflictFramework.analyze()` — sole detection entry point; MCF-GATE-0 enforced on blank mutation_id; MCF-DETECT-0 via frozenset intersection
+- `_classify_severity()` — overlap ratio thresholds: <0.25=low, 0.25–0.50=medium, 0.50–0.75=high, >0.75=critical (MCF-SEVERITY-0)
+- `resolve()` — MCF-RESOLVE-0: low/medium auto-resolves; high/critical requires `human0_acknowledged=True`
+- `EscalationAdvisory` — emitted automatically for high/critical conflicts; carries full HUMAN-0 advisory payload
+- `verify_chain()` — tamper detection via hmac.compare_digest across full ledger replay (MCF-CHAIN-0)
+
+**Endpoint:** `GET /governance/conflict/{mutation_id}`
+
+**Invariants introduced:** `MCF-0`, `MCF-DETECT-0`, `MCF-SEVERITY-0`, `MCF-PERSIST-0`, `MCF-CHAIN-0`, `MCF-RESOLVE-0`, `MCF-GATE-0`, `MCF-DETERM-0` (8 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 99
+
+**Next:** Phase 108 — to be planned
+

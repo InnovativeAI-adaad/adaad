@@ -1,3 +1,27 @@
+## [9.40.0] — 2026-04-03 — Phase 107 · INNOV-22 Mutation Conflict Framework
+
+**Branch:** `feature/phase107-mcf-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T107-MCF-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase107/phase107_sign_off.json` · ILA-107-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/mutation_conflict_framework.py` — INNOV-22 Mutation Conflict Framework
+- `tests/test_phase107_mcf.py` — T107-MCF-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/conflict/{mutation_id}`
+- `artifacts/governance/phase107/` — 4 governance artifacts
+
+### Constitutional Invariants (8 new · cumulative: 99 Hard-class)
+`MCF-0` · `MCF-DETECT-0` · `MCF-SEVERITY-0` · `MCF-PERSIST-0` · `MCF-CHAIN-0` · `MCF-RESOLVE-0` · `MCF-GATE-0` · `MCF-DETERM-0`
+
+### IP Claims
+- Constitutional mutation conflict detection via deterministic frozenset intersection with HMAC-chain-linked tamper-evident JSONL ledger
+- Severity-stratified conflict resolution: auto-resolve for low/medium, mandatory HUMAN-0 escalation advisory for high/critical
+- Stable conflict_digest over sorted mutation_id pair and overlap paths enabling deterministic cross-epoch replay verification
+- EscalationAdvisory emission and acknowledgement lifecycle enforcing HUMAN-0 gate before high/critical conflict resolution
+
+---
+
 ## [9.39.0] — 2026-04-03 — Phase 106 · INNOV-21 Governance Bankruptcy Protocol
 
 **Branch:** `feature/phase106-gbp-impl`

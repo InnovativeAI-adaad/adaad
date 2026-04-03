@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.38.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.40.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 105 \u00b7 INNOV-20 Constitutional Stress Testing",
+  "last_completed_phase": "Phase 107 \u00b7 INNOV-22 Mutation Conflict Framework",
   "last_completed_pr": "feature/phase101-ers-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -444,9 +444,19 @@
     "phase94-mmem-complete",
     "v9.38.0-released",
     "phase105-cst-complete",
-    "phase105-world-first-adversarial-constitution-stress"
+    "phase105-world-first-adversarial-constitution-stress",
+    "phase106-gbp-complete",
+    "phase106-world-first-governance-bankruptcy",
+    "v9.39.0-released",
+    "phase107-mcf-impl-complete",
+    "phase107-mcf-0-enforced",
+    "phase107-mcf-detect-0-enforced",
+    "phase107-mcf-severity-0-enforced",
+    "phase107-mcf-resolve-0-enforced",
+    "phase107-world-first-conflict-framework",
+    "v9.40.0-released"
   ],
-  "current_version": "9.38.0",
+  "current_version": "9.40.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -595,14 +605,24 @@
     "phase105-cst-scenario-0-enforced",
     "phase105-world-first-adversarial-constitution-stress",
     "v9.38.0-released",
-    "phase105-complete"
+    "phase105-complete",
+    "phase106-plan-authored",
+    "phase106-human0-ratified",
+    "phase106-innov21-gbp-implemented",
+    "v9.39.0-released",
+    "phase106-complete",
+    "phase107-plan-authored",
+    "phase107-human0-ratified",
+    "phase107-innov22-mcf-implemented",
+    "v9.40.0-released",
+    "phase107-complete"
   ],
-  "software_version": "9.38.0",
+  "software_version": "9.40.0",
   "last_agent_state_sync_digest": "gsync-5d6402dff0f5519a",
-  "version": "9.39.0",
-  "phase": 105,
-  "phase_label": "Phase 105 \u2014 INNOV-20 Constitutional Stress Testing",
-  "last_innovation": "INNOV-20",
+  "version": "9.40.0",
+  "phase": 107,
+  "phase_label": "Phase 107 \u2014 INNOV-22 Mutation Conflict Framework",
+  "last_innovation": "INNOV-22",
   "acse_active": true,
   "tife_active": true,
   "human0_signoffs": [
@@ -736,23 +756,45 @@
       "scope": "Phase 105 INNOV-20 Constitutional Stress Testing (CST) \u2014 30/30 tests green \u2014 8 CST invariants \u2014 83 cumulative Hard-class invariants \u2014 v9.38.0 release",
       "session_digest": "phase105-cst-impl-2026-04-03",
       "attestation_ref": "ILA-105-2026-04-03-001"
+    },
+    {
+      "date": "2026-04-03",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 106 INNOV-21 Governance Bankruptcy Protocol (GBP) \u2014 30/30 tests green \u2014 8 GBP invariants \u2014 91 cumulative Hard-class invariants \u2014 v9.39.0 release",
+      "session_digest": "phase106-gbp-impl-2026-04-03",
+      "attestation_ref": "ILA-106-2026-04-03-001"
+    },
+    {
+      "date": "2026-04-03",
+      "governor": "DUSTIN L REID",
+      "scope": "Phase 107 INNOV-22 Mutation Conflict Framework (MCF) \u2014 30/30 tests green \u2014 8 MCF invariants \u2014 99 cumulative Hard-class invariants \u2014 v9.40.0 release",
+      "session_digest": "phase107-mcf-impl-2026-04-03",
+      "attestation_ref": "ILA-107-2026-04-03-001"
     }
   ],
-  "current_phase": 106,
-  "next_phase": 106,
-  "last_phase_completed": 106,
+  "current_phase": 107,
+  "next_phase": 108,
+  "last_phase_completed": 107,
   "constitutional_invariants": {
-    "hard_class_count": 91,
-    "cumulative": 91
+    "hard_class_count": 99,
+    "cumulative": 99
   },
   "phases_completed": [
-    106
+    106,
+    107
   ],
   "innovations_shipped": {
     "INNOV-21": {
       "phase": 106,
       "module": "governance_bankruptcy.py",
       "version": "9.39.0",
+      "hard_invariants": 8,
+      "tests": "30/30"
+    },
+    "INNOV-22": {
+      "phase": 107,
+      "module": "mutation_conflict_framework.py",
+      "version": "9.40.0",
       "hard_invariants": 8,
       "tests": "30/30"
     }
