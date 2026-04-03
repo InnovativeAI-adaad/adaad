@@ -413,12 +413,12 @@ ADAAD evolves through numbered phases. Each phase ships a specific capability, r
 
 | Phase | Innovation | Invariants added | Status |
 |:---:|:---|:---:|:---:|
-| 92 | Adversarial Fitness Red Team (AFRT) | AFRT-0 · GATE-0 · INTEL-0 · LEDGER-0 · CASES-0 · DETERM-0 | ✅ Shipped |
-| 93 | Aesthetic Fitness Signal (AFIT) | AFIT-0 · DETERM-0 · BOUND-0 · WEIGHT-0 | ✅ Shipped |
-| 94 | Morphogenetic Memory (MMEM) | MMEM-0 · CHAIN-0 · READONLY-0 · WIRE-0 · LEDGER-0 · DETERM-0 | ✅ Shipped |
-| 95 | Oracle×Dork Alignment (UI) | — | ✅ Shipped |
-| 96 | Cross-Epoch Dream State Engine (DSTE) · INNOV-11 | DSTE-0..6 | ✅ Shipped |
-| 97 | TBD · INNOV-12 | — | 🗺 Planned |
+| 104 | Adversarial Epoch Oracle (AEO) · INNOV-19 | AEO-0..7 | ✅ Shipped |
+| 105 | Constitutional Jury System (CJS) · INNOV-20 | CJS-0..7 | ✅ Shipped |
+| 106 | Governance Bankruptcy Protocol (GBP) · INNOV-21 | GBP-0..7 | ✅ Shipped |
+| 107 | Mutation Conflict Framework (MCF) · INNOV-22 | MCF-0..7 | ✅ Shipped |
+| 108 | Constitutional Epoch Sentinel (CES) · INNOV-23 | CES-0..7 | ✅ Shipped |
+| 109 | TBD · INNOV-24 | — | 🗺 Next |
 
 ### Governance event chain
 
@@ -645,9 +645,9 @@ It answers the question no prior gate could ask: *is this mutation consistent wi
 <summary><b>What are the 10 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-23 shipped across v9.18.0–v9.41.0 (Phases 87–108): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), and Agent Post-Mortem Interviews (APM), and Temporal Governance Windows (TGOV), and Governance Archaeology Mode (GAM).
+INNOV-01 through INNOV-23 shipped across v9.18.0–v9.41.0 (Phases 87–108): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), Agent Post-Mortem Interviews (APM), Temporal Governance Windows (TGOV), Governance Archaeology Mode (GAM), Cross-Epoch Dream State Engine (DSTE), Aponi Reputational Ledger (AROL), Entropy Budget Enforcer (ENBE), Mutation Replay Oracle (MROR), Cross-Shard Dependency Mesh (CSDM), Adversarial Epoch Oracle (AEO), Constitutional Jury System (CJS), Governance Bankruptcy Protocol (GBP), Mutation Conflict Framework (MCF), and Constitutional Epoch Sentinel (CES).
 
-7 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+7 further innovations are roadmapped (INNOV-24..30). Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
 
 <details>
@@ -668,7 +668,7 @@ Start with the [Trust Center](TRUST_CENTER.md). The [Procurement Fast-Lane packa
 
 ## Roadmap
 
-**Short term** — Phase 105 (INNOV-20), Aponi panel for jury deliberation (CJS), AEO endpoint provisioning.
+**Short term** — Phase 109 (INNOV-24), continuing 30-innovation roadmap toward Phase 114 milestone.
 
 **Mid term** — FitnessEngineV2 8th signal integration (identity_consistency), MMEM amendment protocol, device-anchored mobile runtime, reproducible packaging.
 

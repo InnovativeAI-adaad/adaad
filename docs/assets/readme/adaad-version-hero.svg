@@ -10,14 +10,14 @@
     </linearGradient>
   </defs>
   <rect width="800" height="200" rx="12" fill="url(#heroBg)" stroke="#21262d" stroke-width="1"/>
-  <text x="40" y="85" font-family="'SF Mono',monospace" font-size="52" font-weight="900" fill="url(#vGrad)">v9.35.0</text>
-  <rect x="40" y="100" width="180" height="32" rx="6" fill="#f5c84222"/>
-  <text x="52" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase 102 · 17 Innovations</text>
-  <rect x="234" y="100" width="185" height="32" rx="6" fill="#ff446622"/>
-  <text x="246" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#ff4466">51 Hard-class Invariants</text>
-  <rect x="433" y="100" width="90" height="32" rx="6" fill="#00ff8822"/>
-  <circle cx="451" cy="116" r="5" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
-  <text x="463" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#00ff88">LIVE</text>
+  <text x="40" y="85" font-family="'SF Mono',monospace" font-size="52" font-weight="900" fill="url(#vGrad)">v9.41.0</text>
+  <rect x="40" y="100" width="200" height="32" rx="6" fill="#f5c84222"/>
+  <text x="52" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase 108 · 23 Innovations</text>
+  <rect x="254" y="100" width="210" height="32" rx="6" fill="#ff446622"/>
+  <text x="266" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#ff4466">107 Hard-class Invariants</text>
+  <rect x="478" y="100" width="90" height="32" rx="6" fill="#00ff8822"/>
+  <circle cx="496" cy="116" r="5" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
+  <text x="508" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#00ff88">LIVE</text>
   <text x="40" y="170" font-family="'SF Mono',monospace" font-size="13" fill="#8b949e">Autonomous Development &amp; Adaptation Architecture · InnovativeAI LLC</text>
-  <text x="40" y="192" font-family="'SF Mono',monospace" font-size="9" fill="#30363d">AUTO-SYNCED · 2026-04-01</text>
+  <text x="40" y="192" font-family="'SF Mono',monospace" font-size="9" fill="#30363d">AUTO-SYNCED · 2026-04-03</text>
 </svg>
