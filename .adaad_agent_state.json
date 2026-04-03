@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.36.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.37.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 103 \u00b7 INNOV-18 Temporal Governance Windows",
+  "last_completed_phase": "Phase 104 \u00b7 INNOV-19 Governance Archaeology Mode",
   "last_completed_pr": "feature/phase101-ers-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -12,7 +12,7 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-04-03",
-  "last_sync_sha": "a7d07e2",
+  "last_sync_sha": "69f1291",
   "next_pr": "PR-PHASE102-01 (Phase 102 \u2014 INNOV-17 Agent Post-Mortem Interviews)",
   "open_findings": [
     {
@@ -443,7 +443,7 @@
     "phase94-human0-attested",
     "phase94-mmem-complete"
   ],
-  "current_version": "9.36.0",
+  "current_version": "9.37.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -584,8 +584,8 @@
     "v9.35.0-gpg-signed",
     "gpg-backlog-ceremony-complete"
   ],
-  "software_version": "9.36.0",
-  "last_agent_state_sync_digest": "gsync-57b86e11dc5afe63",
+  "software_version": "9.37.0",
+  "last_agent_state_sync_digest": "gsync-a845a90e6104a52f",
   "version": "9.35.0",
   "phase": 102,
   "phase_label": "Phase 102 \u2014 INNOV-17 Agent Post-Mortem Interviews",
