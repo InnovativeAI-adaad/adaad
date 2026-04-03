@@ -24,7 +24,8 @@
 | INNOV-21 GBP | ✅ Shipped v9.39.0 — Phase 106 | [Artifact](artifacts/governance/phase106/phase106_sign_off.json) |
 | INNOV-22 MCF | ✅ Shipped v9.40.0 — Phase 107 | [Artifact](artifacts/governance/phase107/phase107_sign_off.json) |
 | INNOV-23 CES | ✅ Shipped v9.41.0 — Phase 108 | [Artifact](artifacts/governance/phase108/phase108_sign_off.json) |
-| INNOV-24 through INNOV-30 | 📋 Roadmap — sequenced for Phases 109+ | [Roadmap anchor](ROADMAP.md) |
+| INNOV-24 SVP | 🔜 Next — Phase 109 / v9.42.0 | [Roadmap anchor](ROADMAP.md) |
+| INNOV-25 through INNOV-30 | 📋 Roadmap — sequenced for Phases 110+ | [Roadmap anchor](ROADMAP.md) |
 
 ---
 
