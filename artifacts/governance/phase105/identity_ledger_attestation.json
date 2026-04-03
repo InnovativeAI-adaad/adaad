@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "identity_ledger_attestation",
+  "attestation_ref": "ILA-105-2026-04-03-001",
+  "phase": 105,
+  "innovation_id": "INNOV-20",
+  "innovation_name": "Constitutional Stress Testing (CST)",
+  "governor": "DUSTIN L REID",
+  "governor_id": "HUMAN-0",
+  "attestation_date": "2026-04-03",
+  "version": "9.38.0",
+  "session_digest": "phase105-cst-impl-2026-04-03",
+  "scope": "Phase 105 INNOV-20 Constitutional Stress Testing — 30/30 tests green — 8 CST invariants — 83 cumulative Hard-class invariants — v9.38.0 release",
+  "constitutional_invariants_enforced": [
+    "CST-0", "CST-PERSIST-0", "CST-GAP-0", "CST-DIGEST-0",
+    "CST-FEED-0", "CST-SCENARIO-0", "CST-HALT-0", "CST-DETERM-0"
+  ],
+  "evidence_artifacts": [
+    "artifacts/governance/phase105/phase105_sign_off.json",
+    "artifacts/governance/phase105/tier_summary.json",
+    "artifacts/governance/phase105/replay_digest.txt"
+  ],
+  "human0_boundary_respected": true,
+  "track_b_pending": ["gpg_sign_v9.38.0", "gh_pr_create_phase105"]
+}

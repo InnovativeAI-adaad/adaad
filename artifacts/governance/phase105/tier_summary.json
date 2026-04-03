@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "tier_summary",
+  "phase": 105,
+  "innovation_id": "INNOV-20",
+  "version": "9.38.0",
+  "generated_date": "2026-04-03",
+  "gate_results": {
+    "tier_0": "pass",
+    "tier_1": "pass",
+    "tier_2": "pass",
+    "tier_3": "pass"
+  },
+  "invariant_coverage": {
+    "CST-0":         {"description": "Deterministic execution — no random.random() in scenario path", "status": "enforced"},
+    "CST-PERSIST-0": {"description": "Append-only JSONL ledger for every StressReport", "status": "enforced"},
+    "CST-GAP-0":     {"description": "ConstitutionalGap emitted for thin-margin passes", "status": "enforced"},
+    "CST-DIGEST-0":  {"description": "SHA-256 digest on every StressReport and ConstitutionalGap", "status": "enforced"},
+    "CST-FEED-0":    {"description": "Gap records serialised to InvariantDiscovery feed format", "status": "enforced"},
+    "CST-SCENARIO-0":{"description": "Canonical catalogue >= 10 patterns; append-only", "status": "enforced"},
+    "CST-HALT-0":    {"description": "Unwritable ledger raises ConstitutionalViolation — never silent", "status": "enforced"},
+    "CST-DETERM-0":  {"description": "report_digest is pure function of (epoch_id, cases_tested, gap_digests)", "status": "enforced"}
+  },
+  "scenario_count": 12,
+  "test_coverage": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0,
+    "coverage_areas": [
+      "import", "version", "catalogue_size", "catalogue_fields",
+      "run_returns_report", "cases_tested", "all_fail_no_gaps",
+      "gap_emitted_thin_margin", "no_gap_wide_margin", "ledger_created",
+      "ledger_valid_json", "ledger_appends", "halt_on_unwritable",
+      "report_digest_set", "digest_deterministic", "gap_digest_set",
+      "gap_digest_varies", "feed_written_on_gap", "feed_row_keys",
+      "no_feed_no_gaps", "empty_epoch_raises", "whitespace_epoch_raises",
+      "raising_eval_produces_gap", "patterns_run_complete",
+      "catalogue_returns_dicts", "gaps_missing_file", "gaps_filtered_epoch",
+      "violation_is_runtime_error", "multiple_gaps", "determ_digest"
+    ]
+  }
+}

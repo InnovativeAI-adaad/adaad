@@ -6,9 +6,9 @@
 
 ## What ships today — v9.35.0
 
-Phase 102 (INNOV-17 APM) is complete. ADAAD now conducts structured post-mortem interviews with agents after governance rejection — forcing agents to articulate why they believed a mutation would pass, what constitutional gap they missed, and what correction they would apply. These interviews are persisted to an append-only ledger and feed back into agent selection pressure via `agent_recurring_gaps()`. Innovations INNOV-01 through INNOV-17 are shipped across v9.18.0–v9.35.0 (Phases 87–102), with deterministic evidence artifacts recorded per phase closure.
+Phase 102 (INNOV-17 APM) is complete. Phase 103 (INNOV-18 TGOV) shipped v9.36.0. Phase 104 (INNOV-19 GAM) shipped v9.37.0. Phase 105 (INNOV-20 CST) shipped v9.38.0. ADAAD now adversarially stress-tests its own constitutional framework — executing a 12-scenario margin-calibrated catalogue, detecting coverage gaps, and emitting gap records directly into the InvariantDiscovery feed for autonomous rule strengthening. Innovations INNOV-01 through INNOV-20 are shipped across v9.18.0–v9.38.0 (Phases 87–105), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 104** (`v9.37.0`, INNOV-19 GAM shipped). Next = **Phase 105 — INNOV-20**.
+**Current/Next:** Current = **Phase 105** (`v9.38.0`, INNOV-20 CST shipped). Next = **Phase 106 — INNOV-21**.
 
 **GA blockers (canonical): 1 open** — FINDING-66-004 (Governance Key Ceremony: 2-of-3 Ed25519 threshold not yet executed — runbook delivered, ceremony deferred).
 
