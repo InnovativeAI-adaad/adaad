@@ -425,6 +425,72 @@
         "title": "FastPathStatsVersions",
         "type": "object"
       },
+      "GovernanceSemVerStatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "analysis": {
+            "$ref": "#/components/schemas/SemVerAnalysisResponse"
+          },
+          "audit_history": {
+            "items": {
+              "$ref": "#/components/schemas/SemVerVerdictRecord"
+            },
+            "title": "Audit History",
+            "type": "array"
+          },
+          "contract_status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "UNKNOWN"
+            ],
+            "title": "Contract Status",
+            "type": "string"
+          },
+          "history_count": {
+            "title": "History Count",
+            "type": "integer"
+          },
+          "innovation": {
+            "title": "Innovation",
+            "type": "integer"
+          },
+          "innovation_name": {
+            "title": "Innovation Name",
+            "type": "string"
+          },
+          "mutation_id": {
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SemVerVerdictRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "innovation",
+          "innovation_name",
+          "mutation_id",
+          "contract_status",
+          "history_count",
+          "audit_history",
+          "analysis"
+        ],
+        "title": "GovernanceSemVerStatusResponse",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -825,6 +891,93 @@
         "title": "ParallelGateProbeLibraryResponse",
         "type": "object"
       },
+      "SemVerAnalysisResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "breaking_signals": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Breaking Signals",
+            "type": "array"
+          },
+          "detected_impact": {
+            "title": "Detected Impact",
+            "type": "string"
+          },
+          "feature_signals": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Feature Signals",
+            "type": "array"
+          },
+          "public_api_additions": {
+            "title": "Public Api Additions",
+            "type": "integer"
+          },
+          "public_api_removals": {
+            "title": "Public Api Removals",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "detected_impact",
+          "breaking_signals",
+          "feature_signals",
+          "public_api_removals",
+          "public_api_additions"
+        ],
+        "title": "SemVerAnalysisResponse",
+        "type": "object"
+      },
+      "SemVerVerdictRecord": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_honored": {
+            "title": "Contract Honored",
+            "type": "boolean"
+          },
+          "declared_impact": {
+            "title": "Declared Impact",
+            "type": "string"
+          },
+          "detected_impact": {
+            "title": "Detected Impact",
+            "type": "string"
+          },
+          "mutation_id": {
+            "title": "Mutation Id",
+            "type": "string"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "number"
+          },
+          "verdict_digest": {
+            "title": "Verdict Digest",
+            "type": "string"
+          },
+          "violations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Violations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mutation_id",
+          "declared_impact",
+          "detected_impact",
+          "contract_honored",
+          "violations",
+          "verdict_digest",
+          "timestamp"
+        ],
+        "title": "SemVerVerdictRecord",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -904,6 +1057,233 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/admin/runbooks/production/complete": {
+      "post": {
+        "description": "Record completion of a production runbook step for conversion funnel analytics.",
+        "operationId": "admin_production_runbook_complete_api_admin_runbooks_production_complete_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Production Runbook Complete Api Admin Runbooks Production Complete Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Production Runbook Complete"
+      }
+    },
+    "/api/admin/usage": {
+      "get": {
+        "description": "Return billable meter counters and active entitlement plan defaults.",
+        "operationId": "admin_usage_api_admin_usage_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Usage Api Admin Usage Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Usage"
+      }
+    },
+    "/api/admin/usage/plan/{plan_id}": {
+      "get": {
+        "description": "Return plan-specific entitlement limits and current counters.",
+        "operationId": "admin_usage_plan_api_admin_usage_plan__plan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Usage Plan Api Admin Usage Plan  Plan Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Usage Plan"
+      }
+    },
+    "/api/admin/usage/upgrade-intent": {
+      "post": {
+        "description": "Record explicit upgrade CTA engagement for conversion funnel telemetry.",
+        "operationId": "admin_usage_upgrade_intent_api_admin_usage_upgrade_intent_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Admin Usage Upgrade Intent Api Admin Usage Upgrade Intent Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Usage Upgrade Intent"
+      }
+    },
     "/api/agents": {
       "get": {
         "operationId": "_lambda__api_agents_get",
@@ -1168,6 +1548,138 @@
         "summary": "<Lambda>"
       }
     },
+    "/api/compliance/exports/{dataset}": {
+      "get": {
+        "operationId": "get_compliance_export_api_compliance_exports__dataset__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset",
+            "required": true,
+            "schema": {
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fmt",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "pattern": "^(json|csv)$",
+              "title": "Fmt",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Compliance Export"
+      }
+    },
+    "/api/compliance/exports/{dataset}/jobs": {
+      "post": {
+        "operationId": "create_compliance_export_job_api_compliance_exports__dataset__jobs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset",
+            "required": true,
+            "schema": {
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fmt",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "pattern": "^(json|csv)$",
+              "title": "Fmt",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Compliance Export Job Api Compliance Exports  Dataset  Jobs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Compliance Export Job"
+      }
+    },
     "/api/constitution/status": {
       "get": {
         "description": "Return current constitution version, policy hash, and boot sanity check.",
@@ -1208,6 +1720,27 @@
           }
         },
         "summary": "Operator Epochs"
+      }
+    },
+    "/api/extensions/spec": {
+      "get": {
+        "description": "Return the extension SDK descriptor for plugin integrators.",
+        "operationId": "api_extension_spec_api_extensions_spec_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Api Extension Spec Api Extensions Spec Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Extension Spec"
       }
     },
     "/api/fast-path/checkpoint-chain/verify": {
@@ -1799,6 +2332,241 @@
         "summary": "<Lambda>"
       }
     },
+    "/api/v1/admin/runbooks/production/complete": {
+      "post": {
+        "description": "Record completion of a production runbook step for conversion funnel analytics.",
+        "operationId": "v1_admin_production_runbook_complete_api_v1_admin_runbooks_production_complete_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Admin Production Runbook Complete Api V1 Admin Runbooks Production Complete Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Admin Production Runbook Complete",
+        "x-adaad-original-path": "/api/admin/runbooks/production/complete",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/admin/usage": {
+      "get": {
+        "description": "Return billable meter counters and active entitlement plan defaults.",
+        "operationId": "v1_admin_usage_api_v1_admin_usage_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Admin Usage Api V1 Admin Usage Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Admin Usage",
+        "x-adaad-original-path": "/api/admin/usage",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/admin/usage/plan/{plan_id}": {
+      "get": {
+        "description": "Return plan-specific entitlement limits and current counters.",
+        "operationId": "v1_admin_usage_plan_api_v1_admin_usage_plan__plan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Admin Usage Plan Api V1 Admin Usage Plan  Plan Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Admin Usage Plan",
+        "x-adaad-original-path": "/api/admin/usage/plan/{plan_id}",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/admin/usage/upgrade-intent": {
+      "post": {
+        "description": "Record explicit upgrade CTA engagement for conversion funnel telemetry.",
+        "operationId": "v1_admin_usage_upgrade_intent_api_v1_admin_usage_upgrade_intent_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Payload",
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Admin Usage Upgrade Intent Api V1 Admin Usage Upgrade Intent Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Admin Usage Upgrade Intent",
+        "x-adaad-original-path": "/api/admin/usage/upgrade-intent",
+        "x-adaad-versioned-alias": true
+      }
+    },
     "/api/v1/agents": {
       "get": {
         "operationId": "v1__lambda__api_v1_agents_get",
@@ -2073,6 +2841,142 @@
         "x-adaad-versioned-alias": true
       }
     },
+    "/api/v1/compliance/exports/{dataset}": {
+      "get": {
+        "operationId": "v1_get_compliance_export_api_v1_compliance_exports__dataset__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset",
+            "required": true,
+            "schema": {
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fmt",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "pattern": "^(json|csv)$",
+              "title": "Fmt",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Get Compliance Export",
+        "x-adaad-original-path": "/api/compliance/exports/{dataset}",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/compliance/exports/{dataset}/jobs": {
+      "post": {
+        "operationId": "v1_create_compliance_export_job_api_v1_compliance_exports__dataset__jobs_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset",
+            "required": true,
+            "schema": {
+              "title": "Dataset",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fmt",
+            "required": false,
+            "schema": {
+              "default": "json",
+              "pattern": "^(json|csv)$",
+              "title": "Fmt",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Create Compliance Export Job Api V1 Compliance Exports  Dataset  Jobs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "V1 Create Compliance Export Job",
+        "x-adaad-original-path": "/api/compliance/exports/{dataset}/jobs",
+        "x-adaad-versioned-alias": true
+      }
+    },
     "/api/v1/constitution/status": {
       "get": {
         "description": "Return current constitution version, policy hash, and boot sanity check.",
@@ -2116,6 +3020,29 @@
         },
         "summary": "V1 Operator Epochs",
         "x-adaad-original-path": "/api/epochs",
+        "x-adaad-versioned-alias": true
+      }
+    },
+    "/api/v1/extensions/spec": {
+      "get": {
+        "description": "Return the extension SDK descriptor for plugin integrators.",
+        "operationId": "v1_api_extension_spec_api_v1_extensions_spec_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response V1 Api Extension Spec Api V1 Extensions Spec Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "V1 Api Extension Spec",
+        "x-adaad-original-path": "/api/extensions/spec",
         "x-adaad-versioned-alias": true
       }
     },
@@ -3324,6 +4251,142 @@
         "summary": "Governance Aponi Panel"
       }
     },
+    "/governance/archaeology/{mutation_id}": {
+      "get": {
+        "description": "INNOV-19: GET /governance/archaeology/{mutation_id}\n\nAssembles the complete cryptographically-verified decision timeline for\na mutation from proposal to final outcome.  Scans all distributed ledgers.\n\nReturns:\n  - timeline      \u2014 full DecisionEvent list, sorted ascending by timestamp\n  - final_outcome \u2014 resolved from last terminal event (approved/rejected/\n                    promoted/rolled_back); \"unknown\" if none found\n  - timeline_digest \u2014 SHA-256 over ordered event_type sequence [GAM-CHAIN-0]\n  - chain_verified  \u2014 True when at least one event found and digest intact\n  - export          \u2014 full export_timeline() payload with innovation=19\n\nConstitutional invariants:\n  GAM-0           \u2014 never raises; always returns valid timeline\n  GAM-CHAIN-0     \u2014 timeline_digest = sha256-prefixed over event_type sequence\n  GAM-FAIL-OPEN-0 \u2014 corrupt ledger lines silently skipped\n  GAM-VERIFY-0    \u2014 chain_verified computed via verify_chain()",
+        "operationId": "governance_archaeology_governance_archaeology__mutation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mutation_id",
+            "required": true,
+            "schema": {
+              "title": "Mutation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Archaeology Governance Archaeology  Mutation Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Archaeology"
+      }
+    },
+    "/governance/bankruptcy/{epoch_id}": {
+      "get": {
+        "description": "INNOV-21: GET /governance/bankruptcy/{epoch_id}\n\nEvaluates the Governance Debt Bankruptcy Protocol for the given epoch.\nIf debt_score >= BANKRUPTCY_THRESHOLD a declaration is persisted to the\nappend-only JSONL ledger and returned. Always returns remediation_progress\nand chain integrity status.\n\nReturns:\n  - in_bankruptcy       \u2014 bool: protocol currently active\n  - declaration         \u2014 BankruptcyDeclaration if newly declared, else null\n  - remediation_progress \u2014 current streak / discharge status\n  - chain_valid          \u2014 bool: ledger chain integrity verified\n  - chain_detail         \u2014 human-readable chain verification message\n\nConstitutional invariants enforced:\n  GBP-0           \u2014 GBP_VERSION present and non-empty\n  GBP-THRESH-0    \u2014 threshold in (0.0, 1.0) exclusive\n  GBP-HEALTH-0    \u2014 health_target < threshold\n  GBP-PERSIST-0   \u2014 events appended to JSONL ledger, never overwritten\n  GBP-CHAIN-0     \u2014 every entry chain-linked via prev_digest\n  GBP-DISCHARGE-0 \u2014 _load() discharge supersession; discharged \u2260 active\n  GBP-GATE-0      \u2014 empty mutation_intent raises GBPViolation\n  GBP-IMMUT-0     \u2014 discharged epoch_id cannot be re-activated",
+        "operationId": "governance_bankruptcy_governance_bankruptcy__epoch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "debt_score",
+            "required": false,
+            "schema": {
+              "default": 0.0,
+              "title": "Debt Score",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "health_score",
+            "required": false,
+            "schema": {
+              "default": 1.0,
+              "title": "Health Score",
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Bankruptcy Governance Bankruptcy  Epoch Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Bankruptcy"
+      }
+    },
     "/governance/certifier-scans": {
       "get": {
         "description": "Return recent GateCertifier scan records from the audit ledger. Read-only.\n\nQuery parameters\n----------------\nlimit : int, default 20\n    Maximum number of records to return (most recent).\nrejected_only : bool, default False\n    When True, only return REJECTED scan records.\n\nResponse fields (data)\n----------------------\nrecords                 list  \u2014 certifier scan records (chronological)\ntotal_in_window         int   \u2014 number of records returned\nrejection_rate          float \u2014 fraction of all scans that were REJECTED\ncertification_rate      float \u2014 fraction of all scans that were CERTIFIED\nmutation_blocked_count  int   \u2014 scans where mutation_blocked=True\nfail_closed_count       int   \u2014 scans where fail_closed=True\nescalation_breakdown    dict  \u2014 escalation_level \u2192 count\nledger_version          str   \u2014 \"33.0\"\n\nAuthority invariant\n-------------------\nThis endpoint is read-only and advisory.  It never approves or blocks\nmutations.  GovernanceGate retains sole mutation-approval authority.",
@@ -3452,6 +4515,94 @@
           }
         },
         "summary": "Governance Certify"
+      }
+    },
+    "/governance/conflict/{mutation_id}": {
+      "get": {
+        "description": "INNOV-22: GET /governance/conflict/{mutation_id}\n\nAnalyses whether two concurrent mutations have overlapping target paths.\nIf peer_mutation_id and path lists are provided, a conflict analysis is\nperformed and the result persisted to the append-only JSONL ledger.\nWithout peer params, returns the current conflict summary.\n\nConstitutional invariants enforced:\n  MCF-0, MCF-DETECT-0, MCF-SEVERITY-0, MCF-PERSIST-0,\n  MCF-CHAIN-0, MCF-RESOLVE-0, MCF-GATE-0, MCF-DETERM-0",
+        "operationId": "governance_conflict_governance_conflict__mutation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mutation_id",
+            "required": true,
+            "schema": {
+              "title": "Mutation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "peer_mutation_id",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Peer Mutation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "target_paths",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Target Paths",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "peer_paths",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Peer Paths",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Conflict Governance Conflict  Mutation Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Conflict"
       }
     },
     "/governance/debt": {
@@ -4126,6 +5277,279 @@
           }
         },
         "summary": "Governance Scoring Engine"
+      }
+    },
+    "/governance/semver/{mutation_id}": {
+      "get": {
+        "description": "INNOV-24: GET /governance/semver/{mutation_id}\n\nReturns semantic version governance status for a mutation by reading\npersisted SemVerVerdict audit records and optional deterministic diff analysis.",
+        "operationId": "governance_semver_status_governance_semver__mutation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "mutation_id",
+            "required": true,
+            "schema": {
+              "title": "Mutation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "history_limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "History Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "diff_text",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Diff Text",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GovernanceSemVerStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Semver Status"
+      }
+    },
+    "/governance/sentinel/{epoch_id}": {
+      "get": {
+        "description": "INNOV-23: GET /governance/sentinel/{epoch_id}\n\nTicks the Constitutional Epoch Sentinel for the given epoch.\nmetrics is an optional comma-separated list of channel=value pairs\n(e.g. \"debt_score=0.82,health_delta=0.75\"). Returns all advisories\nemitted this tick plus aggregate sentinel status.\n\nConstitutional invariants enforced:\n  CES-0, CES-WATCH-0, CES-THRESH-0, CES-EMIT-0,\n  CES-PERSIST-0, CES-CHAIN-0, CES-GATE-0, CES-DETERM-0",
+        "operationId": "governance_sentinel_governance_sentinel__epoch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metrics",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Metrics",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Sentinel Governance Sentinel  Epoch Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Sentinel"
+      }
+    },
+    "/governance/stress-test/{epoch_id}": {
+      "get": {
+        "description": "INNOV-20: GET /governance/stress-test/{epoch_id}\n\nExecutes the full canonical stress-test catalogue against the constitutional\nframework and returns a StressReport with any identified coverage gaps.\nGap records are simultaneously emitted to the InvariantDiscovery feed.\n\nReturns:\n  - epoch_id       \u2014 echoed back for ledger correlation\n  - cases_tested   \u2014 number of scenarios exercised\n  - gaps_found     \u2014 number of constitutional gaps identified\n  - gaps           \u2014 list of ConstitutionalGap records\n  - report_digest  \u2014 SHA-256 digest over (epoch_id, cases_tested, gap_digests)\n  - catalogue      \u2014 full canonical scenario list\n\nConstitutional invariants:\n  CST-0           \u2014 deterministic; no random state in execution path\n  CST-PERSIST-0   \u2014 every report appended to append-only JSONL ledger\n  CST-GAP-0       \u2014 gap emitted for every thin-margin pass\n  CST-HALT-0      \u2014 unwritable ledger raises ConstitutionalViolation\n  CST-FEED-0      \u2014 gaps written to InvariantDiscovery feed",
+        "operationId": "governance_stress_test_governance_stress_test__epoch_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "epoch_id",
+            "required": true,
+            "schema": {
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Stress Test Governance Stress Test  Epoch Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Stress Test"
+      }
+    },
+    "/governance/temporal/windows": {
+      "get": {
+        "description": "INNOV-18: GET /governance/temporal/windows\n\nReturns the health-adjusted temporal governance ruleset for the given\nepoch and health_score.  Exposes:\n  - adjusted_ruleset   \u2014 {rule_name: effective_severity} at current health\n  - window_config      \u2014 full GovernanceWindow configuration export\n  - health_trend       \u2014 \"improving\" | \"degrading\" | \"stable\"\n  - audit_trail        \u2014 last 10 log entries (with chain digests)\n\nConstitutional invariants:\n  TGOV-FAIL-0    \u2014 unknown rules default to \"blocking\" (fail-closed)\n  TGOV-CHAIN-0   \u2014 each audit entry carries sha256-chained digest\n  TGOV-EXPORT-0  \u2014 window_config carries innovation=18 metadata",
+        "operationId": "governance_temporal_windows_governance_temporal_windows_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "epoch_id",
+            "required": false,
+            "schema": {
+              "default": "current",
+              "title": "Epoch Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "health_score",
+            "required": false,
+            "schema": {
+              "default": 0.75,
+              "title": "Health Score",
+              "type": "number"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Governance Temporal Windows Governance Temporal Windows Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Governance Temporal Windows"
       }
     },
     "/governance/threat-scans": {

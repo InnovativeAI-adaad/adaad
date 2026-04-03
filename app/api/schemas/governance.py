@@ -164,3 +164,33 @@ class FastPathCheckpointVerifyResponse(GovernanceStrictModel):
     chain_length: StrictInt
     integrity: StrictBool
     links: list[FastPathCheckpointLink]
+
+
+class SemVerVerdictRecord(GovernanceStrictModel):
+    mutation_id: StrictStr
+    declared_impact: StrictStr
+    detected_impact: StrictStr
+    contract_honored: StrictBool
+    violations: list[StrictStr]
+    verdict_digest: StrictStr
+    timestamp: float
+
+
+class SemVerAnalysisResponse(GovernanceStrictModel):
+    detected_impact: StrictStr
+    breaking_signals: list[StrictStr]
+    feature_signals: list[StrictStr]
+    public_api_removals: StrictInt
+    public_api_additions: StrictInt
+
+
+class GovernanceSemVerStatusResponse(GovernanceStrictModel):
+    ok: StrictBool
+    innovation: StrictInt
+    innovation_name: StrictStr
+    mutation_id: StrictStr
+    contract_status: Literal["PASS", "FAIL", "UNKNOWN"]
+    verdict: SemVerVerdictRecord | None = None
+    history_count: StrictInt
+    audit_history: list[SemVerVerdictRecord]
+    analysis: SemVerAnalysisResponse

@@ -28,6 +28,7 @@ from app.api.schemas.governance import (
     FastPathRoutePreviewRequest,
     FastPathRoutePreviewResponse,
     FastPathStatsResponse,
+    GovernanceSemVerStatusResponse,
     ParallelGateEvaluateRequest,
     ParallelGateEvaluateResponse,
     ParallelGateProbeLibraryResponse,
@@ -107,6 +108,7 @@ WHALEDIC_DIR = ROOT / "ui" / "developer" / "ADAADdev"
 REPLAY_PROOFS_DIR = ROOT / "security" / "replay_manifests"
 FORENSIC_EXPORT_DIR = ROOT / "reports" / "forensics"
 COMPLIANCE_EXPORT_DIR = ROOT / "reports" / "compliance_exports"
+SEMVER_AUDIT_PATH = ROOT / "data" / "semver_verdicts.jsonl"
 GATE_LOCK_FILE = DEFAULT_GATE_LOCK_FILE
 
 
@@ -2219,6 +2221,47 @@ def governance_archaeology(
         "event_count": len(timeline.events),
         "timeline": [e.to_dict() for e in timeline.events],
         "export": arch.export_timeline(timeline),
+    }
+
+
+@app.get("/governance/semver/{mutation_id}", response_model=GovernanceSemVerStatusResponse)
+def governance_semver_status(
+    mutation_id: str,
+    history_limit: int = Query(default=50, ge=1, le=500),
+    diff_text: str = "",
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-24: GET /governance/semver/{mutation_id}
+
+    Returns semantic version governance status for a mutation by reading
+    persisted SemVerVerdict audit records and optional deterministic diff analysis.
+    """
+    _ = auth_ctx
+    from runtime.innovations30.semantic_version_enforcer import SemanticVersionEnforcer
+
+    enforcer = SemanticVersionEnforcer(audit_path=SEMVER_AUDIT_PATH)
+    history = [
+        row
+        for row in enforcer.verdict_history(limit=history_limit)
+        if row.get("mutation_id") == mutation_id
+    ]
+    latest_verdict = history[-1] if history else None
+    analysis = enforcer.breaking_change_analysis(diff_text)
+
+    contract_status = "UNKNOWN"
+    if latest_verdict is not None:
+        contract_status = "PASS" if bool(latest_verdict.get("contract_honored")) else "FAIL"
+
+    return {
+        "ok": True,
+        "innovation": 24,
+        "innovation_name": "SemanticVersionPromises",
+        "mutation_id": mutation_id,
+        "contract_status": contract_status,
+        "verdict": latest_verdict,
+        "history_count": len(history),
+        "audit_history": history,
+        "analysis": analysis,
     }
 
 
