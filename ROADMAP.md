@@ -4,11 +4,11 @@
 
 ---
 
-## What ships today — v9.41.0
+## What ships today — v9.42.0
 
-Phase 106 (INNOV-21 GBP) shipped v9.39.0. Phase 107 (INNOV-22 MCF) shipped v9.40.0. Phase 108 (INNOV-23 CES) shipped v9.41.0. ADAAD now sentinel-monitors constitutional epoch health — detecting invariant violations in real-time, classifying severity, triggering graduated responses from warnings through emergency halts. 107 Hard-class invariants enforced. Innovations INNOV-01 through INNOV-23 are shipped across v9.18.0–v9.41.0 (Phases 87–108), with deterministic evidence artifacts recorded per phase closure.
+Phase 106 (INNOV-21 GBP) shipped v9.39.0. Phase 107 (INNOV-22 MCF) shipped v9.40.0. Phase 108 (INNOV-23 CES) shipped v9.41.0. Phase 109 (INNOV-24 SVP) shipped v9.42.0. ADAAD now extends constitutional governance with SVP release controls while preserving deterministic evidence closure. 107 Hard-class invariants enforced. Innovations INNOV-01 through INNOV-24 are shipped across v9.18.0–v9.42.0 (Phases 87–109), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 108** (`v9.41.0`, INNOV-23 CES shipped). Next = **Phase 109 — INNOV-24**.
+**Current/Next:** Current = **Phase 109** (`v9.42.0`, INNOV-24 SVP shipped). Next = **Phase 110 — to be planned**.
 
 **GA blockers (canonical): 1 open** — FINDING-66-004 (Governance Key Ceremony: 2-of-3 Ed25519 threshold not yet executed — runbook delivered, ceremony deferred).
 
@@ -1862,7 +1862,7 @@ World-first constitutionally-governed concurrent mutation conflict detection and
 
 **Total Hard-class invariants (cumulative):** 99
 
-**Next:** Phase 109 — INNOV-24 · Semantic Version Promises (SVP)
+**Next:** Phase 110 — to be planned
 
 ### Phase 108 — INNOV-23 · Constitutional Epoch Sentinel (CES)
 
@@ -1883,5 +1883,5 @@ World-first anticipatory constitutional primitive. Prior innovations fire at bre
 
 **Total Hard-class invariants (cumulative):** 107
 
-**Next:** Phase 109 — INNOV-24 · Semantic Version Promises (SVP)
+**Next:** Phase 110 — to be planned
 
