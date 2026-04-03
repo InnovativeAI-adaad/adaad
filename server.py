@@ -2180,6 +2180,48 @@ def governance_aponi_panel(
     return result
 
 
+@app.get("/governance/archaeology/{mutation_id}")
+def governance_archaeology(
+    mutation_id: str,
+    auth_ctx: dict = Depends(require_audit_scope),
+) -> dict:
+    """INNOV-19: GET /governance/archaeology/{mutation_id}
+
+    Assembles the complete cryptographically-verified decision timeline for
+    a mutation from proposal to final outcome.  Scans all distributed ledgers.
+
+    Returns:
+      - timeline      — full DecisionEvent list, sorted ascending by timestamp
+      - final_outcome — resolved from last terminal event (approved/rejected/
+                        promoted/rolled_back); "unknown" if none found
+      - timeline_digest — SHA-256 over ordered event_type sequence [GAM-CHAIN-0]
+      - chain_verified  — True when at least one event found and digest intact
+      - export          — full export_timeline() payload with innovation=19
+
+    Constitutional invariants:
+      GAM-0           — never raises; always returns valid timeline
+      GAM-CHAIN-0     — timeline_digest = sha256-prefixed over event_type sequence
+      GAM-FAIL-OPEN-0 — corrupt ledger lines silently skipped
+      GAM-VERIFY-0    — chain_verified computed via verify_chain()
+    """
+    _ = auth_ctx
+    from runtime.innovations30.governance_archaeology import GovernanceArchaeologist
+    arch = GovernanceArchaeologist()
+    timeline = arch.excavate(mutation_id)
+    return {
+        "ok": True,
+        "innovation": 19,
+        "innovation_name": "GovernanceArchaeologyMode",
+        "mutation_id": mutation_id,
+        "final_outcome": timeline.final_outcome,
+        "timeline_digest": timeline.timeline_digest,
+        "chain_verified": arch.verify_chain(timeline),
+        "event_count": len(timeline.events),
+        "timeline": [e.to_dict() for e in timeline.events],
+        "export": arch.export_timeline(timeline),
+    }
+
+
 @app.get("/governance/temporal/windows")
 def governance_temporal_windows(
     epoch_id: str = "current",
