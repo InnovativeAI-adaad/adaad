@@ -1,19 +1,19 @@
-## [9.46.0] — 2026-04-03 — Phase 113 · INNOV-28 Self-Awareness Invariant
+## [9.47.0] — 2026-04-03 — Phase 114 · INNOV-29 Curiosity-Driven Exploration
 
-**Branch:** `feature/phase113-self-aware-impl`
+**Branch:** `feature/phase114-curiosity-impl`
 **HUMAN-0 Ratification:** `[slot reserved]`
-**Tests:** T113-SELF-AWARE-01..30 (30/30 PASS)
-**Evidence Artifacts:** `artifacts/governance/phase113/phase113_sign_off.json` · ILA-113-2026-04-03-001
+**Tests:** T114-CURIOSITY-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase114/phase114_sign_off.json` · ILA-114-2026-04-03-001
 
 ### Constitutional Invariants Introduced
-- **SELF-AWARE-0** — no mutation may remove observability calls from protected monitoring modules
-- **SELF-AWARE-DETERM-0** — `evaluate()` identical inputs → identical `verdict_digest`
-- **SELF-AWARE-AUDIT-0** — every verdict carries non-empty `verdict_digest`; audit trail persisted
+- **CURIOSITY-0** — `invert_fitness()` returns `1.0 - base_fitness` when active; `base_fitness` in [0.0,1.0] enforced
+- **CURIOSITY-STOP-0** — `tick()` MUST exit immediately on `health < 0.50` or protected file match
+- **CURIOSITY-AUDIT-0** — all transitions append to `discoveries` and persist state
 
 ### Deliverables
-- `runtime/innovations30/self_awareness_invariant.py` — INNOV-28 full constitutional implementation
-- `tests/test_phase113_self_aware.py` — T113-SELF-AWARE-01..30 (30/30 PASS)
-- `artifacts/governance/phase113/` — 4-artifact evidence bundle
+- `runtime/innovations30/curiosity_engine.py` — INNOV-29 full constitutional implementation
+- `tests/test_phase114_curiosity.py` — T114-CURIOSITY-01..30 (30/30 PASS)
+- `artifacts/governance/phase114/` — 4-artifact evidence bundle
 
 ---
 
