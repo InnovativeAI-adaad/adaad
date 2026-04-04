@@ -3,7 +3,7 @@
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 111 \u00b7 INNOV-26 CEB",
+  "last_completed_phase": "Phase 111 \u00b7 INNOV-26 Constitutional Entropy Budget",
   "last_completed_pr": "feature/phase111-ceb-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -11,8 +11,8 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-04-03",
-  "last_sync_sha": "901b8da",
+  "last_invocation": "2026-04-04",
+  "last_sync_sha": "f53245e",
   "next_pr": "Phase 112 \u2014 INNOV-27 Mutation Blast Radius Modeling",
   "open_findings": [
     {
@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.42.0",
+  "current_version": "9.44.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.42.0",
-  "last_agent_state_sync_digest": "gsync-7d99a34e9b5671b4",
+  "software_version": "9.44.0",
+  "last_agent_state_sync_digest": "gsync-506efb7f21d58290",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",
