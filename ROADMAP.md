@@ -1946,3 +1946,26 @@ World-first constitutional version-control layer. Every constitutional amendment
 **Also shipped:** PyPI v9.50.0 publication — closes 38-minor-version distribution gap (prior: v9.11.0)
 
 **Next:** Phase 118 — pipeline evolution continues
+
+
+### Phase 118 — INNOV-33 · Knowledge Bundle Exchange Protocol (KBEP)
+
+**Status:** ✅ shipped (v9.51.0) · **Dependency:** Phase 117 INNOV-32 CRTV merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-04) · **Tests:** T118-KBEP-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase118/phase118_sign_off.json` · ILA-118-2026-04-04-001
+
+World-first multi-instance federated knowledge bundle exchange protocol. Standardizes how institutional memory is packaged, verified, and exchanged across ADAAD federation peers. Every bundle carries a deterministic cryptographic digest (KBEP-VERIFY-0); imports are fail-closed on mismatch; all exchange events are HMAC-chain-linked in an append-only JSONL ledger; federation-level constitutional amendments are permanently gated behind HUMAN-0 (KBEP-GATE-0).
+
+**Module:** `runtime/innovations30/knowledge_bundle_exchange.py`
+- `FederationBundle.create()` — deterministic bundle_id = sha256(epoch_id:instance_id)[:16]; bundle_digest = sha256(canonical-JSON(items)) — KBEP-DETERM-0
+- `KnowledgeBundleExchangeProtocol.import_bundle()` — recompute_digest() verified before state write; fail-closed KBEPVerificationError — KBEP-0/KBEP-VERIFY-0
+- `KnowledgeBundleExchangeProtocol.create_bundle()` — federation_amendment=True requires human0_acknowledged=True — KBEP-GATE-0
+- `ExchangeRecord` — HMAC-SHA256 chain via (record_id + prev_digest + bundle_id) — KBEP-CHAIN-0
+- `_flush_record()` — append-only JSONL write before return — KBEP-PERSIST-0
+- `verify_chain()` — full ledger replay with hmac.compare_digest; KBEPChainError on break
+- `export_snapshot()` — aggregates imported bundles into single exportable snapshot
+- `kbep_guard()` — fail-closed enforcement for all 6 Hard-class invariants
+
+**Invariants introduced:** `KBEP-0`, `KBEP-DETERM-0`, `KBEP-PERSIST-0`, `KBEP-CHAIN-0`, `KBEP-GATE-0`, `KBEP-VERIFY-0` (6 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 141
+
+**Next:** Phase 119 — pipeline evolution continues

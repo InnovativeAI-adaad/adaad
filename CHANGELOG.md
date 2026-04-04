@@ -1,3 +1,35 @@
+## [9.51.0] — 2026-04-04 · Phase 118 · INNOV-33 KBEP
+
+### Added
+- **INNOV-33 Knowledge Bundle Exchange Protocol (KBEP)** — standardized, cryptographically verified knowledge bundle format for sharing institutional memory across federation members; extends INNOV-13 (IMT) to the multi-instance case; 6 new Hard-class invariants (KBEP-0, KBEP-DETERM-0, KBEP-PERSIST-0, KBEP-CHAIN-0, KBEP-GATE-0, KBEP-VERIFY-0)
+- `runtime/innovations30/knowledge_bundle_exchange.py` — KnowledgeBundleExchangeProtocol, FederationBundle, KnowledgeBundleItem, ExchangeRecord, kbep_guard
+- `tests/test_phase118_kbep.py` — T118-KBEP-01..30 (30/30 PASS)
+- `artifacts/governance/phase118/` — phase118_sign_off.json, track_a_sign_off.json, tier_summary.json
+
+### Constitutional Invariants (6 new · cumulative: 141 Hard-class)
+`KBEP-0` · `KBEP-DETERM-0` · `KBEP-PERSIST-0` · `KBEP-CHAIN-0` · `KBEP-GATE-0` · `KBEP-VERIFY-0`
+
+### Architecture
+- `FederationBundle.create()` — KBEP-DETERM-0: deterministic bundle_id = sha256(epoch_id + instance_id)[:16]; bundle_digest = sha256(canonical-JSON(items))
+- `KnowledgeBundleExchangeProtocol.import_bundle()` — KBEP-0/KBEP-VERIFY-0: recompute_digest() must match before any state write; fail-closed KBEPVerificationError
+- `KnowledgeBundleExchangeProtocol.create_bundle()` — KBEP-GATE-0: federation_amendment=True requires human0_acknowledged=True
+- `ExchangeRecord` — KBEP-CHAIN-0: HMAC-SHA256 chain linked via (record_id + prev_digest + bundle_id)
+- `_flush_record()` — KBEP-PERSIST-0: append-only JSONL flush before method return
+- `verify_chain()` — HMAC tamper detection across full ledger replay; KBEPChainError on break
+- `export_snapshot()` — aggregates all imported peer bundles into single exportable snapshot
+- `kbep_guard()` — fail-closed enforcement helper for all 6 Hard-class invariants
+
+### IP Claims
+- World-first: multi-instance federated knowledge bundle exchange with HMAC-chain-linked ledger and HUMAN-0 gated federation amendments in a constitutionally governed autonomous system
+- Extends IMT (INNOV-13) to the federation domain with cryptographic provenance across instance boundaries
+- KBEP-DETERM-0: no datetime/random in any ID derivation — all deterministic from epoch_id + instance_id
+- Fail-closed KBEP-VERIFY-0: partial/approximate digest matching explicitly prohibited
+
+### Metrics
+- Hard-class invariants: **135 → 141** (+6 KBEP)
+- ILA: ILA-118-2026-04-04-001
+- Governor: DUSTIN L REID
+
 ## [9.50.0] — 2026-04-04 · Phase 117 · INNOV-32 CRTV
 
 ### Added

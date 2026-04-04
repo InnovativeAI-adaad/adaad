@@ -1,0 +1,14 @@
+{
+  "phase": 118,
+  "tier": "innovation",
+  "innovation_abbr": "KBEP",
+  "innovation_full": "Knowledge Bundle Exchange Protocol",
+  "innov_number": 33,
+  "shipped_version": "9.51.0",
+  "hard_class_invariants_new": 6,
+  "hard_class_invariants_cumulative": 141,
+  "tests_added": 30,
+  "world_first": true,
+  "federation_capability": true,
+  "extends_innov": 13
+}
