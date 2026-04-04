@@ -1,3 +1,22 @@
+## [9.47.0] — 2026-04-03 — Phase 114 · INNOV-29 Curiosity-Driven Exploration
+
+**Branch:** `feature/phase114-curiosity-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T114-CURIOSITY-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase114/phase114_sign_off.json` · ILA-114-2026-04-03-001
+
+### Constitutional Invariants Introduced
+- **CURIOSITY-0** — `invert_fitness()` returns `1.0 - base_fitness` when active; `base_fitness` in [0.0,1.0] enforced
+- **CURIOSITY-STOP-0** — `tick()` MUST exit immediately on `health < 0.50` or protected file match
+- **CURIOSITY-AUDIT-0** — all transitions append to `discoveries` and persist state
+
+### Deliverables
+- `runtime/innovations30/curiosity_engine.py` — INNOV-29 full constitutional implementation
+- `tests/test_phase114_curiosity.py` — T114-CURIOSITY-01..30 (30/30 PASS)
+- `artifacts/governance/phase114/` — 4-artifact evidence bundle
+
+---
+
 ## [9.42.0] — 2026-04-03 — Phase 109 · INNOV-24 SVP
 
 **Branch:** `feature/phase109-svp-impl`
