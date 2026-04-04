@@ -12,7 +12,7 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-04-04",
-  "last_sync_sha": "c4ba048",
+  "last_sync_sha": "e42cbf4",
   "next_pr": "Phase 111 \u2014 INNOV-26 Constitutional Entropy Budget",
   "open_findings": [
     {
@@ -629,7 +629,7 @@
     "phase108-complete"
   ],
   "software_version": "9.43.0",
-  "last_agent_state_sync_digest": "gsync-1d2df13d57ce1a9b",
+  "last_agent_state_sync_digest": "gsync-934f16b9f013e8be",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",
