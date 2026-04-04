@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADAAD — Autonomous Development &amp; Adaptive Architecture Daemon</title>
+  <meta name="description" content="ADAAD is the world's first constitutionally governed autonomous code evolution system. 31 shipped innovations. 23 constitutional rules. 6,354 tests. Hard-class invariants enforced." />
+  <meta property="og:title" content="ADAAD — Autonomous Development &amp; Adaptive Architecture Daemon" />
+  <meta property="og:description" content="The world's first constitutionally governed autonomous mutation engine. Built by InnovativeAI LLC." />
+  <meta property="og:url" content="https://adaad.pro" />
+  <meta name="theme-color" content="#F59E0B" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:        #05070D;
+      --surface:   #0A0E18;
+      --surface2:  #0F1420;
+      --border:    #1C2336;
+      --amber:     #F59E0B;
+      --amber-dim: #92600A;
+      --green:     #10B981;
+      --green-dim: #065F46;
+      --red:       #EF4444;
+      --text:      #E2E8F0;
+      --muted:     #64748B;
+      --faint:     #1E2A40;
+      --font-display: 'Syne', sans-serif;
+      --font-mono:    'Courier Prime', monospace;
+      --font-serif:   'DM Serif Display', serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── NOISE TEXTURE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.5;
+    }
+
+    /* ─── GRID LINES ─── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--faint) 1px, transparent 1px),
+        linear-gradient(90deg, var(--faint) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
+    /* ─── LAYOUT ─── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(5, 7, 13, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .topbar-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+      color: var(--amber);
+      text-decoration: none;
+    }
+
+    .topbar-logo span {
+      color: var(--muted);
+      font-weight: 400;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    .topbar-nav {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .topbar-nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .topbar-nav a:hover { color: var(--text); }
+
+    .topbar-cta {
+      background: var(--amber);
+      color: var(--bg) !important;
+      padding: 6px 16px;
+      font-weight: 700 !important;
+      transition: background 0.2s !important;
+    }
+    .topbar-cta:hover { background: #FCD34D !important; color: var(--bg) !important; }
+
+    .version-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--green);
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 2px;
+      padding: 2px 8px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 0 80px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 1px;
+      background: var(--amber);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(44px, 6vw, 78px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .hero-title .line-amber { color: var(--amber); }
+    .hero-title .line-dim { color: var(--muted); font-weight: 600; }
+
+    .hero-subtitle {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 22px;
+      color: var(--muted);
+      margin: 20px 0 36px;
+      line-height: 1.4;
+      max-width: 520px;
+    }
+
+    .hero-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 520px;
+      margin-bottom: 48px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--amber);
+      color: var(--bg);
+    }
+    .btn-primary:hover { background: #FCD34D; transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* ─── LIVE PANEL ─── */
+    .live-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 24px;
+      position: relative;
+    }
+
+    .live-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--amber), var(--green));
+    }
+
+    .live-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--amber);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-value.green { color: var(--green); }
+    .stat-value.small { font-size: 15px; color: var(--text); }
+
+    /* ─── STATS BAR ─── */
+    .stats-bar {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .stats-bar-inner {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+    }
+
+    .stat-cell {
+      padding: 28px 24px;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .stat-cell:last-child { border-right: none; }
+
+    .stat-cell-num {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 36px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-cell-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .stat-cell-accent { color: var(--amber); }
+    .stat-cell-green  { color: var(--green); }
+
+    /* ─── SECTION COMMONS ─── */
+    section {
+      position: relative;
+      z-index: 1;
+      padding: 100px 0;
+    }
+
+    .section-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 24px;
+      height: 1px;
+      background: var(--amber);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 14px;
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.8;
+      margin-bottom: 56px;
+    }
+
+    /* ─── WORLD FIRSTS ─── */
+    .world-firsts { background: var(--surface); }
+
+    .firsts-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .first-card {
+      background: var(--surface2);
+      padding: 28px;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .first-card:hover { background: #111827; }
+
+    .first-number {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 48px;
+      color: var(--faint);
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      user-select: none;
+    }
+
+    .first-tag {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--amber);
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      padding: 3px 8px;
+      margin-bottom: 16px;
+    }
+
+    .first-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+
+    .first-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ─── ARCHITECTURE ─── */
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .module-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .module-item {
+      display: flex;
+      align-items: stretch;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .module-item:hover { border-color: var(--amber-dim); }
+
+    .module-abbr {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      min-height: 56px;
+      background: var(--faint);
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--amber);
+      flex-shrink: 0;
+    }
+
+    .module-body {
+      padding: 10px 16px;
+      flex: 1;
+    }
+
+    .module-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .module-role {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 32px;
+      position: relative;
+    }
+
+    .arch-diagram::before {
+      content: 'ARCHITECTURE';
+      position: absolute;
+      top: 16px; right: 16px;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--faint);
+    }
+
+    .diagram-svg { width: 100%; height: auto; }
+
+    /* ─── GOVERNANCE ─── */
+    .gov-section { background: var(--surface); }
+
+    .gov-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .gov-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 28px;
+      position: relative;
+    }
+
+    .gov-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .gov-card.amber::before  { background: var(--amber); }
+    .gov-card.green::before  { background: var(--green); }
+    .gov-card.red::before    { background: var(--red); }
+
+    .gov-icon {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .gov-title {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .gov-body {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .gov-invariant {
+      margin-top: 16px;
+      padding: 10px 14px;
+      background: var(--faint);
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--green);
+      border-left: 2px solid var(--green);
+    }
+
+    /* ─── INNOVATIONS TIMELINE ─── */
+    .innov-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .innov-table th {
+      text-align: left;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .innov-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--faint);
+      vertical-align: top;
+    }
+
+    .innov-table tr:hover td { background: var(--faint); }
+
+    .innov-abbr {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    .innov-status-shipped {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--green);
+      font-size: 11px;
+    }
+    .innov-status-shipped::before {
+      content: '✓';
+      font-weight: 700;
+    }
+
+    .version-tag {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      background: var(--faint);
+      padding: 1px 6px;
+      border-radius: 2px;
+    }
+
+    /* ─── IP / PATENT ─── */
+    .ip-section {
+      background: linear-gradient(135deg, #040608 0%, #0A0E18 50%, #040608 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ip-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .ip-claims {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .claim-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .claim-id {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--amber);
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      padding: 4px 8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .claim-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ─── FOOTER ─── */
+    footer {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .footer-logo {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: 0.08em;
+      color: var(--amber);
+    }
+
+    .footer-meta {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--amber); }
+
+    .footer-hash {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--faint);
+      margin-top: 8px;
+    }
+
+    /* ─── TERMINAL BLOCK ─── */
+    .terminal {
+      background: #030507;
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .terminal-prompt { color: var(--green); }
+    .terminal-cmd    { color: var(--text); }
+    .terminal-out    { color: var(--muted); }
+    .terminal-amber  { color: var(--amber); }
+
+    /* ─── GITHUB BADGES ─── */
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      height: 20px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      overflow: hidden;
+      border-radius: 2px;
+    }
+
+    .badge-label {
+      padding: 0 8px;
+      background: #555;
+      color: #fff;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .badge-value {
+      padding: 0 8px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    .badge-blue   .badge-value { background: #2563EB; color: #fff; }
+    .badge-green  .badge-value { background: #059669; color: #fff; }
+    .badge-amber  .badge-value { background: #D97706; color: #fff; }
+    .badge-purple .badge-value { background: #7C3AED; color: #fff; }
+
+    /* ─── SEPARATOR ─── */
+    .sep {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ─── ANIMATE ON SCROLL ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      .hero-grid          { grid-template-columns: 1fr; gap: 48px; }
+      .stats-bar-inner    { grid-template-columns: repeat(3, 1fr); }
+      .firsts-grid        { grid-template-columns: 1fr 1fr; }
+      .arch-grid          { grid-template-columns: 1fr; }
+      .gov-grid           { grid-template-columns: 1fr; }
+      .ip-grid            { grid-template-columns: 1fr; gap: 48px; }
+      .footer-inner       { flex-direction: column; gap: 32px; align-items: flex-start; }
+      .topbar-nav         { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .container          { padding: 0 20px; }
+      .stats-bar-inner    { grid-template-columns: repeat(2, 1fr); }
+      .firsts-grid        { grid-template-columns: 1fr; }
+      .hero               { padding: 100px 0 60px; }
+    }
+
+    /* ─── COUNTER ANIM ─── */
+    .count-up { display: inline-block; }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <a class="topbar-logo" href="#home">ADAAD <span>by InnovativeAI</span></a>
+      <div class="topbar-nav">
+        <span class="version-pill">v9.50.0</span>
+        <a href="#architecture">Architecture</a>
+        <a href="#governance">Governance</a>
+        <a href="#innovations">Innovations</a>
+        <a href="#ip">IP &amp; Patent</a>
+        <a class="topbar-cta" href="https://github.com/InnovativeAI-adaad/adaad" target="_blank" rel="noopener">GitHub →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="home" class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div>
+          <div class="hero-eyebrow">Constitutional AI &bull; InnovativeAI LLC</div>
+          <h1 class="hero-title">
+            <span class="line-amber">ADAAD</span><br/>
+            <span class="line-dim">Mutation.</span><br/>
+            Governed.
+          </h1>
+          <p class="hero-subtitle">
+            The world's first constitutionally governed autonomous code evolution system.
+          </p>
+          <p class="hero-desc">
+            ADAAD evolves its own architecture through a structured innovation pipeline
+            enforced by Hard-class invariants, a Constitutional Jury System, cryptographic
+            proof DAGs, and non-delegable HUMAN-0 authority gates. No mutation ships without
+            constitutional clearance.
+          </p>
+          <div class="badges">
+            <span class="badge badge-blue">
+              <span class="badge-label">version</span>
+              <span class="badge-value">v9.50.0</span>
+            </span>
+            <span class="badge badge-green">
+              <span class="badge-label">tests</span>
+              <span class="badge-value">6,354 passing</span>
+            </span>
+            <span class="badge badge-amber">
+              <span class="badge-label">phase</span>
+              <span class="badge-value">117</span>
+            </span>
+            <span class="badge badge-purple">
+              <span class="badge-label">license</span>
+              <span class="badge-value">proprietary</span>
+            </span>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://github.com/InnovativeAI-adaad/adaad" target="_blank" rel="noopener">
+              View on GitHub
+            </a>
+            <a class="btn btn-ghost" href="#governance">Governance Model</a>
+            <a class="btn btn-ghost" href="#ip">Patent Priority</a>
+          </div>
+        </div>
+
+        <div class="live-panel reveal">
+          <div class="live-label">
+            <span class="live-dot"></span>
+            Live System State
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Current Version</span>
+            <span class="stat-value">9.50.0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Active Phase</span>
+            <span class="stat-value">117</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Test Suite</span>
+            <span class="stat-value green">6,354</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Innovations Shipped</span>
+            <span class="stat-value">31</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Constitutional Rules</span>
+            <span class="stat-value">23</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Hard Invariants</span>
+            <span class="stat-value">9</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">World Firsts</span>
+            <span class="stat-value green">17</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Ledger-First Pattern</span>
+            <span class="stat-value small">STAKE-0 active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="container">
+      <div class="stats-bar-inner">
+        <div class="stat-cell">
+          <div class="stat-cell-num stat-cell-accent" data-target="6354">0</div>
+          <div class="stat-cell-label">Tests Passing</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-num" data-target="31">0</div>
+          <div class="stat-cell-label">Innovations Shipped</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-num stat-cell-green" data-target="17">0</div>
+          <div class="stat-cell-label">World Firsts</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-num" data-target="23">0</div>
+          <div class="stat-cell-label">Constitutional Rules</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-cell-num stat-cell-accent" data-target="117">0</div>
+          <div class="stat-cell-label">Active Phase</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORLD FIRSTS -->
+  <section id="world-firsts" class="world-firsts">
+    <div class="container">
+      <div class="section-eyebrow">Verified Claims</div>
+      <h2 class="section-title">17 World Firsts</h2>
+      <p class="section-desc">
+        Each claim is backed by a dated governance artifact, cryptographic proof chain,
+        and ledger entry — reviewable at <code>artifacts/governance/</code>.
+      </p>
+      <div class="firsts-grid reveal">
+        <div class="first-card">
+          <span class="first-number">01</span>
+          <div class="first-tag">INNOV-01 · CSAP</div>
+          <div class="first-name">Constitutional Self-Attestation Protocol</div>
+          <div class="first-desc">First autonomous system to sign constitutional rule adherence as cryptographic identity claims.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">02</span>
+          <div class="first-tag">INNOV-06 · CEPD</div>
+          <div class="first-name">Cryptographic Evolution Proof DAG</div>
+          <div class="first-desc">Tamper-evident SHA-256 hash chain linking every mutation event in a provable DAG structure.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">03</span>
+          <div class="first-tag">INNOV-07 · LSME</div>
+          <div class="first-name">Live Shadow Mutation Execution</div>
+          <div class="first-desc">Shadow execution of candidate mutations against live state before committing to the evolution ledger.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">04</span>
+          <div class="first-tag">INNOV-09 · AFIT</div>
+          <div class="first-name">Aesthetic Fitness Signal</div>
+          <div class="first-desc">First governed system applying aesthetic fitness as a constitutional mutation selection criterion.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">05</span>
+          <div class="first-tag">INNOV-10 · MMEM</div>
+          <div class="first-name">Morphogenetic Memory</div>
+          <div class="first-desc">Cross-epoch mutation memory with proven chain integrity — architecture remembers its own lineage.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">06</span>
+          <div class="first-tag">INNOV-11 · DSTE</div>
+          <div class="first-name">Dream State Engine</div>
+          <div class="first-desc">World's first cross-epoch constitutional dream cycle — speculative mutation exploration under governance.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">07</span>
+          <div class="first-tag">INNOV-12 · MGV</div>
+          <div class="first-name">Mutation Genealogy Engine</div>
+          <div class="first-desc">Full deterministic genealogy tracing of every code mutation from origin through all descendant states.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">08</span>
+          <div class="first-tag">INNOV-14 · CJS</div>
+          <div class="first-name">Constitutional Jury System</div>
+          <div class="first-desc">Governed multi-agent jury deliberation with quorum, dissent recording, and deterministic verdict ledger.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">09</span>
+          <div class="first-tag">INNOV-15 · ARS</div>
+          <div class="first-name">Agent Reputation Staking</div>
+          <div class="first-desc">First governed agent-reputation economics system with stake caps, burn events, and ledger-first commits.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">10</span>
+          <div class="first-tag">INNOV-16 · ERS</div>
+          <div class="first-name">Emergent Role Discovery</div>
+          <div class="first-desc">Autonomous discovery of agent specialisation roles from behavioral patterns within constitutional bounds.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">11</span>
+          <div class="first-tag">INNOV-08 · AFRT</div>
+          <div class="first-name">Adversarial Fitness Gate</div>
+          <div class="first-desc">World's first adversarial red-team gate as a mandatory constitutional mutation acceptance criterion.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">12</span>
+          <div class="first-tag">INNOV-20 · CST</div>
+          <div class="first-name">Constitutional Stress Testing</div>
+          <div class="first-desc">Adversarial scenario injection against the live constitution under HUMAN-0 gate — governed chaos engineering.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">13</span>
+          <div class="first-tag">INNOV-21 · GBP</div>
+          <div class="first-name">Governance Bankruptcy Protocol</div>
+          <div class="first-desc">First formal protocol for constitutional insolvency resolution with HUMAN-0 ratified recovery paths.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">14</span>
+          <div class="first-tag">INNOV-22 · MCF</div>
+          <div class="first-name">Mutation Conflict Framework</div>
+          <div class="first-desc">Deterministic resolution of competing mutation proposals through constitutional arbitration ledger.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">15</span>
+          <div class="first-tag">INNOV-23 · CES</div>
+          <div class="first-name">Anticipatory Constitution Sentinel</div>
+          <div class="first-desc">Pre-emptive invariant violation detection before mutation commits — blocking at proposal stage.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">16</span>
+          <div class="first-tag">INNOV-30 · TMT</div>
+          <div class="first-name">The Mirror Test</div>
+          <div class="first-desc">First governed constitutional self-calibration cycle — the system evaluates its own governance under audit.</div>
+        </div>
+        <div class="first-card">
+          <span class="first-number">17</span>
+          <div class="first-tag">INNOV-31 · IDE</div>
+          <div class="first-name">Identity Discovery Engine</div>
+          <div class="first-desc">Autonomous constitutional self-discovery — system derives its own governed identity from first principles.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section id="architecture">
+    <div class="container">
+      <div class="section-eyebrow">Technical Design</div>
+      <h2 class="section-title">Core Architecture</h2>
+      <p class="section-desc">
+        Every layer from mutation proposal to production commit passes through
+        constitutional clearance. No path bypasses HUMAN-0.
+      </p>
+      <div class="arch-grid reveal">
+        <div class="module-list">
+          <div class="module-item">
+            <div class="module-abbr">CEL</div>
+            <div class="module-body">
+              <div class="module-name">Constitutional Evolution Loop</div>
+              <div class="module-role">Core mutation orchestration — proposes, validates, commits</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">CJS</div>
+            <div class="module-body">
+              <div class="module-name">Constitutional Jury System</div>
+              <div class="module-role">Multi-agent deliberation with quorum enforcement</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">CEPD</div>
+            <div class="module-body">
+              <div class="module-name">Cryptographic Evolution Proof DAG</div>
+              <div class="module-role">Tamper-evident SHA-256 hash chain across all events</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">MMEM</div>
+            <div class="module-body">
+              <div class="module-name">Morphogenetic Memory</div>
+              <div class="module-role">Cross-epoch mutation lineage with proven chain integrity</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">DSTE</div>
+            <div class="module-body">
+              <div class="module-name">Dream State Engine</div>
+              <div class="module-role">Speculative exploration in governance sandbox</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">ARS</div>
+            <div class="module-body">
+              <div class="module-name">Agent Reputation Staking</div>
+              <div class="module-role">Stake-0 ledger-first agent credibility economics</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">SCDD</div>
+            <div class="module-body">
+              <div class="module-name">Semantic Constitutional Drift Detector</div>
+              <div class="module-role">Continuous monitoring for governance drift signals</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">AOEP</div>
+            <div class="module-body">
+              <div class="module-name">Autonomous Organ Emergence Protocol</div>
+              <div class="module-role">New capability modules emerge under HUMAN-0 gate</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">LSME</div>
+            <div class="module-body">
+              <div class="module-name">Live Shadow Mutation Execution</div>
+              <div class="module-role">Safe pre-commit shadow runs against live state</div>
+            </div>
+          </div>
+          <div class="module-item">
+            <div class="module-abbr">TMT</div>
+            <div class="module-body">
+              <div class="module-name">The Mirror Test</div>
+              <div class="module-role">Constitutional self-evaluation and calibration cycle</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- SVG Architecture Diagram -->
+          <div class="arch-diagram">
+            <svg class="diagram-svg" viewBox="0 0 360 480" xmlns="http://www.w3.org/2000/svg" font-family="'Courier Prime', monospace">
+              <defs>
+                <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#F59E0B" opacity="0.6"/>
+                </marker>
+                <marker id="arr-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#10B981" opacity="0.6"/>
+                </marker>
+              </defs>
+
+              <!-- HUMAN-0 -->
+              <rect x="110" y="10" width="140" height="44" fill="#1C2336" stroke="#F59E0B" stroke-width="1.5"/>
+              <text x="180" y="28" text-anchor="middle" fill="#F59E0B" font-size="9" letter-spacing="2" font-weight="bold">HUMAN-0</text>
+              <text x="180" y="44" text-anchor="middle" fill="#64748B" font-size="8">Non-Delegable Gate</text>
+
+              <!-- Arrow down -->
+              <line x1="180" y1="54" x2="180" y2="76" stroke="#F59E0B" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)" opacity="0.6"/>
+
+              <!-- CEL -->
+              <rect x="90" y="76" width="180" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="180" y="95" text-anchor="middle" fill="#E2E8F0" font-size="9" letter-spacing="1" font-weight="bold">CEL · Constitutional Evolution Loop</text>
+              <text x="180" y="108" text-anchor="middle" fill="#64748B" font-size="8">Propose → Validate → Commit</text>
+
+              <!-- Arrow -->
+              <line x1="180" y1="116" x2="180" y2="138" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+
+              <!-- Mutation Layer -->
+              <rect x="20" y="138" width="136" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="88" y="155" text-anchor="middle" fill="#E2E8F0" font-size="9" font-weight="bold">LSME</text>
+              <text x="88" y="169" text-anchor="middle" fill="#64748B" font-size="8">Shadow Execution</text>
+
+              <rect x="204" y="138" width="136" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="272" y="155" text-anchor="middle" fill="#E2E8F0" font-size="9" font-weight="bold">CEPD</text>
+              <text x="272" y="169" text-anchor="middle" fill="#64748B" font-size="8">Proof DAG</text>
+
+              <!-- Arrow -->
+              <line x1="88"  y1="178" x2="88"  y2="200" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+              <line x1="272" y1="178" x2="272" y2="200" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+              <line x1="180" y1="138" x2="180" y2="200" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+
+              <!-- Governance Layer -->
+              <rect x="20" y="200" width="136" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="88" y="217" text-anchor="middle" fill="#E2E8F0" font-size="9" font-weight="bold">CJS</text>
+              <text x="88" y="231" text-anchor="middle" fill="#64748B" font-size="8">Jury Deliberation</text>
+
+              <rect x="110" y="200" width="140" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="180" y="217" text-anchor="middle" fill="#10B981" font-size="9" font-weight="bold">CONSTITUTION</text>
+              <text x="180" y="231" text-anchor="middle" fill="#64748B" font-size="8">23 Rules · 9 Hard Invariants</text>
+
+              <rect x="204" y="200" width="136" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="272" y="217" text-anchor="middle" fill="#E2E8F0" font-size="9" font-weight="bold">ARS</text>
+              <text x="272" y="231" text-anchor="middle" fill="#64748B" font-size="8">Reputation Staking</text>
+
+              <!-- Converge Arrow -->
+              <line x1="180" y1="240" x2="180" y2="262" stroke="#10B981" stroke-width="1" marker-end="url(#arr-green)" opacity="0.6"/>
+
+              <!-- Ledger -->
+              <rect x="80" y="262" width="200" height="40" fill="#0A2918" stroke="#065F46" stroke-width="1"/>
+              <text x="180" y="279" text-anchor="middle" fill="#10B981" font-size="9" letter-spacing="1" font-weight="bold">APPEND-ONLY LEDGER</text>
+              <text x="180" y="293" text-anchor="middle" fill="#065F46" font-size="8">STAKE-0 · Ledger-First Pattern</text>
+
+              <!-- Arrow -->
+              <line x1="180" y1="302" x2="180" y2="322" stroke="#10B981" stroke-width="1" marker-end="url(#arr-green)" opacity="0.6"/>
+
+              <!-- Memory / Dream -->
+              <rect x="20" y="322" width="136" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="88" y="339" text-anchor="middle" fill="#E2E8F0" font-size="9" font-weight="bold">MMEM</text>
+              <text x="88" y="353" text-anchor="middle" fill="#64748B" font-size="8">Morphogenetic Memory</text>
+
+              <rect x="204" y="322" width="136" height="40" fill="#0F1420" stroke="#1C2336" stroke-width="1"/>
+              <text x="272" y="339" text-anchor="middle" fill="#E2E8F0" font-size="9" font-weight="bold">DSTE</text>
+              <text x="272" y="353" text-anchor="middle" fill="#64748B" font-size="8">Dream State Engine</text>
+
+              <!-- Final Arrow -->
+              <line x1="88"  y1="362" x2="88"  y2="384" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+              <line x1="272" y1="362" x2="272" y2="384" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+              <line x1="180" y1="362" x2="180" y2="384" stroke="#64748B" stroke-width="1" marker-end="url(#arr)" opacity="0.4"/>
+
+              <!-- Output -->
+              <rect x="50" y="384" width="260" height="44" fill="#111827" stroke="#F59E0B" stroke-width="1"/>
+              <text x="180" y="403" text-anchor="middle" fill="#F59E0B" font-size="9" letter-spacing="2" font-weight="bold">PRODUCTION EVOLUTION</text>
+              <text x="180" y="418" text-anchor="middle" fill="#64748B" font-size="8">Constitutionally Cleared · Cryptographically Proven</text>
+
+              <!-- TMT loop back -->
+              <path d="M 310 406 Q 350 406 350 32 Q 350 10 310 10" fill="none" stroke="#7C3AED" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
+              <text x="348" y="220" fill="#7C3AED" font-size="7" text-anchor="middle" opacity="0.6" transform="rotate(90,348,220)">TMT · Mirror Test</text>
+            </svg>
+          </div>
+
+          <div class="terminal" style="margin-top:16px;">
+            <div><span class="terminal-prompt">$</span> <span class="terminal-cmd">adaad status</span></div>
+            <div class="terminal-out">version     <span class="terminal-amber">9.50.0</span></div>
+            <div class="terminal-out">phase       <span class="terminal-amber">117</span></div>
+            <div class="terminal-out">tests       <span class="terminal-prompt">6354 passing</span></div>
+            <div class="terminal-out">constitution <span class="terminal-amber">v0.9.0 · 23 rules</span></div>
+            <div class="terminal-out">invariants  <span class="terminal-amber">9 hard-class</span></div>
+            <div class="terminal-out">ledger      <span class="terminal-prompt">append-only · STAKE-0</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GOVERNANCE -->
+  <section id="governance" class="gov-section">
+    <div class="container">
+      <div class="section-eyebrow">Safety &amp; Integrity</div>
+      <h2 class="section-title">Constitutional Governance</h2>
+      <p class="section-desc">
+        ADAAD's governance model enforces safety at every layer.
+        Hard-class invariants are unconditional — no mutation, no agent,
+        and no LLM prompt can bypass them.
+      </p>
+      <div class="gov-grid reveal">
+        <div class="gov-card amber">
+          <div class="gov-icon">⊙</div>
+          <div class="gov-title">HUMAN-0 Gate</div>
+          <div class="gov-body">
+            Non-delegable human authority gate. New organ proposals (AOEP-0),
+            constitutional amendments, and GA sign-offs require explicit Dustin Reid
+            sign-off. No bypass path exists by design.
+          </div>
+          <div class="gov-invariant">HUMAN-0 is non-delegable by design</div>
+        </div>
+
+        <div class="gov-card red">
+          <div class="gov-icon">⛔</div>
+          <div class="gov-title">Hard-Class Invariants</div>
+          <div class="gov-body">
+            9 unconditional blocking constraints that cannot be overridden by
+            any agent, LLM call, or autonomous process. Ledger-first (STAKE-0)
+            is the founding Hard-class invariant — all governance events committed
+            to ledger before any downstream action.
+          </div>
+          <div class="gov-invariant">STAKE-0: ledger commit precedes action</div>
+        </div>
+
+        <div class="gov-card green">
+          <div class="gov-icon">⛓</div>
+          <div class="gov-title">Append-Only Ledger</div>
+          <div class="gov-body">
+            Governance and mutation ledgers are strictly append-only.
+            No retroactive modification. SHA-256 hash chains link all events.
+            Tamper detection is formally proven through the CEPD module.
+          </div>
+          <div class="gov-invariant">SHA-256 chain · CEPD tamper-proof</div>
+        </div>
+
+        <div class="gov-card amber">
+          <div class="gov-icon">⚖</div>
+          <div class="gov-title">Constitutional Jury</div>
+          <div class="gov-body">
+            The CJS (Constitutional Jury System) governs mutation acceptance
+            through multi-agent deliberation with quorum enforcement,
+            dissent recording, and deterministic ledger verdicts.
+          </div>
+          <div class="gov-invariant">Quorum required · Dissent recorded</div>
+        </div>
+
+        <div class="gov-card green">
+          <div class="gov-icon">⟳</div>
+          <div class="gov-title">CEL · Evolution Loop</div>
+          <div class="gov-body">
+            Every mutation traverses the Constitutional Evolution Loop:
+            proposal → shadow execution → jury → constitution check →
+            ledger commit → production. No short-circuit path exists.
+          </div>
+          <div class="gov-invariant">Every prompt grounded constitutionally</div>
+        </div>
+
+        <div class="gov-card red">
+          <div class="gov-icon">🔍</div>
+          <div class="gov-title">Identity Ledger Attestation</div>
+          <div class="gov-body">
+            ILA provides cryptographic binding of agent identity to ledger entries.
+            ARS staking means agents put reputation at risk for every mutation vote.
+            Identity fraud triggers automatic stake burn events.
+          </div>
+          <div class="gov-invariant">ILA · ARS stake-burn on fraud</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INNOVATIONS TABLE -->
+  <section id="innovations">
+    <div class="container">
+      <div class="section-eyebrow">Shipped Pipeline</div>
+      <h2 class="section-title">31 Innovations · Complete</h2>
+      <p class="section-desc">
+        The founding 30-innovation roadmap plus INNOV-31 are fully shipped,
+        tested, and governance-artifact-documented. Each has a signed HUMAN-0 artifact.
+      </p>
+      <div class="reveal" style="overflow-x:auto;">
+        <table class="innov-table">
+          <thead>
+            <tr>
+              <th>Abbr</th>
+              <th>Full Name</th>
+              <th>Status</th>
+              <th>Version</th>
+              <th>World First</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="innov-abbr">CSAP</td><td>Constitutional Self-Attestation Protocol</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.18.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">ACSE</td><td>Autonomous Constitutional Self-Evaluation</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.19.0</span></td><td></td></tr>
+            <tr><td class="innov-abbr">TIFE</td><td>Trust-Invariant Failure Envelope</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.20.0</span></td><td></td></tr>
+            <tr><td class="innov-abbr">SCDD</td><td>Semantic Constitutional Drift Detector</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.21.0</span></td><td></td></tr>
+            <tr><td class="innov-abbr">AOEP</td><td>Autonomous Organ Emergence Protocol</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.22.0</span></td><td></td></tr>
+            <tr><td class="innov-abbr">CEPD</td><td>Cryptographic Evolution Proof DAG</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.23.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">LSME</td><td>Live Shadow Mutation Execution</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.24.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">AFRT</td><td>Adversarial Fitness Gate</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.25.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">AFIT</td><td>Aesthetic Fitness Signal</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.26.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">MMEM</td><td>Morphogenetic Memory</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.27.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">DSTE</td><td>Dream State Engine</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.29.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">MGV</td><td>Mutation Genealogy Engine</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.30.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">ILA</td><td>Identity Ledger Attestation</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.31.0</span></td><td></td></tr>
+            <tr><td class="innov-abbr">CJS</td><td>Constitutional Jury System</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.32.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">ARS</td><td>Agent Reputation Staking</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.33.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">ERS</td><td>Emergent Role Discovery</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.34.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">CST</td><td>Constitutional Stress Testing</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.38.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">GBP</td><td>Governance Bankruptcy Protocol</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.39.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">MCF</td><td>Mutation Conflict Framework</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.40.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">CES</td><td>Anticipatory Constitution Sentinel</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.41.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">TMT</td><td>The Mirror Test</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.48.0</span></td><td>✓</td></tr>
+            <tr><td class="innov-abbr">IDE</td><td>Identity Discovery Engine</td><td><span class="innov-status-shipped">Shipped</span></td><td><span class="version-tag">v9.49.0</span></td><td>✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- IP / PATENT -->
+  <section id="ip" class="ip-section">
+    <div class="container">
+      <div class="ip-grid">
+        <div>
+          <div class="section-eyebrow">Intellectual Property</div>
+          <h2 class="section-title">Patent Priority &amp; IP Claims</h2>
+          <p class="section-desc" style="margin-bottom:32px;">
+            ADAAD represents a novel class of governed autonomous system.
+            Priority dates are established through dated governance artifacts,
+            cryptographic ledger entries, and GPG-signed release tags.
+          </p>
+          <div class="terminal">
+            <div><span class="terminal-prompt">#</span> <span class="terminal-cmd">IP Priority Stack</span></div>
+            <div class="terminal-out">Earliest artifact:  <span class="terminal-amber">2026-03-09</span></div>
+            <div class="terminal-out">GPG-signed tags:    <span class="terminal-amber">v9.8.0 → v9.50.0</span></div>
+            <div class="terminal-out">Ledger entries:     <span class="terminal-amber">append-only · SHA-256</span></div>
+            <div class="terminal-out">Governance dir:     <span class="terminal-amber">artifacts/governance/</span></div>
+            <div class="terminal-out">Claims matrix:      <span class="terminal-amber">docs/comms/claims_evidence_matrix.md</span></div>
+            <br/>
+            <div><span class="terminal-prompt">#</span> Open findings (patent prosecution)</div>
+            <div class="terminal-out">FINDING-66-003:     <span class="terminal-amber">deferred → v10.0.0-GA</span></div>
+            <div class="terminal-out">Counsel:            <span class="terminal-amber">contact via GitHub Issues</span></div>
+          </div>
+        </div>
+        <div class="ip-claims">
+          <div class="claim-row">
+            <div class="claim-id">CLAIM-01</div>
+            <div class="claim-text">A constitutionally governed autonomous code mutation system wherein every proposed mutation is evaluated against a formally specified constitutional rule set before commit.</div>
+          </div>
+          <div class="claim-row">
+            <div class="claim-id">CLAIM-02</div>
+            <div class="claim-text">A cryptographic evolution proof DAG (CEPD) wherein SHA-256 hash chains provide tamper-evident provenance for all mutation events in an autonomous development system.</div>
+          </div>
+          <div class="claim-row">
+            <div class="claim-id">CLAIM-03</div>
+            <div class="claim-text">A multi-agent constitutional jury system (CJS) wherein mutation proposals are deliberated by a quorum of specialized agents with mandatory dissent recording and ledger-first verdict commitment.</div>
+          </div>
+          <div class="claim-row">
+            <div class="claim-id">CLAIM-04</div>
+            <div class="claim-text">A morphogenetic memory system (MMEM) providing cross-epoch mutation lineage with formally proven chain integrity in an autonomous architecture evolution engine.</div>
+          </div>
+          <div class="claim-row">
+            <div class="claim-id">CLAIM-05</div>
+            <div class="claim-text">A non-delegable HUMAN-0 authority gate wherein constitutional amendments and new organ emergence proposals are permanently gated on explicit named human sign-off with no automated bypass path.</div>
+          </div>
+          <div class="claim-row">
+            <div class="claim-id">CLAIM-06</div>
+            <div class="claim-text">An agent reputation staking system (ARS) wherein autonomous agents stake bounded reputation tokens on mutation proposals with automatic stake burn on detected identity or governance fraud.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL / QUICKSTART -->
+  <section id="install">
+    <div class="container">
+      <div class="section-eyebrow">Get Started</div>
+      <h2 class="section-title">Quickstart</h2>
+      <p class="section-desc">
+        ADAAD runs on ADAADell — your local Linux node — and connects
+        to the governed GitHub remote. Aponi dashboard at port 8080.
+      </p>
+      <div class="arch-grid reveal">
+        <div>
+          <div class="terminal">
+            <div><span class="terminal-prompt">#</span> <span class="terminal-cmd">Clone &amp; onboard</span></div>
+            <div class="terminal-out">git clone https://github.com/InnovativeAI-adaad/adaad</div>
+            <div class="terminal-out">cd adaad</div>
+            <div class="terminal-out">python3 onboard.py</div>
+            <br/>
+            <div><span class="terminal-prompt">#</span> <span class="terminal-cmd">Run the server</span></div>
+            <div class="terminal-out">./adaadell_run.sh</div>
+            <div class="terminal-out"><span class="terminal-amber">→ Aponi dashboard at :8080</span></div>
+            <br/>
+            <div><span class="terminal-prompt">#</span> <span class="terminal-cmd">Run test suite</span></div>
+            <div class="terminal-out">pytest --tb=short -q</div>
+            <div class="terminal-out"><span class="terminal-prompt">6354 passed</span> · 0 failed</div>
+          </div>
+        </div>
+        <div>
+          <div class="terminal">
+            <div><span class="terminal-prompt">#</span> <span class="terminal-cmd">adaad.pro DNS / nginx</span></div>
+            <div class="terminal-out">sudo apt install nginx certbot -y</div>
+            <br/>
+            <div class="terminal-out"># /etc/nginx/sites-available/adaad.pro</div>
+            <div class="terminal-out">server_name adaad.pro www.adaad.pro;</div>
+            <div class="terminal-out">root /home/dust/ADAAD/public;</div>
+            <div class="terminal-out">location /api/ { proxy_pass :8080/api/; }</div>
+            <br/>
+            <div class="terminal-out">sudo certbot --nginx -d adaad.pro</div>
+            <br/>
+            <div><span class="terminal-prompt">#</span> <span class="terminal-cmd">Subdomains</span></div>
+            <div class="terminal-out">aponi.adaad.pro  → :8080  (dashboard)</div>
+            <div class="terminal-out">api.adaad.pro    → :8080/api/</div>
+            <div class="terminal-out">docs.adaad.pro   → GitHub Pages</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-logo">ADAAD</div>
+          <div class="footer-meta" style="margin-top:12px;">
+            Autonomous Development &amp; Adaptive Architecture Daemon<br/>
+            InnovativeAI LLC · Dustin L. Reid · <a href="mailto:weirdo@innovativeai.llc" style="color:var(--amber);text-decoration:none;">weirdo@innovativeai.llc</a><br/>
+            <span style="color:var(--faint);">© 2026 InnovativeAI LLC. All rights reserved.</span>
+          </div>
+          <div class="footer-hash">v9.50.0 · Phase 117 · Constitutional v0.9.0 · 6,354 tests</div>
+        </div>
+        <div>
+          <div class="footer-links">
+            <a href="https://github.com/InnovativeAI-adaad/adaad" target="_blank">GitHub</a>
+            <a href="#architecture">Architecture</a>
+            <a href="#governance">Governance</a>
+            <a href="#ip">Patent</a>
+            <a href="#innovations">Innovations</a>
+          </div>
+          <div style="margin-top:16px;">
+            <a class="btn btn-primary" href="https://github.com/InnovativeAI-adaad/adaad" target="_blank" rel="noopener" style="font-size:12px;padding:10px 20px;">
+              View Source on GitHub →
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ── SCROLL REVEAL ──
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => observer.observe(el));
+
+    // ── COUNTER ANIMATION ──
+    function animateCount(el, target, duration = 1400) {
+      const start = performance.now();
+      const format = n => n >= 1000 ? n.toLocaleString() : String(n);
+      function step(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        el.textContent = format(Math.round(ease * target));
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = format(target);
+      }
+      requestAnimationFrame(step);
+    }
+
+    const statEls = document.querySelectorAll('[data-target]');
+    const statsObs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          animateCount(e.target, parseInt(e.target.dataset.target));
+          statsObs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    statEls.forEach(el => statsObs.observe(el));
+
+    // ── LIVE PANEL: Fetch GitHub stats ──
+    async function fetchGitHubStats() {
+      try {
+        const res = await fetch('https://api.github.com/repos/InnovativeAI-adaad/adaad');
+        if (!res.ok) return;
+        const data = await res.json();
+        // Could display stars/forks if desired — panel currently shows known values
+        if (data.stargazers_count !== undefined) {
+          const el = document.getElementById('gh-stars');
+          if (el) el.textContent = data.stargazers_count;
+        }
+      } catch (_) { /* silent — GitHub may rate limit */ }
+    }
+    fetchGitHubStats();
+  </script>
+</body>
+</html>
