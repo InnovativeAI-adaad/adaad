@@ -189,7 +189,13 @@ def scan_absolute_paths() -> Tuple[bool, List[str]]:
     for path in ROOT_DIR.rglob("*.py"):
         if not _should_scan_python_file(path):
             continue
-        if path.resolve() == Path(__file__).resolve():
+        # Exclude this file, sandbox implementations, and tests which use /workspace/ or /tmp/ literals
+        # for container/simulation mappings.
+        if (
+            path.resolve() == Path(__file__).resolve()
+            or "sandbox" in path.as_posix()
+            or "tests" in path.as_posix()
+        ):
             continue
         content = path.read_text(encoding="utf-8").splitlines()
         for lineno, line in enumerate(content, start=1):

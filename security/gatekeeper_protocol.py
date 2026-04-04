@@ -48,14 +48,24 @@ def _should_exclude(path: Path) -> bool:
     # local/editor metadata and empty-directory sentinels.
     if path.name.startswith(".") or path.name.endswith(".gitkeep"):
         return True
+    # Exclude __pycache__, ledger churn files, and key rotation artifacts.
+    posix = path.as_posix()
+    if "__pycache__" in posix:
+        return True
+    if "security/ledger" in posix and path.name != "__init__.py":
+        return True
+    if "security/keys/rotation.json" in posix:
+        return True
     # Exclude the digest persistence artifact from the security tree to avoid
     # self-referential hash churn across runs.
-    return path.as_posix() in _EXCLUDED_LEDGER_FILES
+    return posix in _EXCLUDED_LEDGER_FILES
 
 
 def _tree_manifest(tree_root: Path) -> List[Dict[str, str]]:
+    """Return a list of {path, sha256} for all non-excluded files in tree_root."""
     manifest: List[Dict[str, str]] = []
-    repo_root = tree_root.parent.resolve()
+    # Hardening: ensure absolute repo root for consistent relative_to
+    repo_root = tree_root.resolve().parent
 
     def _is_within_repo(path: Path) -> bool:
         try:
@@ -64,54 +74,45 @@ def _tree_manifest(tree_root: Path) -> List[Dict[str, str]]:
         except ValueError:
             return False
 
-    for p in sorted(tree_root.rglob("*")):
-        if p.is_dir() or _should_exclude(p):
+    # Use absolute path for traversal
+    for p in sorted(tree_root.resolve().rglob("*")):
+        p_resolved = p.resolve(strict=False)
+        if p_resolved.is_dir() or _should_exclude(p_resolved):
             continue
-        rel_path = p.relative_to(tree_root.parent).as_posix()
-
-        if p.is_symlink():
-            resolved_target = p.resolve(strict=False)
-            reason_code = "symlink_target_outside_repo"
-            if _is_within_repo(resolved_target):
-                reason_code = "symlink_not_hashed"
-            LOG.warning(
-                "gatekeeper manifest entry skipped",
-                extra={
-                    "reason_code": reason_code,
-                    "path": rel_path,
-                    "resolved_target": resolved_target.as_posix(),
-                },
-            )
+        
+        try:
+            rel_path = p_resolved.relative_to(repo_root).as_posix()
+        except ValueError:
+            LOG.warning("gatekeeper manifest entry skipped: path_outside_repo", extra={"path": str(p_resolved)})
             continue
 
-        resolved_path = p.resolve(strict=False)
-        if not _is_within_repo(resolved_path):
-            LOG.warning(
-                "gatekeeper manifest entry skipped",
-                extra={
-                    "reason_code": "resolved_path_outside_repo",
-                    "path": rel_path,
-                    "resolved_path": resolved_path.as_posix(),
-                },
-            )
+        if p_resolved.is_symlink():
+            resolved_target = p_resolved.resolve(strict=False)
+            if not _is_within_repo(resolved_target):
+                LOG.warning("gatekeeper manifest entry skipped: symlink_target_outside_repo", extra={"path": rel_path})
+                continue
+            LOG.warning("gatekeeper manifest entry skipped: symlink_not_hashed", extra={"path": rel_path})
             continue
 
-        file_hash = hashlib.sha256(resolved_path.read_bytes()).hexdigest()
+        # Performance: read_bytes() once
+        file_hash = hashlib.sha256(p_resolved.read_bytes()).hexdigest()
         manifest.append({"path": rel_path, "sha256": file_hash})
+    
     return sorted(manifest, key=lambda item: item["path"])
 
 
-def _tree_subhash(tree_root: Path) -> str:
-    manifest_payload = json.dumps(_tree_manifest(tree_root), sort_keys=True)
-    return hashlib.sha256(manifest_payload.encode("utf-8")).hexdigest()
+def _collect_tree_data() -> tuple[dict[str, str], dict[str, list[dict[str, str]]]]:
+    """Traverse all MANIFEST_TREES once and return (full_snapshot, tree_manifests)."""
+    full_snapshot: dict[str, str] = {}
+    tree_manifests: dict[str, list[dict[str, str]]] = {}
 
+    for tree in MANIFEST_TREES:
+        manifest = _tree_manifest(tree)
+        tree_manifests[tree.as_posix()] = manifest
+        for item in manifest:
+            full_snapshot[item["path"]] = item["sha256"]
 
-def _build_manifest_snapshot() -> Dict[str, str]:
-    snapshot: Dict[str, str] = {}
-    for tree_root in MANIFEST_TREES:
-        for item in _tree_manifest(tree_root):
-            snapshot[item["path"]] = item["sha256"]
-    return dict(sorted(snapshot.items()))
+    return full_snapshot, tree_manifests
 
 
 def _compute_drift(prev_snapshot: Dict[str, str], curr_snapshot: Dict[str, str]) -> Dict[str, object]:
@@ -143,15 +144,19 @@ def run_gatekeeper() -> Dict[str, object]:
         if not path.exists():
             missing.append(str(path))
 
-    sub_hashes = {
-        tree_root.as_posix(): _tree_subhash(tree_root)
-        for tree_root in MANIFEST_TREES
-    }
+    # OPTIMIZATION: Single pass for all trees
+    manifest_snapshot, tree_manifests = _collect_tree_data()
+
+    sub_hashes = {}
+    for tree_path_str, manifest in tree_manifests.items():
+        payload = json.dumps(manifest, sort_keys=True)
+        sub_hashes[tree_path_str] = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
     ordered_subhash_material = "\n".join(
         f"{tree_name}:{sub_hashes[tree_name]}" for tree_name in sorted(sub_hashes)
     )
     digest = hashlib.sha256(ordered_subhash_material.encode("utf-8")).hexdigest()
-    manifest_snapshot = _build_manifest_snapshot()
+    
     prev = LEDGER_HASH_PATH.read_text(encoding="utf-8").strip() if LEDGER_HASH_PATH.exists() else None
 
     prev_snapshot: Dict[str, str] = {}

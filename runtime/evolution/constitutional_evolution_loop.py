@@ -252,6 +252,8 @@ class ConstitutionalEvolutionLoop:
         self_disc_frequency: int = SELF_DISC_FREQUENCY,
         # Phase 92 — AFRT gate (INNOV-08); pass None to disable (e.g. pre-Phase-92 tests)
         afrt_agent: Any = _UNSET,
+        # Phase 107 — Market-Conditioned Fitness (MCF)
+        market_integrator: Any = _UNSET,
     ) -> None:
         self._run_mode = run_mode
         self._dry_run = run_mode == RunMode.SANDBOX_ONLY
@@ -267,6 +269,15 @@ class ConstitutionalEvolutionLoop:
                 fitness_orchestrator = FitnessOrchestrator()
             except Exception:  # noqa: BLE001
                 fitness_orchestrator = None
+        
+        # Phase 107 — MCF integration
+        if market_integrator is _UNSET:
+            try:
+                from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
+                market_integrator = MarketFitnessIntegrator(fitness_orchestrator=fitness_orchestrator)
+            except Exception:  # noqa: BLE001
+                market_integrator = None
+
         if fitness_decay_scorer is _UNSET:
             try:
                 from runtime.evolution.fitness_decay_scorer import FitnessDecayScorer
@@ -293,6 +304,7 @@ class ConstitutionalEvolutionLoop:
                 self_discovery_loop = None
 
         self._fitness_orchestrator = fitness_orchestrator
+        self._market_integrator = market_integrator
         self._fitness_decay_scorer = fitness_decay_scorer
         self._causal_attributor = causal_fitness_attributor
         self._pareto_orchestrator = pareto_competition_orchestrator
@@ -642,6 +654,16 @@ class ConstitutionalEvolutionLoop:
         # sandbox_results may be in state directly (from Step 6) or in context (test injection)
         sandbox_results = state.get("sandbox_results") or state.get("context", {}).get("sandbox_results", [])
         epoch_id = state["epoch_id"]
+
+        # Phase 107 — Market-Conditioned Fitness (MCF)
+        market_result = None
+        if self._market_integrator is not None:
+            try:
+                # MCF-INTEGRATE-0: enriches FitnessOrchestrator with live signal
+                market_result = self._market_integrator.integrate(epoch_id=epoch_id)
+            except Exception:  # noqa: BLE001 — MCF advisory; never blocks
+                pass
+
         fitness_summary: List[Tuple[str, float]] = []
         fitness_detail: Dict[str, Any] = {}
 
@@ -711,6 +733,7 @@ class ConstitutionalEvolutionLoop:
                 "composite_score": round(composite_score, 6),
                 "decay_coeff": round(decay_coeff, 6),
                 "attribution_digest": attribution_digest,
+                "market_signal": market_result.is_synthetic if market_result else None,
             }
 
         # STEP8-LEDGER-FIRST-0: record fitness event before writing state

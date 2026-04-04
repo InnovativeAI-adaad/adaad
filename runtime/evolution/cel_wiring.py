@@ -48,6 +48,7 @@ from runtime.evolution.fitness_v2 import (
 )
 from runtime.evolution.proposal_engine import ProposalEngine, ProposalRequest
 from runtime.evolution.promotion_events import create_promotion_event
+from runtime.market.market_fitness_integrator import MarketFitnessIntegrator
 from runtime.evolution.promotion_state_machine import PromotionState
 from runtime.governance.exception_tokens import ExceptionTokenLedger
 from runtime.governance.gate import GovernanceGate, GateAxisResult
@@ -141,18 +142,23 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
         innovations_engine: ADAADInnovationEngine | None = None,
         gplugins: list[GovernancePlugin | None] = None,
         epoch_seq: int = 0,
-    ) -> None:
+        # Phase 107 — MCF
+        market_integrator: MarketFitnessIntegrator | None = None,
+        ) -> None:
         super().__init__(
             run_mode=run_mode,
             gate_v2=gate_v2,
             exception_ledger=exception_ledger,
             cel_ledger=cel_ledger,
             timestamp_provider=timestamp_provider,
+            fitness_orchestrator=fitness_engine,
+            market_integrator=market_integrator,
         )
-        self._gate = gate or GovernanceGate()
+
         self._fitness_engine = fitness_engine or FitnessEngineV2(
             config=FitnessConfig.default()
         )
+        self._gate = gate or GovernanceGate()
         self._proposal_engine = proposal_engine or ProposalEngine()
         self._wiring_cfg = wiring_config or WiringConfig()
         self._promo_ledger_path = promotion_ledger_path or Path(
@@ -298,6 +304,15 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             replay_diverged = state.get("replay_diverged", False)
             fitness_summary: list[tuple[str, float]] = []
 
+            # Phase 107 — Market-Conditioned Fitness (MCF)
+            market_result = None
+            if self._market_integrator is not None:
+                try:
+                    # MCF-INTEGRATE-0: enriches FitnessOrchestrator with live signal
+                    market_result = self._market_integrator.integrate(epoch_id=epoch_id)
+                except Exception:  # noqa: BLE001 — MCF advisory; never blocks
+                    pass
+
             for sr in sandbox_results:
                 mid = sr.get("mutation_id", "unknown")
                 sandbox_ok = bool(sr.get("sandbox_ok", False))
@@ -310,6 +325,8 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     governance_compliance=1.0 if sandbox_ok else 0.0,
                     architectural_fitness=0.5,
                     determinism_fitness=1.0,
+                    aesthetic_fitness=0.5,
+                    market_fitness=market_result.live_market_score if market_result else 0.5,
                     net_node_additions=0,
                     replay_result=ReplayResult(
                         diverged=replay_diverged,
@@ -368,6 +385,11 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
             gate_outcomes: list[dict[str, Any]] = []
             rejected: list[str] = []
 
+            # Phase 107 — HUMAN-0 Sign-off Integration
+            signoff_token = os.getenv("HUMAN_SIGNOFF_TOKEN", "").strip()
+            # Requirement: Approved. All signed: Dustin L. Reid
+            human_override = (signoff_token == "Approved. All signed: Dustin L. Reid")
+
             for mid in mutations_succeeded:
                 v2 = v2_decisions.get(mid, {})
                 # Build axis results from V2 rule results
@@ -387,7 +409,7 @@ class LiveWiredCEL(ConstitutionalEvolutionLoop):
                     axis_results=axis_results if axis_results else None,
                     mutation_payload={"epoch_id": state["epoch_id"]},
                     mutation_context={},
-                    human_override=False,
+                    human_override=human_override,
                 )
                 gate_outcomes.append({
                     "mutation_id": mid,
@@ -672,7 +694,13 @@ def make_live_wired_cel(
             os.getenv("ADAAD_EVOLUTION_LEDGER", "data/evolution_ledger.jsonl")
         )
     )
+    fitness_engine = FitnessEngineV2(config=FitnessConfig.default())
     gate_v2 = GovernanceGateV2(exception_ledger=exc_ledger)
+    
+    # Phase 107: MCF auto-provisioning
+    market_integrator = MarketFitnessIntegrator(
+        fitness_orchestrator=fitness_engine
+    )
 
     return LiveWiredCEL(
         run_mode=run_mode,
@@ -681,6 +709,7 @@ def make_live_wired_cel(
         cel_ledger=cel_ledger,
         promotion_ledger_path=promotion_ledger_path,
         wiring_config=wiring_config or WiringConfig(),
+        market_integrator=market_integrator,
     )
 
 

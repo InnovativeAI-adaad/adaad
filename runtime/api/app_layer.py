@@ -7,6 +7,8 @@ from runtime.capability_graph import get_capabilities, register_capability
 from runtime.evolution.entropy_discipline import EntropyBudget, derive_seed, deterministic_context, deterministic_token, deterministic_token_with_budget
 from runtime.evolution.fitness import FitnessEvaluator
 from runtime.evolution.promotion_manifest import PromotionManifestWriter, emit_pr_lifecycle_event
+from runtime.audit_auth import load_audit_tokens, require_audit_read_scope
+from runtime.governance.mutation_ledger import MutationLedger
 from runtime.governance.branch_manager import BranchManager
 from runtime.governance.foundation import RuntimeDeterminismProvider, SeededDeterminismProvider, SystemDeterminismProvider, default_provider, require_replay_safe_provider, safe_get
 from runtime.governance.gate_certifier import GateCertifier
@@ -30,7 +32,10 @@ __all__ = [
     "GovernanceGate",
     "RuntimeDirector",
     "LLMProviderClient",
+    "load_audit_tokens",
+    "require_audit_read_scope",
     "MutationCandidate",
+    "MutationLedger",
     "PromotionManifestWriter",
     "ROOT_DIR",
     "RuntimeDeterminismProvider",

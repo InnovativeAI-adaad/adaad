@@ -41,7 +41,7 @@ def canary_stage_definitions() -> List[Dict[str, Any]]:
 _ALLOWED_TRANSITIONS: dict[PromotionState, frozenset[PromotionState]] = {
     PromotionState.PROPOSED: frozenset({PromotionState.CERTIFIED, PromotionState.REJECTED}),
     PromotionState.CERTIFIED: frozenset({PromotionState.ACTIVATED, PromotionState.REJECTED}),
-    PromotionState.ACTIVATED: frozenset(),
+    PromotionState.ACTIVATED: frozenset({PromotionState.REJECTED}),
     PromotionState.REJECTED: frozenset(),
 }
 
@@ -75,6 +75,7 @@ _TRANSITION_RULES: dict[tuple[PromotionState, PromotionState], dict[str, Any]] =
     (PromotionState.CERTIFIED, PromotionState.ACTIVATED): {"require_fitness": True, "allowed_trust_modes": frozenset({"dev", "prod"})},
     (PromotionState.PROPOSED, PromotionState.REJECTED): {"require_fitness": False, "allowed_trust_modes": frozenset({"dev", "prod"})},
     (PromotionState.CERTIFIED, PromotionState.REJECTED): {"require_fitness": False, "allowed_trust_modes": frozenset({"dev", "prod"})},
+    (PromotionState.ACTIVATED, PromotionState.REJECTED): {"require_fitness": False, "allowed_trust_modes": frozenset({"dev", "prod"})},
 }
 
 

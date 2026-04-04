@@ -1,0 +1,12 @@
+{
+  "phase": 111,
+  "innovation": "INNOV-26",
+  "name": "Constitutional Entropy Budget",
+  "abbreviation": "CEB",
+  "version": "9.44.0",
+  "status": "RATIFIED",
+  "gate": "HUMAN-0",
+  "timestamp": "2026-04-03T00:00:00Z",
+  "cumulative_hard_class_invariants": 113,
+  "evidence_note": "FINDING-115-003: The recorded cumulative count (113) reflects the pre-ship state. Phase 111 introduced 3 new invariants (CEB-0, CEB-1, CEB-2), bringing actual cumulative count to 116 as verified at Phase 112 boot."
+}

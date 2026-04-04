@@ -50,6 +50,7 @@ def build_main_parser() -> argparse.ArgumentParser:
     bundle_parser.add_argument("--pr-id", default="", help="Optional PR id used to resolve an epoch from ledger history.")
 
     parser.add_argument("--verbose", action="store_true", help="Print boot stage diagnostics to stdout.")
+    parser.add_argument("--fast", action="store_true", help="Enable Dev Fast Path (skip expensive gates for non-functional changes).")
     parser.add_argument("--dry-run", action="store_true", help="Evaluate mutations without applying them.")
     parser.add_argument(
         "--replay",
@@ -76,6 +77,11 @@ def build_main_parser() -> argparse.ArgumentParser:
         "--adaad-status",
         action="store_true",
         help="Print ADAAD/DEVADAAD governance status summary and exit.",
+    )
+    parser.add_argument(
+        "--explain-gates",
+        action="store_true",
+        help="Print detailed rationale for gate triggering/skipping and exit.",
     )
     parser.add_argument(
         "--trigger-mode",
@@ -249,4 +255,40 @@ def handle_status_report(*, adaad_status: bool, trigger_mode: str, status_format
         if status_format == "both":
             print()
         print(report_as_json(report))
+    return True
+
+
+def handle_explain_gates(*, explain_gates: bool) -> bool:
+    if not explain_gates:
+        return False
+    
+    from runtime.governance.fast_path_policy import get_operating_mode, get_required_gate_tiers
+    from runtime.governance.change_classifier import classify_current_changes
+    
+    mode = get_operating_mode()
+    change_type = classify_current_changes()
+    required_tiers = get_required_gate_tiers(mode, change_type)
+    
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print("  ADAAD Governance Gate Explanation")
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    print(f"Operating Mode: {mode.value}")
+    print(f"Change Type:    {change_type.value}")
+    print(f"Required Tiers: {sorted(required_tiers)}")
+    print("------------------------------------------------------------")
+    
+    if mode.value == "dev_fast":
+        if change_type.value == "non_functional":
+            print("RATIONALE: Non-functional changes (docs/comments) in Dev Fast Path")
+            print("bypass expensive gates (T1 tests, T2 replay, T3 evidence) to")
+            print("increase local iteration speed while preserving static health (T0).")
+        else:
+            print("RATIONALE: Functional changes in Dev Fast Path skip Tier 3")
+            print("(documentation completeness) but require Tier 1 (unit/lint/type)")
+            print("to ensure code quality during local dev.")
+    else:
+        print("RATIONALE: Governed Release Path (or CI) requires the full")
+        print("gate stack (T0-T3) to guarantee constitutional compliance.")
+    
+    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     return True

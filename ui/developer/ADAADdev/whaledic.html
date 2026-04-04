@@ -364,10 +364,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <div class="dork-inp-wrap">
     <div class="dchips">
       <span class="chip" onclick="dorkPrompt('Governance gate status?')">gate status</span>
-      <span class="chip" onclick="dorkPrompt('Last mutation approved?')">last mutation</span>
+      <span class="chip" onclick="dorkPrompt('Run a new mutation cycle')">run mutation</span>
+      <span class="chip" onclick="dorkPrompt('Are there any pending approvals?')">pending approvals</span>
       <span class="chip" onclick="dorkPrompt('Replay score and divergence?')">replay</span>
       <span class="chip" onclick="dorkPrompt('Agent triad health?')">agents</span>
-      <span class="chip" onclick="dorkPrompt('Any release blockers?')">blockers</span>
     </div>
     <div class="twarn" id="twarn">\u26a0 Token budget nearing limit \u2014 context will be trimmed.</div>
     <div class="apiwarn" id="apiwarn">Anthropic key unavailable \u2014 dork is in read-only mode.</div>
@@ -438,12 +438,89 @@ function renderInsights(g,m,r,rd,ag){const agents=ag?.agents??{};const health=Ob
 async function refreshAll(){const [g,m,r,ep,ag,ld,wh,rd]=await Promise.all([safe('governance','governance'),safe('mutations','mutations'),safe('replay','replay'),safe('epoch','epoch'),safe('agents','agents'),safe('ledger','ledger'),safe('webhooks','whRecent'),safe('readiness','readiness')]);rs={gov:g,muts:m,rep:r,epoch:ep,agents:ag,ledger:ld,wh:wh,ready:rd};renderPills(g,r,ep,rd);renderRuntime(g,ep);renderStats(r,rd,ep);renderGate(g);renderMuts(m,'ml-overview');renderMuts(m,'ml-full');renderAgents(ag);renderLedger(ld);renderWH(wh,'wh-overview');renderWH(wh,'wh-full');renderReplay(r);renderFlightPlan(g,m,r,rd);renderInsights(g,m,r,rd,ag);renderDebt();bus('refresh','all panels ok');}
 async function loadMoreLedger(){ledgerOff+=50;const d=await apiFetch(`${ROUTES.ledger}&offset=${ledgerOff}`,MOCK.ledger);renderLedger(d,true);}
 function simWH(){const t=['push','pull_request','check_run','issue_comment','pull_request_review'];const type=t[Math.floor(Math.random()*t.length)];const ts=new Date().toLocaleTimeString();['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);const row=document.createElement('div');row.className='wh-row';row.innerHTML=`<span class="wh-type">${type}</span><span class="wh-desc">InnovativeAI-adaad/ADAAD</span><span class="wh-ts">${ts}</span><span class="tag tag-a">sim</span>`;el.insertBefore(row,el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;bus('wh_sim',type);}
-function startSSE(){try{const src=new EventSource(ROUTES.whStream);src.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='connected'){bus('sse','connected');return;}const row=document.createElement('div');row.className='wh-row';const t=String(d.event??'\u2014').replace('github_webhook_','');row.innerHTML=`<span class="wh-type">${esc(t)}</span><span class="wh-desc">${esc(d.repo??'\u2014')}</span><span class="wh-ts">live</span><span class="tag tag-w">sse</span>`;['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);el.insertBefore(row.cloneNode(true),el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;}catch(_){}};src.onerror=()=>{bus('sse_err','stream closed');src.close()};}catch(e){bus('sse_unavail',e.message);}}
-function buildSP(){const lc=rs?JSON.stringify({governance:rs.gov,replay:rs.rep,epoch:rs.epoch,agents:rs.agents,readiness:rs.ready,mutations_recent:rs.muts?.mutations?.slice(-5)},null,2):'[unavailable]';return `You are dork, the ADAADinside\u2122 developer intelligence assistant for the ADAAD governed autonomy OS.\n\n## ADAAD Architecture\nADAAD is a governance-native self-evolving software system.\n- GovernanceGate: 7-check constitutional enforcement. Non-bypassable.\n- Constitution: v0.9.0, 23 rules. Violation \u2192 mutation_enabled=False.\n- Agent Triad: ArchitectAgent (UCB1 bandit proposer), DreamMode (task discovery), BeastModeLoop (ancestry validator).\n- Evidence Ledger: append-only, SHA-256 hash-chained, tamper-evident.\n- Deterministic Replay: every decision byte-identical. Divergence halts system.\n- DEVADAAD: build + merge authority. All 5 gate tiers must PASS.\n- Whale.Dic: developer intelligence interface (this UI). Read-only observer.\n\n## LIVE RUNTIME STATE\n${lc}\n\n## Constraints\nYou are read-only. Be concise and developer-oriented. Reference specific data from runtime state.`;}
+function startSSE(){try{const src=new EventSource(ROUTES.whStream);src.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event==='connected'){bus('sse','connected');return;}const row=document.createElement('div');row.className='wh-row';const t=String(d.event??'\u2014').replace('github_webhook_','');row.innerHTML=`<span class="wh-type">${esc(t)}</span><span class="wh-desc">${esc(d.repo??'\u2014')}</span><span class="wh-ts">live</span><span class="tag tag-w">sse</span>`;['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);el.insertBefore(row.cloneNode(true),el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;refreshAll();}catch(_){refreshAll();}};src.onerror=()=>{bus('sse_err','stream closed');src.close()};}catch(e){bus('sse_unavail',e.message);}}
+function buildSP(){const lc=rs?JSON.stringify({governance:rs.gov,replay:rs.rep,epoch:rs.epoch,agents:rs.agents,readiness:rs.ready,mutations_recent:rs.muts?.mutations?.slice(-5)},null,2):'[unavailable]';return `You are dork, the ADAADinside\u2122 developer intelligence assistant for the ADAAD governed autonomy OS. You are interacting with the Governor, Dustin.\n\n## ADAAD Architecture\nADAAD is a governance-native self-evolving software system.\n- GovernanceGate: 7-check constitutional enforcement. Non-bypassable.\n- Constitution: v0.9.0, 23 rules. Violation \u2192 mutation_enabled=False.\n- Agent Triad: ArchitectAgent (UCB1 bandit proposer), DreamMode (task discovery), BeastModeLoop (ancestry validator).\n- Evidence Ledger: append-only, SHA-256 hash-chained, tamper-evident.\n- Deterministic Replay: every decision byte-identical. Divergence halts system.\n- DEVADAAD: build + merge authority. All 5 gate tiers must PASS.\n- Whale.Dic: developer intelligence interface (this UI). Read-only observer.\n\n## GOVERNOR CAPABILITIES\nYou can assist Dustin in performing governed actions:\n1. RUN MUTATION: You can trigger a new mutation cycle (16-step CEL).\n2. PENDING APPROVALS: You can check the queue for mutations awaiting human-0 sign-off.\n3. DECIDE APPROVAL: You can record Dustin's approval or rejection for a specific request ID.\n\n## LIVE RUNTIME STATE\n${lc}\n\n## Constraints\nBe concise and developer-oriented. Reference specific data from runtime state. When asked to run a mutation or approve a request, guide Dustin on how to do it or confirm the action.`;}
 function restoreConv(){try{const s=sessionStorage.getItem(HK);if(s)conv=JSON.parse(s);}catch(_){}}
 function persistConv(){try{sessionStorage.setItem(HK,JSON.stringify(conv.slice(-30)));}catch(_){}}
-function addMsg(role,text,think=false){const msgs=document.getElementById('dork-msgs');const div=document.createElement('div');div.className=`dork-msg ${role}`;div.id=think?'dthink':'';const init=role==='user'?'Y':'d';const body=think?`<div class="dthink"><div class="ddot"></div><div class="ddot"></div><div class="ddot"></div></div>`:`<div class="dtext">${fmt(text)}</div>`;div.innerHTML=`<div class="dav ${role}">${init}</div><div class="dbody"><div class="dsender">${role==='user'?'you':'dork'}</div>${body}</div>`;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
-async function sendDork(){const inp=document.getElementById('dinp');const msg=inp.value.trim();if(!msg||streaming)return;if(rateGated()){bus('rate_gate','5 req/min max');return;}inp.value='';inp.style.height='auto';conv.push({role:'user',content:msg});addMsg('user',msg);addMsg('assistant','',true);streaming=true;reqTs.push(Date.now());try{const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSP(),messages:conv.slice(-16).map(t=>({role:t.role,content:t.content}))})});const data=await resp.json();const text=data?.content?.[0]?.text??(data?.error?.message?`API error: ${data.error.message}`:'No response.');document.getElementById('dthink')?.remove();conv.push({role:'assistant',content:text});totalTok+=estTok(msg)+(data?.usage?.output_tokens??estTok(text));if(totalTok>TOKEN_WARN)document.getElementById('twarn').style.display='block';addMsg('assistant',text);persistConv();bus('dork',`${data?.usage?.output_tokens??'?'}t`);}catch(e){document.getElementById('dthink')?.remove();const em=`dork error: ${e?.message??'request failed'}`;conv.push({role:'assistant',content:em});addMsg('assistant',em);document.getElementById('apiwarn').style.display='block';bus('dork_err',e.message);}finally{streaming=false;}}
+function addMsg(role,text,think=false){const msgs=document.getElementById('dork-msgs');const div=document.createElement('div');div.className=`dork-msg ${role}`;div.id=think?'dthink':'';const init=role==='user'?'D':'d';const body=think?`<div class="dthink"><div class="ddot"></div><div class="ddot"></div><div class="ddot"></div></div>`:`<div class="dtext">${fmt(text)}</div>`;div.innerHTML=`<div class="dav ${role}">${init}</div><div class="dbody"><div class="dsender">${role==='user'?'Dustin':'dork'}</div>${body}</div>`;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
+if(window.__grok_bridge_active){const w=document.getElementById('apiwarn');w.innerHTML=`Anthropic key unavailable \u2014 utilizing local <b>Grok/Ollama</b> bridge.`;w.style.display='block';w.style.borderLeft='3px solid var(--neon-blue)';}
+const DORK_FALLBACK = {
+  "gate": () => `Gate is currently ${rs?.gov?.locked ? 'LOCKED' : 'OPEN'}. Tier: ${rs?.gov?.tier || 'unknown'}.`,
+  "mutation": () => `Latest mutation: ${rs?.muts?.mutations?.slice(-1)[0]?.event || 'none'}. Total in queue: ${rs?.muts?.total || 0}.`,
+  "replay": () => `Current replay score: ${rs?.rep?.score || '0.000'}. Divergence: ${rs?.rep?.divergence || 'False'}.`,
+  "health": () => `System is ${rs?.ready?.readiness_score > 0.8 ? 'HEALTHY' : 'DEGRADED'}. Blockers: ${rs?.ready?.blockers?.length || 0}.`,
+  "help": () => `I can help with: gate status, last mutation, replay scores, agent health, and release blockers.`
+};
+const KB = {
+  "what is adaad": "ADAAD is a governance-native autonomy OS for software evolution. It uses a 16-rule Constitutional Gate to ensure all AI-driven changes are deterministic, auditable, and safe.",
+  "agents": "The Triad: Architect (UCB1 bandit strategy), Dream (state discovery), and Beast (aggressive validation). they compete; governance decides.",
+  "gate": "GovernanceGate enforces 16 constitutional rules. Currently in v0.9.0. If any rule fails, the mutation is blocked.",
+  "ledger": "The Evidence Ledger is a SHA-256 hash-chained log of every decision. It provides an immutable audit trail for the entire evolution lifecycle.",
+  "replay": "Deterministic Replay (CEL-REPLAY-0) ensures every decision can be re-executed to produce byte-identical evidence. Divergence halts the system.",
+  "hello": "Hello! I'm dork. I have live access to the ADAAD runtime. Ask me about the gate, mutations, or agents.",
+  "hi": "Hi there. Ready to audit some mutations?",
+  "help": "I can analyze: gate status, recent mutations, replay scores, agent health, and release blockers. I also have a deep knowledge base of ADAAD internals."
+};
+async function triggerMutation(){bus('mutation','triggering cycle...');try{const r=await fetch('/api/mutations/trigger-epoch',{method:'POST',headers:{'X-Tenant-Id':'adaad-default','X-Workspace-Id':'default','X-Tenant-Scope':'tier-0'}});const d=await r.json();if(d.ok){return `[*] Mutation cycle triggered. Status: ${d.status}. Check Event Bus for progress.`;}return `[-] Mutation trigger failed: ${d.detail||'unknown error'}`;}catch(e){return `[-] Connection error: ${e.message}`;}}
+async function checkApprovals(){bus('gov','checking pending requests...');try{const r=await fetch('/api/governance/approvals/pending');const d=await r.json();if(d.ok && d.pending.length){return `I found ${d.pending.length} pending approval request(s):\n\n` + d.pending.map(p => `- **${p.approval_id}**: ${p.reason} (Mutation: ${p.mutation_id.slice(0,8)})\n  [Click to Approve]`).join('\n') + `\n\nTo approve, say "approve <id>".`;}return "There are no pending approval requests at this time.";}catch(e){return `[-] Failed to fetch approvals: ${e.message}`;}}
+async function decideApproval(id,app){bus('gov',`${app?'approving':'rejecting'} ${id}...`);try{const r=await fetch(`/api/governance/approvals/${id}/decide`,{method:'POST',headers:{'Content-Type':'application/json','X-Tenant-Id':'adaad-default','X-Workspace-Id':'default','X-Tenant-Scope':'tier-0'},body:JSON.stringify({approved:app,operator_id:'Dustin',notes:'Approved via dork interface'})});const d=await r.json();if(d.ok){return `[+] Decision recorded for **${id}**. Status: ${d.decision.status}.`;}return `[-] Decision failed: ${d.detail||'unknown error'}`;}catch(e){return `[-] Connection error: ${e.message}`;}}
+
+function getLocalDork(msg) {
+  const low = msg.toLowerCase().replace(/[?!.]/g, '');
+  if (low.includes('hello') || low === 'hi' || low === 'hey') return KB.hello;
+  if (low.includes('what is adaad')) return KB["what is adaad"];
+  if (low.includes('run mutation') || low.includes('trigger mutation') || low.includes('run a new mutation')) return "MUTATION_TRIGGER";
+  if (low.includes('pending approval') || low.includes('check approval')) return "APPROVAL_CHECK";
+  if (low.startsWith('approve ')) return "APPROVAL_DECIDE_TRUE:" + msg.split(' ')[1];
+  if (low.startsWith('reject ')) return "APPROVAL_DECIDE_FALSE:" + msg.split(' ')[1];
+  if (low.includes('gate') || low.includes('lock')) return DORK_FALLBACK.gate();
+  if (low.includes('mutation') || low.includes('last')) return DORK_FALLBACK.mutation();
+  if (low.includes('replay') || low.includes('diverge')) return DORK_FALLBACK.replay();
+  if (low.includes('health') || low.includes('status') || low.includes('triad')) return DORK_FALLBACK.health();
+  if (low.includes('blocker')) return DORK_FALLBACK.health();
+  if (low.includes('ledger') || low.includes('log')) return KB.ledger;
+  if (low.includes('who are the agents')) return KB.agents;
+  if (low.includes('help') || low.includes('what can')) return KB.help;
+  
+  // Fuzzy match KB
+  for (const [k, v] of Object.entries(KB)) {
+    if (low.includes(k)) return v;
+  }
+  return null;
+}
+async function sendDork(){const inp=document.getElementById('dinp');const msg=inp.value.trim();if(!msg||streaming)return;if(rateGated()){bus('rate_gate','5 req/min max');return;}inp.value='';inp.style.height='auto';conv.push({role:'user',content:msg});addMsg('user',msg);addMsg('assistant','',true);streaming=true;reqTs.push(Date.now());try{
+const local = getLocalDork(msg);
+let text;
+if (local === "MUTATION_TRIGGER") { text = await triggerMutation(); }
+else if (local === "APPROVAL_CHECK") { text = await checkApprovals(); }
+else if (local && local.startsWith("APPROVAL_DECIDE_TRUE:")) { text = await decideApproval(local.split(':')[1], true); }
+else if (local && local.startsWith("APPROVAL_DECIDE_FALSE:")) { text = await decideApproval(local.split(':')[1], false); }
+else if (local && !window.__anthropic_key_available && !window.__grok_bridge_active) {
+  await new Promise(r => setTimeout(r, 400));
+  text = `[Local] ${local}`;
+} else {
+  let resp;
+  if(window.__anthropic_key_available){
+    resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSP(),messages:conv.slice(-16).map(t=>({role:t.role,content:t.content}))})});
+  }else{
+    resp=await fetch('/api/grok/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conv.slice(-16).map(t=>({role:t.role,content:t.content}))})});
+  }
+  if(!resp.ok){
+    const err = await resp.json().catch(() => ({detail: resp.statusText}));
+    if (local) {
+      text = `[Bridge Offline] ${local}`;
+      bus('bridge_fail', err.detail);
+    } else {
+      text = `I'm currently offline (bridge error: ${err.detail}). However, I can still answer basic questions about the gate, mutations, and agents using my local intelligence.`;
+    }
+  } else {
+    const data=await resp.json();
+    text=data?.content?.[0]?.text??(data?.error?.message?`API error: ${data.error.message}`:'No response.');
+    totalTok+=estTok(msg)+(data?.usage?.output_tokens??estTok(text));
+    bus('dork',`${data?.usage?.output_tokens??'?'}t`);
+  }
+}
+document.getElementById('dthink')?.remove();conv.push({role:'assistant',content:text});if(totalTok>TOKEN_WARN)document.getElementById('twarn').style.display='block';addMsg('assistant',text);persistConv();}catch(e){document.getElementById('dthink')?.remove();const em=`dork error: ${e?.message??'request failed'}`;conv.push({role:'assistant',content:em});addMsg('assistant',em);document.getElementById('apiwarn').style.display='block';bus('dork_err',e.message);}finally{streaming=false;}}
 function dorkPrompt(t){document.getElementById('dinp').value=t;sendDork();}
 function dorkKD(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDork();}}
 function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,72)+'px';}
@@ -454,7 +531,7 @@ function renderPalette(q){const query=(q||'').toLowerCase().trim();const list=do
 function runCmd(i){const cmd=CMDS[i];if(!cmd)return;cmd.fn();closePalette({target:{id:'palette-wrap'}});}
 function exportSnapshot(){if(!rs){bus('export','skipped_no_state');return;}const payload={ts:new Date().toISOString(),runtime:rs};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`whaledic_snapshot_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),200);bus('export','runtime_snapshot_saved');}
 document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}if(e.key==='Escape')closePalette({target:{id:'palette-wrap'}});if(e.key==='f'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT'){toggleFocus();}});
-restoreConv();renderDebt();refreshAll();startSSE();setInterval(refreshAll,30000);
+restoreConv();renderDebt();refreshAll();startSSE();
 </script>
 </body>
 </html>

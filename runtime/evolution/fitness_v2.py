@@ -31,6 +31,7 @@ _COMPOSITE_CEILING: float = 1.0
 
 # Signal keys in fixed canonical order (required for FIT-DET-0).
 # Phase 93 (INNOV-09 AFIT): aesthetic_fitness added as 7th signal.
+# Phase 107 (INNOV-22 MCF): market_fitness added as 8th signal.
 _SIGNAL_KEYS: tuple[str, ...] = (
     "test_fitness",
     "complexity_fitness",
@@ -39,19 +40,20 @@ _SIGNAL_KEYS: tuple[str, ...] = (
     "architectural_fitness",
     "determinism_fitness",
     "aesthetic_fitness",   # INNOV-09 — Phase 93
+    "market_fitness",      # INNOV-22 — Phase 107
 )
 
 # Default weights (must sum to 1.0; each in [0.05, 0.70]).
-# Phase 93: aesthetic_fitness introduced at 0.05; prior six signals
-# rebalanced proportionally to absorb the 0.05 reduction.
+# Phase 107: market_fitness introduced at 0.08; prior signals rebalanced.
 _DEFAULT_WEIGHTS: Dict[str, float] = {
-    "test_fitness":          0.28,
-    "complexity_fitness":    0.19,
-    "performance_fitness":   0.14,
-    "governance_compliance": 0.14,
-    "architectural_fitness": 0.11,
+    "test_fitness":          0.25,
+    "complexity_fitness":    0.17,
+    "performance_fitness":   0.13,
+    "governance_compliance": 0.13,
+    "architectural_fitness": 0.10,
     "determinism_fitness":   0.09,
-    "aesthetic_fitness":     0.05,   # AFIT-WEIGHT-0: range [0.05, 0.30]
+    "aesthetic_fitness":     0.05,
+    "market_fitness":        0.08,   # MCF-WEIGHT-0
 }
 
 # code_pressure is a modifier (−0.05 × net_node_additions), not a signal weight.
@@ -146,6 +148,7 @@ class FitnessContext:
     # INNOV-09 Phase 93: aesthetic readability score from AestheticFitnessScorer.
     # Defaults to 0.5 (neutral) — AFIT-0 fallback semantics when source unavailable.
     aesthetic_fitness: float = 0.5
+    market_fitness: float = 0.5
     # Code pressure: net AST node additions (positive = additions, negative = deletions)
     net_node_additions: int = 0
     # Replay result for FIT-DIV-0
@@ -178,6 +181,7 @@ class FitnessScores:
     architectural_fitness: float
     determinism_fitness: float
     aesthetic_fitness: float          # INNOV-09 Phase 93
+    market_fitness: float             # INNOV-22 Phase 107
     code_pressure_adjustment: float
     composite_score: float
     # FIT-DIV-0 override flag
@@ -197,6 +201,7 @@ class FitnessScores:
             "architectural_fitness": self.architectural_fitness,
             "determinism_fitness": self.determinism_fitness,
             "aesthetic_fitness": self.aesthetic_fitness,
+            "market_fitness": self.market_fitness,
             "code_pressure_adjustment": self.code_pressure_adjustment,
             "composite_score": self.composite_score,
             "determinism_override": self.determinism_override,
@@ -257,6 +262,11 @@ class FitnessEngineV2:
         self._architecture_active: bool = (
             os.getenv("PHASE62_ARCH_SIGNAL", "").strip().lower() in self._TRUTHY
         )
+        self._live_signal: Dict[str, Any] = {}
+
+    def inject_live_signal(self, payload: Dict[str, Any]) -> None:
+        """Inject live market signals into the engine (Phase 107 MCF)."""
+        self._live_signal = dict(payload)
 
     @property
     def architecture_active(self) -> bool:
@@ -269,10 +279,11 @@ class FitnessEngineV2:
           1. FIT-DIV-0 check  (determinism override applied first)
           2. Signal collection
           3. FIT-ARCH-0 neutral substitution
-          4. Code pressure modifier
-          5. Weighted composite accumulation (explicit order)
-          6. Composite clamp
-          7. score_hash computation
+          4. MCF-INTEGRATE-0 live market signal enrichment
+          5. Code pressure modifier
+          6. Weighted composite accumulation (explicit order)
+          7. Composite clamp
+          8. score_hash computation
         """
         # ------------------------------------------------------------------ #
         # Step 1 — FIT-DIV-0: replay divergence → total rejection
@@ -282,6 +293,13 @@ class FitnessEngineV2:
         # ------------------------------------------------------------------ #
         # Step 2 — Collect per-signal scores (bounded [0.0, 1.0] by clamping)
         # ------------------------------------------------------------------ #
+        market_fitness = context.market_fitness
+        # MCF-INTEGRATE-0: apply live signal override if available
+        if self._live_signal.get("epoch_id") == context.epoch_id:
+            live_score = self._live_signal.get("live_market_score")
+            if live_score is not None:
+                market_fitness = float(live_score)
+
         raw_signals: Dict[str, float] = {
             "test_fitness": _clamp(context.test_fitness),
             "complexity_fitness": _clamp(context.complexity_fitness),
@@ -290,6 +308,7 @@ class FitnessEngineV2:
             "architectural_fitness": _clamp(context.architectural_fitness),
             "determinism_fitness": _clamp(context.determinism_fitness),
             "aesthetic_fitness": _clamp(context.aesthetic_fitness),   # INNOV-09
+            "market_fitness": _clamp(market_fitness),                 # INNOV-22
         }
 
         # ------------------------------------------------------------------ #
@@ -344,6 +363,7 @@ class FitnessEngineV2:
             architectural_fitness=raw_signals["architectural_fitness"],
             determinism_fitness=raw_signals["determinism_fitness"],
             aesthetic_fitness=raw_signals["aesthetic_fitness"],
+            market_fitness=raw_signals["market_fitness"],
             code_pressure_adjustment=code_pressure_adjustment,
             composite_score=composite,
             determinism_override=determinism_override,
