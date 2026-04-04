@@ -128,41 +128,40 @@
   <!-- Phase rows -->
   <g transform="translate(0,28)">
     <rect width="360" height="22" rx="4" fill="#0d1a2a" stroke="#1a2a3a"/>
-    <circle cx="12" cy="11" r="5" fill="#00ff88" opacity=".9"/>
+    <circle cx="12" cy="11" r="5" fill="#00ff88" opacity="0.9"/>
     <text x="24" y="15" font-family="'Courier New',monospace" font-size="11" fill="#00ff88">Ph.115</text>
     <text x="74" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#e0e6f0">The Mirror Test (MIRROR) 🏁</text>
     <text x="300" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="10" fill="#00d4ff">INNOV-30</text>
   </g>
   <g transform="translate(0,55)">
     <rect width="360" height="22" rx="4" fill="#0d1a2a" stroke="#1a2a3a"/>
-    <circle cx="12" cy="11" r="5" fill="#00d4ff" opacity=".8"/>
+    <circle cx="12" cy="11" r="5" fill="#00d4ff" opacity="0.8"/>
     <text x="24" y="15" font-family="'Courier New',monospace" font-size="11" fill="#00d4ff">Ph.114</text>
     <text x="74" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#8b9ab0">Curiosity-Driven Exploration (CURIOSITY)</text>
     <text x="300" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="10" fill="#8b9ab0">INNOV-29</text>
   </g>
   <g transform="translate(0,82)">
     <rect width="360" height="22" rx="4" fill="#0d1a2a" stroke="#1a2a3a"/>
-    <circle cx="12" cy="11" r="5" fill="#a855f7" opacity=".7"/>
+    <circle cx="12" cy="11" r="5" fill="#a855f7" opacity="0.7"/>
     <text x="24" y="15" font-family="'Courier New',monospace" font-size="11" fill="#a855f7">Ph.113</text>
     <text x="74" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#8b9ab0">Self-Awareness Invariant (SELF-AWARE)</text>
     <text x="300" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="10" fill="#8b9ab0">INNOV-28</text>
   </g>
   <g transform="translate(0,109)">
     <rect width="360" height="22" rx="4" fill="#0d1a2a" stroke="#1a2a3a"/>
-    <circle cx="12" cy="11" r="5" fill="#ff8800" opacity=".7"/>
+    <circle cx="12" cy="11" r="5" fill="#ff8800" opacity="0.7"/>
     <text x="24" y="15" font-family="'Courier New',monospace" font-size="11" fill="#ff8800">Ph.112</text>
     <text x="74" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#8b9ab0">Mutation Blast Radius Modeling (BLAST)</text>
     <text x="300" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="10" fill="#8b9ab0">INNOV-27</text>
   </g>
   <g transform="translate(0,136)">
     <rect width="360" height="22" rx="4" fill="#0d1a2a" stroke="#1a2a3a"/>
-    <circle cx="12" cy="11" r="5" fill="#ffcc00" opacity=".6"/>
+    <circle cx="12" cy="11" r="5" fill="#ffcc00" opacity="0.6"/>
     <text x="24" y="15" font-family="'Courier New',monospace" font-size="11" fill="#ffcc00">Ph.111</text>
     <text x="74" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="11" fill="#8b9ab0">Constitutional Entropy Budget (CEB)</text>
     <text x="300" y="15" font-family="'Segoe UI',Arial,sans-serif" font-size="10" fill="#8b9ab0">INNOV-26</text>
   </g>
-
-  <!-- Live indicator -->
+<!-- Live indicator -->
   <g transform="translate(0,175)">
     <rect width="360" height="28" rx="5" fill="#001a00" stroke="#00ff88" stroke-width="1"/>
     <circle cx="14" cy="14" r="5" fill="#00ff88"><animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.4;1" dur="1s" repeatCount="indefinite"/></circle>

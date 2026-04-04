@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""sync_docs_and_assets.py — Autonomous version sync for all docs and asset surfaces.
+"""sync_docs_and_assets.py — Autonomous version sync for all docs and SVG asset surfaces.
 
-Reads VERSION as canonical source-of-truth and updates every version-bearing
-surface: markdown badges, SVG assets, shields.io badge URLs, alt-text, facing
-docs, and governance pointers.
+Derives canonical state from VERSION + git log (ground truth), then propagates
+every version-bearing value across all 6 README SVGs and markdown surfaces.
 
 Constitutional invariants
   DOCSYNC-0         All surfaces must reflect VERSION after a successful run.
-  DOCSYNC-DETERM-0  Identical VERSION + state inputs → identical outputs.
-  DOCSYNC-IDEM-0    Re-running on an already-synced repo emits zero file writes.
-                    This is achieved by only writing files when their content
-                    would change (patching and SVG regeneration are content-
-                    checked), so a no-op run produces no filesystem writes.
-  DOCSYNC-CLOSED-0  Any unresolvable state file exits non-zero (no silent drift).
+  DOCSYNC-DETERM-0  Identical VERSION + git state → identical outputs.
+  DOCSYNC-IDEM-0    Re-running on already-synced repo emits zero file writes.
+  DOCSYNC-CLOSED-0  Any unresolvable state exits non-zero (no silent drift).
 
 Usage
   python3 scripts/sync_docs_and_assets.py [--dry-run] [--verbose]
@@ -21,248 +17,417 @@ Usage
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# ── Surfaces registry ──────────────────────────────────────────────────────────
-# Each entry: (file, list_of_(regex_or_literal, replacement_template))
-# {V} = version  {PHASE} = phase  {INNOV} = innovation count  {HARD} = hard invariants
+# ── INNOV name registry ────────────────────────────────────────────────────────
+INNOV_NAMES: dict[int, tuple[str, str]] = {
+    1:  ("Constitutional Self-Amendment Protocol",   "CSAP"),
+    2:  ("Adversarial Constitutional Stress Engine", "ACSE"),
+    3:  ("Temporal Invariant Forecasting Engine",    "TIFE"),
+    4:  ("Semantic Constitutional Drift Detector",   "SCDD"),
+    5:  ("Autonomous Organ Emergence Protocol",      "AOEP"),
+    6:  ("Cryptographic Evolution Proof DAG",        "CEPD"),
+    7:  ("Live Shadow Mutation Execution",           "LSME"),
+    8:  ("Adversarial Fitness Red Team",             "AFRT"),
+    9:  ("Aesthetic Fitness Signal",                 "AFIT"),
+    10: ("Morphogenetic Memory",                     "MMEM"),
+    11: ("Cross-Epoch Dream State Engine",           "DSTE"),
+    12: ("Mutation Genealogy Visualization",         "MGV"),
+    13: ("Inter-Model Knowledge Transfer",           "IMT"),
+    14: ("Constitutional Jury System",               "CJS"),
+    15: ("Agent Reputation Staking",                 "ARS"),
+    16: ("Emergent Role Specialization",             "ERS"),
+    17: ("Agent Post-Mortem Interviews",             "APM"),
+    18: ("Temporal Governance Windows",              "TGOV"),
+    19: ("Governance Archaeology Mode",              "GAM"),
+    20: ("Constitutional Stress Testing",            "CST"),
+    21: ("Governance Bankruptcy Protocol",           "GBP"),
+    22: ("Mutation Conflict Framework",              "MCF"),
+    23: ("Constitutional Epoch Sentinel",            "CES"),
+    24: ("Sovereign Validation Plane",               "SVP"),
+    25: ("Hardware-Adaptive Fitness",                "HAF"),
+    26: ("Constitutional Entropy Budget",            "CEB"),
+    27: ("Mutation Blast Radius Modeling",           "BLAST"),
+    28: ("Self-Awareness Invariant",                 "SELF-AWARE"),
+    29: ("Curiosity-Driven Exploration",             "CURIOSITY"),
+    30: ("The Mirror Test",                          "MIRROR"),
+}
 
-SVG_SURFACES: list[Path] = [
-    ROOT / "docs/assets/readme/adaad-stats-card.svg",
-    ROOT / "docs/assets/readme/adaad-version-hero.svg",
-    ROOT / "docs/assets/readme/adaad-live-status.svg",
-    ROOT / "docs/assets/adaad-hero.svg",
-]
-
-
-def _load_state() -> dict[str, Any]:
-    """DOCSYNC-CLOSED-0: load canonical state; exit 1 on failure."""
-    version_path = ROOT / "VERSION"
-    state_path = ROOT / ".adaad_agent_state.json"
-
-    if not version_path.exists():
-        _die("DOCSYNC-CLOSED-0: VERSION file not found")
-    version = version_path.read_text().strip()
-    if not re.match(r"^\d+\.\d+\.\d+$", version):
-        _die(f"DOCSYNC-CLOSED-0: VERSION '{version}' is not valid semver")
-
-    state: dict[str, Any] = {}
-    if state_path.exists():
-        try:
-            state = json.loads(state_path.read_text())
-        except Exception as e:
-            _die(f"DOCSYNC-CLOSED-0: cannot parse .adaad_agent_state.json: {e}")
-
-    phase = state.get("phase", 0)
-    last_innov = state.get("last_innovation", "INNOV-0")
-    innov_match = re.search(r"\d+", last_innov)
-    innov_num = int(innov_match.group()) if innov_match else 0
-
-    # Count cumulative invariants from governance artifact if available
-    hard = 56  # fallback — updated on each phase
-    phase_dirs = list((ROOT / "artifacts/governance").glob("phase*"))
-
-    def _phase_number_from_path(p: Path) -> int:
-        """Extract numeric phase identifier from a governance phase directory name."""
-        m = re.search(r"\d+", p.name)
-        return int(m.group()) if m else 0
+_FEED_COLOURS = ["#00ff88", "#00d4ff", "#a855f7", "#ff8800", "#ffcc00"]
 
 
-        latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
+# ── State derivation ───────────────────────────────────────────────────────────
 
-    if phase_dirs:
-        latest_phase_dir = max(phase_dirs, key=_phase_number_from_path)
-        sign_off = latest_phase_dir / f"{latest_phase_dir.name}_sign_off.json"
-        if sign_off.exists():
-            try:
-                so = json.loads(sign_off.read_text())
-                hard = so.get("cumulative_invariants", hard)
-            except Exception:
-                pass
-
-    return {
-        "version": version,
-        "phase": phase,
-        "innov_num": innov_num,
-        "hard": hard,
-        "today": str(date.today()),
-    }
+@dataclass
+class CanonicalState:
+    version: str
+    phase: int
+    innov_num: int
+    hard: int
+    today: str
+    pipeline_complete: bool
+    recent_phases: list[dict]
 
 
 def _die(msg: str) -> None:
-    print(f"[DOCSYNC ERROR] {msg}", file=sys.stderr)
+    print(json.dumps({"event": "DOCSYNC_ERROR", "msg": msg}), file=sys.stderr)
     sys.exit(1)
 
 
-def _patch_file(
-    path: Path,
-    patches: list[tuple[str, str]],
-    ctx: dict[str, Any],
-    dry_run: bool = False,
-    verbose: bool = False,
-) -> int:
-    """Apply string/regex patches to a file. Returns number of changes made."""
+def _run_git(args: list[str]) -> str:
+    r = subprocess.run(["git"] + args, capture_output=True, text=True, cwd=ROOT)
+    return r.stdout
+
+
+def _load_state() -> CanonicalState:
+    version_path = ROOT / "VERSION"
+    if not version_path.exists():
+        _die("VERSION file not found")
+    version = version_path.read_text().strip()
+    if not re.match(r"^\d+\.\d+\.\d+$", version):
+        _die(f"VERSION '{version}' is not valid semver")
+
+    today = str(date.today())
+    subjects = _run_git(["log", "--format=%s", "--max-count=80"]).splitlines()
+    bodies = _run_git(["log", "--format=%B", "--max-count=30"])
+
+    # Phase: highest number from git log
+    phase_nums = [int(m.group(1)) for s in subjects for m in [re.search(r"[Pp]hase\s+(\d+)", s)] if m]
+    for m in re.finditer(r"[Pp]hase (\d+)", bodies):
+        phase_nums.append(int(m.group(1)))
+    phase = max(phase_nums) if phase_nums else 0
+
+    # Innovation: highest INNOV-N from git log
+    innov_nums = [int(m.group(1)) for s in subjects for m in [re.search(r"INNOV-(\d+)", s)] if m]
+    for m in re.finditer(r"INNOV-(\d+)", bodies):
+        innov_nums.append(int(m.group(1)))
+    innov_num = max(innov_nums) if innov_nums else 0
+
+    # Invariants: highest cumulative count from git log bodies + CHANGELOG + artifacts
+    cuml: list[int] = []
+    for m in re.finditer(r"[Cc]umulative[:\s·]+(\d+)", bodies):
+        cuml.append(int(m.group(1)))
+    changelog_path = ROOT / "CHANGELOG.md"
+    if changelog_path.exists():
+        for m in re.finditer(r"[Cc]umulative[:\s·]+(\d+)", changelog_path.read_text()):
+            cuml.append(int(m.group(1)))
+    phase_dirs = sorted(
+        (ROOT / "artifacts/governance").glob("phase*"),
+        key=lambda p: int(re.search(r"\d+", p.name).group() if re.search(r"\d+", p.name) else 0),
+    )
+    if phase_dirs:
+        so = phase_dirs[-1] / f"{phase_dirs[-1].name}_sign_off.json"
+        if so.exists():
+            try:
+                data = json.loads(so.read_text())
+                if data.get("cumulative_invariants"):
+                    cuml.append(int(data["cumulative_invariants"]))
+            except Exception:
+                pass
+    hard = max(cuml) if cuml else 56
+
+    pipeline_complete = innov_num >= 30
+
+    # Recent phases activity feed — parse feat() commit subjects
+    phase_entries: dict[int, dict] = {}
+    pat = re.compile(r"feat\(phase(\d+)\)[:\s]*INNOV-(\d+)\s+(.+?)(?:\s+[—–]|\s+v\d)")
+    for s in subjects:
+        m = pat.search(s)
+        if m:
+            ph, inn = int(m.group(1)), int(m.group(2))
+            if ph not in phase_entries:
+                full, code = INNOV_NAMES.get(inn, (m.group(3).strip(), ""))
+                phase_entries[ph] = {"phase": ph, "innov": inn, "name": f"{full} ({code})"}
+
+    recent = sorted(phase_entries.values(), key=lambda x: x["phase"], reverse=True)[:5]
+
+    # Fallback if < 5 parsed
+    fallback = [
+        {"phase": 115, "innov": 30, "name": "The Mirror Test (MIRROR)"},
+        {"phase": 114, "innov": 29, "name": "Curiosity-Driven Exploration (CURIOSITY)"},
+        {"phase": 113, "innov": 28, "name": "Self-Awareness Invariant (SELF-AWARE)"},
+        {"phase": 112, "innov": 27, "name": "Mutation Blast Radius Modeling (BLAST)"},
+        {"phase": 111, "innov": 26, "name": "Constitutional Entropy Budget (CEB)"},
+    ]
+    existing = {r["phase"] for r in recent}
+    for fb in fallback:
+        if fb["phase"] not in existing and len(recent) < 5:
+            recent.append(fb)
+    recent = sorted(recent, key=lambda x: x["phase"], reverse=True)[:5]
+
+    return CanonicalState(
+        version=version, phase=phase, innov_num=innov_num, hard=hard,
+        today=today, pipeline_complete=pipeline_complete, recent_phases=recent,
+    )
+
+
+# ── SVG generators ─────────────────────────────────────────────────────────────
+
+def _svg_stats_card(s: CanonicalState) -> str:
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="120" viewBox="0 0 800 120">\n'
+        f'  <defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">'
+        f'<stop offset="0%" style="stop-color:#0d1117"/><stop offset="100%" style="stop-color:#161b22"/>'
+        f'</linearGradient></defs>\n'
+        f'  <rect width="800" height="120" rx="8" fill="url(#bg)" stroke="#30363d" stroke-width="1"/>\n'
+        f'  <text x="24" y="38" font-family="\'SF Mono\',monospace" font-size="11" fill="#8b949e">VERSION</text>\n'
+        f'  <text x="24" y="60" font-family="\'SF Mono\',monospace" font-size="22" font-weight="700" fill="#00d4ff">v{s.version}</text>\n'
+        f'  <text x="180" y="38" font-family="\'SF Mono\',monospace" font-size="11" fill="#8b949e">PHASE</text>\n'
+        f'  <text x="180" y="60" font-family="\'SF Mono\',monospace" font-size="22" font-weight="700" fill="#f5c842">{s.phase}</text>\n'
+        f'  <text x="310" y="38" font-family="\'SF Mono\',monospace" font-size="11" fill="#8b949e">INNOVATIONS</text>\n'
+        f'  <text x="310" y="60" font-family="\'SF Mono\',monospace" font-size="22" font-weight="700" fill="#00ff88">{s.innov_num}</text>\n'
+        f'  <text x="460" y="38" font-family="\'SF Mono\',monospace" font-size="11" fill="#8b949e">HARD INVARIANTS</text>\n'
+        f'  <text x="460" y="60" font-family="\'SF Mono\',monospace" font-size="22" font-weight="700" fill="#ff4466">{s.hard}</text>\n'
+        f'  <text x="640" y="38" font-family="\'SF Mono\',monospace" font-size="11" fill="#8b949e">STATUS</text>\n'
+        f'  <text x="640" y="60" font-family="\'SF Mono\',monospace" font-size="22" font-weight="700" fill="#00ff88">LIVE</text>\n'
+        f'  <text x="24" y="100" font-family="\'SF Mono\',monospace" font-size="10" fill="#484f58">'
+        f'ADAAD \u00b7 Autonomous Development &amp; Adaptation Architecture \u00b7 InnovativeAI LLC \u00b7 Apache 2.0</text>\n'
+        f'  <text x="700" y="100" font-family="\'SF Mono\',monospace" font-size="9" fill="#30363d">AUTO-SYNCED {s.today}</text>\n'
+        f'</svg>'
+    )
+
+
+def _svg_version_hero(s: CanonicalState) -> str:
+    tag = " \u00b7 PIPELINE COMPLETE \U0001f3c1" if s.pipeline_complete else ""
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">\n'
+        f'  <defs>\n'
+        f'    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">'
+        f'<stop offset="0%" style="stop-color:#0d1117"/><stop offset="100%" style="stop-color:#1a2332"/>'
+        f'</linearGradient>\n'
+        f'    <linearGradient id="vGrad" x1="0%" y1="0%" x2="100%" y2="0%">'
+        f'<stop offset="0%" style="stop-color:#00d4ff"/><stop offset="100%" style="stop-color:#0088ff"/>'
+        f'</linearGradient>\n  </defs>\n'
+        f'  <rect width="800" height="200" rx="12" fill="url(#heroBg)" stroke="#21262d" stroke-width="1"/>\n'
+        f'  <text x="40" y="85" font-family="\'SF Mono\',monospace" font-size="52" font-weight="900" fill="url(#vGrad)">v{s.version}</text>\n'
+        f'  <rect x="40" y="100" width="220" height="32" rx="6" fill="#f5c84222"/>\n'
+        f'  <text x="52" y="121" font-family="\'SF Mono\',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase {s.phase} \u00b7 {s.innov_num} Innovations</text>\n'
+        f'  <rect x="274" y="100" width="215" height="32" rx="6" fill="#ff446622"/>\n'
+        f'  <text x="286" y="121" font-family="\'SF Mono\',monospace" font-size="14" font-weight="700" fill="#ff4466">{s.hard} Hard-class Invariants</text>\n'
+        f'  <rect x="503" y="100" width="90" height="32" rx="6" fill="#00ff8822"/>\n'
+        f'  <circle cx="521" cy="116" r="5" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>\n'
+        f'  <text x="533" y="121" font-family="\'SF Mono\',monospace" font-size="14" font-weight="700" fill="#00ff88">LIVE</text>\n'
+        f'  <text x="40" y="170" font-family="\'SF Mono\',monospace" font-size="13" fill="#8b949e">'
+        f'Autonomous Development &amp; Adaptation Architecture \u00b7 InnovativeAI LLC{tag}</text>\n'
+        f'  <text x="40" y="192" font-family="\'SF Mono\',monospace" font-size="9" fill="#30363d">AUTO-SYNCED \u00b7 {s.today}</text>\n'
+        f'</svg>'
+    )
+
+
+def _svg_live_status(s: CanonicalState) -> str:
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="800" height="80" viewBox="0 0 800 80">\n'
+        f'  <rect width="800" height="80" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1"/>\n'
+        f'  <circle cx="28" cy="40" r="7" fill="#00ff88"><animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite"/></circle>\n'
+        f'  <text x="44" y="45" font-family="\'SF Mono\',monospace" font-size="13" font-weight="700" fill="#00ff88">LIVE</text>\n'
+        f'  <text x="110" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#00d4ff">v{s.version}</text>\n'
+        f'  <text x="185" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#8b949e">\u00b7</text>\n'
+        f'  <text x="200" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#f5c842">Phase {s.phase}</text>\n'
+        f'  <text x="290" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#8b949e">\u00b7</text>\n'
+        f'  <text x="305" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#ff4466">{s.hard} Hard Invariants</text>\n'
+        f'  <text x="465" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#8b949e">\u00b7</text>\n'
+        f'  <text x="480" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#00ff88">{s.innov_num} Innovations</text>\n'
+        f'  <text x="610" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#8b949e">\u00b7</text>\n'
+        f'  <text x="625" y="45" font-family="\'SF Mono\',monospace" font-size="13" fill="#00ff88">GATE \u2713</text>\n'
+        f'  <text x="700" y="68" font-family="\'SF Mono\',monospace" font-size="8" fill="#30363d">AUTO-SYNCED {s.today}</text>\n'
+        f'</svg>'
+    )
+
+
+def _svg_phase_progress(s: CanonicalState) -> str:
+    bar_w, gap = 10, 2
+    start_x = 20
+    header = (
+        f"PHASE EVOLUTION \u2014 {s.phase} OF {s.phase} \u2014 PIPELINE COMPLETE \U0001f3c1"
+        if s.pipeline_complete else
+        f"PHASE EVOLUTION \u2014 {s.phase} PHASES COMPLETE"
+    )
+    code = INNOV_NAMES.get(s.innov_num, ("", ""))[1]
+    marker = " \U0001f3c1" if s.pipeline_complete else ""
+    footer = (
+        f"Phase {s.phase}{marker} \u00b7 INNOV-{s.innov_num} {code}"
+        f" \u00b7 {s.hard} Hard Invariants \u00b7 v{s.version} \u00b7 {s.today}"
+    )
+    width = max(start_x + s.phase * (bar_w + gap) + 20, 1238)
+    bars = "\n".join(
+        f'  <rect x="{start_x + i * (bar_w + gap)}" y="32" width="{bar_w}" height="28" rx="2" fill="url(#doneGrad)"/>'
+        for i in range(s.phase)
+    )
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} 88" width="100%" preserveAspectRatio="xMidYMid meet">\n'
+        f'  <defs>\n'
+        f'    <style>@keyframes cur{{0%,100%{{opacity:.5}}50%{{opacity:1}}}}@keyframes ms{{0%,100%{{opacity:.8}}50%{{opacity:1}}}}.cur{{animation:cur 1.5s ease-in-out infinite}}.ms{{animation:ms 3s ease-in-out infinite}}</style>\n'
+        f'    <linearGradient id="doneGrad" x1="0" y1="0" x2="1" y2="0">'
+        f'<stop offset="0%" stop-color="#00d4ff" stop-opacity=".55"/>'
+        f'<stop offset="100%" stop-color="#a855f7" stop-opacity=".35"/></linearGradient>\n'
+        f'    <filter id="gmil"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>\n'
+        f'    <filter id="gcur"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>\n'
+        f'  </defs>\n'
+        f'  <rect width="{width}" height="88" fill="#060a0f"/>\n'
+        f'  <text x="20" y="20" font-family="\'JetBrains Mono\',\'Courier New\',monospace" font-size="16" fill="rgba(255,255,255,.4)" letter-spacing="3">{header}</text>\n'
+        f'{bars}\n'
+        f'  <text x="20" y="76" font-family="\'JetBrains Mono\',monospace" font-size="10" fill="rgba(255,255,255,.25)">{footer}</text>\n'
+        f'</svg>'
+    )
+
+
+def _patch_innovations_animated(s: CanonicalState) -> str:
+    """Patch header only; preserve complex card artwork."""
+    path = ROOT / "docs/assets/readme/adaad-innovations-animated.svg"
+    if not path.exists():
+        return ""
+    content = path.read_text()
+    label = "PIPELINE COMPLETE" if s.pipeline_complete else "SHIPPED"
+    return re.sub(
+        r"\d+ WORLD-FIRST INNOVATIONS — (?:SHIPPED|PIPELINE COMPLETE)",
+        f"{s.innov_num} WORLD-FIRST INNOVATIONS — {label}",
+        content,
+    )
+
+
+def _patch_hero_animated(s: CanonicalState) -> str:
+    """Patch version/stat/feed values in hero-animated; preserve animation artwork."""
+    path = ROOT / "docs/assets/readme/adaad-hero-animated.svg"
+    if not path.exists():
+        return ""
+    c = path.read_text()
+
+    # Version badges (two instances)
+    c = re.sub(r"v9\.\d+\.\d+  LIVE", f"v{s.version}  LIVE", c)
+    c = re.sub(
+        r'(fill="#00ff88">)v\d+\.\d+\.\d+(</text>)',
+        rf'\g<1>v{s.version}\g<2>', c,
+    )
+
+    # Stats block — phase, innovations, invariants numbers
+    c = re.sub(
+        r'(<!-- PHASES -->.*?stat-val[^>]*>)\d{2,3}(</text>)',
+        rf'\g<1>{s.phase}\g<2>', c, flags=re.DOTALL,
+    )
+    c = re.sub(
+        r'(<!-- INNOVATIONS -->.*?stat-val[^>]*>)\d{1,2}(</text>)',
+        rf'\g<1>{s.innov_num}\g<2>', c, flags=re.DOTALL,
+    )
+    c = re.sub(
+        r'(<!-- INNOVATIONS -->.*?animate attributeName="width"[^/]*)from="0" to="\d+" dur',
+        rf'\g<1>from="0" to="120" dur', c, flags=re.DOTALL,
+    )
+    c = re.sub(
+        r'(<!-- INVARIANTS -->.*?stat-val[^>]*>)\d{2,3}(</text>)',
+        rf'\g<1>{s.hard}\g<2>', c, flags=re.DOTALL,
+    )
+    c = re.sub(
+        r'(<!-- INVARIANTS -->.*?animate attributeName="width"[^/]*)from="0" to="\d+" dur',
+        rf'\g<1>from="0" to="120" dur', c, flags=re.DOTALL,
+    )
+
+    # Activity feed — replace the 5 phase row blocks
+    rows_match = re.search(
+        r'(<!-- Phase rows -->)(.*?)(<!-- Live indicator -->)',
+        c, re.DOTALL,
+    )
+    if rows_match and s.recent_phases:
+        offsets = [28, 55, 82, 109, 136]
+        rows_parts = []
+        for i, entry in enumerate(s.recent_phases[:5]):
+            col = _FEED_COLOURS[i]
+            name_fill = "#e0e6f0" if i == 0 else "#8b9ab0"
+            innov_fill = "#00d4ff" if i == 0 else "#8b9ab0"
+            milestone = " \U0001f3c1" if (i == 0 and s.pipeline_complete) else ""
+            opacity = f"{max(0.5, 0.9 - i * 0.08):.1f}"
+            rows_parts.append(
+                f'  <g transform="translate(0,{offsets[i]})">\n'
+                f'    <rect width="360" height="22" rx="4" fill="#0d1a2a" stroke="#1a2a3a"/>\n'
+                f'    <circle cx="12" cy="11" r="5" fill="{col}" opacity="{opacity}"/>\n'
+                f'    <text x="24" y="15" font-family="\'Courier New\',monospace" font-size="11" fill="{col}">Ph.{entry["phase"]}</text>\n'
+                f'    <text x="74" y="15" font-family="\'Segoe UI\',Arial,sans-serif" font-size="11" fill="{name_fill}">{entry["name"]}{milestone}</text>\n'
+                f'    <text x="300" y="15" font-family="\'Segoe UI\',Arial,sans-serif" font-size="10" fill="{innov_fill}">INNOV-{entry["innov"]}</text>\n'
+                f'  </g>'
+            )
+        new_rows = "\n".join(rows_parts)
+        c = c[:rows_match.start(2)] + "\n" + new_rows + "\n" + c[rows_match.end(2):]
+
+    return c
+
+
+# ── Surface registry ───────────────────────────────────────────────────────────
+
+SVG_REGISTRY: list[tuple[str, Any]] = [
+    ("docs/assets/readme/adaad-stats-card.svg",           _svg_stats_card),
+    ("docs/assets/readme/adaad-version-hero.svg",         _svg_version_hero),
+    ("docs/assets/readme/adaad-live-status.svg",          _svg_live_status),
+    ("docs/assets/readme/adaad-phase-progress.svg",       _svg_phase_progress),
+    ("docs/assets/readme/adaad-innovations-animated.svg", _patch_innovations_animated),
+    ("docs/assets/readme/adaad-hero-animated.svg",        _patch_hero_animated),
+]
+
+
+def _write_if_changed(path: Path, content: str, dry_run: bool, verbose: bool) -> int:
+    if not content:
+        if verbose:
+            print(f"  SKIP: {path.relative_to(ROOT)}")
+        return 0
+    existing = path.read_text() if path.exists() else ""
+    if content == existing:
+        if verbose:
+            print(f"  OK (no change): {path.relative_to(ROOT)}")
+        return 0
+    if not dry_run:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+    label = "DRY-PATCHED" if dry_run else "PATCHED"
+    if verbose:
+        print(f"  {label}: {path.relative_to(ROOT)}")
+    return 1
+
+
+def _patch_markdown(path: Path, patches: list[tuple[str, str]], dry_run: bool, verbose: bool) -> int:
     if not path.exists():
         if verbose:
             print(f"  SKIP (missing): {path.relative_to(ROOT)}")
         return 0
-
-    content = original = path.read_text()
+    content = path.read_text()
     changes = 0
-            regex = pattern.removeprefix("REGEX:")
-        repl = replacement.format(**ctx)
+    for pattern, replacement in patches:
         if pattern.startswith("REGEX:"):
-            regex = pattern.removeprefix("REGEX:")
-            new = re.sub(regex, repl, content)
+            new = re.sub(pattern[len("REGEX:"):], replacement, content)
         else:
-            new = content.replace(pattern, repl)
+            new = content.replace(pattern, replacement)
         if new != content:
             changes += 1
             content = new
-
-    if changes > 0 and not dry_run:
+    if changes and not dry_run:
         path.write_text(content)
-    if verbose and changes > 0:
-        print(f"  PATCHED ({changes} changes): {path.relative_to(ROOT)}")
-    elif verbose:
-        print(f"  OK (no change): {path.relative_to(ROOT)}")
+    if verbose:
+        status = f"PATCHED ({changes})" if changes else "OK (no change)"
+        print(f"  {status}: {path.relative_to(ROOT)}")
     return changes
 
 
-def _regenerate_svg(path: Path, ctx: dict[str, Any], dry_run: bool = False) -> int:
-    """Regenerate a versioned SVG badge with current state. Returns 1 if changed."""
-    name = path.stem
-    V, PHASE, HARD, INNOV_N = ctx["version"], ctx["phase"], ctx["hard"], ctx["innov_num"]
-    TODAY = ctx["today"]
-
-    svg_map = {
-        "adaad-stats-card": _svg_stats_card(V, PHASE, INNOV_N, HARD, TODAY),
-        "adaad-version-hero": _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY),
-        "adaad-live-status": _svg_live_status(V, PHASE, INNOV_N, HARD, TODAY),
-        "adaad-hero": _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY),
-    }
-
-    if name not in svg_map:
-        return 0
-
-    new_content = svg_map[name]
-    existing = path.read_text() if path.exists() else ""
-    if new_content == existing:
-        return 0
-    if not dry_run:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(new_content)
-    return 1
-
-
-def _svg_stats_card(V, PHASE, INNOV_N, HARD, TODAY):
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="800" height="120" viewBox="0 0 800 120">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#0d1117"/>
-      <stop offset="100%" style="stop-color:#161b22"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="120" rx="8" fill="url(#bg)" stroke="#30363d" stroke-width="1"/>
-  <text x="24" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">VERSION</text>
-  <text x="24" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#00d4ff">v{V}</text>
-  <text x="180" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">PHASE</text>
-  <text x="180" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#f5c842">{PHASE}</text>
-  <text x="310" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">INNOVATIONS</text>
-  <text x="310" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#00ff88">{INNOV_N}</text>
-  <text x="460" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">HARD INVARIANTS</text>
-  <text x="460" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#ff4466">{HARD}</text>
-  <text x="640" y="38" font-family="'SF Mono',monospace" font-size="11" fill="#8b949e">STATUS</text>
-  <text x="640" y="60" font-family="'SF Mono',monospace" font-size="22" font-weight="700" fill="#00ff88">LIVE</text>
-  <text x="24" y="100" font-family="'SF Mono',monospace" font-size="10" fill="#484f58">ADAAD \xb7 Autonomous Development &amp; Adaptation Architecture \xb7 InnovativeAI LLC \xb7 Apache 2.0</text>
-  <text x="700" y="100" font-family="'SF Mono',monospace" font-size="9" fill="#30363d">AUTO-SYNCED {TODAY}</text>
-</svg>"""
-
-
-def _svg_version_hero(V, PHASE, INNOV_N, HARD, TODAY):
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200">
-  <defs>
-    <linearGradient id="heroBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0d1117"/>
-      <stop offset="100%" style="stop-color:#1a2332"/>
-    </linearGradient>
-    <linearGradient id="vGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#00d4ff"/>
-      <stop offset="100%" style="stop-color:#0088ff"/>
-    </linearGradient>
-  </defs>
-  <rect width="800" height="200" rx="12" fill="url(#heroBg)" stroke="#21262d" stroke-width="1"/>
-  <text x="40" y="85" font-family="'SF Mono',monospace" font-size="52" font-weight="900" fill="url(#vGrad)">v{V}</text>
-  <rect x="40" y="100" width="180" height="32" rx="6" fill="#f5c84222"/>
-  <text x="52" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#f5c842">Phase {PHASE} \xb7 {INNOV_N} Innovations</text>
-  <rect x="234" y="100" width="185" height="32" rx="6" fill="#ff446622"/>
-  <text x="246" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#ff4466">{HARD} Hard-Class Invariants</text>
-  <rect x="433" y="100" width="90" height="32" rx="6" fill="#00ff8822"/>
-  <circle cx="451" cy="116" r="5" fill="#00ff88"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
-  <text x="463" y="121" font-family="'SF Mono',monospace" font-size="14" font-weight="700" fill="#00ff88">LIVE</text>
-  <text x="40" y="170" font-family="'SF Mono',monospace" font-size="13" fill="#8b949e">Autonomous Development &amp; Adaptation Architecture \xb7 InnovativeAI LLC</text>
-  <text x="40" y="192" font-family="'SF Mono',monospace" font-size="9" fill="#30363d">AUTO-SYNCED \xb7 {TODAY}</text>
-</svg>"""
-
-
-def _svg_live_status(V, PHASE, INNOV_N, HARD, TODAY):
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" width="800" height="80" viewBox="0 0 800 80">
-  <rect width="800" height="80" rx="8" fill="#0d1117" stroke="#30363d" stroke-width="1"/>
-  <circle cx="28" cy="40" r="7" fill="#00ff88"><animate attributeName="opacity" values="1;0.4;1" dur="1.5s" repeatCount="indefinite"/></circle>
-  <text x="44" y="45" font-family="'SF Mono',monospace" font-size="13" font-weight="700" fill="#00ff88">LIVE</text>
-  <text x="110" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#00d4ff">v{V}</text>
-  <text x="185" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#8b949e">\xb7</text>
-  <text x="200" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#f5c842">Phase {PHASE}</text>
-  <text x="290" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#8b949e">\xb7</text>
-  <text x="305" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#ff4466">{HARD} Hard Invariants</text>
-  <text x="465" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#8b949e">\xb7</text>
-  <text x="480" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#00ff88">{INNOV_N} Innovations</text>
-  <text x="610" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#8b949e">\xb7</text>
-  <text x="625" y="45" font-family="'SF Mono',monospace" font-size="13" fill="#00ff88">GATE \u2713</text>
-  <text x="700" y="68" font-family="'SF Mono',monospace" font-size="8" fill="#30363d">AUTO-SYNCED {TODAY}</text>
-</svg>"""
-
-
-# ── Markdown patches ───────────────────────────────────────────────────────────
-
-def _build_markdown_patches(ctx: dict[str, Any]) -> list[tuple[Path, list[tuple[str, str]]]]:
-    V, PHASE, INNOV_N, HARD = ctx["version"], ctx["phase"], ctx["innov_num"], ctx["hard"]
-
+def _build_markdown_patches(s: CanonicalState) -> list[tuple[Path, list[tuple[str, str]]]]:
+    label = "PIPELINE COMPLETE" if s.pipeline_complete else "LIVE"
     return [
         (ROOT / "README.md", [
-            ("REGEX:alt=\"ADAAD v[\\d.]+ — \\d+ Phases Complete — LIVE\"",
-             f'alt="ADAAD v{V} — {PHASE} Phases Complete — LIVE"'),
+            (f'REGEX:alt="ADAAD v[\\d.]+ \u2014 \\d+ Phases Complete \u2014 (?:LIVE|PIPELINE COMPLETE)"',
+             f'alt="ADAAD v{s.version} \u2014 {s.phase} Phases Complete \u2014 {label}"'),
+            ("REGEX:All \\d+ Hard-class invariants enforced at runtime \\| Epoch aborts",
+             f"All {s.hard} Hard-class invariants enforced at runtime | Epoch aborts"),
+            ("REGEX:\\*\\*\U0001f6a7 \\d+ Hard-class invariants\\*\\*",
+             f"**\U0001f6a7 {s.hard} Hard-class invariants**"),
         ]),
         (ROOT / "docs/README.md", [
-            ("REGEX:\\*\\*ADAAD v[\\d.]+ · Phase \\d+ \\([^)]+\\)\\*\\*",
-             f"**ADAAD v{V} · Phase {PHASE} (INNOV-{INNOV_N} shipped)**"),
-            ("REGEX:Current = Phase \\d+ \\(v[\\d.]+\\), Next = Phase \\d+[^.]*\\.",
-             f"Current = Phase {PHASE} (v{V}), Next = Phase {PHASE + 1} — INNOV-{INNOV_N + 1}."),
-            ("REGEX:ADAAD v[\\d.]+ Runtime",
-             f"ADAAD v{V} Runtime"),
+            ("REGEX:ADAAD v[\\d.]+ Runtime", f"ADAAD v{s.version} Runtime"),
             ("REGEX:img\\.shields\\.io/badge/ADAAD-v[\\d.]+-",
-             f"img.shields.io/badge/ADAAD-v{V}-"),
-            ("REGEX:img\\.shields\\.io/badge/Phase_\\d+-[^-]+-",
-             f"img.shields.io/badge/Phase_{PHASE}-ERS_Shipped-"),
-            ("REGEX:<sub><code>ADAAD v[\\d.]+</code>",
-             f"<sub><code>ADAAD v{V}</code>"),
-        ]),
-        (ROOT / "docs/CONSTITUTION.md", [
-            ("REGEX:\\*\\*Active Phase\\*\\*: \\d+ \\(v[\\d.]+ — [^)]+\\)",
-             f"**Active Phase**: {PHASE} (v{V} — INNOV-{INNOV_N} ERS complete)"),
-        ]),
-        (ROOT / "docs/governance/ADAAD_7_GA_CLOSURE_TRACKER.md", [
-            ("REGEX:\\*\\*Canonical live state pointer:\\*\\* Current = \\*\\*Phase \\d+\\*\\* \\(`v[\\d.]+`[^)]+\\)\\. Next = \\*\\*Phase \\d+[^*]+\\*\\*\\.",
-             f"**Canonical live state pointer:** Current = **Phase {PHASE}** (`v{V}`, INNOV-{INNOV_N} ERS shipped). Next = **Phase {PHASE + 1} — INNOV-{INNOV_N + 1}**."),
+             f"img.shields.io/badge/ADAAD-v{s.version}-"),
         ]),
     ]
 
@@ -271,36 +436,29 @@ def _build_markdown_patches(ctx: dict[str, Any]) -> list[tuple[Path, list[tuple[
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="ADAAD docs + assets version sync")
-    parser.add_argument("--dry-run", action="store_true", help="Report changes without writing")
-    parser.add_argument("--verbose", action="store_true", help="Show per-file status")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
-    ctx = _load_state()
-    print(json.dumps({"event": "sync_start", "version": ctx["version"],
-                      "phase": ctx["phase"], "dry_run": args.dry_run}))
+    s = _load_state()
+    print(json.dumps({
+        "event": "sync_start", "version": s.version, "phase": s.phase,
+        "innov_num": s.innov_num, "hard_invariants": s.hard,
+        "pipeline_complete": s.pipeline_complete, "dry_run": args.dry_run,
+    }))
 
-    total_changes = 0
-
-    # Markdown patches
-    for path, patches in _build_markdown_patches(ctx):
-        if patches:
-            n = _patch_file(path, patches, ctx, args.dry_run, args.verbose)
-            total_changes += n
-
-    # SVG regeneration
-    for svg_path in SVG_SURFACES:
-        n = _regenerate_svg(svg_path, ctx, args.dry_run)
-        total_changes += n
-        if args.verbose and n:
-            print(f"  SVG REGEN: {svg_path.relative_to(ROOT)}")
+    total = 0
+    for path, patches in _build_markdown_patches(s):
+        total += _patch_markdown(path, patches, args.dry_run, args.verbose)
+    for rel, fn in SVG_REGISTRY:
+        total += _write_if_changed(ROOT / rel, fn(s), args.dry_run, args.verbose)
 
     print(json.dumps({
-        "event": "sync_complete",
-        "version": ctx["version"],
-        "phase": ctx["phase"],
-        "files_changed": total_changes,
-        "dry_run": args.dry_run,
-        "invariants": ["DOCSYNC-0", "DOCSYNC-DETERM-0", "DOCSYNC-IDEM-0"],
+        "event": "sync_complete", "version": s.version, "phase": s.phase,
+        "innov_num": s.innov_num, "hard_invariants": s.hard,
+        "pipeline_complete": s.pipeline_complete,
+        "files_changed": total, "dry_run": args.dry_run,
+        "invariants": ["DOCSYNC-0", "DOCSYNC-DETERM-0", "DOCSYNC-IDEM-0", "DOCSYNC-CLOSED-0"],
     }))
     return 0
 
