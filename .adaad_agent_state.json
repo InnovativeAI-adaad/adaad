@@ -3,7 +3,7 @@
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 114 \u00b7 INNOV-29 CURIOSITY",
+  "last_completed_phase": "Phase 114 \u00b7 INNOV-29 Curiosity-Driven Exploration",
   "last_completed_pr": "feature/phase114-curiosity-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -11,8 +11,8 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-04-03",
-  "last_sync_sha": "901b8da",
+  "last_invocation": "2026-04-04",
+  "last_sync_sha": "3849de8",
   "next_pr": "Phase 115 \u2014 INNOV-30 The Mirror Test",
   "open_findings": [
     {
@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.46.0",
+  "current_version": "9.47.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.46.0",
-  "last_agent_state_sync_digest": "gsync-5c3872367700a516",
+  "software_version": "9.47.0",
+  "last_agent_state_sync_digest": "gsync-b7fe0b7d1a361170",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",
