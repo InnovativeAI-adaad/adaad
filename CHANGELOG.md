@@ -1,3 +1,58 @@
+## [9.49.0] — 2026-04-04 — Phase 116 · INNOV-31 Invariant Discovery Engine (IDE)
+
+**Branch:** `feature/phase116-ide-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-04
+**Tests:** T116-IDE-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase116/phase116_sign_off.json` · ILA-116-2026-04-04-001
+
+### Deliverables
+- `runtime/innovations30/invariant_discovery.py` — INNOV-31 full constitutional implementation
+- `tests/test_phase116_ide.py` — T116-IDE-01..30 (30/30 PASS)
+- `artifacts/governance/phase116/` — 4 governance artifacts
+
+### Constitutional Invariants (5 new · cumulative: 130 Hard-class)
+`IDE-0` · `IDE-DETERM-0` · `IDE-PERSIST-0` · `IDE-AUDIT-0` · `IDE-GATE-0`
+
+### Findings Resolved
+- **FINDING-115-001**: `agent_state` nested fields backfilled to Phase 115 / v9.48.0
+- **FINDING-115-002**: CHANGELOG v9.48.0 Phase 115 MIRROR entry prepended
+- **FINDING-115-003**: ROADMAP Phase 115 section appended
+
+### IP Claims
+- First governed autonomous constitutional self-discovery engine: system mines its own governance failure history to propose new constitutional invariants
+- HMAC-chain-linked append-only JSONL ledger with tamper detection via `verify_chain()`
+- Deterministic `rule_id` derived solely from `epoch_id` + pattern index — no datetime/random (IDE-DETERM-0)
+- Fail-closed `IDE-GATE-0` deduplication preventing re-proposal of already-known patterns
+- `ide_guard()` fail-closed enforcement helper for all 5 Hard-class invariants
+
+---
+
+## [9.48.0] — 2026-04-03 — Phase 115 · INNOV-30 The Mirror Test (MIRROR)
+
+**Branch:** `feature/phase115-mirror-test-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T115-MIRROR-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase115/phase115_sign_off.json` · ILA-115-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/mirror_test.py` — INNOV-30 The Mirror Test full constitutional implementation
+- `tests/test_phase115_mirror.py` — T115-MIRROR-01..30 (30/30 PASS)
+- `artifacts/governance/phase115/` — 4 governance artifacts
+
+### Constitutional Invariants (3 new · cumulative: 125 Hard-class)
+`MIRROR-0` · `MIRROR-DETERM-0` · `MIRROR-AUDIT-0`
+
+### IP Claims
+- First constitutional self-calibration test measuring governance prediction accuracy
+- Deterministic scoring with tamper-evident result_digest on every MirrorTestResult
+- CalibrationEpoch enforcement when overall_score below CALIBRATION_THRESHOLD
+- Fail-closed mirror_guard() enforcement helper for all three Hard-class invariants
+
+### Pipeline Milestone
+**INNOV-01 through INNOV-30 — 30/30 innovations shipped** across Phases 87–115
+
+---
+
 ## [9.47.0] — 2026-04-03 — Phase 114 · INNOV-29 Curiosity-Driven Exploration
 
 **Branch:** `feature/phase114-curiosity-impl`

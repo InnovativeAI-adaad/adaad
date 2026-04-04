@@ -1885,3 +1885,43 @@ World-first anticipatory constitutional primitive. Prior innovations fire at bre
 
 **Next:** Phase 110 — to be planned
 
+
+### Phase 115 — INNOV-30 · The Mirror Test (MIRROR)
+
+**Status:** ✅ shipped (v9.48.0) · **Dependency:** Phase 114 CURIOSITY merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-03) · **Tests:** T115-MIRROR-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase115/phase115_sign_off.json` · ILA-115-2026-04-03-001
+
+World-first constitutional self-calibration test. Every 50 epochs, historical mutation proposals (outcomes redacted) are presented to the system; prediction accuracy is scored. When `overall_score` falls below `CALIBRATION_THRESHOLD`, a `ConstitutionalCalibrationEpoch` is enforced before evolution resumes — guaranteeing the governance engine cannot drift without detection.
+
+**Module:** `runtime/innovations30/mirror_test.py`
+- `MirrorTest.run(epoch_id, sample, predictor)` — sole execution entry; MIRROR-0 range-guard enforced post-score
+- `MirrorTestResult` — carries `result_digest` (sha256 of epoch_id + scores), `overall_score`, `requires_calibration`; persisted to append-only JSONL (MIRROR-AUDIT-0)
+- `mirror_guard()` — fail-closed enforcement helper for all three Hard-class invariants
+- `to_ledger_row()` — JSONL serialisation
+
+**Invariants introduced:** `MIRROR-0`, `MIRROR-DETERM-0`, `MIRROR-AUDIT-0` (3 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 125
+
+**Pipeline milestone:** INNOV-01 through INNOV-30 — 30/30 innovations shipped across Phases 87–115
+
+**Next:** Phase 116 — INNOV-31 · Invariant Discovery Engine (IDE)
+
+### Phase 116 — INNOV-31 · Invariant Discovery Engine (IDE)
+
+**Status:** ✅ shipped (v9.49.0) · **Dependency:** Phase 115 MIRROR merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-04) · **Tests:** T116-IDE-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase116/phase116_sign_off.json` · ILA-116-2026-04-04-001
+
+World-first governed autonomous constitutional self-discovery engine. The system mines its own governance failure history — rejected mutation records — to extract recurring failure patterns and propose new constitutional invariants. Each `DiscoveredRule` carries a deterministic `rule_id`, HMAC-chain-linked digest, and is flushed to append-only JSONL before `analyze_failures()` returns.
+
+**Module:** `runtime/innovations30/invariant_discovery.py`
+- `InvariantDiscoveryEngine.analyze_failures(rejected_records, epoch_id)` — mines failure patterns, enforces IDE-0/GATE-0/PERSIST-0 atomically
+- `DiscoveredRule` — dataclass; digest auto-populated at construction (IDE-AUDIT-0); chain-linked via `_chain_digest()`
+- `ide_guard()` — fail-closed enforcement helper for all 5 Hard-class invariants
+- `verify_chain()` — HMAC tamper detection across full ledger replay
+
+**Invariants introduced:** `IDE-0`, `IDE-DETERM-0`, `IDE-PERSIST-0`, `IDE-AUDIT-0`, `IDE-GATE-0` (5 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 130
+
+**Findings resolved:** FINDING-115-001/002/003 (agent state backfill, CHANGELOG/ROADMAP Phase 115 entries)
+
+**Next:** Phase 117 — pipeline evolution continues
