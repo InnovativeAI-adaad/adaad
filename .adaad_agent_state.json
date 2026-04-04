@@ -1,19 +1,19 @@
 {
-  "active_phase": "v9.45.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.46.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 112 \u00b7 INNOV-27 BLAST",
-  "last_completed_pr": "feature/phase112-blast-impl",
+  "last_completed_phase": "Phase 113 \u00b7 INNOV-28 Self-Awareness Invariant",
+  "last_completed_pr": "feature/phase113-self-aware-impl",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-04-03",
-  "last_sync_sha": "901b8da",
-  "next_pr": "Phase 113 \u2014 INNOV-28 Self-Awareness Invariant",
+  "last_invocation": "2026-04-04",
+  "last_sync_sha": "e5383ef",
+  "next_pr": "Phase 114 \u2014 INNOV-29 Curiosity Engine",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.42.0",
+  "current_version": "9.46.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.42.0",
-  "last_agent_state_sync_digest": "gsync-7d99a34e9b5671b4",
+  "software_version": "9.46.0",
+  "last_agent_state_sync_digest": "gsync-33a2baebe293ee92",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",

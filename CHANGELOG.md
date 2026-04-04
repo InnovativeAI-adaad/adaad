@@ -1,19 +1,19 @@
-## [9.45.0] — 2026-04-03 — Phase 112 · INNOV-27 Mutation Blast Radius Modeling
+## [9.46.0] — 2026-04-03 — Phase 113 · INNOV-28 Self-Awareness Invariant
 
-**Branch:** `feature/phase112-blast-impl`
+**Branch:** `feature/phase113-self-aware-impl`
 **HUMAN-0 Ratification:** `[slot reserved]`
-**Tests:** T112-BLAST-01..30 (30/30 PASS)
-**Evidence Artifacts:** `artifacts/governance/phase112/phase112_sign_off.json` · ILA-112-2026-04-03-001
+**Tests:** T113-SELF-AWARE-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase113/phase113_sign_off.json` · ILA-113-2026-04-03-001
 
 ### Constitutional Invariants Introduced
-- **BLAST-0** — `blast_score` in [0.0,1.0]; `risk_tier` in {low,medium,high,critical}; `report_digest` non-empty
-- **BLAST-SLA-0** — `reversal_sla_hours` MUST equal `REVERSAL_SLA[risk_tier]`; SLA breach triggers escalation
-- **BLAST-AUDIT-0** — every `BlastRadiusReport` carries SHA-256 `report_digest` sealing mutation_id, score, tier, counts
+- **SELF-AWARE-0** — no mutation may remove observability calls from protected monitoring modules
+- **SELF-AWARE-DETERM-0** — `evaluate()` identical inputs → identical `verdict_digest`
+- **SELF-AWARE-AUDIT-0** — every verdict carries non-empty `verdict_digest`; audit trail persisted
 
 ### Deliverables
-- `runtime/innovations30/blast_radius_model.py` — INNOV-27 BLAST full constitutional implementation
-- `tests/test_phase112_blast.py` — T112-BLAST-01..30 (30/30 PASS)
-- `artifacts/governance/phase112/` — 4-artifact evidence bundle
+- `runtime/innovations30/self_awareness_invariant.py` — INNOV-28 full constitutional implementation
+- `tests/test_phase113_self_aware.py` — T113-SELF-AWARE-01..30 (30/30 PASS)
+- `artifacts/governance/phase113/` — 4-artifact evidence bundle
 
 ---
 
