@@ -1,10 +1,10 @@
 {
-  "active_phase": "v9.46.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.47.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 113 \u00b7 INNOV-28 SELF-AWARE",
-  "last_completed_pr": "feature/phase113-self-aware-impl",
+  "last_completed_phase": "Phase 114 \u00b7 INNOV-29 CURIOSITY",
+  "last_completed_pr": "feature/phase114-curiosity-impl",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -13,7 +13,7 @@
   },
   "last_invocation": "2026-04-03",
   "last_sync_sha": "901b8da",
-  "next_pr": "Phase 114 \u2014 INNOV-29 Curiosity Engine",
+  "next_pr": "Phase 115 \u2014 INNOV-30 The Mirror Test",
   "open_findings": [
     {
       "id": "FINDING-66-001",
