@@ -6,7 +6,7 @@ Constitutional invariants under test:
     HAF-DETERM-0 — adapted_weights deterministic for identical profile
     HAF-AUDIT-0  — score_with_profile returns AuditRecord with required fields
 """
-import hashlib, json, sys
+import json, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
