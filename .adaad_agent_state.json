@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.42.0",
+  "current_version": "9.47.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.42.0",
-  "last_agent_state_sync_digest": "gsync-7d99a34e9b5671b4",
+  "software_version": "9.47.0",
+  "last_agent_state_sync_digest": "gsync-b7fe0b7d1a361170",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",
