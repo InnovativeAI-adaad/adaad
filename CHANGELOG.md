@@ -1,3 +1,12 @@
+## [9.52.0] — 2026-04-04 · Phase 119 · INNOV-34 FGCON
+
+### Added
+- **INNOV-34 Federation Governance Consensus (FGCON)** — formal consensus protocol for federation-wide constitutional amendments; strict majority quorum enforcement (floor(N/2)+1); no single instance can amend federation-level invariants unilaterally; 7 new Hard-class invariants (FGCON-0, FGCON-DETERM-0, FGCON-PERSIST-0, FGCON-CHAIN-0, FGCON-GATE-0, FGCON-UNILATERAL-0, FGCON-QUORUM-0)
+- `runtime/innovations30/federation_governance_consensus.py` — FederationGovernanceConsensus, AmendmentProposal, FederationMember, VoteRecord, fgcon_guard
+- `tests/test_phase119_fgcon.py` — T119-FGCON-01..30 (30/30 passing)
+- `artifacts/governance/phase119/` — phase119_sign_off.json, tier_summary.json
+- Cumulative Hard-class invariants: 148
+
 ## [9.51.0] — 2026-04-04 · Phase 118 · INNOV-33 KBEP
 
 ### Added
