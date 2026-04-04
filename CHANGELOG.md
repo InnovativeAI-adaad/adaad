@@ -1,3 +1,27 @@
+## [9.43.0] — 2026-04-03 — Phase 110 · INNOV-25 Hardware-Adaptive Fitness
+
+**Branch:** `feature/phase110-haf-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T110-HAF-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase110/phase110_sign_off.json` · `artifacts/governance/phase110/phase110_replay_digest.txt` · ILA-110-2026-04-03-001
+
+### Constitutional Invariants Introduced
+- **HAF-0** — `profile_id` MUST be non-empty; `adapted_weights` MUST sum to 1.0 ± 0.001; each weight in `[0.01, 0.90]`
+- **HAF-DETERM-0** — `adapted_weights()` MUST return identical output for identical `HardwareProfile` input
+- **HAF-AUDIT-0** — `score_with_profile()` MUST produce a ledger-serialisable `AuditRecord`
+
+### Deliverables
+- `runtime/innovations30/hardware_adaptive_fitness.py` — INNOV-25 HAF full constitutional implementation
+- `tests/test_phase110_haf.py` — T110-HAF-01..30 (30/30 PASS)
+- `artifacts/governance/phase110/` — 4-artifact evidence bundle
+
+### New Constitutional Surfaces
+- `AuditRecord` — typed ledger event for every fitness evaluation
+- `WeightDriftGuard` — blocks weight drift beyond constitutional bounds
+- `profile_fingerprint()` — SHA-256 over canonical profile fields for replay verification
+
+---
+
 ## [9.42.0] — 2026-04-03 — Phase 109 · INNOV-24 SVP
 
 **Branch:** `feature/phase109-svp-impl`
