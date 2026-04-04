@@ -1,9 +1,9 @@
 {
-  "active_phase": "v9.49.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.50.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 116 \u00b7 INNOV-31 Invariant Discovery Engine (IDE)",
+  "last_completed_phase": "Phase 04 \u00b7 Phase 117 \u00b7 INNOV-32 CRTV",
   "last_completed_pr": "feature/phase116-ide-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -12,7 +12,7 @@
     "tier_3": "pass"
   },
   "last_invocation": "2026-04-04",
-  "last_sync_sha": "070824a",
+  "last_sync_sha": "407f874",
   "next_pr": "feature/phase116-ide-impl",
   "open_findings": [
     {
@@ -475,7 +475,7 @@
     "phase116-world-first-constitutional-self-discovery",
     "v9.49.0-released"
   ],
-  "current_version": "9.49.0",
+  "current_version": "9.50.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -652,8 +652,8 @@
     "v9.49.0-released",
     "phase116-complete"
   ],
-  "software_version": "9.49.0",
-  "last_agent_state_sync_digest": "gsync-3d16084201088f92",
+  "software_version": "9.50.0",
+  "last_agent_state_sync_digest": "gsync-148fc12d768b1f72",
   "version": "9.50.0",
   "phase": 117,
   "phase_label": "Phase 116 -- INNOV-31 Invariant Discovery Engine (IDE)",
