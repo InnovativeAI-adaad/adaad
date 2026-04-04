@@ -1,0 +1,19 @@
+{
+  "phase": 117,
+  "innovation": "INNOV-32",
+  "codename": "CRTV",
+  "title": "Constitutional Rollback & Temporal Versioning",
+  "version": "9.50.0",
+  "status": "APPROVED",
+  "governor": "DUSTIN L REID",
+  "ratification": "HUMAN-0 RATIFICATION — DUSTIN L. REID — 2026-04-04",
+  "incident_log_artifact": "ILA-117-2026-04-04-001",
+  "hard_class_invariants_new": ["CRTV-0", "CRTV-CHAIN-0", "CRTV-DETERM-0", "CRTV-GATE-0", "CRTV-AUDIT-0"],
+  "hard_class_count_prior": 130,
+  "hard_class_count_new": 135,
+  "tests_passed": "30/30",
+  "test_suite": "tests/test_phase117_crtv.py",
+  "module": "runtime/innovations30/constitutional_rollback.py",
+  "dependency": "Phase 116 INNOV-31 IDE merged",
+  "timestamp": "2026-04-04T18:00:00Z"
+}
