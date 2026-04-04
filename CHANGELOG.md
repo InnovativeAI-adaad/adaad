@@ -1,43 +1,19 @@
-## [9.44.0] — 2026-04-04 — Phase 111 · INNOV-26 Constitutional Entropy Budget
+## [9.46.0] — 2026-04-03 — Phase 113 · INNOV-28 Self-Awareness Invariant
 
-**Branch:** `feature/phase111-ceb-impl`
+**Branch:** `feature/phase113-self-aware-impl`
 **HUMAN-0 Ratification:** `[slot reserved]`
-**Tests:** T111-CEB-01..30 (30/30 PASS)
-**Evidence Artifacts:** `artifacts/governance/phase111/phase111_sign_off.json` · ILA-111-2026-04-04-001
+**Tests:** T113-SELF-AWARE-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase113/phase113_sign_off.json` · ILA-113-2026-04-03-001
 
 ### Constitutional Invariants Introduced
-- **CEB-0** — `drift_ratio` = (added+removed)/max(1,genesis_count); `requires_double_signoff` True when drift_ratio >= 0.30
-- **CEB-DETERM-0** — `check_drift()` MUST return byte-identical report for identical inputs
-- **CEB-AUDIT-0** — every report carries tamper-evident `report_digest`; every amendment writes to `DriftLedger`
+- **SELF-AWARE-0** — no mutation may remove observability calls from protected monitoring modules
+- **SELF-AWARE-DETERM-0** — `evaluate()` identical inputs → identical `verdict_digest`
+- **SELF-AWARE-AUDIT-0** — every verdict carries non-empty `verdict_digest`; audit trail persisted
 
 ### Deliverables
-- `runtime/innovations30/constitutional_entropy_budget.py`
-- `tests/test_phase111_ceb.py` — T111-CEB-01..30 (30/30 PASS)
-- `artifacts/governance/phase111/` — 4-artifact evidence bundle
-
----
-
-## [9.43.0] — 2026-04-03 — Phase 110 · INNOV-25 Hardware-Adaptive Fitness
-
-**Branch:** `feature/phase110-haf-impl`
-**HUMAN-0 Ratification:** `[slot reserved]`
-**Tests:** T110-HAF-01..30 (30/30 PASS)
-**Evidence Artifacts:** `artifacts/governance/phase110/phase110_sign_off.json` · `artifacts/governance/phase110/phase110_replay_digest.txt` · ILA-110-2026-04-03-001
-
-### Constitutional Invariants Introduced
-- **HAF-0** — `profile_id` MUST be non-empty; `adapted_weights` MUST sum to 1.0 ± 0.001; each weight in `[0.01, 0.90]`
-- **HAF-DETERM-0** — `adapted_weights()` MUST return identical output for identical `HardwareProfile` input
-- **HAF-AUDIT-0** — `score_with_profile()` MUST produce a ledger-serialisable `AuditRecord`
-
-### Deliverables
-- `runtime/innovations30/hardware_adaptive_fitness.py` — INNOV-25 HAF full constitutional implementation
-- `tests/test_phase110_haf.py` — T110-HAF-01..30 (30/30 PASS)
-- `artifacts/governance/phase110/` — 4-artifact evidence bundle
-
-### New Constitutional Surfaces
-- `AuditRecord` — typed ledger event for every fitness evaluation
-- `WeightDriftGuard` — blocks weight drift beyond constitutional bounds
-- `profile_fingerprint()` — SHA-256 over canonical profile fields for replay verification
+- `runtime/innovations30/self_awareness_invariant.py` — INNOV-28 full constitutional implementation
+- `tests/test_phase113_self_aware.py` — T113-SELF-AWARE-01..30 (30/30 PASS)
+- `artifacts/governance/phase113/` — 4-artifact evidence bundle
 
 ---
 
