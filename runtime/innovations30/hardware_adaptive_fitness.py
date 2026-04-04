@@ -19,7 +19,6 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass, field, asdict
-from pathlib import Path
 from typing import Any
 
 # ── Constitutional weight bounds [HAF-0] ─────────────────────────────────────
