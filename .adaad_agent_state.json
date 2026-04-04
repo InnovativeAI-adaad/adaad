@@ -1,10 +1,10 @@
 {
-  "active_phase": "v9.42.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.44.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 109 \u00b7 INNOV-24 SVP",
-  "last_completed_pr": "feature/phase101-ers-impl",
+  "last_completed_phase": "Phase 111 \u00b7 INNOV-26 CEB",
+  "last_completed_pr": "feature/phase111-ceb-impl",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
@@ -13,7 +13,7 @@
   },
   "last_invocation": "2026-04-03",
   "last_sync_sha": "901b8da",
-  "next_pr": "PR-PHASE94-01 (Phase 94 \u2014 INNOV-10 Morphogenetic Memory)",
+  "next_pr": "Phase 112 \u2014 INNOV-27 Mutation Blast Radius Modeling",
   "open_findings": [
     {
       "id": "FINDING-66-001",
