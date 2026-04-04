@@ -1,3 +1,17 @@
+## [9.50.0] — 2026-04-04 · Phase 117 · INNOV-32 CRTV
+
+### Added
+- **INNOV-32 Constitutional Rollback & Temporal Versioning (CRTV)** — append-only, chain-linked snapshot ledger for the constitution itself; governed rollback to any prior state under HUMAN-0 gate; semantic diff between any two constitutional versions; persistence + reload from JSONL ledger; 5 new Hard-class invariants (CRTV-0, CRTV-CHAIN-0, CRTV-DETERM-0, CRTV-GATE-0, CRTV-AUDIT-0)
+- `runtime/innovations30/constitutional_rollback.py` — ConstitutionalRollbackEngine, ConstitutionalSnapshot, ConstitutionalDiff, RollbackEvent
+- `tests/test_phase117_crtv.py` — T117-CRTV-01..30 (30/30 PASS)
+- `artifacts/governance/phase117/` — governance sign-off, track A, tier summary, replay digest
+- **PyPI publication**: v9.50.0 published to PyPI — closes critical distribution gap (prior: v9.11.0)
+
+### Metrics
+- Hard-class invariants: **130 → 135** (+5 CRTV)
+- ILA: ILA-117-2026-04-04-001
+- Governor: DUSTIN L REID
+
 ## [9.49.0] — 2026-04-04 — Phase 116 · INNOV-31 Invariant Discovery Engine (IDE)
 
 **Branch:** `feature/phase116-ide-impl`

@@ -1,0 +1,12 @@
+Phase 117 — INNOV-32 CRTV Replay Digest
+========================================
+ILA-117-2026-04-04-001
+
+Module:       runtime/innovations30/constitutional_rollback.py
+Tests:        tests/test_phase117_crtv.py — T117-CRTV-01..30
+Result:       30/30 PASS
+Invariants:   CRTV-0 | CRTV-CHAIN-0 | CRTV-DETERM-0 | CRTV-GATE-0 | CRTV-AUDIT-0
+New count:    135 Hard-class (130 prior + 5 new)
+Version:      9.49.0 → 9.50.0
+Governor:     DUSTIN L REID
+Timestamp:    2026-04-04T18:00:00Z

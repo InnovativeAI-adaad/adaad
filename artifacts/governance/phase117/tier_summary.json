@@ -1,0 +1,9 @@
+{
+  "phase": 117,
+  "version": "9.50.0",
+  "tier_0_decisions": [],
+  "tier_1_decisions": ["INNOV-32 CRTV module ship", "5 new Hard-class invariants"],
+  "tier_2_decisions": ["Test suite T117-CRTV-01..30"],
+  "hard_class_invariants_cumulative": 135,
+  "governor": "DUSTIN L REID"
+}

@@ -654,8 +654,8 @@
   ],
   "software_version": "9.49.0",
   "last_agent_state_sync_digest": "gsync-3d16084201088f92",
-  "version": "9.49.0",
-  "phase": 116,
+  "version": "9.50.0",
+  "phase": 117,
   "phase_label": "Phase 116 -- INNOV-31 Invariant Discovery Engine (IDE)",
   "last_innovation": "INNOV-31",
   "acse_active": true,
@@ -829,7 +829,7 @@
     }
   ],
   "current_phase": 116,
-  "next_phase": 117,
+  "next_phase": 118,
   "last_phase_completed": 116,
   "constitutional_invariants": {
     "hard_class_count": 130,
@@ -877,6 +877,14 @@
       "version": "9.49.0",
       "hard_invariants": 5,
       "tests": "30/30"
+    },
+    "INNOV-32": {
+      "phase": 117,
+      "module": "constitutional_rollback.py",
+      "version": "9.50.0",
+      "hard_invariants": 5,
+      "tests": "30/30"
     }
-  }
+  },
+  "hard_class_count": 135
 }

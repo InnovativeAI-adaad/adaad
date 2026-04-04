@@ -1925,3 +1925,24 @@ World-first governed autonomous constitutional self-discovery engine. The system
 **Findings resolved:** FINDING-115-001/002/003 (agent state backfill, CHANGELOG/ROADMAP Phase 115 entries)
 
 **Next:** Phase 117 — pipeline evolution continues
+
+### Phase 117 — INNOV-32 · Constitutional Rollback & Temporal Versioning (CRTV)
+
+**Status:** ✅ shipped (v9.50.0) · **Dependency:** Phase 116 IDE merged · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-04) · **Tests:** T117-CRTV-01..30 (30/30 PASS) · **Evidence:** `artifacts/governance/phase117/phase117_sign_off.json` · ILA-117-2026-04-04-001
+
+World-first constitutional version-control layer. Every constitutional amendment produces an immutable, chain-linked `ConstitutionalSnapshot`; any prior state is recoverable via governed rollback requiring HUMAN-0 ratification. Semantic diff between any two snapshots is available without time travel — giving operators full `git blame`-equivalent visibility over how their governance evolved.
+
+**Module:** `runtime/innovations30/constitutional_rollback.py`
+- `ConstitutionalRollbackEngine.snapshot()` — append-only, CRTV-AUDIT-0 flush before return
+- `ConstitutionalRollbackEngine.rollback()` — HUMAN-0 gated; fail-closed; trims in-memory chain to target
+- `ConstitutionalRollbackEngine.diff()` — semantic delta between arbitrary snapshot pairs
+- `ConstitutionalRollbackEngine.verify_chain()` — HMAC-style chain integrity audit (CRTV-CHAIN-0)
+- Persistence: reload from append-only JSONL ledger across engine restarts
+
+**Invariants introduced:** `CRTV-0`, `CRTV-CHAIN-0`, `CRTV-DETERM-0`, `CRTV-GATE-0`, `CRTV-AUDIT-0` (5 new Hard-class invariants)
+
+**Total Hard-class invariants (cumulative):** 135
+
+**Also shipped:** PyPI v9.50.0 publication — closes 38-minor-version distribution gap (prior: v9.11.0)
+
+**Next:** Phase 118 — pipeline evolution continues
