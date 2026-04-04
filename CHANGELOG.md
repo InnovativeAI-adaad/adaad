@@ -1,3 +1,22 @@
+## [9.45.0] — 2026-04-03 — Phase 112 · INNOV-27 Mutation Blast Radius Modeling
+
+**Branch:** `feature/phase112-blast-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T112-BLAST-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase112/phase112_sign_off.json` · ILA-112-2026-04-03-001
+
+### Constitutional Invariants Introduced
+- **BLAST-0** — `blast_score` in [0.0,1.0]; `risk_tier` in {low,medium,high,critical}; `report_digest` non-empty
+- **BLAST-SLA-0** — `reversal_sla_hours` MUST equal `REVERSAL_SLA[risk_tier]`; SLA breach triggers escalation
+- **BLAST-AUDIT-0** — every `BlastRadiusReport` carries SHA-256 `report_digest` sealing mutation_id, score, tier, counts
+
+### Deliverables
+- `runtime/innovations30/blast_radius_model.py` — INNOV-27 BLAST full constitutional implementation
+- `tests/test_phase112_blast.py` — T112-BLAST-01..30 (30/30 PASS)
+- `artifacts/governance/phase112/` — 4-artifact evidence bundle
+
+---
+
 ## [9.42.0] — 2026-04-03 — Phase 109 · INNOV-24 SVP
 
 **Branch:** `feature/phase109-svp-impl`
