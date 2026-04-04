@@ -1,0 +1,25 @@
+{
+  "phase": 111,
+  "innovation": "INNOV-26",
+  "innovation_name": "Constitutional Entropy Budget (CEB)",
+  "version": "9.44.0",
+  "branch": "feature/phase111-ceb-impl",
+  "date": "2026-04-03",
+  "human_0_gate": "Dustin L. Reid",
+  "human_0_ratification": "[slot reserved]",
+  "ledger_event_id": "ILA-111-2026-04-03-001",
+  "tests_pass": 30,
+  "tests_fail": 0,
+  "xfail": 0,
+  "invariants_introduced": [
+    "CEB-0",
+    "CEB-DETERM-0",
+    "CEB-AUDIT-0"
+  ],
+  "cumulative_hard_class_invariants": 113,
+  "evidence_hash": "sha256:fe806c09cb1e1ded",
+  "predecessor": "Phase 110 — INNOV-25 HAF — v9.43.0",
+  "successor": "Phase 112 — INNOV-27 Mutation Blast Radius Modeling — v9.45.0",
+  "world_first_claim": "Constitutional entropy budget enforcing double-HUMAN-0 sign-off at 30% genesis drift, with cooling periods, tamper-evident drift reports, and append-only amendment ledger.",
+  "status": "COMPLETE"
+}
