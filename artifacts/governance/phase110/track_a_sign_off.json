@@ -1,0 +1,36 @@
+{
+  "phase": 110,
+  "innovation": "INNOV-25",
+  "innovation_name": "Hardware-Adaptive Fitness (HAF)",
+  "version": "9.43.0",
+  "status": "COMPLETE",
+  "date": "2026-04-03",
+  "human_0_id": "Dustin L. Reid",
+  "human_0_handle": "HUMAN-0",
+  "human_0_ratification": "[slot reserved]",
+  "ratification_timestamp": "2026-04-03T00:00:00Z",
+  "dependency": "Phase 109 — INNOV-24 SVP — v9.42.0",
+  "branch": "feature/phase110-haf-impl",
+  "new_module": "runtime/innovations30/hardware_adaptive_fitness.py",
+  "modified_modules": [],
+  "test_suite": "T110-HAF-01..30",
+  "tests_passing": 30,
+  "tests_required": 30,
+  "invariants_introduced": [
+    "HAF-0",
+    "HAF-DETERM-0",
+    "HAF-AUDIT-0"
+  ],
+  "invariant_descriptions": {
+    "HAF-0": "profile_id MUST be non-empty; adapted_weights MUST sum to 1.0 ± 0.001; each weight MUST be in [0.01, 0.90].",
+    "HAF-DETERM-0": "adapted_weights() MUST return identical output for identical HardwareProfile input — determinism is a constitutional guarantee.",
+    "HAF-AUDIT-0": "Every score_with_profile call MUST produce a ledger-serialisable AuditRecord containing profile_fingerprint, weights_snapshot, and composite_score."
+  },
+  "pre_existing_failures_on_main": 0,
+  "failures_on_branch": 0,
+  "regressions_introduced": 0,
+  "cumulative_hard_invariants": 113,
+  "replay_digest": "sha256:dfb7cccc1ab13b61",
+  "ledger_event_id": "ILA-110-2026-04-03-001",
+  "notes": "Innovation #25 — Hardware-Adaptive Fitness. Fitness weights are adjusted to the deployment target hardware profile (arm64/x86_64, RAM, thermal, battery) with deterministic weight normalisation, drift guard, and ledger-audited evaluation records."
+}
