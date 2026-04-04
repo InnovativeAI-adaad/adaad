@@ -3,7 +3,7 @@
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 110 \u00b7 INNOV-25 HAF",
+  "last_completed_phase": "Phase 110 \u00b7 INNOV-25 Hardware-Adaptive Fitness",
   "last_completed_pr": "feature/phase110-haf-impl",
   "last_gate_results": {
     "tier_0": "pass",
@@ -11,8 +11,8 @@
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-04-03",
-  "last_sync_sha": "pending",
+  "last_invocation": "2026-04-04",
+  "last_sync_sha": "c4ba048",
   "next_pr": "Phase 111 \u2014 INNOV-26 Constitutional Entropy Budget",
   "open_findings": [
     {
@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.42.0",
+  "current_version": "9.43.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.42.0",
-  "last_agent_state_sync_digest": "gsync-7d99a34e9b5671b4",
+  "software_version": "9.43.0",
+  "last_agent_state_sync_digest": "gsync-1d2df13d57ce1a9b",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",
