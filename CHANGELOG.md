@@ -1,3 +1,12 @@
+## [9.53.0] — 2026-04-04 · Phase 120 · INNOV-35 SPIE
+
+### Added
+- **INNOV-35 Self-Proposing Innovation Engine (SPIE)** — system proposes its own next innovations from FailureSignal, ConstitutionalGapSignal, and MirrorAccuracySignal inputs; HUMAN-0 still ratifies; 7 new Hard-class invariants (SPIE-0, SPIE-DETERM-0, SPIE-PERSIST-0, SPIE-CHAIN-0, SPIE-GATE-0, SPIE-SOURCE-0, SPIE-HUMAN0-0)
+- `runtime/innovations30/self_proposing_innovation_engine.py` — SelfProposingInnovationEngine, InnovationProposal, FailureSignal, ConstitutionalGapSignal, MirrorAccuracySignal, spie_guard
+- `tests/test_phase120_spie.py` — T120-SPIE-01..30 (30/30 passing)
+- `artifacts/governance/phase120/` — phase120_sign_off.json, tier_summary.json
+- Cumulative Hard-class invariants: 155
+
 ## [9.52.0] — 2026-04-04 · Phase 119 · INNOV-34 FGCON
 
 ### Added
