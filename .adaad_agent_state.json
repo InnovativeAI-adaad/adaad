@@ -1,19 +1,19 @@
 {
-  "active_phase": "v9.43.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.44.0 RELEASED \u00b7 post-merge agent sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
-  "last_completed_phase": "Phase 110 \u00b7 INNOV-25 Hardware-Adaptive Fitness",
-  "last_completed_pr": "feature/phase110-haf-impl",
+  "last_completed_phase": "Phase 111 \u00b7 INNOV-26 CEB",
+  "last_completed_pr": "feature/phase111-ceb-impl",
   "last_gate_results": {
     "tier_0": "pass",
     "tier_1": "pass",
     "tier_2": "pass",
     "tier_3": "pass"
   },
-  "last_invocation": "2026-04-04",
-  "last_sync_sha": "e42cbf4",
-  "next_pr": "Phase 111 \u2014 INNOV-26 Constitutional Entropy Budget",
+  "last_invocation": "2026-04-03",
+  "last_sync_sha": "901b8da",
+  "next_pr": "Phase 112 \u2014 INNOV-27 Mutation Blast Radius Modeling",
   "open_findings": [
     {
       "id": "FINDING-66-001",
@@ -462,7 +462,7 @@
     "phase108-world-first-anticipatory-sentinel",
     "v9.41.0-released"
   ],
-  "current_version": "9.43.0",
+  "current_version": "9.42.0",
   "completed_milestones": [
     "phase66-plan",
     "phase66-weight-adaptor-telemetry",
@@ -628,8 +628,8 @@
     "v9.41.0-released",
     "phase108-complete"
   ],
-  "software_version": "9.43.0",
-  "last_agent_state_sync_digest": "gsync-934f16b9f013e8be",
+  "software_version": "9.42.0",
+  "last_agent_state_sync_digest": "gsync-7d99a34e9b5671b4",
   "version": "9.41.0",
   "phase": 108,
   "phase_label": "Phase 108 \u2014 INNOV-23 Constitutional Epoch Sentinel",

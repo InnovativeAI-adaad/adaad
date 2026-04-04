@@ -1,3 +1,22 @@
+## [9.44.0] — 2026-04-04 — Phase 111 · INNOV-26 Constitutional Entropy Budget
+
+**Branch:** `feature/phase111-ceb-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T111-CEB-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase111/phase111_sign_off.json` · ILA-111-2026-04-04-001
+
+### Constitutional Invariants Introduced
+- **CEB-0** — `drift_ratio` = (added+removed)/max(1,genesis_count); `requires_double_signoff` True when drift_ratio >= 0.30
+- **CEB-DETERM-0** — `check_drift()` MUST return byte-identical report for identical inputs
+- **CEB-AUDIT-0** — every report carries tamper-evident `report_digest`; every amendment writes to `DriftLedger`
+
+### Deliverables
+- `runtime/innovations30/constitutional_entropy_budget.py`
+- `tests/test_phase111_ceb.py` — T111-CEB-01..30 (30/30 PASS)
+- `artifacts/governance/phase111/` — 4-artifact evidence bundle
+
+---
+
 ## [9.43.0] — 2026-04-03 — Phase 110 · INNOV-25 Hardware-Adaptive Fitness
 
 **Branch:** `feature/phase110-haf-impl`
