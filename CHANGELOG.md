@@ -1,3 +1,22 @@
+## [9.46.0] — 2026-04-03 — Phase 113 · INNOV-28 Self-Awareness Invariant
+
+**Branch:** `feature/phase113-self-aware-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T113-SELF-AWARE-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase113/phase113_sign_off.json` · ILA-113-2026-04-03-001
+
+### Constitutional Invariants Introduced
+- **SELF-AWARE-0** — no mutation may remove observability calls from protected monitoring modules
+- **SELF-AWARE-DETERM-0** — `evaluate()` identical inputs → identical `verdict_digest`
+- **SELF-AWARE-AUDIT-0** — every verdict carries non-empty `verdict_digest`; audit trail persisted
+
+### Deliverables
+- `runtime/innovations30/self_awareness_invariant.py` — INNOV-28 full constitutional implementation
+- `tests/test_phase113_self_aware.py` — T113-SELF-AWARE-01..30 (30/30 PASS)
+- `artifacts/governance/phase113/` — 4-artifact evidence bundle
+
+---
+
 ## [9.42.0] — 2026-04-03 — Phase 109 · INNOV-24 SVP
 
 **Branch:** `feature/phase109-svp-impl`
