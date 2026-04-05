@@ -8,7 +8,7 @@
 
 Phase 107 (INNOV-22 MCF) shipped v9.40.0. Phase 108 (INNOV-23 CES) shipped v9.41.0. Phase 109 (INNOV-24 SVP) shipped v9.42.0. Phase 110 (INNOV-25 HAF) shipped v9.43.0. ADAAD now extends constitutional governance with hardware-adaptive fitness weights enabling governed evolution across heterogeneous deployment targets. 113 Hard-class invariants enforced. Innovations INNOV-01 through INNOV-25 are shipped across v9.18.0–v9.43.0 (Phases 87–110), with deterministic evidence artifacts recorded per phase closure.
 
-**Current/Next:** Current = **Phase 115** (`v9.48.0`, INNOV-30 MIRROR shipped). **PIPELINE COMPLETE — all 30 innovations shipped.** Next gate: v1.1-GA release candidate (blocked on FINDING-66-004 key ceremony). # (`v9.42.0`, INNOV-24 SVP shipped). Next = **Phase 110 — to be planned**.
+**Current/Next:** Current = **Phase 121** (`v9.54.0`, INNOV-36 DAS shipped). Cumulative Hard-class invariants: 162. Next = **Phase 122 — to be planned**.
 
 **GA blockers (canonical): 1 open** — FINDING-66-004 (Governance Key Ceremony: 2-of-3 Ed25519 threshold not yet executed — runbook delivered, ceremony deferred).
 

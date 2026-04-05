@@ -1,3 +1,19 @@
+## [9.54.0] — 2026-04-04 · Phase 121 · INNOV-36 DAS
+
+### Added
+- **INNOV-36 Deterministic Audit Sandbox (DAS)** — hermetic, reproducible CEL epoch sandbox with HMAC-SHA256 JSONL chain-verified audit ledger; any external observer can clone → `docker-compose up das-demo` → verify in <60 seconds; 7 new Hard-class invariants (DAS-0, DAS-DETERM-0, DAS-CHAIN-0, DAS-REPLAY-0, DAS-GATE-0, DAS-VERIFY-0, DAS-DOCKER-0)
+- `runtime/innovations30/deterministic_audit_sandbox.py` — DeterministicAuditSandbox, EpochRecord, RuntimeDeterminismProvider, das_guard; DAS-VERIFY-0 fix: dual tamper detection via stored prev_digest field validation and computed[:24] hash comparison
+- `tests/test_phase121_das.py` — T121-DAS-01..30 (30/30 passing)
+- `scripts/demo_runner.py` — full pipeline orchestrator; 8-record epoch, chain verify, replay; exit 0 on all-clear
+- `scripts/verify_ledger.py` — standalone chain verifier with --verbose per-record output; exit 1 on first broken link
+- `scripts/replay_epoch.py` — epoch replay tool; re-derives all record_hash values from stored JSONL; exit 0 on digest match
+- `Dockerfile.demo` — pinned Python 3.12.3-slim with exact image digest (DAS-DOCKER-0: :latest constitutionally prohibited)
+- `docker-compose.yml` — 4 services: das-demo, das-verify, das-replay, das-test; shared das_ledger_data volume
+- `DEMO.md` — external-auditor documentation; includes ledger format spec, chain verification algorithm, quick start
+- `ui/aponi/das_panel.js` — Aponi dashboard: live epoch runner, chain integrity banner, per-record table, JSONL export
+- `artifacts/governance/phase121/` — phase121_sign_off.json, tier_summary.json (ILA-121-2026-04-04-001)
+- Cumulative Hard-class invariants: 162
+
 ## [9.53.0] — 2026-04-04 · Phase 120 · INNOV-35 SPIE
 
 ### Added
