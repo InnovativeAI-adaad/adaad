@@ -1,4 +1,508 @@
+## [9.55.0] — 2026-04-05 · Phase 122 · README Credibility + ROADMAP Sync
+
+### Changed
+- **README.md** — removed all `world-first` claims; replaced "30/35 innovations" internal batch grouping with a clean 36-module capability index; updated invariant count to 162; hero alt text updated to v9.55.0/122 phases; Roadmap section updated with post-pipeline horizon links
+- **docs/VERIFIABLE_CLAIMS.md** — new file; maps every shipped capability to module path, test file, governance artifact, and runnable verification command; includes explicit "What is not claimed" section
+- **ROADMAP.md** — Current State updated to v9.55.0/Phase 122; Phase 121 marked ✅ shipped; Phase 122 marked 🔄 in-progress; invariant count updated to 162
+- **VERSION** — `9.54.0` → `9.55.0`
+- **pyproject.toml** — `9.53.0` → `9.55.0`
+- **.adaad_agent_state.json** — version `9.55.0`, current_phase `122`
+- **governance/report_version.json** — version `9.55.0`, phase `122`
+
+### Tests
+- `tests/test_phase122_readme_credibility.py` — T122-CRED-01..30 (30/30 PASS)
+
+### Governance
+- `artifacts/governance/phase122/` — phase122_sign_off.json, track_a_sign_off.json, replay_digest.txt, tier_summary.json (ILA-122-2026-04-05-001)
+- Cumulative Hard-class invariants: **162** (no new invariants — documentation phase)
+
+## [9.54.0] — 2026-04-04 · Phase 121 · INNOV-36 DAS
+
+### Added
+- **INNOV-36 Deterministic Audit Sandbox (DAS)** — hermetic, reproducible CEL epoch sandbox with HMAC-SHA256 JSONL chain-verified audit ledger; any external observer can clone → `docker-compose up das-demo` → verify in <60 seconds; 7 new Hard-class invariants (DAS-0, DAS-DETERM-0, DAS-CHAIN-0, DAS-REPLAY-0, DAS-GATE-0, DAS-VERIFY-0, DAS-DOCKER-0)
+- `runtime/innovations30/deterministic_audit_sandbox.py` — DeterministicAuditSandbox, EpochRecord, RuntimeDeterminismProvider, das_guard; DAS-VERIFY-0 fix: dual tamper detection via stored prev_digest field validation and computed[:24] hash comparison
+- `tests/test_phase121_das.py` — T121-DAS-01..30 (30/30 passing)
+- `scripts/demo_runner.py` — full pipeline orchestrator; 8-record epoch, chain verify, replay; exit 0 on all-clear
+- `scripts/verify_ledger.py` — standalone chain verifier with --verbose per-record output; exit 1 on first broken link
+- `scripts/replay_epoch.py` — epoch replay tool; re-derives all record_hash values from stored JSONL; exit 0 on digest match
+- `Dockerfile.demo` — pinned Python 3.12.3-slim with exact image digest (DAS-DOCKER-0: :latest constitutionally prohibited)
+- `docker-compose.yml` — 4 services: das-demo, das-verify, das-replay, das-test; shared das_ledger_data volume
+- `DEMO.md` — external-auditor documentation; includes ledger format spec, chain verification algorithm, quick start
+- `ui/aponi/das_panel.js` — Aponi dashboard: live epoch runner, chain integrity banner, per-record table, JSONL export
+- `artifacts/governance/phase121/` — phase121_sign_off.json, tier_summary.json (ILA-121-2026-04-04-001)
+- Cumulative Hard-class invariants: 162
+
+## [9.53.0] — 2026-04-04 · Phase 120 · INNOV-35 SPIE
+
+### Added
+- **INNOV-35 Self-Proposing Innovation Engine (SPIE)** — system proposes its own next innovations from FailureSignal, ConstitutionalGapSignal, and MirrorAccuracySignal inputs; HUMAN-0 still ratifies; 7 new Hard-class invariants (SPIE-0, SPIE-DETERM-0, SPIE-PERSIST-0, SPIE-CHAIN-0, SPIE-GATE-0, SPIE-SOURCE-0, SPIE-HUMAN0-0)
+- `runtime/innovations30/self_proposing_innovation_engine.py` — SelfProposingInnovationEngine, InnovationProposal, FailureSignal, ConstitutionalGapSignal, MirrorAccuracySignal, spie_guard
+- `tests/test_phase120_spie.py` — T120-SPIE-01..30 (30/30 passing)
+- `artifacts/governance/phase120/` — phase120_sign_off.json, tier_summary.json
+- Cumulative Hard-class invariants: 155
+
+## [9.52.0] — 2026-04-04 · Phase 119 · INNOV-34 FGCON
+
+### Added
+- **INNOV-34 Federation Governance Consensus (FGCON)** — formal consensus protocol for federation-wide constitutional amendments; strict majority quorum enforcement (floor(N/2)+1); no single instance can amend federation-level invariants unilaterally; 7 new Hard-class invariants (FGCON-0, FGCON-DETERM-0, FGCON-PERSIST-0, FGCON-CHAIN-0, FGCON-GATE-0, FGCON-UNILATERAL-0, FGCON-QUORUM-0)
+- `runtime/innovations30/federation_governance_consensus.py` — FederationGovernanceConsensus, AmendmentProposal, FederationMember, VoteRecord, fgcon_guard
+- `tests/test_phase119_fgcon.py` — T119-FGCON-01..30 (30/30 passing)
+- `artifacts/governance/phase119/` — phase119_sign_off.json, tier_summary.json
+- Cumulative Hard-class invariants: 148
+
+## [9.51.0] — 2026-04-04 · Phase 118 · INNOV-33 KBEP
+
+### Added
+- **INNOV-33 Knowledge Bundle Exchange Protocol (KBEP)** — standardized, cryptographically verified knowledge bundle format for sharing institutional memory across federation members; extends INNOV-13 (IMT) to the multi-instance case; 6 new Hard-class invariants (KBEP-0, KBEP-DETERM-0, KBEP-PERSIST-0, KBEP-CHAIN-0, KBEP-GATE-0, KBEP-VERIFY-0)
+- `runtime/innovations30/knowledge_bundle_exchange.py` — KnowledgeBundleExchangeProtocol, FederationBundle, KnowledgeBundleItem, ExchangeRecord, kbep_guard
+- `tests/test_phase118_kbep.py` — T118-KBEP-01..30 (30/30 PASS)
+- `artifacts/governance/phase118/` — phase118_sign_off.json, track_a_sign_off.json, tier_summary.json
+
+### Constitutional Invariants (6 new · cumulative: 141 Hard-class)
+`KBEP-0` · `KBEP-DETERM-0` · `KBEP-PERSIST-0` · `KBEP-CHAIN-0` · `KBEP-GATE-0` · `KBEP-VERIFY-0`
+
+### Architecture
+- `FederationBundle.create()` — KBEP-DETERM-0: deterministic bundle_id = sha256(epoch_id + instance_id)[:16]; bundle_digest = sha256(canonical-JSON(items))
+- `KnowledgeBundleExchangeProtocol.import_bundle()` — KBEP-0/KBEP-VERIFY-0: recompute_digest() must match before any state write; fail-closed KBEPVerificationError
+- `KnowledgeBundleExchangeProtocol.create_bundle()` — KBEP-GATE-0: federation_amendment=True requires human0_acknowledged=True
+- `ExchangeRecord` — KBEP-CHAIN-0: HMAC-SHA256 chain linked via (record_id + prev_digest + bundle_id)
+- `_flush_record()` — KBEP-PERSIST-0: append-only JSONL flush before method return
+- `verify_chain()` — HMAC tamper detection across full ledger replay; KBEPChainError on break
+- `export_snapshot()` — aggregates all imported peer bundles into single exportable snapshot
+- `kbep_guard()` — fail-closed enforcement helper for all 6 Hard-class invariants
+
+### IP Claims
+- World-first: multi-instance federated knowledge bundle exchange with HMAC-chain-linked ledger and HUMAN-0 gated federation amendments in a constitutionally governed autonomous system
+- Extends IMT (INNOV-13) to the federation domain with cryptographic provenance across instance boundaries
+- KBEP-DETERM-0: no datetime/random in any ID derivation — all deterministic from epoch_id + instance_id
+- Fail-closed KBEP-VERIFY-0: partial/approximate digest matching explicitly prohibited
+
+### Metrics
+- Hard-class invariants: **135 → 141** (+6 KBEP)
+- ILA: ILA-118-2026-04-04-001
+- Governor: DUSTIN L REID
+
+## [9.50.0] — 2026-04-04 · Phase 117 · INNOV-32 CRTV
+
+### Added
+- **INNOV-32 Constitutional Rollback & Temporal Versioning (CRTV)** — append-only, chain-linked snapshot ledger for the constitution itself; governed rollback to any prior state under HUMAN-0 gate; semantic diff between any two constitutional versions; persistence + reload from JSONL ledger; 5 new Hard-class invariants (CRTV-0, CRTV-CHAIN-0, CRTV-DETERM-0, CRTV-GATE-0, CRTV-AUDIT-0)
+- `runtime/innovations30/constitutional_rollback.py` — ConstitutionalRollbackEngine, ConstitutionalSnapshot, ConstitutionalDiff, RollbackEvent
+- `tests/test_phase117_crtv.py` — T117-CRTV-01..30 (30/30 PASS)
+- `artifacts/governance/phase117/` — governance sign-off, track A, tier summary, replay digest
+- **PyPI publication**: v9.50.0 published to PyPI — closes critical distribution gap (prior: v9.11.0)
+
+### Metrics
+- Hard-class invariants: **130 → 135** (+5 CRTV)
+- ILA: ILA-117-2026-04-04-001
+- Governor: DUSTIN L REID
+
+## [9.49.0] — 2026-04-04 — Phase 116 · INNOV-31 Invariant Discovery Engine (IDE)
+
+**Branch:** `feature/phase116-ide-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-04
+**Tests:** T116-IDE-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase116/phase116_sign_off.json` · ILA-116-2026-04-04-001
+
+### Deliverables
+- `runtime/innovations30/invariant_discovery.py` — INNOV-31 full constitutional implementation
+- `tests/test_phase116_ide.py` — T116-IDE-01..30 (30/30 PASS)
+- `artifacts/governance/phase116/` — 4 governance artifacts
+
+### Constitutional Invariants (5 new · cumulative: 130 Hard-class)
+`IDE-0` · `IDE-DETERM-0` · `IDE-PERSIST-0` · `IDE-AUDIT-0` · `IDE-GATE-0`
+
+### Findings Resolved
+- **FINDING-115-001**: `agent_state` nested fields backfilled to Phase 115 / v9.48.0
+- **FINDING-115-002**: CHANGELOG v9.48.0 Phase 115 MIRROR entry prepended
+- **FINDING-115-003**: ROADMAP Phase 115 section appended
+
+### IP Claims
+- First governed autonomous constitutional self-discovery engine: system mines its own governance failure history to propose new constitutional invariants
+- HMAC-chain-linked append-only JSONL ledger with tamper detection via `verify_chain()`
+- Deterministic `rule_id` derived solely from `epoch_id` + pattern index — no datetime/random (IDE-DETERM-0)
+- Fail-closed `IDE-GATE-0` deduplication preventing re-proposal of already-known patterns
+- `ide_guard()` fail-closed enforcement helper for all 5 Hard-class invariants
+
+---
+
+## [9.48.0] — 2026-04-03 — Phase 115 · INNOV-30 The Mirror Test (MIRROR)
+
+**Branch:** `feature/phase115-mirror-test-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T115-MIRROR-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase115/phase115_sign_off.json` · ILA-115-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/mirror_test.py` — INNOV-30 The Mirror Test full constitutional implementation
+- `tests/test_phase115_mirror.py` — T115-MIRROR-01..30 (30/30 PASS)
+- `artifacts/governance/phase115/` — 4 governance artifacts
+
+### Constitutional Invariants (3 new · cumulative: 125 Hard-class)
+`MIRROR-0` · `MIRROR-DETERM-0` · `MIRROR-AUDIT-0`
+
+### IP Claims
+- First constitutional self-calibration test measuring governance prediction accuracy
+- Deterministic scoring with tamper-evident result_digest on every MirrorTestResult
+- CalibrationEpoch enforcement when overall_score below CALIBRATION_THRESHOLD
+- Fail-closed mirror_guard() enforcement helper for all three Hard-class invariants
+
+### Pipeline Milestone
+**INNOV-01 through INNOV-30 — 30/30 innovations shipped** across Phases 87–115
+
+---
+
+## [9.47.0] — 2026-04-03 — Phase 114 · INNOV-29 Curiosity-Driven Exploration
+
+**Branch:** `feature/phase114-curiosity-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T114-CURIOSITY-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase114/phase114_sign_off.json` · ILA-114-2026-04-03-001
+
+### Constitutional Invariants Introduced
+- **CURIOSITY-0** — `invert_fitness()` returns `1.0 - base_fitness` when active; `base_fitness` in [0.0,1.0] enforced
+- **CURIOSITY-STOP-0** — `tick()` MUST exit immediately on `health < 0.50` or protected file match
+- **CURIOSITY-AUDIT-0** — all transitions append to `discoveries` and persist state
+
+### Deliverables
+- `runtime/innovations30/curiosity_engine.py` — INNOV-29 full constitutional implementation
+- `tests/test_phase114_curiosity.py` — T114-CURIOSITY-01..30 (30/30 PASS)
+- `artifacts/governance/phase114/` — 4-artifact evidence bundle
+
+---
+
+## [9.42.0] — 2026-04-03 — Phase 109 · INNOV-24 SVP
+
+**Branch:** `feature/phase109-svp-impl`
+**HUMAN-0 Ratification:** `[slot reserved]`
+**Tests:** T109-SVP-01..30 (30/30 PASS)
+**Evidence Artifacts:** `artifacts/governance/phase109/phase109_sign_off.json` · `artifacts/governance/phase109/phase109_replay_digest.json` · ILA-109-2026-04-03-001
+
+### Server Endpoint Additions
+- `GET /governance/svp/{epoch_id}`
+- `POST /governance/svp/ratify`
+
+### Deliverables
+- `runtime/innovations30/sovereign_validation_plane.py` — INNOV-24 SVP implementation
+- `tests/test_phase109_svp.py` — T109-SVP-01..30 (30/30 PASS)
+- `artifacts/governance/phase109/` — release evidence bundle
+
+---
+
+## [9.41.0] — 2026-04-03 — Phase 108 · INNOV-23 Constitutional Epoch Sentinel
+
+**Branch:** `feature/phase108-ces-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T108-CES-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase108/phase108_sign_off.json` · ILA-108-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/constitutional_epoch_sentinel.py` — INNOV-23 Constitutional Epoch Sentinel
+- `tests/test_phase108_ces.py` — T108-CES-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/sentinel/{epoch_id}`
+- `artifacts/governance/phase108/` — 4 governance artifacts
+
+### Constitutional Invariants (8 new · cumulative: 107 Hard-class)
+`CES-0` · `CES-WATCH-0` · `CES-THRESH-0` · `CES-EMIT-0` · `CES-PERSIST-0` · `CES-CHAIN-0` · `CES-GATE-0` · `CES-DETERM-0`
+
+### IP Claims
+- First anticipatory constitutional primitive: governed early-warning emission before Hard-class invariant breach
+- Warning corridor detection with margin_remaining telemetry enabling pre-violation governance intervention
+- Multi-channel atomic tick architecture: all SentinelChannels evaluated per tick (CES-WATCH-0)
+- Chain-linked advisory ledger with hmac.compare_digest tamper detection
+
+---
+
+## [9.40.0] — 2026-04-03 — Phase 107 · INNOV-22 Mutation Conflict Framework
+
+**Branch:** `feature/phase107-mcf-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T107-MCF-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase107/phase107_sign_off.json` · ILA-107-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/mutation_conflict_framework.py` — INNOV-22 Mutation Conflict Framework
+- `tests/test_phase107_mcf.py` — T107-MCF-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/conflict/{mutation_id}`
+- `artifacts/governance/phase107/` — 4 governance artifacts
+
+### Constitutional Invariants (8 new · cumulative: 99 Hard-class)
+`MCF-0` · `MCF-DETECT-0` · `MCF-SEVERITY-0` · `MCF-PERSIST-0` · `MCF-CHAIN-0` · `MCF-RESOLVE-0` · `MCF-GATE-0` · `MCF-DETERM-0`
+
+### IP Claims
+- Constitutional mutation conflict detection via deterministic frozenset intersection with HMAC-chain-linked tamper-evident JSONL ledger
+- Severity-stratified conflict resolution: auto-resolve for low/medium, mandatory HUMAN-0 escalation advisory for high/critical
+- Stable conflict_digest over sorted mutation_id pair and overlap paths enabling deterministic cross-epoch replay verification
+- EscalationAdvisory emission and acknowledgement lifecycle enforcing HUMAN-0 gate before high/critical conflict resolution
+
+---
+
+## [9.39.0] — 2026-04-03 — Phase 106 · INNOV-21 Governance Bankruptcy Protocol
+
+**Branch:** `feature/phase106-gbp-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T106-GBP-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase106/phase106_sign_off.json` · ILA-106-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/governance_bankruptcy.py` — promoted from scaffold to full constitutional implementation
+- `tests/test_phase106_gbp.py` — T106-GBP-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/bankruptcy/{epoch_id}`
+- `artifacts/governance/phase106/` — 4 governance artifacts
+
+### Findings Resolved
+- `FINDING-GBP-SCAFFOLD-01` (P1): governance_bankruptcy.py scaffold missing typed exception, chain-link, and discharge supersession — all closed
+
+### Constitutional Invariants (8 new · cumulative: 91 Hard-class)
+`GBP-0` · `GBP-THRESH-0` · `GBP-HEALTH-0` · `GBP-PERSIST-0` · `GBP-CHAIN-0` · `GBP-DISCHARGE-0` · `GBP-GATE-0` · `GBP-IMMUT-0`
+
+### IP Claims
+- Governance debt bankruptcy state machine with bounded entry/exit criteria and monotonic discharge progression
+- Chain-linked append-only JSONL ledger with SHA-256 digest chain and `hmac.compare_digest` tamper detection
+- Discharge supersession protocol: last ledger entry per epoch_id is authoritative; stale re-activation is constitutionally blocked
+- Constitutional gate: blank-intent mutation bypass during bankruptcy is a `GBPViolation`, not a pass
+
+---
+
+## [9.38.0] — 2026-04-03 — Phase 105 · INNOV-20 Constitutional Stress Testing
+
+**Branch:** `feature/phase105-cst-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T105-CST-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase105/phase105_sign_off.json` · ILA-105-2026-04-03-001
+
+### Deliverables
+- `runtime/innovations30/constitutional_stress_test.py` — promoted from scaffold to full constitutional implementation
+- `tests/test_phase105_cst.py` — T105-CST-01..30 (30/30 PASS)
+- `server.py` — `GET /governance/stress-test/{epoch_id}`
+- `ui/aponi/cst_panel.js` — scenario catalogue browser + gap explorer panel
+- `artifacts/governance/phase105/` — 4 governance artifacts
+
+### Constitutional Invariants (8 new · cumulative: 83 Hard-class)
+`CST-0` · `CST-PERSIST-0` · `CST-GAP-0` · `CST-DIGEST-0` · `CST-FEED-0` · `CST-SCENARIO-0` · `CST-HALT-0` · `CST-DETERM-0`
+
+### IP Claims
+- Adversarial constitutional stress testing with margin-calibrated scenario catalogue for autonomous AI governance gap detection
+- Append-only gap ledger with InvariantDiscovery feed emission enabling self-reinforcing constitutional rule discovery
+- Deterministic SHA-256 digest chain over stress report records providing tamper-evident governance coverage audit trail
+
+---
+
+## [9.37.0] — 2026-04-03 — Phase 104 · INNOV-19 Governance Archaeology Mode
+
+**Branch:** `feature/phase104-gam-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T104-GAM-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase104/phase104_sign_off.json` · ILA-104-2026-04-03-001
+
+### Phase 104: INNOV-19 — Governance Archaeology Mode (GAM)
+
+World-first cryptographically-verified mutation decision timeline reconstruction.
+`GovernanceArchaeologist.excavate()` scans all distributed ledgers and assembles
+a complete chronological `DecisionEvent` list for any mutation_id — from first
+`proposed` event through every governance gate to final `approved`/`rejected`/
+`promoted`/`rolled_back` outcome.
+
+#### Module: `runtime/innovations30/governance_archaeology.py` (promoted from scaffold)
+
+- `DecisionEvent` — carries event_type, timestamp, epoch_id, mutation_id, actor,
+  outcome, details, ledger_hash; `to_dict()` is JSON-serializable
+- `MutationTimeline` — carries timeline_digest (GAM-CHAIN-0), chain_verified,
+  final_outcome (GAM-OUTCOME-0); accessors: proposal_event, governance_events,
+  human_events, terminal_event
+- `GovernanceArchaeologist` — `excavate()` sole entry point (GAM-0); scans `.jsonl`
+  files across all ledger_roots; `_parse_event()` returns None for non-matching
+  records (GAM-PARSE-0); fail-open throughout (GAM-FAIL-OPEN-0); events sorted
+  ascending by timestamp, empty timestamp sorts first (GAM-SORT-0);
+  `verify_chain()` re-computes digest for tamper detection (GAM-VERIFY-0);
+  `export_timeline()` emits innovation=19 metadata (GAM-EXPORT-0)
+- `_TERMINAL_EVENT_TYPES` — frozenset{approved, rejected, promoted, rolled_back}
+
+#### New REST endpoint: `GET /governance/archaeology/{mutation_id}`
+
+Returns timeline, final_outcome, timeline_digest, chain_verified, event_count, export.
+
+#### New Aponi panel: `ui/aponi/gam_panel.js`
+
+Interactive mutation_id search, outcome badge, SHA-256 chain indicator, chronological
+event list, JSON export download. INNOV-19 · Phase 104.
+
+#### Constitutional invariants introduced (9 new — Hard-class cumulative: 75)
+
+- **GAM-0** — excavate() is the sole entry point; never raises on absent/empty ledger
+- **GAM-CHAIN-0** — timeline_digest = "sha256:" + sha256(json.dumps(event_types)); prefixed
+- **GAM-DETERM-0** — identical ledger state + mutation_id → identical digest; no RNG
+- **GAM-SORT-0** — events sorted ascending by timestamp; empty timestamp sorts first
+- **GAM-FAIL-OPEN-0** — corrupt JSONL lines silently skipped; no exception from excavate()
+- **GAM-PARSE-0** — _parse_event() returns None for non-matching records; never raises
+- **GAM-OUTCOME-0** — final_outcome from last terminal event; defaults "unknown"
+- **GAM-EXPORT-0** — export_timeline() always carries innovation=19 and timeline_digest
+- **GAM-VERIFY-0** — verify_chain() re-computes digest; returns bool; never raises
+
+
+## [9.36.0] — 2026-04-03 — Phase 103 · INNOV-18 Temporal Governance Windows
+
+**Branch:** `feature/phase103-tgov-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-03
+**Tests:** T103-TGOV-01..32 (32/32 PASS)
+**Evidence:** `artifacts/governance/phase103/phase103_sign_off.json` · ILA-103-2026-04-03-001
+
+### Phase 103: INNOV-18 — Temporal Governance Windows (TGOV)
+
+World-first health-adaptive constitutional governance engine.
+`TemporalGovernanceEngine.get_adjusted_ruleset()` dynamically modulates rule severity
+based on live system health — softening non-critical rules during high-health epochs and
+hardening all rules during system degradation. `ast_validity` is permanently `blocking`
+regardless of health state (fail-safe anchor).
+
+#### Module: `runtime/innovations30/temporal_governance.py` (extended)
+
+- `GovernanceWindow` — dataclass carrying `baseline_severity`, `high_health_severity`,
+  `low_health_severity`, and configurable `high_health_threshold` (0.85) / `low_health_threshold` (0.60)
+- `TemporalGovernanceEngine` — `get_adjusted_ruleset(health_score)` sole entry point for
+  severity resolution; `log_adjustment()` appends SHA-256-chained entries (TGOV-CHAIN-0);
+  `audit_trail()` is fail-open — corrupt JSONL lines silently skipped (TGOV-CORRUPT-SKIP-0);
+  `health_trend()` returns "improving" | "degrading" | "stable" from log history (TGOV-HEALTH-0);
+  `export_window_config()` exports structured window metadata with `innovation=18` (TGOV-EXPORT-0)
+- `DEFAULT_WINDOWS` — five constitutional rules: lineage_continuity, single_file_scope,
+  ast_validity, entropy_budget, replay_determinism
+
+#### New REST endpoint: `GET /governance/temporal/windows`
+
+Returns `adjusted_ruleset`, `window_config`, `health_trend`, and last 10 chained audit entries.
+
+#### New Aponi panel: `ui/aponi/tgov_panel.js`
+
+Live health bar, severity table, GovernanceWindow configuration cards, SHA-256 chain audit trail.
+Auto-refresh every 10 s. INNOV-18 · Phase 103.
+
+#### Constitutional invariants introduced (9 new — Hard-class cumulative: 66)
+
+- **TGOV-0** — effective_severity() never raises; unknown rules return "blocking"
+- **TGOV-CHAIN-0** — log entries carry SHA-256 digest linked to prev entry; genesis anchor = "genesis"
+- **TGOV-CORRUPT-SKIP-0** — audit_trail() silently skips corrupt JSONL lines; never raises
+- **TGOV-FAIL-0** — unregistered rule → "blocking" (fail-closed gate, no exceptions)
+- **TGOV-DETERM-0** — identical health score → identical adjusted ruleset (no RNG)
+- **TGOV-PERSIST-0** — log_adjustment() uses Path.open("a") append mode; parent auto-created
+- **TGOV-HEALTH-0** — health_trend() returns exactly one of "improving" | "degrading" | "stable"
+- **TGOV-EXPORT-0** — export_window_config() always carries innovation=18 and window_count
+- **TGOV-WINDOW-0** — GovernanceWindow: score ≥ high_threshold → high_sev; score < low_threshold → low_sev; else baseline
+
 # CHANGELOG
+
+## [9.35.0] — 2026-04-01 — Phase 102 · INNOV-17 Agent Post-Mortem Interviews (APM)
+
+**Branch:** `feature/phase102-apm-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T102-APM-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase102/phase102_sign_off.json` · ILA-102-2026-04-01-001
+
+### Phase 102: INNOV-17 — Agent Post-Mortem Interviews (APM)
+
+World-first constitutional-governed post-mortem interviews for autonomous mutation agents.
+`AgentPostMortemSystem.conduct_interview()` forces agents to articulate why they believed
+a rejected mutation would pass, what constitutional gap they missed, and what correction
+they would apply next time. These interviews are persisted to an append-only JSONL ledger
+and fed back via `agent_recurring_gaps()` as calibration inputs to agent selection pressure.
+
+#### New module: `runtime/innovations30/agent_postmortem.py`
+
+- `AgentPostMortemSystem` — `conduct_interview()` sole entry point (APM-0); synthesizes
+  `agent_self_assessment` from intent+strategy; maps `rejection_reasons` to structured
+  `identified_gap` strings (APM-GAP-0); `_persist()` Path.open append-only (APM-PERSIST-0);
+  `agent_recurring_gaps()` fail-open on missing/corrupt ledger (APM-LOAD-0)
+- `AgentReasoningEntry` — `entry_digest` = `sha256:` + sha256(agent_id:mutation_id:
+  identified_gap)[:16]; no RNG/datetime/uuid4 (APM-DETERM-0); carries agent_id, mutation_id,
+  epoch_id, rejection_reasons, entry_digest (APM-CHAIN-0)
+- Gap taxonomy: lineage → "Insufficient lineage chain verification"; entropy → "Entropy budget
+  miscalculated"; scope → "Mutation scope exceeded single-file boundary"; ast → "AST validity
+  issues not caught pre-submission"; replay → "Replay determinism requirements not met";
+  other → "Constitutional rule violated: {reason}"
+
+#### Constitutional invariants introduced
+
+- **APM-0** — conduct_interview() is the sole entry point for post-mortem creation
+- **APM-DETERM-0** — entry_digest is sha256(agent_id:mutation_id:identified_gap)[:16], prefixed "sha256:"; no RNG/datetime/uuid4
+- **APM-PERSIST-0** — _persist() uses Path.open("a") append mode; builtins.open() forbidden; parent mkdir precedes every write
+- **APM-GAP-0** — identified_gap MUST be a non-empty string; empty/whitespace is a Hard failure before persist
+- **APM-LOAD-0** — agent_recurring_gaps() is fail-open; corrupt JSONL lines silently skipped; never raises on partial ledger corruption
+- **APM-CHAIN-0** — every entry MUST carry agent_id, mutation_id, epoch_id, rejection_reasons (non-empty), entry_digest; missing any field is a Hard failure
+
+- Hard-class invariants cumulative: **57** (APM-0 through APM-CHAIN-0 introduced)
+
+
+## [9.34.0] — 2026-04-01 — Phase 101 · INNOV-16 Emergent Role Specialization (ERS)
+
+**Branch:** `feature/phase101-ers-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T101-ERS-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase101/phase101_sign_off.json` · ILA-101-2026-04-01-001
+
+### Phase 101: INNOV-16 — Emergent Role Specialization (ERS)
+
+World-first data-driven emergent role discovery for autonomous code evolution agents.
+`EmergentRoleSpecializer.discover_roles()` classifies agents into named archetypes
+purely from accumulated behavioral evidence — no manual assignment. Two evidence gates
+enforce quality: agents must accumulate >= 50 epochs (ERS-WINDOW-0) and achieve >= 0.65
+target-type dominance (ERS-THRESHOLD-0) before a role is emitted.
+
+#### New module: `runtime/innovations30/emergent_roles.py`
+
+- `EmergentRoleSpecializer` — `record_behavior()` accumulates observations;
+  `discover_roles()` sole assignment authority (ERS-0), window + threshold gated
+  (ERS-WINDOW-0/ERS-THRESHOLD-0), sorted iteration (ERS-DETERM-0); `_save()` / `_load()`
+  fail-open (ERS-PERSIST-0)
+- `AgentBehaviorProfile` — `dominant_target` / `dominant_strategy` deterministic
+  max (alphabetic tie-break); `specialization_score` = max_count/total; `avg_risk`;
+  `avg_fitness_delta` — all pure properties, no entropy (ERS-DETERM-0)
+- `EmergentRole` — 5 named archetypes: structural_architect, test_coverage_guardian,
+  performance_optimizer, safety_hardener, adaptive_explorer; fallback: emergent_{strategy}
+
+#### Constitutional invariants introduced
+
+- **ERS-0** — discover_roles() is sole role-assignment authority; no manual assignment
+- **ERS-WINDOW-0** — role not emitted before SPECIALIZATION_WINDOW (50) epochs
+- **ERS-THRESHOLD-0** — role not emitted below SPECIALIZATION_THRESHOLD (0.65) score
+- **ERS-DETERM-0** — classification deterministic; no datetime.now()/random/uuid4
+- **ERS-PERSIST-0** — _save() Path.open("w") sort_keys=True; _load() fail-open
+
+- Hard-class invariants cumulative: **56** (ERS-0 through ERS-PERSIST-0 introduced)
+
+
+## [9.33.0] — 2026-04-01 — Phase 100 · INNOV-15 Agent Reputation Staking (ARS)
+
+**Branch:** `feature/phase100-ars-impl`
+**HUMAN-0 Gate:** Dustin L. Reid — ratified 2026-04-01
+**Tests:** T100-ARS-01..30 (30/30 PASS)
+**Evidence:** `artifacts/governance/phase100/phase100_sign_off.json` · ILA-100-2026-04-01-001
+
+### Phase 100: INNOV-15 — Agent Reputation Staking (ARS)
+
+World-first skin-in-the-game economics for autonomous code evolution agents.
+`ReputationStakingLedger` converts hollow proposals into costly commitments: agents
+stake credits before mutation promotion; governance failure burns the full stake
+(STAKE-BURN-0); pass with measured fitness improvement rewards with a 1.5x multiplier.
+Accumulated win-rate shapes agent selection pressure over time.
+
+#### New module: `runtime/innovations30/reputation_staking.py`
+
+- `ReputationStakingLedger` — `register_agent()`, `stake()` with balance gate and cap
+  (STAKE-0/STAKE-CAP-0); `resolve()` with burn-or-reward logic (STAKE-BURN-0);
+  `_persist()` Path.open append-only (STAKE-PERSIST-0); `_load()` fail-open
+- `StakeRecord` — `stake_digest` = full sha256(agent_id:mutation_id:epoch_id:staked_amount)
+  (STAKE-DETERM-0); `outcome` transitions: pending → passed | failed
+- `InsufficientStakeError` — raised when balance < MIN_STAKE (STAKE-0)
+- `StakeAlreadyResolvedError` — raised on double-resolution (STAKE-BURN-0)
+
+#### Constitutional invariants introduced
+
+- **STAKE-0** — agent balance must be >= MIN_STAKE before stake() commits
+- **STAKE-CAP-0** — staked amount capped at 20% of pre-stake balance per proposal
+- **STAKE-BURN-0** — resolve(passed=False) burns 100% of stake; no return path
+- **STAKE-DETERM-0** — stake_digest is full sha256, no datetime/random/uuid4
+- **STAKE-PERSIST-0** — Path.open("a") append-only; wallet writes use sort_keys=True
+
+- Hard-class invariants cumulative: **51** (STAKE-0 through STAKE-PERSIST-0 introduced)
+
 
 ## [9.32.0] — 2026-04-01 — Phase 99 · INNOV-14 Constitutional Jury System (CJS)
 
@@ -650,486 +1154,4 @@ stress-tests itself constitutionally before anything merges.
 **Failure modes covered:** `ACSE_BOUNDARY_BREACH`, `ACSE_VIOLATION_FOUND`, `ACSE_BUDGET_EXCEEDED`,
 `ACSE_SEED_NONDETERMINISTIC`, `ACSE_COUNTER_EVIDENCE_UNSIGNED`
 
-**CSAP integration:** CSAP-GATE-1 check 3 hardened from advisory to hard FAIL.  Any amendment
-without `ACSE_CLEAR` bundle is now unconditionally rejected.
-
-**Tests:** `tests/test_phase87_innov02_acse.py` — T87-ACSE-01..20 (20/20 PASS)
-
-**Next:** INNOV-03 TIFE (v9.20.0) — Temporal Invariant Forecasting Engine
-
----
-
-## [9.18.0] — 2026-03-23 — Phase 87 INNOV-01 · Constitutional Self-Amendment Protocol (CSAP)
-
-### World-First: Governed Constitutional Self-Amendment
-
-ADAAD can now propose, validate, and cryptographically ratify amendments to its own
-constitutional invariant set under a two-gate supermajority protocol.
-
-**New module:** `runtime/evolution/csap_protocol.py`
-
-- `ConstitutionalAmendmentProposal` — machine-readable proposal dataclass; `content_hash()` deterministic
-- `InvariantParser` — structural parser enforcing modal-verb grammar; deterministic; no IO
-- `InvariantsMatrix` — full invariant registry; `apply_amendment()` returns new matrix (immutable); original never mutated
-- `ConstitutionalAmendmentQueue` — append-only persisted proposal queue (CSAP-GATE-1 check 1)
-- `ConstitutionalAmendmentLedger` — append-only ledger; `verify_chain()` predecessor-hash audit; CSAP-1 enforced
-- `evaluate_csap_gate_0()` — six deterministic eligibility checks; fail-closed
-- `evaluate_csap_gate_1()` — six ratification checks; fitness regression delta gate; ACSE advisory hook
-- `ConstitutionalSelfAmendmentProtocol` — orchestrator; CSAP-1 ledger-before-matrix ordering enforced
-
-**Invariants introduced:**
-- `CSAP-0`: Hard-class amendment MUST NOT proceed without HUMAN-0 co-signature — enforced in CSAP-GATE-0 check 6
-- `CSAP-1`: Ledger MUST be written before InvariantsMatrix is mutated — enforced in orchestrator `evaluate()`
-
-**Failure modes covered:** `AMENDMENT_INELIGIBLE`, `RATIFICATION_DENIED`, `AMENDMENT_CONFLICT`,
-`AMENDMENT_REPLAY_BROKEN`, `INVARIANT_PARSER_REJECT`
-
-**Tests:** `tests/test_phase87_innov01_csap.py` — T87-CSAP-01..20 (20/20 PASS)
-
-**Next:** INNOV-02 ACSE (v9.19.0) — when ACSE ships, CSAP-GATE-1 check 3 hardens from advisory to hard FAIL.
-
----
-
-## [9.17.1] — 2026-03-23 — Phase 87 · Innovation Architecture Plan — HUMAN-0 Ratified
-
-### Governance — Phase 87 Innovation Architecture Plan
-
-Seven world-first autonomous improvement features ratified by HUMAN-0 (Dustin L. Reid).
-No implementation code in this PR — plan document and governance ledger event only.
-
-**Document:** `docs/governance/PHASE_87_INNOVATION_ARCHITECTURE_PLAN.md`  
-**Document SHA-256:** `sha256:780af05e3b610f3bd864be5a906fe7c840e563fc346c3a70baec1b6360cbdb2b`  
-**Governance ledger event:** `HUMAN_0_RATIFICATION · PHASE-87-PLAN · record_hash sha256:09832b5aff5b587fa7a70ba1fb1c65b79dfc44ee30163a37782172784e3b3ef1`
-
-**Features ratified (implementation sequence v9.18.0 → v9.24.0):**
-
-| ID | Name | Abbr | Target |
-|----|------|------|--------|
-| INNOV-01 | Constitutional Self-Amendment Protocol | CSAP | v9.18.0 |
-| INNOV-02 | Adversarial Constitutional Stress Engine | ACSE | v9.19.0 |
-| INNOV-03 | Temporal Invariant Forecasting Engine | TIFE | v9.20.0 |
-| INNOV-04 | Semantic Constitutional Drift Detector | SCDD | v9.21.0 |
-| INNOV-05 | Autonomous Organ Emergence Protocol | AOEP | v9.22.0 |
-| INNOV-06 | Cryptographic Evolution Proof DAG | CEPD | v9.23.0 |
-| INNOV-07 | Live Shadow Mutation Execution | LSME | v9.24.0 |
-
-**New Hard-class invariants registered (pending InvariantsMatrix update in INNOV-01 PR):**
-`CSAP-0`, `CSAP-1`, `ACSE-0`, `ACSE-1`, `TIFE-0`, `SCDD-0`, `AOEP-0`, `CEPD-0`, `CEPD-1`, `LSME-0`, `LSME-1`
-
-**Open finding:** FINDING-66-003 (patent filing) addressed by CEPD (INNOV-06) via `CryptographicProofBundle`.
-
-**Invariant:** All seven implementations MUST proceed in ID order. No phase may begin until all prior phases are RELEASED and tagged.
-
----
-
-## [9.17.0] — 2026-03-21 — Phase 86 · Evolution Engine Integration + CompoundEvolutionTracker
-
-### Phase 86 Track A — CEL Evolution Engine Wiring
-
-- `runtime/evolution/constitutional_evolution_loop.py` — 14-step CEL extended to 15 steps:
-  - **Step 8 FITNESS-SCORE**: stub (`0.65 if sandbox_ok`) replaced with real pipeline —
-    `FitnessOrchestrator.score()` (5-component composite) + `FitnessDecayScorer.evaluate()`
-    (temporal half-life discount) + `CausalFitnessAttributor.attribute()` (per-op Shapley).
-    `STEP8-LEDGER-FIRST-0`: `fitness_event_digest` written before `fitness_summary` committed.
-  - **Step 9 PARETO-SELECT** (new): `ParetoCompetitionOrchestrator.run_epoch()` replaces
-    scalar `score > 0.5` threshold in place since Phase 64. `CEL-PARETO-0`: frontier digest
-    ledger-first before Step 10.
-  - **Post-epoch SELF-DISCOVERY hook**: `ConstitutionalSelfDiscoveryLoop` fires every
-    `SELF_DISC_FREQUENCY` (5) completed epochs. `CEL-SELF-DISC-NONBLOCK-0`: exception-safe,
-    never blocks. `SELF-DISC-HUMAN-0`: candidates advisory only; HUMAN-0 required for
-    any promotion to `CONSTITUTION.md`.
-  - `_UNSET` sentinel distinguishes lazy-import from explicit `None` injection.
-  - `self._epoch_seq` tracks completed epochs; blocked epochs do not increment.
-- `tests/test_phase86_cel_fitness_wiring.py` — T86-FIT-01..24 (24 tests)
-- `tests/test_phase86_pareto_select_step.py` — T86-PAR-01..15 (15 tests)
-- `tests/test_phase86_self_discovery_hook.py` — T86-DISC-01..10 (10 tests)
-
-**Invariants introduced:** `STEP8-LEDGER-FIRST-0`, `STEP8-DETERM-0`, `CEL-PARETO-0`,
-`CEL-PARETO-DETERM-0`, `CEL-SELF-DISC-0`, `CEL-SELF-DISC-NONBLOCK-0`, `SELF-DISC-HUMAN-0`
-
-### Phase 86 Track B — CompoundEvolutionTracker
-
-- `runtime/evolution/compound_evolution.py` — `CompoundEvolutionTracker`:
-  - `track_epoch(epoch_id, pareto_result, lineage_graph, attributions)` → `CompoundEvolutionRecord`
-  - Synthesises `ParetoCompetitionResult` + `MultiGenLineageGraph` + `CausalAttributionReport`
-  - Generation-discounted fitness aggregation (`GENERATION_DISCOUNT_FACTOR = 0.8`)
-  - `COMP-GOV-WRITE-0`: `ledger.append_raw()` called before record returned
-- `CompoundEvolutionRecord`, `AncestorContribution` — frozen dataclasses with round-trip serialisation
-- `tests/test_phase86_compound_evolution.py` — T86-COMP-01..24 (24 tests)
-
-**Invariants introduced:** `COMP-TRACK-0`, `COMP-ANCESTRY-0`, `COMP-GOV-WRITE-0`, `COMP-CAUSAL-0`
-
-## [9.16.0] — 2026-03-20 — Phases 81–84 · Evolution Engine Core
-
-### Phase 78 (merge) — Journal Warm-Cache + Autonomous Doc Sync
-
-- `security/ledger/journal.py` — `JOURNAL-CACHE-0` warm-path tail cache absorbed into main; `JournalPaths` dataclass + full path-resolution infrastructure
-- `scripts/verify_doc_sync.py` — upgraded to full argparse/dataclass/JSON-output implementation with `DOC-SYNC-DETERM-0` determinism guarantee
-- `docs/ADAADCHAT_SETUP.md` — GitHub App wiring guide for ADAADchat operators
-- `.env.example` — canonical environment variable reference
-- `tests/governance/test_journal_warm_cache.py`, `test_phase78_doc_sync.py` — phase78 constitutional test suites absorbed
-
-### Phase 81 — Constitutional Self-Discovery Loop
-
-- `runtime/evolution/constitutional_self_discovery.py` — `ConstitutionalSelfDiscoveryLoop`: coordinates failure mining → invariant candidacy → ratification gate
-- `runtime/evolution/failure_pattern_miner.py` — `FailurePatternMiner`: mines ledger for recurring failure signatures, produces `FailurePattern` candidates
-- `runtime/evolution/invariant_candidate_proposer.py` — `InvariantCandidateProposer`: lifts failure patterns to `InvariantCandidate` proposals with constitutional metadata
-- `runtime/evolution/invariant_ratification_gate.py` — `InvariantRatificationGate`: GovernanceGate-gated ratification; only constitutionally-consistent invariants advance
-- `tests/test_phase81_constitutional_self_discovery.py` — constitutional test suite
-- `artifacts/governance/phase81/track_a_sign_off.json` — governance sign-off artifact
-- `pytest.ini` — `phase81` mark registered
-
-**Invariants introduced:**
-- `SELF-DISC-0`: ADAAD can propose new constitutional invariants from its own failure history
-- `RATIFY-GOV-0`: No invariant candidate advances without GovernanceGate ratification
-- `MINE-DETERM-0`: identical ledger state → identical failure pattern candidates
-
-### Phase 82 — Pareto Population Evolution
-
-- `runtime/evolution/pareto_frontier.py` — `ParetoFrontier`: multi-objective non-dominated set maintenance; `dominates()`, `frontier_digest()`
-- `runtime/evolution/pareto_competition.py` — `ParetoCompetitionOrchestrator`: population-level multi-objective competitive selection
-- `runtime/seed_competition.py` — extended with Pareto-aware ranking surface
-- `tests/test_phase82_pareto_evolution.py` — constitutional test suite
-- `artifacts/governance/phase82/track_a_sign_off.json` — governance sign-off artifact
-
-**Invariants introduced:**
-- `PARETO-0`: Evolution selection is non-dominated — no candidate advances if dominated on all objectives
-- `PARETO-DETERM-0`: identical population → identical frontier; ties broken lexicographically
-- `PARETO-GOV-0`: Pareto selection result written to ledger before any promotion
-
-### Phase 83 — Causal Fitness Attribution Engine
-
-- `runtime/evolution/causal_fitness_attributor.py` — `CausalFitnessAttributor`: Shapley-value approximation for per-operation fitness contribution
-- `runtime/evolution/mutation_ablator.py` — `MutationAblator`: ablation harness; removes operations and re-evaluates fitness delta
-- `tests/test_phase83_causal_fitness_attribution.py` — constitutional test suite
-- `artifacts/governance/phase83/track_a_sign_off.json` — governance sign-off artifact
-
-**Invariants introduced:**
-- `CAUSAL-ATTR-0`: Every fitness score traceable to per-operation causal contributions
-- `ABLATE-DETERM-0`: ablation runs are deterministic and ledger-recorded
-- `SHAPLEY-BOUND-0`: approximation error bounded; exact Shapley computed when coalition count ≤ threshold
-
-### Phase 84 — Temporal Fitness Half-Life
-
-- `runtime/evolution/codebase_state_vector.py` — `CodebaseStateVector`: fingerprints codebase structural state for temporal comparison
-- `runtime/evolution/fitness_decay_scorer.py` — `FitnessDecayScorer`: applies exponential half-life decay to historical fitness scores by codebase drift distance
-- `tests/test_phase84_fitness_half_life.py` — constitutional test suite
-- `artifacts/governance/phase84/track_a_sign_off.json` — governance sign-off artifact
-
-**Invariants introduced:**
-- `DECAY-0`: Historical fitness scores discounted by codebase structural drift — stale scores do not gate current promotions
-- `HALFLIFE-DETERM-0`: identical `CodebaseStateVector` pair → identical decay coefficient
-- `DECAY-LEDGER-0`: decay coefficients written to ledger at scoring time
-
-### Metrics at v9.16.0
-- Tests: 4,800+ passing (+28 est.)
-- Phases complete: 84
-- Constitutional invariants: 36 (+9)
-- Evolution engine: Pareto multi-objective + causal attribution + temporal decay — all operational
-
----
-
-## [9.15.0] — 2026-03-20 — Phase 80 Complete (Multi-Generation Compound Evolution)
-
-### Phase 80 — Multi-Seed Competitive Epoch
-
-#### Track A — Multi-Seed Competition Infrastructure (#PR-80-01)
-
-- `runtime/seed_competition.py` — `SeedCompetitionOrchestrator` (new): population-level competitive epoch runner
-  - `SeedCandidate` (frozen dataclass): candidate_id + fitness_context + metadata
-  - `CompetitionResult` (frozen dataclass): epoch_id, winner_id, ranked_ids, fitness_scores, gate_verdict, competition_digest
-  - `_rank_candidates()`: deterministic fitness ranking, tie-break by lexicographic candidate_id
-  - `_competition_digest()`: SHA-256 of canonical sorted inputs (SEED-RANK-0)
-- `runtime/evolution/lineage_v2.py` — `SeedCompetitionEpochEvent` (frozen dataclass) + `append_competition_epoch()` on `LineageLedgerV2`
-- `runtime/fitness_pipeline.py` — `rank_seeds_by_fitness()`: multi-seed ranking surface using FitnessOrchestrator
-- `tests/test_phase80_seed_competition.py` — 24 constitutional tests T80-COMP-01..24 (24/24 pass)
-- `artifacts/governance/phase80/track_a_sign_off.json` — governance sign-off artifact
-- `pytest.ini` — phase80 mark registered
-
-**Invariants introduced:**
-- `SEED-COMP-0`: No seed promoted without competitive ranking of all candidates in epoch window
-- `SEED-RANK-0`: Fitness ranking deterministic — equal inputs → identical rank orderings; ties lexicographic
-- `COMP-GOV-0`: GovernanceGate evaluates all candidates before any single candidate advances
-- `COMP-LEDGER-0`: `SeedCompetitionEpochEvent` written to `LineageLedgerV2` before any promotion
-
-#### Track B — GA Unblock Sprint (#PR-80-02)
-
-- `android/fdroid/com.innovativeai.adaad.yml` — v9.14.0 build entry (versionCode 91400); `CurrentVersion` → 9.14.0
-- `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md` — § 2.3 updated: v1.1-GA canonical declaration (closes FINDING-H04-GA-VERSIONING pending Gate 4); phase80 node added to automation contract
-- `docs/IP_PATENT_FILING_ARTIFACT.md` — Phase 80 Track B transmittal checklist + H-03 filing instructions appended
-
-**HUMAN-0 gate actions (non-delegable — not included in this release):**
-- Gate 3: F-Droid MR submission (Dustin)
-- Gate 4: GPG v1.1-GA sign-off commit (Dustin)
-- C-02: GPG tag ceremony v9.7.0–v9.10.0 (Dustin)
-- H-03: Patent counsel engagement + provisional filing (Dustin)
-
-### Metrics at v9.15.0
-- Tests: 4,772+ passing (+24)
-- Phases complete: 80
-- Constitutional invariants: 27 (+4)
-- Seed competition: population-level competitive epoch now operational
-
-## [9.14.0] — 2026-03-20 — Phases 78 + 79 + Thesis
-
-### Phase 78 — Production Signing Infrastructure + Aponi GitHub Feed + Doc Autosync
-
-- **M78-01 Journal warm-cache** (`JOURNAL-CACHE-0`): 9 constitutional tests confirming O(n) append performance, tamper detection, and cross-instance isolation
-- **M78-02 Autonomous Doc Sync** (`DOC-SYNC-VERSION-0`): `.github/workflows/docs-autosync.yml` triggers on VERSION/CHANGELOG/ROADMAP push; `scripts/verify_doc_sync.py` exits 1 on any version drift
-- **Ed25519/HMAC production signers** (`LEDGER-SIGN-0`): `HMACEnvSigner` (ADAAD_LEDGER_HMAC_SECRET), `Ed25519FileSigner` (ADAAD_SIGNING_KEY_PATH), `build_signer_from_env()` priority factory. 21 tests
-- **Aponi GitHub Feed Panel**: `data-view="github"` nav, `loadGithubFeed()` async, event-type-keyed CSS classes (push/pr/ci/slash/install/rejected), governance bridge fallback. 16 tests
-- Total: 46 new tests
-
-### Phase 79 — Multi-Generation Lineage Graph
-
-- `runtime/evolution/multi_gen_lineage.py`: `GenerationNode` (frozen dataclass, `node_digest`), `MultiGenLineageGraph` (DAG: `register_node`, `ancestor_path`, `descendant_set`, `generation_summary`, `graph_digest`, `to_dict`, `from_ledger`)
-- `MULTIGEN-0`: every node ledger-anchored; `MULTIGEN-ACYC-0`: DAG, cycles structurally impossible; `MULTIGEN-DETERM-0`: identical ledger → identical `graph_digest`; `MULTIGEN-REPLAY-0`: graph reconstructable from ledger alone; `MULTIGEN-ISOLATE-0`: no shared state
-- Foundation for Phase 80 compound evolution
-- 26 tests
-
-### Thesis
-
-- `docs/thesis/ADAAD_THESIS.md`: 500-line comprehensive technical thesis covering architecture, all 23 constitutional invariants, proven capabilities, operator model, current live state, and evolution trajectory
-
-### Metrics at v9.14.0
-- Tests: 4,748+ passing
-- Phases complete: 79
-- Constitutional invariants: 23
-- Evidence ledger entries: 12,441+
-
-## [9.13.0] — 2026-03-20 — Phase 77 Complete (Track A + Track B)
-
-### Track A — Constitutional Governance Infrastructure (#PR-77-01)
-
-- PR ID: `PR-77-01`
-- Title: Close 4 constitutional stubs — ABC enforcement + webhook consolidation
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase77-track-a-abc-enforcement`, `phase77-webhook-shim-deleg-0`
-- Closes: `FINDING-AUDIT-C03` remnant (dual webhook handler) + 3 `NotImplementedError` stubs
-- Delivered:
-  - `runtime/evolution/event_signing.py` — `EventSigner` / `EventVerifier` → proper ABC (`EVENT-SIGN-ABSTRACT-0`)
-  - `runtime/innovations.py` — `GovernancePlugin.evaluate()` → proper ABC (`GPLUGIN-ABSTRACT-0`)
-  - `runtime/fitness_pipeline.py` — `FitnessEvaluator` abstractmethod contract clarified
-  - `runtime/integrations/github_webhook_handler.py` — replaced with governed shim delegating 100% to `app.github_app` (`WEBHOOK-SHIM-DELEG-0` / `WEBHOOK-SHIM-COMPAT-0`)
-  - 26 constitutional closure tests (`tests/test_phase77_track_a_close.py`)
-- Key invariants: `EVENT-SIGN-ABSTRACT-0`, `GPLUGIN-ABSTRACT-0`, `WEBHOOK-SHIM-DELEG-0`, `WEBHOOK-SHIM-COMPAT-0`
-
-### Track B — First Seed Epoch Run (#PR-77-02)
-
-- PR ID: `PR-77-02`
-- Title: First Seed Epoch Run — SEED-LIFECYCLE-COMPLETE-0 demonstrated
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `artifacts/governance/phase77/seed_epoch_run_evidence.json`
-- run_digest: `sha256:b3a41c40b99177dc51d5cfdd43d826c27aa7bf718f93fd936f7a5658869590ab`
-- Milestone: **First live demonstration of end-to-end Seed Lifecycle Pipeline** (Phases 71–76)
-- Delivered:
-  - `scripts/run_phase77_seed_epoch.py` — reproducible 7-step pipeline executor
-  - `artifacts/governance/phase77/seed_epoch_run_evidence.json` — inaugural `EpochEvidence` artifact
-  - Full pipeline executed: `CapabilitySeed` → `SeedPromotionQueue` → human review → `ProposalRequest` → CEL injection → `LiveWiredCEL.run_epoch()` (14 steps) → `SeedCELOutcomeEvent`
-  - 27 constitutional tests (`tests/test_phase77_track_b_seed_epoch.py`)
-- Key invariants demonstrated: `SEED-LIFECYCLE-COMPLETE-0`, `SEED-PROMO-0`, `SEED-REVIEW-HUMAN-0`, `SEED-PROP-LEDGER-0`, `SEED-CEL-AUDIT-0`, `SEED-OUTCOME-AUDIT-0`, `CEL-ORDER-0`
-- Total: 53 new tests | 150 passing across affected modules | 0 regressions
-- Governor: Dustin L. Reid — 2026-03-20
-
-## [9.12.1] — 2026-03-19 — Optimize: 7-Fault Sweep
-
-- PR ID: `PR-508-OPTIMIZE-v9.12.1`
-- Title: Optimize — 7-fault sweep (warm-cache regression · constitution version drift · import contracts · GitHub App wiring)
-- Lane/Tier: `runtime` / `hotfix`
-- Evidence refs: `optimize-warm-cache-lineage-v2`, `optimize-constitution-version-drift`, `optimize-import-contracts`, `optimize-github-app-wiring`
-- Fixes:
-  - `runtime/evolution/lineage_v2.py` — O(n→n²) warm-cache regression in `append_event()`; `_verified_tail_hash` now advanced post-append (C-04 contract)
-  - `app/github_app.py` — governance event emission wiring completed
-  - `app/main.py` — import contract alignment (5 modules)
-  - Test suite: `test_lineage_v2_streaming`, `test_replay_attestation_determinism`, `test_constitution_*` — version constant sync
-- Phase 78 note: Journal-level `_VERIFIED_TAIL_CACHE` (11.6× speedup, 1700ms→146ms) deferred — shared journal test-isolation pre-condition required first
-
-## [9.12.0] — 2026-03-19 — Phase 77
-
-- PR ID: `PR-PHASE77-01`
-- Title: GitHub App Governance + Constitution Version Alignment
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase77-github-audit-bridge`, `phase77-external-event-bridge`, `phase77-constitution-version-0.9.0`
-- Closes: `FINDING-AUDIT-C03` — `app/github_app.py` and `runtime/integrations/github_webhook_handler.py` governance gap
-- Delivered:
-  - `runtime/governance/external_event_bridge.py` — SHA-256 hash-chained JSONL audit ledger
-  - `ExternalGovernanceSignal` emitted for mutation-class events (`push.main`, `pr.merged`, `ci.failure`)
-  - `app/github_app._emit_governance_event` wired to bridge keyword API
-  - `CONSTITUTION_VERSION` updated `"0.7.0"` → `"0.9.0"` in 3 runtime files + `constitution.yaml`
-  - All 31 Phase-77 tests passing (T77-BRG-01..10, T77-SIG-01..06, T77-CHAIN-01..04, T77-WIRE-01..03, T77-CONST-01..03, T77-IDEM-01..02)
-- Key invariants: `GITHUB-AUDIT-0`, `GITHUB-GATE-OBS-0`, `GITHUB-SIG-CLOSED-0`, `GITHUB-DETERM-0`, `GITHUB-FAILSAFE-0`, `GITHUB-GATE-ISO-0`
-
-## [9.11.0] — 2026-03-15 — Phase 76
-
-- PR ID: `PR-PHASE76-01`
-- Title: Seed CEL Outcome Recorder
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase76-seed-cel-outcome-recorder`, `phase76-cel-outcome-ledger-0`, `phase76-cel-outcome-replay-0`
-
-## [9.10.0] — 2026-03-14 — Phase 75
-
-- PR ID: `PR-PHASE75-01`
-- Title: Seed Proposal CEL Injection
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase75-seed-cel-injector`, `phase75-seed-cel-0-canonical-key`, `phase75-seed-cel-human-0-advisory`, `phase75-seed-cel-determ-0`, `phase75-seed-cel-audit-0-ledger`, `phase75-resolve-step4-request`, `phase75-cel-step4-wired`, `phase75-inject-endpoint`
-
-## [9.9.0] — 2026-03-14 — Phase 74
-
-- PR ID: `PR-PHASE74-01`
-- Title: Seed-to-Proposal Bridge
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase74-seed-proposal-bridge`, `phase74-seed-prop-0-approved-only`, `phase74-seed-prop-human-0`, `phase74-seed-prop-ledger-0`, `phase74-seed-prop-determ-0`, `phase74-seed-prop-bus-0`, `phase74-lane-strategy-routing`, `phase74-propose-endpoint`, `phase74-aponi-propose-button`
-
-## [9.8.0] — 2026-03-14 — Phase 73
-
-- PR ID: `PR-PHASE73-01`
-- Title: Seed Review Decision + Governance Wire
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase73-seed-review-decision`, `phase73-seed-review-human-0`, `phase73-seed-review-0-ledger-first`, `phase73-seed-review-audit-0-digest`, `phase73-seed-review-idem-0`, `phase73-seed-review-bus-0`, `phase73-audit-write-scope`, `phase73-review-endpoint`, `phase73-promo-review-aponi-panel`
-
-## [9.7.0] — 2026-03-14 — Phase 72
-
-- PR ID: `PR-PHASE72-01`
-- Title: Seed Promotion Queue + Graduation UI
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase72-seed-promotion-queue`, `phase72-seed-promo-0-threshold`, `phase72-seed-promo-human-0-advisory`, `phase72-seed-promo-idem-0`, `phase72-promoted-endpoint`, `phase72-seed-graduated-ws-handler`, `phase72-oracle-history-panel`, `phase72-graduation-css-toast`
-
-## [9.6.0] — 2026-03-14 — Phase 71
-
-- PR ID: `PR-PHASE71-01`
-- Title: Oracle Persistence + Seed Evolution
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase71-oracle-persist-ledger`, `phase71-oracle-replay-endpoint`, `phase71-oracle-determ-hash`, `phase71-seed-evol-epoch-hook`, `phase71-seed-grad-ceremony`, `phase71-seed-grad-bus-frame`, `phase71-seed-grad-lineage-event`, `phase71-seed-evol-failsafe`
-
-## [9.5.0] — 2026-03-14 — Phase 70
-
-- PR ID: `PR-PHASE70-01`
-- Title: WebSocket Live Epoch Feed
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase70-ws-epoch-feed`, `phase70-live-gate-events`, `phase70-aponi-ws-client`
-
-## [9.4.0] — 2026-03-14 — Phase 69
-
-- PR ID: `PR-PHASE69-01`
-- Title: Aponi Innovations UI
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase69-aponi-innovations-panel`, `phase69-ui-gate-badges`, `phase69-live-epoch-counter`
-
-## [9.3.0] — 2026-03-14 — Phase 68
-
-- PR ID: `PR-PHASE68-01`
-- Title: Full Innovations Orchestration
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase68-orchestration-complete`, `phase68-cel-innovations-wired`, `phase68-epoch-bus-routed`
-
-## [9.2.0] — 2026-03-14 — Phase 67
-
-- PR ID: `PR-PHASE67-01`
-- Title: Innovations Wiring (CEL)
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase67-innovations-cel-wired`, `phase67-proposal-cel-hook`, `phase67-fitness-cel-signal`
-
-## [9.1.0] — 2026-03-14 — Phase 66
-
-- PR ID: `PR-PHASE66-01`
-- Title: Doc Alignment + Deep Dive
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase66-doc-alignment-ci-pin-pr`, `phase66-constitution-v0.9.0-rule-count-reconciled`, `phase66-deep-dive-p0-findings-resolved`
-
-## [9.0.0] — 2026-03-13 — Phase 65
-
-- PR ID: `PR-PHASE65-01`
-- Title: Emergence — First Autonomous Capability Evolution
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase65_first_autonomous_capability_evolution`, `phase65-preflight-determinism-import-hardening`
-
-## [8.7.0] — 2026-03-13 — Phase 64
-
-- PR ID: `PR-PHASE64-01`
-- Title: Phase 64
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase64-constitutional-evolution-loop-14-steps`, `phase64-cel-order-0-enforced`, `phase64-cel-evidence-0-epoch-hash-chain`, `phase64-cel-block-0-halt-on-blocked`, `phase64-cel-dryrun-0-sandbox-only`, `phase64-cel-replay-0-no-datetime-now`, `phase64-cel-gate-0-gate-v2-step9`, `phase64-gate-v2-existing-0-step10`, `phase64-cel-evidence-ledger-append-only`
-
-## [8.6.0] — 2026-03-13 — Phase 63
-
-- PR ID: `PR-PHASE63-01`
-- Title: Phase 63
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase63-governance-gate-v2`, `phase63-exception-token-schema`, `phase63-ast-safe-0-enforced`, `phase63-ast-import-0-enforced`, `phase63-ast-complex-0-enforced`, `phase63-sandbox-div-0-gate-integration`, `phase63-semantic-int-0-enforced`, `phase63-excep-scope-0-enforced`, `phase63-excep-human-0-enforced`, `phase63-excep-ttl-0-enforced`, `phase63-excep-revoke-0-enforced`, `phase63-gate-v2-existing-0-verified`
-
-## [8.5.0] — 2026-03-13 — Phase 62
-
-- PR ID: `PR-PHASE62-01`
-- Title: Phase 62
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase62-fitness-engine-v2`, `phase62-fit-bound-0-enforced`, `phase62-fit-det-0-enforced`, `phase62-fit-div-0-enforced`, `phase62-fit-arch-0-enforced`
-
-## [8.4.0] — 2026-03-13 — Phase 61
-
-- PR ID: `PR-PHASE61-01`
-- Title: Phase 61
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase61-ci-tier-gating-enforced`, `phase61-critical-file-budget-enforced`, `phase61-legacy-path-reduction-target`, `phase61-lineage-engine-v840`, `phase61-metrics-schema-coverage-100`, `phase61-runtime-cost-and-experiment-caps`
-
-## [8.3.0] — 2026-03-13 — Phase 60
-
-- PR ID: `PR-PHASE60-01`
-- Title: Phase 60
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase60-ast-mutation-substrate-sandbox-v830`
-
-## [8.2.0] — 2026-03-13 — Phase 59
-
-- PR ID: `PR-PHASE59-01`
-- Title: Phase 59
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase59-capability-graph-v2-v820`
-
-## [8.1.0] — 2026-03-13 — Phase 58
-
-- PR ID: `PR-PHASE58-01`
-- Title: Phase 58
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase58-code-intelligence-layer-v810`
-
-## [8.0.0] — 2026-03-12 — Phase 57
-
-- PR ID: `PR-PHASE57-01`
-- Title: Phase 57
-- Lane/Tier: `governance` / `constitutional`
-- Evidence refs: `phase57-proposal-engine-autoprovisioning`
-
-## [7.5.0] — 2026-03-12 — Phase 51
-
-- PR ID: `PR-PHASE51-01`
-- Title: Phase 51
-- Lane/Tier: `governance` / `standard`
-- Evidence refs: `phase51-roadmap-procession-alignment`, `phase51-procession-doc-v2`, `phase51-v1-ga-checklist`
-
-## [7.4.0] — 2026-03-12 — Phase 50
-
-- PR ID: `PR-PHASE50-01`
-- Title: Phase 50
-- Lane/Tier: `governance` / `standard`
-- Evidence refs: `phase50-federation-consensus-wired`, `phase50-bridge-wiring-complete`
-
-## [7.3.0] — 2026-03-12 — Phase 49
-
-- PR ID: `PR-PHASE49-01`
-- Title: Phase 49
-- Lane/Tier: `governance` / `standard`
-- Evidence refs: `phase49-container-isolation-default`
-
-## [7.2.0] — 2026-03-12 — Phase 48
-
-- PR ID: `PR-PHASE48-01`
-- Title: Phase 48
-- Lane/Tier: `governance` / `standard`
-- Evidence refs: `phase48-proposal-hardening`
-
-## [7.1.0] — 2026-03-12 — Phase 47
-
-- PR ID: `PR-PHASE47-01`
-- Title: Phase 47
-- Lane/Tier: `governance` / `standard`
-- Evidence refs: `phase47-core-loop-closure`
+## [9.27.0] — 2026-03-28 — Phase 94 · INNOV-10 Morphogenetic Memory (MMEM)

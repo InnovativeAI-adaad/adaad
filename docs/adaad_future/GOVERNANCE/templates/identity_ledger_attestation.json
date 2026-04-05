@@ -1,0 +1,23 @@
+{
+  "_template": "ADAAD Identity Ledger Attestation v2.0",
+  "schema_version": "2.0",
+  "attestation_id": "ILA-NNN-YYYY-MM-DD-001",
+  "phase": "NNN",
+  "governor": "DUSTIN L REID",
+  "timestamp_utc": "YYYY-MM-DDTHH:MM:SSZ",
+  "innovation": "INNOV-NN",
+  "innovation_name": "PLACEHOLDER",
+  "version_attested": "vX.XX.0",
+  "release_sha": "PLACEHOLDER",
+  "test_count": 0,
+  "new_invariants": [],
+  "cumulative_hard_invariants": 0,
+  "gate_results": {"tier_0": "pass", "tier_1": "pass", "tier_2": "pass", "tier_3": "pass"},
+  "evidence_references": [
+    "artifacts/governance/phaseNNN/phaseNNN_sign_off.json",
+    "artifacts/governance/phaseNNN/replay_digest.txt",
+    "artifacts/governance/phaseNNN/tier_summary.json"
+  ],
+  "claims_matrix_row": "phaseNNN-innovNN-abbr-shipped",
+  "attestation_digest": "sha256:PLACEHOLDER"
+}

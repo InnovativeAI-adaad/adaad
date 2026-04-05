@@ -1,10 +1,10 @@
 # ADAAD — 30 Innovations That Make It the Greatest AI Loop Ever
 
 **Author:** Claude (ArchitectAgent)  
-**Date:** March 22, 2026 · **Status updated:** March 28, 2026  
-**Last reviewed:** 2026-03-31  
-**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-12 shipped (v9.18.0–v9.30.0). Items 13–30 are active roadmap.
-**Canonical current/next:** Current = **Phase 97 / v9.30.0** (INNOV-12 MGV shipped), Next = **Phase 98 / INNOV-13 roadmap execution**.
+**Date:** March 22, 2026 · **Status updated:** April 03, 2026  
+**Last reviewed:** 2026-04-03  
+**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-23 shipped (v9.18.0–v9.41.0). Items 24–30 are active roadmap.
+**Canonical current/next:** Current = **Phase 108 / v9.41.0** (INNOV-23 CES shipped), Next = **Phase 109 / INNOV-24 roadmap execution**.
 
 | Range | Status | Evidence links |
 |---|---|---|
@@ -20,7 +20,12 @@
 | INNOV-10 MMEM | ✅ Shipped v9.27.0 — Phase 94 | [Artifact](artifacts/governance/phase94/track_a_sign_off.json) · [Claims row `phase94-innov10-mmem-shipped`](docs/comms/claims_evidence_matrix.md) |
 | INNOV-11 DSTE | ✅ Shipped v9.29.0 — Phase 96 | [Artifact](artifacts/governance/phase96/track_a_sign_off.json) · [Claims row `phase96-innov11-dste-shipped`](docs/comms/claims_evidence_matrix.md) |
 | INNOV-12 MGV | ✅ Shipped v9.30.0 — Phase 97 | [Artifact](artifacts/governance/phase97/track_a_sign_off.json) · [Claims row `phase97-innov12-mgv-shipped`](docs/comms/claims_evidence_matrix.md) |
-| INNOV-13 through INNOV-30 | 📋 Roadmap — sequenced for Phases 98+ | [Roadmap anchor](docs/plans/PHASE_97_PLAN.md) |
+| INNOV-13 through INNOV-20 | ✅ Shipped v9.31.0–v9.38.0 — Phases 98–105 | [Roadmap](ROADMAP.md) |
+| INNOV-21 GBP | ✅ Shipped v9.39.0 — Phase 106 | [Artifact](artifacts/governance/phase106/phase106_sign_off.json) |
+| INNOV-22 MCF | ✅ Shipped v9.40.0 — Phase 107 | [Artifact](artifacts/governance/phase107/phase107_sign_off.json) |
+| INNOV-23 CES | ✅ Shipped v9.41.0 — Phase 108 | [Artifact](artifacts/governance/phase108/phase108_sign_off.json) |
+| INNOV-24 SVP | 🔜 Next — Phase 109 / v9.42.0 | [Roadmap anchor](ROADMAP.md) |
+| INNOV-25 through INNOV-30 | 📋 Roadmap — sequenced for Phases 110+ | [Roadmap anchor](ROADMAP.md) |
 
 ---
 

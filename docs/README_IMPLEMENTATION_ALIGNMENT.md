@@ -9,11 +9,10 @@ This document cross-references `README.md` operational claims with concrete impl
 
 | Metric | Value |
 | --- | --- |
-| Report version | `9.13.0` |
-| Branch | `phase78/journal-warm-cache-doc-sync` |
+| Report version | `9.26.0` |
+| Branch | `feature/phase107-mcf-market-fitness` |
 | Tag | `(none)` |
-| Short SHA | `c699817` |
-| Last sync | 2026-03-19 |
+| Short SHA | `738f1ed` |
 
 All future architecture snapshots MUST include branch, tag (if any), and short SHA.
 <!-- ARCH_SNAPSHOT_METADATA:END -->

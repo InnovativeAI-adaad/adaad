@@ -1,0 +1,25 @@
+{
+  "phase": 110,
+  "innovation": "INNOV-25",
+  "innovation_name": "Hardware-Adaptive Fitness (HAF)",
+  "version": "9.43.0",
+  "branch": "feature/phase110-haf-impl",
+  "date": "2026-04-03",
+  "human_0_gate": "Dustin L. Reid",
+  "human_0_ratification": "[slot reserved]",
+  "ledger_event_id": "ILA-110-2026-04-03-001",
+  "tests_pass": 30,
+  "tests_fail": 0,
+  "xfail": 0,
+  "invariants_introduced": [
+    "HAF-0",
+    "HAF-DETERM-0",
+    "HAF-AUDIT-0"
+  ],
+  "cumulative_hard_class_invariants": 113,
+  "evidence_hash": "sha256:dfb7cccc1ab13b61",
+  "predecessor": "Phase 109 — INNOV-24 SVP — v9.42.0",
+  "successor": "Phase 111 — INNOV-26 Constitutional Entropy Budget — v9.44.0",
+  "world_first_claim": "Hardware-profile-aware constitutional fitness weights with deterministic, ledger-audited evaluation records — enabling governed evolution across heterogeneous deployment targets.",
+  "status": "COMPLETE"
+}

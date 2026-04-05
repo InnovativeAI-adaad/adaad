@@ -1,6 +1,0 @@
-# DISABLED — QA-4 (RACE-01, ORCH-01)
-# This workflow is intentionally inert; all post-merge writes now occur in
-# post_merge_orchestrator.yml.
-name: Phase 65 Post-Merge Sync (DISABLED — see post_merge_orchestrator.yml)
-
-on: {}

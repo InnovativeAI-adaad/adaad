@@ -1,0 +1,15 @@
+{
+  "track": "A",
+  "phase": 117,
+  "module": "runtime/innovations30/constitutional_rollback.py",
+  "invariants": {
+    "CRTV-0": "Append-only: snapshots never mutate once written",
+    "CRTV-CHAIN-0": "Every snapshot carries prev_hash; genesis prev_hash == GENESIS_HASH",
+    "CRTV-DETERM-0": "Digests use sha256(json.dumps(payload, sort_keys=True))",
+    "CRTV-GATE-0": "Rollback is fail-closed; any error raises ConstitutionalRollbackError",
+    "CRTV-AUDIT-0": "Every rollback/snapshot flushed to append-only JSONL before return"
+  },
+  "tests": "T117-CRTV-01..30 (30/30 PASS)",
+  "governor": "DUSTIN L REID",
+  "timestamp": "2026-04-04T18:00:00Z"
+}

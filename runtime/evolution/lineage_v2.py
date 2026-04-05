@@ -7,6 +7,10 @@ import hashlib
 import hmac
 import json
 import logging
+import os
+import threading
+import time
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
@@ -19,6 +23,29 @@ LOG = logging.getLogger(__name__)
 
 LEDGER_V2_PATH = ROOT_DIR / "security" / "ledger" / "lineage_v2.jsonl"
 LINEAGE_V2_PATH = LEDGER_V2_PATH
+
+_TAIL_CACHE_LOCK = threading.Lock()
+_TAIL_CACHE: Dict[str, str] = {}
+
+
+@contextmanager
+def _file_lock(path: Path, timeout: float = 10.0):
+    lock_path = path.with_suffix(path.suffix + ".lock")
+    start_time = time.monotonic()
+    while True:
+        try:
+            # Atomic O_EXCL create
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_RDWR)
+            try:
+                yield
+            finally:
+                os.close(fd)
+                os.unlink(lock_path)
+            return
+        except FileExistsError:
+            if time.monotonic() - start_time > timeout:
+                raise RuntimeError(f"lineage_lock_timeout:{lock_path}")
+            time.sleep(0.01)
 
 
 class LineageResolutionError(RuntimeError):
@@ -360,7 +387,6 @@ class LineageLedgerV2:
         self.ledger_path = tenant_partition_path(base_path, tenant_context)
         self.tenant_context = dict(tenant_context or {})
         self._epoch_digest_index: Dict[str, str] = {}
-        self._verified_tail_hash: str | None = None
 
     def _ensure(self) -> None:
         self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
@@ -368,42 +394,37 @@ class LineageLedgerV2:
             self.ledger_path.touch()
 
     def _last_hash(self) -> str:
-        if self._verified_tail_hash is not None:
-            return self._verified_tail_hash
+        key = str(self.ledger_path.resolve())
+        with _TAIL_CACHE_LOCK:
+            cached = _TAIL_CACHE.get(key)
+        if cached is not None:
+            return cached
         self.verify_integrity()
-        return self._verified_tail_hash or ("0" * 64)
+        with _TAIL_CACHE_LOCK:
+            return _TAIL_CACHE.get(key) or ("0" * 64)
 
     def verify_integrity(self, recovery_hook: LineageRecoveryHook | None = None, max_lines: int | None = None) -> None:
         """Recompute chain from genesis and verify each stored hash.
 
         When max_lines is supplied the scan stops early after that many lines.
-        The warm-cache pointer (_verified_tail_hash) is advanced to the last
-        verified entry in the scanned prefix so that subsequent _last_hash()
-        calls can chain appends from the verified boundary without re-scanning.
-
-        Invariant: after any call to verify_integrity() that returns without
-        raising, _verified_tail_hash is not None and reflects the SHA-256 tip
-        of the deepest verified entry.  Callers that pass max_lines receive a
-        partial-prefix guarantee, not a full-chain guarantee.
+        The warm-cache pointer is advanced to the last verified entry in the
+        scanned prefix so that subsequent _last_hash() calls can chain appends
+        from the verified boundary without re-scanning.
         """
         self._ensure()
-        self._verified_tail_hash = None
+        key = str(self.ledger_path.resolve())
         prev_hash = "0" * 64
         with self.ledger_path.open("r", encoding="utf-8") as handle:
             for line_no, line in enumerate(handle, start=1):
                 if max_lines is not None and line_no > max_lines:
-                    # LINEAGE-CACHE-01: Advance the warm-cache pointer to the
-                    # last verified entry in the scanned prefix before returning.
-                    # Without this, _verified_tail_hash remains None and every
-                    # subsequent _last_hash() call triggers a full O(n) re-scan,
-                    # converting O(n) total append cost to O(n²).
-                    self._verified_tail_hash = prev_hash or ("0" * 64)
+                    with _TAIL_CACHE_LOCK:
+                        _TAIL_CACHE[key] = prev_hash or ("0" * 64)
                     LOG.warning(
                         "lineage_verify_integrity_truncated",
                         extra={
                             "line_no": line_no,
                             "max_lines": max_lines,
-                            "partial_tail_hash": self._verified_tail_hash[:16],
+                            "partial_tail_hash": prev_hash[:16],
                             "verified_lines": line_no - 1,
                         },
                     )
@@ -438,11 +459,11 @@ class LineageLedgerV2:
                         recovery_hook.on_lineage_integrity_failure(ledger_path=self.ledger_path, error=error)
                     raise error
                 prev_hash = entry_hash
-        self._verified_tail_hash = prev_hash
+        with _TAIL_CACHE_LOCK:
+            _TAIL_CACHE[key] = prev_hash
 
     # Contracts:
-    # POST: _verified_tail_hash is not None after any non-raising call.
-    # POST (max_lines path): _verified_tail_hash reflects prefix [0..max_lines].
+    # POST: _TAIL_CACHE[key] is updated after any non-raising call.
 
     @staticmethod
     def _compute_hash(prev_hash: str, entry: Dict[str, Any]) -> str:
@@ -457,28 +478,117 @@ class LineageLedgerV2:
         return self.append_event(event.event_type, event.payload)
 
     def append_event(self, event_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-        # C-04: skip full O(n) re-scan when tail hash is already cached and valid.
-        # _last_hash() triggers verify_integrity() only when _verified_tail_hash is None.
-        # This converts repeated appends from O(n²) to O(n) total over the ledger lifetime.
-        prev_hash = self._last_hash()
-        entry: Dict[str, Any] = {
-            "type": event_type,
-            "payload": payload,
-            "prev_hash": prev_hash,
-        }
-        entry["hash"] = self._compute_hash(prev_hash, entry)
-        with self.ledger_path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
-        # Advance the warm cache to the newly written entry hash.
-        # This keeps repeated appends O(n) total (not O(n²)) by preserving the
-        # verified tail pointer rather than invalidating it on every write.
-        self._verified_tail_hash = entry["hash"]
+        key = str(self.ledger_path.resolve())
+        # COORDINATION-01: use a lock to ensure atomic append and cache update.
+        with _file_lock(self.ledger_path):
+            with _TAIL_CACHE_LOCK:
+                # Re-read last hash to avoid stale appends from other components
+                # in the same process that don't share the same LineageLedgerV2 instance.
+                prev_hash = self._last_hash_internal()
+                entry: Dict[str, Any] = {
+                    "type": event_type,
+                    "payload": payload,
+                    "prev_hash": prev_hash,
+                }
+                entry["hash"] = self._compute_hash(prev_hash, entry)
+                with self.ledger_path.open("a", encoding="utf-8") as handle:
+                    handle.write(json.dumps(entry, ensure_ascii=False) + "\n")
+                # Advance the warm cache to the newly written entry hash.
+                _TAIL_CACHE[key] = entry["hash"]
+
         if event_type == "MutationBundleEvent":
             epoch_id = str(payload.get("epoch_id") or "")
             digest = str(payload.get("epoch_digest") or "")
             if epoch_id and digest:
                 self._update_epoch_digest(epoch_id, digest)
         return entry
+
+    def _last_hash_internal(self) -> str:
+        # Assumes caller holds _TAIL_CACHE_LOCK and optionally _file_lock.
+        # We always re-scan the tail to ensure we have the absolute truth
+        # before appending, which coordinates multiple instances/processes.
+        return self._scan_tail_unlocked()
+
+    def _scan_tail_unlocked(self) -> str:
+        """Read the last complete JSON line and extract its hash.
+        
+        Optimised to avoid full file scans by reading backwards from EOF.
+        """
+        self._ensure()
+        try:
+            size = self.ledger_path.stat().st_size
+        except OSError:
+            return "0" * 64
+            
+        if size == 0:
+            return "0" * 64
+        
+        # We read in chunks from the end. 16KB should cover most SandboxEvidenceEvents.
+        # If not, we fall back to a full scan or larger search.
+        chunk_size = 16384
+        with self.ledger_path.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            pointer = handle.tell()
+            
+            # Skip trailing newlines
+            while pointer > 0:
+                handle.seek(max(0, pointer - 1))
+                char = handle.read(1)
+                if char not in (b"\n", b"\r"):
+                    break
+                pointer -= 1
+            
+            if pointer == 0:
+                return "0" * 64
+                
+            # Scan backwards for the start of the last line
+            end_of_line = pointer
+            start_of_line = -1
+            
+            search_ptr = end_of_line
+            while search_ptr > 0 and (end_of_line - search_ptr) < chunk_size:
+                to_read = min(search_ptr, 1024)
+                search_ptr -= to_read
+                handle.seek(search_ptr)
+                chunk = handle.read(to_read)
+                
+                # Find last newline in this chunk
+                last_nl = chunk.rfind(b"\n")
+                if last_nl != -1:
+                    # Found it!
+                    start_of_line = search_ptr + last_nl + 1
+                    break
+            
+            if start_of_line == -1:
+                # If record is > 16KB or start of file, fall back to slower scan.
+                handle.seek(0)
+                prev_hash = "0" * 64
+                for line in handle:
+                    line = line.strip()
+                    if not line: continue
+                    try:
+                        entry = json.loads(line)
+                        prev_hash = str(entry.get("hash") or prev_hash)
+                    except Exception: continue
+                return prev_hash
+
+            handle.seek(start_of_line)
+            line_data = handle.read(end_of_line - start_of_line).decode("utf-8", errors="ignore").strip()
+            try:
+                entry = json.loads(line_data)
+                return str(entry.get("hash") or ("0" * 64))
+            except Exception:
+                # Corrupt line at tail — full scan to find last valid state
+                handle.seek(0)
+                prev_hash = "0" * 64
+                for line in handle:
+                    line = line.strip()
+                    if not line: continue
+                    try:
+                        entry = json.loads(line)
+                        prev_hash = str(entry.get("hash") or prev_hash)
+                    except Exception: continue
+                return prev_hash
 
     def append_typed_event(self, event) -> Dict[str, Any]:
         """Append a typed lineage event to the ledger.

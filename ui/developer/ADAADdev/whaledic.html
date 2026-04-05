@@ -253,7 +253,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <ellipse cx="12" cy="11" rx="4" ry="6" fill="none" stroke="#00d9ff" stroke-width="0.8" opacity="0.5"/>
       <circle cx="12" cy="11" r="2" fill="#00d9ff"/>
     </svg>
-    <div><div class="logo-name">Whale.Dic</div><div class="logo-sub">ADAADinside&#x2122; &middot; Developer Intelligence &middot; Phase 95</div></div>
+    <div><div class="logo-name">Whale.Dic</div><div class="logo-sub">ADAADinside&#x2122; &middot; Developer Intelligence &middot; Phase 101</div></div>
   </div>
   <div class="top-pills">
     <div class="pill"><div class="dot dot-g"></div><span id="p-gate">Gate: &mdash;</span></div>
@@ -471,7 +471,7 @@ let conv=[],totalTok=0,streaming=false,rs=null,missing=new Set(),reqTs=[],ledger
 let llmCfg={provider:'groq',groqKey:'',ollamaModel:'llama3.2'};
 let selProvider='groq';
 
-// ── ADAAD STATE BUS (Phase 95 L1) ───────────────────────────────
+// ── ADAAD STATE BUS (Phase 101 L1) ───────────────────────────────
 window.ADAAD_STATE_BUS=null;
 function updateBus(patch){
   window.ADAAD_STATE_BUS=Object.freeze({...(window.ADAAD_STATE_BUS||{}), ...patch, captured_at_iso:new Date().toISOString(), schema_version:'1.0.0'});
@@ -500,7 +500,7 @@ document.querySelectorAll('.sb-item[data-v]').forEach(el=>el.addEventListener('c
 async function apiFetch(url,fb=null){if(missing.has(url))return fb;try{const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok){missing.add(url);bus('miss',url);return fb;}return r.json();}catch(e){missing.add(url);bus('err',url+'::'+e.message);return fb;}}
 async function safe(mk,rk){const u=ROUTES[rk];const d=await apiFetch(u,null);if(!d){bus('mock',u);return MOCK[mk];}return d;}
 
-// ── MARKDOWN RENDERER (Phase 95 fmtMd) ──────────────────────────
+// ── MARKDOWN RENDERER (Phase 101 fmtMd) ──────────────────────────
 function fmtMd(m){
   m=String(m);
   // fenced code blocks
@@ -525,7 +525,7 @@ function fmtMd(m){
   return m;
 }
 
-// ── SYSTEM PROMPT BUILDER (Phase 95 L2 Constitutional Grounding) ─
+// ── SYSTEM PROMPT BUILDER (Phase 101 L2 Constitutional Grounding) ─
 function buildSP(){
   const g=rs&&rs.gov,r=rs&&rs.rep,ep=rs&&rs.epoch,ag=rs&&rs.agents,rd=rs&&rs.ready,m=rs&&rs.muts;
   const sb=window.ADAAD_STATE_BUS||{};
@@ -533,7 +533,7 @@ function buildSP(){
   const mutsStr=(m&&m.mutations?m.mutations.slice(-3):[]).map(x=>'[epoch-'+(x.epoch||'?')+'] '+x.agent+': '+x.action+' '+x.sha).join('\n')||'none';
   const oracleCtx=sb.oracle_last_query?('\nORACLE LAST QUERY: "'+sb.oracle_last_query+'" (type: '+(sb.oracle_last_query_type||'generic')+')\nORACLE SUMMARY: '+(sb.oracle_last_answer_summary||'see Oracle panel')):'';
   const locked=g&&g.locked;
-  return 'You are dork, the ADAADinside\u2122 constitutional intelligence assistant for ADAAD v9.28.0 Phase 95.\nYou operate under ADAAD\u2019s V8 constitutional governance framework. You are read-only \u2014 observe and advise, never modify state.\nGround every answer in the live runtime state below. Be direct, precise, developer-oriented.\n\n## CONSTITUTIONAL GOVERNANCE CONTEXT\nGATE: '+(locked?'\ud83d\udd34 LOCKED':'\ud83d\udfe2 PASS')+' \u00b7 Tier: '+(g&&g.tier||'\u2014')+' \u00b7 Constitution: '+(g&&g.constitution_version||'\u2014')+'\nEPOCH: '+(ep&&ep.epoch||'\u2014')+' \u00b7 Phase: '+(ep&&ep.phase||'\u2014')+' \u00b7 Mutations: '+(g&&g.mutation_enabled?'enabled':'disabled')+'\nREPLAY: Score '+(r&&r.score!=null?Number(r.score).toFixed(3):'\u2014')+' \u00b7 Divergence '+(r&&r.divergence!=null?r.divergence:'\u2014')+' \u00b7 Mode '+(r&&r.mode||'\u2014')+'\nREADINESS: '+(rd&&rd.readiness_score!=null?Math.round(rd.readiness_score*100)+'%':'\u2014')+' \u00b7 Blockers: '+((rd&&rd.blockers&&rd.blockers.length)?rd.blockers.join(', '):'none')+'\n\n## AGENT TRIAD\n'+agStr+'\n\n## RECENT MUTATIONS (last 3)\n'+mutsStr+'\n\n## ORACLE BRIDGE'+(oracleCtx||'\nNo Oracle query in current session.')+'\n\n## CONSTRAINTS\n'+(locked?'\u26a0 GATE IS LOCKED \u2014 prepend this warning to every response.\n':'')+'Do not recommend bypassing constitutional gates or HUMAN-0 requirements.\nReference specific epoch IDs, SHA fragments, or phase numbers when citing state.';
+  return 'You are dork, the ADAADinside\u2122 constitutional intelligence assistant for ADAAD v9.34.0 Phase 101.\nYou operate under ADAAD\u2019s V8 constitutional governance framework. You are read-only \u2014 observe and advise, never modify state.\nGround every answer in the live runtime state below. Be direct, precise, developer-oriented.\n\n## CONSTITUTIONAL GOVERNANCE CONTEXT\nGATE: '+(locked?'\ud83d\udd34 LOCKED':'\ud83d\udfe2 PASS')+' \u00b7 Tier: '+(g&&g.tier||'\u2014')+' \u00b7 Constitution: '+(g&&g.constitution_version||'\u2014')+'\nEPOCH: '+(ep&&ep.epoch||'\u2014')+' \u00b7 Phase: '+(ep&&ep.phase||'\u2014')+' \u00b7 Mutations: '+(g&&g.mutation_enabled?'enabled':'disabled')+'\nREPLAY: Score '+(r&&r.score!=null?Number(r.score).toFixed(3):'\u2014')+' \u00b7 Divergence '+(r&&r.divergence!=null?r.divergence:'\u2014')+' \u00b7 Mode '+(r&&r.mode||'\u2014')+'\nREADINESS: '+(rd&&rd.readiness_score!=null?Math.round(rd.readiness_score*100)+'%':'\u2014')+' \u00b7 Blockers: '+((rd&&rd.blockers&&rd.blockers.length)?rd.blockers.join(', '):'none')+'\n\n## AGENT TRIAD\n'+agStr+'\n\n## RECENT MUTATIONS (last 3)\n'+mutsStr+'\n\n## ORACLE BRIDGE'+(oracleCtx||'\nNo Oracle query in current session.')+'\n\n## CONSTRAINTS\n'+(locked?'\u26a0 GATE IS LOCKED \u2014 prepend this warning to every response.\n':'')+'Do not recommend bypassing constitutional gates or HUMAN-0 requirements.\nReference specific epoch IDs, SHA fragments, or phase numbers when citing state.';
 }
 
 // ── DORKENGINE: Deterministic Constitutional Intelligence ────────
@@ -664,7 +664,7 @@ async function callDorkEngine(msgs,onChunk){
   }
 }
 
-// ── SEND DORK (Phase 95 streaming) ───────────────────────────────
+// ── SEND DORK (Phase 101 streaming) ───────────────────────────────
 async function sendDork(){
   const inp=document.getElementById('dinp');
   const msg=inp.value.trim();
@@ -739,7 +739,7 @@ function addMsg(role,text,think=false,prov=''){
   dm.appendChild(d);dm.scrollTop=dm.scrollHeight;return d;
 }
 
-// ── ORACLE BRIDGE (Phase 95 L6) ──────────────────────────────────
+// ── ORACLE BRIDGE (Phase 101 L6) ──────────────────────────────────
 function dorkBridgeOracle(){
   const sb=window.ADAAD_STATE_BUS||{};
   if(!sb.oracle_last_query){
@@ -831,7 +831,7 @@ async function refreshAll(){
   renderMuts(m,'ml-overview');renderMuts(m,'ml-full');renderAgents(ag);renderLedger(ld);
   renderWH(wh,'wh-overview');renderWH(wh,'wh-full');renderReplay(r);
   renderFlightPlan(g,m,r,rd);renderInsights(g,m,r,rd,ag);renderDebt();
-  // Phase 95 L1: update ADAAD_STATE_BUS
+  // Phase 101 L1: update ADAAD_STATE_BUS
   updateBus({
     governance:{gate_ok:!(g&&g.locked),tier:g&&g.tier,constitution_version:g&&g.constitution_version,mutation_enabled:g&&g.mutation_enabled},
     epoch:{id:'epoch-'+((ep&&ep.epoch)||0),phase:ep&&ep.phase},

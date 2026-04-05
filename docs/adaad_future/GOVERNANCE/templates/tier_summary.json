@@ -1,0 +1,31 @@
+{
+  "_template": "ADAAD Tier Gate Summary v2.0",
+  "phase": "NNN",
+  "version": "vX.XX.0",
+  "evaluation_timestamp_utc": "YYYY-MM-DDTHH:MM:SSZ",
+  "tiers": {
+    "tier_0": {
+      "status": "pass",
+      "checks": ["version_hygiene", "import_contracts", "preflight"],
+      "failures": []
+    },
+    "tier_1": {
+      "status": "pass",
+      "checks": ["full_test_suite", "governance_tests", "artifact_verification"],
+      "test_count": 0,
+      "failures": []
+    },
+    "tier_2": {
+      "status": "pass",
+      "checks": ["evidence_validation", "invariant_coverage", "replay_verification"],
+      "failures": []
+    },
+    "tier_3": {
+      "status": "pass",
+      "checks": ["evidence_row", "changelog_update", "roadmap_update", "agent_state_sync"],
+      "failures": []
+    }
+  },
+  "overall": "pass",
+  "summary_digest": "sha256:PLACEHOLDER"
+}

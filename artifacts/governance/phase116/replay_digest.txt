@@ -1,0 +1,31 @@
+PHASE 116 REPLAY DIGEST
+=======================
+Innovation:     INNOV-31 -- Invariant Discovery Engine (IDE)
+Version:        9.49.0
+Date:           2026-04-04
+Branch:         feature/phase116-ide-impl
+Ledger Event:   ILA-116-2026-04-04-001
+
+Module:         runtime/innovations30/invariant_discovery.py
+Tests:          tests/test_phase116_ide.py
+Result:         30/30 PASS
+
+Hard-class invariants introduced (5):
+  IDE-0          -- frequency+precision threshold gate
+  IDE-DETERM-0   -- deterministic rule_id and digest
+  IDE-PERSIST-0  -- all rules flushed to JSONL before return
+  IDE-AUDIT-0    -- non-empty digest at construction
+  IDE-GATE-0     -- deduplication: known patterns suppressed
+
+Cumulative Hard-class invariants: 130 (Phase 116 baseline: 125)
+
+Findings resolved:
+  FINDING-115-001: agent_state nested fields -> Phase 115 / v9.48.0
+  FINDING-115-002: CHANGELOG v9.48.0 Phase 115 entry prepended
+  FINDING-115-003: ROADMAP Phase 115 section appended
+
+World-first: Governed autonomous constitutional self-discovery engine.
+             System mines own governance failure history -> proposes new
+             constitutional invariants via HMAC-chained, determ-replay-safe ledger.
+
+HUMAN-0 attestation: [slot reserved -- Dustin L. Reid]

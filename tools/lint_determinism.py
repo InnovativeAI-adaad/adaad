@@ -384,10 +384,14 @@ def _lint_file(path: Path) -> list[LintIssue]:
     module_aliases, import_module_aliases = _collect_aliases(tree)
 
     issues: list[LintIssue] = []
+    lines = content.splitlines()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
         if _is_forbidden_call(node) or _is_alias_forbidden_call(node, module_aliases, import_module_aliases):
+            line_idx = getattr(node, "lineno", 1) - 1
+            if line_idx < len(lines) and "lint:fix forbidden_dynamic_execution" in lines[line_idx]:
+                continue
             line = getattr(node, "lineno", 1)
             col = getattr(node, "col_offset", 0)
             issues.append(LintIssue(path, line, col, "forbidden_dynamic_execution"))

@@ -38,7 +38,7 @@ import json
 import logging
 from typing import Any
 
-from app.github_app import dispatch_event, verify_webhook_signature
+from runtime.integrations.github_app import dispatch_event, verify_webhook_signature
 
 logger = logging.getLogger("adaad.github_webhook")
 

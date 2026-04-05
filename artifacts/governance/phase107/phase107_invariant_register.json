@@ -1,0 +1,50 @@
+{
+  "ila_id": "ILA-107-2026-04-03-001",
+  "phase": 107,
+  "innovation": "INNOV-22",
+  "date": "2026-04-03",
+  "new_invariants": 8,
+  "cumulative_hard_class": 99,
+  "invariants": [
+    {
+      "code": "MCF-0",
+      "description": "MCF_VERSION present and non-empty; asserted at import",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-DETECT-0",
+      "description": "Conflict iff frozenset intersection non-empty; detection is deterministic",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-SEVERITY-0",
+      "description": "severity \u2208 {low,medium,high,critical}; any other value raises MCFViolation",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-PERSIST-0",
+      "description": "Append-only JSONL ledger; opened exclusively in 'a' mode",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-CHAIN-0",
+      "description": "Chain-linked prev_digest; hmac.compare_digest tamper detection",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-RESOLVE-0",
+      "description": "Auto-resolve \u2208 {low,medium}; high/critical requires HUMAN-0 acknowledgement",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-GATE-0",
+      "description": "Blank mutation_id raises MCFViolation (fail-closed); never a pass",
+      "class": "Hard"
+    },
+    {
+      "code": "MCF-DETERM-0",
+      "description": "conflict_digest = sha256(sorted mutation_ids + sorted overlap_paths); deterministic",
+      "class": "Hard"
+    }
+  ]
+}

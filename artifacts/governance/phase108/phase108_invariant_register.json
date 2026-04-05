@@ -1,0 +1,50 @@
+{
+  "ila_id": "ILA-108-2026-04-03-001",
+  "phase": 108,
+  "innovation": "INNOV-23",
+  "date": "2026-04-03",
+  "new_invariants": 8,
+  "cumulative_hard_class": 107,
+  "invariants": [
+    {
+      "code": "CES-0",
+      "description": "CES_VERSION present and non-empty; asserted at import",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-WATCH-0",
+      "description": "tick() evaluates every registered channel; no channel may be skipped",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-THRESH-0",
+      "description": "warning_threshold < violation_threshold for every channel; CESViolation otherwise",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-EMIT-0",
+      "description": "SentinelAdvisory emitted and persisted iff metric_value >= warning_threshold",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-PERSIST-0",
+      "description": "Append-only JSONL ledger; 'a' mode only; no overwrite",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-CHAIN-0",
+      "description": "Chain-linked prev_digest; hmac.compare_digest tamper detection",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-GATE-0",
+      "description": "Blank epoch_id raises CESViolation (fail-closed); never a pass",
+      "class": "Hard"
+    },
+    {
+      "code": "CES-DETERM-0",
+      "description": "advisory_digest = sha256(epoch_id+channel_name+repr(metric)+prev_digest); deterministic",
+      "class": "Hard"
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/InnovativeAI-adaad/adaad/schemas/stake_record_schema.json",
+  "title": "ADAAD Stake Record Schema",
+  "description": "Schema for entries in data/reputation_stakes.jsonl (INNOV-15)",
+  "type": "object",
+  "required": [
+    "agent_id",
+    "mutation_id",
+    "epoch_id",
+    "staked_amount",
+    "pre_stake_balance",
+    "outcome",
+    "final_balance",
+    "stake_digest"
+  ],
+  "properties": {
+    "agent_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique agent identifier"
+    },
+    "mutation_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique mutation proposal identifier"
+    },
+    "epoch_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Epoch in which the stake was placed"
+    },
+    "staked_amount": {
+      "type": "number",
+      "minimum": 1.0,
+      "description": "Amount staked (must be >= MIN_STAKE=1.0)"
+    },
+    "pre_stake_balance": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Agent balance before this stake was deducted"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["pending", "passed", "failed"],
+      "description": "Current outcome. pending until governance gate resolves."
+    },
+    "final_balance": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Agent balance after outcome settled. 0.0 while pending."
+    },
+    "stake_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{16}$",
+      "description": "STAKE-DETERM-0: sha256(agent_id:mutation_id:staked_amount)[:16]"
+    }
+  },
+  "additionalProperties": false,
+  "_invariant_notes": {
+    "STAKE-0": "Record must exist in JSONL before balance is decremented in wallet",
+    "STAKE-DETERM-0": "stake_digest must equal sha256(agent_id + ':' + mutation_id + ':' + str(staked_amount))[:16] prefixed with 'sha256:'",
+    "STAKE-BURN-0": "When outcome=failed, final_balance = pre_stake_balance - staked_amount (full burn, no partial)"
+  }
+}
