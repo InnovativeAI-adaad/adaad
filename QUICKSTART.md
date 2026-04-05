@@ -33,10 +33,23 @@ python onboard.py
   ADAAD is ready.
 
   Run the dashboard   python server.py
-  Run an epoch        python -m app.main --verbose
+  Run an epoch        adaad demo
+  Inspect ledger      adaad inspect-ledger data/evolution_ledger.jsonl
+  Propose mutation    adaad propose "upgrade system x"
   Strict replay       python -m app.main --replay strict --verbose
-  Architecture docs   docs/EVOLUTION_ARCHITECTURE.md
+  Architecture docs   ARCHITECTURE.md
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### CLI Interface
+
+ADAAD now includes a formal CLI. To use it, ensure `scripts/` is in your PATH or call it directly:
+
+```bash
+./scripts/adaad --help
+./scripts/adaad demo
+./scripts/adaad inspect-ledger <path>
+./scripts/adaad propose "<description>"
 ```
 
 > **Soulbound key warning** — You'll see this on first run. It's expected:

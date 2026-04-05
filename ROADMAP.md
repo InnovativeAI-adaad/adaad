@@ -4,12 +4,12 @@
 
 ---
 
-## Current State — v9.55.0 · Phase 122 · POST-PIPELINE CREDIBILITY
+## Current State — v9.56.0 · Phase 123 · CLI ENTRY POINT
 
 **Date:** 2026-04-05
-**Status:** 36 innovations shipped (INNOV-01 through INNOV-36). Phase 122 in progress. v9.55.0 in progress.
+**Status:** 36 innovations shipped (INNOV-01 through INNOV-36). Phase 123 complete. v9.56.0 released.
 **Hard-class invariants:** 162 (cumulative, enforced)
-**Constitutional Evolution Loop:** 14-step CEL, deterministic replay, wired
+**Constitutional Evolution Loop:** 16-step CEL, deterministic replay, wired
 **Self-Proposing Innovation Engine (SPIE):** active — system proposes its own next innovations; HUMAN-0 ratifies
 **Deterministic Audit Sandbox (DAS):** active — one-command external verification; `docker compose up das-demo`
 
@@ -93,19 +93,19 @@ Delivers the foundation for independent third-party verification of ADAAD's core
 ### Phase 122 — README Credibility + ROADMAP Sync
 
 **Target:** v9.55.0 · **Branch:** `feat/readme-credibility` · **Track:** A (Claude) + B (PR)  
-**Status:** 🔄 in progress · **Dependency:** Phase 121 shipped ✅
+**Status:** ✅ shipped · v9.55.0 · 2026-04-05 · **Dependency:** Phase 121 shipped ✅
 
-Replaces marketing language with engineering language. Aligns governance documentation to v9.53.0 actual state.
+Replaces marketing language with engineering language. Aligns governance documentation to v9.55.0 actual state.
 
 **Track A deliverables:**
 - `README.md` rewrite — remove all unsubstantiated "world-first" claims; replace with measurable, reproducible claim table; add quick-start (4 commands); link to DEMO.md and VERIFIABLE_CLAIMS.md
 - `docs/VERIFIABLE_CLAIMS.md` — structured table mapping each major claim → module → test file → governance artifact → verification command
-- `ROADMAP.md` synchronization — this update (v9.48.0 → v9.53.0 as current; Phase 116–120 entries; 155 invariant count; correct GA blocker; post-pipeline horizon)
+- `ROADMAP.md` synchronization — this update (v9.48.0 → v9.55.0 as current; Phase 116–122 entries; 162 invariant count; correct GA blocker; post-pipeline horizon)
 
 **Acceptance criteria:**
 - Zero instances of "world-first" without peer-reviewed citation in README
 - Every claim in README has a row in VERIFIABLE_CLAIMS.md
-- ROADMAP summary table includes all phases through 120
+- ROADMAP summary table includes all phases through 122
 - Doc-sync CI job passes after merge
 - 30/30 acceptance tests passing
 
@@ -114,7 +114,7 @@ Replaces marketing language with engineering language. Aligns governance documen
 ### Phase 123 — CLI Entry Point
 
 **Target:** v9.56.0 · **Branch:** `feat/adaad-cli` · **Track:** A (Claude) + B (PR)  
-**Status:** 🔜 planned · **Dependency:** Phase 122 shipped
+**Status:** ✅ shipped · v9.56.0 · 2026-04-05 · **Dependency:** Phase 122 shipped ✅
 
 Turns ADAAD from a research artifact into a tool people can run in three commands.
 

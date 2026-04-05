@@ -1,3 +1,27 @@
+## [9.56.0] — 2026-04-05 · Phase 123 · CLI Entry Point
+
+### Added
+- **adaad/__main__.py** — formal CLI entry point with `demo`, `inspect-ledger`, and `propose` commands
+- **scripts/adaad** — POSIX shim for direct CLI invocation
+- **ARCHITECTURE.md** — new file; documents CLI data flow, module map, and Phase 123 governance invariants
+
+### Changed
+- **README.md** — added CLI section; renamed innovations to "Shipped capabilities"; aligned invariant count to 162; updated hero to v9.56.0
+- **QUICKSTART.md** — updated with 5-minute CLI path and architecture diagram link
+- **ROADMAP.md** — marked Phase 122 and 123 as ✅ shipped; updated Current State to v9.56.0/Phase 123
+- **VERSION** — `9.55.0` → `9.56.0`
+- **pyproject.toml** — version `9.56.0`
+- **.adaad_agent_state.json** — version `9.56.0`, current_phase `123`
+- **governance/report_version.json** — version `9.56.0`, phase `123`
+
+### Tests
+- `tests/test_phase123_cli.py` — T123-CLI-01..30 (30/30 PASS)
+
+### Governance
+- **CLI-SANDBOX-0** — CLI initiated mutations default to dry-run mode
+- **CLI-GATE-0** — All CLI proposals must traverse the 16-step CEL pipeline
+- Cumulative Hard-class invariants: **162**
+
 ## [9.55.0] — 2026-04-05 · Phase 122 · README Credibility + ROADMAP Sync
 
 ### Changed
