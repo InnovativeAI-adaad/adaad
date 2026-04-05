@@ -8,7 +8,7 @@
 
 </div>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## What ADAAD is
 
@@ -20,7 +20,7 @@ The governance stack is not a policy layer. It is the only promotion path. There
 
 **Who it's for:** AI teams, research labs, and enterprises that need auditable, deterministic, human-governed autonomous code evolution — and need to prove it to auditors, regulators, or acquirers.
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Enforced guarantees
 
@@ -45,7 +45,7 @@ These are runtime-enforced invariants. Violating any one aborts the epoch.
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md) · [Verifiable claims](docs/VERIFIABLE_CLAIMS.md)
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## The pipeline
 
@@ -105,7 +105,7 @@ Full mutation lineage Merkle-rooted. Every causal ancestor cryptographically lin
 
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Architecture
 
@@ -145,7 +145,7 @@ ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed c
 
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Proven milestones — not roadmap promises
 
@@ -226,7 +226,7 @@ High-stakes mutations require 2-of-3 independent agent jury verdict before gover
 All 30 constitutional innovations shipped. 115 phases complete. 125 Hard-class invariants. `boot_completeness_check()` confirms all 30 modules importable at runtime (`INNOV-COMPLETE-0`). The Innovations30 pipeline is architecturally sealed — every innovation enforced, chained, and auditable.
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Why you can trust the claims
 
@@ -258,7 +258,7 @@ All 30 constitutional innovations shipped. 115 phases complete. 125 Hard-class i
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md)
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## 30 shipped world-first innovations
 
@@ -305,7 +305,7 @@ Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## About the versioning
 
@@ -331,7 +331,7 @@ The version number is a first-class audit artifact. An external evaluator should
 | ✅ GA sign-off | Mine failure patterns · propose new invariants |
 | 🏛 Jury composition policy | Convene constitutional jury for high-stakes paths |
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 <a name="quickstart"></a>
 ## Quickstart
@@ -406,7 +406,7 @@ python -m app.main --replay audit --verbose
 
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Replay and audit
 
@@ -451,7 +451,7 @@ python scripts/check_spdx_headers.py
 # Violations are printed and cause CI failure.
 ```
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Governance in 60 seconds
 
@@ -496,7 +496,7 @@ print(f'Latest hash: {events[-1][\"event_hash\"][:32]}...')
 
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Governance in 60 seconds
 
@@ -520,7 +520,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 6. HUMAN-0 `session_digest` sign-off recorded
 7. `--no-ff` merge · CHANGELOG · VERSION bump · GPG-signed tag · four-file sync
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Security and trust center
 
@@ -536,7 +536,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 
 → [Full Trust Center](TRUST_CENTER.md) · [Compliance Pack](docs/compliance/)
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Live system stats
 
@@ -550,7 +550,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 
 </div>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Mythic identity
 
@@ -564,7 +564,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 | **Dork** | AI operator surface. Groq/Ollama/DorkEngine deterministic fallback. |
 | **HUMAN-0** | The governor. Dustin L. Reid. GPG key holder. Ratifies constitutional changes. |
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Enterprise and commercial use
 
@@ -586,7 +586,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## What ADAAD is not
 
@@ -596,7 +596,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 - ❌ **Not a security scanner** — it enforces mutation governance, not vulnerability detection
 - ❌ **Not magic** — every decision is logged, hash-chained, replayable, and explainable
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## FAQ
 
@@ -662,7 +662,7 @@ Constitutional governance should not require enterprise infrastructure. ADAAD's 
 Start with the [Trust Center](TRUST_CENTER.md) — it includes the independent verification pathway for the Phase 65 founding event, complete versioning rationale, key-person continuity plan, and GA blocker status. The [Procurement Fast-Lane](docs/commercial/procurement_fastlane/DAY0_PROCUREMENT_FASTLANE_CHECKLIST.md) is designed to complete security and legal review within 5 business days.
 </details>
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 ## Roadmap
 
@@ -675,7 +675,7 @@ Start with the [Trust Center](TRUST_CENTER.md) — it includes the independent v
 
 → [Full roadmap](ROADMAP.md) · [30 Innovations specification](ADAAD_30_INNOVATIONS.md)
 
-<svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
 <div align="center">
 
