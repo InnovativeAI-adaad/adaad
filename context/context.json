@@ -1,8 +1,8 @@
 {
   "active": {
-    "version": "v9.52.0",
-    "phase": "Phase 119 COMPLETE \u00b7 v9.52.0",
-    "expected_next_pr_identifier": "PR-PHASE120-01 (Phase 120 \u2014 INNOV-35 Self-Proposing Innovation Engine)"
+    "version": "v9.53.0",
+    "phase": "Phase 120 COMPLETE \u00b7 v9.53.0",
+    "expected_next_pr_identifier": "PR-PHASE121-01 (Phase 121 \u2014 INNOV-36 Constitutional Auto-Generation)"
   },
   "module_ownership": [
     {
