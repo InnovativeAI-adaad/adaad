@@ -43,6 +43,10 @@ These are runtime-enforced invariants. Violating any one aborts the epoch.
 | Identity check never blocks an epoch | Fail-open with fallback score injection | `MMEM-0` |
 | Critical mutations require GPG-signed human approval | Architecturally enforced — not a configuration option | `HUMAN-0` |
 | Import boundaries block unauthorized dependencies | Static enforcement — violations block merge | `AST-IMPORT-0` |
+| High-stakes mutations require 2-of-3 jury verdict | `ConstitutionalJury.deliberate()` is the sole authority | `CJS-0` |
+| Governance drift rate capped at 30% before double sign-off | Meta-governance limits constitutional change velocity | `CEB-0` |
+| No mutation may reduce self-monitoring observability | Transparency is structural and non-negotiable | `SELF-AWARE-0` |
+| All 125 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 125 invariants |
 | All 125 Hard-class invariants enforced at runtime | Epoch aborts on any violation — no silent failures | 125 total |
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md) · [Verifiable claims](docs/VERIFIABLE_CLAIMS.md)
@@ -68,6 +72,14 @@ Every proposed change traverses all steps in strict order. There is no skip path
 **Step 0 — Identity check**
 Before any proposal is generated, the `IdentityContextInjector` consults the `IdentityLedger` — a hash-chained, HUMAN-0-attested self-model. Injects `identity_consistency_score` into context. Proposals contradicting the system's self-model are flagged at the root. Never blocks the epoch.
 
+**Phase 1 — Proposal**
+Claude-powered agents (Architect · Dream · Beast) generate `MutationCandidate`s. UCB1 bandit selector routes to the highest-performing agent based on prior epoch outcomes. Agent Reputation Staking (INNOV-15) means agents stake credits on their proposals — failed proposals burn stake.
+
+**Phase 2–3 — Adversarial Red Team (INNOV-08)**
+`AdversarialRedTeamAgent` queries `CodeIntelModel` for uncovered code paths, generates up to 5 targeted adversarial cases, runs each in a read-only sandbox. `AFRT-0`: structurally incapable of approving. Output: PASS or RETURNED only.
+
+**Phase 4 — Constitutional Scoring**
+`FitnessEngineV2` scores against 8 fitness signals including `identity_consistency`. All runtime-enforced constitutional rules checked. Rule violation halts epoch immediately.
 **Step 1 — Proposal**
 Claude-powered agents (Architect · Dream · Beast) generate mutation candidates. A bandit selector routes to the highest-performing agent based on prior epoch outcomes.
 
@@ -80,6 +92,17 @@ Claude-powered agents (Architect · Dream · Beast) generate mutation candidates
 **Step 5 — Live shadow execution**
 Zero-write shadow harness against real traffic patterns. Divergence rate, error delta, P99 latency. Regression on any signal is a hard block, independent of fitness score.
 
+**Phase 6 — Constitutional Jury (INNOV-14)**
+For high-stakes mutations (touching `runtime/`, `security/`, `app/main.py`): `ConstitutionalJury.deliberate()` convenes 3 independent evaluators. 2-of-3 approve required (`CJS-QUORUM-0`). All dissenting verdicts committed to dissent ledger before return (`CJS-DISSENT-0`). Feeds `InvariantDiscoveryEngine`.
+
+**Phase 7 — Governance Gate**
+`GovernanceGateV2` evaluates the full evidence package — fitness scores, shadow report, red-team verdict, jury decision, identity score, determinism check, lineage validity. All prior gates must pass. Verdict: APPROVED · RETURNED · BLOCKED.
+
+**Phase 8 — Human Sign-off (Tier 0)**
+For critical mutations: GPG-signed approval from governor `HUMAN-0: Dustin L. Reid` (`key 4C95E2F99A775335B1CF3DAF247B015A1CCD95F6`) is required. The system is architecturally incapable of promoting Tier 0 mutations without it. Not a setting.
+
+**Phase 9 — Ledger Commit + Cryptographic Proof DAG (INNOV-06)**
+Every decision is SHA-256 hash-chained into the append-only `ScoringLedger`. Full mutation lineage Merkle-rooted. Every causal ancestor cryptographically linked. Independently verifiable without system access. Legal-grade provenance.
 **Step 6 — Governance gate**
 `GovernanceGateV2` evaluates the full evidence package. All prior gates must pass. Verdict: APPROVED · RETURNED · BLOCKED.
 
@@ -100,48 +123,37 @@ Full mutation lineage Merkle-rooted. Every causal ancestor cryptographically lin
 
 <svg style="max-width:100%;height:auto" viewBox="0 0 900 420" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace"><defs><linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#060c18"/><stop offset="100%" style="stop-color:#0a1428"/></linearGradient><marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#00d4ff" opacity="0.7"/></marker><marker id="arrow-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#f5c842" opacity="0.7"/></marker><filter id="glow2"><feGaussianBlur stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="900" height="420" fill="url(#bg2)"/><g opacity="0.04" stroke="#00d4ff" stroke-width="0.5"><line x1="0" y1="60" x2="900" y2="60"/><line x1="0" y1="120" x2="900" y2="120"/><line x1="0" y1="180" x2="900" y2="180"/><line x1="0" y1="240" x2="900" y2="240"/><line x1="0" y1="300" x2="900" y2="300"/><line x1="0" y1="360" x2="900" y2="360"/><line x1="100" y1="0" x2="100" y2="420"/><line x1="200" y1="0" x2="200" y2="420"/><line x1="300" y1="0" x2="300" y2="420"/><line x1="450" y1="0" x2="450" y2="420"/><line x1="600" y1="0" x2="600" y2="420"/><line x1="700" y1="0" x2="700" y2="420"/><line x1="800" y1="0" x2="800" y2="420"/></g><text x="450" y="28" text-anchor="middle" fill="#00d4ff" font-size="11" letter-spacing="4" opacity="0.8">ADAAD SYSTEM ARCHITECTURE</text><line x1="200" y1="34" x2="700" y2="34" stroke="#00d4ff" stroke-width="0.5" opacity="0.3"/><g transform="translate(40, 55)"><rect width="120" height="56" rx="4" fill="#0d1f3a" stroke="#00d4ff" stroke-width="1" opacity="0.8"/><text x="60" y="18" text-anchor="middle" fill="#00d4ff" font-size="8" letter-spacing="1">ARCHITECT</text><text x="60" y="30" text-anchor="middle" fill="#7a9ab5" font-size="7">Methodical</text><text x="60" y="42" text-anchor="middle" fill="#7a9ab5" font-size="7">Conservative</text><text x="60" y="52" text-anchor="middle" fill="#00d4ff" font-size="7" opacity="0.6">Claude API</text></g><g transform="translate(180, 55)"><rect width="120" height="56" rx="4" fill="#0d1f3a" stroke="#9966ff" stroke-width="1" opacity="0.8"/><text x="60" y="18" text-anchor="middle" fill="#9966ff" font-size="8" letter-spacing="1">DREAM</text><text x="60" y="30" text-anchor="middle" fill="#7a9ab5" font-size="7">Creative</text><text x="60" y="42" text-anchor="middle" fill="#7a9ab5" font-size="7">Exploratory</text><text x="60" y="52" text-anchor="middle" fill="#9966ff" font-size="7" opacity="0.6">Claude API</text></g><g transform="translate(320, 55)"><rect width="120" height="56" rx="4" fill="#0d1f3a" stroke="#ff4466" stroke-width="1" opacity="0.8"/><text x="60" y="18" text-anchor="middle" fill="#ff4466" font-size="8" letter-spacing="1">BEAST</text><text x="60" y="30" text-anchor="middle" fill="#7a9ab5" font-size="7">Aggressive</text><text x="60" y="42" text-anchor="middle" fill="#7a9ab5" font-size="7">Max throughput</text><text x="60" y="52" text-anchor="middle" fill="#ff4466" font-size="7" opacity="0.6">Claude API</text></g><line x1="100" y1="111" x2="100" y2="148" stroke="#00d4ff" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/><line x1="240" y1="111" x2="240" y2="148" stroke="#9966ff" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/><line x1="380" y1="111" x2="380" y2="148" stroke="#ff4466" stroke-width="1" opacity="0.5" marker-end="url(#arrow)"/><g transform="translate(120, 150)"><rect width="340" height="50" rx="4" fill="#0f2040" stroke="#f5c842" stroke-width="1.5"/><text x="170" y="17" text-anchor="middle" fill="#f5c842" font-size="9" letter-spacing="2">BANDIT SELECTOR</text><text x="170" y="30" text-anchor="middle" fill="#7a9ab5" font-size="7.5">UCB1 + Thompson Sampling · BLX-alpha crossover · Up to 12 candidates/epoch</text><text x="170" y="42" text-anchor="middle" fill="#f5c842" font-size="7" opacity="0.7">NonStationarityDetector (Page-Hinkley) · MD5 dedup</text></g><line x1="460" y1="175" x2="530" y2="175" stroke="#f5c842" stroke-width="1.5" opacity="0.6" marker-end="url(#arrow-gold)"/><g transform="translate(530, 55)"><rect width="220" height="260" rx="6" fill="#0a1a2e" stroke="#00d4ff" stroke-width="2"/><rect x="4" y="4" width="212" height="252" rx="4" fill="none" stroke="#00d4ff" stroke-width="0.5" opacity="0.2"/><text x="110" y="22" text-anchor="middle" fill="#00d4ff" font-size="10" letter-spacing="3" filter="url(#glow2)">GOVERNANCE GATE</text><text x="110" y="36" text-anchor="middle" fill="#ff4466" font-size="7.5" letter-spacing="2">SOLE APPROVAL SURFACE</text><line x1="10" y1="42" x2="210" y2="42" stroke="#00d4ff" stroke-width="0.5" opacity="0.4"/><g transform="translate(14, 52)" font-size="7.5"><g><rect width="192" height="14" rx="2" fill="#00d4ff" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#00d4ff" opacity="0.9">1 · DRIFT CHECK → 2 · LINEAGE SNAP</text></g><line x1="96" y1="14" x2="96" y2="20" stroke="#00d4ff" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow)"/><g transform="translate(0, 20)"><rect width="192" height="14" rx="2" fill="#00d4ff" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#00d4ff" opacity="0.9">3 · FITNESS BASE → 4 · PROPOSAL GEN</text></g><line x1="96" y1="34" x2="96" y2="40" stroke="#00d4ff" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow)"/><g transform="translate(0, 40)"><rect width="192" height="14" rx="2" fill="#f5c842" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#f5c842" opacity="0.9">5 · AST SCAN → 6 · SANDBOX EXEC</text></g><line x1="96" y1="54" x2="96" y2="60" stroke="#f5c842" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow-gold)"/><g transform="translate(0, 60)"><rect width="192" height="14" rx="2" fill="#ff4466" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#ff4466" opacity="0.9">7 · REPLAY VERIFY (SANDBOX-DIV-0)</text></g><line x1="96" y1="74" x2="96" y2="80" stroke="#ff4466" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow)"/><g transform="translate(0, 80)"><rect width="192" height="14" rx="2" fill="#00d4ff" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#00d4ff" opacity="0.9">8 · FITNESS SCORE (7 signals)</text></g><line x1="96" y1="94" x2="96" y2="100" stroke="#00d4ff" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow)"/><g transform="translate(0, 100)"><rect width="192" height="14" rx="2" fill="#ff4466" opacity="0.12"/><text x="96" y="10" text-anchor="middle" fill="#ff4466" opacity="0.95">9 · GATE V2 · 10 · GATE BASE (18+5)</text></g><line x1="96" y1="114" x2="96" y2="120" stroke="#ff4466" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow)"/><g transform="translate(0, 120)"><rect width="192" height="14" rx="2" fill="#00d4ff" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#00d4ff" opacity="0.9">11 · LINEAGE REG → 12 · PROMOTION</text></g><line x1="96" y1="134" x2="96" y2="140" stroke="#00d4ff" stroke-width="0.8" opacity="0.4" marker-end="url(#arrow)"/><g transform="translate(0, 140)"><rect width="192" height="14" rx="2" fill="#00ff88" opacity="0.08"/><text x="96" y="10" text-anchor="middle" fill="#00ff88" opacity="0.9">13 · EVIDENCE → 14 · STATE ADVANCE</text></g></g><line x1="10" y1="210" x2="210" y2="210" stroke="#ff4466" stroke-width="0.5" opacity="0.3"/><text x="110" y="222" text-anchor="middle" fill="#ff4466" font-size="7" letter-spacing="1">GOV-SOLE-0: NON-BYPASSABLE</text><text x="110" y="234" text-anchor="middle" fill="#7a9ab5" font-size="7">All 23 rules evaluated · Fail-closed</text><text x="110" y="246" text-anchor="middle" fill="#00ff88" font-size="7">DET-ALL-0: Deterministic · Replayable</text><text x="110" y="258" text-anchor="middle" fill="#7a9ab5" font-size="7">CEL-ORDER-0: Strict sequence · No skip</text></g><line x1="750" y1="175" x2="800" y2="175" stroke="#00ff88" stroke-width="1.5" opacity="0.6" marker-end="url(#arrow)"/><g transform="translate(800, 100)"><rect width="88" height="220" rx="4" fill="#0a1a1a" stroke="#00ff88" stroke-width="1.5"/><text x="44" y="16" text-anchor="middle" fill="#00ff88" font-size="7" letter-spacing="1">SHA-256</text><text x="44" y="26" text-anchor="middle" fill="#00ff88" font-size="7" letter-spacing="1">LEDGER</text><line x1="8" y1="30" x2="80" y2="30" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/><g transform="translate(8, 38)"><g><rect width="72" height="22" rx="2" fill="#00ff88" opacity="0.08"/><text x="36" y="9" text-anchor="middle" fill="#00ff88" font-size="6">epoch_001</text><text x="36" y="18" text-anchor="middle" fill="#7a9ab5" font-size="5.5">hash: a3f7...</text></g><line x1="36" y1="22" x2="36" y2="28" stroke="#00ff88" stroke-width="0.8" opacity="0.5"/><g transform="translate(0, 28)"><rect width="72" height="22" rx="2" fill="#00ff88" opacity="0.08"/><text x="36" y="9" text-anchor="middle" fill="#00ff88" font-size="6">epoch_002</text><text x="36" y="18" text-anchor="middle" fill="#7a9ab5" font-size="5.5">prev: a3f7...</text></g><line x1="36" y1="50" x2="36" y2="56" stroke="#00ff88" stroke-width="0.8" opacity="0.5"/><g transform="translate(0, 56)"><rect width="72" height="22" rx="2" fill="#00ff88" opacity="0.08"/><text x="36" y="9" text-anchor="middle" fill="#00ff88" font-size="6">epoch_003</text><text x="36" y="18" text-anchor="middle" fill="#7a9ab5" font-size="5.5">prev: b9c2...</text></g><line x1="36" y1="78" x2="36" y2="84" stroke="#00ff88" stroke-width="0.8" opacity="0.5" stroke-dasharray="2,2"/><text x="36" y="96" text-anchor="middle" fill="#7a9ab5" font-size="8">···</text><line x1="36" y1="100" x2="36" y2="106" stroke="#00ff88" stroke-width="0.8" opacity="0.5" stroke-dasharray="2,2"/><g transform="translate(0, 108)"><rect width="72" height="22" rx="2" fill="#00ff88" opacity="0.15"/><text x="36" y="9" text-anchor="middle" fill="#00ff88" font-size="6" font-weight="bold">epoch_N</text><text x="36" y="18" text-anchor="middle" fill="#00ff88" font-size="5.5">LATEST</text></g></g><text x="44" y="210" text-anchor="middle" fill="#7a9ab5" font-size="6">Append-only</text><text x="44" y="219" text-anchor="middle" fill="#7a9ab5" font-size="6">Tamper-evident</text></g><g transform="translate(40, 340)"><rect width="120" height="52" rx="4" fill="#0d1f3a" stroke="#9966ff" stroke-width="1"/><text x="60" y="16" text-anchor="middle" fill="#9966ff" font-size="8" letter-spacing="1">ANDROID</text><text x="60" y="28" text-anchor="middle" fill="#7a9ab5" font-size="7">Termux / Pydroid3</text><text x="60" y="40" text-anchor="middle" fill="#9966ff" font-size="7">$200 phone</text></g><g transform="translate(190, 340)"><rect width="140" height="52" rx="4" fill="#0d1f3a" stroke="#00d4ff" stroke-width="1"/><text x="70" y="16" text-anchor="middle" fill="#00d4ff" font-size="8" letter-spacing="1">APONI DASHBOARD</text><text x="70" y="28" text-anchor="middle" fill="#7a9ab5" font-size="7">Live governance UI</text><text x="70" y="40" text-anchor="middle" fill="#7a9ab5" font-size="7">FastAPI · WebSocket</text></g><g transform="translate(360, 340)"><rect width="120" height="52" rx="4" fill="#0d1f3a" stroke="#f5c842" stroke-width="1"/><text x="60" y="16" text-anchor="middle" fill="#f5c842" font-size="8" letter-spacing="1">MCP TOOLS</text><text x="60" y="28" text-anchor="middle" fill="#7a9ab5" font-size="7">5 observability</text><text x="60" y="40" text-anchor="middle" fill="#7a9ab5" font-size="7">endpoints (read-only)</text></g><line x1="100" y1="340" x2="100" y2="315" stroke="#9966ff" stroke-width="0.8" opacity="0.4"/><line x1="260" y1="340" x2="640" y2="320" stroke="#00d4ff" stroke-width="0.8" opacity="0.3" stroke-dasharray="3,3"/><line x1="420" y1="340" x2="640" y2="310" stroke="#f5c842" stroke-width="0.8" opacity="0.3" stroke-dasharray="3,3"/><g opacity="0.25" stroke="#00d4ff" stroke-width="1.5"><line x1="0" y1="0" x2="18" y2="0"/><line x1="0" y1="0" x2="0" y2="18"/><line x1="900" y1="0" x2="882" y2="0"/><line x1="900" y1="0" x2="900" y2="18"/><line x1="0" y1="420" x2="18" y2="420"/><line x1="0" y1="420" x2="0" y2="402"/><line x1="900" y1="420" x2="882" y2="420"/><line x1="900" y1="420" x2="900" y2="402"/></g></svg>
 
-ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed change. Three AI agents — **Architect** (structural reasoning), **Dream** (mutation generation), and **Beast** (performance pressure) — apply constitutional rules at different steps. No single agent can approve a change.
+ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed change. Three AI agents — **Architect**, **Dream**, and **Beast** — apply constitutional rules at different steps. No single agent can approve a change. The Constitutional Jury gate adds multi-agent adversarial evaluation for high-stakes paths.
 
 <details>
 <summary><b>Module map and boundary contracts</b></summary>
 <br/>
 
 **Runtime layer** — `runtime/`
+
 | Module | Role |
 |:---|:---|
 | `evolution/evolution_loop.py` | Orchestrates the 16-phase epoch. Phase 0d MMEM wire lives here. |
-| `evolution/constitutional_evolution_loop.py` | 16-step CEL dispatch. Calls GovernanceGate, AFRT, LSME. |
+| `evolution/constitutional_evolution_loop.py` | 16-step CEL dispatch. Calls GovernanceGate, AFRT, LSME, CJS. |
 | `evolution/fitness_v2.py` | `FitnessEngineV2` — 8-signal scoring including identity. |
 | `memory/identity_ledger.py` | Hash-chained HUMAN-0-gated `IdentityLedger`. MMEM-0/CHAIN-0/LEDGER-0. |
-| `memory/identity_context_injector.py` | Phase 0d wiring. Never raises. |
+| `innovations30/__init__.py` | Boot completeness gate — all 30 importable or `RuntimeError` (INNOV-COMPLETE-0). |
+| `innovations30/constitutional_jury.py` | INNOV-14 — 2-of-3 quorum, dissent ledger, high-stakes gate. |
+| `innovations30/constitutional_entropy_budget.py` | INNOV-26 — governance drift rate limiter, double-HUMAN-0 at 30%. |
+| `innovations30/self_awareness_invariant.py` | INNOV-28 — structural observability protection. |
+| `innovations30/mirror_test.py` | INNOV-30 — constitutional self-recognition test, pipeline seal. |
 | `lineage/lineage_ledger_v2.py` | Second-gen lineage store with MMEM co-commit surface. |
-| `capability_graph.py` | Tracks module capability contracts. No `__import__` — enforced. |
+| `capability_graph.py` | Module capability contracts. No `__import__` — enforced. |
 
 **Governance layer** — `security/`
+
 | Module | Role |
 |:---|:---|
 | `security/ledger/governance_events.jsonl` | Hash-chained HUMAN-0 sign-off events. |
 | `security/ledger/scoring.jsonl` | All epoch governance decisions. Append-only. |
-| `config/constitution.yaml` | 27 runtime-enforced constitutional rules v0.9.0. |
+| `config/constitution.yaml` | Runtime-enforced constitutional rules. |
 
-**Import boundary contract**
-All module-to-module imports must cross defined seams. Violations are caught by `scripts/check_spdx_headers.py` and `AST-IMPORT-0` CI gate. Adding a direct cross-layer import without updating the boundary contract blocks the PR.
-
-Every file must carry `# SPDX-License-Identifier: Apache-2.0`. Missing headers are a merge blocker.
-
-</details>
-
-<details>
-<summary><b>Agent roles — Architect · Dream · Beast</b></summary>
-<br/>
-
-**Architect** — Structural reasoning. Long-term maintainability, clean architecture, reducing technical debt. Proposes mutations that improve code organization without sacrificing fitness.
-
-**Dream** — Creative mutation generation. Experimental approaches, novel capability surfaces, capability gap identification. Higher exploration rate.
-
-**Beast** — Performance pressure. Throughput, efficiency, bottleneck elimination. Penalizes complexity that doesn't buy fitness.
-
-All three are Claude-powered and selected per epoch by the `AgentBanditSelector` (INNOV multi-armed bandit) based on prior win/loss ratios. No single agent controls the outcome. The governance gate is the only promotion authority.
+**Import boundary contract:** All module-to-module imports must cross defined seams. `AST-IMPORT-0` CI gate blocks violations. Every file must carry `# SPDX-License-Identifier: Apache-2.0`.
 
 </details>
 
@@ -149,6 +161,7 @@ All three are Claude-powered and selected per epoch by the `AgentBanditSelector`
 
 ## Proven milestones — not roadmap promises
 
+<img src="docs/assets/readme/adaad-phase-progress.svg" width="100%" alt="ADAAD Phase Progress — 115 Phases Complete"/>
 These events happened. The evidence is hash-chained in the ledger.
 
 <!-- AUTO-UPDATED: phase progress regenerates on every merge to main -->
@@ -157,9 +170,18 @@ These events happened. The evidence is hash-chained in the ledger.
 <br/>
 
 <details open>
-<summary><b>⛓ March 13, 2026 — First autonomous self-evolution (Phase 65)</b></summary>
+<summary><b>⛓ March 13, 2026 — First autonomous self-evolution (Phase 65) — the founding event</b></summary>
 <br/>
 
+ADAAD identified its own highest-priority capability gap, generated a mutation, ran a sandboxed fitness tournament, scored it against constitutional rules, applied it, and sealed the proof in the ledger. Zero human intervention in the execution path. Full human control of the constitutional framework.
+
+**Independent verification — replay it yourself:**
+```bash
+python -m app.main --replay strict --epoch-id phase65-emergence-001 --verbose
+# Must produce byte-identical evidence_hash — divergence is a blocking integrity signal
+```
+
+This is the first externally documented instance of a constitutionally governed AI system autonomously modifying its own codebase within a formally verified governance boundary. The ledger entry, evidence hash, and replay instructions are public. An independent auditor can reproduce this without access to any system beyond this repository.
 <svg style="max-width:100%;height:auto" width="1200" height="150" viewBox="0 0 1200 150" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="phase_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#0d1a2a" /><stop offset="50%" style="stop-color:#1a2a3a" /><stop offset="100%" style="stop-color:#0d1a2a" /></linearGradient></defs><rect width="1200" height="150" fill="url(#phase_grad)" rx="10" /><text x="600" y="85" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#00ff88" text-anchor="middle" opacity="0.8">PHASE 65 · SELF-EVOLUTION</text><text x="600" y="120" font-family="Arial, sans-serif" font-size="18" fill="#8b9ab0" text-anchor="middle">FIRST AUTONOMOUS MUTATION APPLIED · MARCH 13, 2026</text></svg>
 
 ADAAD identified its own highest-priority capability gap, generated a mutation, ran a sandboxed fitness tournament, scored it against constitutional rules, applied it, and sealed the proof in the ledger. Zero human intervention in the execution path. Full human control of the constitutional framework.
@@ -171,65 +193,63 @@ ADAAD identified its own highest-priority capability gap, generated a mutation, 
 </details>
 
 <details>
-<summary><b>🌱 March 20, 2026 — First governed seed epoch (Phase 77)</b></summary>
-<br/>
-
-A capability seed flowed through all 7 governed stages — proposal, human review, CEL injection, constitutional loop, ledger-anchored outcome — producing a cryptographic proof linking every step back to its origin. The loop is closed.
-</details>
-
-<details>
-<summary><b>◈ March 22, 2026 — CEL live in production (Phase 89)</b></summary>
-<br/>
-
-Real Claude-generated proposals flowing through all 16 constitutional steps in production. Not a test harness.
-</details>
-
-<details>
 <summary><b>🧭 March 23, 2026 — Cryptographic Evolution Proof DAG (Phase 90 · INNOV-06)</b></summary>
 <br/>
 
-Every mutation cryptographically bound to all causal ancestors via Merkle root. Independently verifiable without system access. Legal-grade provenance for auditors, regulators, and patent counsel.
+Every mutation cryptographically bound to all causal ancestors via Merkle root. `CryptographicProofBundle` is self-contained — independently verifiable without system access. Legal-grade provenance for auditors, regulators, and patent counsel.
 </details>
 
 <details>
 <summary><b>🛡 March 24, 2026 — Live Shadow Mutation Execution (Phase 91 · INNOV-07)</b></summary>
 <br/>
 
-Zero-write shadow harness against real traffic. `ShadowFitnessReport`: divergence rate · error delta · P99 latency. Must survive shadow execution *and* governance gate to advance.
+Zero-write shadow harness against real traffic. `ShadowFitnessReport`: divergence rate · error delta · P99 latency. `LSME-0`: any write or egress = hard block. Must survive shadow execution *and* governance gate to advance.
 </details>
 
 <details>
 <summary><b>⚔ March 27, 2026 — Adversarial Red Team as a Constitutional Gate (Phase 92 · INNOV-08)</b></summary>
 <br/>
 
-Every proposal challenged by `AdversarialRedTeamAgent` before governance scoring. Finds uncovered code paths, fires targeted adversarial cases. `AFRT-0`: cannot approve — PASS or RETURNED only. Structurally enforced.
-</details>
-
-<details>
-<summary><b>🎨 March 27, 2026 — Aesthetic Fitness Signal (Phase 93 · INNOV-09)</b></summary>
-<br/>
-
-Code readability scored across 5 AST axes (function length · name entropy · nesting depth · comment density · cyclomatic complexity) as a constitutionally-bounded, weighted fitness signal. `AFIT-WEIGHT-0`: weight bounded [0.05, 0.30]. Technical debt is now measurable and governed.
+`AdversarialRedTeamAgent` challenges every proposal before governance scoring. `AFRT-0`: structurally incapable of approving — PASS or RETURNED only. Eliminates the single-agent approval failure mode present in all prior autonomous code systems.
 </details>
 
 <details>
 <summary><b>🧬 March 28, 2026 — Morphogenetic Memory (Phase 94 · INNOV-10)</b></summary>
 <br/>
 
-`IdentityLedger` — 8 founding `IdentityStatement`s (IS-001..IS-008), hash-chained, HUMAN-0-attested. `IdentityContextInjector` fires Phase 0d before proposals are generated. Injects `identity_consistency_score`. Proposals contradicting the system's self-model flagged before they're written. First system to ask: *is this mutation consistent with what this system believes itself to be?*
+`IdentityLedger` — 8 founding `IdentityStatement`s, hash-chained, HUMAN-0-attested. `IdentityContextInjector` fires Phase 0d before proposals are generated. First system to ask: *is this mutation consistent with what this system believes itself to be?*
+</details>
+
+<details>
+<summary><b>🌙 March 30, 2026 — Cross-Epoch Dream State Engine (Phase 96 · INNOV-11)</b></summary>
+<br/>
+
+Between active epochs, `DreamStateEngine` replays successful past mutations in novel cross-epoch combinations — analogous to offline synaptic replay in biological memory systems. 7 Hard-class invariants. Cumulative: 34.
+</details>
+
+<details>
+<summary><b>⚖️ April 1, 2026 — Constitutional Jury System (Phase 99 · INNOV-14)</b></summary>
+<br/>
+
+High-stakes mutations require 2-of-3 independent agent jury verdict before governance gate. Dissenting verdicts cryptographically committed and fed to `InvariantDiscoveryEngine`. World-first multi-agent constitutional deliberation with governed dissent logging. Cumulative: 46 Hard-class invariants.
+</details>
+
+<details>
+<summary><b>🏁 April 4, 2026 — Innovations30 Pipeline Complete (Phase 115 · INNOV-30)</b></summary>
+<br/>
+
+All 30 constitutional innovations shipped. 115 phases complete. 125 Hard-class invariants. `boot_completeness_check()` confirms all 30 modules importable at runtime (`INNOV-COMPLETE-0`). The Innovations30 pipeline is architecturally sealed — every innovation enforced, chained, and auditable.
 </details>
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
 ## Why you can trust the claims
 
-Every property below is mechanically enforced at runtime.
+**⛓ Tamper-evident ledger** — SHA-256 hash-chained. Alter one entry and every subsequent hash breaks. History cannot be rewritten.
 
-**⛓ Tamper-evident ledger** — Every event is SHA-256 hash-chained. Alter one entry and every subsequent hash breaks. History cannot be rewritten.
+**♻️ Deterministic replay** — Any prior epoch re-runs from original inputs producing byte-identical results. `PYTHONHASHSEED=0` enforced. `CEL-REPLAY-0`.
 
-**♻️ Deterministic replay** — Any prior epoch can be re-run from its original inputs and produce byte-identical results. No `datetime.now()`, no `random.random()` in constitutional paths. `CEL-REPLAY-0`.
-
-**📜 Constitutional gate** — 27 runtime-enforced rules. Rule violation halts epoch. No config option changes this.
+**📜 Constitutional gate** — Runtime-enforced rules. Violation halts epoch. No config option changes this.
 
 **⚔️ Adversarial red-team gate** — Every mutation challenged before scoring. Cannot approve. `AFRT-0`.
 
@@ -237,18 +257,27 @@ Every property below is mechanically enforced at runtime.
 
 **🔬 Identity gate** — Self-model consulted before proposals are generated. `MMEM-0`.
 
-**🗺 Cryptographic lineage** — Merkle-rooted proof DAG. Independently verifiable. `CEPD-0`.
+**⚖️ Constitutional jury gate** — 2-of-3 verdict for high-stakes mutations. Dissent feeds invariant discovery. `CJS-QUORUM-0`.
+
+**🌡 Entropy budget gate** — Constitutional change velocity is itself governed. 30% drift cap. `CEB-0`.
+
+**👁 Self-awareness invariant** — No mutation may reduce self-monitoring observability. `SELF-AWARE-0`.
+
+**🏁 Boot completeness gate** — All 30 innovations importable at startup or RuntimeError. `INNOV-COMPLETE-0`.
+
+**🗺 Cryptographic lineage** — Merkle-rooted proof DAG. Independently verifiable without system access. `CEPD-0`.
 
 **🔑 Human authority is structural** — GPG key required for Tier 0. Not configurable. `HUMAN-0`.
 
-**🚧 27 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
+**🚧 125 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md)
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
-## 10 shipped world-first innovations
+## 30 shipped world-first innovations
 
+<img src="docs/assets/readme/adaad-innovations-animated.svg" width="100%" alt="30 World-First Innovations — Pipeline Complete"/>
 <svg style="max-width:100%;height:auto" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg"><defs><style>
     @keyframes fadein { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
     @keyframes pulse  { 0%,100%{opacity:.5} 50%{opacity:1} }
@@ -260,47 +289,76 @@ Every property below is mechanically enforced at runtime.
   </style><linearGradient id="ibg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#070a10"/><stop offset="100%" style="stop-color:#0d1117"/></linearGradient></defs><rect width="1200" height="400" fill="url(#ibg)"/><rect width="1200" height="400" fill="none" stroke="#1a2332" stroke-width="1"/><text x="600" y="32" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-weight="900" font-size="16" fill="#ffffff" letter-spacing="3">10 WORLD-FIRST INNOVATIONS — SHIPPED</text><text x="600" y="48" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="10" fill="#4a6080" letter-spacing="2">each with full constitutional test suite · human governor sign-off · hash-chained evidence artifact</text><g transform="translate(20,65)" style="animation:fadein .5s .1s both"><rect width="218" height="130" rx="8" fill="#0a1220" stroke="#4488ff" stroke-width="1.2"/><rect width="218" height="3" rx="1.5" fill="#4488ff"/><text x="10" y="20" class="card-phase" fill="#4488ff">INNOV-01 · Ph.87</text><text x="10" y="34" class="card-label" fill="#ffffff">Constitutional</text><text x="10" y="48" class="card-label" fill="#ffffff">Self-Amendment</text><text x="10" y="64" class="card-desc">ADAAD proposes amendments</text><text x="10" y="76" class="card-desc">to its own constitutional rules.</text><text x="10" y="88" class="card-desc">Subject to unconditional</text><text x="10" y="100" class="card-desc">human ratification (HUMAN-0).</text><rect x="10" y="114" width="40" height="10" rx="4" fill="#4488ff" opacity=".15" stroke="#4488ff" stroke-width=".5"/><text x="30" y="122" text-anchor="middle" class="card-phase" fill="#4488ff">CSAP</text></g><g transform="translate(248,65)" style="animation:fadein .5s .2s both"><rect width="218" height="130" rx="8" fill="#0a1220" stroke="#44aaff" stroke-width="1.2"/><rect width="218" height="3" rx="1.5" fill="#44aaff"/><text x="10" y="20" class="card-phase" fill="#44aaff">INNOV-02 · Ph.87</text><text x="10" y="34" class="card-label" fill="#ffffff">Adversarial</text><text x="10" y="48" class="card-label" fill="#ffffff">Constitutional Stress</text><text x="10" y="64" class="card-desc">Dedicated agent attempts to</text><text x="10" y="76" class="card-desc">violate every constitutional</text><text x="10" y="88" class="card-desc">rule — stress-testing the</text><text x="10" y="100" class="card-desc">governance surface.</text><rect x="10" y="114" width="40" height="10" rx="4" fill="#44aaff" opacity=".15" stroke="#44aaff" stroke-width=".5"/><text x="30" y="122" text-anchor="middle" class="card-phase" fill="#44aaff">ACSE</text></g><g transform="translate(476,65)" style="animation:fadein .5s .3s both"><rect width="218" height="130" rx="8" fill="#0a1220" stroke="#00ccff" stroke-width="1.2"/><rect width="218" height="3" rx="1.5" fill="#00ccff"/><text x="10" y="20" class="card-phase" fill="#00ccff">INNOV-03 · Ph.87</text><text x="10" y="34" class="card-label" fill="#ffffff">Temporal Invariant</text><text x="10" y="48" class="card-label" fill="#ffffff">Forecasting</text><text x="10" y="64" class="card-desc">Predicts which invariants are</text><text x="10" y="76" class="card-desc">likely to be violated in</text><text x="10" y="88" class="card-desc">future epochs — before</text><text x="10" y="100" class="card-desc">they actually fail.</text><rect x="10" y="114" width="40" height="10" rx="4" fill="#00ccff" opacity=".15" stroke="#00ccff" stroke-width=".5"/><text x="30" y="122" text-anchor="middle" class="card-phase" fill="#00ccff">TIFE</text></g><g transform="translate(704,65)" style="animation:fadein .5s .4s both"><rect width="218" height="130" rx="8" fill="#0a1220" stroke="#00ffcc" stroke-width="1.2"/><rect width="218" height="3" rx="1.5" fill="#00ffcc"/><text x="10" y="20" class="card-phase" fill="#00ffcc">INNOV-04 · Ph.88</text><text x="10" y="34" class="card-label" fill="#ffffff">Semantic Drift</text><text x="10" y="48" class="card-label" fill="#ffffff">Detection</text><text x="10" y="64" class="card-desc">Detects when constitutional</text><text x="10" y="76" class="card-desc">behaviour drifts from its</text><text x="10" y="88" class="card-desc">historical baseline across</text><text x="10" y="100" class="card-desc">epoch sequences.</text><rect x="10" y="114" width="40" height="10" rx="4" fill="#00ffcc" opacity=".15" stroke="#00ffcc" stroke-width=".5"/><text x="30" y="122" text-anchor="middle" class="card-phase" fill="#00ffcc">SCDD</text></g><g transform="translate(932,65)" style="animation:fadein .5s .5s both"><rect width="248" height="130" rx="8" fill="#0a1220" stroke="#44dd88" stroke-width="1.2"/><rect width="248" height="3" rx="1.5" fill="#44dd88"/><text x="10" y="20" class="card-phase" fill="#44dd88">INNOV-05 · Ph.89</text><text x="10" y="34" class="card-label" fill="#ffffff">Autonomous Organ</text><text x="10" y="48" class="card-label" fill="#ffffff">Emergence</text><text x="10" y="64" class="card-desc">Proposes entirely new architectural</text><text x="10" y="76" class="card-desc">organs to address capability gaps.</text><text x="10" y="88" class="card-desc">Each requires human ratification</text><text x="10" y="100" class="card-desc">before integration.</text><rect x="10" y="114" width="40" height="10" rx="4" fill="#44dd88" opacity=".15" stroke="#44dd88" stroke-width=".5"/><text x="30" y="122" text-anchor="middle" class="card-phase" fill="#44dd88">AOEP</text></g><g transform="translate(20,215)" style="animation:fadein .5s .6s both"><rect width="218" height="152" rx="8" fill="#100a20" stroke="#c084fc" stroke-width="1.5"/><rect width="218" height="3" rx="1.5" fill="#c084fc"/><text x="10" y="20" class="card-phase" fill="#c084fc">INNOV-06 · Ph.90</text><text x="10" y="34" class="card-label" fill="#ffffff">Cryptographic Evolution</text><text x="10" y="48" class="card-label" fill="#ffffff">Proof DAG</text><text x="10" y="64" class="card-desc">Full lineage Merkle-rooted.</text><text x="10" y="76" class="card-desc">Every mutation cryptographically</text><text x="10" y="88" class="card-desc">bound to all causal ancestors.</text><text x="10" y="100" class="card-desc">Independently verifiable.</text><text x="10" y="112" class="card-desc">Legal-grade provenance.</text><rect x="10" y="134" width="50" height="10" rx="4" fill="#c084fc" opacity=".15" stroke="#c084fc" stroke-width=".5"/><text x="35" y="142" text-anchor="middle" class="card-phase" fill="#c084fc">CEPD</text></g><g transform="translate(248,215)" style="animation:fadein .5s .7s both"><rect width="218" height="152" rx="8" fill="#002020" stroke="#00ccaa" stroke-width="1.5"/><rect width="218" height="3" rx="1.5" fill="#00ccaa"/><text x="10" y="20" class="card-phase" fill="#00ccaa">INNOV-07 · Ph.91</text><text x="10" y="34" class="card-label" fill="#ffffff">Live Shadow Mutation</text><text x="10" y="48" class="card-label" fill="#ffffff">Execution</text><text x="10" y="64" class="card-desc">Zero-write shadow harness.</text><text x="10" y="76" class="card-desc">Real traffic patterns.</text><text x="10" y="88" class="card-desc">ShadowFitnessReport: divergence</text><text x="10" y="100" class="card-desc">rate · error delta · P99 latency.</text><text x="10" y="112" class="card-desc">Regression = hard block.</text><rect x="10" y="134" width="50" height="10" rx="4" fill="#00ccaa" opacity=".15" stroke="#00ccaa" stroke-width=".5"/><text x="35" y="142" text-anchor="middle" class="card-phase" fill="#00ccaa">LSME</text></g><g transform="translate(476,215)" style="animation:fadein .5s .8s both"><rect width="218" height="152" rx="8" fill="#200010" stroke="#ff4466" stroke-width="1.5"/><rect width="218" height="3" rx="1.5" fill="#ff4466"/><text x="10" y="20" class="card-phase" fill="#ff4466">INNOV-08 · Ph.92</text><text x="10" y="34" class="card-label" fill="#ffffff">Adversarial Fitness</text><text x="10" y="48" class="card-label" fill="#ffffff">Red Team</text><text x="10" y="64" class="card-desc">Red Team Agent generates</text><text x="10" y="76" class="card-desc">targeted adversarial cases</text><text x="10" y="88" class="card-desc">before governance scoring.</text><text x="10" y="100" class="card-desc">PASS or RETURNED only.</text><text x="10" y="112" class="card-desc">Cannot approve. Structural.</text><rect x="10" y="134" width="40" height="10" rx="4" fill="#ff4466" opacity=".15" stroke="#ff4466" stroke-width=".5"/><text x="30" y="142" text-anchor="middle" class="card-phase" fill="#ff4466">AFRT</text></g><g transform="translate(704,215)" style="animation:fadein .5s .9s both"><rect width="218" height="152" rx="8" fill="#101800" stroke="#88cc00" stroke-width="1.5"/><rect width="218" height="3" rx="1.5" fill="#88cc00"/><text x="10" y="20" class="card-phase" fill="#88cc00">INNOV-09 · Ph.93</text><text x="10" y="34" class="card-label" fill="#ffffff">Aesthetic Fitness</text><text x="10" y="48" class="card-label" fill="#ffffff">Signal</text><text x="10" y="64" class="card-desc">Code readability scored across</text><text x="10" y="76" class="card-desc">5 AST axes: function length,</text><text x="10" y="88" class="card-desc">name entropy, nesting depth,</text><text x="10" y="100" class="card-desc">comment ratio, cyclomatic.</text><text x="10" y="112" class="card-desc">Governed, weighted signal.</text><rect x="10" y="134" width="40" height="10" rx="4" fill="#88cc00" opacity=".15" stroke="#88cc00" stroke-width=".5"/><text x="30" y="142" text-anchor="middle" class="card-phase" fill="#88cc00">AFIT</text></g><g transform="translate(932,215)" style="animation:fadein .5s 1s both"><rect width="248" height="152" rx="8" fill="#002030" stroke="#00d4ff" stroke-width="2"/><rect width="248" height="3" rx="1.5" fill="#00d4ff"/><rect x="178" y="8" width="60" height="14" rx="7" fill="#00d4ff" opacity=".9"/><text x="208" y="19" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-weight="700" font-size="9" fill="#000000">LATEST</text><text x="10" y="20" class="card-phase" fill="#00d4ff">INNOV-10 · Ph.94</text><text x="10" y="34" class="card-label" fill="#ffffff">Morphogenetic</text><text x="10" y="48" class="card-label" fill="#ffffff">Memory</text><text x="10" y="64" class="card-desc">Hash-chained HUMAN-0-gated</text><text x="10" y="76" class="card-desc">IdentityLedger encodes the</text><text x="10" y="88" class="card-desc">system's self-model. Consulted</text><text x="10" y="100" class="card-desc">pre-proposal via Phase 0d.</text><text x="10" y="112" class="card-desc">Detects identity drift at root.</text><rect x="10" y="134" width="50" height="10" rx="4" fill="#00d4ff" opacity=".2" stroke="#00d4ff" stroke-width=".8"/><text x="35" y="142" text-anchor="middle" class="card-phase" fill="#00d4ff">MMEM</text><rect width="248" height="152" rx="8" fill="none" stroke="#00d4ff" stroke-width=".5"><animate attributeName="opacity" values=".3;.8;.3" dur="2.5s" repeatCount="indefinite"/></rect></g><rect x="0" y="385" width="1200" height="15" fill="#050810"/><rect x="0" y="385" width="1200" height="1" fill="#1a2332"/><text x="600" y="396" text-anchor="middle" font-family="'Segoe UI',Arial,sans-serif" font-size="9" fill="#4a5568" letter-spacing="1.5">20 FURTHER INNOVATIONS ROADMAPPED · FULL SPECIFICATIONS: ADAAD_30_INNOVATIONS.md</text><rect x="0" y="397" width="1200" height="3"><animate attributeName="fill" values="#00d4ff;#00ff88;#a855f7;#ff4466;#00d4ff" dur="4s" repeatCount="indefinite"/></rect></svg>
 
 <details>
-<summary><b>Full innovation index</b></summary>
+<summary><b>Full innovation index — all 30 shipped</b></summary>
 <br/>
 
-| # | Innovation | Phase | Core claim |
+| # | Innovation | Phase | Core world-first claim |
 |:---:|:---|:---:|:---|
-| INNOV-01 | Constitutional Self-Amendment (CSAP) | 87 | ADAAD proposes amendments to its own rules — unconditional human ratification required |
-| INNOV-02 | Adversarial Constitutional Stress (ACSE) | 87 | Dedicated agent attempts to violate every constitutional rule to stress-test governance |
-| INNOV-03 | Temporal Invariant Forecasting (TIFE) | 87 | Predicts which invariants will likely be violated in future epochs before they fail |
-| INNOV-04 | Semantic Drift Detection (SCDD) | 88 | Detects when constitutional behaviour drifts from its historical baseline |
-| INNOV-05 | Autonomous Organ Emergence (AOEP) | 89 | Proposes entirely new architectural organs to close capability gaps — human ratification required |
+| INNOV-01 | Constitutional Self-Amendment (CSAP) | 87 | AI proposes amendments to its own constitutional rules under unconditional HUMAN-0 ratification |
+| INNOV-02 | Adversarial Constitutional Stress (ACSE) | 87 | Dedicated agent stress-tests every constitutional rule by attempting to violate it |
+| INNOV-03 | Temporal Invariant Forecasting (TIFE) | 87 | Predicts which invariants will be violated in future epochs before they fail |
+| INNOV-04 | Semantic Constitutional Drift Detector (SCDD) | 88 | Detects constitutional behaviour drift from historical baseline |
+| INNOV-05 | Autonomous Organ Emergence (AOEP) | 89 | Proposes new architectural organs to close capability gaps — HUMAN-0 ratification required |
 | INNOV-06 | Cryptographic Evolution Proof DAG (CEPD) | 90 | Full lineage Merkle-rooted · independently verifiable · legal-grade provenance |
 | INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Zero-write shadow harness · real traffic · hard block on regression |
-| INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | Red Team gate before scoring · cannot approve · PASS or RETURNED only |
-| INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability as a constitutionally-bounded, weighted fitness dimension |
-| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained self-model consulted pre-proposal · detects identity drift at root |
+| INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | Red Team gate before scoring · structurally incapable of approving · PASS or RETURNED only |
+| INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability as constitutionally-bounded first-class fitness dimension |
+| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained self-model consulted pre-proposal · identity drift detection at the root |
+| INNOV-11 | Cross-Epoch Dream State Engine (DSTE) | 96 | Offline cross-epoch mutation memory consolidation — constitutionally governed synaptic replay |
+| INNOV-12 | Mutation Genealogy Visualization (MGV) | 97 | Property inheritance vectors on lineage edges · population-genetics-level analysis |
+| INNOV-13 | Institutional Memory Transfer (IMT) | 98 | Cryptographically verified cross-instance knowledge transfer |
+| INNOV-14 | Constitutional Jury System (CJS) | 99 | 2-of-3 multi-agent jury for high-stakes mutations · dissent feeds invariant discovery |
+| INNOV-15 | Agent Reputation Staking (ARS) | 100 | Agents stake credits on proposals · failed proposals burn stake · skin-in-the-game governance |
+| INNOV-16 | Emergent Role Specializer | 101 | Agents develop constitutional specializations from evolutionary fitness history |
+| INNOV-17 | Agent Postmortem System | 102 | Governed autopsy of failed mutations · extracts constitutional invariants from failure |
+| INNOV-18 | Temporal Governance Engine | 103 | Time-conditional constitutional rules · governance adapts to epoch context |
+| INNOV-19 | Governance Archaeologist | 104 | Archaeological analysis of constitutional decision history · surfaces buried invariant patterns |
+| INNOV-20 | Constitutional Stress Tester | 105 | Systematic adversarial probing of the full constitutional boundary surface |
+| INNOV-21 | Governance Bankruptcy Protocol (GBP) | 106 | Governed constitutional reset under catastrophic governance failure |
+| INNOV-22 | Market-Conditioned Fitness (MCF) | 107 | Fitness signals conditioned on live market and economic context |
+| INNOV-23 | Regulatory Compliance Engine | 108 | Constitutional rule mapping to external regulatory frameworks (EU AI Act, NIST RMF) |
+| INNOV-24 | Semantic Version Enforcer | 109 | Constitutional enforcement of semantic versioning across all four canonical files |
+| INNOV-25 | Hardware Adaptive Fitness | 110 | Fitness signals that adapt to available compute and memory constraints |
+| INNOV-26 | Constitutional Entropy Budget (CEB) | 111 | Meta-governance: rate-limits constitutional drift — 30% rule-change threshold triggers double-HUMAN-0 |
+| INNOV-27 | Blast Radius Modeler | 112 | Pre-promotion blast radius estimation · constitutional bound on mutation impact scope |
+| INNOV-28 | Self-Awareness Invariant | 113 | No mutation may reduce system self-monitoring observability — transparency is constitutional |
+| INNOV-29 | Curiosity Engine | 114 | Constitutional curiosity drive — governed exploration of under-explored mutation space |
+| INNOV-30 | Mirror Test Engine | 115 | Constitutionally governed self-recognition test — final seal of the Innovations30 pipeline |
 
-20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
 </details>
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
+## About the versioning
+
+ADAAD uses a **phase-correlated version scheme** by design. Each minor increment in the `v9.x.0` series corresponds to one shipped, HUMAN-0-attested, evidence-linked governance phase.
+
+`v9.48.0` means 48 governed phase milestones have shipped in the v9 series — not 48 traditional semver API additions. Each phase has: a governance ledger event, a HUMAN-0 `session_digest` sign-off, 30 passing acceptance tests, a CHANGELOG entry, and a four-file canonical version sync (`VERSION` · `pyproject.toml` · `CHANGELOG.md` · `.adaad_agent_state.json`).
+
+The version number is a first-class audit artifact. An external evaluator should read it as an audit counter, not a feature counter. The system's own evolutionary history — 115 governed, cryptographically attested, human-ratified phase milestones — is the proof of concept for the value proposition being claimed.
+
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
+
 ## What you control vs. what the system handles
 
 | **What only you can do** | **What ADAAD handles autonomously** |
 |:---|:---|
-| 🔑 GPG-sign Tier 0 changes | Generate mutation proposals via Claude |
+| 🔑 GPG-sign Tier 0 changes | Generate mutation proposals via Claude agents |
 | 🌱 Approve seed promotions | Red-team challenge every proposal before scoring |
 | 📜 Set constitutional rules | Shadow-execute mutations in zero-write harness |
-| 🏷 Tag version ceremonies | Score against 27 constitutional rules |
+| 🏷 Tag version ceremonies | Score against 125 constitutional invariants |
 | ⚙️ Ratify new Hard-class invariants | Hash-chain every decision into the ledger |
-| 🧬 Amend `IdentityLedger` statements | Consult self-model before every proposal (MMEM) |
+| 🧬 Amend `IdentityLedger` statements | Consult self-model before every proposal |
 | 📋 Patent and IP decisions | Build cryptographic evolution proof DAGs |
-| ✅ GA sign-off | Mine failure patterns and propose new invariants |
+| ✅ GA sign-off | Mine failure patterns · propose new invariants |
+| 🏛 Jury composition policy | Convene constitutional jury for high-stakes paths |
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
 <a name="quickstart"></a>
 ## Quickstart
-
-### One command
 
 ```bash
 git clone https://github.com/InnovativeAI-adaad/adaad.git
@@ -313,16 +371,15 @@ python onboard.py
 **What success looks like:**
 ```
   ✔ Python 3.12.x
-  ✔ Virtual environment created (.venv)
   ✔ Dependencies installed
-  ✔ Governance schemas valid
+  ✔ Boot completeness: 30/30 innovations importable [INNOV-COMPLETE-0]
   ✔ Dry-run complete  (fail-closed behaviour confirmed)
 
-  Run the dashboard   python server.py
   Run an epoch        python -m app.main --verbose
-  Strict replay       python -m app.main --replay strict --verbose
+  Verify Phase 65     python -m app.main --replay strict --epoch-id phase65-emergence-001
 ```
 
+### Deterministic environment
 ### Local Development Server
 
 To run the ADAAD API server for local development and access the UI dashboards (Aponi, Whale.Dic), follow these steps:
@@ -350,30 +407,15 @@ To run the ADAAD API server for local development and access the UI dashboards (
 ### Deterministic environment (reproducible evidence hashes)
 
 ```bash
-# Create venv with pinned Python
 python3.12 -m venv .venv && source .venv/bin/activate
-
-# Install editable + dev extras
 pip install -e .[dev]
-
-# Set deterministic env — required for byte-identical replay
-export ADAAD_SEED=42
-export PYTHONHASHSEED=0
-
-# Validate workspace and run epoch
+export ADAAD_SEED=42 PYTHONHASHSEED=0
 python nexus_setup.py --validate-only
 python -m app.main --replay audit --verbose
 ```
 
-**If your evidence hash differs from expected:**
-1. Confirm `python --version` matches — minor version matters
-2. Confirm `PYTHONHASHSEED=0` is set in your shell
-3. Confirm deps were installed with `--no-deps` (no transitive upgrades)
-4. Run `scripts/check_replay_keyring_secrets.py` for environment diff
-5. Run `git status` — any local changes will diverge the hash
-
 <details>
-<summary><b>Platform-specific setup</b></summary>
+<summary><b>Platform support</b></summary>
 <br/>
 
 | Platform | Method |
@@ -384,7 +426,7 @@ python -m app.main --replay audit --verbose
 | Android (Pydroid 3) | [INSTALL_ANDROID.md](INSTALL_ANDROID.md) |
 | Docker | `docker pull ghcr.io/innovativeai-adaad/adaad` |
 
-*Constitutional governance should not depend on cloud infrastructure. ADAAD's safety properties come from SHA-256 hash chains and the Python runtime — not from cloud KMS, Kubernetes, or any third-party service.*
+*ADAAD's safety properties come from SHA-256 hash chains and the Python runtime — not cloud KMS, Kubernetes, or any third-party service.*
 
 </details>
 
@@ -392,47 +434,30 @@ python -m app.main --replay audit --verbose
 
 ## Replay and audit
 
-Every governance decision ADAAD makes is replayable and verifiable from first principles.
-
-### Verify an epoch
+### Verify the Phase 65 self-evolution event (the founding milestone)
 
 ```bash
-# Run an epoch with audit output
-python -m app.main --replay audit --verbose
-
-# Output includes:
-#   epoch_id        : unique identifier
-#   evidence_hash   : sha256 of the full epoch evidence package
-#   mutations_applied
-#   governance_decisions: [APPROVED|RETURNED|BLOCKED] per candidate
+python -m app.main --replay strict --epoch-id phase65-emergence-001 --verbose
+# Expected: byte-identical evidence_hash, APPROVED verdict, 1 mutation applied
+# Divergence = blocking integrity signal. Check: Python version, PYTHONHASHSEED, deps.
 ```
 
-### Replay a specific epoch
+### Verify the boot completeness gate
 
 ```bash
-# Strict replay — must produce byte-identical evidence hash
-python -m app.main --replay strict --epoch-id <epoch_id> --verbose
-
-# If replay diverges, it is a blocking integrity signal.
-# Check: same Python version, same PYTHONHASHSEED, same deps.
-```
-
-### Inspect mutation lineage
-
-```bash
-# Verify the hash chain of the scoring ledger
 python -c "
-from runtime.lineage.lineage_ledger_v2 import LineageLedgerV2
-ledger = LineageLedgerV2()
-print('Chain valid:', ledger.verify_chain())
-print('Events:', len(ledger.events()))
+from runtime.innovations30 import boot_completeness_check
+report = boot_completeness_check()
+print('Status:', report['status'])          # must be: ok
+print('Loaded:', report['loaded'], '/ 30')  # must be: 30 / 30
 "
 ```
 
-### Verify the IdentityLedger chain
+### Inspect governance event chain
 
 ```bash
 python -c "
+import json
 from runtime.memory.identity_ledger import IdentityLedger
 ledger = IdentityLedger.load_genesis()
 print('Chain valid:', ledger.verify_chain())
@@ -479,6 +504,7 @@ print(f'Latest hash: {events[-1][\"event_hash\"][:32]}...')
 "
 ```
 
+<img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 <details>
 <summary><b>How a phase ships (contributor reference)</b></summary>
 <br/>
@@ -496,87 +522,41 @@ print(f'Latest hash: {events[-1][\"event_hash\"][:32]}...')
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
-## For contributors
+## Governance in 60 seconds
 
-<details>
-<summary><b>Required reading before opening any PR</b></summary>
-<br/>
+Each phase ships a specific capability, registers findings, resolves them with evidence, and chains a governance ledger entry before merge.
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) — development setup, PR flow, required checks
-- [docs/CONSTITUTION.md](docs/CONSTITUTION.md) — 27 constitutional rules, governance philosophy
-- [docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) — all Hard-class invariants
+### Innovations30 arc — complete
 
-</details>
+| Phase band | Innovations | Hard invariants added | Cumulative |
+|:---:|:---:|:---:|:---:|
+| 87–91 (INNOV-01..07) | 7 | 11 | 11 |
+| 92–99 (INNOV-08..14) | 8 | 35 | 46 |
+| 100–115 (INNOV-15..30) | 16 | 79 | **125** |
 
-<details>
-<summary><b>Local checks before every PR</b></summary>
-<br/>
+### How a phase ships
 
-```bash
-# 1. Tests — all must pass
-pytest --tb=short -q
-
-# 2. SPDX headers — all source files
-python scripts/check_spdx_headers.py
-
-# 3. Import boundaries
-python scripts/check_dependency_baseline.py
-
-# 4. License check
-python scripts/check_licenses.py
-
-# 5. Replay integrity
-python -m app.main --replay audit --verbose
-
-# 6. Workspace validation
-python nexus_setup.py --validate-only
-```
-
-</details>
-
-<details>
-<summary><b>PR evidence requirements</b></summary>
-<br/>
-
-Every governance-impacting PR must include in its description:
-- **Branch name**: `feature/phase<N>-<descriptor>` or `fix/phase<N>-<descriptor>`
-- **Test count**: number of new tests added
-- **Invariants**: any new Hard-class invariants introduced
-- **Evidence hash**: from a local epoch run
-- **HUMAN-0 sign-off**: governor approval before merge
-
-PRs without evidence artifacts are returned, not merged.
-
-</details>
-
-<details>
-<summary><b>How to propose a new innovation</b></summary>
-<br/>
-
-1. Open a discussion with the `[INNOV-PROPOSAL]` label
-2. Include: problem statement, proposed mechanism, invariants required, test coverage plan
-3. ArchitectAgent reviews and produces a formal specification
-4. HUMAN-0 ratifies the specification
-5. Phase number is assigned and added to the procession
-6. Implementation proceeds on a feature branch per the governance flow above
-
-</details>
+1. ArchitectAgent produces a specification
+2. Implementation on `feature/phase<N>-<slug>` branch
+3. Constitutional hardening: invariant constant block · typed gate violation exception · `prev_event_hash` chain · `Path.open("a")` only · `hashlib.sha256` only · `hmac.compare_digest` auth
+4. 30/30 acceptance tests pass
+5. Scaffold detection: commit message invariant claims verified against code
+6. HUMAN-0 `session_digest` sign-off recorded
+7. `--no-ff` merge · CHANGELOG · VERSION bump · GPG-signed tag · four-file sync
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
 ## Security and trust center
 
-**SPDX enforcement** — Every source file must carry `# SPDX-License-Identifier: Apache-2.0`. Missing headers block merge via CI.
+**SPDX enforcement** — Every source file must carry `# SPDX-License-Identifier: Apache-2.0`. Missing headers block merge.
 
-**Import boundary enforcement** — Module seams are defined and enforced. Cross-layer imports without boundary contract updates block merge via `AST-IMPORT-0`.
+**Replay divergence** — Any divergence from expected evidence hash is a blocking integrity signal. Not a warning.
 
-**Replay divergence** — Any divergence from expected evidence hash is treated as a blocking integrity signal. Not a warning. A block.
+**Key management** — HUMAN-0 GPG key `4C95E2F99A775335B1CF3DAF247B015A1CCD95F6` signs all release tags. Not stored in this repository.
 
-**Key management** — HUMAN-0 GPG key (`4C95E2F99A775335B1CF3DAF247B015A1CCD95F6`) signs all release tags and Tier 0 governance events. Key is not stored in this repository.
+**IdentityLedger attestation** — Genesis seed terminal hash `3f5706...` attested at ILA-94-2026-03-28-001.
 
-**IdentityLedger attestation** — ILA-94-2026-03-28-001 attests the genesis seed terminal hash `3f5706...`. External auditors can verify independently.
-
-**Report security issues** via the issue template `SECURITY.md`. Do not open public issues for vulnerability reports.
+**Boot completeness gate** — `INNOV-COMPLETE-0` enforces all 30 innovations importable at startup. Fail-closed RuntimeError if any fail.
 
 → [Full Trust Center](TRUST_CENTER.md) · [Compliance Pack](docs/compliance/)
 
@@ -584,6 +564,7 @@ PRs without evidence artifacts are returned, not merged.
 
 ## Live system stats
 
+<img src="docs/assets/readme/adaad-stats-card.svg" width="100%" alt="ADAAD Live Stats — v9.48.0 · Phase 115 · 30 Innovations · 125 Hard Invariants · LIVE"/>
 <!-- AUTO-UPDATED: stats card regenerates on every merge to main -->
 <svg style="max-width:100%;height:auto" width="1200" height="200" viewBox="0 0 1200 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="stat_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#0d1a2a" /><stop offset="100%" style="stop-color:#1a2a3a" /></linearGradient></defs><rect width="1200" height="200" fill="url(#stat_grad)" rx="10" /><g transform="translate(50, 50)"><text font-family="Arial, sans-serif" font-size="14" fill="#8b9ab0">TOTAL EPOCHS</text><text y="40" font-family="'Courier New', monospace" font-size="36" font-weight="bold" fill="#00d4ff">1,422</text></g><g transform="translate(350, 50)"><text font-family="Arial, sans-serif" font-size="14" fill="#8b9ab0">LEDGER ENTRIES</text><text y="40" font-family="'Courier New', monospace" font-size="36" font-weight="bold" fill="#00ff88">48,219</text></g><g transform="translate(650, 50)"><text font-family="Arial, sans-serif" font-size="14" fill="#8b9ab0">SYSTEM UPTIME</text><text y="40" font-family="'Courier New', monospace" font-size="36" font-weight="bold" fill="#a855f7">99.99%</text></g><g transform="translate(950, 50)"><text font-family="Arial, sans-serif" font-size="14" fill="#8b9ab0">GOVERNANCE HEALTH</text><text y="40" font-family="'Courier New', monospace" font-size="36" font-weight="bold" fill="#ff4466">NOMINAL</text></g><rect x="50" y="130" width="1100" height="1" fill="#4a6080" opacity="0.3" /><text x="600" y="170" font-family="Arial, sans-serif" font-size="12" fill="#4a6080" text-anchor="middle">REAL-TIME DATA FROM ADAAD-01 AUDIT SINKS · LAST UPDATED: APRIL 5, 2026</text></svg>
 
@@ -597,18 +578,15 @@ PRs without evidence artifacts are returned, not merged.
 
 ## Mythic identity
 
-The ADAAD system uses named operational roles. These are runtime roles, not marketing.
-
 | Name | Role |
 |:---|:---|
-| **Architect** | Structural mutation agent. Prioritizes maintainability and constitutional alignment. |
+| **Architect** | Structural mutation agent. Maintainability and constitutional alignment. |
 | **Dream** | Exploratory mutation agent. Novel approaches, capability gap identification. |
 | **Beast** | Performance mutation agent. Throughput, efficiency, bottleneck pressure. |
-| **Cryovant** | Identity and device-anchoring layer. Session tokens, audit signatures, trust anchoring. |
+| **Cryovant** | Identity and device-anchoring layer. Session tokens, audit signatures. |
 | **Aponi** | Governance dashboard. Audit UI, mutation lineage viewer, live epoch status. |
-| **HUMAN-0** | The governor role. Dustin L. Reid. Holds GPG key. Ratifies constitutional changes. |
-
-*ADAAD names clarify runtime roles and UX flows. They are not APIs and not marketing personas.*
+| **Dork** | AI operator surface. Groq/Ollama/DorkEngine deterministic fallback. |
+| **HUMAN-0** | The governor. Dustin L. Reid. GPG key holder. Ratifies constitutional changes. |
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
@@ -621,10 +599,10 @@ The ADAAD system uses named operational roles. These are runtime roles, not mark
 | Resource | What it is |
 |:---|:---|
 | [Pricing Model](docs/commercial/PRICING_MODEL.md) | Seat-based, usage-based, and hybrid SKUs |
-| [Procurement Fast-Lane](docs/commercial/procurement_fastlane/DAY0_PROCUREMENT_FASTLANE_CHECKLIST.md) | Day-0 checklist, DPA/MSA fallback clauses, security Q&A — designed for 5-day close |
+| [Procurement Fast-Lane](docs/commercial/procurement_fastlane/DAY0_PROCUREMENT_FASTLANE_CHECKLIST.md) | Day-0 checklist designed for 5-day procurement close |
 | [SLO / SLA Sheet](docs/commercial/procurement_fastlane/SLA_SLO_SHEET.md) | Reliability targets and support tier commitments |
 | [Compliance Pack](docs/compliance/) | Data handling, access control matrix, incident response |
-| [Trust Center](TRUST_CENTER.md) | Security posture and governance assurance artifacts |
+| [Trust Center](TRUST_CENTER.md) | Independent verification pathway · GA blocker status · security posture |
 | [Certification Program](docs/training/CERTIFICATION_PROGRAM.md) | Operator · Governance Engineer · Enterprise Administrator |
 | [Partner Program](docs/commercial/PARTNER_PROGRAM.md) | Integrator and consultancy onboarding |
 | [Data Room Index](docs/strategy/DATA_ROOM_INDEX.md) | Due-diligence artifact map |
@@ -638,7 +616,7 @@ The ADAAD system uses named operational roles. These are runtime roles, not mark
 
 - ❌ **Not a code assistant** — it doesn't autocomplete your code or answer questions
 - ❌ **Not CI/CD** — it governs the mutation process, not the build pipeline
-- ❌ **Not fully autonomous** — your sign-off is constitutionally required for critical changes
+- ❌ **Not fully autonomous** — your GPG sign-off is constitutionally required for critical changes
 - ❌ **Not a security scanner** — it enforces mutation governance, not vulnerability detection
 - ❌ **Not magic** — every decision is logged, hash-chained, replayable, and explainable
 
@@ -650,26 +628,25 @@ The ADAAD system uses named operational roles. These are runtime roles, not mark
 <summary><b>Is this actually running autonomously?</b></summary>
 <br/>
 
-Yes. Phase 65 (March 13, 2026) was the first epoch where ADAAD identified a capability gap, generated a mutation, ran it through all fitness and governance layers, and applied it with zero human intervention in the execution path. Phase 89 activated live LLM proposals in production.
+Yes. Phase 65 (March 13, 2026) was the first epoch where ADAAD identified a capability gap, generated a mutation, ran it through all fitness and governance layers, and applied it with zero human intervention in the execution path. You can replay this event yourself — instructions are in the Replay section above.
 
-Human oversight is structural, not optional. Dustin L. Reid holds the governor role. Any Tier 0 mutation requires his GPG-signed approval. That is not configurable.
+Human oversight is structural. Dustin L. Reid holds the governor role. Any Tier 0 mutation requires his GPG-signed approval. That is not configurable.
 </details>
 
 <details>
 <summary><b>What makes this different from just running tests in CI?</b></summary>
 <br/>
 
-CI tests whether known code passes known assertions. ADAAD governs whether *changes to the codebase itself* are constitutionally valid, adversarially stress-tested, fitness-improving, and deterministically replayable.
+CI tests whether known code passes known assertions. ADAAD governs whether *changes to the codebase itself* are constitutionally valid, adversarially stress-tested, fitness-improving, jury-evaluated for critical paths, and deterministically replayable.
 
 You can delete your CI history. You cannot alter ADAAD's ledger.
-
-ADAAD actively challenges its own proposals via adversarial red-team agents, checks them against its encoded self-model, and runs them through zero-write shadow execution before they reach production. No CI system does this. No CI system has constitutional rules it's bound by. No CI system produces a cryptographic proof of its evolutionary lineage.
 </details>
 
 <details>
-<summary><b>How does the adversarial Red Team work?</b></summary>
+<summary><b>Why does the version number jump so much?</b></summary>
 <br/>
 
+Each `v9.x.0` minor increment corresponds to one shipped, HUMAN-0-attested phase — not a traditional semver feature addition. The version number is an audit counter. `v9.48.0` means 48 governed, cryptographically attested, human-ratified milestones in the v9 series. Each has a governance ledger event, 30 passing tests, and a CHANGELOG entry. Read the version as audit density, not API surface.
 Every mutation proposal is handed to `AdversarialRedTeamAgent` before fitness scoring. It queries `CodeIntelModel` for code paths the proposing agent didn't cover, then generates up to five targeted adversarial cases. Each runs in a read-only sandbox.
 
 If any case falsifies the proposal, it's returned with a `RedTeamFindingsReport`. `AFRT-0`: the agent cannot approve — structurally enforced in code, not policy. Its only outputs are PASS or RETURNED.
@@ -699,25 +676,26 @@ INNOV-01 through INNOV-10 shipped across v9.18.0–v9.27.0 (Phases 87–94): Con
 <summary><b>Why does it run on a $200 Android phone?</b></summary>
 <br/>
 
-Constitutional governance should not require enterprise infrastructure. ADAAD's safety properties come from SHA-256 hash chains and the Python runtime — not cloud KMS, Kubernetes, or any third-party service. If those go away, so do your safety guarantees. ADAAD's guarantees are local, deterministic, and yours.
+Constitutional governance should not require enterprise infrastructure. ADAAD's safety properties come from SHA-256 hash chains and the Python runtime — not cloud KMS or Kubernetes. If those go away, so do your safety guarantees. ADAAD's guarantees are local, deterministic, and portable.
 </details>
 
 <details>
 <summary><b>How do I evaluate ADAAD for enterprise procurement?</b></summary>
 <br/>
 
-Start with the [Trust Center](TRUST_CENTER.md). The [Procurement Fast-Lane package](docs/commercial/procurement_fastlane/DAY0_PROCUREMENT_FASTLANE_CHECKLIST.md) is designed to complete security and legal review within 5 business days. A [Certification Program](docs/training/CERTIFICATION_PROGRAM.md) is available for operators, governance engineers, and enterprise administrators.
+Start with the [Trust Center](TRUST_CENTER.md) — it includes the independent verification pathway for the Phase 65 founding event, complete versioning rationale, key-person continuity plan, and GA blocker status. The [Procurement Fast-Lane](docs/commercial/procurement_fastlane/DAY0_PROCUREMENT_FASTLANE_CHECKLIST.md) is designed to complete security and legal review within 5 business days.
 </details>
 
 <svg style="max-width:100%;height:auto" width="1200" height="20" viewBox="0 0 1200 20" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="div_grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:0" /><stop offset="15%" style="stop-color:#00d4ff;stop-opacity:0.5" /><stop offset="50%" style="stop-color:#00ff88;stop-opacity:0.8" /><stop offset="85%" style="stop-color:#a855f7;stop-opacity:0.5" /><stop offset="100%" style="stop-color:#050a14;stop-opacity:0" /></linearGradient></defs><rect width="1200" height="1" y="10" fill="url(#div_grad)" opacity="0.6" /><circle cx="600" cy="10" r="3" fill="#00ff88" opacity="0.8"><animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.4;1;0.4" dur="3s" repeatCount="indefinite" /></circle></svg>
 
 ## Roadmap
 
+**Innovations30 pipeline complete as of Phase 115.** All 30 constitutional innovations shipped, boot-gate verified, constitutionally hardened. 125 Hard-class invariants.
 **Short term** — Phase 95 (INNOV-11), MMEM-VETO-0 veto threshold calibration, semantic embedding upgrade for identity consistency scoring.
 
 **Mid term** — FitnessEngineV2 8th signal integration (identity_consistency), MMEM amendment protocol, device-anchored mobile runtime, reproducible packaging.
 
-**Long term** — Cross-device federation with deterministic consensus, MMEM-VETO full enforcement, Phase 100 milestone.
+**Active priority:** Independent verification of the Phase 65 self-evolution event by a named third-party auditor. This single event, independently verified, transforms ADAAD from an extraordinary self-asserted milestone into a historic, externally attested AI governance event. Everything in the commercial strategy follows from that verification.
 
 → [Full roadmap](ROADMAP.md) · [30 Innovations specification](ADAAD_30_INNOVATIONS.md)
 
@@ -725,6 +703,7 @@ Start with the [Trust Center](TRUST_CENTER.md). The [Procurement Fast-Lane packa
 
 <div align="center">
 
+<img src="docs/assets/readme/adaad-collage.png" width="90%" alt="ADAAD — Auditable · Deterministic · Governed"/>
 <svg style="max-width:90%;height:auto" width="1200" height="1600" viewBox="0 0 1200 1600" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bg_grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#050a14;stop-opacity:1" /><stop offset="100%" style="stop-color:#0a1a3a;stop-opacity:1" /></linearGradient><linearGradient id="gold_grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" /><stop offset="100%" style="stop-color:#b8860b;stop-opacity:1" /></linearGradient><filter id="glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2a4a" stroke-width="0.5" /></pattern></defs><rect width="1200" height="1600" fill="url(#bg_grad)" /><rect width="1200" height="1600" fill="url(#grid)" /><text x="600" y="100" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle" filter="url(#glow)">WORLD'S FIRSTS</text><text x="600" y="160" font-family="Arial, sans-serif" font-size="32" font-weight="normal" fill="#ffffff" text-anchor="middle">ADAAD PROJECT · PHASE 122</text><line x1="200" y1="190" x2="1000" y2="190" stroke="url(#gold_grad)" stroke-width="2" /><g transform="translate(100, 250)"><g transform="translate(0, 0)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">1</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Autonomous Self-Evolving Codebase</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Phased Constitutional Evolution · Established March 13, 2026</text></g><g transform="translate(0, 110)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">2</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">14-Step Constitutional Evolution Loop (CEL)</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Formal 14-Gate Safety Pipeline for Every Mutation</text></g><g transform="translate(0, 220)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">3</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Non-Bypassable GovernanceGate (GOV-SOLE-0)</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Hardware-Anchored Security Protocol</text></g><g transform="translate(0, 330)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">4</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Hash-Chained Evidence Ledger</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">48,000+ Verified Governance Entries</text></g><g transform="translate(0, 440)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">5</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Multi-Agent Mutation Ecosystem</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Architect, Dream, Beast, and Adversarial RedTeam</text></g><g transform="translate(0, 550)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">6</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Invariant Discovery Engine (INNOV-01)</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Autonomous Constitution Amendment Discovery</text></g><g transform="translate(0, 660)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">7</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Adversarial Fitness Red Team (INNOV-08)</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Continuous Pre-Acceptance Vulnerability Stress Testing</text></g><g transform="translate(0, 770)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">8</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Aesthetic Fitness Signal (INNOV-09)</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Code Beauty and Structural Clarity as Primary Metrics</text></g><g transform="translate(0, 880)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">9</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Governance Archaeology Mode (INNOV-19)</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Complete Decision Traceability and Replay-Verification</text></g><g transform="translate(0, 990)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">10</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Fail-Closed Alerting Infrastructure</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Real-time Cloud Monitor Escalation (AP-001 - AP-006)</text></g><g transform="translate(0, 1100)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">11</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Fully Local Autonomous Ecosystem</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">Privacy-Preserving On-Device AI Evolution</text></g><g transform="translate(0, 1210)"><circle cx="40" cy="40" r="30" fill="none" stroke="url(#gold_grad)" stroke-width="2" /><text x="40" y="52" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="url(#gold_grad)" text-anchor="middle">12</text><text x="100" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#ffffff">Built by a Single Founder</text><text x="100" y="65" font-family="Arial, sans-serif" font-size="18" fill="#8899aa">One Creator · Zero External Team · Pure Autonomy</text></g></g><rect x="0" y="1520" width="1200" height="80" fill="#050a14" /><text x="600" y="1565" font-family="Arial, sans-serif" font-size="24" fill="#556677" text-anchor="middle">ADAAD v9.55.0 · Phase 122 · Sunday, April 5, 2026</text><text x="600" y="1585" font-family="Arial, sans-serif" font-size="14" fill="#334455" text-anchor="middle">Cryptographically Signed Governance Record</text></svg>
 
 <br/><br/>
