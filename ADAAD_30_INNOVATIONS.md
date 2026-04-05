@@ -1,10 +1,10 @@
-# ADAAD — 30 Innovations That Make It the Greatest AI Loop Ever
+# ADAAD — 36 Innovations: Constitutional Evolution Pipeline Complete
 
 **Author:** Claude (ArchitectAgent)  
-**Date:** March 22, 2026 · **Status updated:** April 03, 2026  
-**Last reviewed:** 2026-04-03  
-**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-23 shipped (v9.18.0–v9.41.0). Items 24–30 are active roadmap.
-**Canonical current/next:** Current = **Phase 108 / v9.41.0** (INNOV-23 CES shipped), Next = **Phase 109 / INNOV-24 roadmap execution**.
+**Date:** March 22, 2026 · **Status updated:** April 05, 2026  
+**Last reviewed:** 2026-04-05  
+**Grounding:** v9.55.0 architecture. All 36 innovations shipped (INNOV-01 through INNOV-36, Phases 87–121, v9.18.0–v9.54.0).
+**Canonical current:** Phase 122 complete / v9.55.0 · Post-pipeline credibility arc active (Phases 123–126).
 
 | Range | Status | Evidence links |
 |---|---|---|
@@ -24,8 +24,19 @@
 | INNOV-21 GBP | ✅ Shipped v9.39.0 — Phase 106 | [Artifact](artifacts/governance/phase106/phase106_sign_off.json) |
 | INNOV-22 MCF | ✅ Shipped v9.40.0 — Phase 107 | [Artifact](artifacts/governance/phase107/phase107_sign_off.json) |
 | INNOV-23 CES | ✅ Shipped v9.41.0 — Phase 108 | [Artifact](artifacts/governance/phase108/phase108_sign_off.json) |
-| INNOV-24 SVP | 🔜 Next — Phase 109 / v9.42.0 | [Roadmap anchor](ROADMAP.md) |
-| INNOV-25 through INNOV-30 | 📋 Roadmap — sequenced for Phases 110+ | [Roadmap anchor](ROADMAP.md) |
+| INNOV-24 SVP | ✅ Shipped v9.42.0 — Phase 109 | [Artifact](artifacts/governance/phase109/) |
+| INNOV-25 HAF | ✅ Shipped v9.43.0 — Phase 110 | [Artifact](artifacts/governance/phase110/) |
+| INNOV-26 GDA | ✅ Shipped v9.44.0 — Phase 111 | [Artifact](artifacts/governance/phase111/) |
+| INNOV-27 RCI | ✅ Shipped v9.45.0 — Phase 112 | [Artifact](artifacts/governance/phase112/) |
+| INNOV-28 IPV | ✅ Shipped v9.46.0 — Phase 113 | [Artifact](artifacts/governance/phase113/) |
+| INNOV-29 CED | ✅ Shipped v9.47.0 — Phase 114 | [Artifact](artifacts/governance/phase114/) |
+| INNOV-30 MIRROR | ✅ Shipped v9.48.0 — Phase 115 | [Artifact](artifacts/governance/phase115/) |
+| INNOV-31 IDE | ✅ Shipped v9.49.0 — Phase 116 | [Artifact](artifacts/governance/phase116/) |
+| INNOV-32 CRTV | ✅ Shipped v9.50.0 — Phase 117 | [Artifact](artifacts/governance/phase117/) |
+| INNOV-33 KBEP | ✅ Shipped v9.51.0 — Phase 118 | [Artifact](artifacts/governance/phase118/phase118_sign_off.json) |
+| INNOV-34 FGCON | ✅ Shipped v9.52.0 — Phase 119 | [Artifact](artifacts/governance/phase119/phase119_sign_off.json) |
+| INNOV-35 SPIE | ✅ Shipped v9.53.0 — Phase 120 | [Artifact](artifacts/governance/phase120/phase120_sign_off.json) |
+| INNOV-36 DAS | ✅ Shipped v9.54.0 — Phase 121 | [Artifact](artifacts/governance/phase121/phase121_sign_off.json) |
 
 ---
 
@@ -33,7 +44,7 @@
 
 Current state-of-the-art AI loops: propose → evaluate → deploy → repeat. No memory of why decisions were made. No constitutional constraints. No cryptographic proof anything happened. No governance. No human override architecture. Just a gradient descent with a deploy button.
 
-These 30 innovations make ADAAD categorically different — not just better, but operating in a dimension those systems can't reach.
+These 36 innovations make ADAAD categorically different — not just better, but operating in a dimension those systems can't reach.
 
 ---
 
@@ -452,7 +463,7 @@ Low mirror test scores trigger a `ConstitutionalCalibrationEpoch` — a dedicate
 
 ## The Singular Claim
 
-Any one of these would be publishable research. All thirty together describe a system that is not just better than any existing AI evolution loop — it is operating in a different conceptual space entirely.
+Any one of these would be publishable research. All thirty-six together describe a system that is not just better than any existing AI evolution loop — it is operating in a different conceptual space entirely.
 
 The difference: every other AI loop asks "what change makes this better right now?"
 

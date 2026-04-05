@@ -40,8 +40,7 @@ These are runtime-enforced invariants. Violating any one aborts the epoch.
 | High-stakes mutations require 2-of-3 jury verdict | `ConstitutionalJury.deliberate()` is the sole authority | `CJS-0` |
 | Governance drift rate capped at 30% before double sign-off | Meta-governance limits constitutional change velocity | `CEB-0` |
 | No mutation may reduce self-monitoring observability | Transparency is structural and non-negotiable | `SELF-AWARE-0` |
-| All 125 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 125 invariants |
-| All 125 Hard-class invariants enforced at runtime | Epoch aborts on any violation — no silent failures | 125 total |
+| All 162 Hard-class invariants enforced at runtime | Epoch aborts on any violation — no silent failures | 162 invariants |
 
 → [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md) · [Verifiable claims](docs/VERIFIABLE_CLAIMS.md)
 
@@ -58,50 +57,31 @@ Every proposed change traverses all steps in strict order. There is no skip path
 <br/>
 
 **Step 0 — Identity check**
-Before any proposal is generated, the `IdentityContextInjector` consults the `IdentityLedger` — a hash-chained, HUMAN-0-attested self-model. Injects `identity_consistency_score` into context. Proposals contradicting the system's self-model are flagged at the root. Never blocks the epoch.
+Before any proposal is generated, the `IdentityContextInjector` consults the `IdentityLedger` — a hash-chained, HUMAN-0-attested self-model. Injects `identity_consistency_score` into context. Proposals contradicting the system's self-model are flagged at the root. Never blocks the epoch. `MMEM-0`.
 
-**Phase 1 — Proposal**
+**Step 1 — Proposal**
 Claude-powered agents (Architect · Dream · Beast) generate `MutationCandidate`s. UCB1 bandit selector routes to the highest-performing agent based on prior epoch outcomes. Agent Reputation Staking (INNOV-15) means agents stake credits on their proposals — failed proposals burn stake.
 
-**Phase 2–3 — Adversarial Red Team (INNOV-08)**
-`AdversarialRedTeamAgent` queries `CodeIntelModel` for uncovered code paths, generates up to 5 targeted adversarial cases, runs each in a read-only sandbox. `AFRT-0`: structurally incapable of approving. Output: PASS or RETURNED only.
-
-**Phase 4 — Constitutional Scoring**
-`FitnessEngineV2` scores against 8 fitness signals including `identity_consistency`. All runtime-enforced constitutional rules checked. Rule violation halts epoch immediately.
-**Step 1 — Proposal**
-Claude-powered agents (Architect · Dream · Beast) generate mutation candidates. A bandit selector routes to the highest-performing agent based on prior epoch outcomes.
-
-**Step 2–3 — Adversarial Red Team**
-`AdversarialRedTeamAgent` finds code paths the proposing agent didn't cover, generates up to 5 adversarial cases, runs each in a read-only sandbox. Cannot approve — PASS or RETURNED only. Structural constraint, not policy.
+**Steps 2–3 — Adversarial Red Team (INNOV-08)**
+`AdversarialRedTeamAgent` queries `CodeIntelModel` for uncovered code paths, generates up to 5 targeted adversarial cases, runs each in a read-only sandbox. `AFRT-0`: structurally incapable of approving — PASS or RETURNED only. Structural constraint, not policy.
 
 **Step 4 — Constitutional scoring**
-`FitnessEngineV2` scores against 8 signals including identity consistency. All 27 runtime-enforced constitutional rules checked. Rule violation halts the epoch immediately.
+`FitnessEngineV2` scores against 8 fitness signals including `identity_consistency`. All 162 runtime-enforced constitutional invariants checked. Any rule violation halts the epoch immediately.
 
 **Step 5 — Live shadow execution**
-Zero-write shadow harness against real traffic patterns. Divergence rate, error delta, P99 latency. Regression on any signal is a hard block, independent of fitness score.
+Zero-write shadow harness against real traffic patterns. Divergence rate, error delta, P99 latency. Regression on any signal is a hard block, independent of fitness score. `LSME-0`.
 
-**Phase 6 — Constitutional Jury (INNOV-14)**
+**Step 6 — Constitutional Jury (INNOV-14)**
 For high-stakes mutations (touching `runtime/`, `security/`, `app/main.py`): `ConstitutionalJury.deliberate()` convenes 3 independent evaluators. 2-of-3 approve required (`CJS-QUORUM-0`). All dissenting verdicts committed to dissent ledger before return (`CJS-DISSENT-0`). Feeds `InvariantDiscoveryEngine`.
 
-**Phase 7 — Governance Gate**
+**Step 7 — Governance gate**
 `GovernanceGateV2` evaluates the full evidence package — fitness scores, shadow report, red-team verdict, jury decision, identity score, determinism check, lineage validity. All prior gates must pass. Verdict: APPROVED · RETURNED · BLOCKED.
 
-**Phase 8 — Human Sign-off (Tier 0)**
+**Step 8 — Human sign-off (Tier 0)**
 For critical mutations: GPG-signed approval from governor `HUMAN-0: Dustin L. Reid` (`key 4C95E2F99A775335B1CF3DAF247B015A1CCD95F6`) is required. The system is architecturally incapable of promoting Tier 0 mutations without it. Not a setting.
 
-**Phase 9 — Ledger Commit + Cryptographic Proof DAG (INNOV-06)**
-Every decision is SHA-256 hash-chained into the append-only `ScoringLedger`. Full mutation lineage Merkle-rooted. Every causal ancestor cryptographically linked. Independently verifiable without system access. Legal-grade provenance.
-**Step 6 — Governance gate**
-`GovernanceGateV2` evaluates the full evidence package. All prior gates must pass. Verdict: APPROVED · RETURNED · BLOCKED.
-
-**Step 7 — Human sign-off (Tier 0)**
-For critical mutations, GPG-signed approval from the governor is required. The system is architecturally incapable of promoting Tier 0 mutations without it.
-
-**Step 8 — Ledger commit**
-Every decision is SHA-256 hash-chained into the append-only scoring ledger. One altered entry breaks every subsequent hash.
-
-**Step 9 — Cryptographic proof DAG**
-Full mutation lineage Merkle-rooted. Every causal ancestor cryptographically linked. Independently verifiable without system access.
+**Step 9 — Ledger commit**
+Every decision is SHA-256 hash-chained into the append-only `ScoringLedger`. One altered entry breaks every subsequent hash. Full mutation lineage Merkle-rooted — every causal ancestor cryptographically linked. Independently verifiable without system access. Legal-grade provenance. `CEPD-0`.
 
 </details>
 
@@ -111,7 +91,7 @@ Full mutation lineage Merkle-rooted. Every causal ancestor cryptographically lin
 
 <img src="docs/assets/readme/architecture.svg" width="100%" alt="ADAAD System Architecture — Agent Triad, Governance Gate, SHA-256 Ledger"/>
 
-ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed change. Three AI agents — **Architect**, **Dream**, and **Beast** — apply constitutional rules at different steps. No single agent can approve a change. The Constitutional Jury gate adds multi-agent adversarial evaluation for high-stakes paths.
+ADAAD runs a **14-step Constitutional Evolution Loop (CEL)** on every proposed change. Three AI agents — **Architect**, **Dream**, and **Beast** — apply constitutional rules at different steps. No single agent can approve a change. The Constitutional Jury gate adds multi-agent adversarial evaluation for high-stakes paths.
 
 <details>
 <summary><b>Module map and boundary contracts</b></summary>
@@ -121,11 +101,11 @@ ADAAD runs a **16-step Constitutional Evolution Loop (CEL)** on every proposed c
 
 | Module | Role |
 |:---|:---|
-| `evolution/evolution_loop.py` | Orchestrates the 16-phase epoch. Phase 0d MMEM wire lives here. |
-| `evolution/constitutional_evolution_loop.py` | 16-step CEL dispatch. Calls GovernanceGate, AFRT, LSME, CJS. |
+| `evolution/evolution_loop.py` | Orchestrates the 14-phase epoch. Phase 0d MMEM wire lives here. |
+| `evolution/constitutional_evolution_loop.py` | 14-step CEL dispatch. Calls GovernanceGate, AFRT, LSME, CJS. |
 | `evolution/fitness_v2.py` | `FitnessEngineV2` — 8-signal scoring including identity. |
 | `memory/identity_ledger.py` | Hash-chained HUMAN-0-gated `IdentityLedger`. MMEM-0/CHAIN-0/LEDGER-0. |
-| `innovations30/__init__.py` | Boot completeness gate — all 30 importable or `RuntimeError` (INNOV-COMPLETE-0). |
+| `innovations30/__init__.py` | Boot completeness gate — all 36 importable or `RuntimeError` (INNOV-COMPLETE-0). |
 | `innovations30/constitutional_jury.py` | INNOV-14 — 2-of-3 quorum, dissent ledger, high-stakes gate. |
 | `innovations30/constitutional_entropy_budget.py` | INNOV-26 — governance drift rate limiter, double-HUMAN-0 at 30%. |
 | `innovations30/self_awareness_invariant.py` | INNOV-28 — structural observability protection. |
@@ -220,10 +200,12 @@ High-stakes mutations require 2-of-3 independent agent jury verdict before gover
 </details>
 
 <details>
-<summary><b>🏁 April 4, 2026 — Innovations30 Pipeline Complete (Phase 115 · INNOV-30)</b></summary>
+<summary><b>🏁 April 4, 2026 — Innovations30 Pipeline Sealed (Phase 115 · INNOV-30)</b></summary>
 <br/>
 
-All 30 constitutional innovations shipped. 115 phases complete. 125 Hard-class invariants. `boot_completeness_check()` confirms all 30 modules importable at runtime (`INNOV-COMPLETE-0`). The Innovations30 pipeline is architecturally sealed — every innovation enforced, chained, and auditable.
+All 30 original constitutional innovations shipped and boot-gate verified. 125 Hard-class invariants enforced at seal time. `boot_completeness_check()` confirmed all 30 modules importable at runtime (`INNOV-COMPLETE-0`). The Innovations30 pipeline is architecturally sealed — every innovation enforced, chained, and auditable.
+
+Six further innovations (INNOV-31 through INNOV-36) shipped in the post-pipeline arc through Phase 121, raising total Hard-class invariants to 162.
 </details>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -254,18 +236,18 @@ All 30 constitutional innovations shipped. 115 phases complete. 125 Hard-class i
 
 **🔑 Human authority is structural** — GPG key required for Tier 0. Not configurable. `HUMAN-0`.
 
-**🚧 125 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
+**🚧 162 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 30 shipped world-first innovations
+## 36 shipped constitutional innovations
 
 <img src="docs/assets/readme/adaad-innovations-animated.svg" width="100%" alt="36 Innovations — Shipped &amp; Roadmapped"/>
 
 <details>
-<summary><b>Full innovation index — all 30 shipped</b></summary>
+<summary><b>Full innovation index — all 36 shipped</b></summary>
 <br/>
 
 | # | Innovation | Phase | Core world-first claim |
@@ -300,6 +282,12 @@ All 30 constitutional innovations shipped. 115 phases complete. 125 Hard-class i
 | INNOV-28 | Self-Awareness Invariant | 113 | No mutation may reduce system self-monitoring observability — transparency is constitutional |
 | INNOV-29 | Curiosity Engine | 114 | Constitutional curiosity drive — governed exploration of under-explored mutation space |
 | INNOV-30 | Mirror Test Engine | 115 | Constitutionally governed self-recognition test — final seal of the Innovations30 pipeline |
+| INNOV-31 | Invariant Discovery Engine (IDE) | 116 | Mines failure patterns from every epoch to propose new Hard-class invariants; feeds constitutional evolution |
+| INNOV-32 | Constitutional Rollback Engine (CRTV) | 117 | Governed rollback of constitutional state to any prior HUMAN-0-attested snapshot; fail-closed gate |
+| INNOV-33 | Knowledge Bundle Exchange Protocol (KBEP) | 118 | Cryptographically verified federated knowledge transfer across federation members with HMAC-chain ledger |
+| INNOV-34 | Federation Governance Consensus (FGCON) | 119 | Strict majority quorum for federation-wide constitutional amendments — no unilateral instance amendment |
+| INNOV-35 | Self-Proposing Innovation Engine (SPIE) | 120 | System proposes its own next innovations from failure, gap, and mirror signals — HUMAN-0 ratifies |
+| INNOV-36 | Deterministic Audit Sandbox (DAS) | 121 | One-command hermetic CEL epoch replay; external auditor can verify chain integrity in < 60 seconds |
 
 Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
@@ -311,9 +299,9 @@ Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 
 ADAAD uses a **phase-correlated version scheme** by design. Each minor increment in the `v9.x.0` series corresponds to one shipped, HUMAN-0-attested, evidence-linked governance phase.
 
-`v9.48.0` means 48 governed phase milestones have shipped in the v9 series — not 48 traditional semver API additions. Each phase has: a governance ledger event, a HUMAN-0 `session_digest` sign-off, 30 passing acceptance tests, a CHANGELOG entry, and a four-file canonical version sync (`VERSION` · `pyproject.toml` · `CHANGELOG.md` · `.adaad_agent_state.json`).
+`v9.55.0` means 55 governed phase milestones have shipped in the v9 series — not 55 traditional semver API additions. Each phase has: a governance ledger event, a HUMAN-0 `session_digest` sign-off, 30 passing acceptance tests, a CHANGELOG entry, and a four-file canonical version sync (`VERSION` · `pyproject.toml` · `CHANGELOG.md` · `.adaad_agent_state.json`).
 
-The version number is a first-class audit artifact. An external evaluator should read it as an audit counter, not a feature counter. The system's own evolutionary history — 115 governed, cryptographically attested, human-ratified phase milestones — is the proof of concept for the value proposition being claimed.
+The version number is a first-class audit artifact. An external evaluator should read it as an audit counter, not a feature counter. The system's own evolutionary history — 122 governed, cryptographically attested, human-ratified phase milestones — is the proof of concept for the value proposition being claimed.
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
@@ -324,7 +312,7 @@ The version number is a first-class audit artifact. An external evaluator should
 | 🔑 GPG-sign Tier 0 changes | Generate mutation proposals via Claude agents |
 | 🌱 Approve seed promotions | Red-team challenge every proposal before scoring |
 | 📜 Set constitutional rules | Shadow-execute mutations in zero-write harness |
-| 🏷 Tag version ceremonies | Score against 125 constitutional invariants |
+| 🏷 Tag version ceremonies | Score against 162 constitutional invariants |
 | ⚙️ Ratify new Hard-class invariants | Hash-chain every decision into the ledger |
 | 🧬 Amend `IdentityLedger` statements | Consult self-model before every proposal |
 | 📋 Patent and IP decisions | Build cryptographic evolution proof DAGs |
@@ -348,7 +336,7 @@ python onboard.py
 ```
   ✔ Python 3.12.x
   ✔ Dependencies installed
-  ✔ Boot completeness: 30/30 innovations importable [INNOV-COMPLETE-0]
+  ✔ Boot completeness: 36/36 innovations importable [INNOV-COMPLETE-0]
   ✔ Dry-run complete  (fail-closed behaviour confirmed)
 
   Run an epoch        python -m app.main --verbose
@@ -498,22 +486,23 @@ print(f'Latest hash: {events[-1][\"event_hash\"][:32]}...')
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## Governance in 60 seconds
+## Phase shipping standard
 
 Each phase ships a specific capability, registers findings, resolves them with evidence, and chains a governance ledger entry before merge.
 
-### Innovations30 arc — complete
+### Innovation arc — complete
 
 | Phase band | Innovations | Hard invariants added | Cumulative |
 |:---:|:---:|:---:|:---:|
 | 87–91 (INNOV-01..07) | 7 | 11 | 11 |
 | 92–99 (INNOV-08..14) | 8 | 35 | 46 |
-| 100–115 (INNOV-15..30) | 16 | 79 | **125** |
+| 100–115 (INNOV-15..30) | 16 | 79 | 125 |
+| 116–121 (INNOV-31..36) | 6 | 37 | **162** |
 
 ### How a phase ships
 
 1. ArchitectAgent produces a specification
-2. Implementation on `feature/phase<N>-<slug>` branch
+2. Implementation on `feat/phase<N>-<slug>` branch
 3. Constitutional hardening: invariant constant block · typed gate violation exception · `prev_event_hash` chain · `Path.open("a")` only · `hashlib.sha256` only · `hmac.compare_digest` auth
 4. 30/30 acceptance tests pass
 5. Scaffold detection: commit message invariant claims verified against code
@@ -532,7 +521,7 @@ Each phase ships a specific capability, registers findings, resolves them with e
 
 **IdentityLedger attestation** — Genesis seed terminal hash `3f5706...` attested at ILA-94-2026-03-28-001.
 
-**Boot completeness gate** — `INNOV-COMPLETE-0` enforces all 30 innovations importable at startup. Fail-closed RuntimeError if any fail.
+**Boot completeness gate** — `INNOV-COMPLETE-0` enforces all 36 innovations importable at startup. Fail-closed RuntimeError if any fail.
 
 → [Full Trust Center](TRUST_CENTER.md) · [Compliance Pack](docs/compliance/)
 
@@ -640,12 +629,12 @@ It answers the question no prior gate could ask: *is this mutation consistent wi
 </details>
 
 <details>
-<summary><b>What are the 10 shipped innovations?</b></summary>
+<summary><b>What are the 36 shipped innovations?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-10 shipped across v9.18.0–v9.27.0 (Phases 87–94): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), and Morphogenetic Memory (MMEM).
+INNOV-01 through INNOV-30 shipped across v9.18.0–v9.48.0 (Phases 87–115): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), and 20 further innovations through the Mirror Test Engine (INNOV-30), sealing the Innovations30 pipeline.
 
-20 further innovations are roadmapped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+Six post-pipeline innovations (INNOV-31 through INNOV-36) shipped across v9.49.0–v9.54.0 (Phases 116–121): Invariant Discovery Engine, Constitutional Rollback Engine, Knowledge Bundle Exchange Protocol, Federation Governance Consensus, Self-Proposing Innovation Engine, and Deterministic Audit Sandbox. All 36 shipped. Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
 </details>
 
 <details>
@@ -666,14 +655,19 @@ Start with the [Trust Center](TRUST_CENTER.md) — it includes the independent v
 
 ## Roadmap
 
-**Innovations30 pipeline complete as of Phase 115.** All 30 constitutional innovations shipped, boot-gate verified, constitutionally hardened. 125 Hard-class invariants.
-**Short term** — Phase 95 (INNOV-11), MMEM-VETO-0 veto threshold calibration, semantic embedding upgrade for identity consistency scoring.
+**Post-pipeline horizon active — Phase 122 complete · 36 innovations · 162 Hard-class invariants.**
 
-**Mid term** — FitnessEngineV2 8th signal integration (identity_consistency), MMEM amendment protocol, device-anchored mobile runtime, reproducible packaging.
+All constitutional innovations shipped and boot-gate verified. The post-pipeline arc focuses on verifiability, adoptability, and community openness.
 
-**Active priority:** Independent verification of the Phase 65 self-evolution event by a named third-party auditor. This single event, independently verified, transforms ADAAD from an extraordinary self-asserted milestone into a historic, externally attested AI governance event. Everything in the commercial strategy follows from that verification.
+**Near term (Phase 123)** — CLI entry point: `adaad demo · adaad inspect-ledger <path> · adaad propose "<description>"`. Zero-config three-command bootstrap from `pip install adaad`. `CLI-SANDBOX-0`: `propose` defaults to sandbox — live mode requires explicit `--live` flag.
 
-→ [Full roadmap](ROADMAP.md) · [30 Innovations specification](ADAAD_30_INNOVATIONS.md)
+**Mid term (Phase 124)** — `adaad-core` extraction as an independently installable PyPI package with a semver-stable API surface: `GovernanceGate`, `InvariantDiscoveryEngine`, `ConstitutionalRollbackEngine`, `MirrorTest`, `verify_ledger`. API contract enforced by CI import stability gate.
+
+**Long term (Phases 125–126)** — Community governance infrastructure (structured amendment proposal process, FGCON quorum simulation in CI, HUMAN-0 ratification preserved); "Break It" public red-team challenge with all attempts — successful or not — published.
+
+**Active priority:** Independent third-party verification of the Phase 65 self-evolution event. Independently verified, this event transforms ADAAD from an extraordinary self-asserted milestone into a historic, externally attested AI governance event. Everything in the commercial strategy follows from that verification.
+
+→ [Full roadmap](ROADMAP.md) · [36 Innovations specification](ADAAD_30_INNOVATIONS.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 

@@ -5,7 +5,7 @@
 
 > Governance-first contribution guide — read before opening any governance-impacting PR.
 
-**Last reviewed:** 2026-03-06
+**Last reviewed:** 2026-04-05
 
 By submitting a contribution, you agree that your work is licensed under the MIT License (see `LICENSE`). No trademark rights are granted or implied; see `TRADEMARKS.md` and `BRAND_LICENSE.md`.
 
@@ -35,6 +35,7 @@ python -m app.main --replay audit --verbose
 | Type | Pattern |
 |---|---|
 | Feature | `feat/<short-description>` |
+| Phase implementation | `feat/phase<N>-<module-slug>` |
 | Fix | `fix/<short-description>` |
 | Docs | `docs/<short-description>` |
 | Governance | `governance/<short-description>` |
