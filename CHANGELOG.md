@@ -1,3 +1,21 @@
+## [9.55.0] — 2026-04-05 · Phase 122 · README Credibility + ROADMAP Sync
+
+### Changed
+- **README.md** — removed all `world-first` claims; replaced "30/35 innovations" internal batch grouping with a clean 36-module capability index; updated invariant count to 162; hero alt text updated to v9.55.0/122 phases; Roadmap section updated with post-pipeline horizon links
+- **docs/VERIFIABLE_CLAIMS.md** — new file; maps every shipped capability to module path, test file, governance artifact, and runnable verification command; includes explicit "What is not claimed" section
+- **ROADMAP.md** — Current State updated to v9.55.0/Phase 122; Phase 121 marked ✅ shipped; Phase 122 marked 🔄 in-progress; invariant count updated to 162
+- **VERSION** — `9.54.0` → `9.55.0`
+- **pyproject.toml** — `9.53.0` → `9.55.0`
+- **.adaad_agent_state.json** — version `9.55.0`, current_phase `122`
+- **governance/report_version.json** — version `9.55.0`, phase `122`
+
+### Tests
+- `tests/test_phase122_readme_credibility.py` — T122-CRED-01..30 (30/30 PASS)
+
+### Governance
+- `artifacts/governance/phase122/` — phase122_sign_off.json, track_a_sign_off.json, replay_digest.txt, tier_summary.json (ILA-122-2026-04-05-001)
+- Cumulative Hard-class invariants: **162** (no new invariants — documentation phase)
+
 ## [9.54.0] — 2026-04-04 · Phase 121 · INNOV-36 DAS
 
 ### Added

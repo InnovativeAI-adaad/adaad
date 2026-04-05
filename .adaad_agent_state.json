@@ -1,6 +1,6 @@
 {
   "acse_active": true,
-  "active_phase": "v9.54.0 RELEASED \u00b7 post-merge agent sync",
+  "active_phase": "v9.55.0 RELEASED \u00b7 Phase 122 \u00b7 README Credibility + ROADMAP Sync",
   "blocked_at_gate": null,
   "blocked_at_tier": null,
   "blocked_reason": null,
@@ -195,7 +195,7 @@
     "cumulative": 130,
     "hard_class_count": 130
   },
-  "current_phase": 121,
+  "current_phase": 122,
   "current_version": "9.54.0",
   "hard_class_count": 135,
   "hard_class_invariants_cumulative": 162,
@@ -900,7 +900,7 @@
     "phase116-world-first-constitutional-self-discovery",
     "v9.49.0-released"
   ],
-  "version": "9.50.0",
+  "version": "9.55.0",
   "world_firsts_claimed": [
     "phase118-world-first-federation-bundle-exchange"
   ]

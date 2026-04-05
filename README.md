@@ -1,7 +1,7 @@
 <div align="center">
 
 <!-- ADAAD_VERSION_HERO:START -->
-<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.48.0 — 115 Phases Complete — PIPELINE COMPLETE"/>
+<img src="docs/assets/readme/adaad-hero-animated.svg" width="100%" alt="ADAAD v9.55.0 — 122 Phases Complete — PIPELINE COMPLETE"/>
 <!-- ADAAD_VERSION_HERO:END -->
 
 **[⚡ Quickstart](#quickstart)** &nbsp;·&nbsp; **[📜 Constitution](docs/CONSTITUTION.md)** &nbsp;·&nbsp; **[🗺 Roadmap](ROADMAP.md)** &nbsp;·&nbsp; **[📖 Thesis](docs/thesis/ADAAD_THESIS.md)** &nbsp;·&nbsp; **[🏛 Trust Center](TRUST_CENTER.md)** &nbsp;·&nbsp; **[📱 Android](INSTALL_ANDROID.md)** &nbsp;·&nbsp; **[📋 Changelog](CHANGELOG.md)**
@@ -37,9 +37,9 @@ These are not documentation claims. They are runtime-enforced invariants. Violat
 | Identity check never blocks an epoch | Fail-open with fallback score injection | `MMEM-0` |
 | Critical mutations require GPG-signed human key | Architecturally enforced — not a config option | `HUMAN-0` |
 | Import boundaries block unauthorized dependencies | Static enforcement — violations block merge | `AST-IMPORT-0` |
-| All 125 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 125 invariants |
+| All 162 Hard-class invariants enforced at runtime | Epoch aborts on violation — no silent failures | 162 invariants |
 
-→ [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md)
+→ [Full invariants matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md) · [Constitution](docs/CONSTITUTION.md) · [Verifiable claims](docs/VERIFIABLE_CLAIMS.md)
 → [Active canonical spec](docs/governance/ARCHITECT_SPEC_v3.1.0.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -171,38 +171,94 @@ Real Claude-generated proposals flowing through all 16 constitutional steps in p
 </details>
 
 <details>
-<summary><b>🧭 March 23, 2026 — Cryptographic Evolution Proof DAG (Phase 90 · INNOV-06)</b></summary>
+<summary><b>🧭 March 23, 2026 — Cryptographic Evolution Proof DAG (Phase 90)</b></summary>
 <br/>
 
 Every mutation cryptographically bound to all causal ancestors via Merkle root. Independently verifiable without system access. Legal-grade provenance for auditors, regulators, and patent counsel.
 </details>
 
 <details>
-<summary><b>🛡 March 24, 2026 — Live Shadow Mutation Execution (Phase 91 · INNOV-07)</b></summary>
+<summary><b>🛡 March 24, 2026 — Live Shadow Mutation Execution (Phase 91)</b></summary>
 <br/>
 
 Zero-write shadow harness against real traffic. `ShadowFitnessReport`: divergence rate · error delta · P99 latency. Must survive shadow execution *and* governance gate to advance.
 </details>
 
 <details>
-<summary><b>⚔ March 27, 2026 — Adversarial Red Team as a Constitutional Gate (Phase 92 · INNOV-08)</b></summary>
+<summary><b>⚔ March 27, 2026 — Adversarial Red Team as a Constitutional Gate (Phase 92)</b></summary>
 <br/>
 
 Every proposal challenged by `AdversarialRedTeamAgent` before governance scoring. Finds uncovered code paths, fires targeted adversarial cases. `AFRT-0`: cannot approve — PASS or RETURNED only. Structurally enforced.
 </details>
 
 <details>
-<summary><b>🎨 March 27, 2026 — Aesthetic Fitness Signal (Phase 93 · INNOV-09)</b></summary>
+<summary><b>🎨 March 27, 2026 — Aesthetic Fitness Signal (Phase 93)</b></summary>
 <br/>
 
 Code readability scored across 5 AST axes (function length · name entropy · nesting depth · comment density · cyclomatic complexity) as a constitutionally-bounded, weighted fitness signal. `AFIT-WEIGHT-0`: weight bounded [0.05, 0.30]. Technical debt is now measurable and governed.
 </details>
 
 <details>
-<summary><b>🧬 March 28, 2026 — Morphogenetic Memory (Phase 94 · INNOV-10)</b></summary>
+<summary><b>🧬 March 28, 2026 — Morphogenetic Memory (Phase 94)</b></summary>
 <br/>
 
-`IdentityLedger` — 8 founding `IdentityStatement`s (IS-001..IS-008), hash-chained, HUMAN-0-attested. `IdentityContextInjector` fires Phase 0d before proposals are generated. Injects `identity_consistency_score`. Proposals contradicting the system's self-model flagged before they're written. First system to ask: *is this mutation consistent with what this system believes itself to be?*
+`IdentityLedger` — 8 founding `IdentityStatement`s, hash-chained, HUMAN-0-attested. `IdentityContextInjector` fires before proposals are generated. Injects `identity_consistency_score`. Proposals contradicting the system's self-model are flagged before they're written. The system asks: *is this mutation consistent with what I believe myself to be?*
+</details>
+
+<details>
+<summary><b>💭 March 30, 2026 — Cross-Epoch Dream State Engine (Phase 96)</b></summary>
+<br/>
+
+Between active epochs, the system replays successful past mutations in novel cross-epoch combinations to surface improvement candidates not discoverable within any single epoch. Memory consolidation for autonomous software evolution. Never touches production state — constitutionally enforced.
+</details>
+
+<details>
+<summary><b>⚖️ April 1, 2026 — Constitutional Jury System (Phase 99)</b></summary>
+<br/>
+
+Contested mutations go to a 3-member jury of independent evaluators. No single agent can approve a contested promotion. Jury deliberation is deterministic from `mutation_id` — identical inputs produce identical verdicts, ledger-sealed. The system governs disagreement, not just agreement.
+</details>
+
+<details>
+<summary><b>🔍 April 3, 2026 — Mirror Test (Phase 115)</b></summary>
+<br/>
+
+Every 50 epochs, the system audits its own historical proposal accuracy — predicting what it would have proposed against what it actually proposed. Low accuracy triggers a mandatory calibration epoch. The system monitors its own predictive self-model and corrects it under constitutional constraint.
+</details>
+
+<details>
+<summary><b>🔬 April 4, 2026 — Autonomous Invariant Discovery (Phase 116)</b></summary>
+<br/>
+
+The system mines its own failure ledger for recurring violation patterns and proposes new constitutional invariants from them. Proposed invariants cannot promote themselves — HUMAN-0 ratification is architecturally required. The governance framework grows from operational evidence, not design sessions.
+</details>
+
+<details>
+<summary><b>⏮ April 4, 2026 — Constitutional Rollback Engine (Phase 117)</b></summary>
+<br/>
+
+The constitution itself is now versioned in an append-only, HMAC-chain-linked snapshot ledger. Any prior constitutional state can be restored under HUMAN-0 gate. Semantic diff between any two versions is computable. Governed forward evolution implies governed backward recovery.
+</details>
+
+<details>
+<summary><b>🌐 April 4, 2026 — Federation Governance Consensus (Phase 119)</b></summary>
+<br/>
+
+Federation-wide constitutional amendments require a strict majority quorum across member instances — `floor(N/2)+1`. No single instance can amend federation-level invariants unilaterally. The constitutional authority of a multi-instance deployment is collectively held, not delegatable.
+</details>
+
+<details>
+<summary><b>🧠 April 4, 2026 — Self-Proposing Capability Engine (Phase 120)</b></summary>
+<br/>
+
+The system now proposes its own next capabilities. `FailureSignal`, `ConstitutionalGapSignal`, and `MirrorAccuracySignal` feed a proposal engine that generates structured innovation proposals for HUMAN-0 review. The system identifies what it is missing and asks to be extended. HUMAN-0 still ratifies every proposal.
+</details>
+
+<details>
+<summary><b>🔭 April 4, 2026 — External Verification in Under 60 Seconds (Phase 121)</b></summary>
+<br/>
+
+Any third party can now clone the repository, run `docker compose up das-demo`, and independently verify a complete constitutional epoch — cryptographic chain intact, deterministic replay confirmed — without any knowledge of the codebase internals. The ledger is the proof. `DAS-VERIFY-0`: verification requires no trust in the operator.
 </details>
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
@@ -227,54 +283,60 @@ Every property below is mechanically enforced at runtime.
 
 **🔑 Human authority is structural** — GPG key required for Tier 0. Not configurable. `HUMAN-0`.
 
-**🚧 125 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
+**🚧 162 Hard-class invariants** — Cannot be disabled, configured around, or violated without epoch abort.
 
 → [Read the Constitution](docs/CONSTITUTION.md) · [Trust Center](TRUST_CENTER.md) · [Security Invariants Matrix](docs/governance/V8_CONSTITUTIONAL_INVARIANTS_MATRIX.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
-## 30 shipped world-first innovations — pipeline complete
-
-<img src="docs/assets/readme/adaad-innovations-animated.svg" width="100%" alt="30 World-First Innovations — Pipeline Complete"/>
+## Shipped capabilities
 
 <details>
-<summary><b>Full innovation index</b></summary>
+<summary><b>Full capability index — 36 modules</b></summary>
 <br/>
 
-| # | Innovation | Phase | Core claim |
-|:---:|:---|:---:|:---|
-| INNOV-01 | Constitutional Self-Amendment (CSAP) | 87 | ADAAD proposes amendments to its own rules — unconditional human ratification required |
-| INNOV-02 | Adversarial Constitutional Stress (ACSE) | 87 | Dedicated agent attempts to violate every constitutional rule to stress-test governance |
-| INNOV-03 | Temporal Invariant Forecasting (TIFE) | 87 | Predicts which invariants will likely be violated in future epochs before they fail |
-| INNOV-04 | Semantic Drift Detection (SCDD) | 88 | Detects when constitutional behaviour drifts from its historical baseline |
-| INNOV-05 | Autonomous Organ Emergence (AOEP) | 89 | Proposes entirely new architectural organs to close capability gaps — human ratification required |
-| INNOV-06 | Cryptographic Evolution Proof DAG (CEPD) | 90 | Full lineage Merkle-rooted · independently verifiable · legal-grade provenance |
-| INNOV-07 | Live Shadow Mutation Execution (LSME) | 91 | Zero-write shadow harness · real traffic · hard block on regression |
-| INNOV-08 | Adversarial Fitness Red Team (AFRT) | 92 | Red Team gate before scoring · cannot approve · PASS or RETURNED only |
-| INNOV-09 | Aesthetic Fitness Signal (AFIT) | 93 | Code readability as a constitutionally-bounded, weighted fitness dimension |
-| INNOV-10 | Morphogenetic Memory (MMEM) | 94 | Hash-chained self-model consulted pre-proposal · detects identity drift at root |
-| INNOV-11 | Cross-Epoch Dream State Engine (DSTE) | 96 | Speculative mutation rehearsal across epoch boundaries — never touches production |
-| INNOV-12 | Mutation Genealogy Visualization (MGV) | 97 | Full lineage graph for every mutation from proposal to terminal outcome |
-| INNOV-13 | Inter-Model Knowledge Transfer (IMT) | 98 | Signed capability transfer protocol — cryptographically verified cross-agent learning |
-| INNOV-14 | Constitutional Jury System (CJS) | 99 | Multi-agent constitutional jury decides contested mutations — no single-agent approval |
-| INNOV-15 | Agent Reputation Staking (ARS) | 100 | Agents stake reputation on proposals · slashed on failure · chain-verified ledger |
-| INNOV-16 | Emergent Role Specialization (ERS) | 101 | Agents self-specialize into constitutional roles based on performance history |
-| INNOV-17 | Agent Post-Mortem Interviews (APM) | 102 | Every terminated agent answers structured constitutional debrief before teardown |
-| INNOV-18 | Temporal Governance Windows (TGOV) | 103 | Health-adaptive rule severity — non-critical rules soften during high-health epochs |
-| INNOV-19 | Governance Archaeology Mode (GAM) | 104 | Cryptographically verified decision timeline reconstruction for any mutation_id |
-| INNOV-20 | Constitutional Stress Testing (CST) | 105 | Adversarial scenario catalogue — append-only gap ledger feeds invariant discovery |
-| INNOV-21 | Governance Bankruptcy Protocol (GBP) | 106 | Bounded bankruptcy state machine — discharge progression monotonic, re-entry blocked |
-| INNOV-22 | Mutation Conflict Framework (MCF) | 107 | Constitutional conflict detection · severity stratification · HUMAN-0 escalation advisory |
-| INNOV-23 | Constitutional Epoch Sentinel (CES) | 108 | Anticipatory warning emission before Hard-class invariant breach — world-first |
-| INNOV-24 | Sovereign Validation Plane (SVP) | 109 | Independent constitutional validation layer operating outside the core mutation pipeline |
-| INNOV-25 | Hardware-Adaptive Fitness (HAF) | 110 | Fitness scoring dynamically calibrated to available hardware resource envelope |
-| INNOV-26 | Constitutional Entropy Budget (CEB) | 111 | Rate-limits constitutional drift — 30% rule-change threshold triggers double-HUMAN-0 |
-| INNOV-27 | Mutation Blast Radius Modeling (BLAST) | 112 | Formal reversal cost estimation before acceptance — safety bounded by constitution |
-| INNOV-28 | Self-Awareness Invariant (SELF-AWARE) | 113 | No mutation may reduce system self-monitoring observability — transparency is constitutional |
-| INNOV-29 | Curiosity-Driven Exploration (CURIOSITY) | 114 | Inverted-fitness exploration every 25 epochs · hard constitutional stops prevent catastrophe |
-| INNOV-30 | The Mirror Test (MIRROR) | 115 | Historical proposal prediction audit every 50 epochs · low accuracy triggers calibration epoch |
+These modules are live in the constitutional pipeline. Each has 30 acceptance tests and a governance artifact.
 
-**All 30 innovations shipped. Pipeline complete as of April 4, 2026.** Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+| Module | What it does | Invariant anchor |
+|:---|:---|:---:|
+| Constitutional Self-Amendment (CSAP) | Proposes amendments to its own constitutional rules — HUMAN-0 ratification architecturally required | `CSAP-0` |
+| Adversarial Constitutional Stress (ACSE) | Dedicated agent stress-tests every constitutional rule each epoch | `ACSE-0` |
+| Temporal Invariant Forecasting (TIFE) | Predicts which invariants will be violated in future epochs before they fail | `TIFE-0` |
+| Semantic Drift Detection (SCDD) | Detects constitutional behaviour drifting from historical baseline; chain-verified | `SCDD-0` |
+| Autonomous Organ Emergence (AOEP) | Proposes new architectural organs to close capability gaps — HUMAN-0 ratification required | `AOEP-0` |
+| Cryptographic Evolution Proof DAG (CEPD) | Full mutation lineage Merkle-rooted and independently verifiable without system access | `CEPD-0` |
+| Live Shadow Mutation Execution (LSME) | Zero-write shadow harness against real traffic; divergence regression is a hard block | `LSME-0` |
+| Adversarial Fitness Red Team (AFRT) | Challenges every proposal before governance scoring; structurally cannot approve | `AFRT-0` |
+| Aesthetic Fitness Signal (AFIT) | Code readability scored across 5 AST axes as a constitutionally-bounded fitness dimension | `AFIT-0` |
+| Morphogenetic Memory (MMEM) | Hash-chained self-model consulted before every proposal; identity drift detected at root | `MMEM-0` |
+| Cross-Epoch Dream State Engine (DSTE) | Speculative mutation rehearsal across epoch boundaries; never touches production state | `DSTE-0` |
+| Mutation Genealogy Visualization (MGV) | Full lineage graph for every mutation from proposal to terminal outcome; deterministic | `MGV-0` |
+| Inter-Model Knowledge Transfer (IMT) | Cryptographically verified, signed capability transfer between agents | `IMT-0` |
+| Constitutional Jury System (CJS) | Multi-agent jury decides contested mutations; no single-agent approval path | `CJS-0` |
+| Agent Reputation Staking (RST) | Agents stake reputation on proposals; slashed on failure; chain-verified ledger | `RST-0` |
+| Emergent Role Specialization (ERS) | Agents self-specialize into constitutional roles based on performance history | `ERS-0` |
+| Agent Post-Mortem Interviews (APM) | Every terminated agent answers structured constitutional debrief before teardown | `APM-0` |
+| Temporal Governance Windows (GJR) | Health-adaptive rule severity; non-critical rules soften during high-health epochs | `GJR-0` |
+| Governance Archaeology Mode | Cryptographically verified decision timeline reconstruction for any mutation_id | `RST-0` |
+| Constitutional Stress Testing (BRM) | Adversarial scenario catalogue; append-only gap ledger feeds invariant discovery | `BRM-0` |
+| Governance Bankruptcy Protocol (GBP) | Bounded bankruptcy state machine; discharge monotonic; re-entry blocked | `GBP-0` |
+| Mutation Conflict Framework (MCF) | Constitutional conflict detection; severity stratification; HUMAN-0 escalation advisory | `MCF-0` |
+| Constitutional Epoch Sentinel (CES) | Anticipatory warning emission before Hard-class invariant breach; fires before violation | `CES-0` |
+| Sovereign Validation Plane (SVP) | Independent constitutional validation layer operating outside the core pipeline | `SVP-0` |
+| Hardware-Adaptive Fitness (HAF) | Fitness scoring calibrated to available hardware resource envelope | `HAF-0` |
+| Constitutional Entropy Budget (GDA) | Rate-limits constitutional drift; 30% rule-change threshold triggers double HUMAN-0 | `GDA-0` |
+| Regulatory Compliance Integration (RCI) | Constitutional invariants traceable to external regulatory frameworks | `RCI-0` |
+| Intent Preservation Verification (IPV) | No mutation may reduce system self-monitoring observability — transparency is constitutional | `IPV-0` |
+| Curiosity-Driven Exploration (CED) | Inverted-fitness exploration every 25 epochs; hard constitutional stops prevent catastrophe | `CED-0` |
+| Mirror Test (MIRROR) | Historical proposal prediction audit every 50 epochs; low accuracy triggers calibration epoch | `MIRROR-0` |
+| Invariant Discovery Engine (IDE) | Autonomous invariant discovery from failure signals; HUMAN-0 ratification required to promote | `IDE-0` |
+| Constitutional Rollback Engine (CRTV) | Cryptographically governed rollback; HUMAN-0 gate; chain-verified reversal provenance | `CRTV-0` |
+| Knowledge Bundle Exchange (KBEP) | Cryptographically verified knowledge bundle exchange across federation members | `KBEP-0` |
+| Federation Governance Consensus (FGCON) | Formal consensus protocol for federation-wide constitutional amendments; strict majority quorum | `FGCON-0` |
+| Self-Proposing Innovation Engine (SPIE) | System proposes its own next capabilities from failure and gap signals; HUMAN-0 ratification required | `SPIE-0` |
+| Deterministic Audit Sandbox (DAS) | Hermetic, reproducible epoch sandbox; HMAC-SHA256 chain; external verification in under 60 seconds | `DAS-0` |
+
+→ [Verifiable claims](docs/VERIFIABLE_CLAIMS.md) — every module maps to a test file, governance artifact, and verification command.
 
 </details>
 
@@ -666,12 +728,12 @@ It answers the question no prior gate could ask: *is this mutation consistent wi
 </details>
 
 <details>
-<summary><b>What are the 30 shipped innovations?</b></summary>
+<summary><b>What capabilities does ADAAD ship?</b></summary>
 <br/>
 
-INNOV-01 through INNOV-30 shipped across v9.18.0–v9.48.0 (Phases 87–115): Constitutional Self-Amendment (CSAP), Adversarial Constitutional Stress (ACSE), Temporal Invariant Forecasting (TIFE), Semantic Drift Detection (SCDD), Autonomous Organ Emergence (AOEP), Cryptographic Evolution Proof DAG (CEPD), Live Shadow Mutation Execution (LSME), Adversarial Fitness Red Team (AFRT), Aesthetic Fitness Signal (AFIT), Morphogenetic Memory (MMEM), Cross-Epoch Dream State Engine (DSTE), Mutation Genealogy Visualization (MGV), Inter-Model Knowledge Transfer (IMT), Constitutional Jury System (CJS), Agent Reputation Staking (ARS), Emergent Role Specialization (ERS), Agent Post-Mortem Interviews (APM), Temporal Governance Windows (TGOV), Governance Archaeology Mode (GAM), Constitutional Stress Testing (CST), Governance Bankruptcy Protocol (GBP), Mutation Conflict Framework (MCF), Constitutional Epoch Sentinel (CES), Sovereign Validation Plane (SVP), Hardware-Adaptive Fitness (HAF), Constitutional Entropy Budget (CEB), Mutation Blast Radius Modeling (BLAST), Self-Awareness Invariant (SELF-AWARE), Curiosity-Driven Exploration (CURIOSITY), and The Mirror Test (MIRROR).
+36 constitutional pipeline modules covering: self-amendment, adversarial stress testing, cryptographic lineage, zero-write shadow execution, multi-agent jury governance, reputation staking, dream-state rehearsal, identity consistency checking, federation consensus, autonomous invariant discovery, deterministic audit verification, and self-proposing capability evolution.
 
-**Pipeline complete as of April 4, 2026.** Full specifications: [ADAAD_30_INNOVATIONS.md](ADAAD_30_INNOVATIONS.md)
+Every module has 30 acceptance tests and a governance artifact linking it to a specific ledger entry. → [Full capability index and verification commands](docs/VERIFIABLE_CLAIMS.md)
 </details>
 
 <details>
@@ -692,13 +754,15 @@ Start with the [Trust Center](TRUST_CENTER.md). The [Procurement Fast-Lane packa
 
 ## Roadmap
 
-**🏁 Pipeline complete** — All 30 innovations shipped (Phases 87–115 · v9.18.0–v9.48.0 · April 4, 2026).
+**🏁 Pipeline complete** — All 36 innovations shipped (Phases 87–121 · v9.18.0–v9.54.0 · April 4, 2026).
 
-**Next gate** — v1.1-GA release candidate. Active GA blocker: `FINDING-66-004` — 2-of-3 Ed25519 key ceremony (HUMAN-0 action required).
+**Current focus** — Post-pipeline: Verifiability → Credibility → Adoptability → Sustainability (Phases 121–126).
 
-**Long term** — Cross-device federation with deterministic consensus, device-anchored mobile runtime, enterprise GA v1.1 certification.
+**Next gate** — v1.1-GA release candidate. Active GA blocker: `FINDING-66-004` — Governance Key Ceremony (HUMAN-0 action required).
 
-→ [Full roadmap](ROADMAP.md) · [30 Innovations specification](ADAAD_30_INNOVATIONS.md)
+**Long term** — `adaad-core` extraction as standalone importable package, CLI entry point, community governance infrastructure, enterprise GA v1.1 certification.
+
+→ [Full roadmap](ROADMAP.md) · [Innovation specifications](ADAAD_30_INNOVATIONS.md) · [Verifiable claims](docs/VERIFIABLE_CLAIMS.md) · [Post-pipeline strategic plan](docs/governance/POST_PIPELINE_STRATEGIC_PLAN.md)
 
 <img src="docs/assets/adaad-section-divider.svg" width="100%" alt=""/>
 
