@@ -4,13 +4,15 @@
 
 ---
 
-## What ships today — v9.30.0
+## What ships today — v9.48.0 · Phase 115 · Pipeline Complete
 
-Phase 97 (INNOV-12 MGV) is complete. ADAAD now annotates every mutation lineage graph edge with a `PropertyInheritanceVector` — four orthogonal fitness deltas and a deterministic digest — enabling population-genetics-level analysis: productive lineages, evolutionary dead-ends, and cumulative directional drift. Innovations INNOV-01 through INNOV-12 are shipped across v9.18.0–v9.30.0 (Phases 87–97), with deterministic evidence artifacts recorded per phase closure.
+**The Innovations30 pipeline is complete.** All 30 constitutional innovations shipped across Phases 87–115 (v9.18.0–v9.48.0). 125 Hard-class invariants cumulative. `boot_completeness_check()` confirms all 30 modules importable at runtime (`INNOV-COMPLETE-0`).
 
-**Current/Next:** Current = **Phase 99** (`v9.32.0`, INNOV-14 CJS shipped). Next = **Phase 100 — INNOV-15 Agent Reputation Staking**.
+**Current state:** `v9.48.0` · Phase 115 (INNOV-30 Mirror Test Engine) complete · **125 Hard-class invariants** · all 30 innovations constitutionally hardened and boot-gate verified.
 
-**GA blockers (canonical): 4 open** — F-Droid MR submission (manual), founder GPG sign-off, founder tag ceremony backfill, and strict release gate terminal pass.
+**GA blocker (canonical, 1 open):** FINDING-66-004 — Ed25519 2-of-3 key ceremony (P3, runbook delivered, awaits Dustin L. Reid execution with 2 additional key holders). All other GA blockers resolved.
+
+**Active priority:** Independent verification of the Phase 65 self-evolution event by a named third-party auditor. This is the highest-leverage next milestone — it transforms ADAAD from a self-asserted historic event into an externally attested one. Replay instructions: `python -m app.main --replay strict --epoch-id phase65-emergence-001 --verbose`
 
 | Subsystem | Status | Description |
 |-----------|--------|-------------|
@@ -1840,4 +1842,88 @@ World-first constitutionally-governed cross-epoch mutation memory consolidation.
 - FINDING-97-001 RESOLVED — T97-MGV-04 mock target corrected: `builtins.open` → `Path.open`
 - Hard-class invariants cumulative: **46** (CJS-0 through CJS-PERSIST-0 introduced in Phase 99)
 
-**Next:** Phase 100 — INNOV-15 · Agent Reputation Staking
+---
+
+### Phase 98 — INNOV-13 · Institutional Memory Transfer (IMT)
+
+**Status:** ✅ shipped (v9.31.0) · **Tests:** T98-IMT-01..30 (30/30 PASS) · **Evidence:** ILA-98-2026-03-31-001
+
+World-first cryptographically verified cross-instance knowledge transfer for autonomous software evolution engines.
+
+- `KnowledgeBundle.create()` — deterministic sha256 `bundle_hash` (IMT-DETERM-0)
+- `InstitutionalMemoryTransfer.sign_bundle()` — HMAC-SHA256 sole signing surface (IMT-0)
+- `import_bundle()` — signature + integrity gate before any knowledge applied (IMT-VERIFY-0)
+- `_record_chain_event()` — `Path.open("a")` append-only to governance ledger (IMT-CHAIN-0)
+- `TransferVerificationError` / `TransferIntegrityError` — typed failure surfaces
+
+**Invariants introduced:** `IMT-0`, `IMT-VERIFY-0`, `IMT-CHAIN-0`, `IMT-DETERM-0` · **Cumulative: 41**
+
+---
+
+### Phase 99 — INNOV-14 · Constitutional Jury System (CJS)
+
+**Status:** ✅ shipped (v9.32.0) · **Gate:** HUMAN-0 ratified (Dustin L. Reid — 2026-04-01) · **Tests:** T99-CJS-01..30 (30/30 PASS) · **Evidence:** ILA-99-2026-04-01-001
+
+World-first multi-agent constitutional deliberation with governed dissent logging.
+
+- `ConstitutionalJury.deliberate()` — sole authority for high-stakes mutation evaluation (CJS-0)
+- `JURY_SIZE = 3`, `MAJORITY_REQUIRED = 2`, `HIGH_STAKES_PATHS` — invariant constants
+- `ConstitutionalJuryConfigError` / `JuryQuorumError` — typed gate violation exceptions
+- Dissent ledger committed before `deliberate()` returns (CJS-DISSENT-0)
+- `decision_digest` = sha256(mutation_id:majority_verdict:approve_count:jury_size) (CJS-DETERM-0)
+
+**Invariants introduced:** `CJS-0`, `CJS-QUORUM-0`, `CJS-DETERM-0`, `CJS-DISSENT-0`, `CJS-PERSIST-0` · **Cumulative: 46**
+
+---
+
+### Phase 100 — INNOV-15 · Agent Reputation Staking (ARS)
+
+**Status:** ✅ shipped (v9.33.0) · **Gate:** HUMAN-0 ratified · **Tests:** T100-ARS-01..30 (30/30 PASS) · **Evidence:** ILA-100-2026-04-02-001
+
+World-first skin-in-the-game governance — agents stake credits on proposals, failed proposals burn stake.
+
+- `StakingGateViolation` — typed gate violation exception (ARS-0)
+- `StakeEvent` dataclass with `prev_event_hash` chain (ARS-PERSIST-0)
+- Wallet persistence converted from destructive `write_text` to append-only ledger
+- `hmac.compare_digest` for all stake integrity comparisons
+
+**Invariants introduced:** `ARS-0`, `ARS-STAKE-0`, `ARS-BURN-0`, `ARS-DETERM-0`, `ARS-PERSIST-0` · **Cumulative: 51**
+
+---
+
+### Phases 101–115 — INNOV-16..30 · Innovations30 Completion Arc
+
+**Status:** ✅ all shipped · v9.34.0–v9.48.0
+
+| Phase | Innovation | Key invariant | Cumulative |
+|:---:|:---|:---:|:---:|
+| 101 | INNOV-16 Emergent Role Specializer | `ERS-0` | 56 |
+| 102 | INNOV-17 Agent Postmortem System | `APM-0` | 61 |
+| 103 | INNOV-18 Temporal Governance Engine | `TGE-0` | 66 |
+| 104 | INNOV-19 Governance Archaeologist | `GARCH-0` | 71 |
+| 105 | INNOV-20 Constitutional Stress Tester | `CST-0` | 76 |
+| 106 | INNOV-21 Governance Bankruptcy Protocol | `GBP-0` | 83 |
+| 107 | INNOV-22 Market-Conditioned Fitness | `MCF-0` | 89 |
+| 108 | INNOV-23 Regulatory Compliance Engine | `RCE-0` | 95 |
+| 109 | INNOV-24 Semantic Version Enforcer | `SVE-0` | 100 |
+| 110 | INNOV-25 Hardware Adaptive Fitness | `HAF-0` | 106 |
+| 111 | INNOV-26 Constitutional Entropy Budget | `CEB-0` | 112 |
+| 112 | INNOV-27 Blast Radius Modeler | `BRM-0` | 117 |
+| 113 | INNOV-28 Self-Awareness Invariant | `SELF-AWARE-0` | 120 |
+| 114 | INNOV-29 Curiosity Engine | `CURIO-0` | 123 |
+| 115 | INNOV-30 Mirror Test Engine | `MIRROR-0` | **125** |
+
+**Pipeline seal: `boot_completeness_check()` → `{"status": "ok", "loaded": 30, "total": 30}`**
+
+---
+
+## What will not be built
+
+- **No autonomous promotion** — GovernanceGate cannot be delegated. Human sign-off is structural.
+- **No non-deterministic entropy** in governance decisions — Randomness only in agent proposals (epoch-seeded), never in scoring or gate evaluation.
+- **No retroactive evidence** — Evidence cannot be added after a release is tagged.
+- **No silent failures** — Every pipeline halt produces a named failure mode in the evidence ledger.
+
+---
+
+*This roadmap is governed by `docs/CONSTITUTION.md`. Amendments require ArchitectAgent approval, HUMAN-0 sign-off, and a CHANGELOG entry.*
