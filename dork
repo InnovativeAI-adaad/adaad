@@ -28,14 +28,14 @@ def start_server():
     env["ADAAD_ENV"] = "dev"
     env["ADAAD_PORT"] = str(PORT)
     env["ADAAD_HOST"] = "0.0.0.0"
-    log_file = open("server.log", "a")
-    subprocess.Popen(
-        [sys.executable, "server.py"],
-        env=env,
-        stdout=log_file,
-        stderr=log_file,
-        preexec_fn=os.setpgrp
-    )
+    with open("server.log", "a") as log_file:
+        subprocess.Popen(
+            [sys.executable, "server.py"],
+            env=env,
+            stdout=log_file,
+            stderr=log_file,
+            preexec_fn=os.setpgrp
+        )
     
     # Wait for it to wake up
     for _ in range(10):
