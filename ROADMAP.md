@@ -4,6 +4,297 @@
 
 ---
 
+## Current State — v9.53.0 · Phase 120 · PIPELINE COMPLETE
+
+**Date:** 2026-04-04  
+**Status:** 30/30 innovations shipped (INNOV-01 through INNOV-35). Phase 120 closed. v9.53.0 released.  
+**Hard-class invariants:** 155 (cumulative, enforced)  
+**Constitutional Evolution Loop:** 14-step CEL, deterministic replay, wired  
+**Self-Proposing Innovation Engine (SPIE):** active — system proposes its own next innovations; HUMAN-0 ratifies
+
+| Innovation | Module | Phase | Version | Invariants |
+|-----------|--------|-------|---------|------------|
+| INNOV-01 · CSAP | constitutional_stress_test.py | 87 | v9.18.0 | CSAP-0, CSAP-1 |
+| INNOV-02 · ACSE | self_awareness_invariant.py | 87 | v9.18.0 | ACSE-0, ACSE-1 |
+| INNOV-03 · TIFE | temporal_governance.py | 87 | v9.18.0 | TIFE-0 |
+| INNOV-04 · SCDD | constitutional_entropy_budget.py | 88 | v9.21.0 | SCDD-0 |
+| INNOV-05 · AOEP | governance_archaeology.py | 89 | v9.22.0 | AOEP-0 |
+| INNOV-06 · CEPD | counterfactual_fitness.py | 90 | v9.23.0 | CEPD-0, CEPD-1 |
+| INNOV-07 · LSME | temporal_regret.py | 91 | v9.24.0 | LSME-0, LSME-1 |
+| INNOV-08 · AFRT | red_team_agent.py | 92 | v9.25.0 | AFRT-0, AFRT-GATE-0, AFRT-INTEL-0, AFRT-LEDGER-0, AFRT-CASES-0, AFRT-DETERM-0 |
+| INNOV-09 · AFIT | aesthetic_fitness.py | 93 | v9.26.0 | AFIT-0, AFIT-DETERM-0, AFIT-BOUND-0, AFIT-WEIGHT-0 |
+| INNOV-10 · MMEM | morphogenetic_memory.py | 94 | v9.27.0 | MMEM-0..3 |
+| INNOV-11 · DSTE | dream_state.py | 96 | v9.29.0 | DSTE-0..6 |
+| INNOV-12 · MGV | mutation_genealogy.py | 97 | v9.30.0 | MGV-0, MGV-DETERM-0, MGV-PERSIST-0 |
+| INNOV-13 · IMT | knowledge_transfer.py | 98 | v9.31.0 | IMT-0..4 |
+| INNOV-14 · CEB | constitutional_entropy_budget.py | 99 | v9.32.0 | CEB-0..4 |
+| INNOV-15 · CTD | constitutional_tension.py | 100 | v9.33.0 | CTD-0..4 |
+| INNOV-16 · ERS | emergent_roles.py | 101 | v9.34.0 | ERS-0..ERS-PERSIST-0 |
+| INNOV-17 · APM | agent_postmortem.py | 102 | v9.35.0 | APM-0..4 |
+| INNOV-18 · GJR | constitutional_jury.py | 103 | v9.36.0 | GJR-0..4 |
+| INNOV-19 · RST | reputation_staking.py | 104 | v9.37.0 | RST-0..4 |
+| INNOV-20 · BRM | blast_radius_model.py | 105 | v9.38.0 | BRM-0..4 |
+| INNOV-21 · GBP | governance_bankruptcy.py | 106 | v9.39.0 | GBP-0..7 |
+| INNOV-22 · MCF | mutation_conflict_framework.py | 107 | v9.40.0 | MCF-0..DETERM-0 |
+| INNOV-23 · CES | constitutional_epoch_sentinel.py | 108 | v9.41.0 | CES-0..DETERM-0 |
+| INNOV-24 · SVP | semantic_version_enforcer.py | 109 | v9.42.0 | SVP-0..4 |
+| INNOV-25 · HAF | hardware_adaptive_fitness.py | 110 | v9.43.0 | HAF-0..4 |
+| INNOV-26 · GDA | graduated_invariants.py | 111 | v9.44.0 | GDA-0..4 |
+| INNOV-27 · RCI | regulatory_compliance.py | 112 | v9.45.0 | RCI-0..4 |
+| INNOV-28 · IPV | intent_preservation.py | 113 | v9.46.0 | IPV-0..4 |
+| INNOV-29 · CED | curiosity_engine.py | 114 | v9.47.0 | CED-0..4 |
+| INNOV-30 · MIRROR | mirror_test.py | 115 | v9.48.0 | MIRROR-0, MIRROR-DETERM-0, MIRROR-AUDIT-0 |
+| INNOV-31 · IDE | invariant_discovery.py | 116 | v9.49.0 | IDE-0, IDE-DETERM-0, IDE-PERSIST-0, IDE-AUDIT-0, IDE-GATE-0 |
+| INNOV-32 · CRTV | constitutional_rollback.py | 117 | v9.50.0 | CRTV-0, CRTV-CHAIN-0, CRTV-DETERM-0, CRTV-GATE-0, CRTV-AUDIT-0 |
+| INNOV-33 · KBEP | knowledge_bundle_exchange.py | 118 | v9.51.0 | KBEP-0..VERIFY-0 |
+| INNOV-34 · FGCON | federation_governance_consensus.py | 119 | v9.52.0 | FGCON-0..QUORUM-0 |
+| INNOV-35 · SPIE | self_proposing_innovation_engine.py | 120 | v9.53.0 | SPIE-0..HUMAN0-0 |
+
+**Open GA blocker:** FINDING-66-004 (Governance Key Ceremony — Track B, Dustin)  
+**Strategic plan:** `docs/governance/POST_PIPELINE_STRATEGIC_PLAN.md`
+
+---
+
+## Post-Pipeline Horizon — Phases 121–126
+
+The 30-innovation pipeline is complete. The post-pipeline arc shifts focus from *building* to *verifying, credibilizing, and opening* the system.
+
+**Governing strategic document:** `docs/governance/POST_PIPELINE_STRATEGIC_PLAN.md`  
+**Four priorities:** Verifiability → Credibility → Adoptability → Sustainability
+
+### Phase 121 — Demo Sandbox + Ledger Verifier
+
+**Target:** v9.54.0 · **Branch:** `feat/demo-sandbox` · **Track:** A (Claude) + B (PR)  
+**Status:** 🔜 planned
+
+Delivers the foundation for independent third-party verification of ADAAD's core claims.
+
+**Track A deliverables:**
+- `docker-compose.yml` — one-command isolated ADAAD demo (toy constitution, deterministic seed, 3 candidate mutations, no API keys required)
+- `DEMO.md` — step-by-step walkthrough with expected output for every stage
+- `scripts/verify_ledger.py` — standalone stdlib-only HMAC chain verifier; exits 0 on clean, 1 on tampered
+- `scripts/replay_epoch.py` — replays a stored epoch from ledger alone; confirms bit-identical replay digest
+
+**Acceptance criteria:**
+- `docker compose up` → complete mutation cycle in < 3 minutes on cold machine
+- `python verify_ledger.py artifacts/governance/phase120/...` → exits 0
+- `python replay_epoch.py` → digest matches stored Phase 120 replay artifact
+- Zero external API calls in demo mode
+- 30/30 acceptance tests passing
+
+**Constitutional invariants:**
+- `DEMO-ISOLATE-0`: Demo container makes no network egress beyond localhost
+- `VERIFY-0`: Verifier script imports no ADAAD runtime modules (stdlib only)
+- `REPLAY-DETERM-0`: Identical ledger input → identical verifier output
+
+---
+
+### Phase 122 — README Credibility + ROADMAP Sync
+
+**Target:** v9.55.0 · **Branch:** `feat/readme-credibility` · **Track:** A (Claude) + B (PR)  
+**Status:** 🔜 planned · **Dependency:** Phase 121 shipped
+
+Replaces marketing language with engineering language. Aligns governance documentation to v9.53.0 actual state.
+
+**Track A deliverables:**
+- `README.md` rewrite — remove all unsubstantiated "world-first" claims; replace with measurable, reproducible claim table; add quick-start (4 commands); link to DEMO.md and VERIFIABLE_CLAIMS.md
+- `docs/VERIFIABLE_CLAIMS.md` — structured table mapping each major claim → module → test file → governance artifact → verification command
+- `ROADMAP.md` synchronization — this update (v9.48.0 → v9.53.0 as current; Phase 116–120 entries; 155 invariant count; correct GA blocker; post-pipeline horizon)
+
+**Acceptance criteria:**
+- Zero instances of "world-first" without peer-reviewed citation in README
+- Every claim in README has a row in VERIFIABLE_CLAIMS.md
+- ROADMAP summary table includes all phases through 120
+- Doc-sync CI job passes after merge
+- 30/30 acceptance tests passing
+
+---
+
+### Phase 123 — CLI Entry Point
+
+**Target:** v9.56.0 · **Branch:** `feat/adaad-cli` · **Track:** A (Claude) + B (PR)  
+**Status:** 🔜 planned · **Dependency:** Phase 122 shipped
+
+Turns ADAAD from a research artifact into a tool people can run in three commands.
+
+**Track A deliverables:**
+- `adaad/__main__.py` — three commands: `demo`, `inspect-ledger <path>`, `propose "<description>"`
+- `scripts/adaad` — POSIX shim for direct invocation
+- `QUICKSTART.md` — 5-minute path from zero to running demo
+- `ARCHITECTURE.md` — module map, layer diagram, governance data flow
+
+**CLI contract:**
+```
+adaad demo                      # Runs DorkEngine fallback demo (no Docker, no API keys)
+adaad inspect-ledger <path>     # Human-readable ledger chain report
+adaad propose "<description>"   # Submits mutation proposal to local evolution loop
+```
+
+**Acceptance criteria:**
+- All three commands work on a clean Python 3.11 environment with only `pip install adaad`
+- `adaad demo` completes in < 60 seconds with human-readable governance output
+- `adaad inspect-ledger` produces: total records, chain integrity, epoch coverage, any violations
+- `adaad propose` submits to sandbox only by default; requires `--live` flag for real pipeline
+- 30/30 acceptance tests passing
+
+**Constitutional invariants:**
+- `CLI-SANDBOX-0`: `adaad propose` defaults to `ADAAD_SANDBOX_ONLY=true`; live mode requires explicit flag
+- `CLI-GATE-0`: CLI never bypasses GovernanceGate; all proposals enter governed pipeline
+
+---
+
+### Phase 124 — adaad-core Extraction
+
+**Target:** v9.57.0 · **Branch:** `feat/adaad-core-extract` · **Track:** A (skeleton + CI) + B (PyPI publication)  
+**Status:** 🔜 planned · **Dependency:** Phase 123 shipped
+
+Extracts the constitutional governance kernel as an independently importable package.
+
+**Track A deliverables:**
+- `adaad_core/` package with stable API surface
+- `adaad_core/__init__.py` — exports: `GovernanceGate`, `ConstitutionalRollbackEngine`, `InvariantDiscoveryEngine`, `MirrorTest`, `EpochMemoryStore`, `verify_ledger`
+- `adaad_core/pyproject.toml` — separate semver line, `adaad-core` on PyPI
+- `.github/workflows/adaad-core-api-stability.yml` — import contract tests; fails CI on any breaking change
+- `docs/ADAAD_CORE_API.md` — stable API reference
+
+**Track B deliverables (Dustin):**
+- PyPI publication of `adaad-core` as separate package
+- Semver governance: `adaad-core` versioned independently from `adaad` main after first publication
+
+**API surface (semver-governed from first publication):**
+```python
+from adaad_core import GovernanceGate
+from adaad_core import ConstitutionalRollbackEngine
+from adaad_core import InvariantDiscoveryEngine
+from adaad_core import MirrorTest
+from adaad_core import EpochMemoryStore
+from adaad_core import verify_ledger
+```
+
+**Acceptance criteria:**
+- `pip install adaad-core` installs without pulling in Aponi UI, SPIE, or federation modules
+- Import contract CI job passes on every PR touching `adaad_core/`
+- All 6 exported symbols usable with zero additional imports
+- 30/30 acceptance tests passing
+
+**Constitutional invariants:**
+- `CORE-STABLE-0`: No breaking change to `adaad_core` public API without major version bump
+- `CORE-GATE-0`: `GovernanceGate` in `adaad-core` is the same implementation as in main package — no fork
+
+---
+
+### Phase 125 — Community Governance Infrastructure
+
+**Target:** v9.58.0 · **Branch:** `feat/community-governance` · **Track:** A (infrastructure) + B (ratification process)  
+**Status:** 🔜 planned · **Dependency:** Phase 124 shipped
+
+Opens the constitutional amendment process to community participation while preserving FGCON quorum and HUMAN-0 ratification invariants.
+
+**Track A deliverables:**
+- `CONSTITUTION_PROPOSALS.md` — community amendment proposal template and process documentation
+- `.github/ISSUE_TEMPLATE/constitution_amendment.md` — structured GitHub Issue template for amendment proposals
+- `.github/workflows/constitution_amendment_validation.yml` — CI gate: validates amendment proposal structure, checks for invariant conflicts, requires FGCON quorum simulation
+- `docs/GOVERNANCE_PARTICIPATION.md` — contributor guide for proposing, reviewing, and ratifying amendments
+
+**Amendment lifecycle:**
+1. Community opens Issue using `constitution_amendment.md` template
+2. CI validates proposal structure
+3. HUMAN-0 reviews and assigns to governance queue
+4. FGCON module evaluates quorum (Phase 119 FGCON-QUORUM-0 enforced)
+5. HUMAN-0 ratification → GPG-signed merge
+6. `CONSTITUTION.md` bumped with amendment provenance
+
+**Acceptance criteria:**
+- Amendment template captures: proposed invariant, rationale (≥50 words), affected modules, proposed test
+- CI gate rejects proposals missing required fields
+- FGCON quorum invariant preserved: single contributor cannot self-ratify
+- HUMAN-0 ratification remains architecturally inviolable (no auto-merge path)
+- 30/30 acceptance tests passing
+
+**Constitutional invariants:**
+- `COMMUNITY-FGCON-0`: Community amendments are subject to FGCON-QUORUM-0 — no single contributor can ratify
+- `COMMUNITY-HUMAN0-0`: HUMAN-0 ratification cannot be delegated via this workflow
+
+---
+
+### Phase 126 — "Break It" Red-Team Challenge
+
+**Target:** v9.59.0 · **Branch:** `feat/break-it-challenge` · **Track:** A (infrastructure) + B (announcement)  
+**Status:** 🔜 planned · **Dependency:** Phase 125 shipped
+
+Invites external red-teamers to attempt bypass of ADAAD's 155 Hard-class invariants. All attempts (successful or not) are published.
+
+**Track A deliverables:**
+- `docs/BREAK_IT_CHALLENGE.md` — rules, scope (155 Hard-class invariants), submission format, recognition policy
+- `docs/break_it_log/README.md` — public log of all attempts, indexed by date and target invariant
+- `.github/ISSUE_TEMPLATE/break_it_submission.md` — structured submission template
+- `CONTRIBUTORS.md` — permanent recognition for valid submissions
+- Challenge announcement draft (for Track B distribution)
+
+**Challenge scope:**
+- Bypass any of the 155 Hard-class invariants and produce evidence
+- OR produce a tampered ledger file that passes `verify_ledger.py` (exit 0)
+- Constitutional governance still applies — no production system writes without HUMAN-0 gate
+
+**Recognition:**
+- All valid attempts (whether bypass succeeded or not) are permanently logged
+- Successful bypass: named in CONTRIBUTORS.md + CHANGELOG entry + finding tracked to resolution
+- Notable unsuccessful attempts: named in break_it_log
+
+**Acceptance criteria:**
+- `BREAK_IT_CHALLENGE.md` lists all 155 invariants (or links to their definition) as valid targets
+- Submission template captures: target invariant, reproduction steps, evidence
+- All submissions processed within 72 hours (acknowledged, not necessarily resolved)
+- 30/30 acceptance tests passing
+
+**Constitutional invariants:**
+- `BREAK-LOG-0`: All submissions are logged publicly; no suppression of unsuccessful attempts
+- `BREAK-RESOLVE-0`: Every successful bypass is a finding tracked to resolution; no silent fixes
+
+---
+
+## v1.1-GA Gate
+
+**Blocker:** FINDING-66-004 (Governance Key Ceremony — HUMAN-0, Track B only)  
+**Status:** Runbook delivered. Ceremony deferred. Execution: Dustin on ADAADell.
+
+```bash
+# Track B command (ADAADell only):
+cat ~/adaad/docs/runbooks/governance_key_ceremony.md
+# Follow runbook. Produces: governance/key_ceremony_attestation.json
+# Then:
+git tag -s v1.1.0-GA -m "v1.1-GA: FINDING-66-004 resolved; governance key ceremony complete"
+git push origin v1.1.0-GA
+```
+
+---
+
+## Post-v1.1-GA Horizon (v9.60.0+)
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| Academic submission | Single-innovation paper (AFRT recommended) to ICSE 2027 or NeurIPS 2026 | P1 |
+| External Integration SDK | `adaad-sdk` PyPI package: typed Aponi REST client, webhook consumer | P2 |
+| Operator Dashboard Public Beta | Aponi read-only public view for demo epoch | P2 |
+| Name disambiguation footnote | README footnote: ADAAD ≠ CVPR 2023 AdaAD ≠ French home care ADAAD | P3 |
+
+---
+
+## Post-Pipeline Summary Table
+
+| Phase | Title | Version | Priority | Status |
+|-------|-------|---------|----------|--------|
+| 120 | INNOV-35 SPIE — Self-Proposing Innovation Engine | v9.53.0 | — | ✅ shipped |
+| 121 | Demo Sandbox + Ledger Verifier | v9.54.0 | P0 | 🔜 planned |
+| 122 | README Credibility + ROADMAP Sync | v9.55.0 | P0 | 🔜 planned |
+| 123 | CLI Entry Point | v9.56.0 | P1 | 🔜 planned |
+| 124 | adaad-core Extraction | v9.57.0 | P1 | 🔜 planned |
+| 125 | Community Governance Infrastructure | v9.58.0 | P2 | 🔜 planned |
+| 126 | Break It Challenge | v9.59.0 | P2 | 🔜 planned |
+| GA | v1.1-GA Release | v1.1.0-GA | P0 (Track B) | 🔒 blocked on FINDING-66-004 |
+
+---
+
 ## What ships today — v9.48.0 — PIPELINE COMPLETE
 
 Phase 107 (INNOV-22 MCF) shipped v9.40.0. Phase 108 (INNOV-23 CES) shipped v9.41.0. Phase 109 (INNOV-24 SVP) shipped v9.42.0. Phase 110 (INNOV-25 HAF) shipped v9.43.0. ADAAD now extends constitutional governance with hardware-adaptive fitness weights enabling governed evolution across heterogeneous deployment targets. 113 Hard-class invariants enforced. Innovations INNOV-01 through INNOV-25 are shipped across v9.18.0–v9.43.0 (Phases 87–110), with deterministic evidence artifacts recorded per phase closure.
