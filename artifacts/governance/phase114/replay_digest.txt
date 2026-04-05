@@ -1,0 +1,9 @@
+ADAAD Phase 114 Replay Digest
+Innovation: INNOV-29 — Curiosity-Driven Exploration (CURIOSITY)
+Version: v9.47.0 | Date: 2026-04-03 | Ledger: ILA-114-2026-04-03-001
+SHA-256 (full): d06e40e320e0bc7d2f3ee447fd3ea4b1709df2151d9c6a5fd653676837db9a62
+SHA-256 (short): sha256:d06e40e320e0bc7d
+Invariants sealed: CURIOSITY-0 CURIOSITY-STOP-0 CURIOSITY-AUDIT-0
+Cumulative Hard-class invariants: 122
+Tests: T114-CURIOSITY-01..30 — 30/30 PASS
+HUMAN-0: Dustin L. Reid — [slot reserved]

@@ -17,6 +17,7 @@
 <!-- DEBT-009 /api/release/readiness CLOSED -->
 <!-- DEBT-010 /api/ledger/log CLOSED -->
 <!-- DEBT-011 whaledic.html full shell CLOSED -->
+<!-- PHASE-95: dork=Groq+Ollama+DorkEngine · ADAAD_STATE_BUS · Oracle bridge -->
 <style>
 :root{
   --bg:#04060d;--bg2:#080c16;--bg3:#0d1220;--bg4:#121928;
@@ -153,46 +154,94 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .pal-item:hover{background:var(--whale-dim)}
 .pal-name{font-family:var(--font-ui);font-size:11px}
 .pal-key{font-family:var(--font-mono);font-size:9px;color:var(--text3)}
-@media (max-width:1200px){.shell{grid-template-columns:200px 1fr}.dork-pane{display:none}.flight-grid{grid-template-columns:1fr}}
-@media (max-width:840px){.shell{grid-template-columns:1fr}.sidebar{display:none}.top-pills{display:none}.stat-grid,.agent-grid{grid-template-columns:1fr}}
-/* DORK */
+@media(max-width:1200px){.shell{grid-template-columns:200px 1fr}.dork-pane{display:none}.flight-grid{grid-template-columns:1fr}}
+@media(max-width:840px){.shell{grid-template-columns:1fr}.sidebar{display:none}.top-pills{display:none}.stat-grid,.agent-grid{grid-template-columns:1fr}}
+/* ── DORK PANEL ──────────────────────────────────────────────────── */
 .dork-hdr{padding:10px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.dork-hdr-top{display:flex;align-items:flex-start;justify-content:space-between}
 .dork-title{font-family:var(--font-ui);font-size:13px;font-weight:800;color:var(--whale);letter-spacing:-0.3px}
 .dork-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:2px}
+.dork-prov-btn{font-family:var(--font-mono);font-size:8px;padding:2px 7px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.dork-prov-btn:hover{color:var(--whale);border-color:rgba(0,217,255,0.3)}
 .dork-msgs{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
 .dork-msg{display:flex;gap:7px}
 .dav{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:var(--font-ui)}
 .dav.user{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,124,255,0.3)}
 .dav.assistant{background:var(--whale-dim);color:var(--whale);border:1px solid rgba(0,217,255,0.3)}
-.dbody{flex:1}
-.dsender{font-family:var(--font-ui);font-size:9px;font-weight:700;margin-bottom:3px}
+.dbody{flex:1;min-width:0}
+.dsender{font-family:var(--font-ui);font-size:9px;font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:5px}
 .dork-msg.user .dsender{color:var(--purple)}
 .dork-msg.assistant .dsender{color:var(--whale)}
-.dtext{font-size:11px;color:var(--text2);line-height:1.6}
+.dprov{font-family:var(--font-mono);font-size:7px;padding:1px 4px;border-radius:3px;background:var(--bg4);color:var(--text3);border:1px solid var(--border)}
+.dtext{font-size:11px;color:var(--text2);line-height:1.65;word-break:break-word}
 .dtext code{font-family:var(--font-mono);font-size:10px;background:var(--bg4);padding:1px 4px;border-radius:3px;color:var(--whale)}
 .dtext pre{background:var(--bg4);border:1px solid var(--border);border-radius:var(--r);padding:8px;margin:5px 0;overflow-x:auto;font-family:var(--font-mono);font-size:9px;color:var(--text2);line-height:1.6}
+.dtext table{border-collapse:collapse;width:100%;margin:6px 0;font-size:9px;font-family:var(--font-mono)}
+.dtext th{background:var(--bg4);color:var(--whale);padding:3px 7px;border:1px solid var(--border);text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:0.5px}
+.dtext td{padding:3px 7px;border:1px solid var(--border);color:var(--text2)}
+.dtext tr:nth-child(even) td{background:rgba(255,255,255,0.015)}
+.dtext h3{font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--whale);margin:8px 0 4px}
+.dtext h4{font-family:var(--font-ui);font-size:10px;font-weight:600;color:var(--text);margin:5px 0 2px}
+.dtext ul,.dtext ol{margin:4px 0 4px 14px}
+.dtext li{margin:2px 0;color:var(--text2)}
+.dtext strong{color:var(--text);font-weight:600}
+.sha-f{font-family:var(--font-mono);font-size:9px;color:var(--whale);background:var(--whale-dim);padding:1px 4px;border-radius:3px}
+.epoch-f{font-family:var(--font-mono);font-size:9px;color:var(--amber);background:var(--amber-dim);padding:1px 4px;border-radius:3px}
+.gate-pass{color:var(--green);font-weight:700}
+.gate-lock{color:var(--red);font-weight:700}
+.gate-nom{color:var(--whale);font-weight:700}
 .dthink{display:flex;gap:3px;align-items:center;padding-top:3px}
 .ddot{width:4px;height:4px;border-radius:50%;background:var(--whale);animation:blink 1.2s infinite}
 .ddot:nth-child(2){animation-delay:0.2s}
 .ddot:nth-child(3){animation-delay:0.4s}
 @keyframes blink{0%,80%,100%{opacity:0.15}40%{opacity:1}}
+.dcursor{display:inline-block;width:6px;height:11px;background:var(--whale);border-radius:1px;margin-left:1px;vertical-align:middle;animation:blink2 0.9s step-end infinite}
+@keyframes blink2{0%,100%{opacity:1}50%{opacity:0}}
 .dork-inp-wrap{padding:8px 10px;border-top:1px solid var(--border);flex-shrink:0}
 .dchips{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
 .chip{font-family:var(--font-mono);font-size:9px;padding:2px 7px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;transition:all 0.12s}
 .chip:hover{background:var(--whale-dim);color:var(--whale);border-color:rgba(0,217,255,0.3)}
+.chip.oracle-chip{border-color:rgba(255,229,127,0.25);color:rgba(255,229,127,0.55)}
+.chip.oracle-chip:hover{background:rgba(255,229,127,0.07);color:rgba(255,229,127,0.9);border-color:rgba(255,229,127,0.4)}
 .dinp-row{display:flex;gap:5px;align-items:flex-end;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-lg);padding:7px 9px;transition:border-color 0.15s}
 .dinp-row:focus-within{border-color:rgba(0,217,255,0.35)}
 .dinp{flex:1;background:transparent;border:none;outline:none;resize:none;font-family:var(--font-body);font-size:11px;color:var(--text);min-height:18px;max-height:72px;line-height:1.5}
 .dinp::placeholder{color:var(--text3)}
 .dsend{width:22px;height:22px;border-radius:var(--r);background:var(--whale);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s}
 .dsend:hover{opacity:0.8}
+.dsend:disabled{opacity:0.25;cursor:not-allowed}
 .dsend svg{width:9px;height:9px}
-.twarn,.apiwarn{font-family:var(--font-mono);font-size:9px;padding:3px 6px;border-radius:var(--r);margin-bottom:4px;display:none}
-.twarn{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,200,66,0.2)}
-.apiwarn{color:var(--red);background:var(--red-dim);border:1px solid rgba(255,74,110,0.2)}
+.warn-strip{font-family:var(--font-mono);font-size:9px;padding:3px 6px;border-radius:var(--r);margin-bottom:4px;display:none}
+.warn-tok{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,200,66,0.2)}
+.warn-llm{color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,200,66,0.2)}
+.warn-oracle{color:rgba(255,229,127,0.85);background:rgba(255,229,127,0.06);border:1px solid rgba(255,229,127,0.25)}
 .ebus-wrap{padding:6px 12px;border-top:1px solid var(--border);flex-shrink:0}
 .ebus-lbl{font-family:var(--font-mono);font-size:8px;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:3px}
-.ebus{font-family:var(--font-mono);font-size:9px;color:var(--text3);height:42px;overflow-y:auto;line-height:1.6}
+.ebus{font-family:var(--font-mono);font-size:9px;color:var(--text3);height:40px;overflow-y:auto;line-height:1.6}
+/* ── CONFIG MODAL ───────────────────────────────────────────────── */
+.cfg-wrap{position:fixed;inset:0;background:rgba(4,6,13,0.82);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:50}
+.cfg-box{width:min(440px,92vw);background:var(--bg2);border:1px solid var(--border2);border-radius:14px;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,0.55)}
+.cfg-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.cfg-title{font-family:var(--font-ui);font-size:13px;font-weight:800;color:var(--whale)}
+.cfg-x{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
+.cfg-body{padding:16px;display:flex;flex-direction:column;gap:12px}
+.cfg-lbl{font-family:var(--font-mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px;margin-bottom:5px}
+.cfg-provs{display:flex;flex-direction:column;gap:5px}
+.cfg-prov{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r);background:var(--bg3);border:1px solid var(--border);cursor:pointer;transition:all 0.12s}
+.cfg-prov:hover{border-color:var(--border2)}
+.cfg-prov.sel{border-color:rgba(0,217,255,0.4);background:rgba(0,217,255,0.05)}
+.cfg-prov-name{font-family:var(--font-ui);font-size:11px;font-weight:700;flex:1}
+.cfg-badge{font-family:var(--font-mono);font-size:8px;padding:1px 5px;border-radius:4px}
+.b-free{background:var(--green-dim);color:var(--green);border:1px solid rgba(45,235,168,0.3)}
+.b-local{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(155,124,255,0.3)}
+.b-det{background:var(--whale-dim);color:var(--whale);border:1px solid rgba(0,217,255,0.3)}
+.cfg-prov-hint{font-family:var(--font-mono);font-size:8px;color:var(--text3)}
+.cfg-inp{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:7px 9px;color:var(--text);font-family:var(--font-mono);font-size:11px;outline:none;transition:border-color 0.15s}
+.cfg-inp:focus{border-color:rgba(0,217,255,0.4)}
+.cfg-note{font-family:var(--font-mono);font-size:9px;color:var(--text3);margin-top:3px}
+.cfg-note a{color:var(--whale);text-decoration:none}
+.cfg-save{width:100%;padding:9px;background:var(--whale-dim);border:1px solid rgba(0,217,255,0.35);border-radius:var(--r);color:var(--whale);font-family:var(--font-ui);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s}
+.cfg-save:hover{background:rgba(0,217,255,0.14)}
 </style>
 </head>
 <body>
@@ -204,20 +253,20 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       <ellipse cx="12" cy="11" rx="4" ry="6" fill="none" stroke="#00d9ff" stroke-width="0.8" opacity="0.5"/>
       <circle cx="12" cy="11" r="2" fill="#00d9ff"/>
     </svg>
-    <div><div class="logo-name">Whale.Dic</div><div class="logo-sub">ADAADinside\u2122 \u00b7 Developer Intelligence</div></div>
+    <div><div class="logo-name">Whale.Dic</div><div class="logo-sub">ADAADinside&#x2122; &middot; Developer Intelligence &middot; Phase 101</div></div>
   </div>
   <div class="top-pills">
-    <div class="pill"><div class="dot dot-g"></div><span id="p-gate">Gate: \u2014</span></div>
-    <div class="pill"><div class="dot dot-w"></div><span id="p-epoch">Epoch \u2014</span></div>
-    <div class="pill"><div class="dot dot-g"></div><span id="p-replay">Replay: \u2014</span></div>
-    <div class="pill"><span id="p-ready">Readiness: \u2014</span></div>
+    <div class="pill"><div class="dot dot-g"></div><span id="p-gate">Gate: &mdash;</span></div>
+    <div class="pill"><div class="dot dot-w"></div><span id="p-epoch">Epoch &mdash;</span></div>
+    <div class="pill"><div class="dot dot-g"></div><span id="p-replay">Replay: &mdash;</span></div>
+    <div class="pill"><span id="p-ready">Readiness: &mdash;</span></div>
   </div>
   <div class="top-right">
     <button class="top-btn" onclick="toggleFocus()">Focus</button>
-    <button class="top-btn" onclick="openPalette()">⌘K</button>
+    <button class="top-btn" onclick="openPalette()">&#8984;K</button>
     <button class="top-btn" onclick="exportSnapshot()">Export</button>
-    <a class="top-link" href="/ui/aponi/index.html">\u2190 Aponi</a>
-    <a class="top-link" href="https://github.com/InnovativeAI-adaad/ADAAD" target="_blank" rel="noreferrer">GitHub \u2197</a>
+    <a class="top-link" href="/ui/aponi/index.html">&larr; Aponi</a>
+    <a class="top-link" href="https://github.com/InnovativeAI-adaad/adaad" target="_blank" rel="noreferrer">GitHub &#x2197;</a>
   </div>
 </header>
 
@@ -245,15 +294,15 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   </div>
   <div class="sb-item" data-v="replay">
     <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><path d="M7 4v3l2 1"/></svg>
-    <span class="sb-label">Replay</span><span class="sb-bdg g" id="sb-rep">\u2014</span>
+    <span class="sb-label">Replay</span><span class="sb-bdg g" id="sb-rep">&mdash;</span>
   </div>
   <div class="sb-div"></div>
   <div class="sb-sect">Runtime</div>
   <div class="rt-block">
-    <div class="rt-row"><span class="rt-lbl">Constitution</span><span class="rt-val" id="rt-const" style="color:var(--whale)">\u2014</span></div>
-    <div class="rt-row"><span class="rt-lbl">Gate tier</span><span class="rt-val" id="rt-tier">\u2014</span></div>
-    <div class="rt-row"><span class="rt-lbl">Mutations</span><span class="rt-val" id="rt-muts">\u2014</span></div>
-    <div class="rt-row"><span class="rt-lbl">Last refresh</span><span class="rt-val" id="rt-refresh">\u2014</span></div>
+    <div class="rt-row"><span class="rt-lbl">Constitution</span><span class="rt-val" id="rt-const" style="color:var(--whale)">&mdash;</span></div>
+    <div class="rt-row"><span class="rt-lbl">Gate tier</span><span class="rt-val" id="rt-tier">&mdash;</span></div>
+    <div class="rt-row"><span class="rt-lbl">Mutations</span><span class="rt-val" id="rt-muts">&mdash;</span></div>
+    <div class="rt-row"><span class="rt-lbl">Last refresh</span><span class="rt-val" id="rt-refresh">&mdash;</span></div>
   </div>
   <div class="sb-div"></div>
   <div class="sb-sect">API Debt</div>
@@ -265,9 +314,9 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <div class="cs">
       <div class="cs-title">System Status</div>
       <div class="stat-grid">
-        <div class="sc wh"><div class="s-lbl">Replay Score</div><div class="s-val" id="s-replay" style="color:var(--whale)">\u2014</div><div class="s-sub" id="s-replay-s">loading\u2026</div></div>
-        <div class="sc gn"><div class="s-lbl">Release Readiness</div><div class="s-val" id="s-ready" style="color:var(--green)">\u2014</div><div class="s-sub" id="s-ready-s">loading\u2026</div></div>
-        <div class="sc"><div class="s-lbl">Epoch</div><div class="s-val" id="s-epoch">\u2014</div><div class="s-sub" id="s-epoch-s">loading\u2026</div></div>
+        <div class="sc wh"><div class="s-lbl">Replay Score</div><div class="s-val" id="s-replay" style="color:var(--whale)">&mdash;</div><div class="s-sub" id="s-replay-s">loading&hellip;</div></div>
+        <div class="sc gn"><div class="s-lbl">Release Readiness</div><div class="s-val" id="s-ready" style="color:var(--green)">&mdash;</div><div class="s-sub" id="s-ready-s">loading&hellip;</div></div>
+        <div class="sc"><div class="s-lbl">Epoch</div><div class="s-val" id="s-epoch">&mdash;</div><div class="s-sub" id="s-epoch-s">loading&hellip;</div></div>
       </div>
       <div class="cs-title">Governance Gate</div>
       <div class="gate-grid" id="gate-grid"><div class="sk" style="height:30px"></div><div class="sk" style="height:30px"></div><div class="sk" style="height:30px"></div></div>
@@ -281,257 +330,535 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <div class="cs">
       <div class="cs-title">Strategic Flight Plan</div>
       <div class="flight-grid">
-        <div class="flight-card">
-          <div class="flight-title">High-leverage Objectives</div>
-          <div class="flight-items" id="flight-items"><div class="sk" style="height:14px"></div><div class="sk" style="height:14px"></div><div class="sk" style="height:14px"></div></div>
-        </div>
-        <div class="flight-card">
-          <div class="flight-score" id="flight-score">—</div>
-          <div class="flight-sub">execution confidence index</div>
-          <div class="rp-bar-w" style="margin-top:8px"><div class="rp-bar" id="flight-bar" style="width:0%"></div></div>
-          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap" id="flight-tags"></div>
+        <div class="flight-card"><div class="flight-title">Priority Actions</div><div class="flight-items" id="flight-items"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
+        <div class="flight-card" style="text-align:center">
+          <div class="flight-title">Confidence Score</div>
+          <div class="flight-score" id="flight-score">&mdash;</div>
+          <div class="flight-sub">composite readiness</div>
+          <div class="rp-bar-w" style="margin-top:10px"><div class="rp-bar" id="flight-bar" style="width:0%"></div></div>
+          <div style="display:flex;gap:4px;margin-top:10px;flex-wrap:wrap;justify-content:center" id="flight-tags"></div>
         </div>
       </div>
     </div>
     <div class="pdiv"></div>
-    <div class="cs">
-      <div class="cs-title">Strategic Insights</div>
-      <div class="insight-list" id="insight-list"><div class="sk" style="height:28px"></div><div class="sk" style="height:28px"></div></div>
-    </div>
-    <div class="pdiv"></div>
-    <div class="cs">
-      <div class="cs-title">Webhook Activity</div>
-      <div class="wh-stream" id="wh-overview"><div class="sk" style="height:26px"></div><div class="sk" style="height:26px"></div></div>
-    </div>
+    <div class="cs"><div class="cs-title">Governance Insights</div><div class="insight-list" id="insight-list"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div>
   </div>
-
-  <div id="v-mutations" style="display:none">
-    <div class="cs">
-      <div class="cs-title">Mutation Pipeline</div>
-      <div class="rp-comp">
-        <div><div id="mr-num" class="rp-num">\u2014</div><div class="rp-meta-t">replay score</div></div>
-        <div class="rp-meta"><div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px" id="mr-tags"></div><div class="rp-bar-w"><div class="rp-bar" id="mr-bar" style="width:0%"></div></div></div>
-      </div>
-      <div class="mut-list" id="ml-full"><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div></div>
-    </div>
-  </div>
-
-  <div id="v-agents" style="display:none">
-    <div class="cs">
-      <div class="cs-title">Agent Triad \u2014 Architect \u00b7 Dream \u00b7 Beast</div>
-      <div class="agent-grid" id="agent-grid"><div class="agent-card"><div class="sk"></div><div class="sk" style="height:50px;margin-top:4px"></div></div><div class="agent-card"><div class="sk"></div><div class="sk" style="height:50px;margin-top:4px"></div></div><div class="agent-card"><div class="sk"></div><div class="sk" style="height:50px;margin-top:4px"></div></div></div>
-    </div>
-  </div>
-
+  <div id="v-mutations" style="display:none"><div class="cs"><div class="cs-title">Mutation Pipeline</div><div class="mut-list" id="ml-full"><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div><div class="sk" style="height:32px"></div></div></div></div>
+  <div id="v-agents" style="display:none"><div class="cs"><div class="cs-title">Agent Triad</div><div class="agent-grid" id="agent-grid"><div class="sk" style="height:80px"></div><div class="sk" style="height:80px"></div><div class="sk" style="height:80px"></div></div></div></div>
   <div id="v-ledger" style="display:none">
     <div class="cs">
-      <div class="cs-title">Evidence Ledger <button class="btn-sm" onclick="loadMoreLedger()">Load more</button></div>
-      <table class="ltable"><thead><tr><th>Timestamp</th><th>Agent</th><th>Action</th><th>Epoch</th><th>SHA-256</th><th>Status</th></tr></thead><tbody id="ledger-tbody"><tr><td colspan="6"><div class="sk"></div></td></tr></tbody></table>
+      <div class="cs-title">Evidence Ledger <span style="font-family:var(--font-mono);font-size:9px;color:var(--text3);font-weight:400">append-only &middot; SHA-256 chained</span></div>
+      <table class="ltable"><thead><tr><th>Timestamp</th><th>Agent</th><th>Action</th><th>Epoch</th><th>SHA</th><th>Status</th></tr></thead><tbody id="ledger-tbody"><tr><td colspan="6"><div class="sk"></div></td></tr></tbody></table>
+      <div style="margin-top:10px"><button class="btn-sm" onclick="loadMoreLedger()">Load more</button></div>
     </div>
   </div>
-
-  <div id="v-webhooks" style="display:none">
-    <div class="cs">
-      <div class="cs-title">Webhook Stream <button class="btn-sm" onclick="simWH()">Simulate</button></div>
-      <div class="wh-stream" id="wh-full"><div class="sk" style="height:26px"></div><div class="sk" style="height:26px"></div><div class="sk" style="height:26px"></div></div>
-    </div>
-  </div>
-
+  <div id="v-webhooks" style="display:none"><div class="cs"><div class="cs-title">Webhook Stream <button class="btn-sm" style="margin-left:8px" onclick="simWH()">Simulate</button></div><div class="wh-stream" id="wh-full"><div class="sk" style="height:26px"></div><div class="sk" style="height:26px"></div></div></div></div>
   <div id="v-replay" style="display:none">
     <div class="cs">
       <div class="cs-title">Replay Verification</div>
-      <div class="rp-comp">
-        <div><div id="rp-big" class="rp-num">\u2014</div><div class="rp-meta-t">aggregate score</div></div>
-        <div class="rp-meta"><div style="font-size:11px;color:var(--text2);margin-bottom:6px" id="rp-detail">Loading\u2026</div><div class="rp-bar-w"><div class="rp-bar" id="rp-bar" style="width:0%"></div></div></div>
-      </div>
+      <div class="rp-comp"><div><div id="rp-big" class="rp-num">&mdash;</div><div class="rp-meta-t">aggregate score</div></div><div class="rp-meta"><div style="font-size:11px;color:var(--text2);margin-bottom:6px" id="rp-detail">Loading&hellip;</div><div class="rp-bar-w"><div class="rp-bar" id="rp-bar" style="width:0%"></div></div></div></div>
       <div style="display:flex;flex-direction:column;gap:4px" id="rp-manifests"><div class="sk" style="height:30px"></div><div class="sk" style="height:30px"></div></div>
     </div>
   </div>
 </main>
 
+<!-- ── DORK PANEL ──────────────────────────────────────────────────── -->
 <aside class="dork-pane">
   <div class="dork-hdr">
-    <div class="dork-title">dork</div>
-    <div class="dork-sub">ADAADinside\u2122 assistant \u00b7 live runtime context</div>
+    <div class="dork-hdr-top">
+      <div>
+        <div class="dork-title">dork</div>
+        <div class="dork-sub">ADAADinside&#x2122; &middot; constitutional intelligence</div>
+      </div>
+      <button class="dork-prov-btn" id="prov-btn" onclick="openCfg()">&#9881; groq</button>
+    </div>
   </div>
   <div class="dork-msgs" id="dork-msgs">
     <div class="dork-msg assistant">
       <div class="dav assistant">d</div>
-      <div class="dbody"><div class="dsender">dork</div>
-      <div class="dtext">I\u2019m dork \u2014 your ADAADinside\u2122 runtime intelligence interface. I have live access to the ADAAD governance state, mutation pipeline, replay scores, agent health, and evidence ledger.<br><br>Ask me about governance gate status, recent mutations, replay divergence, or anything about the ADAAD codebase.</div></div>
+      <div class="dbody">
+        <div class="dsender">dork <span class="dprov" id="intro-badge">phase95</span></div>
+        <div class="dtext">I&#x2019;m <strong>dork</strong> &#x2014; your ADAADinside&#x2122; constitutional intelligence interface.<br><br>Powered by <strong>Groq</strong> (free tier &middot; llama-3.3-70b) with <strong>Ollama</strong> local fallback and a deterministic <strong>DorkEngine</strong> &#x2014; no paid APIs required. Configure your provider with &#9881; above.<br><br>I have live access to ADAAD&#x2019;s governance state, mutation pipeline, replay scores, agent triad, and the Oracle bridge. Ask me anything.</div>
+      </div>
     </div>
   </div>
   <div class="dork-inp-wrap">
-    <div class="dchips">
-      <span class="chip" onclick="dorkPrompt('Governance gate status?')">gate status</span>
-      <span class="chip" onclick="dorkPrompt('Run a new mutation cycle')">run mutation</span>
-      <span class="chip" onclick="dorkPrompt('Are there any pending approvals?')">pending approvals</span>
-      <span class="chip" onclick="dorkPrompt('Replay score and divergence?')">replay</span>
-      <span class="chip" onclick="dorkPrompt('Agent triad health?')">agents</span>
+    <div class="dchips" id="dork-chips">
+      <span class="chip" onclick="dorkPrompt('Governance gate status and tier?')">gate status</span>
+      <span class="chip" onclick="dorkPrompt('Replay score and divergence \u2014 is the system healthy?')">replay health</span>
+      <span class="chip" onclick="dorkPrompt('Agent triad \u2014 architect, dream, beast status?')">agent triad</span>
+      <span class="chip" onclick="dorkPrompt('Any release blockers or open findings?')">blockers</span>
+      <span class="chip" onclick="dorkPrompt('Strategic priority \u2014 what should I focus on right now?')">strategy</span>
+      <span class="chip oracle-chip" onclick="dorkBridgeOracle()">&#128302; oracle bridge</span>
     </div>
-    <div class="twarn" id="twarn">\u26a0 Token budget nearing limit \u2014 context will be trimmed.</div>
-    <div class="apiwarn" id="apiwarn">Anthropic key unavailable \u2014 dork is in read-only mode.</div>
+    <div class="warn-strip warn-tok" id="w-tok">&#9888; Token budget near limit &#x2014; context will be trimmed.</div>
+    <div class="warn-strip warn-llm" id="w-llm">&#9889; No LLM key &#x2014; DorkEngine deterministic mode active.</div>
+    <div class="warn-strip warn-oracle" id="w-oracle">&#128302; Oracle context loaded from state bus.</div>
     <div class="dinp-row">
-      <textarea class="dinp" id="dinp" rows="1" placeholder="Ask dork about governance, mutations, replay, agents\u2026" onkeydown="dorkKD(event)" oninput="ar(this)"></textarea>
-      <button class="dsend" onclick="sendDork()"><svg viewBox="0 0 10 10" fill="none" stroke="black" stroke-width="2"><path d="M1 9L9 5 1 1v2.5L6 5l-5 1.5z"/></svg></button>
+      <textarea class="dinp" id="dinp" rows="1" placeholder="Ask dork about governance, mutations, replay, agents, oracle&hellip;" onkeydown="dorkKD(event)" oninput="ar(this)"></textarea>
+      <button class="dsend" id="dsend" onclick="sendDork()"><svg viewBox="0 0 10 10" fill="none" stroke="black" stroke-width="2"><path d="M1 9L9 5 1 1v2.5L6 5l-5 1.5z"/></svg></button>
     </div>
   </div>
-  <div class="ebus-wrap">
-    <div class="ebus-lbl">Event Bus</div>
-    <div class="ebus" id="ebus"></div>
-  </div>
+  <div class="ebus-wrap"><div class="ebus-lbl">Event Bus</div><div class="ebus" id="ebus"></div></div>
 </aside>
 </div>
 
-<div class="pal-wrap" id="palette-wrap" onclick="closePalette(event)">
+<!-- CONFIG MODAL -->
+<div class="cfg-wrap" id="cfg-wrap" onclick="cfgOutside(event)">
+  <div class="cfg-box">
+    <div class="cfg-hdr"><div class="cfg-title">&#129504; dork LLM Provider</div><button class="cfg-x" onclick="closeCfg()">&#x2715;</button></div>
+    <div class="cfg-body">
+      <div>
+        <div class="cfg-lbl">Provider</div>
+        <div class="cfg-provs">
+          <div class="cfg-prov sel" id="cp-groq" onclick="selProv('groq')">
+            <div class="cfg-prov-name">Groq</div>
+            <span class="cfg-badge b-free">FREE</span>
+            <span class="cfg-prov-hint">llama-3.3-70b-versatile &middot; 14,400 req/day</span>
+          </div>
+          <div class="cfg-prov" id="cp-ollama" onclick="selProv('ollama')">
+            <div class="cfg-prov-name">Ollama</div>
+            <span class="cfg-badge b-local">LOCAL</span>
+            <span class="cfg-prov-hint">localhost:11434 &middot; no key needed</span>
+          </div>
+          <div class="cfg-prov" id="cp-engine" onclick="selProv('dorkengine')">
+            <div class="cfg-prov-name">DorkEngine</div>
+            <span class="cfg-badge b-det">DETERMINISTIC</span>
+            <span class="cfg-prov-hint">constitutional rule engine &middot; instant</span>
+          </div>
+        </div>
+      </div>
+      <div id="row-groq">
+        <div class="cfg-lbl">Groq API Key</div>
+        <input class="cfg-inp" id="inp-groq" type="password" placeholder="gsk_&hellip;" autocomplete="off"/>
+        <div class="cfg-note">Free at <a href="https://console.groq.com" target="_blank">console.groq.com</a> &mdash; no credit card required.</div>
+      </div>
+      <div id="row-ollama" style="display:none">
+        <div class="cfg-lbl">Ollama Model</div>
+        <input class="cfg-inp" id="inp-model" type="text" placeholder="llama3.2" value="llama3.2"/>
+        <div class="cfg-note">Start with: <code style="font-size:9px;font-family:var(--font-mono)">ollama run llama3.2</code></div>
+      </div>
+      <button class="cfg-save" onclick="saveCfg()">Save &amp; Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="pal-wrap" id="pal-wrap" onclick="closePal(event)">
   <div class="pal">
-    <div class="pal-head"><input class="pal-inp" id="pal-inp" placeholder="Run command: replay, agents, refresh, focus..." oninput="renderPalette(this.value)" /></div>
+    <div class="pal-head"><input class="pal-inp" id="pal-inp" placeholder="Command: overview, mutations, agents, replay, refresh, focus, config&hellip;" oninput="renderPal(this.value)"/></div>
     <div class="pal-list" id="pal-list"></div>
   </div>
 </div>
 
 <script>
+// ── CONSTANTS ─────────────────────────────────────────────────────
 const ROUTES={governance:'/api/governance/status',mutations:'/api/mutations/recent?limit=20',replay:'/api/replay/score',epoch:'/api/epoch/current',agents:'/api/agents/health',ledger:'/api/ledger/entries?limit=50',whRecent:'/api/webhooks/recent?limit=20',whStream:'/api/webhooks/stream',readiness:'/api/release/readiness',ledgerLog:'/api/ledger/log'};
 const DEBT=[{id:'DEBT-001',s:'CLOSED'},{id:'DEBT-002',s:'CLOSED'},{id:'DEBT-003',s:'CLOSED'},{id:'DEBT-004',s:'CLOSED'},{id:'DEBT-005',s:'CLOSED'},{id:'DEBT-006',s:'CLOSED'},{id:'DEBT-007',s:'CLOSED'},{id:'DEBT-008',s:'CLOSED'},{id:'DEBT-009',s:'CLOSED'},{id:'DEBT-010',s:'CLOSED'},{id:'DEBT-011',s:'CLOSED'}];
-const MOCK={governance:{ok:true,locked:false,constitution_version:'v0.9.0',mutation_enabled:true,replay_mode:'audit',tier:'NOMINAL',gate_checks:['constitution_version','key_rotation','ledger_integrity','mutation_engine','warm_pool','architect_invariants','platform_resources']},mutations:{ok:true,mutations:[{event:'mutation_approved_constitutional',agent:'architect',epoch:12,sha:'a3f1b2c',action:'mutation_approved_constitutional'},{event:'mutation_rejected_constitutional',agent:'beast',epoch:12,sha:'9b2e7a1',action:'mutation_rejected_constitutional'},{event:'mutation_approved_constitutional',agent:'dream',epoch:12,sha:'c7d4e9f',action:'mutation_approved_constitutional'}],total:47},replay:{ok:true,score:1.0,divergence:0,mode:'audit'},epoch:{ok:true,epoch:12,phase:'mutation'},agents:{ok:true,agents:{architect:{status:'healthy',proposals:124,approved:98,rejected:26},dream:{status:'healthy',tasks:31,safe_boots:2},beast:{status:'healthy',validated:47,blocked:0}}},ledger:{ok:true,entries:[{ts:'2026-03-14T22:48:01Z',agent:'architect',action:'mutation_approved_constitutional',epoch:12,sha:'a3f1b2c8d9e4f',status:'approved'},{ts:'2026-03-14T22:44:17Z',agent:'beast',action:'mutation_rejected_constitutional',epoch:12,sha:'9b2e7a1c4f8d3',status:'rejected'},{ts:'2026-03-14T22:41:55Z',agent:'dream',action:'mutation_approved_constitutional',epoch:12,sha:'c7d4e9f2a1b8c',status:'approved'},{ts:'2026-03-14T22:38:02Z',agent:'system',action:'replay_verified',epoch:12,sha:'f1a3c9d7e2b4f',status:'ok'},{ts:'2026-03-14T22:35:40Z',agent:'system',action:'orchestrator_ready',epoch:12,sha:'8e2d5c1a9f4b7',status:'ok'}],count:5},webhooks:{ok:true,events:[{event:'github_webhook_push',repo:'InnovativeAI-adaad/ADAAD',ts:'22:48:01'},{event:'github_webhook_pull_request',repo:'InnovativeAI-adaad/ADAAD',ts:'22:44:17'},{event:'github_webhook_check_run',repo:'InnovativeAI-adaad/ADAAD',ts:'22:41:55'}],total:11},readiness:{ok:true,readiness_score:0.98,gate_ok:true,replay_score:1.0,blockers:[]}};
-const TOKEN_CAP=16000,TOKEN_WARN=12000,HK='whaledic_v2_conv';
+const MOCK={
+  governance:{ok:true,locked:false,constitution_version:'v0.9.0',mutation_enabled:true,replay_mode:'audit',tier:'NOMINAL',gate_checks:['constitution_version','key_rotation','ledger_integrity','mutation_engine','warm_pool','architect_invariants','platform_resources']},
+  mutations:{ok:true,mutations:[{event:'mutation_approved_constitutional',agent:'dream',epoch:12,sha:'c7d4e9f',action:'mutation_approved_constitutional'},{event:'mutation_rejected_constitutional',agent:'beast',epoch:12,sha:'9b2e7a1',action:'mutation_rejected_constitutional'},{event:'mutation_approved_constitutional',agent:'architect',epoch:12,sha:'a3f1b2c',action:'mutation_approved_constitutional'}],total:47},
+  replay:{ok:true,score:1.0,divergence:0,mode:'audit'},
+  epoch:{ok:true,epoch:12,phase:'mutation'},
+  agents:{ok:true,agents:{architect:{status:'healthy',proposals:124,approved:98,rejected:26},dream:{status:'healthy',tasks:31,safe_boots:2},beast:{status:'healthy',validated:47,blocked:0}}},
+  ledger:{ok:true,entries:[{ts:'2026-03-14T22:48:01Z',agent:'architect',action:'mutation_approved_constitutional',epoch:12,sha:'a3f1b2c8d9e4f',status:'approved'},{ts:'2026-03-14T22:44:17Z',agent:'beast',action:'mutation_rejected_constitutional',epoch:12,sha:'9b2e7a1c4f8d3',status:'rejected'},{ts:'2026-03-14T22:41:55Z',agent:'dream',action:'mutation_approved_constitutional',epoch:12,sha:'c7d4e9f2a1b8c',status:'approved'},{ts:'2026-03-14T22:38:02Z',agent:'system',action:'replay_verified',epoch:12,sha:'f1a3c9d7e2b4f',status:'ok'},{ts:'2026-03-14T22:35:40Z',agent:'system',action:'orchestrator_ready',epoch:12,sha:'8e2d5c1a9f4b7',status:'ok'}],count:5},
+  webhooks:{ok:true,events:[{event:'github_webhook_push',repo:'InnovativeAI-adaad/adaad',ts:'22:48:01'},{event:'github_webhook_pull_request',repo:'InnovativeAI-adaad/adaad',ts:'22:44:17'},{event:'github_webhook_check_run',repo:'InnovativeAI-adaad/adaad',ts:'22:41:55'}],total:11},
+  readiness:{ok:true,readiness_score:0.98,gate_ok:true,replay_score:1.0,blockers:[]}
+};
+const TOKEN_CAP=16000,TOKEN_WARN=12000,CONV_KEY='whaledic_v3_conv';
+
+// ── STATE ────────────────────────────────────────────────────────
 let conv=[],totalTok=0,streaming=false,rs=null,missing=new Set(),reqTs=[],ledgerOff=0,whCount=0;
+let llmCfg={provider:'groq',groqKey:'',ollamaModel:'llama3.2'};
+let selProvider='groq';
+
+// ── ADAAD STATE BUS (Phase 101 L1) ───────────────────────────────
+window.ADAAD_STATE_BUS=null;
+function updateBus(patch){
+  window.ADAAD_STATE_BUS=Object.freeze({...(window.ADAAD_STATE_BUS||{}), ...patch, captured_at_iso:new Date().toISOString(), schema_version:'1.0.0'});
+}
+
+// ── COMMANDS ────────────────────────────────────────────────────
 const CMDS=[
-  {name:'Go to Overview',key:'1',fn:()=>showView('overview')},
-  {name:'Go to Mutations',key:'2',fn:()=>showView('mutations')},
-  {name:'Go to Agents',key:'3',fn:()=>showView('agents')},
-  {name:'Go to Replay',key:'4',fn:()=>showView('replay')},
-  {name:'Refresh Intelligence',key:'R',fn:()=>refreshAll()},
-  {name:'Toggle Focus Mode',key:'F',fn:()=>toggleFocus()},
-  {name:'Export Runtime Snapshot',key:'E',fn:()=>exportSnapshot()}
+  {name:'Overview',key:'1',fn:()=>showView('overview')},
+  {name:'Mutations',key:'2',fn:()=>showView('mutations')},
+  {name:'Agents',key:'3',fn:()=>showView('agents')},
+  {name:'Replay',key:'4',fn:()=>showView('replay')},
+  {name:'Refresh',key:'R',fn:()=>refreshAll()},
+  {name:'Focus Mode',key:'F',fn:()=>toggleFocus()},
+  {name:'Export Snapshot',key:'E',fn:()=>exportSnapshot()},
+  {name:'Configure LLM',key:'C',fn:()=>openCfg()},
+  {name:'Oracle Bridge',key:'O',fn:()=>dorkBridgeOracle()},
 ];
+
+// ── UTILS ────────────────────────────────────────────────────────
 function esc(v){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function bus(t,d){const e=document.getElementById('ebus');e.textContent=`[${new Date().toISOString().slice(11,19)}] ${t}::${d}\n${e.textContent}`.slice(0,1500)}
-function fmt(m){return m.replace(/```([\s\S]*?)```/g,'<pre>$1</pre>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}
-function rateGated(){const n=Date.now();reqTs=reqTs.filter(t=>n-t<60000);return reqTs.length>=5}
+function bus(t,d){const e=document.getElementById('ebus');e.textContent=('['+new Date().toISOString().slice(11,19)+'] '+t+'::'+d+'\n'+e.textContent).slice(0,2000)}
+function rateGated(){const n=Date.now();reqTs=reqTs.filter(t=>n-t<60000);return reqTs.length>=25}
 function estTok(s){return Math.ceil(String(s).length/4)}
 function showView(n){document.querySelectorAll('[id^="v-"]').forEach(v=>v.style.display='none');const e=document.getElementById('v-'+n);if(e)e.style.display='';document.querySelectorAll('.sb-item[data-v]').forEach(s=>s.classList.remove('act'));const s=document.querySelector('.sb-item[data-v="'+n+'"]');if(s)s.classList.add('act')}
 document.querySelectorAll('.sb-item[data-v]').forEach(el=>el.addEventListener('click',()=>showView(el.dataset.v)));
-async function apiFetch(url,fb=null){if(missing.has(url))return fb;try{const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok){missing.add(url);bus('miss',url);return fb;}const d=await r.json();return d;}catch(e){missing.add(url);bus('err',`${url}::${e.message}`);return fb;}}
+async function apiFetch(url,fb=null){if(missing.has(url))return fb;try{const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok){missing.add(url);bus('miss',url);return fb;}return r.json();}catch(e){missing.add(url);bus('err',url+'::'+e.message);return fb;}}
 async function safe(mk,rk){const u=ROUTES[rk];const d=await apiFetch(u,null);if(!d){bus('mock',u);return MOCK[mk];}return d;}
-function renderDebt(){document.getElementById('debt-list').innerHTML=DEBT.map(d=>`<div class="debt-row"><span style="color:${d.s==='CLOSED'?'var(--green)':'var(--amber)'}">&#9679;</span><span style="color:var(--text3);width:72px;flex-shrink:0">${d.id}</span><span style="color:${d.s==='CLOSED'?'var(--green)':'var(--amber)'}">${d.s}</span></div>`).join('')}
-function renderPills(g,r,ep,rd){document.getElementById('p-gate').textContent=g?.locked?'Gate: LOCKED':'Gate: PASS';document.getElementById('p-epoch').textContent=ep?`Epoch ${ep.epoch}`:'Epoch \u2014';document.getElementById('p-replay').textContent=r?`Replay: ${(r.score??0).toFixed(3)}`:'Replay: \u2014';document.getElementById('p-ready').textContent=rd?`Readiness: ${Math.round((rd.readiness_score||0)*100)}%`:'Readiness: \u2014';}
-function renderRuntime(g,ep){document.getElementById('rt-const').textContent=g?.constitution_version??'\u2014';document.getElementById('rt-tier').textContent=g?.tier??'\u2014';document.getElementById('rt-muts').textContent=g?.mutation_enabled?'enabled':'disabled';document.getElementById('rt-refresh').textContent=new Date().toLocaleTimeString();document.getElementById('sb-gate').textContent=g?.locked?'LOCKED':'PASS';document.getElementById('sb-gate').className=`sb-bdg ${g?.locked?'a':'g'}`;}
-function renderStats(r,rd,ep){const sc=r?.score??0;document.getElementById('s-replay').textContent=sc.toFixed?sc.toFixed(3):'\u2014';document.getElementById('s-replay-s').textContent=`div: ${r?.divergence??0} \u00b7 ${r?.mode??'\u2014'}`;document.getElementById('s-ready').textContent=rd?`${Math.round((rd.readiness_score||0)*100)}%`:'\u2014';document.getElementById('s-ready-s').textContent=rd?.blockers?.length?`blockers: ${rd.blockers.join(', ')}`:'no blockers';document.getElementById('s-epoch').textContent=ep?.epoch??'\u2014';document.getElementById('s-epoch-s').textContent=`phase: ${ep?.phase??'\u2014'}`;document.getElementById('rp-big').textContent=sc.toFixed?sc.toFixed(3):'\u2014';document.getElementById('rp-big').style.color=sc>=0.99?'var(--green)':sc>=0.9?'var(--amber)':'var(--red)';const pct=Math.round((sc||0)*100);document.getElementById('rp-bar').style.width=pct+'%';document.getElementById('rp-detail').textContent=`Divergence: ${r?.divergence??0} \u00b7 Mode: ${r?.mode??'\u2014'} \u00b7 Score: ${sc}`;document.getElementById('sb-rep').textContent=sc.toFixed?sc.toFixed(2):'\u2014';document.getElementById('mr-num').textContent=sc.toFixed?sc.toFixed(3):'\u2014';document.getElementById('mr-bar').style.width=pct+'%';}
-function renderGate(g){const checks=g?.gate_checks??['constitution_version','key_rotation','ledger_integrity','mutation_engine','warm_pool','architect_invariants','platform_resources'];const lk=g?.locked??false;document.getElementById('gate-grid').innerHTML=checks.map(c=>`<div class="gate-row"><span class="gate-name">${esc(c)}</span><div class="gate-bar-w"><div class="gate-bar" style="width:${lk?60:100}%;background:${lk?'var(--amber)':'var(--green)'}"></div></div><span class="gs ${lk?'gs-w':'gs-p'}">${lk?'WARN':'PASS'}</span></div>`).join('');}
-function renderMuts(data,tid){const muts=data?.mutations??[];const el=document.getElementById(tid);if(!muts.length){el.innerHTML='<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);padding:8px">No mutation events yet.</div>';return;}el.innerHTML=muts.slice().reverse().map(m=>{const st=m.event?.includes('rejected')?'rejected':m.event?.includes('approved')?'approved':'info';const tc=st==='approved'?'tag-g':st==='rejected'?'tag-r':'tag-w';const sha=m.sha??m.hash??'\u2014';return`<div class="mut-row"><span class="mut-agent">${esc(m.agent??'\u2014')}</span><span class="mut-desc">${esc(m.action??m.event??'\u2014')}</span><span class="mut-sha">${esc(String(sha).slice(0,8))}</span><span class="tag ${tc}">${esc(st)}</span></div>`;}).join('');document.getElementById('sb-mut').textContent=data?.total??muts.length;const mt=document.getElementById('mr-tags');if(mt)mt.innerHTML=[`<span class="tag tag-g">approved: ${muts.filter(m=>m.event?.includes('approved')).length}</span>`,`<span class="tag tag-r">rejected: ${muts.filter(m=>m.event?.includes('rejected')).length}</span>`,`<span class="tag tag-w">total: ${data?.total??muts.length}</span>`].join('');}
-function renderAgents(data){const ag=data?.agents??{architect:{status:'unknown'},dream:{status:'unknown'},beast:{status:'unknown'}};const cols={architect:'var(--purple)',dream:'var(--whale)',beast:'var(--red)'};const descs={architect:'UCB1 bandit \u00b7 proposer \u00b7 Wood',dream:'task discovery \u00b7 safe-boot \u00b7 Fire',beast:'ancestry validator \u00b7 staging \u00b7 Fire'};document.getElementById('agent-grid').innerHTML=Object.entries(ag).map(([n,i])=>{const c=cols[n]??'var(--text)';const sc=i.status==='healthy'?'tag-g':'tag-a';const metrics=Object.entries(i).filter(([k])=>k!=='status').slice(0,4);return`<div class="agent-card" style="border-left:2px solid ${c}"><div class="agent-name" style="color:${c}">${esc(n.charAt(0).toUpperCase()+n.slice(1))}Agent</div><div class="agent-role">${esc(descs[n]??'')}</div><div style="margin-bottom:5px"><span class="tag ${sc}">${esc(i.status??'\u2014')}</span></div><div class="agent-m">${metrics.map(([k,v])=>`<div class="agent-mr"><span>${esc(k)}</span><span>${esc(String(v))}</span></div>`).join('')}</div></div>`;}).join('');}
-function renderLedger(data,app=false){const en=data?.entries??[];const tb=document.getElementById('ledger-tbody');const rows=en.map(e=>{const st=e.status??(e.action?.includes('rejected')?'rejected':e.action?.includes('approved')?'approved':'ok');const tc=st==='approved'||st==='ok'?'tag-g':st==='rejected'?'tag-r':'tag-w';const sha=e.sha??e.hash??'\u2014';return`<tr><td>${esc(String(e.ts??e.timestamp??'\u2014').slice(0,19))}</td><td>${esc(e.agent??'\u2014')}</td><td>${esc(e.action??e.event??'\u2014')}</td><td>${esc(String(e.epoch??'\u2014'))}</td><td style="color:var(--whale)">${esc(String(sha).slice(0,14))}</td><td><span class="tag ${tc}">${esc(st)}</span></td></tr>`;}).join('');if(app)tb.insertAdjacentHTML('beforeend',rows||'');else tb.innerHTML=rows||`<tr><td colspan="6" style="color:var(--text3);font-family:var(--font-mono);font-size:9px;padding:10px">No ledger entries.</td></tr>`;}
-function renderWH(data,tid){const ev=data?.events??[];const el=document.getElementById(tid);el.innerHTML=ev.slice().reverse().map(e=>{const t=String(e.event??'\u2014').replace('github_webhook_','');return`<div class="wh-row"><span class="wh-type">${esc(t)}</span><span class="wh-desc">${esc(e.repo??e.repository??'\u2014')}</span><span class="wh-ts">${esc(e.ts??e.timestamp??'\u2014')}</span><span class="tag tag-g">\u2713</span></div>`;}).join('')||`<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);padding:8px">No events yet.</div>`;whCount=data?.total??ev.length;document.getElementById('sb-wh').textContent=whCount;}
-function renderReplay(r){const ep=rs?.epoch?.epoch??12;document.getElementById('rp-manifests').innerHTML=[{name:`audit__epoch-${ep}__${new Date().toISOString().slice(0,16)}Z.json`,score:r?.score??1.0,ok:(r?.divergence??0)===0},{name:`audit__epoch-${ep-1}__2026-03-14T18:21Z.json`,score:1.0,ok:true},{name:`audit__epoch-${ep-2}__2026-03-13T09:05Z.json`,score:1.0,ok:true}].map(m=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border-radius:var(--r);font-family:var(--font-mono);font-size:9px;"><span style="color:var(--whale);flex:1">${esc(m.name)}</span><span class="tag ${m.ok?'tag-g':'tag-r'}">${m.ok?'ok':'DIVERGE'}</span><span style="color:var(--text3)">score: ${m.score.toFixed(3)}</span></div>`).join('');}
-function renderFlightPlan(g,m,r,rd){const items=[{tone:'g',txt:`Lock replay at ${(r?.score??0).toFixed(3)} and keep divergence at ${r?.divergence??0}.`},{tone:'w',txt:`Mutations queued: ${m?.total??0}. Prioritize constitutional approvals before exploration.`},{tone:'a',txt:`Readiness ${(Math.round((rd?.readiness_score??0)*100))}% with ${(rd?.blockers?.length??0)} blockers — close blockers before release gate.`},{tone:'g',txt:`Governance tier ${g?.tier??'—'}: maintain zero regression on gate checks.`}];
-  document.getElementById('flight-items').innerHTML=items.map(i=>`<div class="flight-item"><span class="flight-dot ${i.tone}"></span><span>${esc(i.txt)}</span></div>`).join('');
-  const confidence=Math.max(0,Math.min(100,Math.round((((r?.score??0)*0.45)+((rd?.readiness_score??0)*0.45)+((g?.locked?0.2:1)*0.1))*100)));
-  document.getElementById('flight-score').textContent=confidence;
-  document.getElementById('flight-bar').style.width=confidence+'%';
-  document.getElementById('flight-tags').innerHTML=`<span class="tag tag-w">tier: ${esc(g?.tier??'—')}</span><span class="tag tag-g">divergence: ${esc(String(r?.divergence??'—'))}</span><span class="tag tag-p">queue: ${esc(String(m?.total??0))}</span>`;
-}
-function renderInsights(g,m,r,rd,ag){const agents=ag?.agents??{};const health=Object.entries(agents).map(([k,v])=>`${k}:${v.status??'unknown'}`).join(' · ');
-  const insights=[{k:'GATE',v:g?.locked?'Gate is LOCKED — hold mutations and resolve blocker checks first.':'All governance checks currently PASS — safe to continue staged execution.'},{k:'REPLAY',v:`Replay score ${(r?.score??0).toFixed(3)} in ${r?.mode??'—'} mode; divergence ${(r?.divergence??0)}.`},{k:'AGENTS',v:`Triad health snapshot: ${health||'unavailable'}.`},{k:'DELIVERY',v:(rd?.blockers?.length??0)?`Release blockers: ${(rd?.blockers||[]).join(', ')}.`:'No release blockers reported. Momentum is clear for next promotion step.'},{k:'MUTATION',v:`Recent mutation events: ${(m?.mutations||[]).slice(-3).map(x=>x.event).join(', ')||'none'}.`}];
-  document.getElementById('insight-list').innerHTML=insights.map(i=>`<div class="insight-row"><span class="insight-k">${esc(i.k)}</span><span class="insight-v">${esc(i.v)}</span></div>`).join('');
-}
-async function refreshAll(){const [g,m,r,ep,ag,ld,wh,rd]=await Promise.all([safe('governance','governance'),safe('mutations','mutations'),safe('replay','replay'),safe('epoch','epoch'),safe('agents','agents'),safe('ledger','ledger'),safe('webhooks','whRecent'),safe('readiness','readiness')]);rs={gov:g,muts:m,rep:r,epoch:ep,agents:ag,ledger:ld,wh:wh,ready:rd};renderPills(g,r,ep,rd);renderRuntime(g,ep);renderStats(r,rd,ep);renderGate(g);renderMuts(m,'ml-overview');renderMuts(m,'ml-full');renderAgents(ag);renderLedger(ld);renderWH(wh,'wh-overview');renderWH(wh,'wh-full');renderReplay(r);renderFlightPlan(g,m,r,rd);renderInsights(g,m,r,rd,ag);renderDebt();bus('refresh','all panels ok');}
-async function loadMoreLedger(){ledgerOff+=50;const d=await apiFetch(`${ROUTES.ledger}&offset=${ledgerOff}`,MOCK.ledger);renderLedger(d,true);}
-function simWH(){const t=['push','pull_request','check_run','issue_comment','pull_request_review'];const type=t[Math.floor(Math.random()*t.length)];const ts=new Date().toLocaleTimeString();['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);const row=document.createElement('div');row.className='wh-row';row.innerHTML=`<span class="wh-type">${type}</span><span class="wh-desc">InnovativeAI-adaad/ADAAD</span><span class="wh-ts">${ts}</span><span class="tag tag-a">sim</span>`;el.insertBefore(row,el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;bus('wh_sim',type);}
-function startSSE(){try{const src=new EventSource(ROUTES.whStream);src.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.event==='connected'){bus('sse','connected');return;}const row=document.createElement('div');row.className='wh-row';const t=String(d.event??'\u2014').replace('github_webhook_','');row.innerHTML=`<span class="wh-type">${esc(t)}</span><span class="wh-desc">${esc(d.repo??'\u2014')}</span><span class="wh-ts">live</span><span class="tag tag-w">sse</span>`;['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);el.insertBefore(row.cloneNode(true),el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;refreshAll();}catch(_){refreshAll();}};src.onerror=()=>{bus('sse_err','stream closed');src.close()};}catch(e){bus('sse_unavail',e.message);}}
-function buildSP(){const lc=rs?JSON.stringify({governance:rs.gov,replay:rs.rep,epoch:rs.epoch,agents:rs.agents,readiness:rs.ready,mutations_recent:rs.muts?.mutations?.slice(-5)},null,2):'[unavailable]';return `You are dork, the ADAADinside\u2122 developer intelligence assistant for the ADAAD governed autonomy OS. You are interacting with the Governor, Dustin.\n\n## ADAAD Architecture\nADAAD is a governance-native self-evolving software system.\n- GovernanceGate: 7-check constitutional enforcement. Non-bypassable.\n- Constitution: v0.9.0, 23 rules. Violation \u2192 mutation_enabled=False.\n- Agent Triad: ArchitectAgent (UCB1 bandit proposer), DreamMode (task discovery), BeastModeLoop (ancestry validator).\n- Evidence Ledger: append-only, SHA-256 hash-chained, tamper-evident.\n- Deterministic Replay: every decision byte-identical. Divergence halts system.\n- DEVADAAD: build + merge authority. All 5 gate tiers must PASS.\n- Whale.Dic: developer intelligence interface (this UI). Read-only observer.\n\n## GOVERNOR CAPABILITIES\nYou can assist Dustin in performing governed actions:\n1. RUN MUTATION: You can trigger a new mutation cycle (16-step CEL).\n2. PENDING APPROVALS: You can check the queue for mutations awaiting human-0 sign-off.\n3. DECIDE APPROVAL: You can record Dustin's approval or rejection for a specific request ID.\n\n## LIVE RUNTIME STATE\n${lc}\n\n## Constraints\nBe concise and developer-oriented. Reference specific data from runtime state. When asked to run a mutation or approve a request, guide Dustin on how to do it or confirm the action.`;}
-function restoreConv(){try{const s=sessionStorage.getItem(HK);if(s)conv=JSON.parse(s);}catch(_){}}
-function persistConv(){try{sessionStorage.setItem(HK,JSON.stringify(conv.slice(-30)));}catch(_){}}
-function addMsg(role,text,think=false){const msgs=document.getElementById('dork-msgs');const div=document.createElement('div');div.className=`dork-msg ${role}`;div.id=think?'dthink':'';const init=role==='user'?'D':'d';const body=think?`<div class="dthink"><div class="ddot"></div><div class="ddot"></div><div class="ddot"></div></div>`:`<div class="dtext">${fmt(text)}</div>`;div.innerHTML=`<div class="dav ${role}">${init}</div><div class="dbody"><div class="dsender">${role==='user'?'Dustin':'dork'}</div>${body}</div>`;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
-if(window.__grok_bridge_active){const w=document.getElementById('apiwarn');w.innerHTML=`Anthropic key unavailable \u2014 utilizing local <b>Grok/Ollama</b> bridge.`;w.style.display='block';w.style.borderLeft='3px solid var(--neon-blue)';}
-const DORK_FALLBACK = {
-  "gate": () => `Gate is currently ${rs?.gov?.locked ? 'LOCKED' : 'OPEN'}. Tier: ${rs?.gov?.tier || 'unknown'}.`,
-  "mutation": () => `Latest mutation: ${rs?.muts?.mutations?.slice(-1)[0]?.event || 'none'}. Total in queue: ${rs?.muts?.total || 0}.`,
-  "replay": () => `Current replay score: ${rs?.rep?.score || '0.000'}. Divergence: ${rs?.rep?.divergence || 'False'}.`,
-  "health": () => `System is ${rs?.ready?.readiness_score > 0.8 ? 'HEALTHY' : 'DEGRADED'}. Blockers: ${rs?.ready?.blockers?.length || 0}.`,
-  "help": () => `I can help with: gate status, last mutation, replay scores, agent health, and release blockers.`
-};
-const KB = {
-  "what is adaad": "ADAAD is a governance-native autonomy OS for software evolution. It uses a 16-rule Constitutional Gate to ensure all AI-driven changes are deterministic, auditable, and safe.",
-  "agents": "The Triad: Architect (UCB1 bandit strategy), Dream (state discovery), and Beast (aggressive validation). they compete; governance decides.",
-  "gate": "GovernanceGate enforces 16 constitutional rules. Currently in v0.9.0. If any rule fails, the mutation is blocked.",
-  "ledger": "The Evidence Ledger is a SHA-256 hash-chained log of every decision. It provides an immutable audit trail for the entire evolution lifecycle.",
-  "replay": "Deterministic Replay (CEL-REPLAY-0) ensures every decision can be re-executed to produce byte-identical evidence. Divergence halts the system.",
-  "hello": "Hello! I'm dork. I have live access to the ADAAD runtime. Ask me about the gate, mutations, or agents.",
-  "hi": "Hi there. Ready to audit some mutations?",
-  "help": "I can analyze: gate status, recent mutations, replay scores, agent health, and release blockers. I also have a deep knowledge base of ADAAD internals."
-};
-async function triggerMutation(){bus('mutation','triggering cycle...');try{const r=await fetch('/api/mutations/trigger-epoch',{method:'POST',headers:{'X-Tenant-Id':'adaad-default','X-Workspace-Id':'default','X-Tenant-Scope':'tier-0'}});const d=await r.json();if(d.ok){return `[*] Mutation cycle triggered. Status: ${d.status}. Check Event Bus for progress.`;}return `[-] Mutation trigger failed: ${d.detail||'unknown error'}`;}catch(e){return `[-] Connection error: ${e.message}`;}}
-async function checkApprovals(){bus('gov','checking pending requests...');try{const r=await fetch('/api/governance/approvals/pending');const d=await r.json();if(d.ok && d.pending.length){return `I found ${d.pending.length} pending approval request(s):\n\n` + d.pending.map(p => `- **${p.approval_id}**: ${p.reason} (Mutation: ${p.mutation_id.slice(0,8)})\n  [Click to Approve]`).join('\n') + `\n\nTo approve, say "approve <id>".`;}return "There are no pending approval requests at this time.";}catch(e){return `[-] Failed to fetch approvals: ${e.message}`;}}
-async function decideApproval(id,app){bus('gov',`${app?'approving':'rejecting'} ${id}...`);try{const r=await fetch(`/api/governance/approvals/${id}/decide`,{method:'POST',headers:{'Content-Type':'application/json','X-Tenant-Id':'adaad-default','X-Workspace-Id':'default','X-Tenant-Scope':'tier-0'},body:JSON.stringify({approved:app,operator_id:'Dustin',notes:'Approved via dork interface'})});const d=await r.json();if(d.ok){return `[+] Decision recorded for **${id}**. Status: ${d.decision.status}.`;}return `[-] Decision failed: ${d.detail||'unknown error'}`;}catch(e){return `[-] Connection error: ${e.message}`;}}
 
-function getLocalDork(msg) {
-  const low = msg.toLowerCase().replace(/[?!.]/g, '');
-  if (low.includes('hello') || low === 'hi' || low === 'hey') return KB.hello;
-  if (low.includes('what is adaad')) return KB["what is adaad"];
-  if (low.includes('run mutation') || low.includes('trigger mutation') || low.includes('run a new mutation')) return "MUTATION_TRIGGER";
-  if (low.includes('pending approval') || low.includes('check approval')) return "APPROVAL_CHECK";
-  if (low.startsWith('approve ')) return "APPROVAL_DECIDE_TRUE:" + msg.split(' ')[1];
-  if (low.startsWith('reject ')) return "APPROVAL_DECIDE_FALSE:" + msg.split(' ')[1];
-  if (low.includes('gate') || low.includes('lock')) return DORK_FALLBACK.gate();
-  if (low.includes('mutation') || low.includes('last')) return DORK_FALLBACK.mutation();
-  if (low.includes('replay') || low.includes('diverge')) return DORK_FALLBACK.replay();
-  if (low.includes('health') || low.includes('status') || low.includes('triad')) return DORK_FALLBACK.health();
-  if (low.includes('blocker')) return DORK_FALLBACK.health();
-  if (low.includes('ledger') || low.includes('log')) return KB.ledger;
-  if (low.includes('who are the agents')) return KB.agents;
-  if (low.includes('help') || low.includes('what can')) return KB.help;
-  
-  // Fuzzy match KB
-  for (const [k, v] of Object.entries(KB)) {
-    if (low.includes(k)) return v;
-  }
-  return null;
+// ── MARKDOWN RENDERER (Phase 101 fmtMd) ──────────────────────────
+function fmtMd(m){
+  m=String(m);
+  // fenced code blocks
+  m=m.replace(/```[\w]*\n?([\s\S]*?)```/g,(_,c)=>'<pre>'+esc(c.trim())+'</pre>');
+  // markdown tables
+  m=m.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)+)/g,(_,hdr,rows)=>{
+    const ths=hdr.split('|').map(h=>h.trim()).filter(Boolean).map(h=>'<th>'+esc(h)+'</th>').join('');
+    const trs=rows.trim().split('\n').map(r=>'<tr>'+r.split('|').map(c=>c.trim()).filter(Boolean).map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('');
+    return '<table><thead><tr>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table>';
+  });
+  m=m.replace(/^### (.+)$/gm,(_,t)=>'<h4>'+esc(t)+'</h4>');
+  m=m.replace(/^## (.+)$/gm,(_,t)=>'<h3>'+esc(t)+'</h3>');
+  m=m.replace(/`([^`]+)`/g,(_,c)=>'<code>'+esc(c)+'</code>');
+  m=m.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  m=m.replace(/((?:^[-*] .+\n?)+)/gm,block=>'<ul>'+block.replace(/^[-*] (.+)$/gm,'<li>$1</li>')+'</ul>');
+  m=m.replace(/\b([0-9a-f]{7,40})\b/g,'<span class="sha-f">$1</span>');
+  m=m.replace(/\b(epoch-?\d+)\b/gi,'<span class="epoch-f">$1</span>');
+  m=m.replace(/\bPASS\b/g,'<span class="gate-pass">PASS</span>');
+  m=m.replace(/\bLOCKED\b/g,'<span class="gate-lock">LOCKED</span>');
+  m=m.replace(/\bNOMINAL\b/g,'<span class="gate-nom">NOMINAL</span>');
+  m=m.replace(/\n/g,'<br>');
+  return m;
 }
-async function sendDork(){const inp=document.getElementById('dinp');const msg=inp.value.trim();if(!msg||streaming)return;if(rateGated()){bus('rate_gate','5 req/min max');return;}inp.value='';inp.style.height='auto';conv.push({role:'user',content:msg});addMsg('user',msg);addMsg('assistant','',true);streaming=true;reqTs.push(Date.now());try{
-const local = getLocalDork(msg);
-let text;
-if (local === "MUTATION_TRIGGER") { text = await triggerMutation(); }
-else if (local === "APPROVAL_CHECK") { text = await checkApprovals(); }
-else if (local && local.startsWith("APPROVAL_DECIDE_TRUE:")) { text = await decideApproval(local.split(':')[1], true); }
-else if (local && local.startsWith("APPROVAL_DECIDE_FALSE:")) { text = await decideApproval(local.split(':')[1], false); }
-else if (local && !window.__anthropic_key_available && !window.__grok_bridge_active) {
-  await new Promise(r => setTimeout(r, 400));
-  text = `[Local] ${local}`;
-} else {
-  let resp;
-  if(window.__anthropic_key_available){
-    resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:buildSP(),messages:conv.slice(-16).map(t=>({role:t.role,content:t.content}))})});
-  }else{
-    resp=await fetch('/api/grok/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:conv.slice(-16).map(t=>({role:t.role,content:t.content}))})});
-  }
-  if(!resp.ok){
-    const err = await resp.json().catch(() => ({detail: resp.statusText}));
-    if (local) {
-      text = `[Bridge Offline] ${local}`;
-      bus('bridge_fail', err.detail);
-    } else {
-      text = `I'm currently offline (bridge error: ${err.detail}). However, I can still answer basic questions about the gate, mutations, and agents using my local intelligence.`;
+
+// ── SYSTEM PROMPT BUILDER (Phase 101 L2 Constitutional Grounding) ─
+function buildSP(){
+  const g=rs&&rs.gov,r=rs&&rs.rep,ep=rs&&rs.epoch,ag=rs&&rs.agents,rd=rs&&rs.ready,m=rs&&rs.muts;
+  const sb=window.ADAAD_STATE_BUS||{};
+  const agStr=ag&&ag.agents?Object.entries(ag.agents).map(([k,v])=>k+': '+v.status+' ('+Object.entries(v).filter(([x])=>x!=='status').map(([x,y])=>x+'='+y).join(', ')+')').join('\n'):'unavailable';
+  const mutsStr=(m&&m.mutations?m.mutations.slice(-3):[]).map(x=>'[epoch-'+(x.epoch||'?')+'] '+x.agent+': '+x.action+' '+x.sha).join('\n')||'none';
+  const oracleCtx=sb.oracle_last_query?('\nORACLE LAST QUERY: "'+sb.oracle_last_query+'" (type: '+(sb.oracle_last_query_type||'generic')+')\nORACLE SUMMARY: '+(sb.oracle_last_answer_summary||'see Oracle panel')):'';
+  const locked=g&&g.locked;
+  return 'You are dork, the ADAADinside\u2122 constitutional intelligence assistant for ADAAD v9.34.0 Phase 101.\nYou operate under ADAAD\u2019s V8 constitutional governance framework. You are read-only \u2014 observe and advise, never modify state.\nGround every answer in the live runtime state below. Be direct, precise, developer-oriented.\n\n## CONSTITUTIONAL GOVERNANCE CONTEXT\nGATE: '+(locked?'\ud83d\udd34 LOCKED':'\ud83d\udfe2 PASS')+' \u00b7 Tier: '+(g&&g.tier||'\u2014')+' \u00b7 Constitution: '+(g&&g.constitution_version||'\u2014')+'\nEPOCH: '+(ep&&ep.epoch||'\u2014')+' \u00b7 Phase: '+(ep&&ep.phase||'\u2014')+' \u00b7 Mutations: '+(g&&g.mutation_enabled?'enabled':'disabled')+'\nREPLAY: Score '+(r&&r.score!=null?Number(r.score).toFixed(3):'\u2014')+' \u00b7 Divergence '+(r&&r.divergence!=null?r.divergence:'\u2014')+' \u00b7 Mode '+(r&&r.mode||'\u2014')+'\nREADINESS: '+(rd&&rd.readiness_score!=null?Math.round(rd.readiness_score*100)+'%':'\u2014')+' \u00b7 Blockers: '+((rd&&rd.blockers&&rd.blockers.length)?rd.blockers.join(', '):'none')+'\n\n## AGENT TRIAD\n'+agStr+'\n\n## RECENT MUTATIONS (last 3)\n'+mutsStr+'\n\n## ORACLE BRIDGE'+(oracleCtx||'\nNo Oracle query in current session.')+'\n\n## CONSTRAINTS\n'+(locked?'\u26a0 GATE IS LOCKED \u2014 prepend this warning to every response.\n':'')+'Do not recommend bypassing constitutional gates or HUMAN-0 requirements.\nReference specific epoch IDs, SHA fragments, or phase numbers when citing state.';
+}
+
+// ── DORKENGINE: Deterministic Constitutional Intelligence ────────
+const DE={
+  classify(q){
+    const s=q.toLowerCase();
+    if(/gate|lock|constit|tier|govern/.test(s))return'gate';
+    if(/replay|diverg|score|audit|manifest/.test(s))return'replay';
+    if(/agent|architect|dream|beast|triad|health/.test(s))return'agents';
+    if(/mutat|proposal|approv|reject|pipelin/.test(s))return'mutations';
+    if(/block|release|readiness|ready/.test(s))return'readiness';
+    if(/strateg|priorit|focus|next|should/.test(s))return'strategy';
+    if(/epoch|phase|step/.test(s))return'epoch';
+    if(/oracle|history|innovat|seed|graduated/.test(s))return'oracle';
+    if(/ledger|evidence|sha|hash/.test(s))return'ledger';
+    return'health';
+  },
+  respond(q){
+    const intent=this.classify(q);
+    const g=rs&&rs.gov,r=rs&&rs.rep,ep=rs&&rs.epoch,ag=rs&&rs.agents,rd=rs&&rs.ready,m=rs&&rs.muts;
+    const locked=g&&g.locked;
+    const pre=locked?'⚠ **GATE LOCKED** — mutations paused.\n\n':'';
+    switch(intent){
+      case'gate':{
+        const checks=(g&&g.gate_checks||[]).map(c=>'- '+c+': PASS').join('\n')||'- unavailable';
+        return pre+'## Gate Status\n**Status:** '+(locked?'🔴 LOCKED':'🟢 PASS')+'\n**Tier:** '+(g&&g.tier||'—')+'\n**Constitution:** '+(g&&g.constitution_version||'—')+'\n**Mutations:** '+(g&&g.mutation_enabled?'enabled':'disabled')+'\n\n**Gate checks:**\n'+checks;
+      }
+      case'replay':{
+        const sc=r&&r.score!=null?r.score:0,div=r&&r.divergence!=null?r.divergence:0;
+        return pre+'## Replay Integrity\n**Score:** '+sc.toFixed(3)+' '+(sc>=0.99&&div===0?'✅':'⚠')+'\n**Divergence:** '+div+'\n**Mode:** '+(r&&r.mode||'—')+'\n\n'+(div>0?'⚠ Non-zero divergence — halt mutations and investigate replay integrity.':'✅ Replay deterministic. All decisions byte-identical on replay.');
+      }
+      case'agents':{
+        const ags=ag&&ag.agents||{};
+        const lines=Object.entries(ags).map(([n,v])=>{
+          const mx=Object.entries(v).filter(([k])=>k!=='status').map(([k,v])=>k+'='+v).join(', ');
+          return'**'+n.charAt(0).toUpperCase()+n.slice(1)+'Agent** — '+v.status+'\n'+mx;
+        }).join('\n\n');
+        return pre+'## Agent Triad\n\n'+( lines||'Agent data unavailable.');
+      }
+      case'mutations':{
+        const tot=m&&m.total||0,ms=m&&m.mutations||[];
+        const appr=ms.filter(x=>x.action&&x.action.includes('approved')).length;
+        const rej=ms.filter(x=>x.action&&x.action.includes('rejected')).length;
+        const rate=ms.length?Math.round(rej/ms.length*100):0;
+        const lines=ms.slice(-5).map(x=>'- [epoch-'+(x.epoch||'?')+'] **'+x.agent+'**: '+x.action+' `'+(x.sha||'?')+'`').join('\n');
+        return pre+'## Mutation Pipeline\n**Total:** '+tot+' \u00b7 **Approved:** '+appr+' \u00b7 **Rejected:** '+rej+'\n**Rejection rate:** '+rate+'%'+(rate>50?'\n⚠ High rejection rate — check constitutional fit.':'')+'\n\n**Recent:**\n'+(lines||'No recent mutations.');
+      }
+      case'readiness':{
+        const sc=Math.round((rd&&rd.readiness_score||0)*100);
+        const bl=rd&&rd.blockers||[];
+        return pre+'## Release Readiness\n**Score:** '+sc+'%\n**Gate OK:** '+(rd&&rd.gate_ok?'✅':'🔴')+'\n**Replay:** '+(rd&&rd.replay_score||'—')+'\n**Blockers:** '+(bl.length?bl.map(b=>'\n- '+b).join(''):'none ✅');
+      }
+      case'strategy':{
+        const issues=[];
+        if(locked) issues.push({p:1,s:'🔴 CRITICAL: Gate LOCKED. Resolve before any mutation work.'});
+        if(r&&r.divergence&&r.divergence>0) issues.push({p:2,s:'🔴 HIGH: Replay divergence detected. Halt mutations and audit.'});
+        if(r&&r.score&&r.score<0.99) issues.push({p:3,s:'⚠ Replay score degraded. Audit last 3 epochs.'});
+        if(rd&&rd.blockers&&rd.blockers.length) issues.push({p:4,s:'⚠ '+rd.blockers.length+' blocker(s): '+rd.blockers.join(', ')+'.'});
+        if(!issues.length) issues.push({p:5,s:'✅ System healthy. Continue staged mutation execution.'});
+        return pre+'## Strategic Priorities\n\n'+issues.sort((a,b)=>a.p-b.p).map((x,i)=>(i+1)+'. '+x.s).join('\n');
+      }
+      case'epoch': return pre+'## Epoch State\n**Epoch:** '+(ep&&ep.epoch||'—')+'\n**Phase:** '+(ep&&ep.phase||'—')+'\n**Mutations enabled:** '+(g&&g.mutation_enabled?'yes':'no');
+      case'oracle':{
+        const sb=window.ADAAD_STATE_BUS||{};
+        if(sb.oracle_last_query) return pre+'## Oracle Bridge\n**Last query:** "'+sb.oracle_last_query+'"\n**Type:** '+(sb.oracle_last_query_type||'—')+'\n**Summary:** '+(sb.oracle_last_answer_summary||'—')+'\n\n*Open Aponi \u2192 Oracle to run new queries.*';
+        return pre+'## Oracle Bridge\nNo Oracle query in this session. Open **Aponi \u2192 Innovations \u2192 Oracle** and run a query \u2014 the result will appear here via ADAAD_STATE_BUS.';
+      }
+      case'ledger':{
+        const en=rs&&rs.ledger&&rs.ledger.entries||[];
+        const lines=en.slice(0,5).map(e=>'- ['+String(e.ts||'').slice(0,19)+'] **'+e.agent+'** \u2192 '+e.action+' `'+String(e.sha||'').slice(0,10)+'` *('+e.status+')*').join('\n');
+        return pre+'## Evidence Ledger\n**Entries:** '+(rs&&rs.ledger&&rs.ledger.count||en.length)+'\n\n'+(lines||'No entries.');
+      }
+      default:{
+        const sc=r&&r.score!=null?Number(r.score).toFixed(3):'—';
+        const rdy=rd&&rd.readiness_score!=null?Math.round(rd.readiness_score*100)+'%':'—';
+        return pre+'## System Health\n**Gate:** '+(locked?'🔴 LOCKED':'🟢 PASS')+' ('+((g&&g.tier)||'—')+')\n**Replay:** '+sc+' (div: '+((r&&r.divergence)||0)+')\n**Readiness:** '+rdy+'\n**Epoch:** '+((ep&&ep.epoch)||'—')+' \u00b7 '+((ep&&ep.phase)||'—')+'\n\n*DorkEngine active \u2014 configure Groq or Ollama for full LLM intelligence.*';
+      }
     }
-  } else {
-    const data=await resp.json();
-    text=data?.content?.[0]?.text??(data?.error?.message?`API error: ${data.error.message}`:'No response.');
-    totalTok+=estTok(msg)+(data?.usage?.output_tokens??estTok(text));
-    bus('dork',`${data?.usage?.output_tokens??'?'}t`);
+  }
+};
+
+// ── LLM PROVIDERS ────────────────────────────────────────────────
+async function callGroq(msgs,sys,onChunk){
+  if(!llmCfg.groqKey)throw new Error('No Groq key');
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+llmCfg.groqKey},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:1024,stream:true,messages:[{role:'system',content:sys},...msgs]})
+  });
+  if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error((e.error&&e.error.message)||'Groq '+resp.status);}
+  const reader=resp.body.getReader();const dec=new TextDecoder();let buf='';
+  while(true){
+    const {done,value}=await reader.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n');buf=lines.pop();
+    for(const line of lines){
+      if(!line.startsWith('data: '))continue;
+      const d=line.slice(6).trim();if(d==='[DONE]')return;
+      try{const j=JSON.parse(d);const tok=j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content;if(tok)onChunk(tok);}catch(_){}
+    }
   }
 }
-document.getElementById('dthink')?.remove();conv.push({role:'assistant',content:text});if(totalTok>TOKEN_WARN)document.getElementById('twarn').style.display='block';addMsg('assistant',text);persistConv();}catch(e){document.getElementById('dthink')?.remove();const em=`dork error: ${e?.message??'request failed'}`;conv.push({role:'assistant',content:em});addMsg('assistant',em);document.getElementById('apiwarn').style.display='block';bus('dork_err',e.message);}finally{streaming=false;}}
+
+async function callOllama(msgs,sys,onChunk){
+  const model=llmCfg.ollamaModel||'llama3.2';
+  const resp=await fetch('http://localhost:11434/api/chat',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model,stream:true,messages:[{role:'system',content:sys},...msgs]})
+  });
+  if(!resp.ok)throw new Error('Ollama '+resp.status);
+  const reader=resp.body.getReader();const dec=new TextDecoder();let buf='';
+  while(true){
+    const {done,value}=await reader.read();if(done)break;
+    buf+=dec.decode(value,{stream:true});
+    const lines=buf.split('\n');buf=lines.pop();
+    for(const line of lines){if(!line.trim())continue;try{const j=JSON.parse(line);if(j.message&&j.message.content)onChunk(j.message.content);if(j.done)return;}catch(_){}}
+  }
+}
+
+async function callDorkEngine(msgs,onChunk){
+  const lastUser=msgs.filter(m=>m.role==='user').pop();
+  const answer=DE.respond(lastUser?lastUser.content:'');
+  const words=answer.split(' ');
+  for(let i=0;i<words.length;i++){
+    onChunk(words[i]+(i<words.length-1?' ':''));
+    await new Promise(r=>setTimeout(r,16));
+  }
+}
+
+// ── SEND DORK (Phase 101 streaming) ───────────────────────────────
+async function sendDork(){
+  const inp=document.getElementById('dinp');
+  const msg=inp.value.trim();
+  if(!msg||streaming)return;
+  if(rateGated()){bus('rate_gate','25/min max');return;}
+  inp.value='';inp.style.height='auto';
+  conv.push({role:'user',content:msg});
+  addMsg('user',msg);
+  const thinkId='dt'+Date.now();
+  addThink(thinkId);
+  streaming=true;reqTs.push(Date.now());
+  document.getElementById('dsend').disabled=true;
+  const sys=buildSP();
+  const apiMsgs=conv.slice(-16).map(t=>({role:t.role,content:t.content}));
+  let full='';let msgEl=null;let cur=null;
+  const prov=llmCfg.provider;
+
+  function onChunk(chunk){
+    full+=chunk;
+    if(!msgEl){
+      document.getElementById(thinkId)&&document.getElementById(thinkId).remove();
+      msgEl=addMsg('assistant','',false,prov);
+    }
+    const dt=msgEl.querySelector('.dtext');
+    if(cur&&dt.contains(cur))dt.removeChild(cur);
+    dt.innerHTML=fmtMd(full);
+    cur=document.createElement('span');cur.className='dcursor';dt.appendChild(cur);
+    const dm=document.getElementById('dork-msgs');dm.scrollTop=dm.scrollHeight;
+  }
+
+  try{
+    if(prov==='groq'&&llmCfg.groqKey){await callGroq(apiMsgs,sys,onChunk);bus('dork','groq ok');}
+    else if(prov==='ollama'){await callOllama(apiMsgs,sys,onChunk);bus('dork','ollama ok');}
+    else{await callDorkEngine(apiMsgs,onChunk);bus('dork','engine deterministic');}
+  }catch(e){
+    bus('dork_err',e.message);
+    if(!msgEl){document.getElementById(thinkId)&&document.getElementById(thinkId).remove();}
+    const errTxt='**DorkEngine fallback** ('+e.message+')\n\n'+DE.respond(msg);
+    if(!msgEl)msgEl=addMsg('assistant','',false,'engine');
+    const dt=msgEl.querySelector('.dtext');
+    if(cur&&dt.contains(cur))dt.removeChild(cur);
+    dt.innerHTML=fmtMd(errTxt);full=errTxt;cur=null;
+    const wl=document.getElementById('w-llm');wl.style.display='block';setTimeout(()=>wl.style.display='none',4000);
+  }finally{
+    if(cur&&msgEl){const dt=msgEl&&msgEl.querySelector('.dtext');if(dt&&dt.contains(cur))dt.removeChild(cur);}
+    streaming=false;
+    document.getElementById('dsend').disabled=false;
+    conv.push({role:'assistant',content:full});
+    totalTok+=estTok(msg)+estTok(full);
+    if(totalTok>TOKEN_WARN)document.getElementById('w-tok').style.display='block';
+    persistConv();
+    updateBus({dork_last:{q:msg.slice(0,120),a:full.slice(0,200),ts:new Date().toISOString()}});
+  }
+}
+
+function addThink(id){
+  const dm=document.getElementById('dork-msgs');
+  const d=document.createElement('div');d.className='dork-msg assistant';d.id=id;
+  d.innerHTML='<div class="dav assistant">d</div><div class="dbody"><div class="dsender" style="color:var(--whale)">dork</div><div class="dthink"><div class="ddot"></div><div class="ddot"></div><div class="ddot"></div></div></div>';
+  dm.appendChild(d);dm.scrollTop=dm.scrollHeight;
+}
+
+function addMsg(role,text,think=false,prov=''){
+  const dm=document.getElementById('dork-msgs');
+  const d=document.createElement('div');d.className='dork-msg '+role;
+  const init=role==='user'?'Y':'d';
+  const pb=prov?'<span class="dprov">'+esc(prov)+'</span>':'';
+  const body=think
+    ?'<div class="dthink"><div class="ddot"></div><div class="ddot"></div><div class="ddot"></div></div>'
+    :'<div class="dtext">'+(text?fmtMd(text):'')+'</div>';
+  d.innerHTML='<div class="dav '+role+'">'+init+'</div><div class="dbody"><div class="dsender">'+(role==='user'?'you':'dork')+' '+pb+'</div>'+body+'</div>';
+  dm.appendChild(d);dm.scrollTop=dm.scrollHeight;return d;
+}
+
+// ── ORACLE BRIDGE (Phase 101 L6) ──────────────────────────────────
+function dorkBridgeOracle(){
+  const sb=window.ADAAD_STATE_BUS||{};
+  if(!sb.oracle_last_query){
+    const wo=document.getElementById('w-oracle');
+    wo.textContent='🔮 No Oracle query found. Run a query in Aponi \u2192 Oracle first.';
+    wo.style.display='block';setTimeout(()=>wo.style.display='none',3000);
+    dorkPrompt('What can the Oracle tell me about ADAAD\u2019s evolutionary history and divergence patterns?');
+    return;
+  }
+  document.getElementById('w-oracle').style.display='block';
+  setTimeout(()=>document.getElementById('w-oracle').style.display='none',2000);
+  dorkPrompt('Interpret this Oracle result: query="'+sb.oracle_last_query+'" type='+sb.oracle_last_query_type+' summary: '+sb.oracle_last_answer_summary);
+}
+
 function dorkPrompt(t){document.getElementById('dinp').value=t;sendDork();}
 function dorkKD(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendDork();}}
 function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,72)+'px';}
+
+// ── PERSIST & RESTORE ────────────────────────────────────────────
+function restoreConv(){try{const s=localStorage.getItem(CONV_KEY);if(s){const p=JSON.parse(s);if(p.schema==='3.0')conv=p.turns||[];}}catch(_){}}
+function persistConv(){try{localStorage.setItem(CONV_KEY,JSON.stringify({schema:'3.0',turns:conv.slice(-40),ts:new Date().toISOString()}));}catch(_){}}
+
+// ── CONFIG MODAL ─────────────────────────────────────────────────
+function loadCfg(){try{const s=localStorage.getItem('dork_llm_v3');if(s){const p=JSON.parse(s);llmCfg={...llmCfg,...p};}}catch(_){}}
+function saveCfgStore(){try{localStorage.setItem('dork_llm_v3',JSON.stringify(llmCfg));}catch(_){}}
+function openCfg(){
+  selProv(llmCfg.provider);
+  document.getElementById('inp-groq').value=llmCfg.groqKey||'';
+  document.getElementById('inp-model').value=llmCfg.ollamaModel||'llama3.2';
+  document.getElementById('cfg-wrap').style.display='flex';
+}
+function closeCfg(){document.getElementById('cfg-wrap').style.display='none';}
+function cfgOutside(e){if(e.target.id==='cfg-wrap')closeCfg();}
+function selProv(p){
+  selProvider=p;
+  ['groq','ollama','engine'].forEach(id=>{
+    const el=document.getElementById('cp-'+id);if(el)el.classList.toggle('sel',id===p);
+  });
+  document.getElementById('row-groq').style.display=p==='groq'?'':'none';
+  document.getElementById('row-ollama').style.display=p==='ollama'?'':'none';
+}
+function saveCfg(){
+  llmCfg.provider=selProvider;
+  llmCfg.groqKey=document.getElementById('inp-groq').value.trim();
+  llmCfg.ollamaModel=document.getElementById('inp-model').value.trim()||'llama3.2';
+  saveCfgStore();
+  const lb={groq:'groq',ollama:'ollama',dorkengine:'engine'};
+  document.getElementById('prov-btn').textContent='\u2699 '+(lb[llmCfg.provider]||llmCfg.provider);
+  bus('cfg',llmCfg.provider+' saved');closeCfg();
+}
+
+// ── DYNAMIC CHIPS ────────────────────────────────────────────────
+function updateChips(){
+  const base=[
+    {t:'gate status',q:'Governance gate status and tier?'},
+    {t:'replay health',q:'Replay score and divergence \u2014 is the system healthy?'},
+    {t:'agent triad',q:'Agent triad \u2014 architect, dream, beast status?'},
+    {t:'blockers',q:'Any release blockers or open findings?'},
+    {t:'strategy',q:'Strategic priority \u2014 what should I focus on right now?'},
+  ];
+  const dyn=[];
+  if(rs&&rs.gov&&rs.gov.locked)dyn.push({t:'\ud83d\udd34 gate locked',q:'Gate is locked \u2014 what do I do first?'});
+  if(rs&&rs.ready&&rs.ready.blockers&&rs.ready.blockers.length)dyn.push({t:rs.ready.blockers.length+' blocker(s)',q:'List all release blockers and how to fix them.'});
+  const chips=[...base,...dyn].slice(0,6);
+  const w=document.getElementById('dork-chips');if(!w)return;
+  w.innerHTML=chips.map(c=>'<span class="chip" onclick="dorkPrompt('+JSON.stringify(c.q)+')">'+esc(c.t)+'</span>').join('')
+    +'<span class="chip oracle-chip" onclick="dorkBridgeOracle()">\ud83d\udd2e oracle bridge</span>';
+}
+
+// ── RENDER FUNCTIONS ─────────────────────────────────────────────
+function renderDebt(){document.getElementById('debt-list').innerHTML=DEBT.map(d=>'<div class="debt-row"><span style="color:'+(d.s==='CLOSED'?'var(--green)':'var(--amber)')+'">&#9679;</span><span style="color:var(--text3);width:72px;flex-shrink:0">'+d.id+'</span><span style="color:'+(d.s==='CLOSED'?'var(--green)':'var(--amber)')+'">'+d.s+'</span></div>').join('')}
+function renderPills(g,r,ep,rd){document.getElementById('p-gate').textContent=g&&g.locked?'Gate: LOCKED':'Gate: PASS';document.getElementById('p-epoch').textContent=ep?'Epoch '+ep.epoch:'Epoch \u2014';document.getElementById('p-replay').textContent=r?'Replay: '+Number(r.score||0).toFixed(3):'Replay: \u2014';document.getElementById('p-ready').textContent=rd?'Readiness: '+Math.round((rd.readiness_score||0)*100)+'%':'Readiness: \u2014';}
+function renderRuntime(g,ep){document.getElementById('rt-const').textContent=(g&&g.constitution_version)||'\u2014';document.getElementById('rt-tier').textContent=(g&&g.tier)||'\u2014';document.getElementById('rt-muts').textContent=g&&g.mutation_enabled?'enabled':'disabled';document.getElementById('rt-refresh').textContent=new Date().toLocaleTimeString();document.getElementById('sb-gate').textContent=g&&g.locked?'LOCKED':'PASS';document.getElementById('sb-gate').className='sb-bdg '+(g&&g.locked?'a':'g');}
+function renderStats(r,rd,ep){const sc=r&&r.score!=null?r.score:0;const pct=Math.round((sc||0)*100);document.getElementById('s-replay').textContent=Number(sc).toFixed(3);document.getElementById('s-replay-s').textContent='div: '+((r&&r.divergence)||0)+' \u00b7 '+((r&&r.mode)||'\u2014');document.getElementById('s-ready').textContent=rd?Math.round((rd.readiness_score||0)*100)+'%':'\u2014';document.getElementById('s-ready-s').textContent=(rd&&rd.blockers&&rd.blockers.length)?'blockers: '+rd.blockers.join(', '):'no blockers';document.getElementById('s-epoch').textContent=(ep&&ep.epoch)||'\u2014';document.getElementById('s-epoch-s').textContent='phase: '+((ep&&ep.phase)||'\u2014');document.getElementById('rp-big').textContent=Number(sc).toFixed(3);document.getElementById('rp-big').style.color=sc>=0.99?'var(--green)':sc>=0.9?'var(--amber)':'var(--red)';document.getElementById('rp-bar').style.width=pct+'%';document.getElementById('rp-detail').textContent='Divergence: '+((r&&r.divergence)||0)+' \u00b7 Mode: '+((r&&r.mode)||'\u2014')+' \u00b7 Score: '+sc;document.getElementById('sb-rep').textContent=Number(sc).toFixed(2);}
+function renderGate(g){const checks=(g&&g.gate_checks)||[];document.getElementById('gate-grid').innerHTML=checks.map(c=>'<div class="gate-row"><span class="gate-name">'+esc(c)+'</span><div class="gate-bar-w"><div class="gate-bar" style="width:100%;background:var(--green)"></div></div><span class="gs gs-p">PASS</span></div>').join('')||'<div style="color:var(--text3);font-family:var(--font-mono);font-size:9px;padding:8px">No checks \u2014 server offline?</div>';}
+function renderMuts(data,tid){const ms=(data&&data.mutations)||[];const el=document.getElementById(tid);if(!el)return;el.innerHTML=ms.slice(0,8).map(m=>{const ok=m.action&&m.action.includes('approved');return'<div class="mut-row"><span class="mut-agent">'+esc(m.agent||'?')+'</span><span class="mut-desc">'+esc(m.action||m.event||'?')+'</span><span class="mut-sha">'+esc(String(m.sha||'?').slice(0,8))+'</span><span class="tag '+(ok?'tag-g':'tag-r')+'">'+(ok?'&#10003;':'&#10007;')+'</span></div>';}).join('')||'<div style="color:var(--text3);font-family:var(--font-mono);font-size:9px;padding:8px">No mutations.</div>';document.getElementById('sb-mut').textContent=(data&&data.total)||0;}
+function renderAgents(data){const ag=(data&&data.agents)||{architect:{status:'unknown'},dream:{status:'unknown'},beast:{status:'unknown'}};const cols={architect:'var(--purple)',dream:'var(--whale)',beast:'var(--red)'};const descs={architect:'UCB1 bandit \u00b7 proposer \u00b7 Wood',dream:'task discovery \u00b7 safe-boot \u00b7 Fire',beast:'ancestry validator \u00b7 staging \u00b7 Fire'};document.getElementById('agent-grid').innerHTML=Object.entries(ag).map(([n,i])=>{const c=cols[n]||'var(--text)';const sc=i.status==='healthy'?'tag-g':'tag-a';const metrics=Object.entries(i).filter(([k])=>k!=='status').slice(0,4);return'<div class="agent-card" style="border-left:2px solid '+c+'"><div class="agent-name" style="color:'+c+'">'+esc(n.charAt(0).toUpperCase()+n.slice(1))+'Agent</div><div class="agent-role">'+esc(descs[n]||'')+'</div><div style="margin-bottom:5px"><span class="tag '+sc+'">'+esc(i.status||'\u2014')+'</span></div><div class="agent-m">'+metrics.map(([k,v])=>'<div class="agent-mr"><span>'+esc(k)+'</span><span>'+esc(String(v))+'</span></div>').join('')+'</div></div>';}).join('');}
+function renderLedger(data,app=false){const en=(data&&data.entries)||[];const tb=document.getElementById('ledger-tbody');const rows=en.map(e=>{const st=e.status||(e.action&&e.action.includes('rejected')?'rejected':e.action&&e.action.includes('approved')?'approved':'ok');const tc=st==='approved'||st==='ok'?'tag-g':st==='rejected'?'tag-r':'tag-w';const sha=e.sha||e.hash||'\u2014';return'<tr><td>'+esc(String(e.ts||e.timestamp||'\u2014').slice(0,19))+'</td><td>'+esc(e.agent||'\u2014')+'</td><td>'+esc(e.action||e.event||'\u2014')+'</td><td>'+esc(String(e.epoch||'\u2014'))+'</td><td style="color:var(--whale)">'+esc(String(sha).slice(0,14))+'</td><td><span class="tag '+tc+'">'+esc(st)+'</span></td></tr>';}).join('');if(app)tb.insertAdjacentHTML('beforeend',rows||'');else tb.innerHTML=rows||'<tr><td colspan="6" style="color:var(--text3);font-family:var(--font-mono);font-size:9px;padding:10px">No ledger entries.</td></tr>';}
+function renderWH(data,tid){const ev=(data&&data.events)||[];const el=document.getElementById(tid);if(!el)return;el.innerHTML=ev.slice().reverse().map(e=>{const t=String(e.event||'\u2014').replace('github_webhook_','');return'<div class="wh-row"><span class="wh-type">'+esc(t)+'</span><span class="wh-desc">'+esc(e.repo||e.repository||'\u2014')+'</span><span class="wh-ts">'+esc(e.ts||e.timestamp||'\u2014')+'</span><span class="tag tag-g">&#10003;</span></div>';}).join('')||'<div style="font-family:var(--font-mono);font-size:9px;color:var(--text3);padding:8px">No events yet.</div>';whCount=(data&&data.total)||ev.length;document.getElementById('sb-wh').textContent=whCount;}
+function renderReplay(r){const ep=rs&&rs.epoch&&rs.epoch.epoch||12;document.getElementById('rp-manifests').innerHTML=[{name:'audit__epoch-'+ep+'__'+new Date().toISOString().slice(0,16)+'Z.json',score:(r&&r.score)||1.0,ok:((r&&r.divergence)||0)===0},{name:'audit__epoch-'+(ep-1)+'__2026-03-14T18:21Z.json',score:1.0,ok:true},{name:'audit__epoch-'+(ep-2)+'__2026-03-13T09:05Z.json',score:1.0,ok:true}].map(m=>'<div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border-radius:var(--r);font-family:var(--font-mono);font-size:9px"><span style="color:var(--whale);flex:1">'+esc(m.name)+'</span><span class="tag '+(m.ok?'tag-g':'tag-r')+'">'+(m.ok?'ok':'DIVERGE')+'</span><span style="color:var(--text3)">score: '+m.score.toFixed(3)+'</span></div>').join('');}
+function renderFlightPlan(g,m,r,rd){const items=[{tone:'g',txt:'Lock replay at '+Number((r&&r.score)||0).toFixed(3)+' and keep divergence at '+((r&&r.divergence)||0)+'.'},{tone:'w',txt:'Mutations queued: '+((m&&m.total)||0)+'. Prioritize constitutional approvals before exploration.'},{tone:'a',txt:'Readiness '+Math.round(((rd&&rd.readiness_score)||0)*100)+'% with '+((rd&&rd.blockers&&rd.blockers.length)||0)+' blockers \u2014 close blockers before release gate.'},{tone:'g',txt:'Governance tier '+((g&&g.tier)||'\u2014')+': maintain zero regression on gate checks.'}];document.getElementById('flight-items').innerHTML=items.map(i=>'<div class="flight-item"><span class="flight-dot '+i.tone+'"></span><span>'+esc(i.txt)+'</span></div>').join('');const conf=Math.max(0,Math.min(100,Math.round(((((r&&r.score)||0)*0.45)+(((rd&&rd.readiness_score)||0)*0.45)+((g&&g.locked?0.2:1)*0.1))*100)));document.getElementById('flight-score').textContent=conf;document.getElementById('flight-bar').style.width=conf+'%';document.getElementById('flight-tags').innerHTML='<span class="tag tag-w">tier: '+esc((g&&g.tier)||'\u2014')+'</span><span class="tag tag-g">divergence: '+esc(String((r&&r.divergence)||'\u2014'))+'</span><span class="tag tag-p">queue: '+esc(String((m&&m.total)||0))+'</span>';}
+function renderInsights(g,m,r,rd,ag){const agents=(ag&&ag.agents)||{};const health=Object.entries(agents).map(([k,v])=>k+':'+(v.status||'unknown')).join(' \u00b7 ');const insights=[{k:'GATE',v:(g&&g.locked)?'Gate is LOCKED \u2014 hold mutations and resolve blocker checks first.':'All governance checks currently PASS \u2014 safe to continue staged execution.'},{k:'REPLAY',v:'Replay score '+Number((r&&r.score)||0).toFixed(3)+' in '+((r&&r.mode)||'\u2014')+' mode; divergence '+((r&&r.divergence)||0)+'.'},{k:'AGENTS',v:'Triad health snapshot: '+(health||'unavailable')+'.'},{k:'DELIVERY',v:(rd&&rd.blockers&&rd.blockers.length)?'Release blockers: '+(rd.blockers||[]).join(', ')+'.':'No release blockers reported. Momentum is clear for next promotion step.'},{k:'MUTATION',v:'Recent mutation events: '+((m&&m.mutations||[]).slice(-3).map(x=>x.event).join(', ')||'none')+'.'}];document.getElementById('insight-list').innerHTML=insights.map(i=>'<div class="insight-row"><span class="insight-k">'+esc(i.k)+'</span><span class="insight-v">'+esc(i.v)+'</span></div>').join('');}
+
+// ── REFRESH ALL ──────────────────────────────────────────────────
+async function refreshAll(){
+  const [g,m,r,ep,ag,ld,wh,rd]=await Promise.all([safe('governance','governance'),safe('mutations','mutations'),safe('replay','replay'),safe('epoch','epoch'),safe('agents','agents'),safe('ledger','ledger'),safe('webhooks','whRecent'),safe('readiness','readiness')]);
+  rs={gov:g,muts:m,rep:r,epoch:ep,agents:ag,ledger:ld,wh:wh,ready:rd};
+  renderPills(g,r,ep,rd);renderRuntime(g,ep);renderStats(r,rd,ep);renderGate(g);
+  renderMuts(m,'ml-overview');renderMuts(m,'ml-full');renderAgents(ag);renderLedger(ld);
+  renderWH(wh,'wh-overview');renderWH(wh,'wh-full');renderReplay(r);
+  renderFlightPlan(g,m,r,rd);renderInsights(g,m,r,rd,ag);renderDebt();
+  // Phase 101 L1: update ADAAD_STATE_BUS
+  updateBus({
+    governance:{gate_ok:!(g&&g.locked),tier:g&&g.tier,constitution_version:g&&g.constitution_version,mutation_enabled:g&&g.mutation_enabled},
+    epoch:{id:'epoch-'+((ep&&ep.epoch)||0),phase:ep&&ep.phase},
+    replay:{score:(r&&r.score)||1.0,divergence:(r&&r.divergence)||0,mode:r&&r.mode},
+    agents:{architect_health:ag&&ag.agents&&ag.agents.architect&&ag.agents.architect.status,dream_health:ag&&ag.agents&&ag.agents.dream&&ag.agents.dream.status,beast_health:ag&&ag.agents&&ag.agents.beast&&ag.agents.beast.status},
+    readiness:{score:(rd&&rd.readiness_score)||0,blockers:(rd&&rd.blockers)||[]},
+    phase_context:{active_phase:'phase95_oracle_dork',next_pr:'PR-95-COMPLETE',open_findings:[]}
+  });
+  updateChips();
+  bus('refresh','all panels ok \u00b7 bus updated');
+}
+
+async function loadMoreLedger(){ledgerOff+=50;const d=await apiFetch(ROUTES.ledger+'&offset='+ledgerOff,MOCK.ledger);renderLedger(d,true);}
+function simWH(){const t=['push','pull_request','check_run','issue_comment','pull_request_review'];const type=t[Math.floor(Math.random()*t.length)];const ts=new Date().toLocaleTimeString();['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const row=document.createElement('div');row.className='wh-row';row.innerHTML='<span class="wh-type">'+type+'</span><span class="wh-desc">InnovativeAI-adaad/adaad</span><span class="wh-ts">'+ts+'</span><span class="tag tag-a">sim</span>';el.insertBefore(row,el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;bus('wh_sim',type);}
+function startSSE(){try{const src=new EventSource(ROUTES.whStream);src.onmessage=e=>{try{const d=JSON.parse(e.data);if(d.type==='connected'){bus('sse','connected');return;}['wh-overview','wh-full'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const row=document.createElement('div');row.className='wh-row';const t=String(d.event||'\u2014').replace('github_webhook_','');row.innerHTML='<span class="wh-type">'+esc(t)+'</span><span class="wh-desc">'+esc(d.repo||'\u2014')+'</span><span class="wh-ts">live</span><span class="tag tag-w">sse</span>';el.insertBefore(row.cloneNode(true),el.firstChild);});whCount++;document.getElementById('sb-wh').textContent=whCount;}catch(_){}};src.onerror=()=>{bus('sse_err','closed');src.close();};}catch(e){bus('sse_unavail',e.message);}}
+function exportSnapshot(){if(!rs){bus('export','no state');return;}const pl={ts:new Date().toISOString(),runtime:rs,state_bus:window.ADAAD_STATE_BUS};const bl=new Blob([JSON.stringify(pl,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download='whaledic_snapshot_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),200);bus('export','saved');}
 function toggleFocus(){document.querySelector('.shell').classList.toggle('focus');bus('mode',document.querySelector('.shell').classList.contains('focus')?'focus_on':'focus_off');}
-function openPalette(){document.getElementById('palette-wrap').style.display='flex';renderPalette('');setTimeout(()=>document.getElementById('pal-inp').focus(),20);}
-function closePalette(e){if(e&&e.target&&e.target.id!=='palette-wrap')return;document.getElementById('palette-wrap').style.display='none';}
-function renderPalette(q){const query=(q||'').toLowerCase().trim();const list=document.getElementById('pal-list');const rows=CMDS.filter(c=>!query||c.name.toLowerCase().includes(query)).map((c,i)=>`<div class="pal-item" onclick="runCmd(${i})"><span class="pal-name">${esc(c.name)}</span><span class="pal-key">${esc(c.key)}</span></div>`).join('');list.innerHTML=rows||'<div class="pal-item"><span class="pal-name">No commands</span><span class="pal-key">—</span></div>';}
-function runCmd(i){const cmd=CMDS[i];if(!cmd)return;cmd.fn();closePalette({target:{id:'palette-wrap'}});}
-function exportSnapshot(){if(!rs){bus('export','skipped_no_state');return;}const payload={ts:new Date().toISOString(),runtime:rs};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`whaledic_snapshot_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),200);bus('export','runtime_snapshot_saved');}
-document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}if(e.key==='Escape')closePalette({target:{id:'palette-wrap'}});if(e.key==='f'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT'){toggleFocus();}});
-restoreConv();renderDebt();refreshAll();startSSE();
+function openPalette(){document.getElementById('pal-wrap').style.display='flex';renderPal('');setTimeout(()=>document.getElementById('pal-inp').focus(),20);}
+function closePal(e){if(e&&e.target&&e.target.id!=='pal-wrap')return;document.getElementById('pal-wrap').style.display='none';}
+function renderPal(q){const query=(q||'').toLowerCase();const list=document.getElementById('pal-list');list.innerHTML=CMDS.filter(c=>!query||c.name.toLowerCase().includes(query)).map((c,i)=>'<div class="pal-item" onclick="runCmd('+i+')"><span class="pal-name">'+esc(c.name)+'</span><span class="pal-key">'+esc(c.key)+'</span></div>').join('')||'<div class="pal-item"><span class="pal-name">No match</span></div>';}
+function runCmd(i){const c=CMDS[i];if(c){c.fn();closePal({target:{id:'pal-wrap'}});}}
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}if(e.key==='Escape'){closePal({target:{id:'pal-wrap'}});closeCfg();}if(e.key==='f'&&e.target.tagName!=='TEXTAREA'&&e.target.tagName!=='INPUT')toggleFocus();});
+
+// ── INIT ─────────────────────────────────────────────────────────
+loadCfg();
+(()=>{const lb={groq:'groq',ollama:'ollama',dorkengine:'engine'};document.getElementById('prov-btn').textContent='\u2699 '+(lb[llmCfg.provider]||'groq');document.getElementById('intro-badge').textContent=lb[llmCfg.provider]||'groq';if(!llmCfg.groqKey&&llmCfg.provider==='groq'){setTimeout(()=>{document.getElementById('w-llm').style.display='block';},1500);}})();
+restoreConv();renderDebt();refreshAll();startSSE();setInterval(refreshAll,30000);
 </script>
 </body>
 </html>

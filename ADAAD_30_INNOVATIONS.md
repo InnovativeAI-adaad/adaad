@@ -1,10 +1,10 @@
 # ADAAD — 30 Innovations That Make It the Greatest AI Loop Ever
 
 **Author:** Claude (ArchitectAgent)  
-**Date:** March 22, 2026 · **Status updated:** March 28, 2026  
-**Last reviewed:** 2026-03-28  
-**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-09 shipped (v9.18.0–v9.26.0). Items 10–30 are next-wave roadmap.
-**Canonical current/next:** Current = **Phase 93 / v9.26.0** (INNOV-09 shipped), Next = **Phase 94 / INNOV-10 roadmap execution**.
+**Date:** March 22, 2026 · **Status updated:** April 03, 2026  
+**Last reviewed:** 2026-04-03  
+**Grounding:** Built on v9.17.0 architecture. INNOV-01 through INNOV-23 shipped (v9.18.0–v9.41.0). Items 24–30 are active roadmap.
+**Canonical current/next:** Current = **Phase 108 / v9.41.0** (INNOV-23 CES shipped), Next = **Phase 109 / INNOV-24 roadmap execution**.
 
 | Range | Status | Evidence links |
 |---|---|---|
@@ -17,7 +17,15 @@
 | INNOV-07 LSME | ✅ Shipped v9.24.0 — Phase 91 | [Artifact](artifacts/governance/phase91/phase91_sign_off.json) · [Closure ledger](docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md#milestone-history-context) · [Claims row `phase91-innov07-lsme-shipped`](docs/comms/claims_evidence_matrix.md) |
 | INNOV-08 AFRT | ✅ Shipped v9.25.0 — Phase 92 | [Artifact](artifacts/governance/phase92/phase92_sign_off.json) · [Closure record](docs/plans/PHASE_92_PLAN.md) · [Claims row `phase92-innov08-afrt-shipped`](docs/comms/claims_evidence_matrix.md) |
 | INNOV-09 AFIT | ✅ Shipped v9.26.0 — Phase 93 | [Artifact](artifacts/governance/phase93/phase93_sign_off.json) · [Closure record](docs/plans/PHASE_93_CLOSURE.md) · [Claims row `phase93-innov09-afit-shipped`](docs/comms/claims_evidence_matrix.md) |
-| INNOV-10 through INNOV-30 | 📋 Roadmap — sequenced for Phases 94+ | [Roadmap anchor](docs/plans/PHASE_94_PLAN.md) |
+| INNOV-10 MMEM | ✅ Shipped v9.27.0 — Phase 94 | [Artifact](artifacts/governance/phase94/track_a_sign_off.json) · [Claims row `phase94-innov10-mmem-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-11 DSTE | ✅ Shipped v9.29.0 — Phase 96 | [Artifact](artifacts/governance/phase96/track_a_sign_off.json) · [Claims row `phase96-innov11-dste-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-12 MGV | ✅ Shipped v9.30.0 — Phase 97 | [Artifact](artifacts/governance/phase97/track_a_sign_off.json) · [Claims row `phase97-innov12-mgv-shipped`](docs/comms/claims_evidence_matrix.md) |
+| INNOV-13 through INNOV-20 | ✅ Shipped v9.31.0–v9.38.0 — Phases 98–105 | [Roadmap](ROADMAP.md) |
+| INNOV-21 GBP | ✅ Shipped v9.39.0 — Phase 106 | [Artifact](artifacts/governance/phase106/phase106_sign_off.json) |
+| INNOV-22 MCF | ✅ Shipped v9.40.0 — Phase 107 | [Artifact](artifacts/governance/phase107/phase107_sign_off.json) |
+| INNOV-23 CES | ✅ Shipped v9.41.0 — Phase 108 | [Artifact](artifacts/governance/phase108/phase108_sign_off.json) |
+| INNOV-24 SVP | 🔜 Next — Phase 109 / v9.42.0 | [Roadmap anchor](ROADMAP.md) |
+| INNOV-25 through INNOV-30 | 📋 Roadmap — sequenced for Phases 110+ | [Roadmap anchor](ROADMAP.md) |
 
 ---
 
@@ -169,6 +177,9 @@ Weighted at 5% initially, rises automatically as `EpistemicDecay` reduces confid
 ## Category III — Memory and Identity
 
 ### 10. Morphogenetic Memory
+
+> **Status:** ✅ **Shipped** — Phase 94, v9.27.0 · Evidence: [artifacts/governance/phase94/track_a_sign_off.json](artifacts/governance/phase94/track_a_sign_off.json) · Claims: [`phase94-innov10-mmem-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A persistent architectural identity model — a map of what ADAAD believes its own purpose is, encoded as a queryable structure that every mutation proposal must be consistent with.
 
 The `SoulboundLedger` stores craft patterns. This goes further: it stores the system's self-model — its understanding of its own architectural intentions, its key invariants in plain language, its known failure modes, and its active goals. Every mutation proposal is run against this self-model: "Is this mutation consistent with what this system is trying to be?"
@@ -182,6 +193,9 @@ Encoded as a hash-chained ledger of `IdentityStatement` entries, each one human-
 ---
 
 ### 11. Cross-Epoch Dream State
+
+> **Status:** ✅ **Shipped** — Phase 96, v9.29.0 · Evidence: [artifacts/governance/phase96/track_a_sign_off.json](artifacts/governance/phase96/track_a_sign_off.json) · Claims: [`phase96-innov11-dste-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A "dreaming" mode that runs between active evolution epochs, replaying past mutations in novel combinations to discover improvements that weren't available at the time.
 
 Inspired by the neuroscience of memory consolidation during sleep: the brain replays recent experiences in novel combinations, forming connections that weren't apparent during the original experience. ADAAD's dream state takes accepted mutations from the last 100 epochs and runs a combinatorial exploration: what if mutation A and mutation C from different epochs were combined? What if the strategy that worked in epoch 40 was applied to the target that mutation B addressed in epoch 65?
@@ -193,6 +207,9 @@ The `DreamStateEngine` runs in the gaps between real epochs, producing `DreamCan
 ---
 
 ### 12. Mutation Genealogy Visualization
+
+> **Status:** ✅ **Shipped** — Phase 97, v9.30.0 · Evidence: [artifacts/governance/phase97/track_a_sign_off.json](artifacts/governance/phase97/track_a_sign_off.json) · Claims: [`phase97-innov12-mgv-shipped` row](docs/comms/claims_evidence_matrix.md)
+
 **What it is:** A living ancestry tree that tracks not just which mutations descended from which, but what properties they inherited, which properties they introduced, and which properties they mutated away from their parents.
 
 The `MultiGenLineageGraph` tracks ancestry. This extends it: each edge in the graph carries a `PropertyInheritanceVector` — which fitness dimensions improved relative to parent, which degraded, which stayed flat. Summing the inheritance vectors along any lineage path shows you the "evolutionary direction" of that branch.
@@ -416,7 +433,7 @@ Low mirror test scores trigger a `ConstitutionalCalibrationEpoch` — a dedicate
 
 > **Governance note:** This ranking is **strategic prioritization only**. It does **not** authorize execution order changes and cannot override predecessor/phase sequence gates defined in `docs/governance/ADAAD_PR_PROCESSION_2026-03-v2.md`.
 >
-> **Operational lock:** Execution remains phase-locked. Current shipped milestone is **Phase 93**; next executable item is **Phase 94 / INNOV-10**. Any out-of-order implementation requires an explicit governance amendment before work begins.
+> **Operational lock:** Execution remains phase-locked. Current shipped milestone is **Phase 97**; next executable item is **Phase 98 / INNOV-13**. Any out-of-order implementation requires an explicit governance amendment before work begins.
 
 | Priority | Innovation | Why First |
 |----------|-----------|-----------|

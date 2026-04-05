@@ -687,6 +687,10 @@ import sys"),
   aeo-evidence-publish:
     runs-on: ubuntu-latest
     needs: [classify, release-evidence-readiness]
+    # AEO-GATE-0: job is skipped (not failed) when secret is absent.
+    # Provision AEO_EVIDENCE_DESTINATION in repo secrets to activate publishing.
+    # This prevents an unconfigured secret from cascading through CI.
+    if: ${{ secrets.AEO_EVIDENCE_DESTINATION != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env

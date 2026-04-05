@@ -1,6 +1,11 @@
 {
-  "last_sync_date": "2026-03-28",
-  "last_sync_sha": "b3384b9",
-  "report_version": "9.26.0",
-  "version_source": "governance/report_version.json"
+  "last_sync_date": "2026-04-05",
+  "last_sync_sha": "2c9bd8d",
+  "report_version": "9.55.0",
+  "version_source": "governance/report_version.json",
+  "version": "9.55.0",
+  "phase": 122,
+  "date": "2026-04-05",
+  "innovation": "Phase-122-README-Credibility",
+  "updated": "2026-04-05"
 }

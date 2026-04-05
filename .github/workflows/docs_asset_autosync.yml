@@ -1,0 +1,114 @@
+# SPDX-License-Identifier: Apache-2.0
+# Invariant codes: DOCSYNC-0 · DOCSYNC-DETERM-0 · DOCSYNC-IDEM-0 · DOCSYNC-CLOSED-0
+#
+# DOCS + ASSETS AUTO-SYNC
+# Runs on push to main touching VERSION/state, daily at 06:30 UTC,
+# and on workflow_dispatch. Detects stale version refs across all markdown
+# docs and SVG assets, regenerates, commits with governed audit body.
+
+name: Docs + Assets Auto-Sync
+
+on:
+  schedule:
+    - cron: "30 6 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "VERSION"
+      - ".adaad_agent_state.json"
+      - "governance/report_version.json"
+      - "CHANGELOG.md"
+      - "pyproject.toml"
+      - "artifacts/governance/**"
+  workflow_dispatch:
+    inputs:
+      force_sync:
+        description: "Force sync even if no state changes detected"
+        required: false
+        default: "false"
+
+concurrency:
+  group: docs-asset-autosync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: "Version drift detection → docs + assets sync"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message, '[doc-sync]') &&
+      !contains(github.event.head_commit.message, '[skip-docsync]')
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "DEVADAAD"
+          git config user.email "devadaad@innovativeai.dev"
+
+      - name: Run sync_agent_state_on_merge
+        env:
+          ADAAD_ORCHESTRATOR_RUN: "1"
+        run: python3 scripts/sync_agent_state_on_merge.py 2>&1 || true
+
+      - name: Run sync_versions
+        run: python3 scripts/sync_versions.py 2>&1 || true
+
+      - name: Run docs + assets sync
+        id: docsync
+        run: |
+          OUTPUT=$(python3 scripts/sync_docs_and_assets.py --verbose 2>&1)
+          echo "$OUTPUT"
+          CHANGED=$(echo "$OUTPUT" | python3 -c "
+          import sys, json
+          for line in sys.stdin:
+            try:
+              d = json.loads(line)
+              if d.get('event') == 'sync_complete':
+                print(d.get('files_changed', 0))
+            except: pass
+          " 2>/dev/null || echo "0")
+          echo "files_changed=${CHANGED}" >> "$GITHUB_OUTPUT"
+
+      - name: Check for uncommitted changes
+        id: changes
+        run: |
+          git diff --quiet && echo "has_changes=false" >> "$GITHUB_OUTPUT" || echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push sync
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          VERSION=$(cat VERSION)
+          SHA=$(git rev-parse --short HEAD)
+          TODAY=$(date -u +%Y-%m-%d)
+          PHASE=$(python3 -c "import json; print(json.load(open('.adaad_agent_state.json')).get('phase','?'))")
+          git add README.md docs/README.md docs/CONSTITUTION.md docs/governance/ docs/assets/ .adaad_agent_state.json governance/report_version.json pyproject.toml || true
+          git diff --staged --quiet && echo "Nothing staged." && exit 0
+          git commit -m "chore(docsync): docs + assets auto-sync v${VERSION} [doc-sync]
+
+DOCSYNC: version=${VERSION} phase=${PHASE} sha=${SHA} date=${TODAY}
+Surfaces: README badges · docs/README shields · CONSTITUTION · GA-tracker · SVG assets
+Invariants: DOCSYNC-0 DOCSYNC-DETERM-0 DOCSYNC-IDEM-0 DOCSYNC-CLOSED-0
+Trigger: ${GITHUB_EVENT_NAME} $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push origin main
+          echo "Docs + assets sync committed."
+
+      - name: Idempotency confirmation
+        if: steps.changes.outputs.has_changes == 'false'
+        run: echo "DOCSYNC-IDEM-0: All docs and assets already aligned. No commit."

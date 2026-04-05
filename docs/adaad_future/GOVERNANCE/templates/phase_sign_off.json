@@ -1,0 +1,24 @@
+{
+  "_template": "ADAAD Phase Sign-Off v2.0",
+  "_instructions": "Replace all PLACEHOLDER values. attestation_digest = sha256 of the entire object minus this field.",
+  "phase": "PLACEHOLDER_PHASE_NUMBER",
+  "innovation": "PLACEHOLDER_INNOV_ID",
+  "innovation_name": "PLACEHOLDER_INNOV_NAME",
+  "scope": "PLACEHOLDER_SCOPE_DESCRIPTION",
+  "governor": "DUSTIN L REID",
+  "date": "YYYY-MM-DD",
+  "session_digest": "phaseNNN-abbr-impl-YYYY-MM-DD",
+  "attestation_ref": "ILA-NNN-YYYY-MM-DD-001",
+  "gate_results": {
+    "tier_0": "pass",
+    "tier_1": "pass",
+    "tier_2": "pass",
+    "tier_3": "pass"
+  },
+  "new_invariants": ["PLACEHOLDER-0", "PLACEHOLDER-DETERM-0"],
+  "cumulative_hard_invariants": "PLACEHOLDER_COUNT",
+  "test_count": "PLACEHOLDER_TEST_COUNT",
+  "release_tag": "vX.XX.0",
+  "release_sha": "PLACEHOLDER_SHA",
+  "attestation_digest": "sha256:PLACEHOLDER"
+}

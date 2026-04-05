@@ -5,7 +5,7 @@
 
 **Authority chain:** `docs/CONSTITUTION.md` > `docs/ARCHITECTURE_CONTRACT.md` > `docs/governance/ARCHITECT_SPEC_v3.1.0.md` > this document
 **Last reviewed:** 2026-03-28
-**Milestone:** `v9.26.0` (Phase 93 complete — INNOV-09 Aesthetic Fitness Signal)
+**Milestone:** `v9.33.0` (Phase 101 complete — INNOV-16 Emergent Role Specialization (ERS))
 **Canonical evidence anchor:** `artifacts/governance/phase93/phase93_sign_off.json` (SHA-256 `62b8f7b329202785fcb4a09e1e70f53778fff7565a07c7e0d6172d8225af68f3`) + merge SHA `ca3cc42`
 
 ---
@@ -124,13 +124,13 @@ Phase 47 ──► Phase 48 ──► Phase 49 ──► Phase 50 ──► Phas
 | 105 | INNOV-21 — Governance Debt Bankruptcy Protocol | v9.38.0 | Phase 104 | planned |
 | 106 | INNOV-22 — Market-Conditioned Fitness | v9.39.0 | Phase 105 | planned |
 | 107 | INNOV-23 — Regulatory Compliance Layer | v9.40.0 | Phase 106 | planned |
-| 108 | INNOV-24 — Semantic Version Promises | v9.41.0 | Phase 107 | planned |
-| 109 | INNOV-25 — Hardware-Adaptive Fitness | v9.42.0 | Phase 108 | planned |
-| 110 | INNOV-26 — Constitutional Entropy Budget | v9.43.0 | Phase 109 | planned |
-| 111 | INNOV-27 — Mutation Blast Radius Modeling | v9.44.0 | Phase 110 | planned |
-| 112 | INNOV-28 — Self-Awareness Invariant | v9.45.0 | Phase 111 | planned |
-| 113 | INNOV-29 — Curiosity-Driven Exploration with Hard Stops | v9.46.0 | Phase 112 | planned |
-| 114 | INNOV-30 — The Mirror Test | v9.47.0 | Phase 113 | planned |
+| 108 | INNOV-23 — Constitutional Epoch Sentinel | v9.41.0 | Phase 107 | planned |
+| 109 | INNOV-24 — Semantic Version Promises | v9.42.0 | Phase 108 | planned |
+| 110 | INNOV-25 — Hardware-Adaptive Fitness | v9.43.0 | Phase 109 | planned |
+| 111 | INNOV-26 — Constitutional Entropy Budget | v9.44.0 | Phase 110 | planned |
+| 112 | INNOV-27 — Mutation Blast Radius Modeling | v9.45.0 | Phase 111 | planned |
+| 113 | INNOV-28 — Self-Awareness Invariant | v9.46.0 | Phase 112 | planned |
+| 114 | INNOV-29 — Curiosity-Driven Exploration with Hard Stops | v9.47.0 | Phase 113 | planned |
 
 Deterministic next-PR resolution rule for this roadmap slice: **the only valid next phase is the first row whose predecessor phase is `shipped` and whose own status is not `shipped`.**
 

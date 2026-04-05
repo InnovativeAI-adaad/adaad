@@ -1,11 +1,20 @@
 {
   "phase": 116,
-  "innovation": "PIPELINE-SEAL",
+  "innovation": "INNOV-31",
+  "innovation_name": "Invariant Discovery Engine (IDE)",
   "version": "9.49.0",
-  "timestamp": "2026-04-04T00:00:00Z",
-  "tests_pass": 0,
-  "invariants_introduced": [],
-  "cumulative_hard_class_invariants": 125,
+  "branch": "feature/phase116-ide-impl",
+  "date": "2026-04-04",
+  "human_0_gate": "Dustin L. Reid",
   "human_0_ratification": "[slot reserved]",
-  "operator": "Dustin L. Reid"
+  "ledger_event_id": "ILA-116-2026-04-04-001",
+  "tests_pass": 30,
+  "tests_fail": 0,
+  "xfail": 0,
+  "invariants_introduced": ["IDE-0", "IDE-DETERM-0", "IDE-PERSIST-0", "IDE-AUDIT-0", "IDE-GATE-0"],
+  "cumulative_hard_class_invariants": 130,
+  "evidence_hash": "sha256:ede42128536cc44a",
+  "predecessor": "Phase 115 -- INNOV-30 MIRROR -- v9.48.0",
+  "world_first_claim": "First governed autonomous constitutional self-discovery engine: the system mines its own governance failure history to propose new constitutional invariants, with HMAC-chain-linked ledger, deterministic rule_id derivation, and fail-closed IDE-GATE-0 deduplication preventing rule re-proposal.",
+  "status": "COMPLETE"
 }

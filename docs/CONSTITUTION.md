@@ -196,7 +196,7 @@ Policy hash: `71eb6499bc09d8b4…` (authoritative: `runtime/constitution.py → 
 
 **Version**: 0.9.0
 **Last Updated**: 2026-03-24
-**Active Phase**: 90 (v9.24.0 — INNOV-06 CEPD complete)
+**Active Phase**: 102 (v9.35.0 — INNOV-17 APM complete)
 **Next Review**: After 1000 mutations logged
 
 **Canonical implementation specs:**

@@ -1,0 +1,36 @@
+{
+  "phase": 97,
+  "version": "9.30.0",
+  "attestation_ref": "ILA-97-2026-03-31-001",
+  "tier_0": {
+    "label": "always-on baseline",
+    "status": "PASS",
+    "checks": ["preflight", "per-file-verification", "spdx-headers", "import-guard"]
+  },
+  "tier_1": {
+    "label": "standard gate stack",
+    "status": "PASS",
+    "checks": ["full-test-suite", "governance-tests", "artifact-verification", "evidence-validation"]
+  },
+  "tier_2": {
+    "label": "escalated — critical governance/runtime innovation surface",
+    "status": "PASS",
+    "checks": ["constitutional-invariant-tests", "replay-determinism", "lineage-integrity"]
+  },
+  "tier_3": {
+    "label": "PR completeness",
+    "status": "PASS",
+    "checks": ["evidence-row-complete", "docs-aligned", "runbook-present", "ci-tier-declared", "lane-declared"]
+  },
+  "tier_m": {
+    "label": "merge-specific — DEVADAAD trigger",
+    "status": "PASS",
+    "checks": ["merge-attestation-v1", "agent-state-sync", "version-bump", "changelog-entry"]
+  },
+  "lane": "innovations",
+  "classification": "constitutional",
+  "total_tiers_passed": 5,
+  "total_tiers_required": 5,
+  "verdict": "APPROVED",
+  "timestamp_utc": "2026-03-31T00:00:00Z"
+}

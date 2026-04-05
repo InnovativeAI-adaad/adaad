@@ -1,0 +1,31 @@
+{
+  "phase": 106,
+  "innovation": "INNOV-21",
+  "innovation_name": "GovernanceBankruptcyProtocol",
+  "version": "9.39.0",
+  "branch": "feature/phase106-gbp-impl",
+  "ila_id": "ILA-106-2026-04-03-001",
+  "date": "2026-04-03",
+  "human_0": "Dustin L. Reid",
+  "tests": "T106-GBP-01..30",
+  "test_result": "30/30 PASS",
+  "hard_invariants_new": 8,
+  "hard_invariants_cumulative": 91,
+  "invariants": [
+    "GBP-0",
+    "GBP-THRESH-0",
+    "GBP-HEALTH-0",
+    "GBP-PERSIST-0",
+    "GBP-CHAIN-0",
+    "GBP-DISCHARGE-0",
+    "GBP-GATE-0",
+    "GBP-IMMUT-0"
+  ],
+  "findings_resolved": [
+    "FINDING-GBP-SCAFFOLD-01"
+  ],
+  "scaffold_debt_closed": true,
+  "endpoint": "GET /governance/bankruptcy/{epoch_id}",
+  "status": "ratified",
+  "artifact_digest": "sha256:4932926d5bd4ad42f63cf6bc31f117c91d613f630bc69738d856fc41cf43661d"
+}

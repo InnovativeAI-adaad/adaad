@@ -1,0 +1,45 @@
+{
+  "schema": "identity_ledger_attestation_v1",
+  "ila_id": "ILA-95-2026-03-29-001",
+  "phase": 95,
+  "innovation_id": "INNOV-11-ORACLE-DORK",
+  "title": "Phase 95: Oracle x Dork Alignment — Free LLM · State Bus · Bidirectional Bridge",
+  "human_0": "Dustin L. Reid",
+  "human_0_email": "weirdo@innovativeai.llc",
+  "ratified_iso": "2026-03-29T00:00:00Z",
+  "layers_delivered": [
+    "L1: ADAAD_STATE_BUS shared state object",
+    "L2: Constitutional grounding (CCB) injected in every Oracle query and Dork prompt",
+    "L3: Streaming pipeline — Groq SSE, Ollama streaming, DorkEngine word-reveal",
+    "L4: Oracle Intelligence Lift — 12 chips, 5-section renderer, Send-to-Dork bridge",
+    "L5: Dork Intelligence Lift — Groq free tier, Ollama local, DorkEngine deterministic fallback",
+    "L6: Bidirectional bridge — Oracle STATE_BUS relay, Dork oracle-bridge chip, intent detection"
+  ],
+  "llm_architecture": {
+    "primary": "Groq API (free tier, llama-3.3-70b-versatile, 14400 req/day)",
+    "secondary": "Ollama (local, user-configured model, zero cost)",
+    "fallback": "DorkEngine (deterministic constitutional rule engine, always-available)"
+  },
+  "invariants_asserted": [
+    "ORACLE-CONTEXT-0: Every Oracle query carries epoch_id and gate_ok at call time",
+    "ORACLE-RENDER-0: Oracle never renders raw JSON as primary output",
+    "ORACLE-STREAM-0: Oracle result display begins within 400ms via word-reveal",
+    "ORACLE-AUDIT-0: Oracle queries relay to ADAAD_STATE_BUS for audit trail",
+    "DORK-CONST-0: Every Dork system prompt contains CCB with gate_ok and active_phase",
+    "DORK-FREE-0: Dork never requires a paid API key to produce governance intelligence",
+    "DORK-STREAM-0: First Dork token visible within 400ms via Groq SSE or word-reveal",
+    "DORK-AUDIT-0: Dork turns write to event bus and ADAAD_STATE_BUS",
+    "BRIDGE-STATE-0: Oracle answer visible in Dork STATE_BUS context within one query cycle",
+    "BRIDGE-FREE-0: Oracle-to-Dork bridge requires zero additional API cost"
+  ],
+  "files_modified": [
+    "ui/developer/ADAADdev/whaledic.html",
+    "ui/aponi/innovations_panel.js",
+    "docs/plans/PHASE_95_ORACLE_DORK_ALIGNMENT_SPEC.md",
+    "artifacts/governance/phase95/identity_ledger_attestation.json",
+    "CHANGELOG.md",
+    "VERSION"
+  ],
+  "predecessor_ila": "ILA-94-2026-03-28-001",
+  "signature": "Approved Phase 95 Oracle\u00d7Dork alignment. All signed: Dustin L. Reid."
+}

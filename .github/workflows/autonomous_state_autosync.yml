@@ -1,0 +1,229 @@
+# SPDX-License-Identifier: Apache-2.0
+# Invariant codes: AUTOSYNC-0 · AUTOSYNC-DRIFT-0 · AUTOSYNC-IDEM-0 · AUTOSYNC-AUDIT-0
+#
+# AUTONOMOUS STATE AUTO-SYNC
+# ─────────────────────────────────────────────────────────────────────────────
+# Purpose: Drift-detection and self-healing sync that runs on a schedule and on
+#          every push to main.  Detects version/phase divergence across the four
+#          canonical state surfaces and emits a governed commit when drift is found.
+#
+# Constitutional invariants enforced:
+#   AUTOSYNC-0        Sync runs only when divergence is detected — no no-op commits.
+#   AUTOSYNC-DRIFT-0  All four surfaces must agree: VERSION, pyproject.toml,
+#                     .adaad_agent_state.json, governance/report_version.json.
+#   AUTOSYNC-IDEM-0   Identical state → identical sync digest → no commit.
+#   AUTOSYNC-AUDIT-0  Every sync commit carries a machine-readable JSON summary
+#                     in the commit body for forensic replay.
+#
+# Surfaces reconciled:
+#   1. VERSION                         — semver source-of-truth
+#   2. pyproject.toml [tool.poetry] version
+#   3. .adaad_agent_state.json         — current_version + software_version
+#   4. governance/report_version.json  — report_version + last_sync_sha
+
+name: Autonomous State Auto-Sync
+
+on:
+  schedule:
+    - cron: "0 6 * * *"        # 06:00 UTC daily
+  push:
+    branches: [main]
+    paths:
+      - "VERSION"
+      - "pyproject.toml"
+      - "CHANGELOG.md"
+      - ".adaad_agent_state.json"
+      - "governance/report_version.json"
+  workflow_dispatch:
+    inputs:
+      force_sync:
+        description: "Force sync even if no drift detected"
+        required: false
+        default: "false"
+
+concurrency:
+  group: autonomous-state-autosync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  detect-and-sync:
+    name: "Drift detection → autonomous sync"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "DEVADAAD"
+          git config user.email "devadaad@innovativeai.dev"
+
+      - name: Run sync_agent_state_on_merge
+        id: agent_sync
+        env:
+          ADAAD_ORCHESTRATOR_RUN: "1"
+        run: |
+          OUTPUT=$(python3 scripts/sync_agent_state_on_merge.py 2>&1)
+          echo "$OUTPUT"
+          CHANGED=$(echo "$OUTPUT" | python3 -c "
+          import sys, json
+          for line in sys.stdin:
+              try:
+                  d = json.loads(line)
+                  if d.get('event') == 'sync_complete':
+                      print(d.get('fields_changed', 0))
+              except: pass
+          " 2>/dev/null || echo "0")
+          echo "fields_changed=${CHANGED}" >> "$GITHUB_OUTPUT"
+
+      - name: Run sync_versions
+        run: |
+          python3 scripts/sync_versions.py 2>&1 || true
+
+      - name: Drift detection — four-surface check
+        id: drift
+        run: |
+          python3 - << 'PYEOF'
+          import json, re, subprocess, sys, os
+          from pathlib import Path
+
+          ROOT = Path(".")
+          version = (ROOT / "VERSION").read_text().strip()
+
+          # pyproject version
+          pyo = (ROOT / "pyproject.toml").read_text()
+          m = re.search(r'^version\s*=\s*"([^"]+)"', pyo, re.MULTILINE)
+          pyo_ver = m.group(1) if m else "MISSING"
+
+          # agent state
+          with open(ROOT / ".adaad_agent_state.json") as f:
+              state = json.load(f)
+          state_ver = state.get("current_version") or state.get("version", "MISSING")
+
+          # report version
+          rv_path = ROOT / "governance" / "report_version.json"
+          if rv_path.exists():
+              with open(rv_path) as f:
+                  rv = json.load(f)
+              rv_ver = rv.get("report_version", "MISSING")
+          else:
+              rv_ver = "MISSING"
+
+          surfaces = {
+              "VERSION":                  version,
+              "pyproject.toml":           pyo_ver,
+              ".adaad_agent_state.json":  state_ver,
+              "report_version.json":      rv_ver,
+          }
+
+          drift = [k for k, v in surfaces.items() if v != version]
+          summary = {
+              "canonical_version": version,
+              "surfaces": surfaces,
+              "drift_detected": len(drift) > 0,
+              "drifted_surfaces": drift,
+          }
+          print(json.dumps(summary, indent=2))
+
+          env_file = os.environ.get("GITHUB_OUTPUT", "")
+          if env_file:
+              with open(env_file, "a") as ef:
+                  ef.write(f"drift_detected={'true' if drift else 'false'}\n")
+                  ef.write(f"canonical_version={version}\n")
+          PYEOF
+
+      - name: Update report_version.json
+        run: |
+          python3 - << 'PYEOF'
+          import json, subprocess
+          from pathlib import Path
+          from datetime import date
+
+          rv_path = Path("governance/report_version.json")
+          sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode().strip()
+          version = Path("VERSION").read_text().strip()
+
+          data = {}
+          if rv_path.exists():
+              with open(rv_path) as f:
+                  data = json.load(f)
+
+          data.update({
+              "report_version": version,
+              "last_sync_date": str(date.today()),
+              "last_sync_sha": sha,
+              "version_source": "governance/report_version.json",
+          })
+
+          with open(rv_path, "w") as f:
+              json.dump(data, f, indent=2)
+              f.write("\n")
+          print(f"report_version.json → {version} @ {sha}")
+          PYEOF
+
+      - name: Check for uncommitted changes
+        id: changes
+        run: |
+          git diff --quiet && echo "has_changes=false" >> "$GITHUB_OUTPUT" \
+            || echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push sync
+        if: |
+          steps.changes.outputs.has_changes == 'true' ||
+          github.event.inputs.force_sync == 'true'
+        run: |
+          CANONICAL="${{ steps.drift.outputs.canonical_version }}"
+          SHA=$(git rev-parse --short HEAD)
+          TODAY=$(date -u +%Y-%m-%d)
+
+          SUMMARY=$(python3 -c "
+          import json
+          summary = {
+            'event': 'autonomous_autosync',
+            'version': '${CANONICAL}',
+            'sha': '${SHA}',
+            'date': '${TODAY}',
+            'invariants': ['AUTOSYNC-0','AUTOSYNC-DRIFT-0','AUTOSYNC-IDEM-0','AUTOSYNC-AUDIT-0'],
+            'trigger': '${{ github.event_name }}'
+          }
+          print(json.dumps(summary))
+          ")
+
+          git add \
+            .adaad_agent_state.json \
+            governance/report_version.json \
+            pyproject.toml \
+            VERSION || true
+
+          git diff --staged --quiet && echo "Nothing staged." && exit 0
+
+          git commit -m "chore(autosync): autonomous state sync v${CANONICAL} [doc-sync]
+
+          ${SUMMARY}
+
+          Surfaces reconciled: VERSION · pyproject.toml · agent_state · report_version
+          Invariants: AUTOSYNC-0 · AUTOSYNC-DRIFT-0 · AUTOSYNC-IDEM-0 · AUTOSYNC-AUDIT-0
+          Trigger: ${{ github.event_name }} — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+          git push origin main
+          echo "✅ Autonomous sync committed and pushed."
+
+      - name: No-op confirmation
+        if: steps.changes.outputs.has_changes == 'false'
+        run: |
+          echo "✅ AUTOSYNC-IDEM-0: No drift detected. All surfaces aligned at v${{ steps.drift.outputs.canonical_version }}. No commit necessary."

@@ -1,0 +1,80 @@
+version: "3.9"
+
+# ADAAD — Deterministic Audit Sandbox Demo
+# Phase 121 · INNOV-36 · v9.54.0
+#
+# Usage:
+#   docker-compose up das-demo          # run full demo pipeline
+#   docker-compose up das-verify        # verify a ledger
+#   docker-compose up das-replay        # replay epoch from ledger
+#   docker-compose run das-test         # run Phase 121 test suite
+#
+# All services share a named volume for the JSONL ledger so
+# verify/replay can read ledgers produced by das-demo.
+
+volumes:
+  das_ledger_data: {}
+
+x-adaad-base: &adaad-base
+  build:
+    context: .
+    dockerfile: Dockerfile.demo
+  volumes:
+    - das_ledger_data:/adaad/data
+  environment:
+    - PYTHONPATH=/adaad
+    - PYTHONDONTWRITEBYTECODE=1
+    - PYTHONUNBUFFERED=1
+
+services:
+
+  # ── primary demo runner ─────────────────────────────────────────────────────
+  das-demo:
+    <<: *adaad-base
+    container_name: adaad_das_demo
+    command:
+      - python
+      - scripts/demo_runner.py
+      - "--ledger"
+      - data/das_demo_ledger.jsonl
+      - "--mutations"
+      - "8"
+
+  # ── ledger verifier ─────────────────────────────────────────────────────────
+  das-verify:
+    <<: *adaad-base
+    container_name: adaad_das_verify
+    command:
+      - python
+      - scripts/verify_ledger.py
+      - "--ledger"
+      - data/das_demo_ledger.jsonl
+      - "--verbose"
+    depends_on:
+      das-demo:
+        condition: service_completed_successfully
+
+  # ── epoch replay tool ───────────────────────────────────────────────────────
+  das-replay:
+    <<: *adaad-base
+    container_name: adaad_das_replay
+    command:
+      - python
+      - scripts/replay_epoch.py
+      - "--ledger"
+      - data/das_demo_ledger.jsonl
+    depends_on:
+      das-demo:
+        condition: service_completed_successfully
+
+  # ── test runner ─────────────────────────────────────────────────────────────
+  das-test:
+    <<: *adaad-base
+    container_name: adaad_das_test
+    command:
+      - python
+      - -m
+      - pytest
+      - tests/test_phase121_das.py
+      - -v
+      - --tb=short

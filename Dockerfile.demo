@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: Apache-2.0
+# ADAAD — Deterministic Audit Sandbox Demo Container
+# Phase 121 · INNOV-36 · DAS-DOCKER-0
+#
+# DAS-DOCKER-0: Exact image digest pinned — :latest is constitutionally prohibited.
+FROM python:3.12.3-slim@sha256:541a2ba23f9deab97d8bf5fb1f92f9bdbf898e0dad9bc64c4f73e380e0aa9b90
+
+LABEL org.opencontainers.image.title="ADAAD DAS Demo Sandbox"
+LABEL org.opencontainers.image.version="9.54.0"
+LABEL org.opencontainers.image.vendor="InnovativeAI LLC"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+LABEL adaad.phase="121"
+LABEL adaad.innovation="INNOV-36"
+
+WORKDIR /adaad
+
+# ── system deps (minimal, pinned) ─────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates=20230311 \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── Python deps ───────────────────────────────────────────────────────────────
+COPY requirements*.txt ./
+RUN pip install --no-cache-dir --upgrade pip==24.0 \
+    && pip install --no-cache-dir pytest==8.1.1 || true
+
+# ── application source ────────────────────────────────────────────────────────
+COPY runtime/ ./runtime/
+COPY scripts/demo_runner.py ./scripts/demo_runner.py
+COPY scripts/replay_epoch.py ./scripts/replay_epoch.py
+COPY scripts/verify_ledger.py ./scripts/verify_ledger.py
+COPY tests/test_phase121_das.py ./tests/test_phase121_das.py
+COPY tests/conftest.py ./tests/conftest.py
+
+# Create data directory for ledger output
+RUN mkdir -p data
+
+# ── entrypoint ────────────────────────────────────────────────────────────────
+# Default: run the demo pipeline. Override CMD for other modes.
+CMD ["python", "scripts/demo_runner.py", \
+     "--ledger", "data/das_demo_ledger.jsonl", \
+     "--mutations", "8"]

@@ -1,0 +1,14 @@
+ADAAD Phase 102 Replay Digest
+Innovation: INNOV-17 — Agent Post-Mortem Interviews (APM)
+Version: v9.35.0
+Date: 2026-04-02
+Ledger Event: ILA-102-2026-04-02-001
+
+Input payload: phase102:INNOV-17:APM:v9.35.0:30tests:6invariants
+SHA-256 (full): 81604ec87c7a6793f8df162ec03d346244ca62ba56c5a255cf19ec9c99abcfce
+SHA-256 (short): sha256:81604ec87c7a6793
+
+Invariants sealed: APM-0 APM-DETERM-0 APM-PERSIST-0 APM-GAP-0 APM-LOAD-0 APM-CHAIN-0
+Cumulative Hard-class invariants: 57
+Tests: T102-APM-01..30 — 30/30 PASS — 0 xfail — 0 skip
+HUMAN-0: Dustin L. Reid — ratified 2026-04-02

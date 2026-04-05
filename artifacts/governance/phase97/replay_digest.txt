@@ -1,0 +1,28 @@
+ADAAD Phase 97 — Replay Digest
+Generated: 2026-03-31T00:00:00Z
+Attestation: ILA-97-2026-03-31-001
+
+MODULE: runtime/innovations30/mutation_genealogy.py
+  PropertyInheritanceVector.digest: sha256(f"{parent_epoch}:{child_epoch}:{net_improvement:.4f}")[:16]
+  Invariant: MGV-DETERM-0 — identical inputs produce identical digest across all instances
+
+REPLAY EQUIVALENCE PROOF:
+  Input set: parent_epoch, child_epoch, parent_scores{}, child_scores{}
+  Deterministic path: deltas computed by subtraction (no RNG, no datetime, no uuid4)
+  Ledger write: Path.open("a") append — idempotent on re-run given same input sequence
+  Load path: _load() silently skips malformed lines — fail-open, no exception surface
+
+TEST COVERAGE (T97-MGV-01..30, 30/30 PASS):
+  MGV-0: fail-open load on corrupt ledger (T97-MGV-01..03)
+  MGV-DETERM-0: digest determinism across independent instances (T97-MGV-04..08)
+  MGV-PERSIST-0: Path.open mock target verified (T97-MGV-04 corrected)
+  productive_lineages: improvement threshold boundary (T97-MGV-09..14)
+  dead_end_epochs: child-never-parent set logic (T97-MGV-15..19)
+  evolutionary_direction: cumulative delta accumulation (T97-MGV-20..25)
+  net_improvement: four-axis average and is_dead_end threshold (T97-MGV-26..30)
+
+PREDECESSOR CHAIN:
+  Phase 94 MMEM → Phase 95 (UI) → Phase 96 DSTE → Phase 97 MGV
+  Version sequence: v9.27.0 → v9.28.0 → v9.29.0 → v9.30.0
+
+HUMAN-0: Dustin L. Reid — ratified 2026-03-31

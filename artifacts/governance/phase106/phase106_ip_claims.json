@@ -1,0 +1,11 @@
+{
+  "phase": 106,
+  "version": "9.39.0",
+  "innovation": "INNOV-21",
+  "ip_claims": [
+    "Governance debt bankruptcy state machine with mathematically bounded entry and exit criteria enforcing monotonic progression from declaration through remediation to discharge",
+    "Chain-linked append-only JSONL ledger for bankruptcy lifecycle events with SHA-256 digest chain and hmac.compare_digest tamper detection enabling full replay verification",
+    "Discharge supersession protocol ensuring that for each epoch_id the authoritative ledger state is always the latest-written entry, preventing stale re-activation across restarts",
+    "Constitutional gate enforcing that blank-intent mutation bypass during bankruptcy is treated as a violation rather than a pass, eliminating silent governance circumvention"
+  ]
+}

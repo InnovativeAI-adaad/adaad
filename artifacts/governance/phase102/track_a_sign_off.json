@@ -1,0 +1,42 @@
+{
+  "phase": 102,
+  "innovation": "INNOV-17",
+  "innovation_name": "Agent Post-Mortem Interviews (APM)",
+  "version": "9.35.0",
+  "status": "COMPLETE",
+  "date": "2026-04-02",
+  "human_0_id": "Dustin L. Reid",
+  "human_0_handle": "HUMAN-0",
+  "human_0_ratification": "phase102-human0-ratified",
+  "ratification_timestamp": "2026-04-02T00:00:00Z",
+  "dependency": "Phase 101 \u2014 INNOV-16 ERS \u2014 v9.34.0",
+  "branch": "feature/phase102-apm-impl",
+  "new_module": "runtime/innovations30/agent_postmortem.py",
+  "modified_modules": [],
+  "test_suite": "T102-APM-01..30",
+  "tests_passing": 30,
+  "tests_required": 30,
+  "invariants_introduced": [
+    "APM-0",
+    "APM-DETERM-0",
+    "APM-PERSIST-0",
+    "APM-GAP-0",
+    "APM-LOAD-0",
+    "APM-CHAIN-0"
+  ],
+  "invariant_descriptions": {
+    "APM-0": "conduct_interview() is the sole entry point for post-mortem creation. Direct AgentReasoningEntry instantiation outside conduct_interview() is forbidden.",
+    "APM-DETERM-0": "entry_digest MUST be deterministic: sha256(agent_id:mutation_id:identified_gap)[:16], prefixed sha256:. No RNG, datetime, uuid4, or process-state inputs.",
+    "APM-PERSIST-0": "_persist() MUST use Path.open(a) in append mode. Direct builtins.open() is forbidden. ledger_path.parent.mkdir(parents=True, exist_ok=True) MUST precede every write.",
+    "APM-GAP-0": "identified_gap MUST be a non-empty string. Empty or whitespace-only is a Hard failure before persist.",
+    "APM-LOAD-0": "agent_recurring_gaps() MUST be fail-open: any corrupt JSONL line silently skipped. Method MUST NOT raise on partial ledger corruption.",
+    "APM-CHAIN-0": "Every entry MUST carry: agent_id, mutation_id, epoch_id, rejection_reasons (non-empty list), entry_digest. Missing any field is a Hard failure before persist."
+  },
+  "pre_existing_failures_on_main": 0,
+  "failures_on_branch": 0,
+  "regressions_introduced": 0,
+  "cumulative_hard_invariants": 57,
+  "replay_digest": "sha256:81604ec87c7a6793",
+  "ledger_event_id": "ILA-102-2026-04-02-001",
+  "notes": "Innovation #17 \u2014 Agent Post-Mortem Interviews. After governance rejection, agents articulate why they believed a mutation would pass, what constitutional gap they missed, and proposed correction. These interviews become calibration inputs to agent selection pressure. World-first: constitutional-governed post-mortem interviews for autonomous mutation agents."
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "artifact_type": "governance_sign_off",
+  "phase": 120,
+  "innovation_id": "INNOV-35",
+  "innovation_name": "Self-Proposing Innovation Engine",
+  "abbreviation": "SPIE",
+  "version": "9.53.0",
+  "tag": "v9.53.0",
+  "ila_ref": "ILA-120-2026-04-04-001",
+  "ratified_by": "DUSTIN L REID",
+  "ratified_date": "2026-04-04",
+  "branch": "feature/phase120-innov35-spie",
+  "test_suite": "T120-SPIE-01..30",
+  "tests_total": 30,
+  "tests_passed": 30,
+  "tests_failed": 0,
+  "constitutional_invariants": [
+    "SPIE-0",
+    "SPIE-DETERM-0",
+    "SPIE-PERSIST-0",
+    "SPIE-CHAIN-0",
+    "SPIE-GATE-0",
+    "SPIE-SOURCE-0",
+    "SPIE-HUMAN0-0"
+  ],
+  "hard_class_invariants_added": 7,
+  "hard_class_invariants_cumulative": 155,
+  "deliverables": [
+    "runtime/innovations30/self_proposing_innovation_engine.py",
+    "tests/test_phase120_spie.py",
+    "artifacts/governance/phase120/phase120_sign_off.json",
+    "artifacts/governance/phase120/tier_summary.json"
+  ],
+  "gate_decisions": {
+    "implementation_complete": true,
+    "tests_green": true,
+    "changelog_updated": true,
+    "version_bumped": true
+  },
+  "summary": "World-first self-proposing innovation engine for a constitutionally governed autonomous AI system. SPIE consumes three signal classes — FailureSignal (recurring mutation failure patterns), ConstitutionalGapSignal (invariant category coverage deficits), and MirrorAccuracySignal (self-model fidelity decay) — and synthesises InnovationProposals deterministically. SPIE-GATE-0 prevents duplicate proposals via signal fingerprint deduplication. SPIE-HUMAN0-0 guarantees ratified=True is only reachable via ratify(), never at construction. SPIE-CHAIN-0 provides HMAC-SHA256 chain-linked append-only ledger of every proposal. The system now proposes its own evolutionary direction; HUMAN-0 still ratifies.",
+  "ip_claims": [
+    "Deterministic multi-signal innovation proposal synthesis from failure history, constitutional gap analysis, and Mirror Test accuracy decay in a constitutionally governed autonomous AI system",
+    "SPIE-HUMAN0-0: construction-time ratification prevention — ratified flag exclusively settable via governed ratify() pathway, enforced at module level",
+    "HMAC-SHA256 chain-linked append-only ledger for cryptographic auditability of self-proposed innovation candidates with signal-fingerprint deduplication gate"
+  ],
+  "world_first": true,
+  "world_first_claim": "First autonomous AI system to propose its own next innovations from failure history, constitutional gap analysis, and self-model accuracy signals, with HUMAN-0 ratification gate and cryptographic chain-linked proposal audit ledger",
+  "dependency": "Phase 119 INNOV-34 FGCON merged",
+  "extends": "INNOV-31 IDE (failure pattern discovery → innovation proposal synthesis)"
+}

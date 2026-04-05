@@ -1,0 +1,54 @@
+{
+  "phase": 99,
+  "version": "9.32.0",
+  "attestation_ref": "ILA-99-2026-04-01-001",
+  "tier_0": {
+    "label": "always-on baseline",
+    "status": "PASS",
+    "checks": [
+      "preflight",
+      "per-file-verification",
+      "spdx-headers",
+      "import-guard"
+    ]
+  },
+  "tier_1": {
+    "label": "standard gate stack",
+    "status": "PASS",
+    "checks": [
+      "full-test-suite",
+      "governance-tests",
+      "artifact-verification",
+      "evidence-validation"
+    ]
+  },
+  "tier_2": {
+    "label": "escalated \u2014 multi-agent governance surface",
+    "status": "PASS",
+    "checks": [
+      "constitutional-invariant-tests",
+      "quorum-gate",
+      "dissent-ledger-integrity",
+      "replay-determinism"
+    ]
+  },
+  "tier_3": {
+    "label": "PR completeness",
+    "status": "PASS",
+    "checks": [
+      "evidence-row-complete",
+      "docs-alignment",
+      "ci-tier-declaration",
+      "lane-declaration"
+    ]
+  },
+  "tier_m": {
+    "label": "merge-specific",
+    "status": "PASS",
+    "checks": [
+      "devadaad-trigger",
+      "human0-attestation",
+      "version-bump"
+    ]
+  }
+}
