@@ -45,10 +45,12 @@ class RetryPolicy:
 
 @dataclass(frozen=True)
 class LLMProviderConfig:
+    provider: str  # "anthropic", "gemini", "openai", "ollama"
     api_key: str
     model: str
     timeout_seconds: float
     max_tokens: int
+    base_url: str | None = None
     fallback_to_noop: bool = False
 
 
@@ -144,11 +146,34 @@ def validate_adaptive_proposal_schema(payload: dict[str, Any]) -> bool:
 
 def load_provider_config(env: Mapping[str, str] | None = None) -> LLMProviderConfig:
     source = env or os.environ
+    
+    # Provider resolution priority
+    provider = source.get("ADAAD_LLM_PROVIDER", "").strip().lower()
+    if not provider:
+        if source.get("ADAAD_ANTHROPIC_API_KEY"): provider = "anthropic"
+        elif source.get("GOOGLE_API_KEY"): provider = "gemini"
+        elif source.get("OPENAI_API_KEY"): provider = "openai"
+        else: provider = "anthropic" # Default fallback
+
     return LLMProviderConfig(
-        api_key=(source.get("ADAAD_ANTHROPIC_API_KEY") or "").strip(),
-        model=(source.get("ADAAD_LLM_MODEL") or "claude-3-5-sonnet-20241022").strip(),
+        provider=provider,
+        api_key=(
+            source.get("ADAAD_ANTHROPIC_API_KEY") or 
+            source.get("GOOGLE_API_KEY") or 
+            source.get("OPENAI_API_KEY") or ""
+        ).strip(),
+        model=(
+            source.get("ADAAD_LLM_MODEL") or 
+            {
+                "anthropic": "claude-3-5-sonnet-20241022",
+                "gemini": "gemini-1.5-pro",
+                "openai": "gpt-4-turbo",
+                "ollama": "llama3"
+            }.get(provider, "claude-3-5-sonnet-20241022")
+        ).strip(),
         timeout_seconds=float(source.get("ADAAD_LLM_TIMEOUT_SECONDS") or "15"),
         max_tokens=int(source.get("ADAAD_LLM_MAX_TOKENS") or "800"),
+        base_url=source.get("ADAAD_LLM_BASE_URL"),
         fallback_to_noop=(source.get("ADAAD_LLM_FALLBACK_TO_NOOP") or "false").strip().lower() in {"1", "true", "yes", "on"},
     )
 
@@ -165,26 +190,15 @@ class LLMProviderClient:
         self.schema_validator = schema_validator or validate_adaptive_proposal_schema
 
     def request_json(self, *, system_prompt: str, user_prompt: str) -> LLMProviderResult:
-        if not self.config.api_key:
-            return self._safe_failure("missing_api_key", "LLM API key is not configured.")
-
-        client = self._build_client()
-        if client is None:
-            return self._safe_failure("provider_unavailable", "Anthropic client could not be initialized.")
+        if not self.config.api_key and self.config.provider != "ollama":
+            return self._safe_failure("missing_api_key", f"{self.config.provider} API key is not configured.")
 
         for attempt in range(self.retry_policy.attempts):
             delay = self.retry_policy.delay_for_attempt(attempt)
             if delay > 0:
                 time.sleep(delay)
             try:
-                response = client.messages.create(
-                    model=self.config.model,
-                    max_tokens=self.config.max_tokens,
-                    timeout=self.config.timeout_seconds,
-                    system=system_prompt,
-                    messages=[{"role": "user", "content": user_prompt}],
-                )
-                text = self._extract_text(response)
+                text = self._dispatch_request(system_prompt, user_prompt)
                 payload = self._parse_and_validate(text)
                 return LLMProviderResult(ok=True, payload=payload)
             except Exception as exc:  # noqa: BLE001
@@ -193,15 +207,60 @@ class LLMProviderClient:
 
         return self._safe_failure("provider_request_failed", "Provider request failed after retries.")
 
-    def _build_client(self) -> Any | None:
-        try:
-            if _anthropic is None:
-                return None
-            return _anthropic.Anthropic(api_key=self.config.api_key)
-        except Exception:  # noqa: BLE001
-            return None
+    def _dispatch_request(self, system: str, user: str) -> str:
+        if self.config.provider == "anthropic":
+            return self._request_anthropic(system, user)
+        if self.config.provider == "gemini":
+            return self._request_gemini(system, user)
+        if self.config.provider in ("openai", "ollama"):
+            return self._request_openai_compatible(system, user)
+        raise ValueError(f"unsupported_provider:{self.config.provider}")
 
-    def _extract_text(self, response: Any) -> str:
+    def _request_anthropic(self, system: str, user: str) -> str:
+        if _anthropic is None:
+            raise ImportError("anthropic package not installed")
+        client = _anthropic.Anthropic(api_key=self.config.api_key)
+        response = client.messages.create(
+            model=self.config.model,
+            max_tokens=self.config.max_tokens,
+            timeout=self.config.timeout_seconds,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+        )
+        return self._extract_text_anthropic(response)
+
+    def _request_gemini(self, system: str, user: str) -> str:
+        import httpx
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.config.model}:generateContent?key={self.config.api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": f"SYSTEM: {system}\n\nUSER: {user}"}]}],
+            "generationConfig": {"maxOutputTokens": self.config.max_tokens}
+        }
+        resp = httpx.post(url, json=payload, timeout=self.config.timeout_seconds)
+        resp.raise_for_status()
+        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+    def _request_openai_compatible(self, system: str, user: str) -> str:
+        import httpx
+        base_url = self.config.base_url or ("http://localhost:11434/v1" if self.config.provider == "ollama" else "https://api.openai.com/v1")
+        headers = {"Content-Type": "application/json"}
+        if self.config.api_key:
+            headers["Authorization"] = f"Bearer {self.config.api_key}"
+        
+        payload = {
+            "model": self.config.model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user}
+            ],
+            "max_tokens": self.config.max_tokens,
+            "temperature": 0.0
+        }
+        resp = httpx.post(f"{base_url}/chat/completions", json=payload, headers=headers, timeout=self.config.timeout_seconds)
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
+
+    def _extract_text_anthropic(self, response: Any) -> str:
         content = getattr(response, "content", []) or []
         text_parts: list[str] = []
         for block in content:

@@ -19,6 +19,7 @@ class OrchestratorInitState:
     replay_epoch: str
     exit_after_boot: bool
     verify_replay: bool
+    fast_mode: bool
 
 
 @dataclass(frozen=True)
@@ -49,4 +50,5 @@ def build_init_state(*, args: object, dry_run_env: bool, replay_mode: ReplayMode
         replay_epoch=selected_epoch,
         exit_after_boot=bool(getattr(args, "exit_after_boot")),
         verify_replay=bool(getattr(args, "verify_replay")),
+        fast_mode=bool(getattr(args, "fast", False)),
     )

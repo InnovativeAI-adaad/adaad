@@ -9,7 +9,7 @@ from app.api.schemas.tenancy import TenantContext
 
 _TENANT_ID_PATTERN = re.compile(r"^[a-zA-Z0-9._:-]+$")
 
-from runtime.audit_auth import require_audit_read_scope
+from runtime.api.app_layer import require_audit_read_scope
 
 
 def auth_context(authorization: str | None = Header(default=None)) -> str | None:

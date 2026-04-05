@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -77,7 +78,8 @@ class BootPreflightService:
                 evidence_refs=("security.cryovant.validate_environment",),
                 payload={},
             )
-        certified, errors = cryovant.certify_agents(agents_root)
+        repair = os.getenv("ADAAD_ENV") == "dev"
+        certified, errors = cryovant.certify_agents(agents_root, repair=repair)
         if not certified:
             return StatusEnvelope(
                 status="error",

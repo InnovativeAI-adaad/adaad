@@ -22,6 +22,9 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "BeastModeLoop": ("runtime.api.legacy_modes", "BeastModeLoop"),
     "DreamMode": ("runtime.api.legacy_modes", "DreamMode"),
     "MutationExecutor": ("runtime.api.mutation", "MutationExecutor"),
+    "EvolutionLoop": ("runtime.evolution.evolution_loop", "EvolutionLoop"),
+    "CodebaseContext": ("runtime.autonomy.ai_mutation_proposer", "CodebaseContext"),
+    "is_cel_enabled": ("runtime.evolution.cel_wiring", "is_cel_enabled"),
     "extension_sdk_descriptor": ("runtime.api.extensions", "extension_sdk_descriptor"),
 }
 
@@ -44,6 +47,18 @@ def _resolve_module(module_name: str) -> Any:
         return module
     if module_name == "runtime.api.extensions":
         from runtime.api import extensions as module
+
+        return module
+    if module_name == "runtime.evolution.evolution_loop":
+        from runtime.evolution import evolution_loop as module
+
+        return module
+    if module_name == "runtime.autonomy.ai_mutation_proposer":
+        from runtime.autonomy import ai_mutation_proposer as module
+
+        return module
+    if module_name == "runtime.evolution.cel_wiring":
+        from runtime.evolution import cel_wiring as module
 
         return module
     raise ModuleNotFoundError(module_name)

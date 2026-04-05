@@ -97,3 +97,6 @@ security/replay_proof_keyring.local.json
 # Packaging/build outputs (ephemeral; CI/release only)
 /build/
 *.egg-info/
+
+.gemini/
+gha-creds-*.json

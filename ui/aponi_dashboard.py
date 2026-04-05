@@ -1506,7 +1506,7 @@ class AponiDashboard:
                         limit = max(1, min(200, int(limit_raw)))
                     except (TypeError, ValueError):
                         limit = 50
-                    from governance.mutation_ledger import MutationLedger
+                    from runtime.api.app_layer import MutationLedger
                     try:
                         ledger = MutationLedger()
                         entries = list(ledger.tail(limit=limit))

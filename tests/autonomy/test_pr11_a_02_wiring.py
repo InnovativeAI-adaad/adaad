@@ -138,6 +138,7 @@ def test_t11_b_03_phase_0d_calls_recommend_and_passes_to_landscape(monkeypatch, 
         return original_rec(self, bandit_rec=bandit_rec)
 
     monkeypatch.setattr(FitnessLandscape, "recommended_agent", patched_rec)
+    monkeypatch.setattr("runtime.evolution.cel_wiring.is_cel_enabled", lambda: False)
 
     with patch("runtime.evolution.evolution_loop.propose_from_all_agents") as mock_prop:
         mock_prop.return_value = MagicMock(proposals_by_agent={

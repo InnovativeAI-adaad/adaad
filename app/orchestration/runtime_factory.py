@@ -20,4 +20,5 @@ def build_orchestrator(init_state: OrchestratorInitState) -> "Orchestrator":
         replay_epoch=init_state.replay_epoch,
         exit_after_boot=init_state.exit_after_boot,
         verbose=init_state.verbose,
+        fast_mode=init_state.fast_mode,
     )

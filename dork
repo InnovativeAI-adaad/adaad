@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+"""
+Dork — Easiest access to ADAADinside™ Developer Intelligence.
+Ensures server is running and opens Whale.Dic in the browser.
+"""
+
+import os
+import subprocess
+import sys
+import time
+import webbrowser
+
+PORT = int(os.getenv("ADAAD_PORT", "8000"))
+URL = f"http://localhost:{PORT}/dork"
+
+def is_server_running():
+    import socket
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        # Check both localhost and 0.0.0.0
+        return s.connect_ex(('127.0.0.1', PORT)) == 0
+
+def start_server():
+    print(f"[*] Starting ADAAD unified server on port {PORT}...")
+    # Use the same env as current process
+    env = os.environ.copy()
+    env["ADAAD_ENV"] = "dev"
+    env["ADAAD_PORT"] = str(PORT)
+    env["ADAAD_HOST"] = "0.0.0.0"
+    with open("server.log", "a") as log_file:
+        subprocess.Popen(
+            [sys.executable, "server.py"],
+            env=env,
+            stdout=log_file,
+            stderr=log_file,
+            preexec_fn=os.setpgrp
+        )
+    
+    # Wait for it to wake up
+    for _ in range(10):
+        if is_server_running():
+            print("[+] Server is live.")
+            return True
+        time.sleep(1)
+    return False
+
+def main():
+    if not is_server_running():
+        if not start_server():
+            print("[-] Failed to start server. Check server.log")
+            sys.exit(1)
+    
+    print(f"[*] Opening dork: {URL}")
+    webbrowser.open(URL)
+
+if __name__ == "__main__":
+    main()

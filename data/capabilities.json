@@ -1,0 +1,92 @@
+{
+  "architect.scan": {
+    "evidence": {},
+    "identity": {
+      "hash": "aeff735361b65610a1ce7eeca8078eacd5fce17d3c78ca34a4433fd9f08ee319",
+      "timestamp": "2026-04-04T01:08:25Z",
+      "tool_id": "architect.scan",
+      "version": "0.65.0"
+    },
+    "name": "architect.scan",
+    "owner": "Wood",
+    "requires": [],
+    "score": 1.0,
+    "updated_at": "2026-04-04T01:08:25Z",
+    "version": "0.65.0"
+  },
+  "beast.evaluate": {
+    "evidence": {},
+    "identity": {
+      "hash": "aeff735361b65610a1ce7eeca8078eacd5fce17d3c78ca34a4433fd9f08ee319",
+      "timestamp": "2026-04-04T01:08:25Z",
+      "tool_id": "beast.evaluate",
+      "version": "0.65.0"
+    },
+    "name": "beast.evaluate",
+    "owner": "Fire",
+    "requires": [],
+    "score": 1.0,
+    "updated_at": "2026-04-04T01:08:25Z",
+    "version": "0.65.0"
+  },
+  "cryovant.gate": {
+    "evidence": {},
+    "identity": {
+      "hash": "aeff735361b65610a1ce7eeca8078eacd5fce17d3c78ca34a4433fd9f08ee319",
+      "timestamp": "2026-04-04T01:08:25Z",
+      "tool_id": "cryovant.gate",
+      "version": "0.65.0"
+    },
+    "name": "cryovant.gate",
+    "owner": "Water",
+    "requires": [],
+    "score": 1.0,
+    "updated_at": "2026-04-04T01:08:25Z",
+    "version": "0.65.0"
+  },
+  "dream.cycle": {
+    "evidence": {},
+    "identity": {
+      "hash": "aeff735361b65610a1ce7eeca8078eacd5fce17d3c78ca34a4433fd9f08ee319",
+      "timestamp": "2026-04-04T01:08:25Z",
+      "tool_id": "dream.cycle",
+      "version": "0.65.0"
+    },
+    "name": "dream.cycle",
+    "owner": "Fire",
+    "requires": [],
+    "score": 1.0,
+    "updated_at": "2026-04-04T01:08:25Z",
+    "version": "0.65.0"
+  },
+  "orchestrator.boot": {
+    "evidence": {},
+    "identity": {
+      "hash": "aeff735361b65610a1ce7eeca8078eacd5fce17d3c78ca34a4433fd9f08ee319",
+      "timestamp": "2026-04-04T01:08:25Z",
+      "tool_id": "orchestrator.boot",
+      "version": "0.65.0"
+    },
+    "name": "orchestrator.boot",
+    "owner": "Earth",
+    "requires": [],
+    "score": 1.0,
+    "updated_at": "2026-04-04T01:08:25Z",
+    "version": "0.65.0"
+  },
+  "ui.dashboard": {
+    "evidence": {},
+    "identity": {
+      "hash": "aeff735361b65610a1ce7eeca8078eacd5fce17d3c78ca34a4433fd9f08ee319",
+      "timestamp": "2026-04-04T01:08:25Z",
+      "tool_id": "ui.dashboard",
+      "version": "0.65.0"
+    },
+    "name": "ui.dashboard",
+    "owner": "Metal",
+    "requires": [],
+    "score": 1.0,
+    "updated_at": "2026-04-04T01:08:25Z",
+    "version": "0.65.0"
+  }
+}

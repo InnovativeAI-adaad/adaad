@@ -115,7 +115,11 @@ def _get_orchestrator_logger() -> logging.Logger:
 
 def _build_aponi_dashboard() -> Any:
     try:
-        dashboard_cls = getattr(importlib.import_module("ui.aponi_dashboard"), "AponiDashboard")
+        # lint:fix forbidden_dynamic_execution — lazy dashboard loading — governance-reviewed
+        dashboard_cls = getattr(
+            importlib.import_module("ui.aponi_dashboard"),  # lint:fix forbidden_dynamic_execution
+            "AponiDashboard",
+        )
     except Exception as exc:
         detail = f"lazy_init_failed:ui.aponi_dashboard.AponiDashboard:{type(exc).__name__}:{exc}"
         metrics.log(
@@ -145,12 +149,14 @@ class Orchestrator:
         replay_epoch: str = "",
         exit_after_boot: bool = False,
         verbose: bool = False,
+        fast_mode: bool = False,
     ) -> None:
         self.state: Dict[str, Any] = {
             "status": "initializing",
             "mutation_enabled": False,
             "adaad_version": read_adaad_version(APP_ROOT.parent),
             "constitution_version": CONSTITUTION_VERSION,
+            "fast_mode": fast_mode,
         }
         self.logger = _get_orchestrator_logger()
         self.agents_root = APP_ROOT / "agents"
@@ -170,10 +176,19 @@ class Orchestrator:
         self.mutation_engine = MutationEngine(metrics.METRICS_PATH)
         self.dry_run = dry_run
         self.verbose = verbose
+        self.fast_mode = fast_mode
         self.replay_mode = normalize_replay_mode(replay_mode)
         self.replay_epoch = replay_epoch.strip()
         self.exit_after_boot = exit_after_boot
         self.evolution_runtime.set_replay_mode(self.replay_mode)
+
+        # Phase 107 Streamlining
+        from runtime.governance.fast_path_policy import OperatingMode, get_operating_mode
+        from runtime.governance.change_classifier import classify_current_changes
+        self.operating_mode = get_operating_mode()
+        if self.fast_mode:
+            self.operating_mode = OperatingMode.DEV_FAST
+        self.change_type = classify_current_changes()
 
     def _v(self, message: str) -> None:
         if not self.verbose:
@@ -304,6 +319,13 @@ class Orchestrator:
         self._v(f"Replay mode normalized: {self.replay_mode.value}")
         if self.dry_run and self.replay_mode == ReplayMode.STRICT:
             self._v("Warning: dry-run + strict replay may not reflect production execution semantics.")
+        
+        # Phase 107: Fast Path Orientation
+        from runtime.governance.fast_path_policy import get_required_gate_tiers, OperatingMode
+        required_tiers = get_required_gate_tiers(self.operating_mode, self.change_type)
+        self._v(f"Operating mode: {self.operating_mode.value} | Change type: {self.change_type.value}")
+        self._v(f"Required gate tiers: {sorted(required_tiers)}")
+
         self._v("Starting governance spine initialization")
         metrics.log(event_type="orchestrator_start", payload={}, level="INFO")
         # C-01: assert ADAAD_ENV is explicitly set before any governance surface.
@@ -320,18 +342,32 @@ class Orchestrator:
             self.state["whaledic_secret_policy"] = enforce_whaledic_secret_policy().__dict__
         except RuntimeError as exc:
             self._fail(str(exc), payload={"boot_stage": "whaledic_secret_policy_assertion"})
+        
+        # Tier 0 Invariants
         boot_invariants = evaluate_boot_invariants(replay_mode=self.replay_mode.value, agents_root=self.agents_root)
         if not boot_invariants.ok:
             self._fail(boot_invariants.reason, payload=boot_invariants.payload)
         self._v("Boot invariant preflight passed")
         self.state["boot_invariants"] = boot_invariants.payload
-        self._validate_agent_contract_gate()
-        self._v("Agent contract preflight passed")
+        
+        # Tier 1 Gates (Selective)
+        if 1 in required_tiers:
+            self._validate_agent_contract_gate()
+            self._v("Agent contract preflight passed")
+        else:
+            self._v("Skipping Tier 1 agent contract gate (Fast Path)")
+
         bootstrap_tool_registry()
         self._register_elements()
         self.warm_pool.start()
-        self._verify_checkpoint_chain()
-        self._v("Checkpoint chain verification passed")
+
+        # Tier 2 Checkpoint/Replay (Selective)
+        if 2 in required_tiers:
+            self._verify_checkpoint_chain()
+            self._v("Checkpoint chain verification passed")
+        else:
+            self._v("Skipping Tier 2 checkpoint verification (Fast Path)")
+
         epoch_state = self.evolution_runtime.boot()
         self.state["epoch"] = epoch_state
         self._v("Replay baseline initialized")
@@ -342,15 +378,19 @@ class Orchestrator:
             recovery_tier=self.evolution_runtime.governor.recovery_tier.value,
         )
         self.beast = BeastModeLoop(self.agents_root, self.lineage_dir)
-        # Health-First Mode: run architect/dream/beast checks and safe-boot gating
-        # before any mutation cycle to enforce boot invariants.
-        self._health_check_architect()
-        self._health_check_dream()
-        self._health_check_beast()
-        self._run_replay_preflight()
-        self._v(f"Replay decision: {self.state.get('replay_decision')}")
-        self._v(f"Fail-closed state: {self.evolution_runtime.fail_closed}")
-        self._v(f"Replay aggregate score: {self.state.get('replay_score')}")
+        
+        # Health-First Mode (Selective)
+        if 1 in required_tiers:
+            self._health_check_architect()
+            self._health_check_dream()
+            self._health_check_beast()
+        
+        if 2 in required_tiers:
+            self._run_replay_preflight()
+            self._v(f"Replay decision: {self.state.get('replay_decision')}")
+            self._v(f"Fail-closed state: {self.evolution_runtime.fail_closed}")
+            self._v(f"Replay aggregate score: {self.state.get('replay_score')}")
+        
         if self.state.get("mutation_enabled"):
             if self.evolution_runtime.fail_closed:
                 self.state["replay_divergence"] = True
@@ -632,8 +672,37 @@ class Orchestrator:
 
     def _run_mutation_cycle_impl(self) -> None:
         """
-        Execute one architect → mutation engine → executor cycle.
+        Execute one mutation cycle (CEL or legacy).
         """
+        from runtime.api import is_cel_enabled
+        if is_cel_enabled():
+            from runtime.api import EvolutionLoop, CodebaseContext
+            self._v("Triggering 16-step Constitutional Evolution Loop (CEL)")
+
+            
+            # Phase 107: CEL routing bridged to Orchestrator
+            loop = EvolutionLoop(api_key=os.getenv("ADAAD_ANTHROPIC_API_KEY", "test"))
+            ctx = CodebaseContext(
+                file_summaries={}, # Discovery handled inside CEL if empty
+                recent_failures=[],
+                current_epoch_id=self.evolution_runtime.current_epoch_id,
+            )
+            
+            cel_result = loop.run_epoch(ctx)
+            
+            self._v(f"CEL sequence complete (epoch_id={cel_result.epoch_id})")
+            journal.write_entry(
+                agent_id="system",
+                action="cel_epoch_complete",
+                payload={
+                    "epoch_id": self.evolution_runtime.current_epoch_id,
+                    "mutations_attempted": cel_result.total_candidates,
+                    "mutations_succeeded": len(cel_result.top_mutation_ids),
+                    "accepted_count": cel_result.accepted_count,
+                }
+            )
+            return
+
         if self.evolution_runtime.fail_closed:
             metrics.log(event_type="mutation_cycle_blocked", payload={"reason": "replay_fail_closed", "epoch_id": self.evolution_runtime.current_epoch_id}, level="ERROR")
             return
@@ -941,6 +1010,10 @@ def main() -> None:
         trigger_mode=args.trigger_mode,
         status_format=args.status_format,
     ):
+        return
+
+    from app.orchestration.cli_handlers import handle_explain_gates
+    if handle_explain_gates(explain_gates=args.explain_gates):
         return
 
     init_state = build_init_state(

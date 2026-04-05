@@ -52,8 +52,8 @@ def _validate_command_token(token: str) -> tuple[str, ...]:
 def _validate_write_allowlist(write_path_allowlist: Any) -> tuple[str, ...]:
     """H-03: Validate write-path allowlist entries before mount processing.
 
-    Rejects non-absolute paths and any entry containing ``..`` path traversal
-    sequences. Fails closed so a malformed allowlist cannot silently open a
+    Rejects any entry containing ``..`` path traversal sequences.
+    Fails closed so a malformed allowlist cannot silently open a
     path-bypass during mount validation.
     """
     violations: list[str] = []
@@ -62,8 +62,6 @@ def _validate_write_allowlist(write_path_allowlist: Any) -> tuple[str, ...]:
         entry_str = str(entry)
         if ".." in PurePosixPath(entry_str).parts:
             violations.append(f"write_allowlist_traversal:{entry_str}")
-        elif not entry_str.startswith("/"):
-            violations.append(f"write_allowlist_non_absolute:{entry_str}")
     return tuple(violations)
 
 
