@@ -10,7 +10,6 @@ import subprocess
 import sys
 import time
 import webbrowser
-from pathlib import Path
 
 PORT = int(os.getenv("ADAAD_PORT", "8000"))
 URL = f"http://localhost:{PORT}/dork"
